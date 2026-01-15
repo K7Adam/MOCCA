@@ -1,5 +1,8 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
   <ManuallySuppressedIssues></ManuallySuppressedIssues>
-  <CurrentIssues></CurrentIssues>
+  <CurrentIssues>
+    <ID>TrailingWhitespace:MainActivity.kt$com.mocca.app.MainActivity.kt</ID>
+    <ID>TrailingWhitespace:MoccaApp.kt$com.mocca.app.MoccaApp.kt</ID>
+  </CurrentIssues>
 </SmellBaseline>

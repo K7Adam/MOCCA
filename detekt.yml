@@ -54,20 +54,14 @@ comments:
     active: false
     searchInNestedClass: true
     searchInInnerClass: true
-    searchInInterface: true
+
     searchInProtectedClass: false
   UndocumentedPublicFunction:
     active: false
-    searchInNestedClass: true
-    searchInInnerClass: true
-    searchInInterface: true
-    searchInProtectedClass: false
+
   UndocumentedPublicProperty:
     active: false
-    searchInNestedClass: true
-    searchInInnerClass: true
-    searchInInterface: true
-    searchInProtectedClass: false
+
 
 complexity:
   active: true
@@ -191,7 +185,7 @@ exceptions:
     active: true
   NotImplementedDeclaration:
     active: true
-    reportAssertionError: false
+
   ObjectExtendsThrowable:
     active: false
   PrintStackTrace:
@@ -253,15 +247,8 @@ naming:
     parameterPattern: '[a-z][A-Za-z0-9]*'
     privateParameterPattern: '[a-z][A-Za-z0-9]*'
     excludeClassPattern: '$^'
-  EnumEntryNaming:
-    active: true
-    enumEntryPattern: '[A-Z][_a-zA-Z0-9]*'
-  FunctionMAXLineLength:
-    active: true
-    maximumLineLength: 120
-    excludePackageStatements: true
-    excludeImportStatements: true
-    excludeCommentStatements: false
+
+
   FunctionNaming:
     active: true
     functionPattern: '[a-z][a-zA-Z0-9]*'
@@ -325,10 +312,7 @@ potential-bugs:
   active: true
   AvoidReferentialEquality:
     active: true
-    forbiddenTypeExceptions:
-      - 'kotlin.Unit'
-      - 'kotlin.Nothing'
-      - 'kotlin.Enum'
+
   CastToNullableType:
     active: false
   Deprecation:
@@ -354,8 +338,7 @@ potential-bugs:
     active: true
   EqualsWithHashCodeExist:
     active: true
-  ExitController:
-    active: true
+
   ExplicitGarbageCollectionCall:
     active: true
   HasPlatformType:
@@ -455,7 +438,7 @@ style:
     ignoreUsageInGenerics: false
   FunctionOnlyReturningConstant:
     active: true
-    ignoreOverridden: true
+
     excludedFunctions:
       - 'describeContents'
     excludeAnnotatedFunction:
