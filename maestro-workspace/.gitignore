@@ -1,0 +1,18 @@
+# Maestro Generated Files
+# These are created during test execution and should not be committed
+
+# Screenshots from test runs
+.maestro/screenshots/
+*.png
+
+# Video recordings
+*.mp4
+*.webm
+
+# Test reports and results
+test-results/
+reports/
+
+# Temporary files
+*.tmp
+*.log

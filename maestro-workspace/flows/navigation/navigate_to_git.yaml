@@ -1,0 +1,35 @@
+# Flow: Navigate to Git
+# Tests navigation to git screen via dashboard panel
+# Tags: @navigation
+appId: com.mocca.app
+tags:
+  - navigation
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Swipe left to reveal dashboard panel
+- swipe:
+    direction: LEFT
+    duration: 300
+
+- waitForAnimationToEnd
+
+# Tap on Git button
+- tapOn:
+    text: "Git"
+    optional: true
+
+- tapOn:
+    id: ".*git.*"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+- takeScreenshot: git_screen

@@ -1,0 +1,8 @@
+# Smoke Test Plan
+# Quick validation tests for PR checks
+# Run with: maestro test testplans/smoke.yaml
+appId: com.mocca.app
+---
+- runFlow: ../flows/onboarding/app_launch.yaml
+- runFlow: ../flows/navigation/navigate_to_settings.yaml
+- runFlow: ../flows/sessions/create_new_session.yaml

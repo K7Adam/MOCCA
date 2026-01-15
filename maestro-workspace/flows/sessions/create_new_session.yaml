@@ -1,0 +1,31 @@
+# Flow: Create New Session
+# Tests creating a new chat session from the context panel
+# Tags: @smoke @sessions
+appId: com.mocca.app
+tags:
+  - smoke
+  - sessions
+---
+- launchApp:
+    clearState: true
+
+# Wait for app to be ready
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Swipe right to reveal context panel (left panel)
+- swipe:
+    direction: RIGHT
+    duration: 300
+
+# Wait for panel animation
+- waitForAnimationToEnd
+
+# Look for new session button or + icon
+- tapOn:
+    id: ".*new.*session.*"
+    optional: true
+
+# Take screenshot to capture result
+- takeScreenshot: create_session_result

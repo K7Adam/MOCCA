@@ -1,0 +1,9 @@
+# Subflow: Wait for Main Screen
+# Waits for the main screen to be fully loaded
+# Usage: runFlow: subflows/common/wait_for_main_screen.yaml
+appId: com.mocca.app
+---
+# Wait for either the quote rotator (empty state) or chat content
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 10000

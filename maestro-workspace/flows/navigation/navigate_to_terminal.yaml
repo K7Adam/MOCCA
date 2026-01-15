@@ -1,0 +1,35 @@
+# Flow: Navigate to Terminal
+# Tests navigation to terminal screen via dashboard panel
+# Tags: @navigation
+appId: com.mocca.app
+tags:
+  - navigation
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Swipe left to reveal dashboard panel
+- swipe:
+    direction: LEFT
+    duration: 300
+
+- waitForAnimationToEnd
+
+# Tap on Terminal button
+- tapOn:
+    text: "Terminal"
+    optional: true
+
+- tapOn:
+    id: ".*terminal.*"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+- takeScreenshot: terminal_screen

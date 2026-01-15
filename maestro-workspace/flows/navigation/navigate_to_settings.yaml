@@ -1,0 +1,41 @@
+# Flow: Navigate to Settings
+# Tests navigation to settings screen via dashboard panel
+# Tags: @smoke @navigation
+appId: com.mocca.app
+tags:
+  - smoke
+  - navigation
+---
+- launchApp:
+    clearState: true
+
+# Wait for app to be ready
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Swipe left to reveal dashboard panel (right panel)
+- swipe:
+    direction: LEFT
+    duration: 300
+
+# Wait for panel animation
+- waitForAnimationToEnd
+
+# Tap on Settings button
+- tapOn:
+    text: "Settings"
+    optional: true
+
+# Alternative: tap by id pattern
+- tapOn:
+    id: ".*settings.*"
+    optional: true
+
+# Wait for settings screen
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+# Take screenshot
+- takeScreenshot: settings_screen

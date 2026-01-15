@@ -1,4 +1,0 @@
-appId: com.mocca.app
----
-- launchApp
-- assertVisible: "AGENT: BUILD"

@@ -1,0 +1,7 @@
+# Subflow: Launch MOCCA App
+# Reusable component for app initialization
+# Usage: runFlow: subflows/common/launch_app.yaml
+appId: com.mocca.app
+---
+- launchApp:
+    clearState: ${CLEAR_STATE == 'true'}

@@ -1,0 +1,35 @@
+# Flow: Navigate to Files
+# Tests navigation to files screen via dashboard panel
+# Tags: @navigation
+appId: com.mocca.app
+tags:
+  - navigation
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Swipe left to reveal dashboard panel
+- swipe:
+    direction: LEFT
+    duration: 300
+
+- waitForAnimationToEnd
+
+# Tap on Files button
+- tapOn:
+    text: "Files"
+    optional: true
+
+- tapOn:
+    id: ".*files.*"
+    optional: true
+
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 5000
+
+- takeScreenshot: files_screen

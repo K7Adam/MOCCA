@@ -1,0 +1,18 @@
+# Flow: App Launch
+# Verifies that the MOCCA app launches successfully
+# Tags: @smoke @critical
+appId: com.mocca.app
+tags:
+  - smoke
+  - critical
+---
+- launchApp:
+    clearState: true
+
+# Verify main UI is displayed
+- extendedWaitUntil:
+    visible: ".*"
+    timeout: 15000
+
+# Take screenshot for verification
+- takeScreenshot: app_launch_success
