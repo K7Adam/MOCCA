@@ -1,7 +1,7 @@
-# OpenCode Remote
+# MOCCA
 
 ## 1. Project Overview
-OpenCode Remote is a **Kotlin Multiplatform** Android client for the **OpenCode** AI agent. It delivers a production-ready mobile interface matching the OpenChamber web UI, enabling developers to remotely manage coding sessions, files, and terminal operations via secure HTTP and Server-Sent Events (SSE).
+MOCCA is a **Kotlin Multiplatform** Android client for the **OpenCode** AI agent. It delivers a production-ready mobile interface matching the OpenChamber web UI, enabling developers to remotely manage coding sessions, files, and terminal operations via secure HTTP and Server-Sent Events (SSE).
 
 ## 2. Key Features
 - **Full Session Management**: Real-time chat with streaming responses and optimistic UI updates.
@@ -47,8 +47,8 @@ OpenCode Server (API)
 - **Tech Stack**: Kotlin 2.3.0, Compose 1.9.3, Koin 4.1.1, Voyager 1.1.0-beta03, AGP 9.0.0-rc03.
 - **Patterns**: MVI architecture; Repositories return `Flow<Resource<T>>`.
 - **Guidelines**:
-  - **No Automated Tests**: Rely on rigorous manual verification.
-  - **No Linting**: Manually adhere to standard Kotlin coding conventions.
+  - **Automated Tests**: CI builds debug APKs on every push.
+  - **Linting**: Detekt static analysis is enforced via GitHub Actions.
   - **Absolute Paths**: Use absolute paths for all file operations.
 
 ## License
