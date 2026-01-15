@@ -17,6 +17,7 @@ napier = "2.7.1"
 markdown-renderer = "0.27.0"
 highlights = "0.9.0"
 agp = "9.0.0-rc03"
+detekt = "1.23.6"
 
 [libraries]
 markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer", version.ref = "markdown-renderer" }
@@ -74,3 +75,4 @@ sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }

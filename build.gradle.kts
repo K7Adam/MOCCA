@@ -7,4 +7,14 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
+    alias(libs.plugins.detekt)
+}
+
+subprojects {
+    apply(plugin = "io.gitlab.arturbosch.detekt")
+    
+    detekt {
+       config.setFrom(files("$rootDir/detekt.yml"))
+       buildUponDefaultConfig = true
+    }
 }
