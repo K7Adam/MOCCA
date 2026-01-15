@@ -1,0 +1,45 @@
+# Gradle
+.gradle/
+build/
+node_modules/
+
+# Android
+local.properties
+.navigation/
+captures/
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+
+# IDEs
+.idea/
+*.iml
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+
+# Kotlin
+.kotlin/
+kotlin-js-store/
+
+# Logs and Temp Files
+*.log
+*.txt
+!README.md
+!AGENTS.md
+sse_debug.txt
+temp_logs.txt
+logcat_*.txt
+robust_test_log.txt
+window_dump.xml
+
+# OS Specific
+.DS_Store
+Thumbs.db
+nul

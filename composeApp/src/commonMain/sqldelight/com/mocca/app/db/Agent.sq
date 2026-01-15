@@ -1,0 +1,48 @@
+-- Agent table for caching agent configurations
+CREATE TABLE AgentEntity (
+    name TEXT PRIMARY KEY NOT NULL,
+    mode TEXT,
+    description TEXT,
+    prompt TEXT,
+    isNative INTEGER AS kotlin.Boolean DEFAULT 0 NOT NULL,
+    isHidden INTEGER AS kotlin.Boolean DEFAULT 0 NOT NULL,
+    color TEXT,
+    modelProviderId TEXT,
+    modelId TEXT,
+    permissionsJson TEXT,
+    optionsJson TEXT,
+    cachedAt INTEGER NOT NULL
+);
+
+-- Select all agents
+selectAll:
+SELECT * FROM AgentEntity ORDER BY name ASC;
+
+-- Select visible agents (not hidden)
+selectVisible:
+SELECT * FROM AgentEntity WHERE isHidden = 0 ORDER BY name ASC;
+
+-- Select agent by name
+selectByName:
+SELECT * FROM AgentEntity WHERE name = ?;
+
+-- Insert or replace agent
+insertOrReplace:
+INSERT OR REPLACE INTO AgentEntity(name, mode, description, prompt, isNative, isHidden, color, modelProviderId, modelId, permissionsJson, optionsJson, cachedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Delete agent by name
+deleteByName:
+DELETE FROM AgentEntity WHERE name = ?;
+
+-- Delete all agents
+deleteAll:
+DELETE FROM AgentEntity;
+
+-- Count agents
+countAgents:
+SELECT COUNT(*) FROM AgentEntity;
+
+-- Check cache freshness (returns 1 if any agent was cached within threshold)
+hasFreshCache:
+SELECT COUNT(*) FROM AgentEntity WHERE cachedAt > ?;

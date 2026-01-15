@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Mocca" parent="android:Theme.Material.NoActionBar">
+        <!-- Black window background to match app theme -->
+        <item name="android:windowBackground">@android:color/black</item>
+        <!-- Transparent system bars for proper edge-to-edge display -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <!-- Ensure navigation bar contrast is handled by the app -->
+        <item name="android:enforceNavigationBarContrast">false</item>
+    </style>
+</resources>

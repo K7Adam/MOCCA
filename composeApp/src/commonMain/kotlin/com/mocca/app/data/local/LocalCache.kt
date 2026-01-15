@@ -1,0 +1,77 @@
+package com.mocca.app.data.local
+
+import com.mocca.app.domain.model.Agent
+import com.mocca.app.domain.model.Command
+import com.mocca.app.domain.model.FileInfo
+import com.mocca.app.domain.model.GitStatusResponse
+import com.mocca.app.domain.model.Message
+import com.mocca.app.domain.model.ServerConfig
+import com.mocca.app.domain.model.Session
+
+/**
+ * Platform-agnostic local cache interface.
+ * Android uses SQLDelight for persistent storage.
+ */
+interface LocalCache {
+    // Sessions
+    suspend fun getAllSessions(): List<Session>
+    suspend fun getSession(id: String): Session?
+    suspend fun insertSession(session: Session)
+    suspend fun updateSessionStatus(id: String, status: String)
+    suspend fun deleteSession(id: String)
+    suspend fun deleteAllSessions()
+
+    // Messages
+    suspend fun getMessages(sessionId: String): List<Message>
+    suspend fun getMessage(messageId: String): Message?
+    suspend fun insertMessage(message: Message)
+    suspend fun updateMessage(message: Message)
+    suspend fun deleteMessages(sessionId: String)
+    suspend fun deleteMessage(messageId: String)
+
+    // Server Configs
+    suspend fun getAllServerConfigs(): List<ServerConfig>
+    suspend fun getServerConfig(id: String): ServerConfig?
+    suspend fun getActiveServerConfig(): ServerConfig?
+    suspend fun insertServerConfig(config: ServerConfig)
+    suspend fun setActiveServerConfig(id: String)
+    suspend fun deleteServerConfig(id: String)
+    
+    // Agents
+    suspend fun getAllAgents(): List<Agent>
+    suspend fun getVisibleAgents(): List<Agent>
+    suspend fun getAgent(name: String): Agent?
+    suspend fun insertAgent(agent: Agent)
+    suspend fun insertAgents(agents: List<Agent>)
+    suspend fun deleteAllAgents()
+    suspend fun hasAgentCache(maxAgeMs: Long): Boolean
+    
+    // Commands
+    suspend fun getAllCommands(): List<Command>
+    suspend fun getCommand(name: String): Command?
+    suspend fun insertCommand(command: Command)
+    suspend fun insertCommands(commands: List<Command>)
+    suspend fun deleteAllCommands()
+    suspend fun hasCommandCache(maxAgeMs: Long): Boolean
+    
+    // FileInfo (file browser cache)
+    suspend fun getFilesInDirectory(parentPath: String?): List<FileInfo>
+    suspend fun getFileInfo(path: String): FileInfo?
+    suspend fun insertFileInfo(fileInfo: FileInfo, parentPath: String?)
+    suspend fun insertFilesInDirectory(files: List<FileInfo>, parentPath: String?)
+    suspend fun deleteFilesInDirectory(parentPath: String?)
+    suspend fun deleteAllFiles()
+    suspend fun hasFileCache(parentPath: String?, maxAgeMs: Long): Boolean
+    
+    // Git Status (in-memory cache, not persisted to DB)
+    fun getGitStatus(): GitStatusResponse?
+    fun saveGitStatus(status: GitStatusResponse)
+    fun clearGitStatus()
+}
+
+/**
+ * Expected platform-specific cache factory.
+ */
+expect class LocalCacheFactory {
+    fun create(): LocalCache
+}

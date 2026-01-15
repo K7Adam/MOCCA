@@ -1,0 +1,50 @@
+-- FileInfo table for caching file browser data
+CREATE TABLE FileInfoEntity (
+    path TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    size INTEGER,
+    modifiedAt INTEGER,
+    parentPath TEXT,
+    cachedAt INTEGER NOT NULL
+);
+
+-- Create index for faster parent path lookups
+CREATE INDEX idx_fileinfo_parent ON FileInfoEntity(parentPath);
+
+-- Select all files in a directory
+selectByParent:
+SELECT * FROM FileInfoEntity WHERE parentPath = ? ORDER BY type DESC, name ASC;
+
+-- Select file by path
+selectByPath:
+SELECT * FROM FileInfoEntity WHERE path = ?;
+
+-- Select root files
+selectRoot:
+SELECT * FROM FileInfoEntity WHERE parentPath IS NULL OR parentPath = '' ORDER BY type DESC, name ASC;
+
+-- Insert or replace file info
+insertOrReplace:
+INSERT OR REPLACE INTO FileInfoEntity(path, name, type, size, modifiedAt, parentPath, cachedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Delete file by path
+deleteByPath:
+DELETE FROM FileInfoEntity WHERE path = ?;
+
+-- Delete all files under a parent path
+deleteByParent:
+DELETE FROM FileInfoEntity WHERE parentPath = ?;
+
+-- Delete all files
+deleteAll:
+DELETE FROM FileInfoEntity;
+
+-- Count files
+countFiles:
+SELECT COUNT(*) FROM FileInfoEntity;
+
+-- Check cache freshness for a directory
+hasFreshCacheForPath:
+SELECT COUNT(*) FROM FileInfoEntity WHERE parentPath = ? AND cachedAt > ?;

@@ -1,0 +1,229 @@
+package com.mocca.app.ui.components.terminal
+
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalSpacing
+import kotlinx.coroutines.delay
+
+/**
+ * Quote rotator component for the main chat initial state.
+ * Shows rotating quotes with fade animation.
+ */
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEFAULT QUOTES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+val defaultQuotes = listOf(
+    "Built for what people want",
+    "Code at the speed of thought",
+    "Your AI pair programmer",
+    "Making the impossible possible",
+    "Agents that understand context",
+    "From idea to implementation",
+    "The future of development"
+)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUOTE ROTATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Rotating quote display with fade animation.
+ * Centers content and rotates through quotes.
+ */
+@Composable
+fun QuoteRotator(
+    quotes: List<String> = defaultQuotes,
+    modifier: Modifier = Modifier,
+    intervalMs: Long = 4000L,
+    fadeInDurationMs: Int = 500,
+    fadeOutDurationMs: Int = 500,
+    textColor: Color = TerminalColors.white,
+    showAsciiArt: Boolean = true,
+    versionText: String? = null,
+    serverText: String? = null,
+    isLoading: Boolean = false,       // Show loading indicator under ASCII art
+    loadingText: String = "LOADING..." // Text to show when loading
+) {
+    var currentIndex by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(intervalMs)
+            currentIndex = (currentIndex + 1) % quotes.size
+        }
+    }
+    
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+    ) {
+        // ASCII art globe/logo
+        if (showAsciiArt) {
+            AsciiGlobe()
+        }
+        
+        // Loading indicator (shown under ASCII art when loading)
+        AnimatedVisibility(
+            visible = isLoading,
+            enter = fadeIn(animationSpec = tween(200)),
+            exit = fadeOut(animationSpec = tween(200))
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp,
+                    color = TerminalColors.statusWaiting
+                )
+                Text(
+                    text = loadingText,
+                    color = TerminalColors.statusWaiting,
+                    style = MaterialTheme.typography.labelMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        
+        // Rotating quote with fade animation (only show when NOT loading)
+        AnimatedVisibility(
+            visible = !isLoading,
+            enter = fadeIn(animationSpec = tween(200)),
+            exit = fadeOut(animationSpec = tween(200))
+        ) {
+            AnimatedContent(
+                targetState = currentIndex,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(fadeInDurationMs)) togetherWith
+                        fadeOut(animationSpec = tween(fadeOutDurationMs))
+                },
+                label = "quoteAnimation"
+            ) { index ->
+                Text(
+                    text = quotes.getOrElse(index) { "" },
+                    color = textColor,
+                    style = MaterialTheme.typography.headlineLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+        
+        // Version and server info
+        if (versionText != null || serverText != null) {
+            val metaText = listOfNotNull(versionText, serverText).joinToString(" • ")
+            Text(
+                text = metaText.uppercase(),
+                color = TerminalColors.greyDark,
+                style = MaterialTheme.typography.labelSmall,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ASCII ART
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * ASCII art globe/logo for the quote rotator section.
+ */
+@Composable
+fun AsciiGlobe(
+    modifier: Modifier = Modifier,
+    color: Color = TerminalColors.grey
+) {
+    val asciiArt = """
+           .---.
+          /     \
+         | () () |
+          \  ^  /
+           '---'
+        /=========\
+       /===========\
+      [=============]
+       \===========/
+        `=========`
+    """.trimIndent()
+    
+    Text(
+        text = asciiArt,
+        color = color,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = modifier,
+        textAlign = TextAlign.Center
+    )
+}
+
+/**
+ * Alternative ASCII art - terminal/command prompt style.
+ */
+@Composable
+fun AsciiTerminal(
+    modifier: Modifier = Modifier,
+    color: Color = TerminalColors.grey
+) {
+    val asciiArt = """
+        ┌─────────────────────┐
+        │  >_                 │
+        │                     │
+        │  OPENCODE TERMINAL  │
+        │                     │
+        └─────────────────────┘
+    """.trimIndent()
+    
+    Text(
+        text = asciiArt,
+        color = color,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = modifier,
+        textAlign = TextAlign.Center
+    )
+}
+
+/**
+ * Decorative brackets symbol [[ ]].
+ */
+@Composable
+fun DecorativeBrackets(
+    modifier: Modifier = Modifier,
+    color: Color = TerminalColors.white
+) {
+    Text(
+        text = "[[ ]]",
+        color = color,
+        style = MaterialTheme.typography.displayLarge,
+        modifier = modifier,
+        textAlign = TextAlign.Center
+    )
+}

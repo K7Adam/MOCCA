@@ -1,0 +1,47 @@
+-- Message table for caching message history
+CREATE TABLE MessageEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    sessionId TEXT NOT NULL,
+    role TEXT NOT NULL,
+    parts TEXT NOT NULL,
+    createdAt INTEGER NOT NULL,
+    model TEXT,
+    cost REAL,
+    FOREIGN KEY (sessionId) REFERENCES SessionEntity(id) ON DELETE CASCADE
+);
+
+-- Create index for faster session lookups
+CREATE INDEX idx_message_session ON MessageEntity(sessionId);
+
+-- Select messages by session, ordered chronologically
+selectBySession:
+SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt ASC;
+
+-- Select message by ID
+selectById:
+SELECT * FROM MessageEntity WHERE id = ?;
+
+-- Insert or replace message
+insertOrReplace:
+INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Delete message by ID
+deleteById:
+DELETE FROM MessageEntity WHERE id = ?;
+
+-- Delete all messages for a session
+deleteBySession:
+DELETE FROM MessageEntity WHERE sessionId = ?;
+
+-- Delete all messages
+deleteAll:
+DELETE FROM MessageEntity;
+
+-- Count messages in session
+countBySession:
+SELECT COUNT(*) FROM MessageEntity WHERE sessionId = ?;
+
+-- Get last message in session
+selectLastBySession:
+SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt DESC LIMIT 1;

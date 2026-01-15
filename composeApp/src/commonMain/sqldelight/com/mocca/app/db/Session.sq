@@ -1,0 +1,48 @@
+-- Session table for caching session data
+CREATE TABLE SessionEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    title TEXT,
+    createdAt INTEGER NOT NULL,
+    updatedAt INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'idle',
+    cost REAL NOT NULL DEFAULT 0.0,
+    parentId TEXT,
+    isSynced INTEGER AS kotlin.Boolean DEFAULT 1 NOT NULL
+);
+
+-- Select all sessions ordered by most recent
+selectAll:
+SELECT * FROM SessionEntity ORDER BY updatedAt DESC;
+
+-- Select session by ID
+selectById:
+SELECT * FROM SessionEntity WHERE id = ?;
+
+-- Insert or replace session
+insertOrReplace:
+INSERT OR REPLACE INTO SessionEntity(id, title, createdAt, updatedAt, status, cost, parentId, isSynced)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Delete session by ID
+deleteById:
+DELETE FROM SessionEntity WHERE id = ?;
+
+-- Delete all sessions
+deleteAll:
+DELETE FROM SessionEntity;
+
+-- Update session status
+updateStatus:
+UPDATE SessionEntity SET status = ?, updatedAt = ? WHERE id = ?;
+
+-- Mark session as synced
+markSynced:
+UPDATE SessionEntity SET isSynced = 1 WHERE id = ?;
+
+-- Get unsynced sessions
+selectUnsynced:
+SELECT * FROM SessionEntity WHERE isSynced = 0;
+
+-- Count total sessions
+countSessions:
+SELECT COUNT(*) FROM SessionEntity;

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext (HTTP) traffic to localhost and local network for development -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain> <!-- Android emulator host -->
+        <domain includeSubdomains="true">10.0.0.0</domain> <!-- Local network -->
+        <domain includeSubdomains="true">192.168.0.0</domain> <!-- Local network -->
+        <domain includeSubdomains="true">172.16.0.0</domain> <!-- Local network -->
+    </domain-config>
+    
+    <!-- Trust user-installed CAs for debug builds (useful for Charles/Fiddler proxying) -->
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="user" />
+            <certificates src="system" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

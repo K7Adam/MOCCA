@@ -1,0 +1,39 @@
+-- Server configuration storage
+CREATE TABLE ServerConfigEntity (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    baseUrl TEXT NOT NULL DEFAULT 'http://localhost:4096',
+    connectionType TEXT NOT NULL DEFAULT 'local',
+    authType TEXT NOT NULL DEFAULT 'none',
+    authToken TEXT,
+    isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
+);
+
+-- Select all servers
+selectAll:
+SELECT * FROM ServerConfigEntity ORDER BY name ASC;
+
+-- Select active server
+selectActive:
+SELECT * FROM ServerConfigEntity WHERE isActive = 1 LIMIT 1;
+
+-- Select server by ID
+selectById:
+SELECT * FROM ServerConfigEntity WHERE id = ?;
+
+-- Insert or replace server config
+insertOrReplace:
+INSERT OR REPLACE INTO ServerConfigEntity(id, name, baseUrl, connectionType, authType, authToken, isActive)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Delete server by ID
+deleteById:
+DELETE FROM ServerConfigEntity WHERE id = ?;
+
+-- Deactivate all servers
+deactivateAll:
+UPDATE ServerConfigEntity SET isActive = 0;
+
+-- Activate a specific server
+activate:
+UPDATE ServerConfigEntity SET isActive = 1 WHERE id = ?;

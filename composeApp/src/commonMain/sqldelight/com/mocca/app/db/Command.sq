@@ -1,0 +1,47 @@
+-- Command table for caching slash commands
+CREATE TABLE CommandEntity (
+    name TEXT PRIMARY KEY NOT NULL,
+    description TEXT,
+    templateJson TEXT,
+    isSubtask INTEGER AS kotlin.Boolean DEFAULT 0 NOT NULL,
+    hintsJson TEXT,
+    isMcp INTEGER AS kotlin.Boolean DEFAULT 0 NOT NULL,
+    cachedAt INTEGER NOT NULL
+);
+
+-- Select all commands
+selectAll:
+SELECT * FROM CommandEntity ORDER BY name ASC;
+
+-- Select command by name
+selectByName:
+SELECT * FROM CommandEntity WHERE name = ?;
+
+-- Select MCP commands
+selectMcpCommands:
+SELECT * FROM CommandEntity WHERE isMcp = 1 ORDER BY name ASC;
+
+-- Select non-MCP commands
+selectNonMcpCommands:
+SELECT * FROM CommandEntity WHERE isMcp = 0 ORDER BY name ASC;
+
+-- Insert or replace command
+insertOrReplace:
+INSERT OR REPLACE INTO CommandEntity(name, description, templateJson, isSubtask, hintsJson, isMcp, cachedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?);
+
+-- Delete command by name
+deleteByName:
+DELETE FROM CommandEntity WHERE name = ?;
+
+-- Delete all commands
+deleteAll:
+DELETE FROM CommandEntity;
+
+-- Count commands
+countCommands:
+SELECT COUNT(*) FROM CommandEntity;
+
+-- Check cache freshness
+hasFreshCache:
+SELECT COUNT(*) FROM CommandEntity WHERE cachedAt > ?;
