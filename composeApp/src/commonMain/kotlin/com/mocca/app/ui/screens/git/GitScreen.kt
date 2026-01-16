@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Undo
@@ -46,14 +47,23 @@ class GitScreen : Screen {
         val uiState by screenModel.uiState.collectAsState()
         val selectedTab by screenModel.selectedTab.collectAsState()
         
-        // Simple status message display
-        val statusMessage = uiState.operationResult ?: uiState.error
+        // Simple status message display - priority: warning > success > error (for toast only)
+        val toastMessage = uiState.warningMessage ?: uiState.operationResult
+        val toastIsWarning = uiState.warningMessage != null
         
-        // Clear message after showing
+        // Clear operation result after showing
         LaunchedEffect(uiState.operationResult) {
             if (uiState.operationResult != null) {
                 kotlinx.coroutines.delay(3000)
                 screenModel.clearOperationResult()
+            }
+        }
+        
+        // Clear warning after showing
+        LaunchedEffect(uiState.warningMessage) {
+            if (uiState.warningMessage != null) {
+                kotlinx.coroutines.delay(4000)
+                screenModel.clearWarning()
             }
         }
         
@@ -171,14 +181,14 @@ class GitScreen : Screen {
             } // End Column
             
             // Status toast overlay at bottom (inside outer Box for BoxScope.align)
-            statusMessage?.let { message ->
+            toastMessage?.let { message ->
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
                         .padding(TerminalSpacing.md)
                         .background(
-                            if (uiState.error != null) TerminalColors.error 
+                            if (toastIsWarning) TerminalColors.statusWaiting
                             else TerminalColors.statusOnline
                         )
                         .padding(TerminalSpacing.md)
@@ -223,11 +233,11 @@ private fun StatusTab(
                     }
                 )
             }
-            items(
+            itemsIndexed(
                 items = status.staged,
-                key = { "staged-${it.path}" },
-                contentType = { "file-change" }
-            ) { change ->
+                key = { index, change -> "staged-$index-${change.path}" },
+                contentType = { _, _ -> "file-change" }
+            ) { _, change ->
                 FileChangeItem(
                     change = change,
                     staged = true,
@@ -247,7 +257,7 @@ private fun StatusTab(
                     }
                 )
             }
-            items(status.unstaged, key = { "unstaged-${it.path}" }) { change ->
+            itemsIndexed(status.unstaged, key = { index, change -> "unstaged-$index-${change.path}" }) { _, change ->
                 FileChangeItem(
                     change = change,
                     staged = false,

@@ -188,7 +188,7 @@ class GitScreenModel(
     
     fun commit(message: String) {
         if (message.isBlank()) {
-            _uiState.update { it.copy(error = "Commit message cannot be empty") }
+            _uiState.update { it.copy(warningMessage = "Commit message cannot be empty") }
             return
         }
         
@@ -205,7 +205,10 @@ class GitScreenModel(
                     loadStatus()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        warningMessage = error.message ?: "Operation failed"
+                    ) }
                 }
         }
     }
@@ -222,7 +225,10 @@ class GitScreenModel(
                     loadStatus()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        warningMessage = error.message ?: "Operation failed"
+                    ) }
                 }
         }
     }
@@ -239,7 +245,10 @@ class GitScreenModel(
                     loadStatus()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        warningMessage = error.message ?: "Operation failed"
+                    ) }
                 }
         }
     }
@@ -257,7 +266,10 @@ class GitScreenModel(
                     loadBranches()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        warningMessage = error.message ?: "Operation failed"
+                    ) }
                 }
         }
     }
@@ -275,7 +287,10 @@ class GitScreenModel(
                     loadBranches()
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(isLoading = false, error = error.message) }
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        warningMessage = error.message ?: "Operation failed"
+                    ) }
                 }
         }
     }
@@ -299,11 +314,16 @@ class GitScreenModel(
     fun clearOperationResult() {
         _uiState.update { it.copy(operationResult = null) }
     }
+    
+    fun clearWarning() {
+        _uiState.update { it.copy(warningMessage = null) }
+    }
 }
 
 data class GitUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
+    val warningMessage: String? = null,
     val operationResult: String? = null,
     val status: GitStatusResponse? = null,
     val branches: List<GitBranch> = emptyList(),

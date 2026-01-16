@@ -1,5 +1,6 @@
 package com.mocca.app.di
 
+import com.mocca.app.api.GitApiClient
 import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
@@ -71,11 +72,18 @@ val commonModule = module {
     }
     
     // Services
-    single { GitService(get(), get(), get(), get()) }
+    single {
+        val httpClientProvider: HttpClientProvider = get()
+        val serverConfigRepo: ServerConfigRepository = get()
+        GitApiClient(
+            httpClientProvider = httpClientProvider,
+            serverConfigProvider = { serverConfigRepo.getActiveServerConfig() }
+        )
+    }
     
     singleOf(::FileRepository)
     singleOf(::TerminalRepository)
-    single { GitRepository(get(), get(), get()) }
+    single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
     
     // New repositories for OpenCode features

@@ -472,6 +472,12 @@ class EventStreamRepository(
                 Napier.i("Agent $agentName: $status${event.properties.message?.let { " - $it" } ?: ""}")
             }
             
+            is ServerEvent.Heartbeat -> {
+                // Heartbeat events are used to keep the connection alive
+                // No action needed, just acknowledge receipt
+                Napier.v("Heartbeat received")
+            }
+            
             is ServerEvent.Unknown -> {
                 Napier.w("Unknown event type: ${event.type}")
             }

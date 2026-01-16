@@ -20,6 +20,13 @@ sealed class ServerEvent {
     ) : ServerEvent()
     
     @Serializable
+    @SerialName("server.heartbeat")
+    data class Heartbeat(
+        override val type: String = "server.heartbeat",
+        val properties: HeartbeatProperties = HeartbeatProperties()
+    ) : ServerEvent()
+    
+    @Serializable
     @SerialName("session.updated")
     data class SessionUpdated(
         override val type: String = "session.updated",
@@ -161,8 +168,13 @@ sealed class ServerEvent {
 
 @Serializable
 data class ConnectedProperties(
-    val status: String,
+    val status: String = "connected",
     val version: String = "unknown",
+    val timestamp: Long? = null
+)
+
+@Serializable
+data class HeartbeatProperties(
     val timestamp: Long? = null
 )
 

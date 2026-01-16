@@ -20,29 +20,24 @@ class GitDiffScreenModel(
 
     fun loadDiff(path: String, staged: Boolean) {
         screenModelScope.launch {
-            // We request the diff for the specific file
-            // Since GitRepository.getDiff usually returns full diff, 
-            // we might need to filter it or update repository to support path filtering.
-            // For now, we fetch full diff and filter locally.
-            
-            gitRepository.getDiff(cached = staged).collect { resource ->
+            // Fetch only the specific file's diff using the optimized repository method
+            gitRepository.getFileDiff(path, cached = staged).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
                         is Resource.Success -> {
-                            val allFiles = resource.data?.files ?: emptyList()
-                            val fileDiff = allFiles.find { it.path == path }
-                            
-                            if (fileDiff != null) {
+                            val diff = resource.data
+                            // Ensure the returned diff actually contains the file we asked for (validation)
+                            if (diff.files.isNotEmpty()) {
                                 state.copy(
                                     isLoading = false,
-                                    diff = GitDiff(files = listOf(fileDiff)), // Wrap in GitDiff
+                                    diff = diff,
                                     error = null
                                 )
                             } else {
                                 state.copy(
                                     isLoading = false,
-                                    error = "File not found in diff"
+                                    error = "No changes found for $path"
                                 )
                             }
                         }

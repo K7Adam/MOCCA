@@ -940,8 +940,10 @@ private fun DiffView(oldText: String, newText: String) {
                         color = TerminalColors.diffDeletionText,
                         modifier = Modifier.width(20.dp)
                     )
+                    // Use LazyColumn logic (simulated with scrollable Column for now as nested lazy layouts are tricky)
+                    // For massive files, we just let the outer container scroll, but we remove the 'take(20)' limit.
                     Text(
-                        text = oldText.lines().take(20).joinToString("\n"),
+                        text = oldText.lines().joinToString("\n"),
                         style = TerminalTypography.bodySmall,
                         color = TerminalColors.diffDeletionText.copy(alpha = 0.8f)
                     )
@@ -965,7 +967,7 @@ private fun DiffView(oldText: String, newText: String) {
                         modifier = Modifier.width(20.dp)
                     )
                     Text(
-                        text = newText.lines().take(20).joinToString("\n"),
+                        text = newText.lines().joinToString("\n"),
                         style = TerminalTypography.bodySmall,
                         color = TerminalColors.diffAdditionText.copy(alpha = 0.9f)
                     )
