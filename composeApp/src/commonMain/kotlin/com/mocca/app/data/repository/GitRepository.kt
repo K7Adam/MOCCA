@@ -4,8 +4,10 @@ import com.mocca.app.api.GitApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 
 class GitRepository(
     private val gitApiClient: GitApiClient,
@@ -34,7 +36,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get Git status", cached))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun getBranches(): Flow<Resource<List<GitBranch>>> = flow {
         emit(Resource.Loading())
@@ -49,7 +51,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get branches"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun getLog(branch: String? = null, limit: Int = 50, skip: Int = 0): Flow<Resource<GitLog>> = flow {
         emit(Resource.Loading())
@@ -65,7 +67,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get commit log"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun getDiff(ref: String? = null, cached: Boolean = false): Flow<Resource<GitDiff>> = flow {
         emit(Resource.Loading())
@@ -81,7 +83,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get diff"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
     
     // Support for single file diff (called by new GitDiffScreenModel)
     fun getFileDiff(path: String, cached: Boolean = false): Flow<Resource<GitDiff>> = flow {
@@ -96,7 +98,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get file diff"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     suspend fun stage(files: List<String>): Result<GitOperationResult> {
         return gitApiClient.stage(files)
@@ -143,7 +145,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get remotes"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     fun getStashes(): Flow<Resource<List<GitStash>>> = flow {
         emit(Resource.Loading())
@@ -158,7 +160,7 @@ class GitRepository(
                 emit(Resource.Error(e.message ?: "Failed to get stashes"))
             }
         )
-    }
+    }.flowOn(Dispatchers.Default)
 
     suspend fun refreshStatus(): Result<GitStatusResponse> {
         return gitApiClient.getStatus().map { status ->
@@ -173,6 +175,6 @@ class GitRepository(
        // Currently removed dependency on MoccaApiClient, so we can't call getVcsInfo.
        // We should add getVcsInfo to GitApiClient or handle it differently.
        // For now, emit empty/dummy or Error.
-       emit(Resource.Error("Not implemented in refactor yet"))
-    }
+       emit(Resource.Error<VcsInfo>("Not implemented in refactor yet"))
+    }.flowOn(Dispatchers.Default)
 }

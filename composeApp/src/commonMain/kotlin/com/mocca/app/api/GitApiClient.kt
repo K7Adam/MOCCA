@@ -6,6 +6,7 @@ import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.client.plugins.timeout
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
@@ -215,8 +216,9 @@ class GitApiClient(
         skip: Int = 0,
         branch: String? = null
     ): Result<GitLog> = safeCall("getLog") {
+        val encodedBranch = branch?.encodeURLParameter()
         val url = "$gitServerUrl/git/log?limit=$limit&skip=$skip" +
-            (branch?.let { "&branch=$it" } ?: "")
+            (encodedBranch?.let { "&branch=$it" } ?: "")
         
         val response: GitServerLog = getClient().get(url).body()
         
@@ -254,10 +256,17 @@ class GitApiClient(
         path: String? = null,
         cached: Boolean = false
     ): Result<GitDiff> = safeCall("getDiff") {
+        val encodedPath = path?.encodeURLParameter()
         val url = "$gitServerUrl/git/diff?cached=$cached" +
-            (path?.let { "&path=$it" } ?: "")
+            (encodedPath?.let { "&path=$it" } ?: "")
         
-        val response: GitServerDiff = getClient().get(url).body()
+        val response: GitServerDiff = getClient().get(url) {
+            timeout {
+                requestTimeoutMillis = 60_000
+                socketTimeoutMillis = 60_000
+                connectTimeoutMillis = 15_000
+            }
+        }.body()
         
         GitDiff(
             files = response.files.map {

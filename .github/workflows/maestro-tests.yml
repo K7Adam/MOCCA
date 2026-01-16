@@ -36,7 +36,7 @@ jobs:
     - name: Run Maestro Tests on Emulator
       uses: reactivecircus/android-emulator-runner@v2
       with:
-        api-level: 30
+        api-level: 31
         arch: x86_64
         profile: pixel_6
         force-avd-creation: false
