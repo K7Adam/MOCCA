@@ -5,6 +5,7 @@ import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.domain.model.GitStatusResponse
 import com.mocca.app.domain.model.Message
+import com.mocca.app.domain.model.RecentModel
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.domain.model.Session
 
@@ -62,6 +63,10 @@ interface LocalCache {
     suspend fun deleteFilesInDirectory(parentPath: String?)
     suspend fun deleteAllFiles()
     suspend fun hasFileCache(parentPath: String?, maxAgeMs: Long): Boolean
+    
+    // Recent Models
+    suspend fun getRecentModels(): List<RecentModel>
+    suspend fun insertRecentModel(recentModel: RecentModel)
     
     // Git Status (in-memory cache, not persisted to DB)
     fun getGitStatus(): GitStatusResponse?

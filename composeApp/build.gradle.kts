@@ -77,6 +77,10 @@ kotlin {
 
             // SLF4J for Ktor logging
             implementation("org.slf4j:slf4j-simple:2.0.9")
+            
+            // FileKit for cross-platform file picking (latest stable)
+            implementation("io.github.vinceglb:filekit-core:0.12.0")
+            implementation("io.github.vinceglb:filekit-dialogs-compose:0.12.0")
         }
 
         androidMain.dependencies {

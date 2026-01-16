@@ -4,7 +4,9 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.data.repository.CommandRepository
 import com.mocca.app.domain.model.*
+import com.mocca.app.util.TerminalCommand
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -28,13 +30,34 @@ data class ChatState(
     val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected,
     val isSessionIdle: Boolean = true,
     val modelName: String = "CLAUDE",
-    val agentName: String = "SISYPHUS"
+    val agentName: String = "SISYPHUS",
+    
+    // NEW: Provider/Model selection
+    val providerInfo: ProviderResponse? = null,
+    val selectedProviderId: String = "",
+    val selectedModelId: String = "",
+    
+    // NEW: Mode selection  
+    val modes: List<Mode> = emptyList(),
+    val selectedModeId: String? = null,
+    
+    // NEW: File attachments
+    // NEW: File attachments
+    val attachedFiles: List<AttachedFile> = emptyList(),
+    
+    // NEW: Commands
+    val commands: List<TerminalCommand> = emptyList(),
+    
+    // NEW: Recent Models
+    val recentModels: List<RecentModel> = emptyList()
 )
 
 class ChatScreenModel(
     initialSessionId: String?,
+
     private val sessionRepository: SessionRepository,
-    private val eventStreamRepository: EventStreamRepository
+    private val eventStreamRepository: EventStreamRepository,
+    private val commandRepository: CommandRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(ChatState(sessionId = initialSessionId ?: ""))
@@ -85,12 +108,22 @@ class ChatScreenModel(
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     init {
+        // Load initial configuration
         loadConfig()
-        // Ensure we are monitoring events globally for this screen model
-        observeEvents()
+        loadRecentModels()
+        loadCommands()
         
+        // Start streaming for this session if we have an ID
         if (initialSessionId != null) {
+            connectToEventStream()
             loadSession(initialSessionId)
+        }
+    }
+    
+    private fun loadRecentModels() {
+        screenModelScope.launch {
+            val recent = sessionRepository.getRecentModels()
+            _state.value = _state.value.copy(recentModels = recent)
         }
     }
 
@@ -261,12 +294,56 @@ class ChatScreenModel(
     private fun loadConfig() {
         screenModelScope.launch(Dispatchers.IO) {
             sessionRepository.loadDefaultConfig()
-            // Fetch config to get model/agent names for display
+            
+            // Load providers with models
+            sessionRepository.getProviderInfo().onSuccess { providerResponse ->
+                val (defaultModelId, defaultProviderId) = sessionRepository.getDefaultModelProvider()
+                _state.value = _state.value.copy(
+                    providerInfo = providerResponse,
+                    selectedProviderId = defaultProviderId,
+                    selectedModelId = defaultModelId
+                )
+            }
+            
+            // Load available modes
+            sessionRepository.getModes().onSuccess { modes ->
+                val defaultMode = sessionRepository.getDefaultMode()
+                _state.value = _state.value.copy(
+                    modes = modes,
+                    selectedModeId = defaultMode
+                )
+            }
+            
+            // Update display names
             sessionRepository.getCurrentModelInfo()?.let { (modelName, agentName) ->
                 _state.value = _state.value.copy(
                     modelName = modelName,
                     agentName = agentName
                 )
+            }
+            
+            // Fetch commands
+            loadCommands()
+        }
+    }
+    
+    private fun loadCommands() {
+        screenModelScope.launch {
+            commandRepository.getCommands().collect { resource ->
+                if (resource is Resource.Success) {
+                    val remoteCommands = resource.data.map { cmd ->
+                        TerminalCommand(
+                            trigger = cmd.name,
+                            description = cmd.description ?: "",
+                            action = { 
+                                // Remote commands are executed by sending the command text
+                                updateInputText("/${cmd.name}")
+                                sendMessage() 
+                            }
+                        )
+                    }
+                    _state.value = _state.value.copy(commands = remoteCommands)
+                }
             }
         }
     }
@@ -308,32 +385,102 @@ class ChatScreenModel(
         _inputText.value = text
     }
     
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MODEL/PROVIDER SELECTION
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    fun selectModel(providerId: String, modelId: String) {
+        sessionRepository.setDefaultModel(modelId, providerId)
+        val modelName = modelId.uppercase().replace("-", " ").take(30)
+        _state.value = _state.value.copy(
+            selectedProviderId = providerId,
+            selectedModelId = modelId,
+            modelName = modelName
+        )
+        // Add to recent models
+        screenModelScope.launch {
+            sessionRepository.addRecentModel(providerId, modelId)
+            loadRecentModels()
+        }
+        Napier.i("Selected model: $providerId/$modelId")
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MODE SELECTION
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    fun selectMode(modeId: String?) {
+        val newModeId = modeId ?: "build" // Default to build mode
+        sessionRepository.setDefaultMode(newModeId)
+        val modeName = _state.value.modes.find { it.id == newModeId }?.name ?: newModeId.uppercase()
+        _state.value = _state.value.copy(
+            selectedModeId = newModeId,
+            agentName = modeName.uppercase()
+        )
+        Napier.i("Selected mode: $newModeId")
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FILE ATTACHMENTS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    fun addAttachment(file: AttachedFile) {
+        val current = _state.value.attachedFiles
+        if (current.none { it.id == file.id }) {
+            _state.value = _state.value.copy(
+                attachedFiles = current + file
+            )
+            Napier.i("Added attachment: ${file.name}")
+        }
+    }
+    
+    fun removeAttachment(file: AttachedFile) {
+        _state.value = _state.value.copy(
+            attachedFiles = _state.value.attachedFiles.filter { it.id != file.id }
+        )
+        Napier.i("Removed attachment: ${file.name}")
+    }
+    
+    fun clearAttachments() {
+        _state.value = _state.value.copy(attachedFiles = emptyList())
+    }
+    
     fun sendMessage() {
         val text = _inputText.value.trim()
         if (text.isEmpty()) return
         
-        Napier.i(">>> sendMessage() called with sessionId=$sessionId")
-        Napier.i(">>> SSE connectionStatus=${eventStreamRepository.connectionStatus.value}")
+        // Capture current attachments before clearing
+        val attachments = _state.value.attachedFiles
+        val selectedMode = _state.value.selectedModeId
+        val selectedModel = _state.value.selectedModelId
+        val selectedProvider = _state.value.selectedProviderId
+        
+        Napier.i(">>> sendMessage() with mode=$selectedMode, attachments=${attachments.size}")
         
         // Ensure SSE is connected and monitoring this session
         eventStreamRepository.connect(screenModelScope, sessionId)
         eventStreamRepository.monitorSession(sessionId)
-        Napier.i(">>> After connect: monitorSession($sessionId) called")
         
         screenModelScope.launch {
             // Optimistically add user message to UI
             val userMessage = sessionRepository.createLocalUserMessage(sessionId, text)
             _inputText.value = "" // Clear input immediately
+            clearAttachments() // Clear attachments after capturing
             _state.value = _state.value.copy(
                 isSending = true,
                 isSessionIdle = false,
                 messages = _state.value.messages + userMessage
             )
             
-            Napier.i(">>> Optimistic message added, calling sendMessageAsync for session $sessionId...")
-            
-            // Send message async (response comes via SSE)
-            sessionRepository.sendMessageAsync(sessionId, text).fold(
+            // Send message async with mode and attachments
+            sessionRepository.sendMessageAsync(
+                sessionId = sessionId,
+                text = text,
+                mode = selectedMode,
+                attachments = attachments,
+                modelId = selectedModel.ifEmpty { null },
+                providerId = selectedProvider.ifEmpty { null }
+            ).fold(
                 onSuccess = {
                     // Message sent successfully, waiting for SSE events.
                     // Timeout increased to 120s to handle slow server inference.
@@ -500,6 +647,51 @@ class ChatScreenModel(
                      _state.value = _state.value.copy(isLoading = false, error = error.message)
                 }
             )
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COMMAND EXECUTION
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    fun executeCommand(command: String) {
+        when (command) {
+            "clear" -> clearHistory()
+            "reset" -> resetSession()
+            // "settings" is handled by navigation in UI usually, but we can emit event
+            "settings" -> screenModelScope.launch { /* Navigate to settings */ }
+            else -> Napier.w("Unknown command: $command")
+        }
+    }
+    
+    private fun clearHistory() {
+        screenModelScope.launch {
+             _state.value = _state.value.copy(isLoading = true)
+            sessionRepository.deleteAllSessions().fold(
+                onSuccess = {
+                    // Create new fresh session
+                    sessionRepository.createSession().onSuccess { session ->
+                         _state.value = _state.value.copy(isLoading = false)
+                        _navigationEvent.emit(session.id)
+                    }
+                },
+                onFailure = { error ->
+                    _state.value = _state.value.copy(isLoading = false, error = error.message)
+                }
+            )
+        }
+    }
+    
+    private fun resetSession() {
+        // Just create a new session
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            sessionRepository.createSession().onSuccess { session ->
+                 _state.value = _state.value.copy(isLoading = false)
+                _navigationEvent.emit(session.id)
+            }.onFailure { error ->
+                _state.value = _state.value.copy(isLoading = false, error = error.message)
+            }
         }
     }
 

@@ -145,7 +145,13 @@ class GitScreen : Screen {
                         }
                     )
                     else -> when (selectedTab) {
-                        GitTab.STATUS -> StatusTab(uiState, screenModel)
+                        GitTab.STATUS -> StatusTab(
+                            uiState, 
+                            screenModel, 
+                            onNavigateToDiff = { path, staged -> 
+                                navigator.push(GitDiffScreen(path, staged)) 
+                            }
+                        )
                         GitTab.BRANCHES -> BranchesTab(uiState, screenModel)
                         GitTab.LOG -> LogTab(uiState, screenModel)
                         GitTab.REMOTES -> RemotesTab(uiState)
@@ -190,7 +196,11 @@ class GitScreen : Screen {
 }
 
 @Composable
-private fun StatusTab(uiState: GitUiState, screenModel: GitScreenModel) {
+private fun StatusTab(
+    uiState: GitUiState, 
+    screenModel: GitScreenModel,
+    onNavigateToDiff: (String, Boolean) -> Unit
+) {
     val status = uiState.status
     
     LazyColumn(
@@ -221,7 +231,8 @@ private fun StatusTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 FileChangeItem(
                     change = change,
                     staged = true,
-                    onUnstage = { screenModel.unstageFile(change.path) }
+                    onUnstage = { screenModel.unstageFile(change.path) },
+                    onClick = { onNavigateToDiff(change.path, true) }
                 )
             }
         }
@@ -241,7 +252,8 @@ private fun StatusTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     change = change,
                     staged = false,
                     onStage = { screenModel.stageFile(change.path) },
-                    onDiscard = { screenModel.discardFile(change.path) }
+                    onDiscard = { screenModel.discardFile(change.path) },
+                    onClick = { onNavigateToDiff(change.path, false) }
                 )
             }
         }
@@ -364,37 +376,39 @@ private fun SectionHeader(title: String, action: @Composable (() -> Unit)? = nul
     }
 }
 
-@Composable
-private fun FileChangeItem(
-    change: GitFileChange,
-    staged: Boolean,
-    onStage: (() -> Unit)? = null,
-    onUnstage: (() -> Unit)? = null,
-    onDiscard: (() -> Unit)? = null
-) {
-    val statusColor = when (change.status) {
-        GitFileStatus.ADDED -> TerminalColors.statusOnline
-        GitFileStatus.MODIFIED -> TerminalColors.statusWaiting
-        GitFileStatus.DELETED -> TerminalColors.error
-        GitFileStatus.RENAMED -> TerminalColors.statusOffline
-        else -> TerminalColors.white
-    }
-    
-    val statusChar = when (change.status) {
-        GitFileStatus.ADDED -> "A"
-        GitFileStatus.MODIFIED -> "M"
-        GitFileStatus.DELETED -> "D"
-        GitFileStatus.RENAMED -> "R"
-        else -> "?"
-    }
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
-            .padding(TerminalSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+    @Composable
+    private fun FileChangeItem(
+        change: GitFileChange,
+        staged: Boolean,
+        onStage: (() -> Unit)? = null,
+        onUnstage: (() -> Unit)? = null,
+        onDiscard: (() -> Unit)? = null,
+        onClick: (() -> Unit)? = null
     ) {
+        val statusColor = when (change.status) {
+            GitFileStatus.ADDED -> TerminalColors.statusOnline
+            GitFileStatus.MODIFIED -> TerminalColors.statusWaiting
+            GitFileStatus.DELETED -> TerminalColors.error
+            GitFileStatus.RENAMED -> TerminalColors.statusOffline
+            else -> TerminalColors.white
+        }
+        
+        val statusChar = when (change.status) {
+            GitFileStatus.ADDED -> "A"
+            GitFileStatus.MODIFIED -> "M"
+            GitFileStatus.DELETED -> "D"
+            GitFileStatus.RENAMED -> "R"
+            else -> "?"
+        }
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+                .clickable { onClick?.invoke() }
+                .padding(TerminalSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
         // Status
         Box(
             modifier = Modifier

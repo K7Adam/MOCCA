@@ -11,6 +11,5 @@ appId: com.mocca.app
 
 # Platform settings
 platform: android
-
 # NOTE: Maestro CLI does not support a "default serial" in this config.
 # Use the --device flag or run-emulator-tests.ps1 to target specific devices.

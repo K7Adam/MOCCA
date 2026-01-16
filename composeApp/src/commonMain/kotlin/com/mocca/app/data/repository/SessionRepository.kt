@@ -142,6 +142,22 @@ class SessionRepository(
     }
 
     /**
+     * Get recently used models.
+     */
+    suspend fun getRecentModels(): List<RecentModel> {
+        return localCache.getRecentModels()
+    }
+    
+    /**
+     * Add or update a recent model.
+     */
+    suspend fun addRecentModel(providerId: String, modelId: String) {
+        val now = Clock.System.now().toEpochMilliseconds() // or System.currentTimeMillis() if using java.lang.System
+        // Clock is imported from kotlinx.datetime
+        localCache.insertRecentModel(RecentModel(providerId, modelId, now))
+    }
+
+    /**
      * Get messages for a session with caching.
      */
     fun getMessages(sessionId: String): Flow<Resource<List<Message>>> = flow {
@@ -175,15 +191,34 @@ class SessionRepository(
     /**
      * Send a message to a session (async - uses SSE for streaming response).
      * Returns immediately, use SSE events to track progress.
+     * @param sessionId The session ID
+     * @param text The message text
+     * @param mode Optional mode override (uses default if null)
+     * @param attachments Optional file attachments
+     * @param modelId Optional model override
+     * @param providerId Optional provider override
      */
-    suspend fun sendMessageAsync(sessionId: String, text: String): Result<Unit> {
-        val parts = listOf(ChatPart.Text(text = text))
+    suspend fun sendMessageAsync(
+        sessionId: String,
+        text: String,
+        mode: String? = null,
+        attachments: List<AttachedFile> = emptyList(),
+        modelId: String? = null,
+        providerId: String? = null
+    ): Result<Unit> {
+        // Build parts list: text + any file attachments
+        val parts = buildList {
+            add(ChatPart.Text(text = text))
+            attachments.forEach { file ->
+                add(file.toChatPart())
+            }
+        }
         return apiClient.chatAsync(
             sessionId = sessionId,
-            modelId = defaultModelId,
-            providerId = defaultProviderId,
+            modelId = modelId ?: defaultModelId,
+            providerId = providerId ?: defaultProviderId,
             parts = parts,
-            mode = defaultMode
+            mode = mode ?: defaultMode
         )
     }
 
@@ -422,6 +457,34 @@ class SessionRepository(
      */
     fun setDefaultMode(mode: String) {
         defaultMode = mode
+    }
+    
+    /**
+     * Get available providers with their models.
+     */
+    suspend fun getProviderInfo(): Result<ProviderResponse> {
+        return apiClient.getProviderInfo()
+    }
+    
+    /**
+     * Get available modes.
+     */
+    suspend fun getModes(): Result<List<Mode>> {
+        return apiClient.getModes()
+    }
+    
+    /**
+     * Get current default model and provider IDs.
+     */
+    fun getDefaultModelProvider(): Pair<String, String> {
+        return Pair(defaultModelId, defaultProviderId)
+    }
+    
+    /**
+     * Get current default mode.
+     */
+    fun getDefaultMode(): String {
+        return defaultMode
     }
     
     /**

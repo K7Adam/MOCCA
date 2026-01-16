@@ -151,7 +151,7 @@ class MoccaApiClient(
         }.body()
     }
     
-    // Permissions (new API matching OpenChamber SDK)
+    // Permissions
     /**
      * Reply to a permission request using the new permission.reply API.
      * @param requestId The permission request ID

@@ -18,6 +18,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -147,7 +150,7 @@ fun TerminalInput(
 
 /**
  * Rich chat input field with status bar and action toolbar.
- * Main input field for chat screen as per mockups.
+ * Main input field for chat screen with model selection, mode toggle, and attachments.
  */
 @Composable
 fun RichChatInput(
@@ -155,23 +158,124 @@ fun RichChatInput(
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier,
-    modelName: String = "CLAUDE OPUS 4.5",
-    agentName: String = "SISYPHUS",
+    modelName: String = "CLAUDE",
+    agentName: String = "BUILD",
     placeholder: String = "Input instruction...",
     enabled: Boolean = true,
-    isPlanMode: Boolean = false,
-    onPlanModeToggle: () -> Unit = {},
-    onMentionClick: () -> Unit = {},
-    onCommandClick: () -> Unit = {},
-    onAttachClick: () -> Unit = {}
+    // Model selection
+    providerResponse: com.mocca.app.domain.model.ProviderResponse? = null,
+    selectedProviderId: String = "",
+    selectedModelId: String = "",
+    onModelSelected: (providerId: String, modelId: String) -> Unit = { _, _ -> },
+    recentModels: List<com.mocca.app.domain.model.RecentModel> = emptyList(),
+    // Mode selection
+    modes: List<com.mocca.app.domain.model.Mode> = emptyList(),
+    selectedModeId: String? = null,
+    onModeSelected: (String?) -> Unit = {},
+    // Attachments
+    attachedFiles: List<com.mocca.app.domain.model.AttachedFile> = emptyList(),
+    onRemoveAttachment: (com.mocca.app.domain.model.AttachedFile) -> Unit = {},
+    onAttachClick: () -> Unit = {},
+
+    // Command/Mention callbacks
+    commands: List<com.mocca.app.util.TerminalCommand> = emptyList(),
+    onCommandSelected: (com.mocca.app.util.TerminalCommand) -> Unit = {},
+    onModeSelectedForMention: (com.mocca.app.domain.model.Mode) -> Unit = {}
 ) {
+    var showModelSelector by remember { mutableStateOf(false) }
+    
+    // Suggestion state
+    var showSuggestions by remember { mutableStateOf(false) }
+    var suggestionQuery by remember { mutableStateOf("") }
+    var suggestionType by remember { mutableStateOf<SuggestionType?>(null) }
+    
+    // Calculate suggestions based on input
+    val currentSuggestions = remember(value, showSuggestions, suggestionType, suggestionQuery, modes, commands) {
+        if (!showSuggestions || suggestionType == null) emptyList<SuggestionItem>()
+        else {
+            val query = suggestionQuery.lowercase()
+            when (suggestionType) {
+                SuggestionType.COMMAND -> {
+                    commands.filter { 
+                        it.trigger.lowercase().contains(query) 
+                    }.map { 
+                        SuggestionItem(it.trigger, it.trigger, it.description, SuggestionType.COMMAND) 
+                    }
+                }
+                SuggestionType.MODE -> {
+                    modes.filter { 
+                        it.name.lowercase().contains(query) || it.id.lowercase().contains(query)
+                    }.map { 
+                        SuggestionItem(it.id, it.name.uppercase(), it.description, SuggestionType.MODE) 
+                    }
+                }
+                else -> emptyList<SuggestionItem>()
+            }
+        }
+    }
+
+    // Handle input changes to detect triggers
+    val handleValueChange = { newValue: String ->
+        onValueChange(newValue)
+        
+        // Simple regex to find trigger at end of string or single word
+        // Slash command: starts with /
+        if (newValue.startsWith("/")) {
+            suggestionType = SuggestionType.COMMAND
+            suggestionQuery = newValue.drop(1)
+            showSuggestions = true
+        } 
+        // Mention: @ at word boundary
+        else {
+            val lastAt = newValue.lastIndexOf('@')
+            if (lastAt != -1 && (lastAt == 0 || newValue[lastAt - 1].isWhitespace())) {
+                suggestionType = SuggestionType.MODE
+                suggestionQuery = newValue.substring(lastAt + 1)
+                showSuggestions = true
+            } else {
+                showSuggestions = false
+            }
+        }
+        
+        if (newValue.isEmpty()) {
+            showSuggestions = false
+        }
+    }
+    
+    // Handle suggestion selection
+    val onSuggestionSelected = { item: SuggestionItem ->
+        when (item.type) {
+            SuggestionType.COMMAND -> {
+                // Command selected: replace input with command trigger (or execute immediately?)
+                // For now, let's just complete the command text
+                onValueChange("/${item.id}")
+                // Optionally execute immediately? usually user presses enter
+                showSuggestions = false
+            }
+            SuggestionType.MODE -> {
+                // Mode selected: set the mode and remove the @mention text
+                val mode = modes.find { it.id == item.id }
+                if (mode != null) {
+                    onModeSelectedForMention(mode)
+                    // Remove the @query part from input
+                    val lastAt = value.lastIndexOf('@')
+                    if (lastAt != -1) {
+                         val prefix = value.substring(0, lastAt)
+                         onValueChange(prefix)
+                    }
+                }
+                showSuggestions = false
+            }
+        }
+    }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(TerminalColors.background, RectangleShape)
             .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
     ) {
-        // Status bar (MODEL + AGENT)
+        // Status bar (MODEL + MODE) - clickable to open selectors
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -180,13 +284,29 @@ fun RichChatInput(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // Model selector (clickable)
+            Row(
+                modifier = Modifier
+                    .clickable(enabled = providerResponse != null) { showModelSelector = true },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "MODEL: $modelName".uppercase(),
+                    color = if (providerResponse != null) TerminalColors.greyLight else TerminalColors.grey,
+                    style = TerminalTypography.labelSmall
+                )
+                if (providerResponse != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "▼",
+                        color = TerminalColors.grey,
+                        style = TerminalTypography.labelSmall
+                    )
+                }
+            }
+            
             Text(
-                text = "MODEL: $modelName".uppercase(),
-                color = TerminalColors.grey,
-                style = TerminalTypography.labelSmall
-            )
-            Text(
-                text = "AGENT: $agentName".uppercase(),
+                text = "MODE: $agentName".uppercase(),
                 color = TerminalColors.grey,
                 style = TerminalTypography.labelSmall
             )
@@ -198,6 +318,28 @@ fun RichChatInput(
             color = TerminalColors.border
         )
         
+        // Attached files display (if any)
+        if (attachedFiles.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TerminalSpacing.inputPadding, vertical = TerminalSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+            ) {
+                attachedFiles.forEach { file ->
+                    AttachmentChip(
+                        file = file,
+                        onRemove = { onRemoveAttachment(file) }
+                    )
+                }
+            }
+            
+            HorizontalDivider(
+                thickness = TerminalSpacing.borderThin,
+                color = TerminalColors.border
+            )
+        }
+        
         // Input area
         Box(
             modifier = Modifier
@@ -207,7 +349,7 @@ fun RichChatInput(
         ) {
             BasicTextField(
                 value = value,
-                onValueChange = onValueChange,
+                onValueChange = handleValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = enabled,
                 textStyle = TerminalTypography.bodyMedium.copy(
@@ -236,6 +378,16 @@ fun RichChatInput(
                     }
                 }
             )
+
+            
+            // Suggestions popup anchored to input
+            if (showSuggestions && currentSuggestions.isNotEmpty()) {
+                SuggestionPopup(
+                    suggestions = currentSuggestions,
+                    onSuggestionSelected = onSuggestionSelected,
+                    onDismiss = { showSuggestions = false }
+                )
+            }
         }
         
         // Divider
@@ -244,7 +396,7 @@ fun RichChatInput(
             color = TerminalColors.border
         )
         
-        // Action toolbar
+        // Action toolbar with mode buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -252,18 +404,18 @@ fun RichChatInput(
                 .padding(horizontal = TerminalSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // @ mention button
+            // @ mention button - inserts @
             TerminalIconButton(
                 icon = Icons.Default.Add,
-                onClick = onMentionClick,
+                onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
                 size = 36.dp,
                 iconColor = TerminalColors.greyLight
             )
             
-            // / command button
+            // / command button - inserts /
             TerminalTextButton(
                 text = "/",
-                onClick = onCommandClick,
+                onClick = { handleValueChange("/") },
                 textColor = TerminalColors.greyLight
             )
             
@@ -276,12 +428,25 @@ fun RichChatInput(
             )
             Spacer(modifier = Modifier.width(TerminalSpacing.xs))
             
-            // Plan mode toggle
-            TerminalTextButton(
-                text = if (isPlanMode) "* PLAN" else "PLAN",
-                onClick = onPlanModeToggle,
-                textColor = if (isPlanMode) TerminalColors.white else TerminalColors.greyLight
-            )
+            // Mode selector buttons
+            if (modes.isNotEmpty()) {
+                modes.take(3).forEach { mode ->
+                    val isSelected = mode.id == selectedModeId
+                    TerminalTextButton(
+                        text = if (isSelected) "* ${mode.name.uppercase()}" else mode.name.uppercase(),
+                        onClick = { onModeSelected(if (isSelected) null else mode.id) },
+                        textColor = if (isSelected) TerminalColors.white else TerminalColors.greyLight
+                    )
+                    Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                }
+            } else {
+                // Fallback static mode button
+                TerminalTextButton(
+                    text = "* ${agentName.uppercase()}",
+                    onClick = { },
+                    textColor = TerminalColors.white
+                )
+            }
             
             Spacer(modifier = Modifier.weight(1f))
             
@@ -303,6 +468,63 @@ fun RichChatInput(
                 icon = Icons.AutoMirrored.Filled.Send
             )
         }
+    }
+    
+    // Model selector dialog
+    if (showModelSelector && providerResponse != null) {
+        ModelSelectorDialog(
+            providerResponse = providerResponse,
+            selectedProviderId = selectedProviderId,
+            selectedModelId = selectedModelId,
+            onModelSelected = onModelSelected,
+            recentModels = recentModels,
+            onDismiss = { showModelSelector = false }
+        )
+    }
+}
+
+/**
+ * Chip showing an attached file with remove button.
+ */
+@Composable
+private fun AttachmentChip(
+    file: com.mocca.app.domain.model.AttachedFile,
+    onRemove: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .background(TerminalColors.surface, RectangleShape)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+            .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.AttachFile,
+            contentDescription = null,
+            tint = TerminalColors.grey,
+            modifier = Modifier.size(12.dp)
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = file.name.take(20),
+            style = TerminalTypography.labelSmall,
+            color = TerminalColors.greyLight
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Text(
+            text = "(${file.displaySize})",
+            style = TerminalTypography.labelSmall,
+            color = TerminalColors.grey
+        )
+        Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+        Icon(
+            Icons.Default.Close,
+            contentDescription = "Remove",
+            tint = TerminalColors.grey,
+            modifier = Modifier
+                .size(14.dp)
+                .clickable { onRemove() }
+        )
     }
 }
 

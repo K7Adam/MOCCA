@@ -670,3 +670,13 @@ data class SessionRevertInfo(
     @SerialName("messageID")
     val messageID: String
 )
+
+/**
+ * Recent model entry for UI persistence.
+ */
+@Serializable
+data class RecentModel(
+    val providerId: String,
+    val modelId: String,
+    val lastUsedAt: Long
+)

@@ -3,6 +3,7 @@ package com.mocca.app.data.repository
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
+import com.mocca.app.data.repository.GitParsers.parseDiff
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,7 +13,8 @@ import kotlinx.coroutines.flow.flow
  */
 class GitRepository(
     private val apiClient: MoccaApiClient,
-    private val localCache: LocalCache
+    private val localCache: LocalCache,
+    private val gitService: GitService
 ) {
     /**
      * Get current Git status with staged, unstaged, and untracked files.
@@ -32,8 +34,22 @@ class GitRepository(
                 localCache.saveGitStatus(status)
                 emit(Resource.Success(status))
             }
-            .onFailure { error ->
-                emit(Resource.Error(error.message ?: "Failed to get Git status", cached))
+            .onFailure { 
+                // Fallback to GitService
+                gitService.execute("git status --porcelain=v2 -b").fold(
+                    onSuccess = { output ->
+                        try {
+                            val status = GitParsers.parseStatus(output)
+                            localCache.saveGitStatus(status)
+                            emit(Resource.Success(status))
+                        } catch (e: Exception) {
+                            emit(Resource.Error("Failed to parse git status: ${e.message}", cached))
+                        }
+                    },
+                    onFailure = { e ->
+                        emit(Resource.Error(e.message ?: "Failed to get Git status", cached))
+                    }
+                )
             }
     }
     
@@ -47,8 +63,20 @@ class GitRepository(
             .onSuccess { branches ->
                 emit(Resource.Success(branches))
             }
-            .onFailure { error ->
-                emit(Resource.Error(error.message ?: "Failed to get branches"))
+            .onFailure {
+                gitService.execute("git branch -vv -a").fold(
+                    onSuccess = { output ->
+                        try {
+                            val branches = GitParsers.parseBranches(output)
+                            emit(Resource.Success(branches))
+                        } catch (e: Exception) {
+                            emit(Resource.Error("Failed to parse branches: ${e.message}"))
+                        }
+                    },
+                    onFailure = { e ->
+                        emit(Resource.Error(e.message ?: "Failed to get branches"))
+                    }
+                )
             }
     }
     
@@ -66,8 +94,21 @@ class GitRepository(
             .onSuccess { log ->
                 emit(Resource.Success(log))
             }
-            .onFailure { error ->
-                emit(Resource.Error(error.message ?: "Failed to get commit log"))
+            .onFailure {
+                val b = branch ?: "HEAD"
+                gitService.execute("git log $b --pretty=format:\"%H|%h|%s|%an|%ae|%at|%P\" -n $limit --skip $skip").fold(
+                    onSuccess = { output ->
+                        try {
+                            val log = GitParsers.parseLog(output)
+                            emit(Resource.Success(log))
+                        } catch (e: Exception) {
+                            emit(Resource.Error("Failed to parse log: ${e.message}"))
+                        }
+                    },
+                    onFailure = { e ->
+                        emit(Resource.Error(e.message ?: "Failed to get commit log"))
+                    }
+                )
             }
     }
     
@@ -84,8 +125,24 @@ class GitRepository(
             .onSuccess { diff ->
                 emit(Resource.Success(diff))
             }
-            .onFailure { error ->
-                emit(Resource.Error(error.message ?: "Failed to get diff"))
+            .onFailure {
+                val cmd = StringBuilder("git diff")
+                if (cached) cmd.append(" --cached")
+                if (ref != null) cmd.append(" $ref")
+                
+                gitService.execute(cmd.toString()).fold(
+                    onSuccess = { output ->
+                        try {
+                            val diff = GitParsers.parseDiff(output)
+                            emit(Resource.Success(diff))
+                        } catch (e: Exception) {
+                            emit(Resource.Error("Failed to parse diff: ${e.message}"))
+                        }
+                    },
+                    onFailure = { e ->
+                        emit(Resource.Error(e.message ?: "Failed to get diff"))
+                    }
+                )
             }
     }
     
@@ -93,12 +150,14 @@ class GitRepository(
      * Stage files for commit.
      */
     suspend fun stage(files: List<String>): Result<GitOperationResult> {
-        return apiClient.gitStage(files).also { result ->
+        return apiClient.gitStage(files).recoverCatching {
+            gitService.execute("git add ${files.joinToString(" ")}").map { 
+                GitOperationResult(true, "Staged ${files.size} files")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
                 // Refresh status after staging
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {} // Force refresh cache
             }
         }
     }
@@ -107,11 +166,13 @@ class GitRepository(
      * Unstage files.
      */
     suspend fun unstage(files: List<String>): Result<GitOperationResult> {
-        return apiClient.gitUnstage(files).also { result ->
+        return apiClient.gitUnstage(files).recoverCatching {
+            gitService.execute("git restore --staged ${files.joinToString(" ")}").map {
+                GitOperationResult(true, "Unstaged ${files.size} files")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {}
             }
         }
     }
@@ -120,11 +181,13 @@ class GitRepository(
      * Discard changes to files.
      */
     suspend fun discard(files: List<String>): Result<GitOperationResult> {
-        return apiClient.gitDiscard(files).also { result ->
+        return apiClient.gitDiscard(files).recoverCatching {
+            gitService.execute("git restore ${files.joinToString(" ")}").map {
+                GitOperationResult(true, "Discarded changes")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {}
             }
         }
     }
@@ -137,11 +200,15 @@ class GitRepository(
         files: List<String>? = null,
         amend: Boolean = false
     ): Result<GitOperationResult> {
-        return apiClient.gitCommit(message, files, amend).also { result ->
+        return apiClient.gitCommit(message, files, amend).recoverCatching {
+            val cmd = StringBuilder("git commit -m \"$message\"")
+            if (amend) cmd.append(" --amend")
+            gitService.execute(cmd.toString()).map {
+                GitOperationResult(true, "Commit successful")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {}
             }
         }
     }
@@ -155,7 +222,15 @@ class GitRepository(
         force: Boolean = false,
         setUpstream: Boolean = false
     ): Result<GitOperationResult> {
-        return apiClient.gitPush(remote, branch, force, setUpstream)
+        return apiClient.gitPush(remote, branch, force, setUpstream).recoverCatching {
+            val cmd = StringBuilder("git push $remote")
+            if (branch != null) cmd.append(" $branch")
+            if (force) cmd.append(" --force")
+            if (setUpstream) cmd.append(" -u")
+            gitService.execute(cmd.toString()).map {
+                GitOperationResult(true, "Push successful")
+            }.getOrThrow()
+        }
     }
     
     /**
@@ -166,11 +241,16 @@ class GitRepository(
         branch: String? = null,
         rebase: Boolean = false
     ): Result<GitOperationResult> {
-        return apiClient.gitPull(remote, branch, rebase).also { result ->
+        return apiClient.gitPull(remote, branch, rebase).recoverCatching {
+            val cmd = StringBuilder("git pull $remote")
+            if (branch != null) cmd.append(" $branch")
+            if (rebase) cmd.append(" --rebase")
+            gitService.execute(cmd.toString()).map {
+                GitOperationResult(true, "Pull successful")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {}
             }
         }
     }
@@ -183,7 +263,14 @@ class GitRepository(
         prune: Boolean = false,
         all: Boolean = false
     ): Result<GitOperationResult> {
-        return apiClient.gitFetch(remote, prune, all)
+        return apiClient.gitFetch(remote, prune, all).recoverCatching {
+            val cmd = StringBuilder("git fetch $remote")
+            if (prune) cmd.append(" --prune")
+            if (all) cmd.append(" --all")
+            gitService.execute(cmd.toString()).map {
+                GitOperationResult(true, "Fetch successful")
+            }.getOrThrow()
+        }
     }
     
     /**
@@ -194,11 +281,17 @@ class GitRepository(
         create: Boolean = false,
         force: Boolean = false
     ): Result<GitOperationResult> {
-        return apiClient.gitCheckout(ref, create, force).also { result ->
+        return apiClient.gitCheckout(ref, create, force).recoverCatching {
+            val cmd = StringBuilder("git checkout")
+            if (create) cmd.append(" -b")
+            if (force) cmd.append(" -f")
+            cmd.append(" $ref")
+            gitService.execute(cmd.toString()).map {
+                GitOperationResult(true, "Checkout successful")
+            }.getOrThrow()
+        }.also { result ->
             result.onSuccess {
-                apiClient.getGitStatus().onSuccess { status ->
-                    localCache.saveGitStatus(status)
-                }
+                getStatus().collect {}
             }
         }
     }
@@ -213,8 +306,20 @@ class GitRepository(
             .onSuccess { remotes ->
                 emit(Resource.Success(remotes))
             }
-            .onFailure { error ->
-                emit(Resource.Error(error.message ?: "Failed to get remotes"))
+            .onFailure {
+                gitService.execute("git remote -v").fold(
+                    onSuccess = { output ->
+                        try {
+                            val remotes = GitParsers.parseRemotes(output)
+                            emit(Resource.Success(remotes))
+                        } catch (e: Exception) {
+                            emit(Resource.Error("Failed to parse remotes: ${e.message}"))
+                        }
+                    },
+                    onFailure = { e ->
+                        emit(Resource.Error(e.message ?: "Failed to get remotes"))
+                    }
+                )
             }
     }
     

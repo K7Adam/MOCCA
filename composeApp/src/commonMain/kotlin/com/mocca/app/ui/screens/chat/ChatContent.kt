@@ -35,6 +35,11 @@ import com.mocca.app.ui.theme.TerminalTypography
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
+import com.mocca.app.util.FilePickerHelper
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import kotlinx.coroutines.launch
+import com.mocca.app.ui.components.terminal.SuggestionType
 
 @Composable
 fun ChatContent(screenModel: ChatScreenModel) {
@@ -43,6 +48,31 @@ fun ChatContent(screenModel: ChatScreenModel) {
     val streamingText by screenModel.streamingText.collectAsState() // PERFORMANCE FIX: Separate streaming text
     val messages by screenModel.aggregatedMessages.collectAsState()
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Command definitions
+    // Command definitions
+    // Command definitions
+    // Only use commands fetched from API
+    val commands = state.commands
+    
+    // File picker launcher using FileKit
+    val filePickerLauncher = rememberFilePickerLauncher(
+        type = FilePickerHelper.createFileType(),
+        mode = FileKitMode.Multiple()
+    ) { files ->
+        files?.forEach { file ->
+            coroutineScope.launch {
+                try {
+                    val attached = FilePickerHelper.toAttachedFile(file)
+                    screenModel.addAttachment(attached)
+                } catch (e: Exception) {
+                    // Log error but don't crash
+                    io.github.aakira.napier.Napier.e("Failed to attach file", e)
+                }
+            }
+        }
+    }
     
     // Auto-scroll (reverseLayout: 0 is bottom)
     LaunchedEffect(messages.size, streamingText) {
@@ -164,7 +194,32 @@ fun ChatContent(screenModel: ChatScreenModel) {
             onSendClick = { screenModel.sendMessage() },
             enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
             modelName = state.modelName,
-            agentName = state.agentName
+            agentName = state.agentName,
+            // Model selection
+            providerResponse = state.providerInfo,
+            selectedProviderId = state.selectedProviderId,
+            selectedModelId = state.selectedModelId,
+            onModelSelected = { providerId, modelId -> 
+                screenModel.selectModel(providerId, modelId) 
+            },
+            recentModels = state.recentModels,
+            // Mode selection
+            // Mode selection
+            modes = state.modes,
+            selectedModeId = state.selectedModeId,
+            onModeSelected = { screenModel.selectMode(it) },
+            // Attachments
+            attachedFiles = state.attachedFiles,
+            onRemoveAttachment = { screenModel.removeAttachment(it) },
+            onAttachClick = { filePickerLauncher.launch() },
+            // Command/Mention
+            commands = commands,
+            onCommandSelected = { cmd -> 
+                coroutineScope.launch { cmd.action() } 
+            },
+            onModeSelectedForMention = { mode -> 
+                screenModel.selectMode(mode.id) 
+            }
         )
     }
 }

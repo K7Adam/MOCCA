@@ -11,6 +11,7 @@ import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.files.FilesScreenModel
+import com.mocca.app.ui.screens.git.GitDiffScreenModel
 import com.mocca.app.ui.screens.git.GitScreenModel
 import com.mocca.app.ui.screens.main.MainScreenModel
 import com.mocca.app.ui.screens.mcp.McpScreenModel
@@ -68,9 +69,13 @@ val commonModule = module {
             localCache = get()
         )
     }
+    
+    // Services
+    single { GitService(get(), get(), get(), get()) }
+    
     singleOf(::FileRepository)
     singleOf(::TerminalRepository)
-    single { GitRepository(get(), get()) }
+    single { GitRepository(get(), get(), get()) }
     single { McpRepository(get()) }
     
     // New repositories for OpenCode features
@@ -123,7 +128,8 @@ val screenModelModule = module {
         ChatScreenModel(
             initialSessionId = params.getOrNull(),
             sessionRepository = get(),
-            eventStreamRepository = get()
+            eventStreamRepository = get(),
+            commandRepository = get()
         )
     }
     
@@ -143,6 +149,13 @@ val screenModelModule = module {
     
     // Git screen
     factoryOf(::GitScreenModel)
+    
+    // Git Diff screen
+    factory { params ->
+        GitDiffScreenModel(
+            gitRepository = get()
+        )
+    }
     
     // MCP screen
     factory {

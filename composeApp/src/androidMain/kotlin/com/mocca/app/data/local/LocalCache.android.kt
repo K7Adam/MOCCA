@@ -24,6 +24,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     private val sessionQueries get() = database.sessionQueries
     private val messageQueries get() = database.messageQueries
     private val serverConfigQueries get() = database.serverConfigQueries
+    private val recentModelQueries get() = database.recentModelQueries
     
     private val json = Json { ignoreUnknownKeys = true }
     
@@ -501,6 +502,35 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             database.fileInfoQueries.hasFreshCacheForPath(parentPath ?: "", threshold).executeAsOne() > 0
         } catch (e: Exception) {
             false
+        }
+    }
+
+    // ==================== Recent Models ====================
+    
+    override suspend fun getRecentModels(): List<com.mocca.app.domain.model.RecentModel> {
+        return try {
+            recentModelQueries.selectRecent().executeAsList().map { 
+                com.mocca.app.domain.model.RecentModel(it.providerId, it.modelId, it.lastUsedAt) 
+            }
+        } catch (e: Exception) {
+            Napier.w("Failed to get recent models", e)
+            emptyList()
+        }
+    }
+    
+    override suspend fun insertRecentModel(recentModel: RecentModel) {
+        try {
+            database.transaction {
+                recentModelQueries.insertRecent(
+                    providerId = recentModel.providerId, 
+                    modelId = recentModel.modelId, 
+                    lastUsedAt = recentModel.lastUsedAt
+                )
+                // Cleanup old entries (keep top 5)
+                recentModelQueries.deleteOldest()
+            }
+        } catch (e: Exception) {
+            Napier.w("Failed to insert recent model", e)
         }
     }
 

@@ -4,4 +4,7 @@
 appId: com.mocca.app
 ---
 - launchApp:
-    clearState: ${CLEAR_STATE == 'true'}
+    clearState: true
+- extendedWaitUntil:
+    visible: "PROBING_HOST..."
+    timeout: 30000

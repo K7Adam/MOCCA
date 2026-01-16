@@ -5,5 +5,5 @@ appId: com.mocca.app
 ---
 # Wait for either the quote rotator (empty state) or chat content
 - extendedWaitUntil:
-    visible: ".*"
-    timeout: 10000
+    visible: "SEND"
+    timeout: 60000
