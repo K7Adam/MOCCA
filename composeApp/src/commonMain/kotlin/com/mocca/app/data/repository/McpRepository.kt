@@ -48,14 +48,42 @@ class McpRepository(
         
         return apiClient.getMcpStatus(directory).fold(
             onSuccess = { statusMap ->
-                val servers = statusMap.mapValues { (name, status) ->
-                    McpServerInfo(
-                        name = name,
-                        status = status,
-                        config = null
-                    )
+                _mcpServers.update { current ->
+                    statusMap.mapValues { (name, newStatus) ->
+                        val currentServer = current[name]
+                        val currentStatus = currentServer?.status?.status
+
+                        val effectiveStatus = when {
+                            // If locally CONNECTING, ignore updates unless it's a final state (CONNECTED or FAILED)
+                            currentServer?.isTransitioning == true && currentStatus == McpConnectionStatus.CONNECTING -> {
+                                if (newStatus.status == McpConnectionStatus.CONNECTED || newStatus.status == McpConnectionStatus.FAILED) {
+                                    newStatus
+                                } else {
+                                    currentServer.status
+                                }
+                            }
+                            // If locally DISCONNECTING, ignore updates unless it's a final state (DISCONNECTED/DISABLED or FAILED)
+                            currentServer?.isTransitioning == true && currentStatus == McpConnectionStatus.DISCONNECTING -> {
+                                if (newStatus.status == McpConnectionStatus.DISCONNECTED || 
+                                    newStatus.status == McpConnectionStatus.DISABLED || 
+                                    newStatus.status == McpConnectionStatus.FAILED) {
+                                    newStatus
+                                } else {
+                                    currentServer.status
+                                }
+                            }
+                            else -> newStatus
+                        }
+
+                        McpServerInfo(
+                            name = name,
+                            status = effectiveStatus,
+                            config = null
+                        )
+                    }
                 }
-                _mcpServers.value = servers
+                
+                val servers = _mcpServers.value
                 _isLoading.value = false
                 Napier.d("MCP status refreshed: ${servers.size} servers")
                 Resource.Success(servers)
@@ -96,6 +124,8 @@ class McpRepository(
      */
     suspend fun disconnect(name: String, directory: String? = null): Resource<Unit> {
         Napier.d("Disconnecting from MCP server: $name")
+        
+        updateServerStatus(name, McpConnectionStatus.DISCONNECTING)
         
         return apiClient.disconnectMcp(name, directory).fold(
             onSuccess = {

@@ -11,10 +11,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 /**
- * Git API Client using the MOCCA Git HTTP Proxy Server.
+ * Git API Client using the integrated Git HTTP server.
  * 
- * The Git server runs on port 4097 (adjacent to OpenCode's 4096) and provides
- * fast, reliable REST endpoints for all Git operations.
+ * The Git server runs on port 4097 (separate from OpenCode's 4096) and is
+ * automatically started by the git-plugin.js when `opencode serve` launches.
+ * This provides fast, reliable REST endpoints for all Git operations.
  */
 class GitApiClient(
     private val httpClientProvider: HttpClientProvider,
@@ -23,7 +24,7 @@ class GitApiClient(
 ) {
     companion object {
         private const val TAG = "GitApiClient"
-        // Git server runs on port 4097
+        // Git HTTP server runs on port 4097 (OpenCode plugin auto-starts it)
         private const val GIT_SERVER_PORT = 4097
     }
 
@@ -31,12 +32,33 @@ class GitApiClient(
         return httpClientProvider.getClientSync()
     }
 
-    // Git server base URL - same host as OpenCode but different port
+    /**
+     * Git server base URL - uses same host as OpenCode but on port 4097.
+     * The git-plugin.js embedded in OpenCode automatically starts an HTTP server
+     * on port 4097 when `opencode serve` runs.
+     *
+     * IMPORTANT: Git server ALWAYS uses HTTP (not HTTPS) because it's a
+     * local development server that doesn't configure SSL/TLS.
+     */
     private val gitServerUrl: String
         get() {
-            val openCodeUrl = serverConfigProvider().baseUrl.trimEnd('/')
-            // Replace port in the URL from OpenCode's port to Git server port
-            return openCodeUrl.replace(Regex(":\\d+$"), ":$GIT_SERVER_PORT")
+            val config = serverConfigProvider()
+            // Extract host from baseUrl and use Git server port
+            val baseUrl = config.baseUrl.trimEnd('/')
+            return try {
+                // Extract hostname without scheme or port
+                val regex = Regex("""https?://([^:/]+)""")
+                val match = regex.find(baseUrl)
+                if (match != null) {
+                    // Force HTTP for git server (never HTTPS)
+                    "http://${match.groupValues[1]}:$GIT_SERVER_PORT"
+                } else {
+                    // Fallback: assume localhost
+                    "http://127.0.0.1:$GIT_SERVER_PORT"
+                }
+            } catch (e: Exception) {
+                "http://127.0.0.1:$GIT_SERVER_PORT"
+            }
         }
 
     // --- Response models ---
@@ -179,7 +201,7 @@ class GitApiClient(
     // --- Git Operations ---
 
     suspend fun getStatus(): Result<GitStatusResponse> = safeCall("getStatus") {
-        val response: GitServerStatus = getClient().get("$gitServerUrl/git/status").body()
+        val response: GitServerStatus = getClient().get("$gitServerUrl/status").body()
         
         GitStatusResponse(
             branch = response.branch,
@@ -217,7 +239,7 @@ class GitApiClient(
         branch: String? = null
     ): Result<GitLog> = safeCall("getLog") {
         val encodedBranch = branch?.encodeURLParameter()
-        val url = "$gitServerUrl/git/log?limit=$limit&skip=$skip" +
+        val url = "$gitServerUrl/log?limit=$limit&skip=$skip" +
             (encodedBranch?.let { "&branch=$it" } ?: "")
         
         val response: GitServerLog = getClient().get(url).body()
@@ -241,7 +263,7 @@ class GitApiClient(
     }
 
     suspend fun getBranches(): Result<List<GitBranch>> = safeCall("getBranches") {
-        val response: GitServerBranches = getClient().get("$gitServerUrl/git/branches").body()
+        val response: GitServerBranches = getClient().get("$gitServerUrl/branches").body()
         
         response.branches.map {
             GitBranch(
@@ -257,7 +279,7 @@ class GitApiClient(
         cached: Boolean = false
     ): Result<GitDiff> = safeCall("getDiff") {
         val encodedPath = path?.encodeURLParameter()
-        val url = "$gitServerUrl/git/diff?cached=$cached" +
+        val url = "$gitServerUrl/diff?cached=$cached" +
             (encodedPath?.let { "&path=$it" } ?: "")
         
         val response: GitServerDiff = getClient().get(url) {
@@ -290,7 +312,7 @@ class GitApiClient(
         files: List<String>? = null,
         amend: Boolean = false
     ): Result<GitOperationResult> = safeCall("commit") {
-        val response = getClient().post("$gitServerUrl/git/commit") {
+        val response = getClient().post("$gitServerUrl/commit") {
             contentType(ContentType.Application.Json)
             setBody(GitCommitRequest(
                 message = message,
@@ -313,7 +335,7 @@ class GitApiClient(
         force: Boolean = false,
         setUpstream: Boolean = false
     ): Result<GitOperationResult> = safeCall("push") {
-        val response = getClient().post("$gitServerUrl/git/push") {
+        val response = getClient().post("$gitServerUrl/push") {
             contentType(ContentType.Application.Json)
             setBody(GitPushRequest(
                 remote = remote,
@@ -336,7 +358,7 @@ class GitApiClient(
         branch: String? = null,
         rebase: Boolean = false
     ): Result<GitOperationResult> = safeCall("pull") {
-        val response = getClient().post("$gitServerUrl/git/pull") {
+        val response = getClient().post("$gitServerUrl/pull") {
             contentType(ContentType.Application.Json)
             setBody(GitPullRequest(
                 remote = remote,
@@ -358,7 +380,7 @@ class GitApiClient(
         prune: Boolean = false,
         all: Boolean = false
     ): Result<GitOperationResult> = safeCall("fetch") {
-        val response = getClient().post("$gitServerUrl/git/fetch") {
+        val response = getClient().post("$gitServerUrl/fetch") {
             contentType(ContentType.Application.Json)
             setBody(GitFetchRequest(
                 remote = remote,
@@ -380,7 +402,7 @@ class GitApiClient(
         create: Boolean = false,
         force: Boolean = false
     ): Result<GitOperationResult> = safeCall("checkout") {
-        val response = getClient().post("$gitServerUrl/git/checkout") {
+        val response = getClient().post("$gitServerUrl/checkout") {
             contentType(ContentType.Application.Json)
             setBody(GitCheckoutRequest(
                 ref = ref,
@@ -398,7 +420,7 @@ class GitApiClient(
     }
 
     suspend fun stage(files: List<String>): Result<GitOperationResult> = safeCall("stage") {
-        val response = getClient().post("$gitServerUrl/git/stage") {
+        val response = getClient().post("$gitServerUrl/stage") {
             contentType(ContentType.Application.Json)
             setBody(GitFilesRequest(files))
         }
@@ -412,7 +434,7 @@ class GitApiClient(
     }
 
     suspend fun unstage(files: List<String>): Result<GitOperationResult> = safeCall("unstage") {
-        val response = getClient().post("$gitServerUrl/git/unstage") {
+        val response = getClient().post("$gitServerUrl/unstage") {
             contentType(ContentType.Application.Json)
             setBody(GitFilesRequest(files))
         }
@@ -426,7 +448,7 @@ class GitApiClient(
     }
 
     suspend fun discard(files: List<String>): Result<GitOperationResult> = safeCall("discard") {
-        val response = getClient().post("$gitServerUrl/git/discard") {
+        val response = getClient().post("$gitServerUrl/discard") {
             contentType(ContentType.Application.Json)
             setBody(GitFilesRequest(files))
         }
@@ -440,7 +462,7 @@ class GitApiClient(
     }
 
     suspend fun getRemotes(): Result<List<GitRemote>> = safeCall("getRemotes") {
-        val response: List<GitServerRemote> = getClient().get("$gitServerUrl/git/remotes").body()
+        val response: List<GitServerRemote> = getClient().get("$gitServerUrl/remotes").body()
         
         response.map {
             GitRemote(
@@ -452,7 +474,7 @@ class GitApiClient(
     }
 
     suspend fun getStashes(): Result<List<GitStash>> = safeCall("getStashes") {
-        val response: List<GitServerStash> = getClient().get("$gitServerUrl/git/stash").body()
+        val response: List<GitServerStash> = getClient().get("$gitServerUrl/stash").body()
         
         response.map {
             GitStash(

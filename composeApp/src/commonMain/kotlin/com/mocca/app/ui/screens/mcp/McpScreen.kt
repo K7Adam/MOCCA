@@ -590,6 +590,7 @@ private fun getStatusText(status: McpConnectionStatus): String {
         McpConnectionStatus.CONNECTED -> "CONNECTED"
         McpConnectionStatus.DISCONNECTED -> "OFFLINE"
         McpConnectionStatus.CONNECTING -> "CONNECTING"
+        McpConnectionStatus.DISCONNECTING -> "DISCONNECTING"
         McpConnectionStatus.FAILED -> "FAILED"
         McpConnectionStatus.NEEDS_AUTH -> "AUTH_REQUIRED"
         McpConnectionStatus.NEEDS_CLIENT_REGISTRATION -> "REGISTRATION_REQUIRED"

@@ -22,7 +22,8 @@ class DashboardScreenModel(
     private val formatterRepository: FormatterRepository,
     private val lspRepository: LspRepository,
     private val gitRepository: GitRepository,
-    private val mcpRepository: McpRepository
+    private val mcpRepository: McpRepository,
+    private val eventStreamRepository: EventStreamRepository
 ) : ScreenModel {
     
     data class State(
@@ -86,6 +87,9 @@ class DashboardScreenModel(
         val gitBehind: Int
             get() = (vcsInfo as? Resource.Success)?.data?.behind ?: 0
         
+        val gitChangeCount: Int
+            get() = (vcsInfo as? Resource.Success)?.data?.changeCount ?: 0
+        
         val activeLspServers: List<LspStatus>
             get() = (lspStatus as? Resource.Success)?.data?.filter { it.status == "running" } ?: emptyList()
         
@@ -108,21 +112,62 @@ class DashboardScreenModel(
     
     init {
         loadAllData()
+        observeEvents()
+    }
+    
+    private fun observeEvents() {
+        screenModelScope.launch {
+            eventStreamRepository.events.collect { event ->
+                if (event is ServerEvent.FileEdited || event is ServerEvent.FileWatcherUpdated) {
+                    loadVcsInfo()
+                }
+            }
+        }
+        
+        screenModelScope.launch {
+            gitRepository.getVcsInfo().collect { resource ->
+                _state.update { it.copy(vcsInfo = resource) }
+            }
+        }
+        
+        screenModelScope.launch {
+            mcpRepository.mcpServers.collect { servers ->
+                _state.update { state ->
+                    state.copy(
+                        mcpServers = Resource.Success(servers.values.associateBy({ it.name }, { it.status }))
+                    )
+                }
+            }
+        }
     }
     
     /**
-     * Load all dashboard data in parallel.
+     * Load all initial data.
      */
     fun loadAllData() {
         screenModelScope.launch {
-            launch { loadProviders() }
-            launch { loadAgents() }
-            launch { loadTools() }
-            launch { loadCommands() }
-            launch { loadFormatters() }
-            launch { loadLspStatus() }
-            launch { loadVcsInfo() }
-            launch { loadMcpServers() }
+            loadProviders()
+        }
+        screenModelScope.launch {
+            loadAgents()
+        }
+        screenModelScope.launch {
+            loadTools()
+        }
+        screenModelScope.launch {
+            loadCommands()
+        }
+        screenModelScope.launch {
+            loadFormatters()
+        }
+        screenModelScope.launch {
+            loadLspStatus()
+        }
+        screenModelScope.launch {
+            loadVcsInfo()
+        }
+        screenModelScope.launch {
+            loadMcpServers()
         }
     }
     

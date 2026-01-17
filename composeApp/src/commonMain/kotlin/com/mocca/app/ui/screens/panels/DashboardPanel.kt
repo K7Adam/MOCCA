@@ -75,7 +75,7 @@ fun DashboardPanel(
         // Git Status Module
         GitStatusModule(
             branchName = state.gitBranch,
-            changedFiles = if (state.gitDirty) 1 else 0, // Simplified - could be enhanced
+            changedFiles = state.gitChangeCount,
             onExpandClick = onGitClick
         )
         
@@ -303,8 +303,9 @@ private fun Resource<Map<String, com.mocca.app.domain.model.McpServerStatus>>.to
                 id = name,
                 name = name,
                 type = if (status.isConnected) "CONNECTED" else "DISCONNECTED",
-                isEnabled = status.isConnected,
-                isConnected = status.isConnected
+                isEnabled = status.isEnabled,
+                isConnected = status.isConnected,
+                isTransitioning = status.isTransitioning
             )
         }
         is Resource.Loading -> data?.map { (name, status) ->
@@ -312,8 +313,9 @@ private fun Resource<Map<String, com.mocca.app.domain.model.McpServerStatus>>.to
                 id = name,
                 name = name,
                 type = if (status.isConnected) "CONNECTED" else "DISCONNECTED",
-                isEnabled = status.isConnected,
-                isConnected = status.isConnected
+                isEnabled = status.isEnabled,
+                isConnected = status.isConnected,
+                isTransitioning = status.isTransitioning
             )
         } ?: emptyList()
         is Resource.Error -> emptyList()

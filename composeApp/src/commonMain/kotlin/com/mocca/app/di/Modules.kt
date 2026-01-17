@@ -201,7 +201,8 @@ val screenModelModule = module {
             formatterRepository = get(),
             lspRepository = get(),
             gitRepository = get(),
-            mcpRepository = get()
+            mcpRepository = get(),
+            eventStreamRepository = get()
         )
     }
 }

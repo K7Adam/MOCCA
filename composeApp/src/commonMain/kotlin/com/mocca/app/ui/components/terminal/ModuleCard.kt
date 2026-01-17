@@ -129,6 +129,7 @@ fun ModuleRowItem(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     isConnected: Boolean = true,
+    isTransitioning: Boolean = false,
     showToggle: Boolean = true,
     onToggle: ((Boolean) -> Unit)? = null,
     onClick: (() -> Unit)? = null,
@@ -157,7 +158,8 @@ fun ModuleRowItem(
                 !isEnabled -> TerminalColors.greyDark
                 isConnected -> TerminalColors.statusOnline
                 else -> TerminalColors.statusOffline
-            }
+            },
+            isTransitioning = isTransitioning
         )
         
         Spacer(modifier = Modifier.width(TerminalSpacing.sm))
@@ -188,7 +190,8 @@ fun ModuleRowItem(
             Spacer(modifier = Modifier.width(TerminalSpacing.sm))
             TerminalToggle(
                 checked = isEnabled,
-                onCheckedChange = onToggle
+                onCheckedChange = onToggle,
+                enabled = !isTransitioning
             )
         }
     }
@@ -290,6 +293,7 @@ fun McpConfigModule(
                 subtitle = server.type,
                 isEnabled = server.isEnabled,
                 isConnected = server.isConnected,
+                isTransitioning = server.isTransitioning,
                 isStrikethrough = !server.isEnabled,
                 onToggle = { onServerToggle(server.id, it) }
             )
@@ -302,13 +306,13 @@ fun McpConfigModule(
         }
     }
 }
-
 data class McpServerItem(
     val id: String,
     val name: String,
     val type: String,
     val isEnabled: Boolean,
-    val isConnected: Boolean
+    val isConnected: Boolean,
+    val isTransitioning: Boolean = false
 )
 
 /**

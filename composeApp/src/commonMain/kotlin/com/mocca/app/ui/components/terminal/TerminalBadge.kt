@@ -20,6 +20,13 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
 import com.mocca.app.ui.theme.TerminalSpacing
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.runtime.getValue
 
 /**
  * Terminal-styled badges for labels and status indicators.
@@ -158,13 +165,34 @@ fun StatusDot(
 fun StatusSquare(
     color: Color,
     modifier: Modifier = Modifier,
-    size: Dp = TerminalSpacing.statusDotSize
+    size: Dp = TerminalSpacing.statusDotSize,
+    isTransitioning: Boolean = false
 ) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .background(color, RectangleShape)
-    )
+    if (isTransitioning) {
+        val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+        val alpha by infiniteTransition.animateFloat(
+            initialValue = 0.3f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable<Float>(
+                animation = tween<Float>(800, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "pulse"
+        )
+        
+        Box(
+            modifier = modifier
+                .size(size)
+                .background(color.copy(alpha = alpha), RectangleShape)
+                .border(1.dp, color, RectangleShape)
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .size(size)
+                .background(color, RectangleShape)
+        )
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

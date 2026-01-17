@@ -14,5 +14,6 @@ data class VcsInfo(
     val dirty: Boolean = false,
     val ahead: Int = 0,
     val behind: Int = 0,
-    val remote: String? = null
+    val remote: String? = null,
+    val changeCount: Int = 0
 )

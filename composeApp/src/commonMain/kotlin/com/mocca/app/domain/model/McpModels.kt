@@ -20,9 +20,11 @@ data class McpServerStatus(
     val prompts: List<McpPrompt>? = null
 ) {
     val isConnected: Boolean get() = status == McpConnectionStatus.CONNECTED
+    val isTransitioning: Boolean get() = status == McpConnectionStatus.CONNECTING || status == McpConnectionStatus.DISCONNECTING
     val needsAuth: Boolean get() = status == McpConnectionStatus.NEEDS_AUTH || status == McpConnectionStatus.NEEDS_CLIENT_REGISTRATION
     val hasFailed: Boolean get() = status == McpConnectionStatus.FAILED
     val isDisabled: Boolean get() = status == McpConnectionStatus.DISABLED
+    val isEnabled: Boolean get() = status != McpConnectionStatus.DISABLED
 }
 
 /**
@@ -42,6 +44,8 @@ enum class McpConnectionStatus {
     DISCONNECTED,
     @SerialName("connecting")
     CONNECTING,
+    @SerialName("disconnecting")
+    DISCONNECTING,
     @SerialName("disabled")
     DISABLED;
     
@@ -54,6 +58,7 @@ enum class McpConnectionStatus {
                 "needs_client_registration" -> NEEDS_CLIENT_REGISTRATION
                 "disconnected" -> DISCONNECTED
                 "connecting" -> CONNECTING
+                "disconnecting" -> DISCONNECTING
                 "disabled" -> DISABLED
                 else -> DISCONNECTED
             }
@@ -167,6 +172,9 @@ data class McpServerInfo(
     
     val isConnected: Boolean
         get() = status.isConnected
+    
+    val isTransitioning: Boolean
+        get() = status.isTransitioning
     
     val toolCount: Int
         get() = status.tools?.size ?: 0

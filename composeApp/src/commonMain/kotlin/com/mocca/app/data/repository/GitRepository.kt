@@ -172,9 +172,21 @@ class GitRepository(
     // VcsInfo was used in Dashboard, maybe keep it here or move to another repo?
     // It's still useful.
     fun getVcsInfo(): Flow<Resource<VcsInfo>> = flow {
-       // Currently removed dependency on MoccaApiClient, so we can't call getVcsInfo.
-       // We should add getVcsInfo to GitApiClient or handle it differently.
-       // For now, emit empty/dummy or Error.
-       emit(Resource.Error<VcsInfo>("Not implemented in refactor yet"))
+        emit(Resource.Loading())
+        gitApiClient.getStatus().fold(
+            onSuccess = { status ->
+                emit(Resource.Success(VcsInfo(
+                    type = "git",
+                    branch = status.branch,
+                    dirty = status.hasChanges,
+                    ahead = status.ahead,
+                    behind = status.behind,
+                    changeCount = status.totalChanges
+                )))
+            },
+            onFailure = { e ->
+                emit(Resource.Error(e.message ?: "Failed to get VCS info"))
+            }
+        )
     }.flowOn(Dispatchers.Default)
 }

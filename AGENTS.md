@@ -81,8 +81,41 @@ adb install androidApp\build\outputs\apk\debug\androidApp-debug.apk
 - **Network**: `network_security_config.xml` allows cleartext for local/LAN dev.
 - **Emulator**: Host is `10.0.2.2:4096`. Auto-detected by `isEmulator()`.
 - **Physical Devices**: Default to Tailscale/LAN. Migrated from `10.0.2.2` automatically.
-- **Git**: Project uses `git init` but excludes build artifacts manually (no .gitignore yet).
+- **Git Server**: Runs on port 4097 (auto-started by git-plugin.js when `opencode serve` launches).
 - **Terminal**: Clear button unimplemented.
+
+---
+
+## GIT SERVER INTEGRATION
+
+### Architecture
+MOCCA's Git functionality requires a dedicated HTTP server running alongside OpenCode:
+
+| Component | Port | Purpose |
+|-----------|------|---------|
+| OpenCode Server | 4096 | AI agent, SSE events, file operations |
+| Git HTTP Server | 4097 | Git operations (status, commit, push, etc.) |
+
+### How It Works
+1. User runs `opencode serve 4096`
+2. OpenCode loads `~/.config/opencode/plugin/git-plugin.js`
+3. Plugin immediately starts embedded HTTP server on port 4097
+4. MOCCA's `GitApiClient.kt` connects to `<host>:4097` for Git operations
+
+### Setup (One-Time)
+```bash
+# Install dependencies for the git plugin
+cd ~/.config/opencode
+bun install  # or npm install
+```
+
+### Plugin Location
+`~/.config/opencode/plugin/git-plugin.js` - Embedded HTTP server, no external files needed
+
+### Troubleshooting
+- **Git screen shows error**: Ensure `opencode serve` is running - the git server starts automatically
+- **Port conflict**: Check if port 4097 is free (`netstat -an | grep 4097`)
+- **Dependencies missing**: Run `bun install` in `~/.config/opencode/`
 
 ---
 
