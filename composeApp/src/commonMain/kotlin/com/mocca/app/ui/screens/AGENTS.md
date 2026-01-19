@@ -1,43 +1,34 @@
 # UI & SCREENS KNOWLEDGE BASE
 
 ## OVERVIEW
-Voyager-based navigation implementing feature-specific screens with MVI architecture and ScreenModel state management.
+The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a "Terminal" aesthetic with high-contrast, monospace layouts.
 
-## STRUCTURE
-```
-ui/screens/
-├── chat/           # Chat interface, message rendering, optimistic updates
-├── files/          # File explorer, editor, search
-├── git/            # Git controls: status, log, diff, commit
-├── main/           # Main container, bottom nav, swipe panels
-├── mcp/            # MCP tool management
-├── onboarding/     # Initial setup flow
-├── panels/         # Dashboard & Context panels for MainScreen
-├── sessions/       # Session list, creation, deletion
-├── settings/       # App configuration, server management
-├── terminal/       # WebSocket terminal emulator
-└── workspace/      # Workspace layout container
-```
+## NAVIGATION
+- **Voyager Stack**: The app uses `Navigator` for screen transitions. Access it via `LocalNavigator.currentOrThrow`.
+- **Panel System**: `MainScreen` implements a `SwipePanelLayout` for a 3-panel experience:
+    - **Left Swipe (Context)**: Session list, model info, and token usage.
+    - **Center (Focus)**: Active chat interface and message history.
+    - **Right Swipe (Dashboard)**: Modular tools dashboard (Git status, MCP servers, Tools).
+- **Settings Access**: The **Settings** screen is reachable exclusively via the **Dashboard swipe** (Right panel) by clicking the `[SETTINGS]` button.
 
-## WHERE TO LOOK
-| Component | Location | Notes |
-|-----------|----------|-------|
-| Main Nav | `main/MainScreen.kt` | Root scaffold, `SwipePanelLayout` integration |
-| ScreenModel | `*/XScreenModel.kt` | One per screen, extends Voyager `ScreenModel` |
-| UI Content | `*/XScreen.kt` | Composable `Content()`, collects state |
-| Dashboard | `panels/DashboardPanel.kt` | Side panel for quick settings/stats |
-| Context | `panels/ContextHistoryPanel.kt` | Side panel for chat history/context |
+## SCREEN LIST
+| Screen | Logic Highlight | Description |
+|--------|-----------------|-------------|
+| `MainScreen` | Panel Management | Host scaffold for the 3-panel UI. Manages global session state. |
+| `GitScreen` | **Start Server Logic** | Comprehensive Git UI. If the Git API (Port 4097) is down, it provides a "Start Server" trigger that runs `start-git-server.ps1` on the host via the OpenCode agent. |
+| `SettingsScreen` | Server Config | Configuration for OpenCode server URLs, connection types, and auth tokens. |
+| `McpScreen` | Tool Inspection | UI for managing MCP servers and viewing available tools. |
+| `TerminalScreen` | SSH/WebSocket | Real-time terminal emulator for direct host access. |
+| `FilesScreen` | Explorer | Browsing and basic editing of the project workspace. |
 
-## CONVENTIONS
-- **Voyager Navigation**: All screens implement `Screen`. Use `LocalNavigator.currentOrThrow.push(Screen())`.
-- **MVI Pattern**: `ScreenModel` exposes single `StateFlow<XState>`. UI observes via `collectAsState()`.
-- **DI Injection**: Use `koinScreenModel<XScreenModel>()` in Composable.
-- **Events**: One-off events (navigation) use `SharedFlow`.
-- **State Immutability**: State classes are `data class` with `val`. Copy to update.
-- **Loading/Error**: All states include `isLoading` and `error` fields.
+## MVI ARCHITECTURE (STRICT)
+- **State**: Every `ScreenModel` exposes a single, immutable `StateFlow<State>`. 
+- **Observation**: UI observes state via `val state by screenModel.state.collectAsState()`.
+- **ScreenModel**: All business logic, repository calls, and state transitions MUST happen here.
+- **DI**: Use `koinScreenModel<T>()` inside the Composable `Content()` function to retrieve the model.
 
 ## ANTI-PATTERNS
-- **NEVER** put business logic in Composable. Use ScreenModel.
-- **NEVER** expose MutableStateFlow to UI. Expose as `StateFlow`.
-- **AVOID** passing complex objects in navigation. Pass IDs (e.g., `sessionId`).
-- **DO NOT** duplicate scaffold for full-screen dialogs.
+- **NEVER put logic in Composables**: No validation, no network calls, no state manipulation in `@Composable` functions.
+- **NEVER expose MutableStateFlow**: Keep the mutable state private in the `ScreenModel`; only expose the read-only `StateFlow`.
+- **AVOID complex navigation params**: Pass IDs or simple strings in `Screen` constructors. Let the `ScreenModel` load the data.
+- **DO NOT block the main thread**: Always use `screenModelScope.launch` for asynchronous operations.

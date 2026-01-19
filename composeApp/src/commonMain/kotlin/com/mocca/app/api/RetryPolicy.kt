@@ -99,10 +99,23 @@ sealed class NetworkError : Exception() {
     data class ParseError(override val message: String, override val cause: Throwable? = null) : NetworkError()
     data class Unknown(override val message: String, override val cause: Throwable? = null) : NetworkError()
     
+    /**
+     * Specialized error for when the Git HTTP server (port 4097) is not running.
+     * This is NOT wrapped in Unknown so it can be detected by UI to show the start server dialog.
+     */
+    data class GitServerUnavailable(
+        override val message: String = "Git server is not running",
+        override val cause: Throwable? = null
+    ) : NetworkError()
+    
     companion object {
         fun from(throwable: Throwable): NetworkError {
             return when {
                 throwable is NetworkError -> throwable
+                // Preserve GitServerNotRunningException as GitServerUnavailable
+                throwable::class.simpleName == "GitServerNotRunningException" ||
+                throwable.message?.contains("Git server is not running", ignoreCase = true) == true ->
+                    GitServerUnavailable(throwable.message ?: "Git server is not running", throwable)
                 throwable.message?.contains("timeout", ignoreCase = true) == true -> 
                     Timeout("Request timed out", throwable)
                 throwable.message?.contains("connection", ignoreCase = true) == true ->

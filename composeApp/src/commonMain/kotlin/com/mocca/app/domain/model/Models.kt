@@ -680,3 +680,16 @@ data class RecentModel(
     val modelId: String,
     val lastUsedAt: Long
 )
+
+/**
+ * Generic server error response structure.
+ * Used to parse error bodies when the server returns a non-200 status or unexpected JSON.
+ */
+@Serializable
+data class ServerErrorResponse(
+    val name: String? = null,
+    val message: String? = null,
+    val data: JsonElement? = null,
+    val code: String? = null,
+    val status: Int? = null
+)

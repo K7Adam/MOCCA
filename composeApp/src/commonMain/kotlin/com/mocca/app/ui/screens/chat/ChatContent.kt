@@ -21,7 +21,7 @@ import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.LoadingScreen
-import com.mocca.app.ui.components.PermissionDialog
+import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.terminal.RichChatInput
 import com.mocca.app.ui.components.terminal.TerminalIconButton
@@ -171,7 +171,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
             
             // Dialogs
             state.pendingPermission?.let { permission ->
-                PermissionDialog(
+                PermissionRequestDialog(
                     permission = permission,
                     onApprove = { screenModel.approvePermission() },
                     onDeny = { screenModel.denyPermission() }

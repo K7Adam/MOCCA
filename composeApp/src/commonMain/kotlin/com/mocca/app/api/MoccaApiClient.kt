@@ -67,8 +67,8 @@ class MoccaApiClient(
     }
 
     // Sessions
-    suspend fun listSessions(): Result<List<Session>> = safeCall("listSessions") {
-        getClient().get("$baseUrl/session").body()
+    suspend fun listSessions(): Result<List<Session>> = safeRequest("listSessions") {
+        getClient().get("$baseUrl/session")
     }
 
     suspend fun createSession(): Result<Session> = safeCallNoRetry("createSession") {
@@ -304,28 +304,28 @@ class MoccaApiClient(
     }
     
     // Agents
-    suspend fun getAgents(): Result<List<Agent>> = safeCall("getAgents") {
-        getClient().get("$baseUrl/agent").body()
+    suspend fun getAgents(): Result<List<Agent>> = safeRequest("getAgents") {
+        getClient().get("$baseUrl/agent")
     }
     
     // Tools
-    suspend fun getToolIds(): Result<List<String>> = safeCall("getToolIds") {
-        getClient().get("$baseUrl/experimental/tool/ids").body()
+    suspend fun getToolIds(): Result<List<String>> = safeRequest("getToolIds") {
+        getClient().get("$baseUrl/experimental/tool/ids")
     }
     
     // Slash Commands
-    suspend fun getCommands(): Result<List<Command>> = safeCall("getCommands") {
-        getClient().get("$baseUrl/command").body()
+    suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") {
+        getClient().get("$baseUrl/command")
     }
     
     // Formatters
-    suspend fun getFormatters(): Result<List<FormatterStatus>> = safeCall("getFormatters") {
-        getClient().get("$baseUrl/formatter").body()
+    suspend fun getFormatters(): Result<List<FormatterStatus>> = safeRequest("getFormatters") {
+        getClient().get("$baseUrl/formatter")
     }
     
     // LSP Status
-    suspend fun getLspStatus(): Result<List<LspStatus>> = safeCall("getLspStatus") {
-        getClient().get("$baseUrl/lsp").body()
+    suspend fun getLspStatus(): Result<List<LspStatus>> = safeRequest("getLspStatus") {
+        getClient().get("$baseUrl/lsp")
     }
     
     // VCS Info
@@ -393,15 +393,29 @@ class MoccaApiClient(
         }.body()
     }
 
-    // Git Operations
+    // ===================================================================================
+    // DEPRECATED: Git Operations via OpenCode Agent (Port 4096)
+    // ===================================================================================
+    // These endpoints target the OpenCode agent server's /git/* routes.
+    // MOCCA now uses the dedicated Git HTTP Server (Port 4097) via GitApiClient for
+    // all Git operations. This provides better performance and avoids blocking the
+    // AI agent's main loop.
+    //
+    // These methods are kept for reference/fallback but are NOT used in production.
+    // See: GitApiClient.kt for the active Git implementation.
+    // ===================================================================================
+    
+    @Deprecated("Use GitApiClient.getStatus() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitStatus(): Result<GitStatusResponse> = safeCall("getGitStatus") {
         getClient().get("$baseUrl/git/status").body()
     }
     
+    @Deprecated("Use GitApiClient.getBranches() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitBranches(): Result<List<GitBranch>> = safeCall("getGitBranches") {
         getClient().get("$baseUrl/git/branches").body()
     }
     
+    @Deprecated("Use GitApiClient.getLog() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitLog(
         branch: String? = null,
         limit: Int = 50,
@@ -414,6 +428,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.getDiff() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitDiff(
         ref: String? = null,
         cached: Boolean = false
@@ -424,6 +439,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.stage() instead - connects to dedicated Git server on port 4097")
     suspend fun gitStage(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitStage") {
         getClient().post("$baseUrl/git/stage") {
             contentType(ContentType.Application.Json)
@@ -431,6 +447,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.unstage() instead - connects to dedicated Git server on port 4097")
     suspend fun gitUnstage(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitUnstage") {
         getClient().post("$baseUrl/git/unstage") {
             contentType(ContentType.Application.Json)
@@ -438,6 +455,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.discard() instead - connects to dedicated Git server on port 4097")
     suspend fun gitDiscard(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitDiscard") {
         getClient().post("$baseUrl/git/discard") {
             contentType(ContentType.Application.Json)
@@ -445,6 +463,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.commit() instead - connects to dedicated Git server on port 4097")
     suspend fun gitCommit(
         message: String,
         files: List<String>? = null,
@@ -456,6 +475,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.push() instead - connects to dedicated Git server on port 4097")
     suspend fun gitPush(
         remote: String = "origin",
         branch: String? = null,
@@ -468,6 +488,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.pull() instead - connects to dedicated Git server on port 4097")
     suspend fun gitPull(
         remote: String = "origin",
         branch: String? = null,
@@ -479,6 +500,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.fetch() instead - connects to dedicated Git server on port 4097")
     suspend fun gitFetch(
         remote: String = "origin",
         prune: Boolean = false,
@@ -490,6 +512,7 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.checkout() instead - connects to dedicated Git server on port 4097")
     suspend fun gitCheckout(
         ref: String,
         create: Boolean = false,
@@ -501,10 +524,12 @@ class MoccaApiClient(
         }.body()
     }
     
+    @Deprecated("Use GitApiClient.getRemotes() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitRemotes(): Result<List<GitRemote>> = safeCall("getGitRemotes") {
         getClient().get("$baseUrl/git/remotes").body()
     }
     
+    @Deprecated("Use GitApiClient.getStashes() instead - connects to dedicated Git server on port 4097")
     suspend fun getGitStashes(): Result<List<GitStash>> = safeCall("getGitStashes") {
         getClient().get("$baseUrl/git/stash").body()
     }
@@ -514,10 +539,10 @@ class MoccaApiClient(
      * Get status of all MCP servers.
      * Returns a map of server name to McpServerStatus.
      */
-    suspend fun getMcpStatus(directory: String? = null): Result<Map<String, McpServerStatus>> = safeCall("getMcpStatus") {
+    suspend fun getMcpStatus(directory: String? = null): Result<Map<String, McpServerStatus>> = safeRequest("getMcpStatus") {
         getClient().get("$baseUrl/mcp") {
             directory?.let { parameter("directory", it) }
-        }.body()
+        }
     }
     
     /**
@@ -577,6 +602,59 @@ class MoccaApiClient(
     }
 
     // Helpers
+    /**
+     * Safer request handler that parses body as text first to handle potential error objects
+     * returned with 200 OK status, or non-200 responses with error bodies.
+     */
+    private suspend inline fun <reified T> safeRequest(
+        tag: String = "API",
+        retryable: Boolean = true,
+        crossinline block: suspend HttpClient.() -> HttpResponse
+    ): Result<T> {
+        val policy = if (retryable) retryPolicy else RetryPolicy.None
+        return withRetry(policy, tag) {
+            val response = getClient().block()
+            val bodyText = response.bodyAsText()
+
+            // 1. Check for non-success status code
+            if (!response.status.isSuccess()) {
+                val message = try {
+                    val error = json.decodeFromString<ServerErrorResponse>(bodyText)
+                    error.message ?: error.name ?: "Server Error: ${response.status}"
+                } catch (e: Exception) {
+                    "Server Error: ${response.status}"
+                }
+                throw NetworkError.ServerError(response.status.value, message)
+            }
+
+            // 2. Try to parse successful response
+            try {
+                if (T::class == Unit::class) {
+                    return@withRetry Unit as T
+                }
+                json.decodeFromString<T>(bodyText)
+            } catch (e: Exception) {
+                // 3. If parsing fails, check if it's actually an error object disguised as 200 OK
+                try {
+                    val errorResponse = json.decodeFromString<ServerErrorResponse>(bodyText)
+                    // If successful and has name/message, treat as error
+                    if (errorResponse.name != null || errorResponse.message != null) {
+                        throw NetworkError.ServerError(
+                            statusCode = response.status.value,
+                            message = errorResponse.message ?: errorResponse.name ?: "Unknown Server Error"
+                        )
+                    }
+                    throw e // Re-throw original if it looked like an error but wasn't conclusive
+                } catch (errorParseError: Exception) {
+                    // It wasn't an error object either. Genuine parse error.
+                    throw e
+                }
+            }
+        }.mapError { error ->
+            NetworkError.from(error)
+        }
+    }
+
     private suspend inline fun <reified T> safeCall(
         tag: String = "API",
         retryable: Boolean = true,

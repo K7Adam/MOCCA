@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
@@ -46,7 +47,8 @@ fun DashboardPanel(
     onGitClick: () -> Unit = {},
     onMcpConfigClick: () -> Unit = {},
     onSkillsClick: () -> Unit = {},
-    onSkillClick: (String) -> Unit = {}
+    onSkillClick: (String) -> Unit = {},
+    onRefreshAll: () -> Unit = {}
 ) {
     val state by screenModel.state.collectAsState()
     val scrollState = rememberScrollState()
@@ -107,6 +109,17 @@ fun DashboardPanel(
         }
         
         Spacer(modifier = Modifier.weight(1f))
+        
+        // Refresh All Button
+        TerminalOutlinedButton(
+            text = "[REFRESH_ALL]",
+            onClick = onRefreshAll,
+            showBrackets = false,
+            icon = Icons.Default.Refresh,
+            modifier = Modifier.fillMaxWidth()
+        )
+        
+        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
         
         // Settings Button
         TerminalOutlinedButton(

@@ -4,6 +4,10 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.GitRepository
 import com.mocca.app.domain.model.*
+import com.mocca.app.api.GitApiClient.GitServerNotRunningException
+import com.mocca.app.api.NetworkError
+import io.github.aakira.napier.Napier
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -50,10 +54,31 @@ class GitScreenModel(
                             status = resource.data,
                             error = null
                         )
-                        is Resource.Error -> state.copy(
-                            isLoading = false,
-                            error = resource.message
-                        )
+                        is Resource.Error -> {
+                            // Check if error is "server not running" - handles both direct and wrapped exceptions
+                            val cause = resource.cause
+                            val isServerNotRunning = cause is GitServerNotRunningException ||
+                                cause is NetworkError.GitServerUnavailable ||
+                                cause?.cause is GitServerNotRunningException ||
+                                resource.message.contains("Git server is not running", ignoreCase = true)
+                            
+                            if (isServerNotRunning) {
+                                // Extract details if available
+                                val exception = (cause as? GitServerNotRunningException) 
+                                    ?: (cause?.cause as? GitServerNotRunningException)
+                                
+                                val isRefused = exception?.isConnectionRefused ?: false
+                                val url = exception?.url
+                                
+                                Napier.i("GitServerNotRunning detected, showing dialog (refused: $isRefused)")
+                                showServerNotRunningDialog(isRefused, url)
+                            }
+                            state.copy(
+                                isLoading = false,
+                                status = resource.data ?: state.status,
+                                error = resource.message
+                            )
+                        }
                     }
                 }
             }
@@ -318,6 +343,93 @@ class GitScreenModel(
     fun clearWarning() {
         _uiState.update { it.copy(warningMessage = null) }
     }
+
+    fun showServerNotRunningDialog(isConnectionRefused: Boolean = false, url: String? = null) {
+        Napier.i("showServerNotRunningDialog() called, updating state (refused: $isConnectionRefused, url: $url)")
+        
+        // If connection was refused on localhost (127.0.0.1) on an emulator, it likely means ADB reverse is missing
+        val isLocalhost = url?.contains("127.0.0.1") == true || url?.contains("localhost") == true
+        val isAdbReverseMissing = isConnectionRefused && isLocalhost
+        
+        if (isAdbReverseMissing) {
+            Napier.w("Detected possible missing ADB reverse setup!")
+        }
+        
+        _uiState.update { 
+            it.copy(
+                showServerNotRunningDialog = true,
+                showAdbReverseHelp = isAdbReverseMissing
+            ) 
+        }
+    }
+
+    fun hideServerNotRunningDialog() {
+        _uiState.update { it.copy(showServerNotRunningDialog = false, showAdbReverseHelp = false) }
+    }
+
+    fun showServerStartedDialog() {
+        _uiState.update { it.copy(showServerStartedDialog = true) }
+    }
+
+    fun hideServerStartedDialog() {
+        _uiState.update { it.copy(showServerStartedDialog = false) }
+    }
+
+    fun requestStartGitServer() {
+        Napier.i("Requesting git server start via OpenCode with polling")
+        screenModelScope.launch {
+            // Show starting state
+            _uiState.update { 
+                it.copy(
+                    isStartingServer = true, 
+                    serverStartProgress = "Sending start command...",
+                    showServerNotRunningDialog = false
+                ) 
+            }
+            
+            // Use the new polling method
+            gitRepository.requestStartGitServerAndWait(
+                maxWaitMs = 15_000L,  // Wait up to 15 seconds
+                pollIntervalMs = 500L
+            ).onSuccess { serverStarted ->
+                if (serverStarted) {
+                    Napier.i("Git server started successfully!")
+                    _uiState.update { 
+                        it.copy(
+                            isStartingServer = false,
+                            serverStartProgress = null,
+                            showServerStartedDialog = true,
+                            error = null
+                        ) 
+                    }
+                    // Automatically reload status now that server is up
+                    delay(500) // Brief delay to ensure server is fully ready
+                    loadStatus()
+                } else {
+                    onGitServerStartFailed("Server did not start")
+                }
+            }.onFailure { e ->
+                Napier.e("Git server start failed", e)
+                onGitServerStartFailed(e.message ?: "Unknown error")
+            }
+        }
+    }
+
+    private fun onGitServerStartFailed(reason: String) {
+        _uiState.update { 
+            it.copy(
+                isStartingServer = false,
+                serverStartProgress = null,
+                warningMessage = "Could not start git server: $reason\n\nPlease run 'start-git-server.ps1' on host manually."
+            ) 
+        }
+    }
+
+    fun onGitServerStarted() {
+        Napier.i("Git server start request accepted")
+        hideServerNotRunningDialog()
+        showServerStartedDialog()
+    }
 }
 
 data class GitUiState(
@@ -330,7 +442,12 @@ data class GitUiState(
     val log: GitLog? = null,
     val remotes: List<GitRemote> = emptyList(),
     val showCommitDialog: Boolean = false,
-    val commitMessage: String = ""
+    val commitMessage: String = "",
+    val showServerNotRunningDialog: Boolean = false,
+    val showAdbReverseHelp: Boolean = false,
+    val showServerStartedDialog: Boolean = false,
+    val isStartingServer: Boolean = false,
+    val serverStartProgress: String? = null
 ) {
     val hasChanges: Boolean get() = status?.hasChanges == true
     val currentBranch: String get() = status?.branch ?: "unknown"

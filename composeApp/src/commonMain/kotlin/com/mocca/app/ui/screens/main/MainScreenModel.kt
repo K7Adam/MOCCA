@@ -7,10 +7,13 @@ import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.domain.model.Session
+import com.mocca.app.domain.model.UpdateInfo
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,7 +65,13 @@ data class MainScreenState(
     val isMcpLoading: Boolean = false,
     
     // App info
-    val appVersion: String = "V2.0.4"
+    val appVersion: String = "V2.0.4",
+    
+    // Update info
+    val updateInfo: UpdateInfo? = null,
+    val isUpdateAvailable: Boolean = false,
+    val isDownloadingUpdate: Boolean = false,
+    val downloadProgress: Float = 0f
 ) {
     val mcpConnectedCount: Int get() = mcpServers.count { it.isConnected }
     val mcpTotalCount: Int get() = mcpServers.size
@@ -76,7 +85,8 @@ class MainScreenModel(
     private val sessionRepository: SessionRepository,
     private val eventStreamRepository: EventStreamRepository,
     private val appConnectionManager: AppConnectionManager,
-    private val mcpRepository: McpRepository
+    private val mcpRepository: McpRepository,
+    private val updateRepository: UpdateRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
@@ -87,11 +97,60 @@ class MainScreenModel(
         observeConnectionState()
         observeMcpServers()
         loadSessions()
+        checkForUpdates()
         if (initialSessionId != null) {
             loadMessages(initialSessionId)
         }
     }
     
+    private fun checkForUpdates() {
+        screenModelScope.launch {
+            try {
+                updateRepository.checkForUpdate().fold(
+                    onSuccess = { updateInfo ->
+                        if (updateInfo != null) {
+                            _state.update { 
+                                it.copy(
+                                    updateInfo = updateInfo,
+                                    isUpdateAvailable = true
+                                )
+                            }
+                        }
+                    },
+                    onFailure = { e ->
+                        Napier.w("Failed to check for updates", e)
+                    }
+                )
+            } catch (e: Exception) {
+                 Napier.e("Error checking for updates", e)
+            }
+        }
+    }
+
+    fun startUpdate() {
+        val info = _state.value.updateInfo ?: return
+        
+        screenModelScope.launch {
+            _state.update { it.copy(isDownloadingUpdate = true, downloadProgress = 0f) }
+            
+            try {
+                updateRepository.downloadAndInstall(info.downloadUrl, "mocca-update.apk")
+                    .collect { progress ->
+                        _state.update { it.copy(downloadProgress = progress) }
+                    }
+                // Install triggered automatically by repository at end of flow
+            } catch (e: Exception) {
+                _state.update { it.copy(isDownloadingUpdate = false, error = "Update failed: ${e.message}") }
+            } finally {
+                _state.update { it.copy(isDownloadingUpdate = false) }
+            }
+        }
+    }
+    
+    fun dismissUpdate() {
+        _state.update { it.copy(isUpdateAvailable = false) }
+    }
+
     private fun observeAppConnectionState() {
         screenModelScope.launch {
             appConnectionManager.connectionState.collect { appState ->
@@ -457,6 +516,41 @@ class MainScreenModel(
     fun retryConnection() {
         appConnectionManager.checkConnection()
         eventStreamRepository.reconnect()
+    }
+    
+    /**
+     * Refresh all data - sessions, messages, config, and reconnection.
+     * Called from DashboardPanel refresh button.
+     */
+    fun refreshAll() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            
+            try {
+                // 1. Refresh sessions from server
+                sessionRepository.refreshSessions()
+                
+                // 2. Force SSE reconnection to get fresh event stream
+                eventStreamRepository.disconnect()
+                kotlinx.coroutines.delay(500) // Brief delay before reconnecting
+                _state.value.currentSessionId?.let { sessionId ->
+                    eventStreamRepository.connect(screenModelScope, sessionId)
+                }
+                
+                // 3. Reload sessions to update UI
+                loadSessions()
+                
+                // 4. Reload messages for current session
+                _state.value.currentSessionId?.let { sessionId ->
+                    loadMessages(sessionId)
+                }
+                
+                Napier.i("Global refresh completed")
+            } catch (e: Exception) {
+                Napier.e("Failed to refresh all data", e)
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
     }
     
     override fun onDispose() {

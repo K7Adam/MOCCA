@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "opencode-antigravity-auth": "^1.3.0",
+    "opencode-supermemory": "^0.1.6"
+  }
+}

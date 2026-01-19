@@ -733,6 +733,38 @@ class ChatScreenModel(
         connectToEventStream()
     }
     
+    /**
+     * Refresh all chat data - messages, config, commands, recent models.
+     * Called from global refresh operation.
+     */
+    fun refreshData() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            
+            try {
+                // 1. Reload messages
+                loadMessages()
+                
+                // 2. Reload config (providers, modes)
+                loadConfig()
+                
+                // 3. Reload commands
+                loadCommands()
+                
+                // 4. Reload recent models
+                loadRecentModels()
+                
+                // 5. Reconnect to SSE
+                connectToEventStream()
+                
+                Napier.i("ChatScreenModel refresh completed")
+            } catch (e: Exception) {
+                Napier.e("Failed to refresh chat data", e)
+                _state.update { it.copy(error = e.message, isLoading = false) }
+            }
+        }
+    }
+    
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }

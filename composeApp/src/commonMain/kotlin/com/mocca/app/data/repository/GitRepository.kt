@@ -33,7 +33,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get git status", e)
-                emit(Resource.Error(e.message ?: "Failed to get Git status", cached))
+                emit(Resource.Error(e.message ?: "Failed to get Git status", cached, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -48,7 +48,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get branches", e)
-                emit(Resource.Error(e.message ?: "Failed to get branches"))
+                emit(Resource.Error(e.message ?: "Failed to get branches", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -64,7 +64,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get log", e)
-                emit(Resource.Error(e.message ?: "Failed to get commit log"))
+                emit(Resource.Error(e.message ?: "Failed to get commit log", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -80,7 +80,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get diff", e)
-                emit(Resource.Error(e.message ?: "Failed to get diff"))
+                emit(Resource.Error(e.message ?: "Failed to get diff", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -95,7 +95,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get diff for $path", e)
-                emit(Resource.Error(e.message ?: "Failed to get file diff"))
+                emit(Resource.Error(e.message ?: "Failed to get file diff", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -142,7 +142,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get remotes", e)
-                emit(Resource.Error(e.message ?: "Failed to get remotes"))
+                emit(Resource.Error(e.message ?: "Failed to get remotes", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -157,7 +157,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get stashes", e)
-                emit(Resource.Error(e.message ?: "Failed to get stashes"))
+                emit(Resource.Error(e.message ?: "Failed to get stashes", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -167,6 +167,28 @@ class GitRepository(
             localCache.saveGitStatus(status)
             status
         }
+    }
+
+    suspend fun requestStartGitServer(): Result<Unit> {
+        return gitApiClient.requestStartGitServer()
+    }
+
+    /**
+     * Request git server start and wait for it to become available.
+     * Uses polling to verify the server is actually running.
+     */
+    suspend fun requestStartGitServerAndWait(
+        maxWaitMs: Long = 10_000L,
+        pollIntervalMs: Long = 500L
+    ): Result<Boolean> {
+        return gitApiClient.requestStartGitServerAndWait(maxWaitMs, pollIntervalMs)
+    }
+
+    /**
+     * Check if the git server is currently running.
+     */
+    suspend fun isServerRunning(): Boolean {
+        return gitApiClient.isServerRunning()
     }
 
     // VcsInfo was used in Dashboard, maybe keep it here or move to another repo?
@@ -185,7 +207,7 @@ class GitRepository(
                 )))
             },
             onFailure = { e ->
-                emit(Resource.Error(e.message ?: "Failed to get VCS info"))
+                emit(Resource.Error(e.message ?: "Failed to get VCS info", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)

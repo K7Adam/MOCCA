@@ -1,0 +1,81 @@
+package com.mocca.app.data.repository
+
+import com.mocca.app.api.GitHubApiClient
+import com.mocca.app.domain.manager.PlatformUpdateManager
+import com.mocca.app.domain.model.UpdateInfo
+import com.mocca.app.domain.provider.AppVersionProvider
+import io.github.aakira.napier.Napier
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.request.prepareGet
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+class UpdateRepository(
+    private val gitHubApiClient: GitHubApiClient,
+    private val platformUpdateManager: PlatformUpdateManager,
+    private val appVersionProvider: AppVersionProvider
+) {
+
+    suspend fun checkForUpdate(): Result<UpdateInfo?> {
+        val currentVersion = appVersionProvider.getVersion()
+        Napier.d("Checking for updates. Current version: $currentVersion", tag = "UpdateRepository")
+        
+        return gitHubApiClient.getLatestRelease("K7Adam", "MOCCA").map { release ->
+            val remoteTag = release.tagName.removePrefix("v")
+            val currentTag = currentVersion.removePrefix("v")
+            
+            if (isNewer(remoteTag, currentTag)) {
+                val asset = release.assets.find { it.name.endsWith(".apk") }
+                if (asset != null) {
+                    UpdateInfo(
+                        version = release.tagName,
+                        releaseNotes = release.body,
+                        downloadUrl = asset.downloadUrl,
+                        size = asset.size
+                    )
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        }
+    }
+
+    fun downloadAndInstall(url: String, fileName: String): Flow<Float> = flow {
+        emit(0f)
+        try {
+            gitHubApiClient.getClient().prepareGet(url).execute { response ->
+                val length = response.headers["Content-Length"]?.toLong()
+                val channel = response.bodyAsChannel()
+                
+                val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
+                   emit(progress)
+                }
+                
+                platformUpdateManager.installApk(path)
+            }
+            emit(1f)
+        } catch (e: Exception) {
+            Napier.e("Download failed", e, "UpdateRepository")
+            throw e
+        }
+    }
+    
+    // Helper to compare versions (simple semver)
+    private fun isNewer(remote: String, current: String): Boolean {
+        // Simple comparison for now. Ideally use a library or stronger logic.
+        // Assuming X.Y.Z
+        val remoteParts = remote.split(".").mapNotNull { it.toIntOrNull() }
+        val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
+        
+        val length = maxOf(remoteParts.size, currentParts.size)
+        for (i in 0 until length) {
+            val r = remoteParts.getOrElse(i) { 0 }
+            val c = currentParts.getOrElse(i) { 0 }
+            if (r > c) return true
+            if (r < c) return false
+        }
+        return false
+    }
+}

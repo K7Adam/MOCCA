@@ -6,6 +6,7 @@ MOCCA is a **Kotlin Multiplatform** Android client for the **OpenCode** AI agent
 ## 2. Key Features
 - **Full Session Management**: Real-time chat with streaming responses and optimistic UI updates.
 - **File & Git Operations**: Browse, search, and edit files; complete Git version control interface.
+- **Automatic Git Server Management**: Mobile app can start git HTTP server when unavailable via REST API command.
 - **Terminal Access**: WebSocket-based terminal emulation for remote command execution.
 - **Offline-First**: SQLDelight-backed caching ensures instant access to sessions and logs.
 - **Secure Control**: Token-based authentication and mobile permission approval for tool execution.
@@ -21,8 +22,18 @@ ScreenModels (Voyager / State Management)
 Repositories (Data Layer)
   ├── Local Cache (SQLDelight)
   └── Remote Data (Ktor Client / SSE)
-       ↓
+        ↓
 OpenCode Server (API)
+  └── Git HTTP Server (Port 4097)
+```
+
+**Git Server Auto-Startup Flow:**
+```
+GitServerNotRunningDialog
+    ↓ sends command
+OpenCode /command endpoint
+    ↓ triggers PowerShell
+Git HTTP Server (Port 4097)
 ```
 
 ## 4. Setup Instructions
@@ -42,6 +53,33 @@ OpenCode Server (API)
 4.  **Connect**:
     - **Emulator**: Auto-connects to host via `10.0.2.2:4096`.
     - **Device**: Configure LAN or Tailscale IP in Settings.
+
+### ⚠️ CRITICAL: Android Emulator Network Setup
+
+**MANDATORY for Emulator Git Operations:**
+
+The Android Emulator cannot reach the Git Server directly due to network limitations. You **MUST** set up ADB reverse port forwarding before launching the app:
+
+```bash
+# 1. Start Emulator
+# 2. Set up ADB reverse for Git Server (port 4097)
+adb reverse tcp:4097 tcp:4097
+
+# 3. Verify setup
+adb reverse --list
+# Expected output should include: tcp:4097 tcp:4097
+```
+
+**Why this is needed:**
+- Android Emulator's `10.0.2.2` mapping doesn't work for all ports
+- Port 4097 (Git Server) is blocked from emulator
+- ADB reverse maps host's port 4097 to emulator's localhost:4097
+- Without this, ALL Git operations will fail with "Git server is not running"
+
+**Troubleshooting:**
+- If Git operations fail, verify: `adb reverse --list` includes `tcp:4097`
+- If not, re-run: `adb reverse tcp:4097 tcp:4097`
+- Restart emulator after setting up ADB reverse if issues persist
 
 ## 5. Development Workflow
 - **Tech Stack**: Kotlin 2.3.0, Compose 1.9.3, Koin 4.1.1, Voyager 1.1.0-beta03, AGP 9.0.0-rc03.

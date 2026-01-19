@@ -34,6 +34,7 @@ import com.mocca.app.domain.model.GitCommit
 import com.mocca.app.domain.model.GitFileChange
 import com.mocca.app.domain.model.GitFileStatus
 import com.mocca.app.domain.model.GitStatusResponse
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -149,17 +150,17 @@ class GitScreen : Screen {
                     uiState.isLoading -> LoadingScreen()
                     uiState.error != null -> ErrorScreen(
                         message = uiState.error!!,
-                        onRetry = { 
+                        onRetry = {
                             screenModel.clearError()
-                            screenModel.selectTab(selectedTab) 
+                            screenModel.selectTab(selectedTab)
                         }
                     )
                     else -> when (selectedTab) {
                         GitTab.STATUS -> StatusTab(
-                            uiState, 
-                            screenModel, 
-                            onNavigateToDiff = { path, staged -> 
-                                navigator.push(GitDiffScreen(path, staged)) 
+                            uiState,
+                            screenModel,
+                            onNavigateToDiff = { path, staged ->
+                                navigator.push(GitDiffScreen(path, staged))
                             }
                         )
                         GitTab.BRANCHES -> BranchesTab(uiState, screenModel)
@@ -167,7 +168,7 @@ class GitScreen : Screen {
                         GitTab.REMOTES -> RemotesTab(uiState)
                     }
                 }
-                
+
                 // Overlay Commit Dialog
                 if (uiState.showCommitDialog) {
                     TerminalCommitDialog(
@@ -179,7 +180,55 @@ class GitScreen : Screen {
                 }
             }
             } // End Column
-            
+
+            // Overlay Server Not Running Dialog (outside weighted Box for full-screen access)
+            if (uiState.showServerNotRunningDialog) {
+                com.mocca.app.ui.components.GitServerNotRunningDialog(
+                    onDismiss = { screenModel.hideServerNotRunningDialog() },
+                    onStartServer = {
+                        screenModel.requestStartGitServer()
+                    },
+                    showAdbHelp = uiState.showAdbReverseHelp
+                )
+            }
+
+            // Overlay for starting server with progress
+            if (uiState.isStartingServer) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(TerminalColors.background.copy(alpha = 0.9f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+                    ) {
+                        androidx.compose.material3.CircularProgressIndicator(
+                            color = TerminalColors.white,
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            text = "STARTING GIT SERVER...",
+                            color = TerminalColors.white,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        uiState.serverStartProgress?.let { progress ->
+                            Text(
+                                text = progress.uppercase(),
+                                color = TerminalColors.greyLight,
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                        Text(
+                            text = "Waiting for server to become available...",
+                            color = TerminalColors.grey,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                    }
+                }
+            }
+
             // Status toast overlay at bottom (inside outer Box for BoxScope.align)
             toastMessage?.let { message ->
                 Box(

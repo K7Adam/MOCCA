@@ -656,5 +656,23 @@ const GitPlugin = async (context) => {
     };
 }
 
+// ============================================
+// STANDALONE EXECUTION
+// ============================================
+
+// Allow running standalone via "bun run git-plugin.js start-server"
+if (process.argv.includes('start-server')) {
+    console.log('[Git Plugin] Standalone mode detected');
+    const workDir = process.cwd();
+    startEmbeddedServer(workDir, 4097).then(success => {
+        if (!success) process.exit(1);
+        // Keep process alive
+        setInterval(() => {}, 1000 * 60 * 60);
+    }).catch(err => {
+        console.error(err);
+        process.exit(1);
+    });
+}
+
 export { GitPlugin };
 export default GitPlugin;

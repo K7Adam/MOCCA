@@ -16,6 +16,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.terminal.ConnectionBannerStatus
 import com.mocca.app.ui.components.terminal.ConnectionStatusBanner
 import com.mocca.app.ui.components.terminal.QuoteRotator
+import com.mocca.app.ui.components.terminal.UpdateDialog
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
@@ -51,6 +52,17 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             state.currentSessionId?.let { id ->
                 chatScreenModel.loadSession(id)
             }
+        }
+        
+        // Show Update Dialog
+        if (state.isUpdateAvailable && state.updateInfo != null) {
+            UpdateDialog(
+                updateInfo = state.updateInfo!!,
+                isDownloading = state.isDownloadingUpdate,
+                progress = state.downloadProgress,
+                onUpdate = { screenModel.startUpdate() },
+                onDismiss = { screenModel.dismissUpdate() }
+            )
         }
         
         val panelState = rememberPanelState()
@@ -151,7 +163,16 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onGitClick = { navigator.push(GitScreen()) },
                     onFilesClick = { navigator.push(FilesScreen()) },
                     onTerminalClick = { navigator.push(TerminalScreen()) },
-                    onSkillsClick = { }
+                    onSkillsClick = { },
+                    onSkillClick = { },
+                    onRefreshAll = {
+                        // Trigger global refresh: sessions, messages, config, and SSE reconnection
+                        screenModel.refreshAll()
+                        // Also refresh chat data
+                        chatScreenModel.refreshData()
+                        // Refresh dashboard data
+                        dashboardScreenModel.refresh()
+                    }
                 )
             },
             panelState = panelState.state,

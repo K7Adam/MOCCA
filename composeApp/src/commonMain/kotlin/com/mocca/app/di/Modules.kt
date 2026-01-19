@@ -1,5 +1,6 @@
 package com.mocca.app.di
 
+import com.mocca.app.api.GitHubApiClient
 import com.mocca.app.api.GitApiClient
 import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
@@ -85,6 +86,8 @@ val commonModule = module {
     singleOf(::TerminalRepository)
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
+    singleOf(::UpdateRepository)
+    singleOf(::GitHubApiClient)
     
     // New repositories for OpenCode features
     singleOf(::ProviderRepository)
@@ -179,7 +182,8 @@ val screenModelModule = module {
             sessionRepository = get(),
             eventStreamRepository = get(),
             appConnectionManager = get(),
-            mcpRepository = get()
+            mcpRepository = get(),
+            updateRepository = get()
         )
     }
     
