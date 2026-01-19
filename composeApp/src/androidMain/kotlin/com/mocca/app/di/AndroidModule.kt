@@ -4,7 +4,6 @@ import com.mocca.app.data.local.LocalCacheFactory
 import com.mocca.app.domain.manager.AndroidUpdateManager
 import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.provider.AndroidAppVersionProvider
-import com.mocca.app.domain.provider.AppVersionProvider
 import com.mocca.app.util.NetworkObserver
 import com.mocca.app.util.NetworkObserverImpl
 import org.koin.android.ext.koin.androidContext

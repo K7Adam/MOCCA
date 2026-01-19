@@ -27,6 +27,8 @@ class UpdateRepository(
             val remoteTag = latestRelease.tagName.removePrefix("v")
             val currentTag = currentVersion.removePrefix("v")
             
+            Napier.d("Latest release on GitHub: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
+            
             // Compare including build numbers if present (simple string check for now or handle build metadata)
             // Ideally: Use a proper SemVer parser. 
             // For "1.0.0-build.123", we might want to compare 123 if base versions match.
@@ -41,19 +43,30 @@ class UpdateRepository(
                         size = asset.size
                     )
                 } else {
+                    Napier.w("Update found but no APK asset available", tag = "UpdateRepository")
                     null
                 }
             } else {
+                Napier.d("No update available. Latest: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
                 null
             }
         }.recover { e ->
-            // Handle failure gracefully - log warning but don't crash
-            if (e.message?.contains("No releases found") == true) {
-                Napier.i("No releases found on GitHub yet", tag = "UpdateRepository")
-                null // Return null to indicate no update available
+            // Handle failure gracefully - log detailed error
+            val errorMessage = e.message ?: "Unknown error"
+            
+            if (errorMessage.contains("No releases found") || errorMessage.contains("Not Found")) {
+                Napier.w(
+                    "Failed to access GitHub releases. Repository may be private or not accessible. Error: $errorMessage",
+                    tag = "UpdateRepository"
+                )
+                // Return null instead of throwing to prevent UI crash
+                null
+            } else if (errorMessage.contains("GitHub API Error")) {
+                Napier.w("GitHub API error during update check: $errorMessage", e, tag = "UpdateRepository")
+                null
             } else {
-                Napier.w("Update check failed: ${e.message}", e, tag = "UpdateRepository")
-                throw e // Re-throw other errors
+                Napier.e("Unexpected error during update check: $errorMessage", e, tag = "UpdateRepository")
+                throw e
             }
         }
     }

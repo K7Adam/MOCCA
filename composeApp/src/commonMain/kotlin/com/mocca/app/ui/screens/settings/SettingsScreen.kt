@@ -3,7 +3,7 @@ package com.mocca.app.ui.screens.settings
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -159,13 +159,49 @@ class SettingsScreen : Screen {
                             showToggle = false
                         )
                         
-                        Box(modifier = Modifier.padding(top = TerminalSpacing.md)) {
+                        Column(modifier = Modifier.padding(top = TerminalSpacing.md)) {
                             TerminalButton(
-                                text = "CHECK_FOR_UPDATES",
+                                text = if (state.isLoading) "CHECKING..." else "CHECK_FOR_UPDATES",
                                 onClick = { screenModel.checkForUpdates() },
-                                height = 40.dp
+                                height = 40.dp,
+                                enabled = !state.isLoading
                             )
+                            
+                            // Display update check result or error
+                            state.message?.let { message ->
+                                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                Text(
+                                    text = message,
+                                    color = if (message.contains("failed", ignoreCase = true) || message.contains("Error", ignoreCase = true)) {
+                                        TerminalColors.error
+                                    } else {
+                                        TerminalColors.statusOnline
+                                    },
+                                    style = TerminalTypography.bodySmall
+                                )
+                            }
                         }
+                        
+                        // GitHub Token Configuration
+                        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                        Text(
+                            text = "// GITHUB_TOKEN",
+                            color = TerminalColors.grey,
+                            style = TerminalTypography.labelMedium
+                        )
+                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                        
+                        Text(
+                            text = "GitHub token support available in future update.",
+                            color = TerminalColors.greyDark,
+                            style = TerminalTypography.bodySmall
+                        )
+                        Text(
+                            text = "Repository must be public for auto-updates.",
+                            color = TerminalColors.greyDark,
+                            style = TerminalTypography.bodySmall
+                        )
+                    }
                     }
                 }
                 
