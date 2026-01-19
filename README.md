@@ -91,3 +91,6 @@ adb reverse --list
 
 ## License
 MIT
+
+## Note
+Auto-update feature enabled - app checks GitHub releases for updates.
