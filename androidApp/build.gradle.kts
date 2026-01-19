@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
@@ -12,8 +15,25 @@ android {
         applicationId = "com.mocca.app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0.0"
+        
+        val buildNumber = System.getenv("BUILD_NUMBER")?.toIntOrNull() ?: 1
+        val versionProps = Properties()
+        try {
+            versionProps.load(FileInputStream(rootProject.file("gradle.properties")))
+        } catch (e: Exception) {
+            // Fallback if file missing
+        }
+        
+        val baseVersion = versionProps.getProperty("VERSION_NAME", "1.0.0")
+        
+        versionCode = buildNumber
+        versionName = if (System.getenv("CI") == "true") {
+            // CI Version: 1.0.0-build.123
+            "$baseVersion-build.$buildNumber"
+        } else {
+            // Local Version: 1.0.0
+            baseVersion
+        }
     }
 
     buildTypes {
