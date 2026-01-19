@@ -20,7 +20,8 @@ class UpdateRepository(
         val currentVersion = appVersionProvider.getVersion()
         Napier.d("Checking for updates. Current version: $currentVersion", tag = "UpdateRepository")
         
-        return gitHubApiClient.getLatestRelease("K7Adam", "MOCCA").map { release ->
+        return gitHubApiClient.getLatestRelease("K7Adam", "MOCCA").mapCatching { release ->
+            // Handle success
             val remoteTag = release.tagName.removePrefix("v")
             val currentTag = currentVersion.removePrefix("v")
             
@@ -38,6 +39,15 @@ class UpdateRepository(
                 }
             } else {
                 null
+            }
+        }.recover { e ->
+            // Handle failure gracefully - log warning but don't crash
+            if (e.message?.contains("No releases found") == true) {
+                Napier.i("No releases found on GitHub yet", tag = "UpdateRepository")
+                null // Return null to indicate no update available
+            } else {
+                Napier.w("Update check failed: ${e.message}", e, tag = "UpdateRepository")
+                throw e // Re-throw other errors
             }
         }
     }
