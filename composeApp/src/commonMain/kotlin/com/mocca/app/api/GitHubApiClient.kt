@@ -28,9 +28,9 @@ class GitHubApiClient {
         }
     }
 
-    suspend fun getLatestRelease(owner: String, repo: String): Result<GitHubRelease> {
+    suspend fun getReleases(owner: String, repo: String): Result<List<GitHubRelease>> {
         return try {
-            val response = client.get("https://api.github.com/repos/$owner/$repo/releases/latest")
+            val response = client.get("https://api.github.com/repos/$owner/$repo/releases")
             
             if (response.status == HttpStatusCode.NotFound) {
                 return Result.failure(Exception("No releases found"))
@@ -42,7 +42,7 @@ class GitHubApiClient {
             
             Result.success(response.body())
         } catch (e: Exception) {
-            Napier.e("Failed to fetch latest release", e, "GitHubApiClient")
+            Napier.e("Failed to fetch releases", e, "GitHubApiClient")
             Result.failure(e)
         }
     }

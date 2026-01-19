@@ -151,7 +151,8 @@ val screenModelModule = module {
     factory {
         SettingsScreenModel(
             serverConfigRepository = get(),
-            appConnectionManager = get()
+            appConnectionManager = get(),
+            updateRepository = get()
         )
     }
     

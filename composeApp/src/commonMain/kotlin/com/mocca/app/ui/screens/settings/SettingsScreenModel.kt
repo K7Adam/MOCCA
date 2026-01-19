@@ -6,6 +6,7 @@ import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.data.repository.ServerConfigRepository
+import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
@@ -42,7 +43,8 @@ data class SettingsState(
 
 class SettingsScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
-    private val appConnectionManager: AppConnectionManager
+    private val appConnectionManager: AppConnectionManager,
+    private val updateRepository: UpdateRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -54,6 +56,42 @@ class SettingsScreenModel(
         observeActiveConnectionState()
     }
     
+    fun checkForUpdates() {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, message = "Checking for updates...")
+            
+            updateRepository.checkForUpdate().fold(
+                onSuccess = { updateInfo ->
+                    if (updateInfo != null) {
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            message = "Update available: ${updateInfo.version}"
+                        )
+                        // Note: MainScreen should observe updateInfo globally or we trigger it via repository
+                        // For now, this just notifies the user in settings.
+                        // Ideally, we'd trigger the global update dialog.
+                        // We can't easily trigger MainScreen dialog from here without shared state.
+                        // Let's assume the user sees the message and goes back to main screen where checking happens automatically on start?
+                        // No, let's make it better. The repository check itself doesn't trigger UI.
+                        // We need a way to tell the app an update is ready.
+                        // But for manual check, showing a toast/message is fine for now.
+                    } else {
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            message = "No updates available"
+                        )
+                    }
+                },
+                onFailure = { e ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        message = "Update check failed: ${e.message}"
+                    )
+                }
+            )
+        }
+    }
+
     private fun observeActiveConnectionState() {
         screenModelScope.launch {
             appConnectionManager.connectionState.collect { state ->

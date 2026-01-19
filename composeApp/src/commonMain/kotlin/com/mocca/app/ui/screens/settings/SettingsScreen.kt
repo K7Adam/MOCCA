@@ -158,6 +158,14 @@ class SettingsScreen : Screen {
                             isEnabled = true,
                             showToggle = false
                         )
+                        
+                        Box(modifier = Modifier.padding(top = TerminalSpacing.md)) {
+                            TerminalButton(
+                                text = "CHECK_FOR_UPDATES",
+                                onClick = { screenModel.checkForUpdates() },
+                                height = 40.dp
+                            )
+                        }
                     }
                 }
                 
