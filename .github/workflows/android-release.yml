@@ -1,0 +1,75 @@
+name: "MOCCA Continuous Release"
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Generate Version
+        id: version
+        run: |
+          # Use run number as build number (incrementing)
+          BUILD_NUMBER=${{ github.run_number }}
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
+          
+          # Get base version from gradle.properties
+          BASE_VERSION=$(grep "VERSION_NAME" gradle.properties | cut -d'=' -f2)
+          
+          # Create full version string: 1.0.0-build.123
+          FULL_VERSION="${BASE_VERSION}-build.${BUILD_NUMBER}"
+          echo "FULL_VERSION=$FULL_VERSION" >> $GITHUB_ENV
+          
+          echo "Generating release for version: $FULL_VERSION"
+
+      - name: Build Debug APK
+        run: ./gradlew :androidApp:assembleDebug
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          CI: true
+
+      - name: Rename APK
+        run: |
+          mv androidApp/build/outputs/apk/debug/androidApp-debug.apk mocca-${{ env.FULL_VERSION }}.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.FULL_VERSION }}
+          name: "v${{ env.FULL_VERSION }}"
+          body: |
+            ### 🚀 Automated Release v${{ env.FULL_VERSION }}
+            
+            **Commit:** ${{ github.sha }}
+            **Build:** ${{ github.run_number }}
+            
+            ### 📦 Changes
+            ${{ github.event.head_commit.message }}
+          files: mocca-${{ env.FULL_VERSION }}.apk
+          draft: false
+          prerelease: false
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
