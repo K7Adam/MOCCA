@@ -78,20 +78,56 @@ class UpdateRepository(
         }
     }
     
-    // Helper to compare versions (simple semver)
+    // Helper to compare versions (handles X.Y.Z and X.Y.Z-build.N formats)
     private fun isNewer(remote: String, current: String): Boolean {
-        // Simple comparison for now. Ideally use a library or stronger logic.
-        // Assuming X.Y.Z
-        val remoteParts = remote.split(".").mapNotNull { it.toIntOrNull() }
-        val currentParts = current.split(".").mapNotNull { it.toIntOrNull() }
+        // Parse version components
+        val remoteParsed = parseVersion(remote)
+        val currentParsed = parseVersion(current)
         
-        val length = maxOf(remoteParts.size, currentParts.size)
+        // Compare major.minor.patch
+        val length = maxOf(remoteParsed.baseVersion.size, currentParsed.baseVersion.size)
         for (i in 0 until length) {
-            val r = remoteParts.getOrElse(i) { 0 }
-            val c = currentParts.getOrElse(i) { 0 }
+            val r = remoteParsed.baseVersion.getOrElse(i) { 0 }
+            val c = currentParsed.baseVersion.getOrElse(i) { 0 }
             if (r > c) return true
             if (r < c) return false
         }
+        
+        // If base versions are equal, compare build numbers
+        // A version WITH a build number is considered newer than one WITHOUT
+        if (remoteParsed.buildNumber != null && currentParsed.buildNumber == null) {
+            return true
+        } else if (remoteParsed.buildNumber == null && currentParsed.buildNumber != null) {
+            return false
+        } else if (remoteParsed.buildNumber != null && currentParsed.buildNumber != null) {
+            return remoteParsed.buildNumber > currentParsed.buildNumber
+        }
+        
         return false
+    }
+    
+    private data class ParsedVersion(
+        val baseVersion: List<Int>,  // [major, minor, patch]
+        val buildNumber: Int? = null  // null if no build suffix
+    )
+    
+    private fun parseVersion(version: String): ParsedVersion {
+        // Check for -build.N suffix
+        val buildMatch = Regex("^(.+)-build\\.(\\d+)$").find(version)
+        
+        return if (buildMatch != null) {
+            val base = buildMatch.groupValues[1]
+            val buildNum = buildMatch.groupValues[2].toInt()
+            ParsedVersion(
+                baseVersion = base.split(".").mapNotNull { it.toIntOrNull() },
+                buildNumber = buildNum
+            )
+        } else {
+            // No build suffix, just parse base version
+            ParsedVersion(
+                baseVersion = version.split(".").mapNotNull { it.toIntOrNull() },
+                buildNumber = null
+            )
+        }
     }
 }
