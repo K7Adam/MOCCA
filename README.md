@@ -92,5 +92,18 @@ adb reverse --list
 ## License
 MIT
 
-## Note
-Auto-update feature enabled - app checks GitHub releases for updates.
+## Auto-Update Feature
+The app supports checking for updates via GitHub Releases. The update dialog will automatically appear when a new version is available.
+
+**Note:** For private repositories, GitHub authentication is required. The current implementation only works with public repositories. If your repository is private, you'll need to configure a GitHub Personal Access Token in the app (feature coming soon) or make the repository public.
+
+### Current Implementation:
+- Checks GitHub Releases API on app startup and manual trigger
+- Compares versions including `-build.X` format
+- Downloads and installs APK updates automatically
+- Update dialog appears in MainScreen when an update is available
+
+### Known Limitations:
+- Private repositories require GitHub authentication (not yet implemented)
+- Repository must be public for auto-updates to work without authentication
+- Network permissions must be granted in Android Manifest
