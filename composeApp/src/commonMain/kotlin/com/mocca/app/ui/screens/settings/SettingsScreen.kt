@@ -142,7 +142,7 @@ class SettingsScreen : Screen {
                     ModuleCard(title = "MOCCA_CLIENT_INFO") {
                         ModuleRowItem(
                             title = "VERSION",
-                            subtitle = "v2.4.0-STABLE",
+                            subtitle = "v1.0.2",
                             isEnabled = true,
                             showToggle = false
                         )
