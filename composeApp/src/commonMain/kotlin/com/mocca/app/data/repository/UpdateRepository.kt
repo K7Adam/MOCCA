@@ -112,8 +112,14 @@ class UpdateRepository(
             return true
         } else if (remoteParsed.buildNumber == null && currentParsed.buildNumber != null) {
             return false
-        } else if (remoteParsed.buildNumber != null && currentParsed.buildNumber != null) {
-            return remoteParsed.buildNumber > currentParsed.buildNumber
+        } else if (remoteParsed.buildNumber != null) {
+            // Both have build numbers (since currentParsed.buildNumber != null is implied here)
+             // But wait, the previous `else if` covered `currentParsed.buildNumber != null` when `remote` is null.
+             // If we are here, `remoteParsed.buildNumber` is NOT null.
+             // So `currentParsed.buildNumber` could be null OR not null?
+             // No, the first `if` handled `remote != null && current == null`.
+             // So if we are here, `currentParsed.buildNumber` MUST be NOT null.
+            return remoteParsed.buildNumber > (currentParsed.buildNumber ?: 0)
         }
         
         return false
