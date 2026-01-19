@@ -25,6 +25,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     private val messageQueries get() = database.messageQueries
     private val serverConfigQueries get() = database.serverConfigQueries
     private val recentModelQueries get() = database.recentModelQueries
+    private val appSettingsQueries get() = database.appSettingsQueries
     
     private val json = Json { ignoreUnknownKeys = true }
     
@@ -531,6 +532,33 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             }
         } catch (e: Exception) {
             Napier.w("Failed to insert recent model", e)
+        }
+    }
+
+    // ==================== App Settings ====================
+
+    override suspend fun getSetting(key: String): String? {
+        return try {
+            appSettingsQueries.getSetting(key).executeAsOneOrNull()
+        } catch (e: Exception) {
+            Napier.w("Failed to get setting: $key", e)
+            null
+        }
+    }
+
+    override suspend fun saveSetting(key: String, value: String) {
+        try {
+            appSettingsQueries.insertSetting(key, value)
+        } catch (e: Exception) {
+            Napier.w("Failed to save setting: $key", e)
+        }
+    }
+
+    override suspend fun deleteSetting(key: String) {
+        try {
+            appSettingsQueries.deleteSetting(key)
+        } catch (e: Exception) {
+            Napier.w("Failed to delete setting: $key", e)
         }
     }
 

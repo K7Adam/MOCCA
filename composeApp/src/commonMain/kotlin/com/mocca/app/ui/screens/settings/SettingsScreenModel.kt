@@ -6,6 +6,7 @@ import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.data.repository.ServerConfigRepository
+import com.mocca.app.data.repository.SettingsRepository
 import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
@@ -35,7 +36,8 @@ data class SettingsState(
     val isLoading: Boolean = false,
     val message: String? = null,
     val connectionStatuses: Map<String, ServerConnectionStatus> = emptyMap(),
-    val activeConnectionState: AppConnectionState = AppConnectionState.NotConfigured
+    val activeConnectionState: AppConnectionState = AppConnectionState.NotConfigured,
+    val githubToken: String = ""
 ) {
     /** Server version from SSE Connected event, or null if not connected */
     val serverVersion: String? get() = (activeConnectionState as? AppConnectionState.Connected)?.serverInfo?.version
@@ -44,7 +46,8 @@ data class SettingsState(
 class SettingsScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val appConnectionManager: AppConnectionManager,
-    private val updateRepository: UpdateRepository
+    private val updateRepository: UpdateRepository,
+    private val settingsRepository: SettingsRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -52,6 +55,7 @@ class SettingsScreenModel(
     
     init {
         loadServers()
+        loadGitHubToken()
         observeActiveServer()
         observeActiveConnectionState()
     }
@@ -88,6 +92,23 @@ class SettingsScreenModel(
                         message = "Update check failed: ${e.message}"
                     )
                 }
+            )
+        }
+    }
+
+    private fun loadGitHubToken() {
+        screenModelScope.launch {
+            val token = settingsRepository.getGitHubToken()
+            _state.value = _state.value.copy(githubToken = token ?: "")
+        }
+    }
+
+    fun saveGitHubToken(token: String) {
+        screenModelScope.launch {
+            settingsRepository.saveGitHubToken(token)
+            _state.value = _state.value.copy(
+                githubToken = token,
+                message = "GitHub token saved"
             )
         }
     }

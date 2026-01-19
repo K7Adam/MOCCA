@@ -1,0 +1,13 @@
+CREATE TABLE AppSettingsEntity (
+    key TEXT PRIMARY KEY NOT NULL,
+    value TEXT NOT NULL
+);
+
+getSetting:
+SELECT value FROM AppSettingsEntity WHERE key = ?;
+
+insertSetting:
+INSERT OR REPLACE INTO AppSettingsEntity(key, value) VALUES (?, ?);
+
+deleteSetting:
+DELETE FROM AppSettingsEntity WHERE key = ?;

@@ -134,7 +134,7 @@ class MainScreenModel(
             _state.update { it.copy(isDownloadingUpdate = true, downloadProgress = 0f) }
             
             try {
-                updateRepository.downloadAndInstall(info.downloadUrl, "mocca-update.apk")
+                updateRepository.downloadAndInstall(info, "mocca-update.apk")
                     .collect { progress ->
                         _state.update { it.copy(downloadProgress = progress) }
                     }

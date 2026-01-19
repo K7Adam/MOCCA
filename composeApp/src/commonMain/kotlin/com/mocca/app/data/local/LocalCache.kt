@@ -68,6 +68,11 @@ interface LocalCache {
     suspend fun getRecentModels(): List<RecentModel>
     suspend fun insertRecentModel(recentModel: RecentModel)
     
+    // App Settings
+    suspend fun getSetting(key: String): String?
+    suspend fun saveSetting(key: String, value: String)
+    suspend fun deleteSetting(key: String)
+    
     // Git Status (in-memory cache, not persisted to DB)
     fun getGitStatus(): GitStatusResponse?
     fun saveGitStatus(status: GitStatusResponse)

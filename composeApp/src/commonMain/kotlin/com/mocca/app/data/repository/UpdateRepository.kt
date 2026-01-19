@@ -5,22 +5,26 @@ import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
-import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class UpdateRepository(
     private val gitHubApiClient: GitHubApiClient,
     private val platformUpdateManager: PlatformUpdateManager,
-    private val appVersionProvider: AppVersionProvider
+    private val appVersionProvider: AppVersionProvider,
+    private val settingsRepository: SettingsRepository
 ) {
 
     suspend fun checkForUpdate(): Result<UpdateInfo?> {
         val currentVersion = appVersionProvider.getVersion()
-        Napier.d("Checking for updates. Current version: $currentVersion", tag = "UpdateRepository")
+        val token = settingsRepository.getGitHubToken()
+        Napier.d("Checking for updates. Current version: $currentVersion. Token present: ${token != null}", tag = "UpdateRepository")
         
-        return gitHubApiClient.getReleases("K7Adam", "MOCCA").mapCatching { releases ->
+        return gitHubApiClient.getReleases("K7Adam", "MOCCA", token).mapCatching { releases ->
             val latestRelease = releases.firstOrNull() ?: return@mapCatching null
             
             // Handle success
@@ -29,10 +33,6 @@ class UpdateRepository(
             
             Napier.d("Latest release on GitHub: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
             
-            // Compare including build numbers if present (simple string check for now or handle build metadata)
-            // Ideally: Use a proper SemVer parser. 
-            // For "1.0.0-build.123", we might want to compare 123 if base versions match.
-            
             if (isNewer(remoteTag, currentTag)) {
                 val asset = latestRelease.assets.find { it.name.endsWith(".apk") }
                 if (asset != null) {
@@ -40,6 +40,7 @@ class UpdateRepository(
                         version = latestRelease.tagName,
                         releaseNotes = latestRelease.body,
                         downloadUrl = asset.downloadUrl,
+                        apiUrl = asset.apiUrl,
                         size = asset.size
                     )
                 } else {
@@ -54,15 +55,14 @@ class UpdateRepository(
             // Handle failure gracefully - log detailed error
             val errorMessage = e.message ?: "Unknown error"
             
-            if (errorMessage.contains("No releases found") || errorMessage.contains("Not Found")) {
+            if (errorMessage.contains("No releases found") || errorMessage.contains("Not Found") || errorMessage.contains("404")) {
                 Napier.w(
                     "Failed to access GitHub releases. Repository may be private or not accessible. Error: $errorMessage",
                     tag = "UpdateRepository"
                 )
-                // Return null instead of throwing to prevent UI crash
                 null
-            } else if (errorMessage.contains("GitHub API Error")) {
-                Napier.w("GitHub API error during update check: $errorMessage", e, tag = "UpdateRepository")
+            } else if (errorMessage.contains("Unauthorized") || errorMessage.contains("401")) {
+                Napier.w("Unauthorized access to GitHub API. Check token.", tag = "UpdateRepository")
                 null
             } else {
                 Napier.e("Unexpected error during update check: $errorMessage", e, tag = "UpdateRepository")
@@ -71,11 +71,26 @@ class UpdateRepository(
         }
     }
 
-    fun downloadAndInstall(url: String, fileName: String): Flow<Float> = flow {
+    fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<Float> = flow {
         emit(0f)
         try {
-            gitHubApiClient.getClient().prepareGet(url).execute { response ->
-                val length = response.headers["Content-Length"]?.toLong()
+            val token = settingsRepository.getGitHubToken()
+            val useApi = !token.isNullOrBlank()
+            val url = if (useApi) updateInfo.apiUrl else updateInfo.downloadUrl
+            
+            Napier.d("Starting download. Use API: $useApi, URL: $url", tag = "UpdateRepository")
+
+            gitHubApiClient.getClient().prepareGet(url) {
+                if (useApi) {
+                    header("Authorization", "Bearer $token")
+                    header("Accept", "application/octet-stream")
+                }
+            }.execute { response ->
+                if (!response.status.isSuccess()) {
+                    throw Exception("Download failed with status: ${response.status}")
+                }
+                
+                val length = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
                 val channel = response.bodyAsChannel()
                 
                 val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->

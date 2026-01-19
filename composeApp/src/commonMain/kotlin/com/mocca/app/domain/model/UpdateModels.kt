@@ -14,6 +14,7 @@ data class GitHubRelease(
 data class GitHubAsset(
     val name: String,
     @SerialName("browser_download_url") val downloadUrl: String,
+    @SerialName("url") val apiUrl: String,
     val size: Long,
     @SerialName("content_type") val contentType: String
 )
@@ -22,5 +23,6 @@ data class UpdateInfo(
     val version: String,
     val releaseNotes: String,
     val downloadUrl: String,
+    val apiUrl: String,
     val size: Long
 )

@@ -142,7 +142,7 @@ class SettingsScreen : Screen {
                     ModuleCard(title = "MOCCA_CLIENT_INFO") {
                         ModuleRowItem(
                             title = "VERSION",
-                            subtitle = "v1.0.2",
+                            subtitle = "v1.0.3",
                             isEnabled = true,
                             showToggle = false
                         )
@@ -184,25 +184,23 @@ class SettingsScreen : Screen {
                         
                         // GitHub Token Configuration
                         Spacer(modifier = Modifier.height(TerminalSpacing.lg))
-                        Text(
-                            text = "// GITHUB_TOKEN",
-                            color = TerminalColors.grey,
-                            style = TerminalTypography.labelMedium
-                        )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                         
-                        Text(
-                            text = "GitHub token support available in future update.",
-                            color = TerminalColors.greyDark,
-                            style = TerminalTypography.bodySmall
+                        TerminalInput(
+                            value = state.githubToken,
+                            onValueChange = { screenModel.saveGitHubToken(it) },
+                            label = "GITHUB_ACCESS_TOKEN",
+                            placeholder = "ghp_...",
+                            hint = "Required for private repositories. Stored securely."
                         )
+                        
+                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                         Text(
-                            text = "Repository must be public for auto-updates.",
+                            text = "Repository: K7Adam/MOCCA",
                             color = TerminalColors.greyDark,
                             style = TerminalTypography.bodySmall
                         )
                     }
-                    }
+                }
                 
                 // Server Info Section (when connected)
                 state.serverVersion?.let { version ->
@@ -220,18 +218,18 @@ class SettingsScreen : Screen {
                 }
             }
         
-        // Edit Server Dialog (Overlay)
-        state.editingServer?.let { server ->
-            val isNewServer = state.servers.none { it.id == server.id }
-            TerminalServerEditDialog(
-                server = server,
-                isNewServer = isNewServer,
-                onSave = { screenModel.saveServer(it, isNewServer) },
-                onDismiss = { screenModel.cancelEdit() }
-            )
+            // Edit Server Dialog (Overlay)
+            state.editingServer?.let { server ->
+                val isNewServer = state.servers.none { it.id == server.id }
+                TerminalServerEditDialog(
+                    server = server,
+                    isNewServer = isNewServer,
+                    onSave = { screenModel.saveServer(it, isNewServer) },
+                    onDismiss = { screenModel.cancelEdit() }
+                )
+            }
         }
     }
-}
 }
 
 @Composable
