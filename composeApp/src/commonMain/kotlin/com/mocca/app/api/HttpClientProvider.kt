@@ -3,6 +3,7 @@ package com.mocca.app.api
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.domain.model.AuthType
 import com.mocca.app.domain.model.ServerConfig
+import com.mocca.app.util.NetworkObserver
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import io.ktor.client.plugins.*
@@ -59,7 +60,6 @@ data class ConnectionMetrics(
     val consecutiveFailures: Int = 0
 )
 
-import com.mocca.app.util.NetworkObserver
 
 /**
  * Dynamic HttpClient provider that recreates the client when server configuration changes.

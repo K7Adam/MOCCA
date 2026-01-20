@@ -10,6 +10,7 @@ import io.ktor.client.plugins.timeout
 import kotlinx.serialization.Serializable
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.sync.Mutex
+import com.mocca.app.api.NetworkError
 import kotlinx.coroutines.sync.withLock
 
 // --- Response models (Internal DTOs) ---

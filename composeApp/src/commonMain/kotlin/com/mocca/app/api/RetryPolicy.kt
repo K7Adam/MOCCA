@@ -7,6 +7,14 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.random.Random
+import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.network.sockets.SocketTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
+import io.ktor.client.plugins.ServerResponseException
+import java.net.ConnectException
+import java.net.SocketException
+import java.net.UnknownHostException
+import java.io.IOException
 
 /**
  * Retry policy for network requests.
@@ -36,14 +44,6 @@ data class RetryPolicy(
         return cappedDelay + jitter
     }
 }
-
-import io.ktor.client.network.sockets.ConnectTimeoutException
-import io.ktor.client.network.sockets.SocketTimeoutException
-import io.ktor.client.plugins.HttpRequestTimeoutException
-import io.ktor.client.plugins.ServerResponseException
-import java.net.ConnectException
-import java.net.SocketException
-import java.net.UnknownHostException
 
 /**
  * Exception types that should trigger a retry.
@@ -108,7 +108,3 @@ suspend fun <T> withRetry(
     Napier.e("[$tag] All ${policy.maxRetries + 1} attempts failed", lastException)
     return Result.failure(lastException ?: Exception("Unknown error after retries"))
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// END OF FILE
-// ═══════════════════════════════════════════════════════════════════════════════

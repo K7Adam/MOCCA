@@ -46,6 +46,8 @@ kotlin {
             implementation(libs.ktor.client.auth)
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.serialization.kotlinx.json)
+            // Ktor Encoding (Compression)
+            implementation("io.ktor:ktor-client-encoding:3.0.3")
 
             // Koin DI
             implementation(libs.koin.core)

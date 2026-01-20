@@ -22,6 +22,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
+import com.mocca.app.api.NetworkError
 
 /**
  * OpenCode API Client for REST endpoints.
