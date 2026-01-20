@@ -12,14 +12,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
-import androidx.compose.material3.MaterialTheme
+import com.mocca.app.ui.theme.TerminalTypography
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -29,15 +31,16 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.runtime.getValue
 
 /**
- * Terminal-styled badges for labels and status indicators.
+ * Modern MOCCA badge components with pill-shaped design.
+ * Based on UI overhaul designs - rounded corners, subtle backgrounds.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROLE BADGE (USER/AGENT labels)
+// ROLE BADGE (USER/AGENT labels - pill shaped)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Role badge - white background, black text.
+ * Role badge - pill-shaped with light background.
  * Used for message sender labels: USER, AGENT.
  */
 @Composable
@@ -46,25 +49,27 @@ fun TerminalRoleBadge(
     modifier: Modifier = Modifier,
     backgroundColor: Color = TerminalColors.badgeBackground,
     textColor: Color = TerminalColors.badgeText,
-    paddingHorizontal: Dp = TerminalSpacing.sm,
-    paddingVertical: Dp = TerminalSpacing.xs
+    paddingHorizontal: Dp = TerminalSpacing.badgePaddingHorizontal,
+    paddingVertical: Dp = TerminalSpacing.badgePaddingVertical,
+    shape: Shape = TerminalShapes.badge
 ) {
     Box(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
             text = role.uppercase(),
             color = textColor,
-            style = MaterialTheme.typography.labelMedium,
+            style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
 /**
- * Inverted badge - transparent/dark background, white text, white border.
+ * Outlined pill badge - transparent background, subtle border.
  * Used for secondary labels.
  */
 @Composable
@@ -72,21 +77,23 @@ fun TerminalOutlinedBadge(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Transparent,
-    textColor: Color = TerminalColors.white,
-    borderColor: Color = TerminalColors.borderLight,
-    paddingHorizontal: Dp = TerminalSpacing.sm,
-    paddingVertical: Dp = TerminalSpacing.xs
+    textColor: Color = TerminalColors.textSecondary,
+    borderColor: Color = TerminalColors.border,
+    paddingHorizontal: Dp = TerminalSpacing.badgePaddingHorizontal,
+    paddingVertical: Dp = TerminalSpacing.badgePaddingVertical,
+    shape: Shape = TerminalShapes.pill
 ) {
     Box(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
-            .border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(TerminalSpacing.borderThin, borderColor, shape)
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Medium
         )
     }
@@ -111,11 +118,14 @@ fun TerminalStatusBadge(
         TerminalStatus.ONLINE -> TerminalColors.statusOnline to TerminalColors.statusOnline
         TerminalStatus.OFFLINE -> TerminalColors.statusOffline to TerminalColors.statusOffline
         TerminalStatus.WAITING -> TerminalColors.statusWaiting to TerminalColors.statusWaiting
-        TerminalStatus.IDLE -> TerminalColors.grey to TerminalColors.grey
+        TerminalStatus.IDLE -> TerminalColors.textTertiary to TerminalColors.textTertiary
     }
     
     Row(
-        modifier = modifier,
+        modifier = modifier
+            .clip(TerminalShapes.pill)
+            .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
+            .padding(horizontal = TerminalSpacing.badgePaddingHorizontal, vertical = TerminalSpacing.badgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
@@ -125,7 +135,7 @@ fun TerminalStatusBadge(
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = MaterialTheme.typography.labelSmall,
+            style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Medium
         )
     }
@@ -159,7 +169,8 @@ fun StatusDot(
 }
 
 /**
- * Square status indicator (terminal style).
+ * Square status indicator - legacy terminal style.
+ * Now uses rounded corners for modern aesthetic.
  */
 @Composable
 fun StatusSquare(
@@ -183,14 +194,16 @@ fun StatusSquare(
         Box(
             modifier = modifier
                 .size(size)
-                .background(color.copy(alpha = alpha), RectangleShape)
-                .border(1.dp, color, RectangleShape)
+                .clip(TerminalShapes.extraSmall)
+                .background(color.copy(alpha = alpha), TerminalShapes.extraSmall)
+                .border(1.dp, color, TerminalShapes.extraSmall)
         )
     } else {
         Box(
             modifier = modifier
                 .size(size)
-                .background(color, RectangleShape)
+                .clip(TerminalShapes.extraSmall)
+                .background(color, TerminalShapes.extraSmall)
         )
     }
 }
@@ -200,66 +213,73 @@ fun StatusSquare(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Small tag badge - for inline metadata.
+ * Small tag badge - pill-shaped for inline metadata.
  */
 @Composable
 fun TerminalTag(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = TerminalColors.surfaceVariant,
-    textColor: Color = TerminalColors.whiteMuted,
-    paddingHorizontal: Dp = TerminalSpacing.xs,
-    paddingVertical: Dp = 2.dp
+    textColor: Color = TerminalColors.textSecondary,
+    paddingHorizontal: Dp = TerminalSpacing.tagPaddingHorizontal,
+    paddingVertical: Dp = TerminalSpacing.tagPaddingVertical,
+    shape: Shape = TerminalShapes.tag
 ) {
     Box(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = MaterialTheme.typography.labelSmall
+            style = TerminalTypography.labelSmall
         )
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CONNECTED/EDIT BADGES (from Settings mockup)
+// CONNECTED/EDIT BADGES (modern pill-shaped)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Connected badge - inverted white badge.
+ * Connected badge - pill-shaped success indicator.
  */
 @Composable
 fun TerminalConnectedBadge(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    shape: Shape = TerminalShapes.pill
 ) {
-    Box(
+    Row(
         modifier = modifier
-            .background(TerminalColors.white, RectangleShape)
-            .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs)
+            .clip(shape)
+            .background(TerminalColors.statusOnline.copy(alpha = 0.15f), shape)
+            .padding(horizontal = TerminalSpacing.badgePaddingHorizontal, vertical = TerminalSpacing.badgePaddingVertical),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
+        StatusDot(color = TerminalColors.statusOnline, size = TerminalSpacing.statusDotSizeSmall)
         Text(
             text = "CONNECTED",
-            color = TerminalColors.background,
-            style = MaterialTheme.typography.labelSmall,
+            color = TerminalColors.statusOnline,
+            style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
     }
 }
 
 /**
- * Edit badge - grey text in brackets.
+ * Edit badge - subtle text button style.
  */
 @Composable
 fun TerminalEditBadge(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = "[EDIT]",
-        color = TerminalColors.grey,
-        style = MaterialTheme.typography.labelSmall,
+        text = "EDIT",
+        color = TerminalColors.textSecondary,
+        style = TerminalTypography.labelSmall,
         modifier = modifier
     )
 }

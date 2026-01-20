@@ -42,28 +42,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
 
 /**
- * Terminal-styled input components.
+ * Modern MOCCA input components with pill-shaped design.
+ * Based on UI overhaul designs - 32dp rounded corners, clean aesthetic.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BASIC TERMINAL INPUT
+// BASIC TERMINAL INPUT (Pill-shaped, 32dp radius)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Basic terminal input field with white border.
- * Used for server address, auth token inputs on onboarding.
+ * Basic input field with rounded corners.
+ * Modern design: 32dp rounded corners, dark background, subtle border.
  */
 @Composable
 fun TerminalInput(
@@ -75,31 +78,34 @@ fun TerminalInput(
     hint: String? = null,
     enabled: Boolean = true,
     singleLine: Boolean = true,
-    showPrompt: Boolean = true,
-    borderColor: Color = TerminalColors.borderLight,
-    borderWidth: Dp = TerminalSpacing.borderStandard,
+    showPrompt: Boolean = false, // Modern design doesn't use terminal prompts
+    backgroundColor: Color = TerminalColors.surfaceContainer,
+    borderColor: Color = TerminalColors.border,
+    borderWidth: Dp = TerminalSpacing.borderThin,
+    shape: Shape = TerminalShapes.input,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
     Column(modifier = modifier) {
-        // Label
+        // Label (uppercase, subtle)
         if (label != null) {
             Text(
-                text = "// ${label.uppercase()}",
-                color = TerminalColors.white,
+                text = label.uppercase(),
+                color = TerminalColors.textSecondary,
                 style = TerminalTypography.labelMedium
             )
             Spacer(modifier = Modifier.height(TerminalSpacing.sm))
         }
         
-        // Input field
+        // Input field with rounded corners
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(TerminalSpacing.inputHeight)
-                .background(TerminalColors.background, RectangleShape)
-                .border(borderWidth, borderColor, RectangleShape)
-                .padding(horizontal = TerminalSpacing.inputPadding)
+                .clip(shape)
+                .background(backgroundColor, shape)
+                .border(borderWidth, borderColor, shape)
+                .padding(horizontal = TerminalSpacing.inputPaddingHorizontal)
         ) {
             Row(
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -108,7 +114,7 @@ fun TerminalInput(
                 if (showPrompt) {
                     Text(
                         text = "> ",
-                        color = TerminalColors.white,
+                        color = TerminalColors.accentGreen,
                         style = TerminalTypography.bodyMedium
                     )
                 }
@@ -122,15 +128,15 @@ fun TerminalInput(
                     textStyle = TerminalTypography.bodyMedium.copy(
                         color = TerminalColors.white
                     ),
-                    cursorBrush = SolidColor(TerminalColors.white),
+                    cursorBrush = SolidColor(TerminalColors.accentGreen),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     decorationBox = { innerTextField ->
                         Box {
                             if (value.isEmpty()) {
                                 Text(
-                                    text = placeholder.uppercase(),
-                                    color = TerminalColors.greyDark,
+                                    text = placeholder,
+                                    color = TerminalColors.textPlaceholder,
                                     style = TerminalTypography.bodyMedium
                                 )
                             }
@@ -141,12 +147,12 @@ fun TerminalInput(
             }
         }
         
-        // Hint
+        // Hint (optional helper text)
         if (hint != null) {
             Spacer(modifier = Modifier.height(TerminalSpacing.xs))
             Text(
-                text = "* $hint",
-                color = TerminalColors.grey,
+                text = hint,
+                color = TerminalColors.textTertiary,
                 style = TerminalTypography.labelSmall
             )
         }
@@ -154,12 +160,14 @@ fun TerminalInput(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RICH CHAT INPUT (with @mentions, /commands, attachments)
+// RICH CHAT INPUT (Modern card-based input with status bar)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Rich chat input field with status bar and action toolbar.
  * Main input field for chat screen with model selection, mode toggle, and attachments.
+ * 
+ * Modern design: Rounded card container, clean status bar, pill-shaped send button.
  */
 @Composable
 fun RichChatInput(
@@ -169,7 +177,7 @@ fun RichChatInput(
     modifier: Modifier = Modifier,
     modelName: String = "CLAUDE",
     agentName: String = "BUILD",
-    placeholder: String = "Input instruction...",
+    placeholder: String = "Type a message...",
     enabled: Boolean = true,
     // Model selection
     providerResponse: com.mocca.app.domain.model.ProviderResponse? = null,
@@ -281,15 +289,16 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(TerminalColors.background, RectangleShape)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+            .clip(TerminalShapes.card)
+            .background(TerminalColors.surfaceContainer, TerminalShapes.card)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
     ) {
         // Status bar (MODEL + MODE) - clickable to open selectors
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(32.dp)
-                .padding(horizontal = TerminalSpacing.inputPadding),
+                .height(40.dp)
+                .padding(horizontal = TerminalSpacing.inputPaddingHorizontal),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -301,14 +310,14 @@ fun RichChatInput(
             ) {
                 Text(
                     text = "MODEL: $modelName".uppercase(),
-                    color = if (providerResponse != null) TerminalColors.greyLight else TerminalColors.grey,
+                    color = if (providerResponse != null) TerminalColors.textSecondary else TerminalColors.textTertiary,
                     style = TerminalTypography.labelSmall
                 )
                 if (providerResponse != null) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "▼",
-                        color = TerminalColors.grey,
+                        color = TerminalColors.textTertiary,
                         style = TerminalTypography.labelSmall
                     )
                 }
@@ -316,7 +325,7 @@ fun RichChatInput(
             
             Text(
                 text = "MODE: $agentName".uppercase(),
-                color = TerminalColors.grey,
+                color = TerminalColors.textTertiary,
                 style = TerminalTypography.labelSmall
             )
         }
@@ -332,8 +341,8 @@ fun RichChatInput(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TerminalSpacing.inputPadding, vertical = TerminalSpacing.xs),
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    .padding(horizontal = TerminalSpacing.inputPaddingHorizontal, vertical = TerminalSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
             ) {
                 attachedFiles.forEach { file ->
                     AttachmentChip(
@@ -354,7 +363,7 @@ fun RichChatInput(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 80.dp, max = 240.dp)
-                .padding(TerminalSpacing.inputPadding)
+                .padding(TerminalSpacing.inputPaddingHorizontal)
         ) {
             BasicTextField(
                 value = value,
@@ -375,26 +384,19 @@ fun RichChatInput(
                 textStyle = TerminalTypography.bodyMedium.copy(
                     color = TerminalColors.white
                 ),
-                cursorBrush = SolidColor(TerminalColors.white),
+                cursorBrush = SolidColor(TerminalColors.accentGreen),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,
                 decorationBox = { innerTextField ->
-                    Row {
-                        Text(
-                            text = "> ",
-                            color = TerminalColors.white,
-                            style = TerminalTypography.bodyMedium
-                        )
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (value.isEmpty()) {
-                                Text(
-                                    text = placeholder,
-                                    color = TerminalColors.greyDark,
-                                    style = TerminalTypography.bodyMedium
-                                )
-                            }
-                            innerTextField()
+                    Box(modifier = Modifier) {
+                        if (value.isEmpty()) {
+                            Text(
+                                text = placeholder,
+                                color = TerminalColors.textPlaceholder,
+                                style = TerminalTypography.bodyMedium
+                            )
                         }
+                        innerTextField()
                     }
                 }
             )
@@ -429,14 +431,14 @@ fun RichChatInput(
                 icon = Icons.Default.Add,
                 onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
                 size = 36.dp,
-                iconColor = TerminalColors.greyLight
+                iconColor = TerminalColors.textSecondary
             )
             
             // / command button - inserts /
             TerminalTextButton(
                 text = "/",
                 onClick = { handleValueChange("/") },
-                textColor = TerminalColors.greyLight
+                textColor = TerminalColors.textSecondary
             )
             
             // Divider
@@ -448,23 +450,23 @@ fun RichChatInput(
             )
             Spacer(modifier = Modifier.width(TerminalSpacing.xs))
             
-            // Mode selector buttons
+            // Mode selector buttons (as pills)
             if (modes.isNotEmpty()) {
                 modes.take(3).forEach { mode ->
                     val isSelected = mode.id == selectedModeId
-                    TerminalTextButton(
-                        text = if (isSelected) "* ${mode.name.uppercase()}" else mode.name.uppercase(),
-                        onClick = { onModeSelected(if (isSelected) null else mode.id) },
-                        textColor = if (isSelected) TerminalColors.white else TerminalColors.greyLight
+                    TabPillButton(
+                        text = mode.name.uppercase(),
+                        isSelected = isSelected,
+                        onClick = { onModeSelected(if (isSelected) null else mode.id) }
                     )
                     Spacer(modifier = Modifier.width(TerminalSpacing.xs))
                 }
             } else {
                 // Fallback static mode button
-                TerminalTextButton(
-                    text = "* ${agentName.uppercase()}",
-                    onClick = { },
-                    textColor = TerminalColors.white
+                TabPillButton(
+                    text = agentName.uppercase(),
+                    isSelected = true,
+                    onClick = { }
                 )
             }
             
@@ -475,12 +477,12 @@ fun RichChatInput(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachClick,
                 size = 36.dp,
-                iconColor = TerminalColors.greyLight
+                iconColor = TerminalColors.textSecondary
             )
             
             Spacer(modifier = Modifier.width(TerminalSpacing.sm))
             
-            // Send button
+            // Send button (pill-shaped)
             TerminalCompactButton(
                 text = "SEND",
                 onClick = onSendClick,
@@ -505,6 +507,7 @@ fun RichChatInput(
 
 /**
  * Chip showing an attached file with remove button.
+ * Modern pill-shaped design.
  */
 @Composable
 private fun AttachmentChip(
@@ -513,34 +516,35 @@ private fun AttachmentChip(
 ) {
     Row(
         modifier = Modifier
-            .background(TerminalColors.surface, RectangleShape)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+            .clip(TerminalShapes.pill)
+            .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.pill)
             .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             Icons.Default.AttachFile,
             contentDescription = null,
-            tint = TerminalColors.grey,
+            tint = TerminalColors.textSecondary,
             modifier = Modifier.size(12.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = file.name.take(20),
             style = TerminalTypography.labelSmall,
-            color = TerminalColors.greyLight
+            color = TerminalColors.textSecondary
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = "(${file.displaySize})",
             style = TerminalTypography.labelSmall,
-            color = TerminalColors.grey
+            color = TerminalColors.textTertiary
         )
         Spacer(modifier = Modifier.width(TerminalSpacing.xs))
         Icon(
             Icons.Default.Close,
             contentDescription = "Remove",
-            tint = TerminalColors.grey,
+            tint = TerminalColors.textTertiary,
             modifier = Modifier
                 .size(14.dp)
                 .clickable { onRemove() }
@@ -549,11 +553,12 @@ private fun AttachmentChip(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMMAND LINE INPUT (simple > prompt)
+// COMMAND LINE INPUT (Modern pill-shaped variant)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Simple command line input for terminal screen.
+ * Modern design: Rounded corners, accent cursor.
  * 
  * Supports command history navigation via up/down arrow callbacks.
  */
@@ -565,6 +570,7 @@ fun CommandLineInput(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     placeholder: String = "Enter command...",
+    shape: Shape = TerminalShapes.input,
     // ═══════════════════════════════════════════════════════════════════════════════
     // COMMAND HISTORY (Priority 5.3) - History navigation callbacks
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -574,17 +580,12 @@ fun CommandLineInput(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(TerminalColors.surface, RectangleShape)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
-            .padding(TerminalSpacing.inputPadding),
+            .clip(shape)
+            .background(TerminalColors.surfaceContainer, shape)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, shape)
+            .padding(horizontal = TerminalSpacing.inputPaddingHorizontal, vertical = TerminalSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = "> ",
-            color = TerminalColors.statusOnline,
-            style = TerminalTypography.bodyMedium
-        )
-        
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
@@ -594,7 +595,7 @@ fun CommandLineInput(
             textStyle = TerminalTypography.bodyMedium.copy(
                 color = TerminalColors.white
             ),
-            cursorBrush = SolidColor(TerminalColors.statusOnline),
+            cursorBrush = SolidColor(TerminalColors.accentGreen),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             decorationBox = { innerTextField ->
@@ -602,7 +603,7 @@ fun CommandLineInput(
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = TerminalColors.greyDark,
+                            color = TerminalColors.textPlaceholder,
                             style = TerminalTypography.bodyMedium
                         )
                     }
@@ -623,7 +624,7 @@ fun CommandLineInput(
                         icon = Icons.Default.KeyboardArrowUp,
                         onClick = onHistoryUp,
                         enabled = enabled,
-                        iconColor = TerminalColors.grey,
+                        iconColor = TerminalColors.textSecondary,
                         size = 24.dp,
                         contentDescription = "Previous command"
                     )
@@ -633,7 +634,7 @@ fun CommandLineInput(
                         icon = Icons.Default.KeyboardArrowDown,
                         onClick = onHistoryDown,
                         enabled = enabled,
-                        iconColor = TerminalColors.grey,
+                        iconColor = TerminalColors.textSecondary,
                         size = 24.dp,
                         contentDescription = "Next command"
                     )
@@ -643,14 +644,13 @@ fun CommandLineInput(
         
         Spacer(modifier = Modifier.width(TerminalSpacing.sm))
         
-        // Send button (white square with arrow)
-        TerminalIconButton(
+        // Send button (circular FAB style)
+        TerminalFab(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
-            enabled = enabled && value.isNotBlank(),
-            backgroundColor = if (value.isNotBlank()) TerminalColors.white else TerminalColors.greyDark,
-            iconColor = TerminalColors.background,
-            size = 40.dp
+            size = 48.dp,
+            backgroundColor = if (value.isNotBlank()) TerminalColors.buttonBackground else TerminalColors.greyDark,
+            iconColor = if (value.isNotBlank()) TerminalColors.buttonText else TerminalColors.textTertiary
         )
     }
 }

@@ -10,144 +10,99 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 
 /**
- * Terminal-styled card containers with blocky appearance.
+ * Modern MOCCA card containers with rounded corners.
+ * Based on UI overhaul designs - soft, rounded aesthetic with subtle borders.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BASIC TERMINAL CARD
+// BASIC TERMINAL CARD (16dp rounded corners)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Basic terminal card with white border and black background.
- * Sharp corners (0dp), no elevation.
+ * Basic card with rounded corners and subtle border.
+ * Default: 16dp rounded corners, dark surface background.
  */
 @Composable
 fun TerminalCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.surface,
+    backgroundColor: Color = TerminalColors.surfaceContainer,
     borderColor: Color = TerminalColors.border,
     borderWidth: Dp = TerminalSpacing.borderThin,
     contentPadding: Dp = TerminalSpacing.cardPadding,
+    shape: Shape = TerminalShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
-            .border(borderWidth, borderColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(borderWidth, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
 }
 
 /**
- * Terminal card with prominent white border (2dp).
+ * Elevated card with subtle highlight and slightly thicker border.
  * Used for input fields, status monitors, important containers.
  */
 @Composable
 fun TerminalCardElevated(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.background,
+    backgroundColor: Color = TerminalColors.cardBackground,
     borderColor: Color = TerminalColors.borderLight,
-    borderWidth: Dp = TerminalSpacing.borderStandard,
+    borderWidth: Dp = TerminalSpacing.borderThin,
     contentPadding: Dp = TerminalSpacing.cardPadding,
+    shape: Shape = TerminalShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
-            .border(borderWidth, borderColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(borderWidth, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATUS MONITOR CARD (with decorative L-brackets)
+// STATUS MONITOR CARD (Glass effect with rounded corners)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Status monitor container with decorative L-shaped corner brackets.
+ * Status monitor card with glassmorphic effect.
  * Used on onboarding screen for the hero status section.
+ * 
+ * Modern design: 24dp rounded corners, subtle glass background, soft border.
  */
 @Composable
 fun StatusMonitorCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.background,
-    borderColor: Color = TerminalColors.borderLight,
-    borderWidth: Dp = TerminalSpacing.borderStandard,
-    bracketLength: Dp = 16.dp,
-    bracketThickness: Dp = 4.dp,
-    contentPadding: Dp = TerminalSpacing.xl,
+    backgroundColor: Color = TerminalColors.surfaceContainer,
+    borderColor: Color = TerminalColors.border,
+    borderWidth: Dp = TerminalSpacing.borderThin,
+    contentPadding: Dp = TerminalSpacing.cardPaddingLarge,
+    shape: Shape = TerminalShapes.extraLarge,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
         modifier = modifier
-            .background(backgroundColor, RectangleShape)
-            .border(borderWidth, borderColor, RectangleShape)
-            .drawBehind {
-                val bracketLengthPx = bracketLength.toPx()
-                val bracketThicknessPx = bracketThickness.toPx()
-                
-                // Top-left L-bracket
-                // Horizontal part
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(0f, 0f),
-                    size = androidx.compose.ui.geometry.Size(bracketLengthPx, bracketThicknessPx)
-                )
-                // Vertical part
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(0f, 0f),
-                    size = androidx.compose.ui.geometry.Size(bracketThicknessPx, bracketLengthPx)
-                )
-                
-                // Top-right L-bracket
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(size.width - bracketLengthPx, 0f),
-                    size = androidx.compose.ui.geometry.Size(bracketLengthPx, bracketThicknessPx)
-                )
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(size.width - bracketThicknessPx, 0f),
-                    size = androidx.compose.ui.geometry.Size(bracketThicknessPx, bracketLengthPx)
-                )
-                
-                // Bottom-left L-bracket
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(0f, size.height - bracketThicknessPx),
-                    size = androidx.compose.ui.geometry.Size(bracketLengthPx, bracketThicknessPx)
-                )
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(0f, size.height - bracketLengthPx),
-                    size = androidx.compose.ui.geometry.Size(bracketThicknessPx, bracketLengthPx)
-                )
-                
-                // Bottom-right L-bracket
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(size.width - bracketLengthPx, size.height - bracketThicknessPx),
-                    size = androidx.compose.ui.geometry.Size(bracketLengthPx, bracketThicknessPx)
-                )
-                drawRect(
-                    color = borderColor,
-                    topLeft = Offset(size.width - bracketThicknessPx, size.height - bracketLengthPx),
-                    size = androidx.compose.ui.geometry.Size(bracketThicknessPx, bracketLengthPx)
-                )
-            }
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(borderWidth, borderColor, shape)
     ) {
         Column(
             modifier = Modifier.padding(contentPadding),
@@ -157,24 +112,26 @@ fun StatusMonitorCard(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECTION CARD (with left border indicator)
+// SECTION CARD (with left accent border)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Card with left border accent, used for console log sections.
+ * Card with left accent border, used for console log sections.
+ * Retains left-border style but with rounded corners on right side.
  */
 @Composable
 fun TerminalSectionCard(
     modifier: Modifier = Modifier,
-    leftBorderColor: Color = TerminalColors.grey,
-    leftBorderWidth: Dp = TerminalSpacing.borderThin,
-    backgroundColor: Color = Color.Transparent,
+    leftBorderColor: Color = TerminalColors.accentGreen,
+    leftBorderWidth: Dp = TerminalSpacing.borderStandard,
+    backgroundColor: Color = TerminalColors.surfaceVariant,
     contentPadding: Dp = TerminalSpacing.lg,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .background(backgroundColor)
+            .clip(TerminalShapes.medium)
+            .background(backgroundColor, TerminalShapes.medium)
             .drawBehind {
                 drawRect(
                     color = leftBorderColor,
@@ -182,7 +139,8 @@ fun TerminalSectionCard(
                     size = androidx.compose.ui.geometry.Size(leftBorderWidth.toPx(), size.height)
                 )
             }
-            .padding(start = contentPadding),
+            .padding(start = contentPadding + leftBorderWidth, end = contentPadding, 
+                     top = contentPadding, bottom = contentPadding),
         content = content
     )
 }
@@ -193,22 +151,25 @@ fun TerminalSectionCard(
 
 /**
  * Session/conversation list item card with active indicator.
+ * Modern design: 24dp rounded corners, subtle border, left accent when active.
  */
 @Composable
 fun TerminalSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    backgroundColor: Color = TerminalColors.surface,
+    backgroundColor: Color = TerminalColors.surfaceContainer,
     borderColor: Color = TerminalColors.border,
-    activeIndicatorColor: Color = TerminalColors.activeIndicator,
+    activeIndicatorColor: Color = TerminalColors.accentGreen,
     activeIndicatorWidth: Dp = TerminalSpacing.activeIndicatorWidth,
     contentPadding: Dp = TerminalSpacing.cardPadding,
+    shape: Shape = TerminalShapes.sessionCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor, RectangleShape)
+            .clip(shape)
+            .background(backgroundColor, shape)
             .then(
                 if (isActive) {
                     Modifier.drawBehind {
@@ -225,7 +186,60 @@ fun TerminalSessionCard(
                     Modifier
                 }
             )
-            .border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .padding(contentPadding),
+        content = content
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE CARD (for dashboard modules/tools)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Module card for dashboard tools.
+ * 28dp rounded corners per design specs.
+ */
+@Composable
+fun ModuleToolCard(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = TerminalColors.moduleBackground,
+    borderColor: Color = TerminalColors.border,
+    contentPadding: Dp = TerminalSpacing.modulePadding,
+    shape: Shape = TerminalShapes.moduleCard,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .padding(contentPadding),
+        content = content
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GLASS CARD (Glassmorphic effect)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Glass card with semi-transparent background for overlay effects.
+ */
+@Composable
+fun GlassCard(
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = TerminalColors.glassBackground,
+    borderColor: Color = TerminalColors.glassBorder,
+    contentPadding: Dp = TerminalSpacing.cardPadding,
+    shape: Shape = TerminalShapes.card,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(TerminalSpacing.borderThin, borderColor, shape)
             .padding(contentPadding),
         content = content
     )

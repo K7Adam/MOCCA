@@ -1,15 +1,16 @@
 package com.mocca.app.ui.components.terminal
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,32 +18,37 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ripple
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
-import androidx.compose.material3.MaterialTheme
+import com.mocca.app.ui.theme.TerminalTypography
 
 /**
- * Terminal-styled buttons with blocky appearance.
+ * Modern MOCCA button components with pill-shaped design.
+ * Based on UI overhaul designs - fully rounded corners, subtle glow effects.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// PRIMARY BUTTON (Light grey background, black text)
+// PRIMARY BUTTON (Pill shape, light background, dark text)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Primary terminal button - light grey background, black text.
- * Used for main actions like "[ CONNECT ]".
+ * Primary pill button - off-white background, black text, arrow icon.
+ * Used for main CTAs like "CONNECT →"
  */
 @Composable
 fun TerminalButton(
@@ -55,9 +61,18 @@ fun TerminalButton(
     disabledBackgroundColor: Color = TerminalColors.greyDark,
     disabledTextColor: Color = TerminalColors.grey,
     height: Dp = TerminalSpacing.buttonHeight,
-    showBrackets: Boolean = true,
-    icon: ImageVector? = null
+    showBrackets: Boolean = false, // Changed default - modern design doesn't use brackets
+    icon: ImageVector? = null,
+    showArrow: Boolean = false
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = tween(100),
+        label = "buttonScale"
+    )
+    
     val bgColor = if (enabled) backgroundColor else disabledBackgroundColor
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
@@ -66,12 +81,13 @@ fun TerminalButton(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .background(bgColor, RectangleShape)
+            .scale(scale)
+            .background(bgColor, TerminalShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
+                        interactionSource = interactionSource,
+                        indication = ripple(color = Color.Black.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
                 } else {
@@ -96,19 +112,27 @@ fun TerminalButton(
             Text(
                 text = displayText.uppercase(),
                 color = txtColor,
-                style = MaterialTheme.typography.labelMedium,
+                style = TerminalTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
+            if (showArrow) {
+                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Text(
+                    text = "→",
+                    color = txtColor,
+                    style = TerminalTypography.labelLarge
+                )
+            }
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// OUTLINED BUTTON (Transparent background, white border)
+// OUTLINED BUTTON (Pill shape, transparent background, border)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Outlined terminal button - transparent background, white border.
+ * Outlined pill button - transparent background, subtle border.
  * Used for secondary actions.
  */
 @Composable
@@ -123,9 +147,17 @@ fun TerminalOutlinedButton(
     disabledTextColor: Color = TerminalColors.grey,
     borderWidth: Dp = TerminalSpacing.borderThin,
     height: Dp = TerminalSpacing.buttonHeight,
-    showBrackets: Boolean = true,
+    showBrackets: Boolean = false,
     icon: ImageVector? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.98f else 1f,
+        animationSpec = tween(100),
+        label = "buttonScale"
+    )
+    
     val brdColor = if (enabled) borderColor else disabledBorderColor
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
@@ -134,12 +166,13 @@ fun TerminalOutlinedButton(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
-            .background(Color.Transparent, RectangleShape)
-            .border(borderWidth, brdColor, RectangleShape)
+            .scale(scale)
+            .background(Color.Transparent, TerminalShapes.pill)
+            .border(borderWidth, brdColor, TerminalShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
+                        interactionSource = interactionSource,
                         indication = ripple(color = Color.White.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
@@ -165,19 +198,19 @@ fun TerminalOutlinedButton(
             Text(
                 text = displayText.uppercase(),
                 color = txtColor,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                style = TerminalTypography.labelMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPACT BUTTON (smaller, for toolbars)
+// COMPACT BUTTON (Smaller pill for toolbars)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Compact terminal button - smaller height, for action toolbars.
+ * Compact pill button - smaller height, for action toolbars.
  */
 @Composable
 fun TerminalCompactButton(
@@ -187,22 +220,31 @@ fun TerminalCompactButton(
     enabled: Boolean = true,
     backgroundColor: Color = TerminalColors.white,
     textColor: Color = TerminalColors.background,
-    height: Dp = 36.dp,
-    paddingHorizontal: Dp = TerminalSpacing.lg,
+    height: Dp = 40.dp,
+    paddingHorizontal: Dp = TerminalSpacing.pillPaddingHorizontal,
     icon: ImageVector? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(100),
+        label = "buttonScale"
+    )
+    
     val bgColor = if (enabled) backgroundColor else TerminalColors.greyDark
     val txtColor = if (enabled) textColor else TerminalColors.grey
     
     Box(
         modifier = modifier
             .height(height)
-            .background(bgColor, RectangleShape)
+            .scale(scale)
+            .background(bgColor, TerminalShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
+                        interactionSource = interactionSource,
+                        indication = ripple(color = Color.Black.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
                 } else {
@@ -228,19 +270,70 @@ fun TerminalCompactButton(
             Text(
                 text = text.uppercase(),
                 color = txtColor,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
+                style = TerminalTypography.labelMedium,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ICON BUTTON (square, for toolbars)
+// TAB PILL BUTTON (For tab selectors)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Square icon button - for toolbar actions.
+ * Tab pill button - for horizontal tab selectors.
+ * Active state: filled background. Inactive: transparent with border.
+ */
+@Composable
+fun TabPillButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    activeBackgroundColor: Color = TerminalColors.primary,
+    activeTextColor: Color = TerminalColors.white,
+    inactiveBackgroundColor: Color = Color.Transparent,
+    inactiveBorderColor: Color = TerminalColors.borderLight,
+    inactiveTextColor: Color = TerminalColors.textSecondary
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    Box(
+        modifier = modifier
+            .height(40.dp)
+            .then(
+                if (isSelected) {
+                    Modifier.background(activeBackgroundColor, TerminalShapes.pill)
+                } else {
+                    Modifier
+                        .background(inactiveBackgroundColor, TerminalShapes.pill)
+                        .border(TerminalSpacing.borderThin, inactiveBorderColor, TerminalShapes.pill)
+                }
+            )
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(color = Color.White.copy(alpha = 0.1f)),
+                onClick = onClick
+            )
+            .padding(horizontal = TerminalSpacing.pillPaddingHorizontal),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (isSelected) activeTextColor else inactiveTextColor,
+            style = TerminalTypography.labelMedium,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ICON BUTTON (Circular for FABs and toolbars)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Circular icon button - for FABs and toolbar actions.
  */
 @Composable
 fun TerminalIconButton(
@@ -254,15 +347,24 @@ fun TerminalIconButton(
     borderColor: Color? = null,
     size: Dp = TerminalSpacing.iconButtonSize
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.9f else 1f,
+        animationSpec = tween(100),
+        label = "iconButtonScale"
+    )
+    
     val tintColor = if (enabled) iconColor else TerminalColors.grey
     
     Box(
         modifier = modifier
             .size(size)
-            .background(backgroundColor, RectangleShape)
+            .scale(scale)
+            .background(backgroundColor, TerminalShapes.circle)
             .then(
                 if (borderColor != null) {
-                    Modifier.border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+                    Modifier.border(TerminalSpacing.borderThin, borderColor, TerminalShapes.circle)
                 } else {
                     Modifier
                 }
@@ -270,7 +372,7 @@ fun TerminalIconButton(
             .then(
                 if (enabled) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
+                        interactionSource = interactionSource,
                         indication = ripple(
                             bounded = true,
                             color = Color.White.copy(alpha = 0.1f)
@@ -293,12 +395,60 @@ fun TerminalIconButton(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TEXT BUTTON (underlined link style)
+// FAB (Floating Action Button)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Text button - for inline actions like "CLEAR", "RETRY", "CONFIG".
- * Includes minimum touch target size of 48dp for accessibility.
+ * Floating action button - circular, prominent.
+ */
+@Composable
+fun TerminalFab(
+    icon: ImageVector,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    contentDescription: String? = null,
+    backgroundColor: Color = TerminalColors.buttonBackground,
+    iconColor: Color = TerminalColors.buttonText,
+    size: Dp = TerminalSpacing.fabSize
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = tween(100),
+        label = "fabScale"
+    )
+    
+    Box(
+        modifier = modifier
+            .size(size)
+            .scale(scale)
+            .background(backgroundColor, TerminalShapes.circle)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(
+                    bounded = true,
+                    color = Color.Black.copy(alpha = 0.1f)
+                ),
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = contentDescription,
+            tint = iconColor,
+            modifier = Modifier.size(28.dp)
+        )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TEXT BUTTON (Link style)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Text button - for inline actions, link style.
  */
 @Composable
 fun TerminalTextButton(
@@ -308,15 +458,16 @@ fun TerminalTextButton(
     enabled: Boolean = true,
     textColor: Color = TerminalColors.greyLight
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     val color = if (enabled) textColor else TerminalColors.greyDark
     
     Box(
         modifier = modifier
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+            .height(48.dp)
             .then(
                 if (enabled) {
                     Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
+                        interactionSource = interactionSource,
                         indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
@@ -328,9 +479,10 @@ fun TerminalTextButton(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = text.uppercase(),
+            text = text,
             color = color,
-            style = MaterialTheme.typography.labelMedium
+            style = TerminalTypography.labelMedium,
+            fontWeight = FontWeight.Medium
         )
     }
 }

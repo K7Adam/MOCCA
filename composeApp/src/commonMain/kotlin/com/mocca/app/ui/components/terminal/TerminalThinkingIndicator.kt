@@ -26,15 +26,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
 
 /**
  * Terminal-style thinking indicator for Claude/o1 extended reasoning.
  * Shows a pulsing "brain activity" animation with optional thinking content preview.
+ * Modern design: Rounded, subtle.
  */
 @Composable
 fun TerminalThinkingIndicator(
@@ -63,7 +66,7 @@ fun TerminalThinkingIndicator(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = TerminalSpacing.xs)
+            modifier = Modifier.padding(bottom = TerminalSpacing.xs, start = TerminalSpacing.sm)
         ) {
             // Brain icon with pulse
             Box(
@@ -76,7 +79,7 @@ fun TerminalThinkingIndicator(
             )
             Spacer(modifier = Modifier.width(TerminalSpacing.xs))
             Text(
-                text = "[THINKING...]",
+                text = "THINKING...",
                 color = TerminalColors.statusThinking,
                 style = TerminalTypography.labelSmall,
                 fontWeight = FontWeight.Bold
@@ -86,7 +89,7 @@ fun TerminalThinkingIndicator(
             if (elapsedMs > 0) {
                 Text(
                     text = formatThinkingDuration(elapsedMs),
-                    color = TerminalColors.whiteMuted,
+                    color = TerminalColors.textTertiary,
                     style = TerminalTypography.labelSmall
                 )
             }
@@ -106,18 +109,19 @@ private fun ExpandableThinkingPreview(content: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TerminalColors.surfaceVariant, RectangleShape)
+            .clip(TerminalShapes.medium)
+            .background(TerminalColors.background.copy(alpha = 0.5f), TerminalShapes.medium)
             .border(
                 width = TerminalSpacing.borderThin,
                 color = TerminalColors.statusThinking.copy(alpha = 0.3f),
-                shape = RectangleShape
+                shape = TerminalShapes.medium
             )
             .clickable { expanded = !expanded }
             .padding(TerminalSpacing.sm)
     ) {
         Text(
             text = if (expanded) content else content.take(100) + if (content.length > 100) "..." else "",
-            color = TerminalColors.whiteMuted,
+            color = TerminalColors.textSecondary,
             style = TerminalTypography.bodySmall,
             maxLines = if (expanded) Int.MAX_VALUE else 2
         )
@@ -125,7 +129,7 @@ private fun ExpandableThinkingPreview(content: String) {
         if (content.length > 100) {
             Spacer(modifier = Modifier.height(TerminalSpacing.xs))
             Text(
-                text = if (expanded) "[COLLAPSE]" else "[EXPAND]",
+                text = if (expanded) "COLLAPSE" else "EXPAND",
                 color = TerminalColors.statusThinking.copy(alpha = 0.7f),
                 style = TerminalTypography.labelSmall,
                 fontWeight = FontWeight.Bold

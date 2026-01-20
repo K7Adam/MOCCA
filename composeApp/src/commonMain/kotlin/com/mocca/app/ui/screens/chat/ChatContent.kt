@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -35,6 +37,7 @@ import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.terminal.*
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
 import com.mocca.app.util.FilePickerHelper
@@ -105,12 +108,13 @@ fun ChatContent(screenModel: ChatScreenModel) {
             
             AlertDialog(
                 onDismissRequest = { showShareDialog = false },
-                containerColor = TerminalColors.surface,
-                title = { Text(if (isShared) "SESSION_SHARED" else "SHARE_SESSION", style = TerminalTypography.labelMedium, color = TerminalColors.white) },
+                containerColor = TerminalColors.surfaceElevated,
+                shape = TerminalShapes.dialog,
+                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = TerminalTypography.labelMedium, color = TerminalColors.white) },
                 text = {
                     Column {
                         if (isShared) {
-                            Text("This session is publicly accessible.", color = TerminalColors.grey, style = TerminalTypography.bodySmall)
+                            Text("This session is publicly accessible.", color = TerminalColors.textSecondary, style = TerminalTypography.bodySmall)
                             Spacer(modifier = Modifier.height(TerminalSpacing.md))
                             TerminalInput(
                                 value = shareUrl,
@@ -125,16 +129,16 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 confirmButton = {
                     if (isShared) {
-                        TerminalButton(
-                            text = "COPY_LINK",
+                        TerminalCompactButton(
+                            text = "COPY LINK",
                             onClick = { 
                                 clipboardManager.setText(AnnotatedString(shareUrl))
                                 showShareDialog = false
                             }
                         )
                     } else {
-                        TerminalButton(
-                            text = "SHARE_PUBLICLY",
+                        TerminalCompactButton(
+                            text = "SHARE PUBLICLY",
                             onClick = { 
                                 screenModel.shareSession()
                             }
@@ -149,7 +153,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                                 screenModel.unshareSession()
                                 showShareDialog = false
                             },
-                            textColor = TerminalColors.error
+                            textColor = TerminalColors.alertRed
                         )
                     } else {
                         TerminalTextButton(
@@ -188,7 +192,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = TerminalSpacing.lg, vertical = TerminalSpacing.lg),
+                        .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.lg),
                     verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
                 ) {
                     repeat(3) { MessageSkeleton() }
@@ -207,7 +211,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     reverseLayout = true,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = TerminalSpacing.lg),
+                        .padding(horizontal = TerminalSpacing.screenPaddingHorizontal),
                     contentPadding = PaddingValues(
                         top = TerminalSpacing.lg,
                         bottom = TerminalSpacing.lg
@@ -276,28 +280,38 @@ fun ChatContent(screenModel: ChatScreenModel) {
             }
         }
         
-        RichChatInput(
-            value = inputText,
-            onValueChange = { screenModel.updateInputText(it) },
-            onSendClick = { screenModel.sendMessage() },
-            enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
-            modelName = state.modelName,
-            agentName = state.agentName,
-            providerResponse = state.providerInfo,
-            selectedProviderId = state.selectedProviderId,
-            selectedModelId = state.selectedModelId,
-            onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
-            recentModels = state.recentModels,
-            modes = state.modes,
-            selectedModeId = state.selectedModeId,
-            onModeSelected = { screenModel.selectMode(it) },
-            attachedFiles = state.attachedFiles,
-            onRemoveAttachment = { screenModel.removeAttachment(it) },
-            onAttachClick = { filePickerLauncher.launch() },
-            commands = commands,
-            onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
-            onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
-        )
+        // Input area with padding
+        Box(
+            modifier = Modifier.padding(
+                start = TerminalSpacing.screenPaddingHorizontal,
+                end = TerminalSpacing.screenPaddingHorizontal,
+                bottom = TerminalSpacing.screenPaddingBottom,
+                top = TerminalSpacing.md
+            )
+        ) {
+            RichChatInput(
+                value = inputText,
+                onValueChange = { screenModel.updateInputText(it) },
+                onSendClick = { screenModel.sendMessage() },
+                enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
+                modelName = state.modelName,
+                agentName = state.agentName,
+                providerResponse = state.providerInfo,
+                selectedProviderId = state.selectedProviderId,
+                selectedModelId = state.selectedModelId,
+                onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
+                recentModels = state.recentModels,
+                modes = state.modes,
+                selectedModeId = state.selectedModeId,
+                onModeSelected = { screenModel.selectMode(it) },
+                attachedFiles = state.attachedFiles,
+                onRemoveAttachment = { screenModel.removeAttachment(it) },
+                onAttachClick = { filePickerLauncher.launch() },
+                commands = commands,
+                onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
+                onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
+            )
+        }
     }
 }
 
@@ -309,11 +323,11 @@ private fun ChatHeader(
     onShareClick: () -> Unit,
     onSummarizeClick: () -> Unit
 ) {
+    // Modern header with transparent/blurred background
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TerminalColors.surfaceVariant)
-            .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
+            .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -326,31 +340,27 @@ private fun ChatHeader(
             modifier = Modifier.weight(1f)
         )
         
-        Row {
+        Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
             TerminalIconButton(
                 icon = Icons.Default.Description,
                 onClick = onSummarizeClick,
-                iconColor = TerminalColors.greyLight,
-                size = 32.dp,
+                iconColor = TerminalColors.textSecondary,
+                size = 36.dp,
                 contentDescription = "Summarize"
             )
-            
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
             
             TerminalIconButton(
                 icon = Icons.Default.Share,
                 onClick = onShareClick,
-                iconColor = TerminalColors.greyLight,
-                size = 32.dp
+                iconColor = TerminalColors.textSecondary,
+                size = 36.dp
             )
-            
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
             
             TerminalIconButton(
                 icon = if (showTodos) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
                 onClick = onTodoClick,
-                iconColor = if (showTodos) TerminalColors.statusOnline else TerminalColors.greyLight,
-                size = 32.dp
+                iconColor = if (showTodos) TerminalColors.accentGreen else TerminalColors.textSecondary,
+                size = 36.dp
             )
         }
     }
@@ -362,33 +372,40 @@ private fun RevertedSessionBanner(onResume: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .zIndex(1f)
-            .background(TerminalColors.surfaceVariant)
-            .padding(TerminalSpacing.sm)
+            .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.sm)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(TerminalShapes.medium)
+                .background(TerminalColors.surfaceVariant)
+                .padding(TerminalSpacing.sm)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.History, 
-                    contentDescription = null,
-                    tint = TerminalColors.grey,
-                    modifier = Modifier.size(16.dp)
-                )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
-                Text(
-                    text = "VIEWING_OLDER_VERSION // NEW_MESSAGES_WILL_FORK",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TerminalColors.grey
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.History, 
+                        contentDescription = null,
+                        tint = TerminalColors.textSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                    Text(
+                        text = "VIEWING OLDER VERSION",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TerminalColors.textSecondary
+                    )
+                }
+                TerminalTextButton(
+                    text = "RESUME LATEST",
+                    onClick = onResume,
+                    textColor = TerminalColors.accentGreen
                 )
             }
-            TerminalTextButton(
-                text = "RESUME_LATEST",
-                onClick = onResume,
-                textColor = TerminalColors.statusOnline
-            )
         }
     }
 }
@@ -402,25 +419,32 @@ private fun TerminalErrorOverlay(
         modifier = Modifier
             .fillMaxWidth()
             .zIndex(2f)
-            .background(TerminalColors.error.copy(alpha = 0.9f))
-            .padding(TerminalSpacing.md)
+            .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.sm)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(TerminalShapes.medium)
+                .background(TerminalColors.error.copy(alpha = 0.9f))
+                .padding(TerminalSpacing.md)
         ) {
-            Text(
-                text = "ERROR: $error".uppercase(),
-                color = TerminalColors.white,
-                style = TerminalTypography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.weight(1f)
-            )
-            TerminalIconButton(
-                icon = Icons.Default.Close,
-                onClick = onDismiss,
-                iconColor = TerminalColors.white
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "ERROR: $error",
+                    color = TerminalColors.white,
+                    style = TerminalTypography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                TerminalIconButton(
+                    icon = Icons.Default.Close,
+                    onClick = onDismiss,
+                    iconColor = TerminalColors.white
+                )
+            }
         }
     }
 }
@@ -435,15 +459,15 @@ fun MarkdownText(
         content = markdown,
         colors = markdownColor(
             text = color,
-            codeText = TerminalColors.statusOnline,
-            codeBackground = TerminalColors.surface,
-            inlineCodeText = TerminalColors.statusOnline,
-            inlineCodeBackground = TerminalColors.surface,
-            linkText = TerminalColors.statusOnline
+            codeText = TerminalColors.accentGreen,
+            codeBackground = TerminalColors.surfaceVariant,
+            inlineCodeText = TerminalColors.accentGreen,
+            inlineCodeBackground = TerminalColors.surfaceVariant,
+            linkText = TerminalColors.primary
         ),
         typography = markdownTypography(
             text = style,
-            code = MaterialTheme.typography.bodySmall.copy(color = TerminalColors.statusOnline),
+            code = MaterialTheme.typography.bodySmall.copy(color = TerminalColors.accentGreen),
             h1 = MaterialTheme.typography.headlineMedium.copy(color = color),
             h2 = MaterialTheme.typography.headlineSmall.copy(color = color),
             h3 = MaterialTheme.typography.titleLarge.copy(color = color),
@@ -467,18 +491,18 @@ private fun EmptySessionState(onInit: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Rocket,
                 contentDescription = null,
-                tint = TerminalColors.grey,
+                tint = TerminalColors.textTertiary,
                 modifier = Modifier.size(64.dp)
             )
             Spacer(modifier = Modifier.height(TerminalSpacing.md))
             Text(
-                text = "SESSION_READY",
-                style = TerminalTypography.labelLarge,
-                color = TerminalColors.grey
+                text = "SESSION READY",
+                style = TerminalTypography.headlineSmall,
+                color = TerminalColors.textTertiary
             )
             Spacer(modifier = Modifier.height(TerminalSpacing.lg))
             TerminalButton(
-                text = "INITIALIZE_PROJECT",
+                text = "INITIALIZE PROJECT",
                 onClick = onInit
             )
         }
@@ -502,10 +526,11 @@ private fun InitSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surface,
+        containerColor = TerminalColors.surfaceElevated,
+        shape = TerminalShapes.dialog,
         title = { 
             Text(
-                text = "INITIALIZE_PROJECT", 
+                text = "INITIALIZE PROJECT", 
                 style = TerminalTypography.labelMedium, 
                 color = TerminalColors.white
             ) 
@@ -515,11 +540,11 @@ private fun InitSessionDialog(
                 Text(
                     text = "Select an AI model to analyze the project:",
                     style = TerminalTypography.bodySmall,
-                    color = TerminalColors.grey
+                    color = TerminalColors.textSecondary
                 )
                 Spacer(modifier = Modifier.height(TerminalSpacing.md))
                 
-                Text("// PROVIDER", color = TerminalColors.statusOnline, style = TerminalTypography.labelSmall)
+                Text("PROVIDER", color = TerminalColors.accentGreen, style = TerminalTypography.labelSmall)
                 Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                 providerInfo.all.forEach { providerItem ->
                     Row(
@@ -532,16 +557,25 @@ private fun InitSessionDialog(
                             .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Use a custom radio-like indicator
+                        Box(
+                            modifier = Modifier
+                                .size(16.dp)
+                                .clip(TerminalShapes.circle)
+                                .border(1.dp, if (selectedProvider == providerItem.id) TerminalColors.accentGreen else TerminalColors.grey, TerminalShapes.circle)
+                                .background(if (selectedProvider == providerItem.id) TerminalColors.accentGreen else Color.Transparent)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (selectedProvider == providerItem.id) "[x] ${providerItem.name}" else "[ ] ${providerItem.name}",
-                            color = if (selectedProvider == providerItem.id) TerminalColors.white else TerminalColors.grey
+                            text = providerItem.name,
+                            color = if (selectedProvider == providerItem.id) TerminalColors.white else TerminalColors.textSecondary
                         )
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(TerminalSpacing.md))
                 
-                Text("// MODEL", color = TerminalColors.statusOnline, style = TerminalTypography.labelSmall)
+                Text("MODEL", color = TerminalColors.accentGreen, style = TerminalTypography.labelSmall)
                 Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                 LazyColumn(modifier = Modifier.height(150.dp)) {
                     items(currentModelIds) { modelId ->
@@ -552,9 +586,17 @@ private fun InitSessionDialog(
                                 .padding(vertical = 4.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .clip(TerminalShapes.circle)
+                                    .border(1.dp, if (selectedModel == modelId) TerminalColors.accentGreen else TerminalColors.grey, TerminalShapes.circle)
+                                    .background(if (selectedModel == modelId) TerminalColors.accentGreen else Color.Transparent)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (selectedModel == modelId) "[x] $modelId" else "[ ] $modelId",
-                                color = if (selectedModel == modelId) TerminalColors.white else TerminalColors.grey,
+                                text = modelId,
+                                color = if (selectedModel == modelId) TerminalColors.white else TerminalColors.textSecondary,
                                 style = TerminalTypography.bodySmall
                             )
                         }
@@ -563,8 +605,8 @@ private fun InitSessionDialog(
             }
         },
         confirmButton = {
-            TerminalButton(
-                text = "START_INITIALIZATION",
+            TerminalCompactButton(
+                text = "START",
                 onClick = { onInit(selectedProvider, selectedModel) },
                 enabled = selectedProvider.isNotEmpty() && selectedModel.isNotEmpty()
             )

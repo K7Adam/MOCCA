@@ -6,163 +6,275 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import mocca.composeapp.generated.resources.Res
-import mocca.composeapp.generated.resources.jetbrains_mono_bold
-import mocca.composeapp.generated.resources.jetbrains_mono_regular
-import org.jetbrains.compose.resources.Font
 
 /**
- * Terminal typography using monospace fonts throughout.
- * Follows mockup specifications: uppercase headers, monospace everywhere.
+ * Modern MOCCA typography using system fonts with variable weights.
+ * Based on UI overhaul designs using Space Grotesk aesthetic.
+ * 
+ * Design Language: 
+ * - Display/Headers: Light to Bold weights, tight tracking
+ * - Body: Regular weight, relaxed line height
+ * - Labels: Medium weight, wide letter-spacing, UPPERCASE
+ * - Code: Monospace (JetBrains Mono when available)
  */
 object TerminalTypography {
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // FONT FAMILY
+    // FONT FAMILIES
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Monospace font family for terminal aesthetic */
-    val fontFamily = FontFamily.Monospace
+    /** Display font - System Sans Serif (mimics Space Grotesk) */
+    val displayFamily = FontFamily.SansSerif
+    
+    /** Body font - System Default */
+    val bodyFamily = FontFamily.Default
+    
+    /** Monospace font - for code blocks */
+    val monoFamily = FontFamily.Monospace
+    
+    // For backwards compatibility
+    val fontFamily = FontFamily.SansSerif
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // RAW STYLES (for direct use outside MaterialTheme)
+    // DISPLAY STYLES (Hero text, large headings)
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Hero/display text - Status monitor "PROBING_HOST..." */
+    /** Hero/display text - "Initialize" - Light weight */
     val displayLarge = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 48.sp,
-        lineHeight = 56.sp,
-        letterSpacing = 2.sp
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Light,
+        fontSize = 36.sp,
+        lineHeight = 40.sp,
+        letterSpacing = (-0.5).sp
     )
     
-    /** Large title - "OPENCODE_TERM" */
-    val headlineLarge = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
+    /** Display medium - Secondary hero text */
+    val displayMedium = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 32.sp,
+        lineHeight = 36.sp,
+        letterSpacing = 0.sp
+    )
+    
+    /** Display small - Tertiary display */
+    val displaySmall = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 28.sp,
         lineHeight = 32.sp,
-        letterSpacing = 1.sp
+        letterSpacing = 0.sp
     )
     
-    /** Section headers - "[ CONTEXT_INFO ]" */
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HEADLINE STYLES (Page titles, section headers)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Large headline - "Connection" - Bold */
+    val headlineLarge = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 32.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.5).sp
+    )
+    
+    /** Medium headline - Section headers */
     val headlineMedium = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = displayFamily,
         fontWeight = FontWeight.SemiBold,
+        fontSize = 24.sp,
+        lineHeight = 28.sp,
+        letterSpacing = 0.sp
+    )
+    
+    /** Small headline - Card titles, subsections */
+    val headlineSmall = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.sp
+    )
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TITLE STYLES (List items, navigation)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Large title - Navigation items, major list items */
+    val titleLarge = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Bold,
         fontSize = 18.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     )
     
-    /** Card titles - "MCP_CONFIG" */
-    val headlineSmall = TextStyle(
-        fontFamily = fontFamily,
+    /** Medium title - List item primary text */
+    val titleMedium = TextStyle(
+        fontFamily = displayFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 22.sp,
-        letterSpacing = 0.5.sp
+        letterSpacing = 0.sp
     )
     
-    /** Primary body text - Chat messages */
+    /** Small title - Compact list items */
+    val titleSmall = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.sp
+    )
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // BODY STYLES (Content text)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Large body - Primary content text */
     val bodyLarge = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.sp
     )
     
-    /** Secondary body text - Session descriptions */
+    /** Medium body - Secondary content */
     val bodyMedium = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.sp
     )
     
-    /** Small body text - Console logs, meta info */
+    /** Small body - Descriptions, metadata */
     val bodySmall = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.sp
     )
     
-    /** Label - Status bar "MODEL: CLAUDE OPUS 4.5" */
+    // ═══════════════════════════════════════════════════════════════════════════
+    // LABEL STYLES (UI labels, buttons, status)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Large label - Button text, prominent labels */
     val labelLarge = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 16.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.5.sp
+    )
+    
+    /** Medium label - Standard labels, tabs */
+    val labelMedium = TextStyle(
+        fontFamily = displayFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 1.sp
+        lineHeight = 18.sp,
+        letterSpacing = 0.5.sp
     )
     
-    /** Medium label - Button text "[ CONNECT ]" */
-    val labelMedium = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.Bold,
+    /** Small label - Status badges, timestamps */
+    val labelSmall = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 1.sp
+        letterSpacing = 0.5.sp
     )
     
-    /** Small label - Timestamps, meta "SYS_BOOT_SEQ_892" */
-    val labelSmall = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.Normal,
+    /** Extra small label - Very compact labels */
+    val labelExtraSmall = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Medium,
         fontSize = 10.sp,
         lineHeight = 14.sp,
         letterSpacing = 1.sp
     )
     
-    /** Title for navigation items */
-    val titleLarge = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SPECIAL STYLES
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Header label - UPPERCASE with wide tracking */
+    val headerLabel = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
+        letterSpacing = 2.sp
     )
     
-    /** Title for list items */
-    val titleMedium = TextStyle(
-        fontFamily = fontFamily,
+    /** Section header - UPPERCASE with tracking */
+    val sectionHeader = TextStyle(
+        fontFamily = displayFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 11.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 1.5.sp
+    )
+    
+    /** Status text - For status indicators */
+    val status = TextStyle(
+        fontFamily = displayFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
+        fontSize = 10.sp,
+        lineHeight = 12.sp,
+        letterSpacing = 0.5.sp
     )
     
-    /** Title for compact items */
-    val titleSmall = TextStyle(
-        fontFamily = fontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp
-    )
-    
-    /** Code blocks - Monospace, small */
+    /** Code blocks - Monospace */
     val code = TextStyle(
-        fontFamily = fontFamily,
+        fontFamily = monoFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.sp
+    )
+    
+    /** Code small - Smaller code text */
+    val codeSmall = TextStyle(
+        fontFamily = monoFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         letterSpacing = 0.sp
     )
+    
+    /** Mono label - Monospace labels (commit hashes, etc.) */
+    val monoLabel = TextStyle(
+        fontFamily = monoFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.sp
+    )
+    
+    /** Footer text - Very small, muted */
+    val footer = TextStyle(
+        fontFamily = monoFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 2.sp
+    )
 }
 
 /**
- * Creates Material3 Typography using terminal monospace fonts.
+ * Creates Material3 Typography using modern font styles.
  */
 @Composable
 fun terminalTypography(): Typography = Typography(
     displayLarge = TerminalTypography.displayLarge,
-    displayMedium = TerminalTypography.headlineLarge, // Reuse for medium display
-    displaySmall = TerminalTypography.headlineMedium,
+    displayMedium = TerminalTypography.displayMedium,
+    displaySmall = TerminalTypography.displaySmall,
     headlineLarge = TerminalTypography.headlineLarge,
     headlineMedium = TerminalTypography.headlineMedium,
     headlineSmall = TerminalTypography.headlineSmall,

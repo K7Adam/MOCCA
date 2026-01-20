@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,35 +27,31 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.terminal.BlinkingCursor
+import com.mocca.app.ui.components.terminal.StatusDot
 import com.mocca.app.ui.components.terminal.StatusMonitorCard
 import com.mocca.app.ui.components.terminal.TerminalButton
-import com.mocca.app.ui.components.terminal.TerminalHeader
+import com.mocca.app.ui.components.terminal.TerminalInput
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
 
 /**
  * Onboarding screen for initial connection setup.
  * Matches mockup: mockups_screens/onboarding_&_connection/screen.png
+ * Refactored to modern UI/UX standards.
  */
 class OnboardingScreen : Screen {
     
@@ -77,14 +72,14 @@ class OnboardingScreen : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(TerminalColors.background)
-                .padding(TerminalSpacing.lg)
+                .padding(TerminalSpacing.screenPaddingHorizontal)
         ) {
             // Top status bar
             TopStatusBar(hasSignal = state.isConnected || state.probeState == ProbeState.SUCCESS)
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+            Spacer(modifier = Modifier.height(TerminalSpacing.sectionGap))
             
-            // Boot sequence console
+            // Boot sequence console (kept for flavor, but modernized)
             AnimatedVisibility(
                 visible = !state.bootComplete,
                 exit = fadeOut(animationSpec = tween(300))
@@ -132,6 +127,7 @@ class OnboardingScreen : Screen {
             
             // Footer
             FooterInfo()
+            Spacer(modifier = Modifier.height(TerminalSpacing.screenPaddingBottom))
         }
     }
 }
@@ -142,7 +138,9 @@ class OnboardingScreen : Screen {
 @Composable
 private fun TopStatusBar(hasSignal: Boolean) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = TerminalSpacing.screenPaddingTop),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -155,19 +153,15 @@ private fun TopStatusBar(hasSignal: Boolean) {
         
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(
-                        if (hasSignal) TerminalColors.statusOnline else TerminalColors.statusOffline,
-                        RectangleShape
-                    )
+            StatusDot(
+                color = if (hasSignal) TerminalColors.statusOnline else TerminalColors.statusOffline,
+                size = TerminalSpacing.statusDotSize
             )
             Text(
                 text = if (hasSignal) "SIGNAL_OK" else "NO_SIGNAL",
-                color = if (hasSignal) TerminalColors.statusOnline else TerminalColors.grey,
+                color = if (hasSignal) TerminalColors.statusOnline else TerminalColors.textSecondary,
                 style = TerminalTypography.labelSmall
             )
         }
@@ -183,12 +177,15 @@ private fun BootSequenceConsole(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .clip(TerminalShapes.medium)
+            .background(TerminalColors.surfaceVariant, TerminalShapes.medium)
+            .padding(TerminalSpacing.md),
         verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
         Text(
             text = "SYS_BOOT_SEQ_${(100..999).random()}",
-            color = TerminalColors.grey,
+            color = TerminalColors.textTertiary,
             style = TerminalTypography.labelSmall
         )
         
@@ -211,7 +208,7 @@ private fun BootSequenceConsole(
                         BootStatus.DONE -> TerminalColors.statusOnline
                         BootStatus.ERROR -> TerminalColors.error
                         BootStatus.WAIT -> TerminalColors.statusWaiting
-                        else -> TerminalColors.grey
+                        else -> TerminalColors.textTertiary
                     },
                     style = TerminalTypography.bodySmall
                 )
@@ -229,7 +226,7 @@ private fun BootSequenceConsole(
 }
 
 /**
- * Probing status card with L-bracket corners.
+ * Probing status card with glassmorphic effect.
  */
 @Composable
 private fun ProbingStatusCard(
@@ -244,12 +241,12 @@ private fun ProbingStatusCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "[[ $probeMessage ]]",
+                text = probeMessage.uppercase(),
                 color = when (probeState) {
                     ProbeState.SUCCESS -> TerminalColors.statusOnline
                     ProbeState.FAILED -> TerminalColors.error
                     ProbeState.PROBING -> TerminalColors.statusWaiting
-                    ProbeState.IDLE -> TerminalColors.grey
+                    ProbeState.IDLE -> TerminalColors.textSecondary
                 },
                 style = TerminalTypography.headlineMedium,
                 fontWeight = FontWeight.Bold
@@ -257,12 +254,13 @@ private fun ProbingStatusCard(
             
             if (probeState == ProbeState.PROBING) {
                 Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Attempting connection",
-                        color = TerminalColors.grey,
-                        style = TerminalTypography.bodySmall
+                        color = TerminalColors.textSecondary,
+                        style = TerminalTypography.bodyMedium
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     BlinkingCursor()
                 }
             }
@@ -288,32 +286,52 @@ private fun ConnectionForm(
         verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
     ) {
         // Server address field
-        TerminalInputField(
-            label = "// SERVER_ADDRESS",
+        TerminalInput(
+            label = "SERVER ADDRESS",
             value = serverAddress,
             onValueChange = onServerAddressChange,
-            placeholder = "> HTTP://LOCALHOST:8000",
-            enabled = !isConnecting
+            placeholder = "http://localhost:8000",
+            enabled = !isConnecting,
+            hint = "Enter the full URL of your OpenCode server"
         )
         
         // Auth token field
-        TerminalInputField(
-            label = "// AUTH_TOKEN",
+        TerminalInput(
+            label = "AUTH TOKEN",
             value = authToken,
             onValueChange = onAuthTokenChange,
-            placeholder = "> ENTER_API_KEY",
-            helperText = "* Required for secure handshake",
-            isPassword = true,
-            enabled = !isConnecting
+            placeholder = "Enter API Key",
+            hint = "Required for secure handshake",
+            enabled = !isConnecting,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            )
         )
         
         // Error message
         if (connectionError != null) {
-            Text(
-                text = "ERROR: $connectionError",
-                color = TerminalColors.error,
-                style = TerminalTypography.bodySmall
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(TerminalShapes.medium)
+                    .background(TerminalColors.alertRedDim, TerminalShapes.medium)
+                    .padding(TerminalSpacing.md)
+            ) {
+                Text(
+                    text = "!",
+                    color = TerminalColors.alertRed,
+                    style = TerminalTypography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = connectionError,
+                    color = TerminalColors.alertRed,
+                    style = TerminalTypography.bodySmall
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(TerminalSpacing.md))
@@ -323,83 +341,9 @@ private fun ConnectionForm(
             text = if (isConnecting) "CONNECTING..." else "CONNECT",
             onClick = onConnectClick,
             enabled = !isConnecting,
+            showArrow = true,
             modifier = Modifier.fillMaxWidth()
         )
-    }
-}
-
-/**
- * Terminal-styled input field.
- */
-@Composable
-private fun TerminalInputField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    modifier: Modifier = Modifier,
-    helperText: String? = null,
-    isPassword: Boolean = false,
-    enabled: Boolean = true
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            color = TerminalColors.grey,
-            style = TerminalTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
-        
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(TerminalSpacing.borderThin, TerminalColors.borderLight, RectangleShape)
-                .background(TerminalColors.surface)
-                .padding(TerminalSpacing.md)
-        ) {
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                enabled = enabled,
-                singleLine = true,
-                textStyle = TerminalTypography.bodyMedium.copy(
-                    color = TerminalColors.white
-                ),
-                cursorBrush = SolidColor(TerminalColors.white),
-                visualTransformation = if (isPassword && value.isNotEmpty()) {
-                    PasswordVisualTransformation('*')
-                } else {
-                    VisualTransformation.None
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Uri,
-                    imeAction = ImeAction.Next
-                ),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = TerminalColors.grey,
-                                style = TerminalTypography.bodyMedium
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-        
-        if (helperText != null) {
-            Spacer(modifier = Modifier.height(TerminalSpacing.xxs))
-            Text(
-                text = helperText,
-                color = TerminalColors.grey,
-                style = TerminalTypography.labelSmall
-            )
-        }
     }
 }
 
@@ -414,7 +358,7 @@ private fun FooterInfo() {
     ) {
         Text(
             text = "OPENCODE_AGENT_V1.0 // UNENCRYPTED_LOCAL_LINK",
-            color = TerminalColors.greyDark,
+            color = TerminalColors.textTertiary,
             style = TerminalTypography.labelSmall
         )
     }

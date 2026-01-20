@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.terminal.GitStatusModule
 import com.mocca.app.ui.components.terminal.McpConfigModule
@@ -27,14 +28,14 @@ import com.mocca.app.ui.components.terminal.ModuleRowItem
 import com.mocca.app.ui.components.terminal.SkillItem
 import com.mocca.app.ui.components.terminal.SkillsEngineModule
 import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
+import com.mocca.app.ui.components.terminal.TerminalButton
 import com.mocca.app.ui.theme.TerminalColors
 import com.mocca.app.ui.theme.TerminalSpacing
 
 /**
  * Right swipe panel: Modular tools dashboard.
  * Matches mockup: mockups_screens/modular_tools_dashboard/screen.png
- * 
- * This version uses DashboardScreenModel for real data.
+ * Refactored for modern UI/UX.
  */
 @Composable
 fun DashboardPanel(
@@ -88,24 +89,24 @@ fun DashboardPanel(
             onExpandClick = onGitClick
         )
         
-        // Agents Module (new - shows available agents)
+        // Agents Module
         AgentsModule(
             agents = state.agents,
             onAgentClick = { /* Could navigate to agent detail */ }
         )
         
-        // Tools Module (new - shows available tools count)
+        // Tools Module
         ToolsModule(
             tools = state.tools
         )
         
-        // Commands Module (new - shows slash commands)
+        // Commands Module
         CommandsModule(
             commands = state.commands,
             onCommandClick = { /* Could insert command into chat */ }
         )
         
-        // Skills Engine Module (using commands as skills for now)
+        // Skills Engine Module
         val skills = state.commands.toSkillItems()
         if (skills.isNotEmpty()) {
             SkillsEngineModule(
@@ -116,12 +117,12 @@ fun DashboardPanel(
         }
         
         Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(TerminalSpacing.xl))
         
-        // Refresh All Button
+        // Refresh All Button (Modern rounded button)
         TerminalOutlinedButton(
-            text = "[REFRESH_ALL]",
+            text = "REFRESH ALL",
             onClick = onRefreshAll,
-            showBrackets = false,
             icon = Icons.Default.Refresh,
             modifier = Modifier.fillMaxWidth()
         )
@@ -130,9 +131,8 @@ fun DashboardPanel(
         
         // Settings Button
         TerminalOutlinedButton(
-            text = "[SETTINGS]",
+            text = "SETTINGS",
             onClick = onSettingsClick,
-            showBrackets = false,
             icon = Icons.Default.Settings,
             modifier = Modifier.fillMaxWidth()
         )
@@ -140,13 +140,15 @@ fun DashboardPanel(
         Spacer(modifier = Modifier.height(TerminalSpacing.sm))
         
         // Open Terminal Button
-        TerminalOutlinedButton(
-            text = ">_ OPEN_TERMINAL",
+        TerminalButton(
+            text = ">_ OPEN TERMINAL",
             onClick = onTerminalClick,
-            showBrackets = false,
             icon = Icons.Default.Terminal,
             modifier = Modifier.fillMaxWidth()
         )
+        
+        // Bottom padding
+        Spacer(modifier = Modifier.height(TerminalSpacing.screenPaddingBottom))
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,9 +34,9 @@ import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.terminal.TerminalHeader
 import com.mocca.app.ui.components.terminal.TerminalIconButton
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import com.mocca.app.ui.theme.TerminalTypography
 import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
@@ -64,16 +65,22 @@ class FilesScreen : Screen {
                     TerminalIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = TerminalColors.white
+                        iconColor = TerminalColors.textSecondary
                     )
                     Spacer(modifier = Modifier.width(TerminalSpacing.md))
-                    TerminalHeader(text = "FILE_EXPLORER", showBrackets = true)
+                    Text(
+                        text = "FILE EXPLORER",
+                        style = TerminalTypography.labelLarge,
+                        color = TerminalColors.white,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 
                 TerminalIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { screenModel.loadFiles(state.currentPath) },
-                    contentDescription = "REFRESH"
+                    contentDescription = "REFRESH",
+                    iconColor = TerminalColors.textSecondary
                 )
             }
             
@@ -93,7 +100,9 @@ class FilesScreen : Screen {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(TerminalSpacing.borderThin, TerminalColors.borderLight, RectangleShape)
+                    .clip(TerminalShapes.card)
+                    .background(TerminalColors.surfaceContainer, TerminalShapes.card)
+                    .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
             ) {
                 if (state.isLoading) {
                     LoadingScreen()
@@ -126,15 +135,18 @@ private fun TerminalBreadcrumbBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .border(TerminalSpacing.borderThin, TerminalColors.greyDark, RectangleShape)
-            .padding(TerminalSpacing.sm),
+            .clip(TerminalShapes.pill)
+            .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.pill)
+            .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (canNavigateUp) {
             TerminalIconButton(
                 icon = Icons.AutoMirrored.Filled.ArrowBack,
                 onClick = onNavigateUp,
-                size = 24.dp
+                size = 24.dp,
+                iconColor = TerminalColors.textSecondary
             )
             Spacer(modifier = Modifier.width(TerminalSpacing.sm))
         }
@@ -157,11 +169,12 @@ private fun TerminalBreadcrumbBar(
                     path.split("/").forEach { segment ->
                         Text(
                             text = " / ",
-                            color = TerminalColors.grey
+                            color = TerminalColors.textTertiary,
+                            style = TerminalTypography.bodySmall
                         )
                         Text(
                             text = segment,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = TerminalTypography.bodySmall,
                             color = TerminalColors.white,
                             fontWeight = FontWeight.Bold
                         )
@@ -183,9 +196,9 @@ private fun TerminalFilesList(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "DIRECTORY_EMPTY",
-                style = MaterialTheme.typography.bodyMedium,
-                color = TerminalColors.grey
+                text = "DIRECTORY EMPTY",
+                style = TerminalTypography.bodyMedium,
+                color = TerminalColors.textTertiary
             )
         }
     } else {
@@ -214,11 +227,12 @@ private fun TerminalFileItem(
     onClick: () -> Unit
 ) {
     val icon = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name)
-    val iconColor = if (file.isDirectory) TerminalColors.statusOnline else TerminalColors.greyLight
+    val iconColor = if (file.isDirectory) TerminalColors.accentGreen else TerminalColors.textSecondary
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(TerminalShapes.medium)
             .clickable(onClick = onClick)
             .padding(vertical = TerminalSpacing.sm, horizontal = TerminalSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
@@ -227,7 +241,7 @@ private fun TerminalFileItem(
             imageVector = icon,
             contentDescription = null,
             tint = iconColor,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(20.dp)
         )
         
         Spacer(modifier = Modifier.width(TerminalSpacing.md))
@@ -235,7 +249,7 @@ private fun TerminalFileItem(
         Text(
             text = file.name,
             color = TerminalColors.white,
-            style = MaterialTheme.typography.bodyMedium,
+            style = TerminalTypography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
@@ -244,8 +258,8 @@ private fun TerminalFileItem(
         if (file.size != null) {
             Text(
                 text = formatFileSize(file.size),
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.labelSmall
+                color = TerminalColors.textTertiary,
+                style = TerminalTypography.labelSmall
             )
         }
         
@@ -254,7 +268,7 @@ private fun TerminalFileItem(
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = TerminalColors.greyDark,
+                tint = TerminalColors.textTertiary,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -276,35 +290,36 @@ private fun TerminalFileViewer(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(TerminalColors.surfaceVariant)
-                .padding(TerminalSpacing.md),
+                .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 getFileIcon(fileName),
                 contentDescription = null,
-                tint = TerminalColors.statusOnline,
+                tint = TerminalColors.accentGreen,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(TerminalSpacing.md))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = fileName.uppercase(),
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = TerminalTypography.bodyMedium,
                     color = TerminalColors.white,
                     fontWeight = FontWeight.Bold
                 )
                 if (language != null) {
                     Text(
                         text = language.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TerminalColors.grey
+                        style = TerminalTypography.labelSmall,
+                        color = TerminalColors.textTertiary
                     )
                 }
             }
             TerminalIconButton(
                 icon = Icons.Default.Close,
                 onClick = onClose,
-                iconColor = TerminalColors.white
+                iconColor = TerminalColors.white,
+                size = 32.dp
             )
         }
         
@@ -320,8 +335,8 @@ private fun TerminalFileViewer(
         ) {
             Text(
                 text = content,
-                style = MaterialTheme.typography.bodySmall,
-                color = TerminalColors.greyLight
+                style = TerminalTypography.code, // Use code typography
+                color = TerminalColors.whiteMuted
             )
         }
     }

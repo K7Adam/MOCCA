@@ -34,10 +34,16 @@ MOCCA/
 - **Architecture**: MVI (ScreenModel -> StateFlow -> UI).
 - **Offline-First**: Repositories return `Flow<Resource<T>>` (Cache -> Loading -> Network -> Cache).
 - **Paths**: **ALWAYS** use absolute paths for file operations.
-- **Theme**: "Terminal" aesthetic. 0dp corners, `#000000` background, monospace fonts.
+- **Theme**: "Glassmorphic Terminal" aesthetic.
+    - **Background**: Pitch Black (`#000000`) for OLED power saving.
+    - **Corners**: Rounded corners (16dp-32dp) for interactive elements.
+    - **Buttons**: Pill-shaped (`CircleShape`).
+    - **Typography**: Space Grotesk (sans-serif) with variable weights.
+    - **Accents**: Mint Green (`#00D9A5`) and White.
 - **Environment**: `serverConfigProvider` auto-detects `10.0.2.2` (Emulator) vs Tailscale/LAN.
 
 ## ANTI-PATTERNS (STRICT)
+- **NEVER** use `RectangleShape` for interactive elements (buttons, inputs, cards). Use `TerminalShapes.card`, `TerminalShapes.pill`, etc.
 - **NEVER** use `ToolConfirmation` (Deprecated) -> Use `PermissionRequest`.
 - **NEVER** use relative paths.
 - **NEVER** block main thread (use `sendMessageAsync`).

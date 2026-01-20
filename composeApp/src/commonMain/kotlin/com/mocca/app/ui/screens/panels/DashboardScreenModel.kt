@@ -116,8 +116,8 @@ class DashboardScreenModel(
     val state: StateFlow<State> = _state.asStateFlow()
     
     init {
-        loadAllData()
         observeEvents()
+        loadAllData()
     }
     
     private fun observeEvents() {

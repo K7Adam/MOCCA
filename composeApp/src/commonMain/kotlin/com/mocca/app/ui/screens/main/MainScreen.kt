@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.main
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,11 +34,13 @@ import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
+import com.mocca.app.ui.theme.TerminalColors
 import org.koin.core.parameter.parametersOf
 
 /**
  * Main screen with swipe panel navigation.
  * Shows chat content in center, context/history on left, dashboard on right.
+ * Refactored for modern UI/UX.
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
@@ -76,7 +79,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         }
         
         // Main content wrapped in Box for GlobalActivityIndicator overlay
-        Box(modifier = Modifier.fillMaxSize()) {
+        // Use Pitch Black background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TerminalColors.background)
+        ) {
             SwipePanelLayout(
                 leftPanel = {
                     ContextHistoryPanel(
@@ -125,7 +133,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             }
                             
                             // Chat content (input will be disabled based on connection status)
-                            // Note: chatScreenModel is now declared at top level
                             ChatContent(chatScreenModel)
                         }
                     } else {

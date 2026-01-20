@@ -18,16 +18,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.TerminalTypography
 import androidx.compose.material3.MaterialTheme
 
 /**
  * Connection status banners and warning components.
+ * Modern design: Rounded, friendly alerts.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -48,36 +51,36 @@ fun ConnectionStatusBanner(
         is ConnectionBannerStatus.Disconnected -> 
             Quadruple(
                 Icons.Default.WifiOff,
-                status.error ?: "NO_CONNECTION",
-                TerminalColors.surfaceVariant,
+                status.error ?: "NO CONNECTION",
+                TerminalColors.surfaceContainer,
                 TerminalColors.statusOffline
             )
         is ConnectionBannerStatus.Connecting ->
             Quadruple(
                 Icons.Default.Warning,
                 "CONNECTING... (${status.attempt}/${status.maxAttempts})",
-                TerminalColors.surfaceVariant,
+                TerminalColors.surfaceContainer,
                 TerminalColors.statusWaiting
             )
         is ConnectionBannerStatus.WaitingForNetwork ->
             Quadruple(
                 Icons.Default.WifiOff,
-                "WAITING_FOR_NETWORK",
-                TerminalColors.surfaceVariant,
+                "WAITING FOR NETWORK",
+                TerminalColors.surfaceContainer,
                 TerminalColors.statusWaiting
             )
         is ConnectionBannerStatus.Reconnecting ->
             Quadruple(
                 Icons.Default.Warning,
                 "RECONNECTING... (${status.attempt}/${status.maxAttempts})",
-                TerminalColors.surfaceVariant,
+                TerminalColors.surfaceContainer,
                 TerminalColors.statusWaiting
             )
         is ConnectionBannerStatus.Error ->
             Quadruple(
                 Icons.Default.Warning,
                 status.message,
-                TerminalColors.surfaceVariant,
+                TerminalColors.surfaceContainer,
                 TerminalColors.error
             )
     }
@@ -85,7 +88,8 @@ fun ConnectionStatusBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(backgroundColor, RectangleShape)
+            .clip(TerminalShapes.medium)
+            .background(backgroundColor, TerminalShapes.medium)
             .padding(
                 horizontal = TerminalSpacing.lg,
                 vertical = TerminalSpacing.md
@@ -108,7 +112,7 @@ fun ConnectionStatusBanner(
                 Text(
                     text = message.uppercase(),
                     color = textColor,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = TerminalTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -161,13 +165,13 @@ fun InlineConnectionStatus(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
-        StatusSquare(
+        StatusDot(
             color = if (isConnected) TerminalColors.statusOnline else TerminalColors.statusOffline
         )
         Text(
-            text = if (isConnected) "NO_SIGNAL" else (serverName?.uppercase() ?: "CONNECTED"),
-            color = TerminalColors.grey,
-            style = MaterialTheme.typography.labelSmall
+            text = if (isConnected) "NO SIGNAL" else (serverName?.uppercase() ?: "CONNECTED"),
+            color = TerminalColors.textSecondary,
+            style = TerminalTypography.labelSmall
         )
     }
 }
@@ -178,7 +182,6 @@ fun InlineConnectionStatus(
 
 /**
  * "Not yet implemented" placeholder banner.
- * Used for foundation-only features.
  */
 @Composable
 fun NotImplementedBanner(
@@ -188,7 +191,8 @@ fun NotImplementedBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(TerminalColors.surfaceVariant, RectangleShape)
+            .clip(TerminalShapes.medium)
+            .background(TerminalColors.surfaceVariant, TerminalShapes.medium)
             .padding(TerminalSpacing.lg)
     ) {
         Column(
@@ -196,16 +200,16 @@ fun NotImplementedBanner(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(
-                text = "[ NOT_IMPLEMENTED ]",
+                text = "NOT IMPLEMENTED",
                 color = TerminalColors.statusWaiting,
-                style = MaterialTheme.typography.labelMedium,
+                style = TerminalTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(TerminalSpacing.xs))
             Text(
                 text = "${featureName.uppercase()} feature is under development",
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.bodySmall
+                color = TerminalColors.textTertiary,
+                style = TerminalTypography.bodySmall
             )
         }
     }
@@ -237,22 +241,22 @@ fun TerminalEmptyState(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = TerminalColors.grey
+                tint = TerminalColors.textTertiary
             )
         }
         
         Text(
             text = title.uppercase(),
             color = TerminalColors.white,
-            style = MaterialTheme.typography.headlineSmall,
+            style = TerminalTypography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.bodySmall
+                color = TerminalColors.textSecondary,
+                style = TerminalTypography.bodySmall
             )
         }
         
@@ -286,7 +290,7 @@ fun TerminalLoadingState(
         TypewriterText(
             text = message.uppercase(),
             color = TerminalColors.white,
-            style = MaterialTheme.typography.headlineSmall,
+            style = TerminalTypography.headlineSmall,
             typingDelayMs = 100L,
             showCursor = true
         )

@@ -17,34 +17,33 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.ripple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
-import androidx.compose.material3.MaterialTheme
+import com.mocca.app.ui.theme.TerminalTypography
 
 /**
  * Module card components for the right swipe dashboard panel.
+ * Modern design: Rounded cards, clean headers.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -54,6 +53,7 @@ import androidx.compose.material3.MaterialTheme
 /**
  * Module card for the modular dashboard.
  * Contains a header with icon and optional action button, plus content area.
+ * 28dp rounded corners.
  */
 @Composable
 fun ModuleCard(
@@ -66,7 +66,9 @@ fun ModuleCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .border(TerminalSpacing.borderThin, TerminalColors.borderLight, RectangleShape)
+            .clip(TerminalShapes.moduleCard)
+            .background(TerminalColors.moduleBackground, TerminalShapes.moduleCard)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.moduleCard)
     ) {
         // Header
         Row(
@@ -74,7 +76,7 @@ fun ModuleCard(
                 .fillMaxWidth()
                 .padding(
                     horizontal = TerminalSpacing.cardPadding,
-                    vertical = TerminalSpacing.sm
+                    vertical = TerminalSpacing.md
                 ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -84,16 +86,23 @@ fun ModuleCard(
                 horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
             ) {
                 if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = TerminalColors.textSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                } else {
                     Text(
                         text = "{ }",
-                        color = TerminalColors.white,
-                        style = MaterialTheme.typography.bodyMedium
+                        color = TerminalColors.textTertiary,
+                        style = TerminalTypography.bodyMedium
                     )
                 }
                 Text(
                     text = title.uppercase(),
                     color = TerminalColors.white,
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = TerminalTypography.labelLarge, // Updated typography
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -120,7 +129,6 @@ fun ModuleCard(
 
 /**
  * Module row item with status indicator, text, and optional toggle.
- * Used inside ModuleCard for MCP servers, skills, etc.
  */
 @Composable
 fun ModuleRowItem(
@@ -152,34 +160,34 @@ fun ModuleRowItem(
             .padding(vertical = TerminalSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Status indicator
-        StatusSquare(
+        // Status indicator (rounded)
+        StatusDot(
             color = when {
-                !isEnabled -> TerminalColors.greyDark
+                !isEnabled -> TerminalColors.textTertiary
                 isConnected -> TerminalColors.statusOnline
                 else -> TerminalColors.statusOffline
             },
-            isTransitioning = isTransitioning
+            size = TerminalSpacing.statusDotSizeLarge
         )
         
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(TerminalSpacing.md))
         
         // Text content
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) TerminalColors.white else TerminalColors.grey,
-                style = MaterialTheme.typography.bodyMedium.copy(
+                color = if (isEnabled) TerminalColors.white else TerminalColors.textSecondary,
+                style = TerminalTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) TextDecoration.LineThrough else TextDecoration.None
                 ),
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.Medium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 text = subtitle,
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.bodySmall,
+                color = TerminalColors.textTertiary,
+                style = TerminalTypography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -198,11 +206,11 @@ fun ModuleRowItem(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TERMINAL TOGGLE (Rectangular switch)
+// TERMINAL TOGGLE (Rounded pill switch)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Terminal-styled toggle switch (rectangular, not rounded).
+ * Modern toggle switch.
  */
 @Composable
 fun TerminalToggle(
@@ -217,15 +225,15 @@ fun TerminalToggle(
         modifier = modifier,
         enabled = enabled,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = TerminalColors.white,
-            checkedTrackColor = TerminalColors.surfaceVariant,
-            checkedBorderColor = TerminalColors.white,
-            uncheckedThumbColor = TerminalColors.grey,
+            checkedThumbColor = TerminalColors.background,
+            checkedTrackColor = TerminalColors.accentGreen,
+            checkedBorderColor = TerminalColors.accentGreen,
+            uncheckedThumbColor = TerminalColors.white,
             uncheckedTrackColor = TerminalColors.surfaceVariant,
-            uncheckedBorderColor = TerminalColors.grey,
-            disabledCheckedThumbColor = TerminalColors.greyDark,
+            uncheckedBorderColor = TerminalColors.border,
+            disabledCheckedThumbColor = TerminalColors.grey,
             disabledCheckedTrackColor = TerminalColors.surfaceVariant,
-            disabledUncheckedThumbColor = TerminalColors.greyDark,
+            disabledUncheckedThumbColor = TerminalColors.grey,
             disabledUncheckedTrackColor = TerminalColors.surfaceVariant
         )
     )
@@ -237,7 +245,6 @@ fun TerminalToggle(
 
 /**
  * Outlined action button for module card headers.
- * e.g., [JSON_CONFIG], [FILTER], [EXPAND]
  */
 @Composable
 fun ModuleActionButton(
@@ -247,18 +254,19 @@ fun ModuleActionButton(
 ) {
     Box(
         modifier = modifier
-            .border(TerminalSpacing.borderThin, TerminalColors.grey, RectangleShape)
+            .clip(TerminalShapes.small)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.small)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(color = TerminalColors.white.copy(alpha = 0.1f)),
                 onClick = onClick
             )
-            .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs)
+            .padding(horizontal = TerminalSpacing.sm, vertical = 4.dp)
     ) {
         Text(
-            text = "[$text]".uppercase(),
-            color = TerminalColors.grey,
-            style = MaterialTheme.typography.labelSmall
+            text = text.uppercase(),
+            color = TerminalColors.textSecondary,
+            style = TerminalTypography.labelSmall
         )
     }
 }
@@ -278,11 +286,11 @@ fun McpConfigModule(
     onServerToggle: (String, Boolean) -> Unit = { _, _ -> }
 ) {
     ModuleCard(
-        title = "MCP_CONFIG",
+        title = "MCP CONFIG",
         modifier = modifier,
         actionButton = {
             ModuleActionButton(
-                text = "JSON_CONFIG",
+                text = "JSON CONFIG",
                 onClick = onConfigClick
             )
         }
@@ -317,7 +325,6 @@ data class McpServerItem(
 
 /**
  * Git Status module preview.
- * The entire card is clickable for better UX.
  */
 @Composable
 fun GitStatusModule(
@@ -327,7 +334,7 @@ fun GitStatusModule(
     onExpandClick: () -> Unit = {}
 ) {
     ModuleCard(
-        title = "GIT_STATUS",
+        title = "GIT STATUS",
         modifier = modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.1f)),
@@ -338,7 +345,7 @@ fun GitStatusModule(
                 icon = Icons.Default.ChevronRight,
                 onClick = onExpandClick,
                 size = 32.dp,
-                iconColor = TerminalColors.grey
+                iconColor = TerminalColors.textSecondary
             )
         }
     ) {
@@ -349,26 +356,26 @@ fun GitStatusModule(
             Column {
                 Text(
                     text = "BRANCH",
-                    color = TerminalColors.grey,
-                    style = MaterialTheme.typography.labelSmall
+                    color = TerminalColors.textTertiary,
+                    style = TerminalTypography.labelSmall
                 )
                 Text(
                     text = branchName,
                     color = TerminalColors.white,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = TerminalTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "CHANGES",
-                    color = TerminalColors.grey,
-                    style = MaterialTheme.typography.labelSmall
+                    color = TerminalColors.textTertiary,
+                    style = TerminalTypography.labelSmall
                 )
                 Text(
                     text = "$changedFiles FILES",
                     color = if (changedFiles > 0) TerminalColors.statusWaiting else TerminalColors.white,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = TerminalTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -387,14 +394,14 @@ fun SkillsEngineModule(
     onSkillClick: (String) -> Unit = {}
 ) {
     ModuleCard(
-        title = "SKILLS_ENGINE",
+        title = "SKILLS ENGINE",
         modifier = modifier,
         actionButton = {
             TerminalIconButton(
                 icon = Icons.Default.Settings,
                 onClick = onFilterClick,
                 size = 32.dp,
-                iconColor = TerminalColors.grey
+                iconColor = TerminalColors.textSecondary
             )
         }
     ) {
@@ -406,14 +413,15 @@ fun SkillsEngineModule(
                     .padding(vertical = TerminalSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusSquare(
-                    color = if (skill.isActive) TerminalColors.statusOnline else TerminalColors.grey
+                StatusDot(
+                    color = if (skill.isActive) TerminalColors.statusOnline else TerminalColors.grey,
+                    size = 8.dp
                 )
                 Spacer(modifier = Modifier.width(TerminalSpacing.sm))
                 Text(
                     text = skill.name.uppercase(),
                     color = TerminalColors.white,
-                    style = MaterialTheme.typography.bodySmall
+                    style = TerminalTypography.bodySmall
                 )
             }
         }

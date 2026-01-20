@@ -43,7 +43,12 @@ data class SettingsState(
     val providers: List<Provider> = emptyList(),
     val providerAuthMethods: Map<String, List<ProviderAuthMethod>> = emptyMap(),
     val selectedProviderId: String? = null,
-    val authLoading: Boolean = false
+    val authLoading: Boolean = false,
+    // Server Config (fetched from /config endpoint)
+    val serverConfig: ConfigResponse? = null,
+    val serverDefaultProvider: String? = null,
+    val serverDefaultModel: String? = null,
+    val serverModes: List<Mode> = emptyList()
 ) {
     /** Server version from SSE Connected event, or null if not connected */
     val serverVersion: String? get() = (activeConnectionState as? AppConnectionState.Connected)?.serverInfo?.version
@@ -67,6 +72,57 @@ class SettingsScreenModel(
         observeActiveConnectionState()
         // Load remote config if connected
         loadRemoteConfig()
+        loadServerConfig()
+    }
+
+    /**
+     * Load server configuration (default provider, model, modes) from /config endpoint.
+     */
+    private fun loadServerConfig() {
+        screenModelScope.launch {
+            // Load config for default model
+            configRepository.getConfig().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val config = resource.data
+                        _state.value = _state.value.copy(
+                            serverConfig = config,
+                            serverDefaultModel = config.model,
+                            serverModes = config.modes
+                        )
+                        Napier.i { "Server config loaded: defaultModel=${config.model}, modes=${config.modes.size}" }
+                    }
+                    is Resource.Error -> {
+                        Napier.w { "Failed to load server config: ${resource.message}" }
+                    }
+                    is Resource.Loading -> {
+                        // Already handled by isLoading state
+                    }
+                }
+            }
+        }
+
+        // Load providers config for default provider
+        screenModelScope.launch {
+            configRepository.getProvidersConfig().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val config = resource.data
+                        val defaultProvider = config.default.entries.firstOrNull()?.key
+                        _state.value = _state.value.copy(
+                            serverDefaultProvider = defaultProvider
+                        )
+                        Napier.i { "Providers config loaded: defaultProvider=$defaultProvider, providers=${config.providers.size}" }
+                    }
+                    is Resource.Error -> {
+                        Napier.w { "Failed to load providers config: ${resource.message}" }
+                    }
+                    is Resource.Loading -> {
+                        // Already handled by isLoading state
+                    }
+                }
+            }
+        }
     }
     
     // Remote Config Logic

@@ -2,56 +2,121 @@ package com.mocca.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Shapes
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 /**
- * Terminal shapes with 0dp corners (blocky/rectangular aesthetic).
- * NO rounded corners allowed per mockup specifications.
+ * Modern MOCCA shapes with rounded corners.
+ * Based on UI overhaul designs - soft, rounded aesthetic.
+ * 
+ * Design Language: 16dp-32dp rounded corners, pill shapes for buttons/badges.
  */
 object TerminalShapes {
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // BASE SHAPES (ALL RECTANGULAR)
+    // BASE CORNER RADII
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** No rounding - default for all elements */
-    val none: Shape = RectangleShape
+    /** No rounding - for specific elements that need sharp corners */
+    val none: Shape = RoundedCornerShape(0.dp)
     
-    /** Extra small - same as none (0dp) */
-    val extraSmall: Shape = RectangleShape
+    /** Extra small - 4dp - for inline code, small badges */
+    val extraSmall: Shape = RoundedCornerShape(4.dp)
     
-    /** Small - same as none (0dp) */
-    val small: Shape = RectangleShape
+    /** Small - 8dp - for chips, small cards */
+    val small: Shape = RoundedCornerShape(8.dp)
     
-    /** Medium - same as none (0dp) */
-    val medium: Shape = RectangleShape
+    /** Medium - 12dp - for cards, containers */
+    val medium: Shape = RoundedCornerShape(12.dp)
     
-    /** Large - same as none (0dp) */
-    val large: Shape = RectangleShape
+    /** Large - 16dp - for prominent cards, inputs */
+    val large: Shape = RoundedCornerShape(16.dp)
     
-    /** Extra large - same as none (0dp) */
-    val extraLarge: Shape = RectangleShape
+    /** Extra large - 24dp - for modal cards, large containers */
+    val extraLarge: Shape = RoundedCornerShape(24.dp)
+    
+    /** XXL - 28dp - for module cards per design specs */
+    val xxl: Shape = RoundedCornerShape(28.dp)
+    
+    /** 2XL - 32dp - for floating inputs, pill containers */
+    val rounded2xl: Shape = RoundedCornerShape(32.dp)
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // SPECIAL SHAPES (only if mockup explicitly shows them)
+    // SPECIAL SHAPES
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Circle shape - ONLY for explicit circular elements like status dots */
+    /** Circle shape - for status dots, avatars, FABs */
     val circle: Shape = RoundedCornerShape(50)
+    
+    /** Pill shape - fully rounded for buttons, badges */
+    val pill: Shape = RoundedCornerShape(9999.dp)
     
     /** Status indicator dot (8dp circle) */
     val statusDot: Shape = RoundedCornerShape(4.dp)
+    
+    /** Bottom sheet shape - rounded top corners only */
+    val bottomSheet: Shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    
+    /** Top rounded only - for cards at bottom of screen */
+    val topRounded: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    
+    /** Bottom rounded only - for cards at top of screen */
+    val bottomRounded: Shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // COMPONENT-SPECIFIC SHAPES
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Input field shape - rounded rectangle */
+    val input: Shape = RoundedCornerShape(32.dp)
+    
+    /** Button shape - pill/fully rounded */
+    val button: Shape = RoundedCornerShape(9999.dp)
+    
+    /** Card shape - medium rounded */
+    val card: Shape = RoundedCornerShape(16.dp)
+    
+    /** Module card shape - larger rounded per design */
+    val moduleCard: Shape = RoundedCornerShape(28.dp)
+    
+    /** Alert banner shape - pill */
+    val alertBanner: Shape = RoundedCornerShape(9999.dp)
+    
+    /** Code block shape */
+    val codeBlock: Shape = RoundedCornerShape(12.dp)
+    
+    /** Avatar shape - circular */
+    val avatar: Shape = RoundedCornerShape(50)
+    
+    /** Floating action button */
+    val fab: Shape = RoundedCornerShape(50)
+    
+    /** Session card shape */
+    val sessionCard: Shape = RoundedCornerShape(24.dp)
+    
+    /** Tab pill shape */
+    val tabPill: Shape = RoundedCornerShape(9999.dp)
+    
+    /** Badge shape */
+    val badge: Shape = RoundedCornerShape(4.dp)
+    
+    /** Tag/chip shape */
+    val tag: Shape = RoundedCornerShape(9999.dp)
+    
+    /** Dialog shape */
+    val dialog: Shape = RoundedCornerShape(24.dp)
+    
+    /** File preview card */
+    val filePreview: Shape = RoundedCornerShape(16.dp)
 }
 
 /**
- * Creates Material3 Shapes with all rectangular (0dp) corners.
+ * Creates Material3 Shapes with modern rounded corners.
  */
 fun terminalShapes(): Shapes = Shapes(
-    extraSmall = RoundedCornerShape(0.dp),
-    small = RoundedCornerShape(0.dp),
-    medium = RoundedCornerShape(0.dp),
-    large = RoundedCornerShape(0.dp),
-    extraLarge = RoundedCornerShape(0.dp)
+    extraSmall = RoundedCornerShape(4.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp)
 )

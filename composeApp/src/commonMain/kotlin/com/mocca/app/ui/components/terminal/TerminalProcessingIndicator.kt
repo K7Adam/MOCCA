@@ -44,15 +44,15 @@ fun TerminalProcessingIndicator() {
     ) {
         Text(
             text = frames[frameIndex],
-            color = TerminalColors.statusWaiting,
-            style = TerminalTypography.bodyLarge,
+            color = TerminalColors.accentGreen,
+            style = TerminalTypography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(20.dp)
+            modifier = Modifier.width(24.dp)
         )
         
         Text(
-            text = "PROCESSING_REQUEST...",
-            color = TerminalColors.statusWaiting,
+            text = "PROCESSING REQUEST...",
+            color = TerminalColors.accentGreen,
             style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )

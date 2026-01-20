@@ -337,11 +337,11 @@ class ChatScreenModel(
                                  val existing = currentText[part.sessionID] ?: ""
                                  
                                  if (existing.isEmpty() && !part.text.isNullOrEmpty()) {
-                                     currentText[part.sessionID] = part.text!!
+                                     currentText[part.sessionID] = part.text
                                  } else if (delta != null) {
                                      currentText[part.sessionID] = existing + delta
                                  } else if (!part.text.isNullOrEmpty()) {
-                                     currentText[part.sessionID] = part.text!!
+                                     currentText[part.sessionID] = part.text
                                  }
                                  
                                  _childStreamingText.value = currentText
@@ -394,11 +394,52 @@ class ChatScreenModel(
             sessionRepository.loadDefaultConfig()
             sessionRepository.getProviderInfo().onSuccess { providerResponse ->
                 val (defaultModelId, defaultProviderId) = sessionRepository.getDefaultModelProvider()
+                
+                // Try to restore session model from history now that we have provider info
+                // (This handles the case where DB loaded messages before network loaded providers)
+                var restoredProviderId = ""
+                var restoredModelId = ""
+                
+                val lastModelId = _state.value.messages.findLast { 
+                    (it.role == MessageRole.ASSISTANT || it.role == MessageRole.USER) && !it.model.isNullOrBlank() 
+                }?.model
+                
+                if (!lastModelId.isNullOrBlank()) {
+                     val provider = providerResponse.all.find { it.models.toString().contains(lastModelId) }
+                     if (provider != null) {
+                         restoredProviderId = provider.id
+                         restoredModelId = lastModelId
+                         Napier.i("ChatScreenModel: Restored model from history in loadConfig: $restoredProviderId/$restoredModelId")
+                     }
+                }
+                
+                // If we already have a selection (from user or previous restore), keep it. 
+                // Otherwise use restored. Otherwise use default.
+                val currentProviderId = _state.value.selectedProviderId
+                val currentModelId = _state.value.selectedModelId
+                
+                val finalProviderId = when {
+                    currentProviderId.isNotEmpty() -> currentProviderId
+                    restoredProviderId.isNotEmpty() -> restoredProviderId
+                    else -> defaultProviderId
+                }
+                
+                val finalModelId = when {
+                    currentModelId.isNotEmpty() -> currentModelId
+                    restoredModelId.isNotEmpty() -> restoredModelId
+                    else -> defaultModelId
+                }
+                
                 _state.value = _state.value.copy(
                     providerInfo = providerResponse,
-                    selectedProviderId = defaultProviderId,
-                    selectedModelId = defaultModelId
+                    selectedProviderId = finalProviderId,
+                    selectedModelId = finalModelId
                 )
+                
+                 if (finalModelId.isNotEmpty()) {
+                    val modelName = finalModelId.uppercase().replace("-", " ").take(30)
+                    _state.value = _state.value.copy(modelName = modelName)
+                }
             }
             sessionRepository.getModes().onSuccess { modes ->
                 val defaultMode = sessionRepository.getDefaultMode()
@@ -439,7 +480,39 @@ class ChatScreenModel(
                         _state.value = _state.value.copy(isLoading = true, messages = resource.data ?: _state.value.messages)
                     }
                     is Resource.Success -> {
-                        _state.value = _state.value.copy(isLoading = false, messages = resource.data, error = null)
+                        val messages = resource.data
+                        var updatedState = _state.value.copy(isLoading = false, messages = messages, error = null)
+
+                        // Restore session model from history if we haven't manually selected one yet (or just switched session)
+                        // logic: Find last assistant message with a modelID
+                        val lastModelId = messages.findLast { it.role == MessageRole.ASSISTANT && !it.model.isNullOrBlank() }?.model
+                        
+                        if (!lastModelId.isNullOrBlank()) {
+                            // We have a model ID (e.g. "claude-sonnet-4-5") but need the provider ID
+                            // Look it up in our loaded provider info
+                            val providers = _state.value.providerInfo?.all ?: emptyList()
+                            val provider = providers.find { provider -> 
+                                // Check if this provider has the model. 
+                                // provider.models is JsonElement, so we need safe checking or if it was parsed differently.
+                                // Actually ProviderInfo.models is JsonElement? but usually parsed or we can just assume 
+                                // we need a better lookup if Models are not fully parsed.
+                                // Let's check sessionRepository helper first or just iterate if possible.
+                                // For now, simple heuristic:
+                                provider.models.toString().contains(lastModelId) 
+                            }
+
+                            if (provider != null) {
+                                val modelName = lastModelId.uppercase().replace("-", " ").take(30)
+                                updatedState = updatedState.copy(
+                                    selectedModelId = lastModelId,
+                                    selectedProviderId = provider.id,
+                                    modelName = modelName
+                                )
+                                Napier.i("Restored session model: ${provider.id} / $lastModelId")
+                            }
+                        }
+                        
+                        _state.value = updatedState
                     }
                     is Resource.Error -> {
                         _state.value = _state.value.copy(isLoading = false, error = resource.message, messages = resource.data ?: _state.value.messages)
