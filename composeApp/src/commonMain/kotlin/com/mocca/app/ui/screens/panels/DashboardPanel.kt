@@ -180,12 +180,12 @@ private fun ProjectModule(
                     projects.data.forEach { project ->
                         val isCurrent = project.id == currentId
                         ModuleRowItem(
-                            title = project.name,
-                            subtitle = project.path,
+                            title = project.displayName,
+                            subtitle = project.path ?: project.directory ?: "",
                             isEnabled = true,
                             isConnected = isCurrent,
                             showToggle = false,
-                            onClick = { onProjectClick(project.id) }
+                            onClick = { project.id?.let { onProjectClick(it) } }
                         )
                     }
                 }

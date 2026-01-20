@@ -807,16 +807,21 @@ data class ModelConfig(
 
 /**
  * Project information from /project endpoints.
+ * Note: Fields are nullable to handle various API response formats.
  */
 @Serializable
 data class Project(
-    val id: String,
-    val name: String,
-    val path: String,
-    val directory: String,
+    val id: String? = null,
+    val name: String? = null,
+    val path: String? = null,
+    val directory: String? = null,
     val vcs: VcsType? = null,
     val createdAt: Long? = null
-)
+) {
+    /** Display name with fallback to path or directory */
+    val displayName: String
+        get() = name ?: path?.substringAfterLast('/') ?: directory?.substringAfterLast('/') ?: "Unknown Project"
+}
 
 @Serializable
 enum class VcsType {

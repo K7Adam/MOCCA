@@ -224,6 +224,72 @@ class SettingsScreen : Screen {
                         }
                     }
                 }
+                
+                // ═══════════════════════════════════════════════════════════════════════════════
+                // AUTO UPDATE SECTION
+                // ═══════════════════════════════════════════════════════════════════════════════
+                item {
+                    Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                    Text(
+                        text = "// APP_UPDATES",
+                        color = TerminalColors.grey,
+                        style = TerminalTypography.labelMedium
+                    )
+                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                }
+                
+                item {
+                    ModuleCard(title = "GITHUB_AUTO_UPDATE") {
+                        // GitHub PAT input for private repo access
+                        var tokenInput by remember { mutableStateOf(state.githubToken) }
+                        
+                        Text(
+                            text = "GitHub Personal Access Token (for private repo access)",
+                            color = TerminalColors.greyLight,
+                            style = TerminalTypography.labelSmall
+                        )
+                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                        
+                        TerminalInput(
+                            value = tokenInput,
+                            onValueChange = { tokenInput = it },
+                            label = "GITHUB_PAT",
+                            placeholder = "ghp_xxxxxxxxxxxxxxxxxxxx"
+                        )
+                        
+                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                        ) {
+                            TerminalOutlinedButton(
+                                text = "SAVE_TOKEN",
+                                onClick = { screenModel.saveGitHubToken(tokenInput) },
+                                enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken,
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            TerminalButton(
+                                text = "CHECK_FOR_UPDATES",
+                                onClick = { screenModel.checkForUpdates() },
+                                enabled = !state.isLoading,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                        
+                        // Show message if any
+                        state.message?.let { message ->
+                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Text(
+                                text = message,
+                                color = if (message.contains("failed", ignoreCase = true) || message.contains("error", ignoreCase = true)) 
+                                    TerminalColors.error else TerminalColors.statusOnline,
+                                style = TerminalTypography.labelSmall
+                            )
+                        }
+                    }
+                }
             }
         
             // Edit Server Dialog (Overlay)
