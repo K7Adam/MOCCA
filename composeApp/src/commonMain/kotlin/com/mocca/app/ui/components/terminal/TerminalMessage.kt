@@ -146,6 +146,10 @@ fun TerminalMessage(
                         is MessagePart.SubTask -> {
                             // Subtasks handled separately or embedded
                         }
+                        is MessagePart.Thinking -> {
+                            // Thinking content is shown via TerminalThinkingIndicator during streaming
+                            // For completed messages, we can optionally display it collapsed
+                        }
                     }
                     Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                 }

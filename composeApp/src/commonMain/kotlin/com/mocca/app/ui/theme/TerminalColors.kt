@@ -84,6 +84,9 @@ object TerminalColors {
     /** Waiting/Connecting - yellow/amber */
     val statusWaiting = Color(0xFFFFAA00)
     
+    /** Thinking/Reasoning - purple/magenta for AI extended thinking */
+    val statusThinking = Color(0xFFE879F9)
+    
     /** Success - bright green */
     val success = Color(0xFF44FF44)
     
@@ -134,6 +137,7 @@ data class ExtendedTerminalColors(
     val statusOnline: Color = TerminalColors.statusOnline,
     val statusOffline: Color = TerminalColors.statusOffline,
     val statusWaiting: Color = TerminalColors.statusWaiting,
+    val statusThinking: Color = TerminalColors.statusThinking,
     val diffAddition: Color = TerminalColors.diffAddition,
     val diffDeletion: Color = TerminalColors.diffDeletion,
     val diffAdditionText: Color = TerminalColors.diffAdditionText,

@@ -104,6 +104,9 @@ fun MessageBubble(
                             is MessagePart.SubTask -> {
                                 // Subtasks are handled separately or embedded
                             }
+                            is MessagePart.Thinking -> {
+                                // Thinking content shown via indicator during streaming
+                            }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                     }

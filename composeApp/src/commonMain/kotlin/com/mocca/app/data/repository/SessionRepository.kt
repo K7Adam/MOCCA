@@ -519,4 +519,162 @@ class SessionRepository(
             }
         )
     }.flowOn(Dispatchers.IO)
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SESSION TODO LIST (Priority 2.1)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Get todos for a session.
+     */
+    fun getSessionTodos(sessionId: String): Flow<Resource<List<Todo>>> = flow {
+        emit(Resource.Loading())
+        apiClient.getSessionTodos(sessionId).fold(
+            onSuccess = { todos ->
+                emit(Resource.Success(todos))
+            },
+            onFailure = { error ->
+                Napier.e("Failed to fetch todos for session $sessionId", error)
+                emit(Resource.Error(error.message ?: "Failed to fetch todos"))
+            }
+        )
+    }.flowOn(Dispatchers.IO)
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SESSION SHARING (Priority 2.2)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Share a session publicly.
+     */
+    suspend fun shareSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
+        apiClient.shareSession(sessionId).fold(
+            onSuccess = { session ->
+                localCache.insertSession(session)
+                Napier.i("Session $sessionId shared successfully")
+                Resource.Success(session)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to share session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to share session")
+            }
+        )
+    }
+
+    /**
+     * Unshare a session (revoke public access).
+     */
+    suspend fun unshareSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
+        apiClient.unshareSession(sessionId).fold(
+            onSuccess = { session ->
+                localCache.insertSession(session)
+                Napier.i("Session $sessionId unshared successfully")
+                Resource.Success(session)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to unshare session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to unshare session")
+            }
+        )
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SESSION SUMMARIZATION (Priority 2.3)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Summarize a session (generate title and summary).
+     */
+    suspend fun summarizeSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
+        apiClient.summarizeSession(sessionId).fold(
+            onSuccess = { session ->
+                localCache.insertSession(session)
+                Napier.i("Session $sessionId summarized successfully")
+                Resource.Success(session)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to summarize session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to summarize session")
+            }
+        )
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SESSION INIT (Priority 2.4)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Initialize a session with system prompts and configuration.
+     */
+    suspend fun initializeProject(
+        sessionId: String,
+        messageId: String,
+        providerId: String,
+        modelId: String
+    ): Resource<Unit> = withContext(Dispatchers.IO) {
+        val request = InitSessionRequest(
+            messageID = messageId,
+            providerID = providerId,
+            modelID = modelId
+        )
+        apiClient.initSession(sessionId, request).fold(
+            onSuccess = {
+                Napier.i("Session $sessionId initialized successfully")
+                Resource.Success(Unit)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to initialize session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to initialize session")
+            }
+        )
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SLASH COMMAND EXECUTION (Priority 1.4)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Execute a slash command.
+     */
+    suspend fun executeCommand(
+        sessionId: String,
+        command: String,
+        arguments: String? = null,
+        agent: String? = null
+    ): Resource<Unit> = withContext(Dispatchers.IO) {
+        apiClient.executeCommand(sessionId, command, arguments, agent).fold(
+            onSuccess = {
+                Napier.i("Command /$command executed in session $sessionId")
+                Resource.Success(Unit)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to execute command /$command in session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to execute command")
+            }
+        )
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SHELL COMMAND EXECUTION (Priority 1.5)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Execute a shell command directly.
+     */
+    suspend fun executeShellCommand(
+        sessionId: String,
+        command: String,
+        agent: String = "build"
+    ): Resource<String> = withContext(Dispatchers.IO) {
+        apiClient.executeShell(sessionId, command, agent).fold(
+            onSuccess = { output ->
+                Napier.i("Shell command executed in session $sessionId")
+                Resource.Success(output)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to execute shell command in session $sessionId", error)
+                Resource.Error(error.message ?: "Failed to execute shell command")
+            }
+        )
+    }
 }

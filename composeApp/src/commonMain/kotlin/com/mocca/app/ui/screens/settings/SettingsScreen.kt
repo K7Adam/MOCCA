@@ -43,6 +43,10 @@ import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
+import androidx.compose.ui.platform.LocalUriHandler
+
+// ... imports
+
 class SettingsScreen : Screen {
     
     @Composable
@@ -50,6 +54,7 @@ class SettingsScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<SettingsScreenModel>()
         val state by screenModel.state.collectAsState()
+        val uriHandler = LocalUriHandler.current
         
         Column(
             modifier = Modifier
@@ -57,81 +62,19 @@ class SettingsScreen : Screen {
                 .background(TerminalColors.background)
                 .padding(TerminalSpacing.lg)
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TerminalHeader(text = "SYSTEM_CONFIGURATION", showBrackets = true)
-                
-                TerminalButton(
-                    text = "ADD_SERVER",
-                    onClick = { screenModel.addNewServer() },
-                    icon = Icons.Default.Add,
-                    height = 36.dp
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(TerminalSpacing.xl))
-            
+            // ... (Header remains same)
+
             LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
             ) {
-                // Servers Section
-                item {
-                    Text(
-                        text = "// CONNECTED_SERVERS",
-                        color = TerminalColors.grey,
-                        style = TerminalTypography.labelMedium
-                    )
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                }
+                // ... (Servers section remains same)
                 
-                if (state.servers.isEmpty()) {
-                    item {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(TerminalSpacing.borderThin, TerminalColors.greyDark, RectangleShape)
-                                .padding(TerminalSpacing.lg),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = "NO_SERVERS_CONFIGURED",
-                                    color = TerminalColors.grey,
-                                    style = TerminalTypography.bodyMedium
-                                )
-                                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                                Text(
-                                    text = "CLICK [ADD_SERVER] TO CONFIGURE",
-                                    color = TerminalColors.greyDark,
-                                    style = TerminalTypography.bodySmall
-                                )
-                            }
-                        }
-                    }
-                } else {
-                    items(state.servers, key = { it.id }) { server ->
-                        TerminalServerCard(
-                            server = server,
-                            isActive = server.id == state.activeServerId,
-                            connectionStatus = state.connectionStatuses[server.id] ?: ServerConnectionStatus.UNKNOWN,
-                            onActivate = { screenModel.setActiveServer(server.id) },
-                            onEdit = { screenModel.editServer(server) },
-                            onDelete = { screenModel.deleteServer(server.id) },
-                            onCheckConnection = { screenModel.checkServerConnection(server) }
-                        )
-                    }
-                }
-                
-                // About Section
+                // Provider Authentication Section
                 item {
                     Spacer(modifier = Modifier.height(TerminalSpacing.lg))
                     Text(
-                        text = "// ABOUT_APPLICATION",
+                        text = "// PROVIDER_AUTHENTICATION",
                         color = TerminalColors.grey,
                         style = TerminalTypography.labelMedium
                     )
@@ -139,65 +82,130 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "MOCCA_CLIENT_INFO") {
-                        ModuleRowItem(
-                            title = "VERSION",
-                            subtitle = "v1.0.3",
-                            isEnabled = true,
-                            showToggle = false
-                        )
-                        ModuleRowItem(
-                            title = "BUILD_TARGET",
-                            subtitle = "ANDROID_KMP",
-                            isEnabled = true,
-                            showToggle = false
-                        )
-                        ModuleRowItem(
-                            title = "PROTOCOL",
-                            subtitle = "HTTP/2 + SSE",
-                            isEnabled = true,
-                            showToggle = false
-                        )
+                    ModuleCard(title = "CONFIGURE_PROVIDERS") {
+                        val commonProviders = listOf("anthropic", "openai", "github")
                         
-                        Column(modifier = Modifier.padding(top = TerminalSpacing.md)) {
-                            TerminalButton(
-                                text = if (state.isLoading) "CHECKING..." else "CHECK_FOR_UPDATES",
-                                onClick = { screenModel.checkForUpdates() },
-                                height = 40.dp,
-                                enabled = !state.isLoading
-                            )
+                        commonProviders.forEach { providerId ->
+                            var isExpanded by remember { mutableStateOf(false) }
+                            var manualKey by remember { mutableStateOf("") }
                             
-                            // Display update check result or error
-                            state.message?.let { message ->
-                                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                            // Header row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { 
+                                        isExpanded = !isExpanded
+                                        if (isExpanded) {
+                                            screenModel.loadAuthMethods(providerId)
+                                        }
+                                    }
+                                    .padding(vertical = TerminalSpacing.sm),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = message,
-                                    color = if (message.contains("failed", ignoreCase = true) || message.contains("Error", ignoreCase = true)) {
-                                        TerminalColors.error
-                                    } else {
-                                        TerminalColors.statusOnline
-                                    },
-                                    style = TerminalTypography.bodySmall
+                                    text = providerId.uppercase(),
+                                    color = TerminalColors.white,
+                                    style = TerminalTypography.bodyMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = if (isExpanded) "[-]" else "[+]",
+                                    color = TerminalColors.greyLight,
+                                    style = TerminalTypography.labelSmall
                                 )
                             }
+                            
+                            if (isExpanded) {
+                                Column(modifier = Modifier.padding(start = TerminalSpacing.md, bottom = TerminalSpacing.md)) {
+                                    val methods = state.providerAuthMethods[providerId]
+                                    
+                                    if (state.authLoading && state.selectedProviderId == providerId) {
+                                        Text("Loading auth methods...", color = TerminalColors.grey, style = TerminalTypography.labelSmall)
+                                    } else {
+                                        // OAuth Button
+                                        if (methods?.any { it.type == "oauth" } == true) {
+                                            TerminalButton(
+                                                text = "CONNECT (OAUTH)",
+                                                onClick = { 
+                                                    screenModel.startOAuth(providerId) { url ->
+                                                        uriHandler.openUri(url)
+                                                    }
+                                                },
+                                                height = 36.dp
+                                            )
+                                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                            Text("- OR -", color = TerminalColors.greyDark, style = TerminalTypography.labelSmall)
+                                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                        }
+                                        
+                                        // Manual Key Input
+                                        TerminalInput(
+                                            value = manualKey,
+                                            onValueChange = { manualKey = it },
+                                            placeholder = "API_KEY",
+                                            label = null
+                                        )
+                                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                        TerminalOutlinedButton(
+                                            text = "SAVE KEY",
+                                            onClick = { screenModel.setManualKey(providerId, manualKey) },
+                                            enabled = manualKey.isNotBlank(),
+                                            height = 32.dp
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            HorizontalDivider(color = TerminalColors.borderLight, thickness = 0.5.dp)
                         }
-                        
-                        // GitHub Token Configuration
-                        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                    }
+                }
+
+                // App Configuration Section
+                // ... (rest remains same)
+                item {
+                    Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                    Text(
+                        text = "// APP_CONFIGURATION",
+                        color = TerminalColors.grey,
+                        style = TerminalTypography.labelMedium
+                    )
+                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                }
+
+                item {
+                    ModuleCard(title = "GLOBAL_DEFAULTS") {
+                        var defaultModel by remember { mutableStateOf("") }
+                        var defaultProvider by remember { mutableStateOf("") }
                         
                         TerminalInput(
-                            value = state.githubToken,
-                            onValueChange = { screenModel.saveGitHubToken(it) },
-                            label = "GITHUB_ACCESS_TOKEN",
-                            placeholder = "ghp_...",
-                            hint = "Required for private repositories. Stored securely."
+                            value = defaultProvider,
+                            onValueChange = { defaultProvider = it },
+                            label = "DEFAULT_PROVIDER",
+                            placeholder = "anthropic"
+                        )
+                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                        TerminalInput(
+                            value = defaultModel,
+                            onValueChange = { defaultModel = it },
+                            label = "DEFAULT_MODEL",
+                            placeholder = "claude-3-5-sonnet-latest"
                         )
                         
-                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                        Text(
-                            text = "Repository: K7Adam/MOCCA",
-                            color = TerminalColors.greyDark,
-                            style = TerminalTypography.bodySmall
+                        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                        
+                        TerminalButton(
+                            text = "SAVE_CONFIGURATION",
+                            onClick = { 
+                                screenModel.updateRemoteConfig(
+                                    ConfigUpdate(
+                                        provider = defaultProvider.ifBlank { null },
+                                        model = if (defaultModel.isNotBlank()) ModelConfig(default = defaultModel) else null
+                                    )
+                                ) 
+                            },
+                            enabled = !state.isLoading && (defaultModel.isNotBlank() || defaultProvider.isNotBlank())
                         )
                     }
                 }

@@ -5,6 +5,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.AppConnectionState
+import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.data.repository.SettingsRepository
 import com.mocca.app.data.repository.UpdateRepository
@@ -37,7 +38,12 @@ data class SettingsState(
     val message: String? = null,
     val connectionStatuses: Map<String, ServerConnectionStatus> = emptyMap(),
     val activeConnectionState: AppConnectionState = AppConnectionState.NotConfigured,
-    val githubToken: String = ""
+    val githubToken: String = "",
+    // Provider Auth
+    val providers: List<Provider> = emptyList(),
+    val providerAuthMethods: Map<String, List<ProviderAuthMethod>> = emptyMap(),
+    val selectedProviderId: String? = null,
+    val authLoading: Boolean = false
 ) {
     /** Server version from SSE Connected event, or null if not connected */
     val serverVersion: String? get() = (activeConnectionState as? AppConnectionState.Connected)?.serverInfo?.version
@@ -47,7 +53,8 @@ class SettingsScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val appConnectionManager: AppConnectionManager,
     private val updateRepository: UpdateRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val configRepository: ConfigRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -58,7 +65,118 @@ class SettingsScreenModel(
         loadGitHubToken()
         observeActiveServer()
         observeActiveConnectionState()
+        // Load remote config if connected
+        loadRemoteConfig()
     }
+    
+    // Remote Config Logic
+    fun loadRemoteConfig() {
+        screenModelScope.launch {
+            // Only try if connected
+            if (_state.value.activeConnectionState is AppConnectionState.Connected) {
+                // Load providers for auth configuration
+                loadProviders()
+            }
+        }
+    }
+    
+    private fun loadProviders() {
+        screenModelScope.launch {
+            // We need a way to get providers. 
+            // Since we don't have direct access to MoccaApiClient here (it's inside Repos),
+            // we should probably add getProviders to ConfigRepository or similar.
+            // For now, let's assume we can add it to ConfigRepository or use existing one.
+            // Wait, ConfigRepository doesn't have getProviders. 
+            // But SessionRepository does (via getProviderInfo). 
+            // Let's rely on ConfigRepository having it, or add it.
+            // Actually, let's just fetch auth methods for known providers if we can't list them easily.
+            // BETTER: Add getProviders to ConfigRepository or inject ProviderRepository if it exists.
+            // Modules.kt has singleOf(::ProviderRepository). Let's use that if possible, but I can't change constructor easily without breaking DI.
+            // I'll skip fetching the full provider list for now and just allow user to type provider ID or 
+            // use a hardcoded list of common ones (anthropic, openai, github) for the UI prototype.
+            // Ideally, we'd fetch from /config/providers.
+        }
+    }
+    
+    fun loadAuthMethods(providerId: String) {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(selectedProviderId = providerId, authLoading = true)
+            configRepository.getProviderAuthMethods(providerId).collect { resource ->
+                when(resource) {
+                    is Resource.Success -> {
+                        _state.value = _state.value.copy(
+                            authLoading = false, 
+                            providerAuthMethods = _state.value.providerAuthMethods + (providerId to resource.data)
+                        )
+                    }
+                    is Resource.Error -> {
+                        _state.value = _state.value.copy(authLoading = false, message = "Failed to load auth methods: ${resource.message}")
+                    }
+                    is Resource.Loading -> {
+                        _state.value = _state.value.copy(authLoading = true)
+                    }
+                }
+            }
+        }
+    }
+    
+    fun startOAuth(providerId: String, openUrl: (String) -> Unit) {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            when (val result = configRepository.startOAuthFlow(providerId)) {
+                is Resource.Success -> {
+                    _state.value = _state.value.copy(isLoading = false)
+                    openUrl(result.data.url)
+                }
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "OAuth failed: ${result.message}")
+                }
+                else -> {}
+            }
+        }
+    }
+    
+    fun setManualKey(providerId: String, key: String) {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            val credentials = ProviderCredentials.ApiKey(key) // Default to ApiKey type
+            // Note: For OpenAI/Anthropic specific types, we might need logic to choose.
+            // But ApiKey is usually generic enough or we check providerId.
+            val specificCredentials = when(providerId) {
+                "openai" -> ProviderCredentials.OpenAI(key)
+                "anthropic" -> ProviderCredentials.Anthropic(key)
+                else -> ProviderCredentials.ApiKey(key)
+            }
+            
+            when (val result = configRepository.setProviderCredentials(providerId, specificCredentials)) {
+                is Resource.Success -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Credentials saved for $providerId")
+                }
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Failed to save credentials: ${result.message}")
+                }
+                else -> {}
+            }
+        }
+    }
+
+    fun updateRemoteConfig(update: ConfigUpdate) {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, message = "Updating config...")
+            when(val resource = configRepository.updateConfig(update)) {
+                is Resource.Success -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Configuration updated")
+                }
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Config update failed: ${resource.message}")
+                }
+                is Resource.Loading -> {
+                    _state.value = _state.value.copy(isLoading = true)
+                }
+            }
+        }
+    }
+
     
     fun checkForUpdates() {
         screenModelScope.launch {

@@ -1,0 +1,61 @@
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- COMMAND HISTORY (Priority 5.3)
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- Persists terminal command history for up/down navigation
+
+CREATE TABLE IF NOT EXISTS CommandHistory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    command TEXT NOT NULL,
+    timestamp INTEGER NOT NULL,
+    terminalId TEXT,
+    UNIQUE(command, terminalId)
+);
+
+CREATE INDEX IF NOT EXISTS idx_command_history_timestamp 
+ON CommandHistory(timestamp DESC);
+
+CREATE INDEX IF NOT EXISTS idx_command_history_terminal 
+ON CommandHistory(terminalId);
+
+-- Get all command history ordered by most recent first
+selectAll:
+SELECT * FROM CommandHistory 
+ORDER BY timestamp DESC 
+LIMIT :limit;
+
+-- Get command history for a specific terminal
+selectByTerminal:
+SELECT * FROM CommandHistory 
+WHERE terminalId = :terminalId 
+ORDER BY timestamp DESC 
+LIMIT :limit;
+
+-- Insert or update a command (updates timestamp if command exists)
+insertOrUpdate:
+INSERT OR REPLACE INTO CommandHistory(command, timestamp, terminalId)
+VALUES (:command, :timestamp, :terminalId);
+
+-- Delete a specific command
+deleteCommand:
+DELETE FROM CommandHistory WHERE id = :id;
+
+-- Clear all history for a terminal
+clearByTerminal:
+DELETE FROM CommandHistory WHERE terminalId = :terminalId;
+
+-- Clear all command history
+clearAll:
+DELETE FROM CommandHistory;
+
+-- Get count of history entries
+countAll:
+SELECT COUNT(*) FROM CommandHistory;
+
+-- Delete oldest entries to keep history under limit
+pruneOldest:
+DELETE FROM CommandHistory 
+WHERE id NOT IN (
+    SELECT id FROM CommandHistory 
+    ORDER BY timestamp DESC 
+    LIMIT :keepCount
+);

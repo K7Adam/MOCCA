@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -18,9 +21,13 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -80,6 +87,15 @@ class SessionsScreen : Screen {
                 TerminalHeader(text = "SESSIONS", showBrackets = true)
                 
                 Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                    // ═══════════════════════════════════════════════════════════════════════════════
+                    // SESSION SEARCH (Priority 5.6) - Search toggle button
+                    // ═══════════════════════════════════════════════════════════════════════════════
+                    TerminalIconButton(
+                        icon = Icons.Default.Search,
+                        onClick = { screenModel.toggleSearch() },
+                        contentDescription = "Search",
+                        iconColor = if (state.isSearchVisible) TerminalColors.statusOnline else TerminalColors.grey
+                    )
                     TerminalIconButton(
                         icon = Icons.Default.Settings,
                         onClick = { navigator.push(SettingsScreen()) },
@@ -91,6 +107,20 @@ class SessionsScreen : Screen {
                         contentDescription = stringResource(Res.string.refresh)
                     )
                 }
+            }
+            
+            // ═══════════════════════════════════════════════════════════════════════════════
+            // SESSION SEARCH (Priority 5.6) - Search bar
+            // ═══════════════════════════════════════════════════════════════════════════════
+            if (state.isSearchVisible) {
+                TerminalSearchBar(
+                    query = state.searchQuery,
+                    onQueryChange = { screenModel.updateSearchQuery(it) },
+                    onClear = { screenModel.clearSearch() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = TerminalSpacing.lg, vertical = TerminalSpacing.sm)
+                )
             }
             
             HorizontalDivider(
@@ -161,10 +191,33 @@ class SessionsScreen : Screen {
                                     modifier = Modifier.align(Alignment.Center)
                                 )
                             }
+                            state.filteredSessions.isEmpty() && state.searchQuery.isNotBlank() -> {
+                                // No search results
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(TerminalSpacing.xxl),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.SearchOff,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(48.dp),
+                                        tint = TerminalColors.grey
+                                    )
+                                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                                    Text(
+                                        text = "NO_RESULTS_FOR: \"${state.searchQuery}\"",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TerminalColors.greyLight
+                                    )
+                                }
+                            }
                             else -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
                                     TerminalSessionsList(
-                                        sessions = state.sessions,
+                                        sessions = state.filteredSessions,
                                         childrenMap = state.childrenMap,
                                         selectedSessionId = state.selectedSessionId,
                                         onSessionClick = { session ->
@@ -467,5 +520,81 @@ private fun formatTime(timestamp: Long): String {
         "${localDateTime.hour.toString().padStart(2, '0')}:${localDateTime.minute.toString().padStart(2, '0')}"
     } catch (e: Exception) {
         ""
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SESSION SEARCH (Priority 5.6) - Search bar component
+// ═══════════════════════════════════════════════════════════════════════════════
+
+@Composable
+private fun TerminalSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onClear: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusRequester = remember { FocusRequester() }
+    
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+    
+    Box(
+        modifier = modifier
+            .background(TerminalColors.surface, RectangleShape)
+            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+            .padding(TerminalSpacing.sm)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp),
+                tint = TerminalColors.grey
+            )
+            
+            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    color = TerminalColors.white
+                ),
+                cursorBrush = SolidColor(TerminalColors.statusOnline),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "SEARCH_SESSIONS...",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = TerminalColors.grey
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+            
+            if (query.isNotEmpty()) {
+                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                TerminalIconButton(
+                    icon = Icons.Default.Clear,
+                    onClick = onClear,
+                    iconColor = TerminalColors.grey,
+                    contentDescription = "Clear"
+                )
+            }
+        }
     }
 }

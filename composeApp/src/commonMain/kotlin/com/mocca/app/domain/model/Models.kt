@@ -1,9 +1,11 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+@Immutable
 @Serializable
 data class Session(
     val id: String,
@@ -21,13 +23,16 @@ data class Session(
     val parentId: String? = null,
     val summary: SessionSummary? = null,
     val permission: List<SessionPermission>? = null, // Tool permissions
-    val revert: SessionRevertInfo? = null // Revert state for undo/redo
+    val revert: SessionRevertInfo? = null, // Revert state for undo/redo
+    @SerialName("shareID")
+    val shareID: String? = null // Share ID for public sharing
 ) {
     // Convenience accessors for time fields
     val createdAt: Long get() = time?.created ?: 0L
     val updatedAt: Long get() = time?.updated ?: 0L
     val effectiveParentID: String? get() = parentID ?: parentId
     val isReverted: Boolean get() = revert != null
+    val isShared: Boolean get() = shareID != null
 }
 
 @Serializable
@@ -308,6 +313,7 @@ data class RevertSessionRequest(
  * Simplified message representation for UI.
  * Converted from MessageResponse.
  */
+@Immutable
 @Serializable
 data class Message(
     val id: String,
@@ -327,6 +333,14 @@ data class Message(
                 parts = response.parts.mapNotNull { part ->
                     when (part.type) {
                         "text" -> part.text?.let { MessagePart.Text(it) }
+                        "thinking" -> part.text?.let { 
+                            MessagePart.Thinking(
+                                content = it,
+                                durationMs = part.time?.completed?.let { end -> 
+                                    part.time.created.takeIf { start -> start > 0 }?.let { start -> end - start }
+                                }
+                            ) 
+                        }
                         "tool" -> {
                             val richState = RichToolState.fromResponse(part.state)
                             MessagePart.ToolInvocation(
@@ -367,6 +381,16 @@ sealed class MessagePart {
     data class Reasoning(
         val content: String,
         val timeMs: Long
+    ) : MessagePart()
+
+    /**
+     * Extended thinking content from Claude/o1 and other reasoning models.
+     * Displayed with a distinct "thinking" visualization before text response.
+     */
+    @Serializable
+    data class Thinking(
+        val content: String,
+        val durationMs: Long? = null
     ) : MessagePart()
 
     @Serializable
@@ -692,4 +716,156 @@ data class ServerErrorResponse(
     val data: JsonElement? = null,
     val code: String? = null,
     val status: Int? = null
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TODO LIST MODELS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Session todo item.
+ * Used for tracking agent task progress.
+ */
+@Serializable
+data class Todo(
+    val id: String,
+    val content: String,
+    val status: TodoStatus,
+    val priority: TodoPriority,
+    val createdAt: Long? = null,
+    val completedAt: Long? = null
+)
+
+@Serializable
+enum class TodoStatus {
+    @SerialName("pending") PENDING,
+    @SerialName("in_progress") IN_PROGRESS,
+    @SerialName("completed") COMPLETED,
+    @SerialName("cancelled") CANCELLED
+}
+
+@Serializable
+enum class TodoPriority {
+    @SerialName("high") HIGH,
+    @SerialName("medium") MEDIUM,
+    @SerialName("low") LOW
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Request body for POST /session/:id/summarize.
+ */
+@Serializable
+data class SummarizeRequest(
+    @SerialName("providerID")
+    val providerID: String,
+    @SerialName("modelID")
+    val modelID: String
+)
+
+/**
+ * Request body for POST /session/:id/init.
+ */
+@Serializable
+data class InitSessionRequest(
+    @SerialName("messageID")
+    val messageID: String,
+    @SerialName("providerID")
+    val providerID: String,
+    @SerialName("modelID")
+    val modelID: String
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG UPDATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Request body for PATCH /config.
+ */
+@Serializable
+data class ConfigUpdate(
+    val model: ModelConfig? = null,
+    val provider: String? = null,
+    val theme: String? = null,
+    val autosave: Boolean? = null,
+    val experimental: Map<String, JsonElement>? = null
+)
+
+@Serializable
+data class ModelConfig(
+    val default: String? = null,
+    val reasoning: String? = null
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECT MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Project information from /project endpoints.
+ */
+@Serializable
+data class Project(
+    val id: String,
+    val name: String,
+    val path: String,
+    val directory: String,
+    val vcs: VcsType? = null,
+    val createdAt: Long? = null
+)
+
+@Serializable
+enum class VcsType {
+    @SerialName("git") GIT,
+    @SerialName("none") NONE
+}
+
+/**
+ * Path information from /path endpoint.
+ */
+@Serializable
+data class PathInfo(
+    val cwd: String,
+    val home: String? = null,
+    val root: String? = null
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOGGING
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Request body for POST /log.
+ */
+@Serializable
+data class LogEntry(
+    val service: String,
+    val level: String, // "debug", "info", "warn", "error"
+    val message: String,
+    val extra: Map<String, String>? = null
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TOOLS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Full tool list response.
+ */
+@Serializable
+data class ToolList(
+    val tools: List<ToolDefinition> = emptyList()
+)
+
+@Serializable
+data class ToolDefinition(
+    val id: String,
+    val name: String,
+    val description: String? = null,
+    val schema: JsonElement? = null,
+    val category: String? = null
 )

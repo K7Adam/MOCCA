@@ -60,6 +60,16 @@ class EventStreamRepository(
     private val _streamingText = MutableStateFlow("")
     val streamingText: StateFlow<String> = _streamingText.asStateFlow()
     
+    // Extended thinking state tracking (for Claude/o1 reasoning models)
+    private val _isThinking = MutableStateFlow(false)
+    val isThinking: StateFlow<Boolean> = _isThinking.asStateFlow()
+    
+    private val _thinkingContent = MutableStateFlow("")
+    val thinkingContent: StateFlow<String> = _thinkingContent.asStateFlow()
+    
+    private val _thinkingStartTime = MutableStateFlow<Long?>(null)
+    val thinkingStartTime: StateFlow<Long?> = _thinkingStartTime.asStateFlow()
+    
     // Use Lists instead of single values to prevent race condition overwrites
     private val _pendingPermissions = MutableStateFlow<List<PermissionRequest>>(emptyList())
     val pendingPermissions: StateFlow<List<PermissionRequest>> = _pendingPermissions.asStateFlow()
@@ -228,6 +238,9 @@ class EventStreamRepository(
         monitoredSessionIds.value = emptySet()
         _connectionStatus.value = ConnectionStatus.Disconnected
         _streamingText.value = ""
+        _isThinking.value = false
+        _thinkingContent.value = ""
+        _thinkingStartTime.value = null
         _pendingPermissions.value = emptyList()
         _pendingQuestions.value = emptyList()
         Napier.i("SSE disconnected")
@@ -250,6 +263,15 @@ class EventStreamRepository(
      */
     fun clearStreamingText() {
         _streamingText.value = ""
+    }
+    
+    /**
+     * Clear the thinking state (call when message completes).
+     */
+    fun clearThinkingState() {
+        _isThinking.value = false
+        _thinkingContent.value = ""
+        _thinkingStartTime.value = null
     }
 
     /**
@@ -324,6 +346,10 @@ class EventStreamRepository(
                 val sessionId = event.properties.sessionID
                 if (sessionId == activeSessionId) {
                     _streamingText.value = ""
+                    // Clear thinking state on session idle
+                    _isThinking.value = false
+                    _thinkingContent.value = ""
+                    _thinkingStartTime.value = null
                 }
                 // Update session status in cache
                 try {
@@ -350,8 +376,29 @@ class EventStreamRepository(
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
                 Napier.i(">>> MessagePartUpdated: type=${part.type}, sessionID=${part.sessionID}, activeSessionId=$activeSessionId, monitored=${monitoredSessionIds.value}")
                 
+                // Handle thinking state for extended reasoning models (Claude/o1)
+                if (part.type == "thinking" && part.text != null) {
+                    if (monitoredSessionIds.value.contains(part.sessionID)) {
+                        if (part.sessionID == activeSessionId) {
+                            _isThinking.value = true
+                            _thinkingContent.value = part.text
+                            if (_thinkingStartTime.value == null) {
+                                _thinkingStartTime.value = System.currentTimeMillis()
+                            }
+                            Napier.i(">>> Thinking state updated (${part.text.length} chars)")
+                        }
+                    }
+                }
+                
                 // Handle streaming text
                 if (part.type == "text" && part.text != null) {
+                    // Text part received means thinking is complete
+                    if (_isThinking.value) {
+                        _isThinking.value = false
+                        _thinkingContent.value = ""
+                        _thinkingStartTime.value = null
+                    }
+                    
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
                         if (part.sessionID == activeSessionId) {
                             _streamingText.value = part.text
@@ -372,8 +419,11 @@ class EventStreamRepository(
             is ServerEvent.MessageUpdated -> {
                 val messageInfo = event.properties.info
                 if (messageInfo.sessionID == activeSessionId) {
-                    // Message complete - clear streaming text
+                    // Message complete - clear streaming text and thinking state
                     _streamingText.value = ""
+                    _isThinking.value = false
+                    _thinkingContent.value = ""
+                    _thinkingStartTime.value = null
                 }
                 // Update session status to running when message is being processed
                 try {

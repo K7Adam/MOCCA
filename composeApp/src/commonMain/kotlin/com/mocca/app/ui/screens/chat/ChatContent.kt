@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.chat
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -8,55 +9,55 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Rocket
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import com.mocca.app.domain.model.ConnectionStatus
-import com.mocca.app.domain.model.MessageRole
-import com.mocca.app.ui.components.ErrorScreen
-import com.mocca.app.ui.components.LoadingScreen
-import com.mocca.app.ui.components.PermissionRequestDialog
-import com.mocca.app.ui.components.QuestionDialog
-import com.mocca.app.ui.components.terminal.RichChatInput
-import com.mocca.app.ui.components.terminal.TerminalIconButton
-import com.mocca.app.ui.components.terminal.TerminalMessage
-import com.mocca.app.ui.components.terminal.TerminalStreamingMessage
-import com.mocca.app.ui.components.terminal.TerminalTextButton
-import com.mocca.app.ui.components.terminal.TerminalProcessingIndicator
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
+import com.mocca.app.domain.model.ConnectionStatus
+import com.mocca.app.domain.model.MessageRole
+import com.mocca.app.ui.components.ErrorScreen
+import com.mocca.app.ui.components.PermissionRequestDialog
+import com.mocca.app.ui.components.QuestionDialog
+import com.mocca.app.ui.components.chat.TodoListPanel
+import com.mocca.app.ui.components.terminal.*
+import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.TerminalTypography
 import com.mocca.app.util.FilePickerHelper
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
-import com.mocca.app.ui.components.terminal.SuggestionType
+import kotlinx.serialization.json.JsonObject
 
 @Composable
 fun ChatContent(screenModel: ChatScreenModel) {
     val state by screenModel.state.collectAsState()
-    val inputText by screenModel.inputText.collectAsState() // PERFORMANCE FIX: Separate input state
-    val streamingText by screenModel.streamingText.collectAsState() // PERFORMANCE FIX: Separate streaming text
+    val inputText by screenModel.inputText.collectAsState()
+    val streamingText by screenModel.streamingText.collectAsState()
     val messages by screenModel.aggregatedMessages.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
     
-    // Command definitions
-    // Command definitions
-    // Command definitions
-    // Only use commands fetched from API
     val commands = state.commands
+    var showShareDialog by remember { mutableStateOf(false) }
+    var showInitDialog by remember { mutableStateOf(false) }
     
-    // File picker launcher using FileKit
     val filePickerLauncher = rememberFilePickerLauncher(
         type = FilePickerHelper.createFileType(),
         mode = FileKitMode.Multiple()
@@ -67,20 +68,15 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     val attached = FilePickerHelper.toAttachedFile(file)
                     screenModel.addAttachment(attached)
                 } catch (e: Exception) {
-                    // Log error but don't crash
                     io.github.aakira.napier.Napier.e("Failed to attach file", e)
                 }
             }
         }
     }
     
-    // Auto-scroll (reverseLayout: 0 is bottom)
     LaunchedEffect(messages.size, streamingText) {
         if (messages.isNotEmpty() || streamingText.isNotEmpty()) {
-            // With reverseLayout, 0 is the bottom. 
-            // We only animate if not already at 0, or just ensure visibility.
             if (listState.firstVisibleItemIndex > 1) {
-                 // If far away, maybe just show badge? For now force scroll.
                  listState.animateScrollToItem(0)
             } else {
                  listState.animateScrollToItem(0)
@@ -93,20 +89,94 @@ fun ChatContent(screenModel: ChatScreenModel) {
             .fillMaxSize()
             .background(TerminalColors.background)
     ) {
-        // Chat Content
+        state.session?.let { session ->
+            ChatHeader(
+                title = session.title ?: "SESSION_${session.id.take(8)}",
+                showTodos = state.showTodoPanel,
+                onTodoClick = { screenModel.toggleTodoPanel() },
+                onShareClick = { showShareDialog = true },
+                onSummarizeClick = { screenModel.summarizeSession() }
+            )
+        }
+        
+        if (showShareDialog) {
+            val isShared = state.session?.shareID != null
+            val shareUrl = if (isShared) "https://opencode.dev/s/${state.session?.shareID}" else ""
+            
+            AlertDialog(
+                onDismissRequest = { showShareDialog = false },
+                containerColor = TerminalColors.surface,
+                title = { Text(if (isShared) "SESSION_SHARED" else "SHARE_SESSION", style = TerminalTypography.labelMedium, color = TerminalColors.white) },
+                text = {
+                    Column {
+                        if (isShared) {
+                            Text("This session is publicly accessible.", color = TerminalColors.grey, style = TerminalTypography.bodySmall)
+                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            TerminalInput(
+                                value = shareUrl,
+                                onValueChange = {},
+                                showPrompt = false,
+                                enabled = false 
+                            )
+                        } else {
+                            Text("Make this session publicly accessible?", color = TerminalColors.white, style = TerminalTypography.bodyMedium)
+                        }
+                    }
+                },
+                confirmButton = {
+                    if (isShared) {
+                        TerminalButton(
+                            text = "COPY_LINK",
+                            onClick = { 
+                                clipboardManager.setText(AnnotatedString(shareUrl))
+                                showShareDialog = false
+                            }
+                        )
+                    } else {
+                        TerminalButton(
+                            text = "SHARE_PUBLICLY",
+                            onClick = { 
+                                screenModel.shareSession()
+                            }
+                        )
+                    }
+                },
+                dismissButton = {
+                    if (isShared) {
+                        TerminalTextButton(
+                            text = "UNSHARE",
+                            onClick = { 
+                                screenModel.unshareSession()
+                                showShareDialog = false
+                            },
+                            textColor = TerminalColors.error
+                        )
+                    } else {
+                        TerminalTextButton(
+                            text = "CANCEL",
+                            onClick = { showShareDialog = false }
+                        )
+                    }
+                }
+            )
+        }
+        
+        TodoListPanel(
+            todos = state.todos,
+            isVisible = state.showTodoPanel
+        )
+
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            // Reverted session banner
             if (state.session?.isReverted == true) {
                 RevertedSessionBanner(
                     onResume = { screenModel.unrevertSession() }
                 )
             }
             
-            // Error overlay
             state.error?.let { error ->
                 TerminalErrorOverlay(
                     error = error,
@@ -115,13 +185,23 @@ fun ChatContent(screenModel: ChatScreenModel) {
             }
             
             if (state.isLoading && state.messages.isEmpty()) {
-                LoadingScreen()
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = TerminalSpacing.lg, vertical = TerminalSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                ) {
+                    repeat(3) { MessageSkeleton() }
+                }
             } else if (state.error != null && state.messages.isEmpty()) {
                 ErrorScreen(message = state.error ?: "UNKNOWN_ERROR") {
                     screenModel.retry()
                 }
+            } else if (state.messages.isEmpty()) {
+                EmptySessionState(
+                    onInit = { showInitDialog = true }
+                )
             } else {
-                // Messages list (Reversed for Chat)
                 LazyColumn(
                     state = listState,
                     reverseLayout = true,
@@ -134,24 +214,23 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     ),
                     verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
                 ) {
-                    // Bottom items first in reverseLayout
+                    if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
+                        item(contentType = "processing") { TerminalProcessingIndicator() }
+                    }
                     
-                    // Processing indicator
-                    if (state.isSending && streamingText.isEmpty()) {
-                        item(contentType = "processing") {
-                            TerminalProcessingIndicator()
+                    if (state.isThinking) {
+                        item(contentType = "thinking") {
+                            TerminalThinkingIndicator(
+                                thinkingContent = state.thinkingContent,
+                                elapsedMs = state.thinkingElapsedMs
+                            )
                         }
                     }
                     
-                    // Streaming text
                     if (streamingText.isNotEmpty()) {
-                        item(contentType = "streaming") {
-                            TerminalStreamingMessage(text = streamingText)
-                        }
+                        item(contentType = "streaming") { TerminalStreamingMessage(text = streamingText) }
                     }
                     
-                    // Messages (Newest first at bottom)
-                    // Filter out empty assistant messages to prevent duplicate blocks during streaming
                     val displayMessages = messages.filter { msg ->
                         msg.role == MessageRole.USER || msg.parts.isNotEmpty()
                     }
@@ -166,10 +245,20 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             onRevert = { screenModel.revertSession(message) }
                         )
                     }
-                } // LazyColumn ends here
+                }
             }
             
-            // Dialogs
+            if (showInitDialog && state.providerInfo != null) {
+                InitSessionDialog(
+                    providerInfo = state.providerInfo!!,
+                    onInit = { providerId, modelId -> 
+                        screenModel.initSession(providerId, modelId)
+                        showInitDialog = false
+                    },
+                    onDismiss = { showInitDialog = false }
+                )
+            }
+            
             state.pendingPermission?.let { permission ->
                 PermissionRequestDialog(
                     permission = permission,
@@ -187,7 +276,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
             }
         }
         
-        // Chat Input
         RichChatInput(
             value = inputText,
             onValueChange = { screenModel.updateInputText(it) },
@@ -195,32 +283,76 @@ fun ChatContent(screenModel: ChatScreenModel) {
             enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
             modelName = state.modelName,
             agentName = state.agentName,
-            // Model selection
             providerResponse = state.providerInfo,
             selectedProviderId = state.selectedProviderId,
             selectedModelId = state.selectedModelId,
-            onModelSelected = { providerId, modelId -> 
-                screenModel.selectModel(providerId, modelId) 
-            },
+            onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
             recentModels = state.recentModels,
-            // Mode selection
-            // Mode selection
             modes = state.modes,
             selectedModeId = state.selectedModeId,
             onModeSelected = { screenModel.selectMode(it) },
-            // Attachments
             attachedFiles = state.attachedFiles,
             onRemoveAttachment = { screenModel.removeAttachment(it) },
             onAttachClick = { filePickerLauncher.launch() },
-            // Command/Mention
             commands = commands,
-            onCommandSelected = { cmd -> 
-                coroutineScope.launch { cmd.action() } 
-            },
-            onModeSelectedForMention = { mode -> 
-                screenModel.selectMode(mode.id) 
-            }
+            onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
+            onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
         )
+    }
+}
+
+@Composable
+private fun ChatHeader(
+    title: String,
+    showTodos: Boolean,
+    onTodoClick: () -> Unit,
+    onShareClick: () -> Unit,
+    onSummarizeClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(TerminalColors.surfaceVariant)
+            .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title.uppercase(),
+            style = TerminalTypography.labelMedium,
+            color = TerminalColors.white,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            modifier = Modifier.weight(1f)
+        )
+        
+        Row {
+            TerminalIconButton(
+                icon = Icons.Default.Description,
+                onClick = onSummarizeClick,
+                iconColor = TerminalColors.greyLight,
+                size = 32.dp,
+                contentDescription = "Summarize"
+            )
+            
+            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            
+            TerminalIconButton(
+                icon = Icons.Default.Share,
+                onClick = onShareClick,
+                iconColor = TerminalColors.greyLight,
+                size = 32.dp
+            )
+            
+            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            
+            TerminalIconButton(
+                icon = if (showTodos) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
+                onClick = onTodoClick,
+                iconColor = if (showTodos) TerminalColors.statusOnline else TerminalColors.greyLight,
+                size = 32.dp
+            )
+        }
     }
 }
 
@@ -299,7 +431,6 @@ fun MarkdownText(
     style: TextStyle,
     color: Color
 ) {
-    // Use multiplatform-markdown-renderer for proper markdown rendering
     Markdown(
         content = markdown,
         colors = markdownColor(
@@ -320,5 +451,129 @@ fun MarkdownText(
             h5 = MaterialTheme.typography.titleSmall.copy(color = color),
             h6 = MaterialTheme.typography.labelLarge.copy(color = color)
         )
+    )
+}
+
+@Composable
+private fun EmptySessionState(onInit: () -> Unit) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Rocket,
+                contentDescription = null,
+                tint = TerminalColors.grey,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Text(
+                text = "SESSION_READY",
+                style = TerminalTypography.labelLarge,
+                color = TerminalColors.grey
+            )
+            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            TerminalButton(
+                text = "INITIALIZE_PROJECT",
+                onClick = onInit
+            )
+        }
+    }
+}
+
+@Composable
+private fun InitSessionDialog(
+    providerInfo: com.mocca.app.domain.model.ProviderResponse,
+    onInit: (String, String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val defaultProvider = providerInfo.all.firstOrNull()?.id ?: ""
+    val defaultModel = (providerInfo.all.firstOrNull()?.models as? JsonObject)?.keys?.firstOrNull() ?: ""
+    
+    var selectedProvider by remember { mutableStateOf(defaultProvider) }
+    var selectedModel by remember { mutableStateOf(defaultModel) }
+    
+    val provider = providerInfo.all.find { it.id == selectedProvider }
+    val currentModelIds = (provider?.models as? JsonObject)?.keys?.toList() ?: emptyList()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = TerminalColors.surface,
+        title = { 
+            Text(
+                text = "INITIALIZE_PROJECT", 
+                style = TerminalTypography.labelMedium, 
+                color = TerminalColors.white
+            ) 
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Select an AI model to analyze the project:",
+                    style = TerminalTypography.bodySmall,
+                    color = TerminalColors.grey
+                )
+                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                
+                Text("// PROVIDER", color = TerminalColors.statusOnline, style = TerminalTypography.labelSmall)
+                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                providerInfo.all.forEach { providerItem ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { 
+                                selectedProvider = providerItem.id 
+                                selectedModel = (providerItem.models as? JsonObject)?.keys?.firstOrNull() ?: ""
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (selectedProvider == providerItem.id) "[x] ${providerItem.name}" else "[ ] ${providerItem.name}",
+                            color = if (selectedProvider == providerItem.id) TerminalColors.white else TerminalColors.grey
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                
+                Text("// MODEL", color = TerminalColors.statusOnline, style = TerminalTypography.labelSmall)
+                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                LazyColumn(modifier = Modifier.height(150.dp)) {
+                    items(currentModelIds) { modelId ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedModel = modelId }
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (selectedModel == modelId) "[x] $modelId" else "[ ] $modelId",
+                                color = if (selectedModel == modelId) TerminalColors.white else TerminalColors.grey,
+                                style = TerminalTypography.bodySmall
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TerminalButton(
+                text = "START_INITIALIZATION",
+                onClick = { onInit(selectedProvider, selectedModel) },
+                enabled = selectedProvider.isNotEmpty() && selectedModel.isNotEmpty()
+            )
+        },
+        dismissButton = {
+            TerminalTextButton(
+                text = "CANCEL",
+                onClick = onDismiss
+            )
+        }
     )
 }

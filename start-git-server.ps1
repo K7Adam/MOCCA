@@ -10,7 +10,7 @@ $ErrorActionPreference = "Stop"
 
 # Configuration
 $WorkDir = $PSScriptRoot
-$PluginScript = "$WorkDir\.opencode\plugins\git-plugin.js"
+$PluginScript = "$WorkDir\.opencode\plugin\git-plugin.js"
 $LogFileOut = "$WorkDir\git-server.out.log"
 $LogFileErr = "$WorkDir\git-server.err.log"
 

@@ -6,6 +6,7 @@ import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.RetryPolicy
+import com.mocca.app.data.GlobalActivityManager
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.local.LocalCacheFactory
 import com.mocca.app.data.repository.*
@@ -87,8 +88,12 @@ val commonModule = module {
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
     singleOf(::SettingsRepository)
+    single { ConfigRepository(get()) }
     singleOf(::UpdateRepository)
     singleOf(::GitHubApiClient)
+    
+    // Global Activity Manager - singleton for tracking background activity
+    single { GlobalActivityManager() }
     
     // New repositories for OpenCode features
     singleOf(::ProviderRepository)
@@ -98,6 +103,7 @@ val commonModule = module {
     singleOf(::FormatterRepository)
     singleOf(::LspRepository)
     singleOf(::SearchRepository)
+    singleOf(::ProjectRepository)
     
     single {
         AppConnectionManager(
@@ -154,7 +160,8 @@ val screenModelModule = module {
             serverConfigRepository = get(),
             appConnectionManager = get(),
             updateRepository = get(),
-            settingsRepository = get()
+            settingsRepository = get(),
+            configRepository = get()
         )
     }
     
@@ -209,7 +216,8 @@ val screenModelModule = module {
             lspRepository = get(),
             gitRepository = get(),
             mcpRepository = get(),
-            eventStreamRepository = get()
+            eventStreamRepository = get(),
+            projectRepository = get()
         )
     }
 }

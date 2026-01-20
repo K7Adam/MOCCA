@@ -23,12 +23,17 @@ class DashboardScreenModel(
     private val lspRepository: LspRepository,
     private val gitRepository: GitRepository,
     private val mcpRepository: McpRepository,
-    private val eventStreamRepository: EventStreamRepository
+    private val eventStreamRepository: EventStreamRepository,
+    private val projectRepository: ProjectRepository
 ) : ScreenModel {
     
     data class State(
         // Provider data
         val providers: Resource<ProviderResponse> = Resource.Loading(),
+        
+        // Projects
+        val projects: Resource<List<Project>> = Resource.Loading(),
+        val currentProject: Resource<Project> = Resource.Loading(),
         
         // Agents
         val agents: Resource<List<Agent>> = Resource.Loading(),
@@ -169,11 +174,29 @@ class DashboardScreenModel(
         screenModelScope.launch {
             loadMcpServers()
         }
+        screenModelScope.launch {
+            loadProjects()
+        }
+        screenModelScope.launch {
+            loadCurrentProject()
+        }
     }
     
     private suspend fun loadProviders() {
         providerRepository.getProviders().collect { resource ->
             _state.update { it.copy(providers = resource) }
+        }
+    }
+    
+    private suspend fun loadProjects() {
+        projectRepository.getProjects().collect { resource ->
+            _state.update { it.copy(projects = resource) }
+        }
+    }
+
+    private suspend fun loadCurrentProject() {
+        projectRepository.getCurrentProject().collect { resource ->
+            _state.update { it.copy(currentProject = resource) }
         }
     }
     

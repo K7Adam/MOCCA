@@ -63,3 +63,77 @@ data class ProvidersConfig(
     val providers: List<ProviderInfo> = emptyList(),
     val default: Map<String, String> = emptyMap()
 )
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OAUTH & AUTHENTICATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Provider authentication method descriptor.
+ */
+@Serializable
+data class ProviderAuthMethod(
+    val type: String, // "oauth", "api_key", "manual"
+    val name: String,
+    val description: String? = null,
+    val required: Boolean = false
+)
+
+/**
+ * OAuth authorization response containing the URL to redirect the user to.
+ */
+@Serializable
+data class ProviderAuthAuthorization(
+    val url: String,
+    val state: String,
+    val expiresAt: Long? = null
+)
+
+/**
+ * OAuth callback request body.
+ */
+@Serializable
+data class OAuthCallbackRequest(
+    val code: String,
+    val state: String
+)
+
+/**
+ * Sealed class representing different provider credential types.
+ */
+@Serializable
+sealed class ProviderCredentials {
+    @Serializable
+    @SerialName("api_key")
+    data class ApiKey(
+        val apiKey: String
+    ) : ProviderCredentials()
+    
+    @Serializable
+    @SerialName("openai")
+    data class OpenAI(
+        val apiKey: String,
+        val organization: String? = null
+    ) : ProviderCredentials()
+    
+    @Serializable
+    @SerialName("anthropic")
+    data class Anthropic(
+        val apiKey: String
+    ) : ProviderCredentials()
+    
+    @Serializable
+    @SerialName("aws")
+    data class AWS(
+        val accessKeyId: String,
+        val secretAccessKey: String,
+        val region: String
+    ) : ProviderCredentials()
+    
+    @Serializable
+    @SerialName("azure")
+    data class Azure(
+        val apiKey: String,
+        val endpoint: String
+    ) : ProviderCredentials()
+}

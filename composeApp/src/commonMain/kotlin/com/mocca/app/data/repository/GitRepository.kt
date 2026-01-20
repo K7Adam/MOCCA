@@ -162,6 +162,94 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
+    // Stash Operations
+    suspend fun createStash(message: String? = null, includeUntracked: Boolean = false): Result<GitOperationResult> {
+        return gitApiClient.createStash(message, includeUntracked)
+    }
+
+    suspend fun popStash(index: Int = 0): Result<GitOperationResult> {
+        return gitApiClient.popStash(index)
+    }
+
+    suspend fun applyStash(index: Int = 0): Result<GitOperationResult> {
+        return gitApiClient.applyStash(index)
+    }
+
+    suspend fun dropStash(index: Int): Result<GitOperationResult> {
+        return gitApiClient.dropStash(index)
+    }
+
+    // Merge Operations
+    suspend fun merge(
+        branch: String, 
+        noFf: Boolean = false, 
+        squash: Boolean = false, 
+        message: String? = null
+    ): Result<GitOperationResult> {
+        return gitApiClient.merge(branch, noFf, squash, message)
+    }
+
+    suspend fun abortMerge(): Result<GitOperationResult> {
+        return gitApiClient.abortMerge()
+    }
+
+    // Rebase Operations
+    suspend fun rebase(onto: String): Result<GitOperationResult> {
+        return gitApiClient.rebase(onto)
+    }
+
+    suspend fun rebaseContinue(): Result<GitOperationResult> {
+        return gitApiClient.rebaseContinue()
+    }
+
+    suspend fun rebaseAbort(): Result<GitOperationResult> {
+        return gitApiClient.rebaseAbort()
+    }
+
+    suspend fun rebaseSkip(): Result<GitOperationResult> {
+        return gitApiClient.rebaseSkip()
+    }
+
+    // Tag Operations
+    fun getTags(): Flow<Resource<List<String>>> = flow {
+        emit(Resource.Loading())
+        gitApiClient.getTags().fold(
+            onSuccess = { tags ->
+                emit(Resource.Success(tags))
+            },
+            onFailure = { e ->
+                Napier.e("$TAG: Failed to get tags", e)
+                emit(Resource.Error(e.message ?: "Failed to get tags", null, e))
+            }
+        )
+    }.flowOn(Dispatchers.Default)
+
+    suspend fun createTag(
+        name: String, 
+        message: String? = null, 
+        ref: String? = null, 
+        annotated: Boolean = false
+    ): Result<GitOperationResult> {
+        return gitApiClient.createTag(name, message, ref, annotated)
+    }
+
+    suspend fun deleteTag(name: String): Result<GitOperationResult> {
+        return gitApiClient.deleteTag(name)
+    }
+
+    // Remote Operations
+    suspend fun addRemote(name: String, url: String): Result<GitOperationResult> {
+        return gitApiClient.addRemote(name, url)
+    }
+
+    suspend fun removeRemote(name: String): Result<GitOperationResult> {
+        return gitApiClient.removeRemote(name)
+    }
+
+    suspend fun setRemoteUrl(name: String, url: String): Result<GitOperationResult> {
+        return gitApiClient.setRemoteUrl(name, url)
+    }
+
     suspend fun refreshStatus(): Result<GitStatusResponse> {
         return gitApiClient.getStatus().map { status ->
             localCache.saveGitStatus(status)

@@ -6,6 +6,7 @@ import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.domain.model.McpConnectionStatus
 import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.Resource
+import com.mocca.app.domain.model.McpServerConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -128,6 +129,17 @@ class McpScreenModel(
             selectedServer = null,
             showServerDetails = false
         )}
+    }
+    
+    /**
+     * Add a new MCP server.
+     */
+    fun addServer(name: String, config: McpServerConfig) {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            mcpRepository.addServer(name, config)
+            _state.update { it.copy(isLoading = false) }
+        }
     }
     
     /**

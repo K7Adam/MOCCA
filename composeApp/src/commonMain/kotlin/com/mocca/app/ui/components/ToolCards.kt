@@ -60,6 +60,7 @@ fun RichToolCard(
 
 /**
  * Base tool card layout with consistent terminal styling.
+ * Now includes live timing display for running tools.
  */
 @Composable
 private fun BaseToolCard(
@@ -69,6 +70,7 @@ private fun BaseToolCard(
     icon: ImageVector,
     iconTint: Color,
     modifier: Modifier = Modifier,
+    startTimeMs: Long? = null, // For live timing during running state
     headerExtra: @Composable RowScope.() -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -161,8 +163,8 @@ private fun BaseToolCard(
                 // Extra header content
                 headerExtra()
                 
-                // State indicator
-                ToolStateIndicator(state)
+                // State indicator with live timing
+                ToolStateIndicator(state, startTimeMs)
                 
                 // Expand/collapse icon
                 Icon(
@@ -188,7 +190,7 @@ private fun BaseToolCard(
 }
 
 @Composable
-private fun ToolStateIndicator(state: ToolState) {
+private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
     when (state) {
         ToolState.PENDING -> {
             Text(
@@ -207,11 +209,30 @@ private fun ToolStateIndicator(state: ToolState) {
                     strokeWidth = 2.dp,
                     color = TerminalColors.statusWaiting
                 )
-                Text(
-                    text = "Running",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.statusWaiting
-                )
+                
+                // Live elapsed time display
+                if (startTimeMs != null) {
+                    var elapsedMs by remember { mutableStateOf(System.currentTimeMillis() - startTimeMs) }
+                    
+                    LaunchedEffect(startTimeMs) {
+                        while (true) {
+                            elapsedMs = System.currentTimeMillis() - startTimeMs
+                            kotlinx.coroutines.delay(100) // Update every 100ms
+                        }
+                    }
+                    
+                    Text(
+                        text = formatDuration(elapsedMs),
+                        style = TerminalTypography.labelSmall,
+                        color = TerminalColors.statusWaiting
+                    )
+                } else {
+                    Text(
+                        text = "Running",
+                        style = TerminalTypography.labelSmall,
+                        color = TerminalColors.statusWaiting
+                    )
+                }
             }
         }
         ToolState.COMPLETED -> {

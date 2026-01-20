@@ -61,6 +61,13 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
     ) {
+        // Project Module
+        ProjectModule(
+            currentProject = state.currentProject,
+            projects = state.projects,
+            onProjectClick = { /* Read only for now */ }
+        )
+
         // MCP Config Module
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),
@@ -140,6 +147,59 @@ fun DashboardPanel(
             icon = Icons.Default.Terminal,
             modifier = Modifier.fillMaxWidth()
         )
+    }
+}
+
+@Composable
+private fun ProjectModule(
+    currentProject: Resource<com.mocca.app.domain.model.Project>,
+    projects: Resource<List<com.mocca.app.domain.model.Project>>,
+    onProjectClick: (String) -> Unit
+) {
+    ModuleCard(title = "PROJECTS") {
+        val currentId = (currentProject as? Resource.Success)?.data?.id
+        
+        when (projects) {
+            is Resource.Loading -> {
+                ModuleRowItem(
+                    title = "Loading...",
+                    subtitle = "Fetching projects",
+                    isEnabled = false,
+                    showToggle = false
+                )
+            }
+            is Resource.Success -> {
+                if (projects.data.isEmpty()) {
+                    ModuleRowItem(
+                        title = "No projects found",
+                        subtitle = "Server returned empty list",
+                        isEnabled = false,
+                        showToggle = false
+                    )
+                } else {
+                    projects.data.forEach { project ->
+                        val isCurrent = project.id == currentId
+                        ModuleRowItem(
+                            title = project.name,
+                            subtitle = project.path,
+                            isEnabled = true,
+                            isConnected = isCurrent,
+                            showToggle = false,
+                            onClick = { onProjectClick(project.id) }
+                        )
+                    }
+                }
+            }
+            is Resource.Error -> {
+                ModuleRowItem(
+                    title = "Error",
+                    subtitle = projects.message,
+                    isEnabled = false,
+                    isConnected = false,
+                    showToggle = false
+                )
+            }
+        }
     }
 }
 

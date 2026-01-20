@@ -212,6 +212,9 @@ class MoccaApiClient(
     /**
      * List all pending question requests.
      */
+    /**
+     * List all pending question requests.
+     */
     suspend fun listPendingQuestions(): Result<List<QuestionRequest>> = safeCall("listPendingQuestions") {
         getClient().get("$baseUrl/question").body()
     }
@@ -301,6 +304,271 @@ class MoccaApiClient(
     
     suspend fun getProvidersConfig(): Result<ProvidersConfig> = safeCall("getProvidersConfig") {
         getClient().get("$baseUrl/config/providers").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // OAUTH / AUTHENTICATION (Priority 1.1, 1.2)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get available authentication methods for a provider.
+     * @param providerId The provider ID (e.g., "anthropic", "openai")
+     * @return List of authentication methods (api_key, oauth, etc.)
+     */
+    suspend fun getProviderAuthMethods(providerId: String): Result<List<ProviderAuthMethod>> = safeCall("getProviderAuthMethods") {
+        getClient().get("$baseUrl/provider/$providerId/auth").body()
+    }
+    
+    /**
+     * Initiate OAuth authorization flow for a provider.
+     * @param providerId The provider ID
+     * @return Authorization URL and state for OAuth redirect
+     */
+    suspend fun authorizeProvider(providerId: String): Result<ProviderAuthAuthorization> = safeCallNoRetry("authorizeProvider") {
+        getClient().post("$baseUrl/provider/$providerId/authorize").body()
+    }
+    
+    /**
+     * Handle OAuth callback after authorization.
+     * @param providerId The provider ID
+     * @param code OAuth authorization code
+     * @param state OAuth state for verification
+     */
+    suspend fun handleOAuthCallback(
+        providerId: String,
+        code: String,
+        state: String
+    ): Result<Unit> = safeCallNoRetry("handleOAuthCallback") {
+        getClient().post("$baseUrl/provider/$providerId/callback") {
+            contentType(ContentType.Application.Json)
+            setBody(OAuthCallbackRequest(code = code, state = state))
+        }
+        Unit
+    }
+    
+    /**
+     * Set provider authentication credentials manually (API key).
+     * @param providerId The provider ID
+     * @param credentials Authentication credentials (API key, etc.)
+     */
+    suspend fun setProviderAuth(
+        providerId: String,
+        credentials: ProviderCredentials
+    ): Result<Unit> = safeCallNoRetry("setProviderAuth") {
+        getClient().post("$baseUrl/provider/$providerId/auth") {
+            contentType(ContentType.Application.Json)
+            setBody(credentials)
+        }
+        Unit
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CONFIG WRITE (Priority 1.3)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Update configuration settings.
+     * @param update Partial configuration update
+     */
+    suspend fun updateConfig(update: ConfigUpdate): Result<ConfigResponse> = safeCallNoRetry("updateConfig") {
+        getClient().patch("$baseUrl/config") {
+            contentType(ContentType.Application.Json)
+            setBody(update)
+        }.body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COMMAND EXECUTION (Priority 1.4, 1.5)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Execute a slash command.
+     * @param sessionId Session to execute command in
+     * @param command Command name (without leading /)
+     * @param arguments Optional command arguments as string
+     * @param agent Optional agent to use
+     */
+    suspend fun executeCommand(
+        sessionId: String,
+        command: String,
+        arguments: String? = null,
+        agent: String? = null
+    ): Result<Unit> = safeCallNoRetry("executeCommand") {
+        getClient().post("$baseUrl/session/$sessionId/command") {
+            contentType(ContentType.Application.Json)
+            setBody(CommandExecutionRequest(
+                command = command, 
+                arguments = arguments,
+                agent = agent
+            ))
+        }
+        Unit
+    }
+    
+    /**
+     * Execute a shell command directly.
+     * @param sessionId Session context
+     * @param command Shell command to execute
+     * @param agent Agent to execute with
+     */
+    suspend fun executeShell(
+        sessionId: String,
+        command: String,
+        agent: String = "build"
+    ): Result<String> = safeCallNoRetry("executeShell") {
+        getClient().post("$baseUrl/session/$sessionId/shell") {
+            contentType(ContentType.Application.Json)
+            setBody(ShellExecutionRequest(command = command, agent = agent))
+        }.body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION TODO (Priority 2.1)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get todos for a session.
+     * @param sessionId Session ID
+     */
+    suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> = safeCall("getSessionTodos") {
+        getClient().get("$baseUrl/session/$sessionId/todo").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION SHARING (Priority 2.2)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Share a session publicly.
+     * @param sessionId Session to share
+     * @return Updated session with shareID
+     */
+    suspend fun shareSession(sessionId: String): Result<Session> = safeCallNoRetry("shareSession") {
+        getClient().post("$baseUrl/session/$sessionId/share").body()
+    }
+    
+    /**
+     * Unshare a session (revoke public access).
+     * @param sessionId Session to unshare
+     */
+    suspend fun unshareSession(sessionId: String): Result<Session> = safeCallNoRetry("unshareSession") {
+        getClient().delete("$baseUrl/session/$sessionId/share").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION SUMMARIZATION (Priority 2.3)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Summarize a session (generate title, summary).
+     * @param sessionId Session to summarize
+     */
+    suspend fun summarizeSession(sessionId: String): Result<Session> = safeCallNoRetry("summarizeSession") {
+        getClient().post("$baseUrl/session/$sessionId/summarize").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION INIT (Priority 2.4)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Initialize a session with system prompts and configuration.
+     * @param sessionId Session to initialize
+     * @param request Initialization parameters
+     */
+    suspend fun initSession(
+        sessionId: String,
+        request: InitSessionRequest
+    ): Result<Session> = safeCallNoRetry("initSession") {
+        getClient().post("$baseUrl/session/$sessionId/init") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }.body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PROJECT MANAGEMENT (Priority 2.5)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * List available projects.
+     */
+    suspend fun listProjects(): Result<List<Project>> = safeCall("listProjects") {
+        getClient().get("$baseUrl/project").body()
+    }
+    
+    /**
+     * Get current active project.
+     */
+    suspend fun getCurrentProject(): Result<Project> = safeCall("getCurrentProject") {
+        getClient().get("$baseUrl/project/current").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // DYNAMIC MCP (Priority 2.6)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Add a new MCP server dynamically.
+     * @param name Server name
+     * @param config Server configuration
+     */
+    suspend fun addMcpServer(name: String, config: McpServerConfig): Result<Unit> = safeCallNoRetry("addMcpServer") {
+        getClient().post("$baseUrl/mcp") {
+            contentType(ContentType.Application.Json)
+            setBody(McpConfigureRequest(name = name, config = config))
+        }
+        Unit
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PATH ENDPOINT (Priority 2.8)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get current working directory path.
+     */
+    suspend fun getCurrentPath(): Result<PathInfo> = safeCall("getCurrentPath") {
+        getClient().get("$baseUrl/path").body()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // INSTANCE DISPOSAL (Priority 2.9)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Dispose an OpenCode instance gracefully.
+     */
+    suspend fun disposeInstance(): Result<Unit> = safeCallNoRetry("disposeInstance") {
+        getClient().post("$baseUrl/dispose")
+        Unit
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // LOGGING ENDPOINT (Priority 2.10)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Send a log entry to the server.
+     * @param entry Log entry to send
+     */
+    suspend fun sendLog(entry: LogEntry): Result<Unit> = safeCallNoRetry("sendLog") {
+        getClient().post("$baseUrl/log") {
+            contentType(ContentType.Application.Json)
+            setBody(entry)
+        }
+        Unit
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // FULL TOOL LIST (Priority 2.11)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get full list of available tools with definitions.
+     */
+    suspend fun getTools(): Result<ToolList> = safeCall("getTools") {
+        getClient().get("$baseUrl/tool").body()
     }
     
     // Agents
@@ -394,145 +662,11 @@ class MoccaApiClient(
     }
 
     // ===================================================================================
-    // DEPRECATED: Git Operations via OpenCode Agent (Port 4096)
+    // DEPRECATED: Git Operations Removed
     // ===================================================================================
-    // These endpoints target the OpenCode agent server's /git/* routes.
-    // MOCCA now uses the dedicated Git HTTP Server (Port 4097) via GitApiClient for
-    // all Git operations. This provides better performance and avoids blocking the
-    // AI agent's main loop.
-    //
-    // These methods are kept for reference/fallback but are NOT used in production.
-    // See: GitApiClient.kt for the active Git implementation.
+    // Legacy git operations via port 4096 have been removed.
+    // Use GitApiClient.kt (Port 4097) for all git operations.
     // ===================================================================================
-    
-    @Deprecated("Use GitApiClient.getStatus() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitStatus(): Result<GitStatusResponse> = safeCall("getGitStatus") {
-        getClient().get("$baseUrl/git/status").body()
-    }
-    
-    @Deprecated("Use GitApiClient.getBranches() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitBranches(): Result<List<GitBranch>> = safeCall("getGitBranches") {
-        getClient().get("$baseUrl/git/branches").body()
-    }
-    
-    @Deprecated("Use GitApiClient.getLog() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitLog(
-        branch: String? = null,
-        limit: Int = 50,
-        skip: Int = 0
-    ): Result<GitLog> = safeCall("getGitLog") {
-        getClient().get("$baseUrl/git/log") {
-            branch?.let { parameter("branch", it) }
-            parameter("limit", limit)
-            parameter("skip", skip)
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.getDiff() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitDiff(
-        ref: String? = null,
-        cached: Boolean = false
-    ): Result<GitDiff> = safeCall("getGitDiff") {
-        getClient().get("$baseUrl/git/diff") {
-            ref?.let { parameter("ref", it) }
-            if (cached) parameter("cached", true)
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.stage() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitStage(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitStage") {
-        getClient().post("$baseUrl/git/stage") {
-            contentType(ContentType.Application.Json)
-            setBody(GitStageRequest(files = files))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.unstage() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitUnstage(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitUnstage") {
-        getClient().post("$baseUrl/git/unstage") {
-            contentType(ContentType.Application.Json)
-            setBody(GitUnstageRequest(files = files))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.discard() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitDiscard(files: List<String>): Result<GitOperationResult> = safeCallNoRetry("gitDiscard") {
-        getClient().post("$baseUrl/git/discard") {
-            contentType(ContentType.Application.Json)
-            setBody(GitDiscardRequest(files = files))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.commit() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitCommit(
-        message: String,
-        files: List<String>? = null,
-        amend: Boolean = false
-    ): Result<GitOperationResult> = safeCallNoRetry("gitCommit") {
-        getClient().post("$baseUrl/git/commit") {
-            contentType(ContentType.Application.Json)
-            setBody(GitCommitRequest(message = message, files = files, amend = amend))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.push() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitPush(
-        remote: String = "origin",
-        branch: String? = null,
-        force: Boolean = false,
-        setUpstream: Boolean = false
-    ): Result<GitOperationResult> = safeCallNoRetry("gitPush") {
-        getClient().post("$baseUrl/git/push") {
-            contentType(ContentType.Application.Json)
-            setBody(GitPushRequest(remote = remote, branch = branch, force = force, setUpstream = setUpstream))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.pull() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitPull(
-        remote: String = "origin",
-        branch: String? = null,
-        rebase: Boolean = false
-    ): Result<GitOperationResult> = safeCallNoRetry("gitPull") {
-        getClient().post("$baseUrl/git/pull") {
-            contentType(ContentType.Application.Json)
-            setBody(GitPullRequest(remote = remote, branch = branch, rebase = rebase))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.fetch() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitFetch(
-        remote: String = "origin",
-        prune: Boolean = false,
-        all: Boolean = false
-    ): Result<GitOperationResult> = safeCallNoRetry("gitFetch") {
-        getClient().post("$baseUrl/git/fetch") {
-            contentType(ContentType.Application.Json)
-            setBody(GitFetchRequest(remote = remote, prune = prune, all = all))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.checkout() instead - connects to dedicated Git server on port 4097")
-    suspend fun gitCheckout(
-        ref: String,
-        create: Boolean = false,
-        force: Boolean = false
-    ): Result<GitOperationResult> = safeCallNoRetry("gitCheckout") {
-        getClient().post("$baseUrl/git/checkout") {
-            contentType(ContentType.Application.Json)
-            setBody(GitCheckoutRequest(ref = ref, create = create, force = force))
-        }.body()
-    }
-    
-    @Deprecated("Use GitApiClient.getRemotes() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitRemotes(): Result<List<GitRemote>> = safeCall("getGitRemotes") {
-        getClient().get("$baseUrl/git/remotes").body()
-    }
-    
-    @Deprecated("Use GitApiClient.getStashes() instead - connects to dedicated Git server on port 4097")
-    suspend fun getGitStashes(): Result<List<GitStash>> = safeCall("getGitStashes") {
-        getClient().get("$baseUrl/git/stash").body()
-    }
 
     // MCP Operations
     /**

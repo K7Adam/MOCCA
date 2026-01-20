@@ -21,8 +21,26 @@ data class SessionsState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedSessionId: String? = null,
-    val connectionState: AppConnectionState = AppConnectionState.NotConfigured
-)
+    val connectionState: AppConnectionState = AppConnectionState.NotConfigured,
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION SEARCH (Priority 5.6)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    val searchQuery: String = "",
+    val isSearchVisible: Boolean = false
+) {
+    /**
+     * Filtered sessions based on search query.
+     */
+    val filteredSessions: List<Session>
+        get() = if (searchQuery.isBlank()) {
+            sessions
+        } else {
+            sessions.filter { session ->
+                session.title?.contains(searchQuery, ignoreCase = true) == true ||
+                session.id.contains(searchQuery, ignoreCase = true)
+            }
+        }
+}
 
 class SessionsScreenModel(
     private val sessionRepository: SessionRepository,
@@ -162,5 +180,37 @@ class SessionsScreenModel(
         } else {
             appConnectionManager.checkConnection()
         }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION SEARCH (Priority 5.6)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Update the search query.
+     */
+    fun updateSearchQuery(query: String) {
+        _state.value = _state.value.copy(searchQuery = query)
+    }
+    
+    /**
+     * Toggle search visibility.
+     */
+    fun toggleSearch() {
+        val newVisibility = !_state.value.isSearchVisible
+        _state.value = _state.value.copy(
+            isSearchVisible = newVisibility,
+            searchQuery = if (!newVisibility) "" else _state.value.searchQuery
+        )
+    }
+    
+    /**
+     * Clear search and hide search bar.
+     */
+    fun clearSearch() {
+        _state.value = _state.value.copy(
+            searchQuery = "",
+            isSearchVisible = false
+        )
     }
 }

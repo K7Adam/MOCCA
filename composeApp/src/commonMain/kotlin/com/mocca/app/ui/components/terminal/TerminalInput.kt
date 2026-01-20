@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
@@ -534,6 +536,8 @@ private fun AttachmentChip(
 
 /**
  * Simple command line input for terminal screen.
+ * 
+ * Supports command history navigation via up/down arrow callbacks.
  */
 @Composable
 fun CommandLineInput(
@@ -542,7 +546,12 @@ fun CommandLineInput(
     onSubmit: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    placeholder: String = "Enter command..."
+    placeholder: String = "Enter command...",
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COMMAND HISTORY (Priority 5.3) - History navigation callbacks
+    // ═══════════════════════════════════════════════════════════════════════════════
+    onHistoryUp: (() -> Unit)? = null,
+    onHistoryDown: (() -> Unit)? = null
 ) {
     Row(
         modifier = modifier
@@ -583,6 +592,36 @@ fun CommandLineInput(
                 }
             }
         )
+        
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // COMMAND HISTORY (Priority 5.3) - History navigation buttons
+        // ═══════════════════════════════════════════════════════════════════════════════
+        if (onHistoryUp != null || onHistoryDown != null) {
+            Column(
+                modifier = Modifier.padding(horizontal = TerminalSpacing.xs)
+            ) {
+                if (onHistoryUp != null) {
+                    TerminalIconButton(
+                        icon = Icons.Default.KeyboardArrowUp,
+                        onClick = onHistoryUp,
+                        enabled = enabled,
+                        iconColor = TerminalColors.grey,
+                        size = 24.dp,
+                        contentDescription = "Previous command"
+                    )
+                }
+                if (onHistoryDown != null) {
+                    TerminalIconButton(
+                        icon = Icons.Default.KeyboardArrowDown,
+                        onClick = onHistoryDown,
+                        enabled = enabled,
+                        iconColor = TerminalColors.grey,
+                        size = 24.dp,
+                        contentDescription = "Next command"
+                    )
+                }
+            }
+        }
         
         Spacer(modifier = Modifier.width(TerminalSpacing.sm))
         

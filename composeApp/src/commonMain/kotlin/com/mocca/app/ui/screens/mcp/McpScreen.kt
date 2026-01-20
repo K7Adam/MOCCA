@@ -30,11 +30,10 @@ import com.mocca.app.ui.components.terminal.*
 import com.mocca.app.ui.theme.TerminalColors
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.domain.model.McpServerConfig
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
-/**
- * MCP Server Management Screen.
- * Displays all MCP servers with their status and allows connect/disconnect operations.
- */
 class McpScreen : Screen {
     
     @Composable
@@ -42,142 +41,158 @@ class McpScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<McpScreenModel>()
         val state by screenModel.state.collectAsState()
+        var showAddDialog by remember { mutableStateOf(false) }
         
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(TerminalColors.background)
-                .padding(TerminalSpacing.lg)
-        ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(TerminalColors.background)
+                    .padding(TerminalSpacing.lg)
             ) {
-                Column {
-                    TerminalHeader(text = "MCP_SERVER_CONTROL", showBrackets = true)
-                    Spacer(modifier = Modifier.height(TerminalSpacing.xs))
-                    Text(
-                        text = "${state.connectedCount}/${state.totalCount} SERVERS_CONNECTED",
-                        color = if (state.connectedCount > 0) TerminalColors.statusOnline else TerminalColors.grey,
-                        style = TerminalTypography.labelSmall
-                    )
+                // Header (modified to include Add button if crowded, but FAB is better)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        TerminalHeader(text = "MCP_SERVER_CONTROL", showBrackets = true)
+                        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                        Text(
+                            text = "${state.connectedCount}/${state.totalCount} SERVERS_CONNECTED",
+                            color = if (state.connectedCount > 0) TerminalColors.statusOnline else TerminalColors.grey,
+                            style = TerminalTypography.labelSmall
+                        )
+                    }
+                    
+                    Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                        TerminalIconButton(
+                            icon = Icons.Default.Refresh,
+                            onClick = { screenModel.refresh() },
+                            iconColor = if (state.isRefreshing) TerminalColors.statusWaiting else TerminalColors.greyLight
+                        )
+                        TerminalIconButton(
+                            icon = Icons.Default.Add,
+                            onClick = { showAddDialog = true },
+                            iconColor = TerminalColors.statusOnline
+                        )
+                    }
                 }
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
-                    TerminalIconButton(
-                        icon = Icons.Default.Refresh,
-                        onClick = { screenModel.refresh() },
-                        iconColor = if (state.isRefreshing) TerminalColors.statusWaiting else TerminalColors.greyLight
+                Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                
+                // Error message
+                state.error?.let { error ->
+                    McpErrorBanner(
+                        message = error,
+                        onDismiss = { screenModel.clearError() }
                     )
+                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
                 }
-            }
-            
-            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
-            
-            // Error message
-            state.error?.let { error ->
-                McpErrorBanner(
-                    message = error,
-                    onDismiss = { screenModel.clearError() }
-                )
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
-            }
-            
-            // Loading state
-            if (state.isLoading && !state.hasServers) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(
-                            color = TerminalColors.statusWaiting,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
-                        Text(
-                            text = "LOADING_MCP_STATUS...",
-                            color = TerminalColors.grey,
-                            style = TerminalTypography.bodyMedium
-                        )
-                    }
-                }
-            } else if (!state.hasServers) {
-                // Empty state
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .border(TerminalSpacing.borderThin, TerminalColors.greyDark, RectangleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(TerminalSpacing.xl)
+                
+                // Loading state
+                if (state.isLoading && !state.hasServers) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.CloudOff,
-                            contentDescription = null,
-                            tint = TerminalColors.greyDark,
-                            modifier = Modifier.size(48.dp)
-                        )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
-                        Text(
-                            text = "NO_MCP_SERVERS_FOUND",
-                            color = TerminalColors.grey,
-                            style = TerminalTypography.bodyLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                        Text(
-                            text = "MCP servers are configured in opencode.json",
-                            color = TerminalColors.greyDark,
-                            style = TerminalTypography.bodySmall
-                        )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
-                        TerminalOutlinedButton(
-                            text = "REFRESH",
-                            onClick = { screenModel.refresh() }
-                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(
+                                color = TerminalColors.statusWaiting,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Text(
+                                text = "LOADING_MCP_STATUS...",
+                                color = TerminalColors.grey,
+                                style = TerminalTypography.bodyMedium
+                            )
+                        }
                     }
-                }
-            } else {
-                // Server list
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
-                ) {
-                    items(state.servers, key = { it.name }) { server ->
-                        McpServerCard(
-                            server = server,
-                            isOperationInProgress = state.operationInProgress == server.name,
-                            onToggle = { connect ->
-                                screenModel.toggleConnection(server.name, connect)
-                            },
-                            onClick = { screenModel.selectServer(server) }
-                        )
+                } else if (!state.hasServers) {
+                    // Empty state
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .border(TerminalSpacing.borderThin, TerminalColors.greyDark, RectangleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.padding(TerminalSpacing.xl)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudOff,
+                                contentDescription = null,
+                                tint = TerminalColors.greyDark,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Text(
+                                text = "NO_MCP_SERVERS_FOUND",
+                                color = TerminalColors.grey,
+                                style = TerminalTypography.bodyLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                            Text(
+                                text = "Add a server to get started",
+                                color = TerminalColors.greyDark,
+                                style = TerminalTypography.bodySmall
+                            )
+                            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                            TerminalButton(
+                                text = "ADD_SERVER",
+                                onClick = { showAddDialog = true }
+                            )
+                        }
+                    }
+                } else {
+                    // Server list
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                    ) {
+                        items(state.servers, key = { it.name }) { server ->
+                            McpServerCard(
+                                server = server,
+                                isOperationInProgress = state.operationInProgress == server.name,
+                                onToggle = { connect ->
+                                    screenModel.toggleConnection(server.name, connect)
+                                },
+                                onClick = { screenModel.selectServer(server) }
+                            )
+                        }
                     }
                 }
             }
-        }
-        
-        // Server Details Bottom Sheet / Dialog
-        if (state.showServerDetails && state.selectedServer != null) {
-            McpServerDetailsDialog(
-                server = state.selectedServer!!,
-                onDismiss = { screenModel.closeServerDetails() },
-                onConnect = { screenModel.connect(state.selectedServer!!.name) },
-                onDisconnect = { screenModel.disconnect(state.selectedServer!!.name) }
-            )
+            
+            // Server Details Bottom Sheet / Dialog
+            if (state.showServerDetails && state.selectedServer != null) {
+                McpServerDetailsDialog(
+                    server = state.selectedServer!!,
+                    onDismiss = { screenModel.closeServerDetails() },
+                    onConnect = { screenModel.connect(state.selectedServer!!.name) },
+                    onDisconnect = { screenModel.disconnect(state.selectedServer!!.name) }
+                )
+            }
+            
+            // Add Server Dialog
+            if (showAddDialog) {
+                AddMcpServerDialog(
+                    onDismiss = { showAddDialog = false },
+                    onAdd = { name, config ->
+                        screenModel.addServer(name, config)
+                        showAddDialog = false
+                    }
+                )
+            }
         }
     }
 }
 
-/**
- * MCP Server Card - displays server info with toggle switch.
- */
 @Composable
 private fun McpServerCard(
     server: McpServerInfo,
@@ -296,9 +311,6 @@ private fun McpServerCard(
     }
 }
 
-/**
- * Error banner for MCP operations.
- */
 @Composable
 private fun McpErrorBanner(
     message: String,
@@ -336,9 +348,6 @@ private fun McpErrorBanner(
     }
 }
 
-/**
- * Server details dialog showing tools, resources, prompts.
- */
 @Composable
 private fun McpServerDetailsDialog(
     server: McpServerInfo,
@@ -577,6 +586,106 @@ private fun McpServerDetailsDialog(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddMcpServerDialog(
+    onDismiss: () -> Unit,
+    onAdd: (String, McpServerConfig) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var command by remember { mutableStateOf("") }
+    var args by remember { mutableStateOf("") }
+    var env by remember { mutableStateOf("") }
+    
+    // Default to stdio for now as it's the most common for local
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(TerminalColors.background.copy(alpha = 0.9f))
+            .clickable(enabled = false) {},
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+                .background(TerminalColors.background, RectangleShape)
+                .border(TerminalSpacing.borderStandard, TerminalColors.borderLight, RectangleShape)
+                .padding(TerminalSpacing.lg)
+        ) {
+            TerminalHeader(text = "ADD_MCP_SERVER", showBrackets = true)
+            
+            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            
+            TerminalInput(
+                value = name,
+                onValueChange = { name = it },
+                label = "SERVER_NAME",
+                placeholder = "weather-server"
+            )
+            
+            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            
+            TerminalInput(
+                value = command,
+                onValueChange = { command = it },
+                label = "COMMAND",
+                placeholder = "npx",
+                hint = "Executable to run"
+            )
+            
+            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            
+            TerminalInput(
+                value = args,
+                onValueChange = { args = it },
+                label = "ARGUMENTS",
+                placeholder = "-y @modelcontextprotocol/server-weather",
+                hint = "Space separated arguments"
+            )
+            
+            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            
+            TerminalInput(
+                value = env,
+                onValueChange = { env = it },
+                label = "ENVIRONMENT",
+                placeholder = "KEY=VALUE,KEY2=VALUE2",
+                hint = "Comma separated env vars (optional)"
+            )
+            
+            Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)) {
+                TerminalOutlinedButton(
+                    text = "CANCEL",
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                )
+                TerminalButton(
+                    text = "ADD",
+                    onClick = {
+                        val argsList = args.split(" ").filter { it.isNotBlank() }
+                        val envMap = if (env.isNotBlank()) {
+                            env.split(",").associate { 
+                                val parts = it.split("=", limit = 2)
+                                (parts.getOrNull(0) ?: "") to (parts.getOrNull(1) ?: "")
+                            }
+                        } else emptyMap()
+                        
+                        val config = McpServerConfig(
+                            command = listOf(command) + argsList,
+                            environment = envMap
+                        )
+                        onAdd(name, config)
+                    },
+                    enabled = name.isNotBlank() && command.isNotBlank(),
+                    modifier = Modifier.weight(1f)
+                )
             }
         }
     }

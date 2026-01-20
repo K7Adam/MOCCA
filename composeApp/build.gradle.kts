@@ -7,6 +7,11 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
+// Compose Compiler configuration for stability
+composeCompiler {
+    stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
+}
+
 kotlin {
     compilerOptions {
         freeCompilerArgs.add("-Xexpect-actual-classes")
@@ -57,6 +62,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.collections.immutable)
 
             // Logging
             implementation(libs.napier)
@@ -81,6 +87,10 @@ kotlin {
             // FileKit for cross-platform file picking (latest stable)
             implementation("io.github.vinceglb:filekit-core:0.12.0")
             implementation("io.github.vinceglb:filekit-dialogs-compose:0.12.0")
+
+            // Paging 3
+            implementation(libs.paging.common)
+            implementation(libs.paging.compose)
         }
 
         androidMain.dependencies {

@@ -113,6 +113,56 @@ class MoccaSseClient(
             Napier.i(">>> SSE connection closed by awaitClose")
         }
     }
+    
+    /**
+     * Subscribe to global events (not session-specific).
+     * Useful for monitoring system-wide events like installation updates,
+     * LSP diagnostics, and agent status across all sessions.
+     * Returns a Flow that emits only global ServerEvent objects.
+     */
+    fun subscribeToGlobalEvents(): Flow<ServerEvent> = callbackFlow {
+        try {
+            val url = "$baseUrl/event/global"
+            Napier.i(">>> Connecting to Global SSE at $url")
+            
+            getClient().sse(
+                urlString = url,
+                reconnectionTime = 3.seconds
+            ) {
+                Napier.i(">>> Global SSE session established")
+                
+                send(ServerEvent.Connected(
+                    type = "server.connected",
+                    properties = ConnectedProperties(
+                        status = "connected",
+                        version = "unknown"
+                    )
+                ))
+                
+                this.incoming.collect { sseEvent ->
+                    val data = sseEvent.data
+                    if (data.isNullOrBlank()) return@collect
+                    
+                    try {
+                        val event = parseEvent(data)
+                        send(event)
+                    } catch (e: Exception) {
+                        Napier.w(">>> Failed to parse global SSE event: ${data.take(100)}", e)
+                        send(ServerEvent.Unknown(type = "parse_error", rawData = data))
+                    }
+                }
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Napier.e(">>> Global SSE connection error: ${e.message}", e)
+            close(e)
+        }
+        
+        awaitClose {
+            Napier.i(">>> Global SSE connection closed")
+        }
+    }
 
     /**
      * Parse raw JSON string into ServerEvent.

@@ -169,6 +169,29 @@ class McpRepository(
             }
         )
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DYNAMIC MCP SERVER ADDITION (Priority 2.6)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Add a new MCP server dynamically.
+     */
+    suspend fun addServer(name: String, config: McpServerConfig): Resource<Unit> {
+        Napier.d("Adding new MCP server: $name")
+        
+        return apiClient.addMcpServer(name, config).fold(
+            onSuccess = {
+                Napier.d("Successfully added MCP server: $name")
+                refresh()
+                Resource.Success(Unit)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to add MCP server: $name", error)
+                Resource.Error(error.message ?: "Failed to add MCP server")
+            }
+        )
+    }
     
     /**
      * Get a specific server by name.
