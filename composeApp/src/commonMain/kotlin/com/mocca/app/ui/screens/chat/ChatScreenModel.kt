@@ -329,10 +329,21 @@ class ChatScreenModel(
                     }
                     is ServerEvent.MessagePartUpdated -> {
                         val part = event.properties.part
+                        val delta = event.properties.delta
+                        
                         if (part.sessionID != sessionId && _state.value.childSessions.containsKey(part.sessionID)) {
-                            if (part.type == "text" && part.text != null) {
+                            if (part.type == "text") {
                                  val currentText = _childStreamingText.value.toMutableMap()
-                                 currentText[part.sessionID] = part.text
+                                 val existing = currentText[part.sessionID] ?: ""
+                                 
+                                 if (existing.isEmpty() && !part.text.isNullOrEmpty()) {
+                                     currentText[part.sessionID] = part.text!!
+                                 } else if (delta != null) {
+                                     currentText[part.sessionID] = existing + delta
+                                 } else if (!part.text.isNullOrEmpty()) {
+                                     currentText[part.sessionID] = part.text!!
+                                 }
+                                 
                                  _childStreamingText.value = currentText
                             }
                         }

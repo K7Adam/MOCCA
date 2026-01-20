@@ -373,25 +373,36 @@ class EventStreamRepository(
             
             is ServerEvent.MessagePartUpdated -> {
                 val part = event.properties.part
+                val delta = event.properties.delta
+                
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
-                Napier.i(">>> MessagePartUpdated: type=${part.type}, sessionID=${part.sessionID}, activeSessionId=$activeSessionId, monitored=${monitoredSessionIds.value}")
+                Napier.i(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
                 
                 // Handle thinking state for extended reasoning models (Claude/o1)
-                if (part.type == "thinking" && part.text != null) {
+                if (part.type == "thinking") {
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
                         if (part.sessionID == activeSessionId) {
                             _isThinking.value = true
-                            _thinkingContent.value = part.text
+                            
+                            // Initialize thinking content if empty, or append delta
+                            if (_thinkingContent.value.isEmpty() && !part.text.isNullOrEmpty()) {
+                                _thinkingContent.value = part.text
+                            } else if (delta != null) {
+                                _thinkingContent.value += delta
+                            } else if (!part.text.isNullOrEmpty()) {
+                                _thinkingContent.value = part.text
+                            }
+                            
                             if (_thinkingStartTime.value == null) {
                                 _thinkingStartTime.value = System.currentTimeMillis()
                             }
-                            Napier.i(">>> Thinking state updated (${part.text.length} chars)")
+                            Napier.i(">>> Thinking state updated")
                         }
                     }
                 }
                 
                 // Handle streaming text
-                if (part.type == "text" && part.text != null) {
+                if (part.type == "text") {
                     // Text part received means thinking is complete
                     if (_isThinking.value) {
                         _isThinking.value = false
@@ -401,8 +412,16 @@ class EventStreamRepository(
                     
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
                         if (part.sessionID == activeSessionId) {
-                            _streamingText.value = part.text
-                            Napier.i(">>> Streaming text updated (${part.text.length} chars): ...${part.text.takeLast(50)}")
+                            // Initialize streaming text if empty, or append delta
+                            if (_streamingText.value.isEmpty() && !part.text.isNullOrEmpty()) {
+                                _streamingText.value = part.text
+                            } else if (delta != null) {
+                                _streamingText.value += delta
+                            } else if (!part.text.isNullOrEmpty()) {
+                                _streamingText.value = part.text
+                            }
+                            
+                            Napier.i(">>> Streaming text updated: ...${_streamingText.value.takeLast(50)}")
                         } else {
                             Napier.w(">>> Session ID mismatch: event.sessionID=${part.sessionID}, activeSessionId=$activeSessionId")
                         }

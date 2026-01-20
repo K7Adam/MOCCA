@@ -8,6 +8,7 @@ import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
+import io.ktor.client.plugins.compression.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.sse.*
 import io.ktor.client.plugins.websocket.*
@@ -58,6 +59,8 @@ data class ConnectionMetrics(
     val consecutiveFailures: Int = 0
 )
 
+import com.mocca.app.util.NetworkObserver
+
 /**
  * Dynamic HttpClient provider that recreates the client when server configuration changes.
  * This solves the "stale client" bug where Auth headers and base URL become outdated
@@ -69,7 +72,8 @@ data class ConnectionMetrics(
  * - P4.5: Request deduplication support
  */
 class HttpClientProvider(
-    private val serverConfigRepository: ServerConfigRepository
+    private val serverConfigRepository: ServerConfigRepository,
+    private val networkObserver: NetworkObserver? = null
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val mutex = Mutex()
@@ -268,6 +272,27 @@ class HttpClientProvider(
                 }
             }
         }
+        
+        // P4.4: Proactive network monitoring
+        if (networkObserver != null) {
+            scope.launch {
+                networkObserver.isOnline.collect { isOnline ->
+                    if (!isOnline) {
+                        Napier.w("[HttpClientProvider] Network lost (proactive)")
+                        _connectionMetrics.value = _connectionMetrics.value.copy(
+                            quality = ConnectionQuality.OFFLINE
+                        )
+                    } else if (_connectionMetrics.value.quality == ConnectionQuality.OFFLINE) {
+                        Napier.i("[HttpClientProvider] Network restored (proactive)")
+                        // Reset to UNKNOWN so next request will re-evaluate quality
+                        _connectionMetrics.value = _connectionMetrics.value.copy(
+                            quality = ConnectionQuality.UNKNOWN,
+                            consecutiveFailures = 0
+                        )
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -339,6 +364,11 @@ class HttpClientProvider(
                     ignoreUnknownKeys = true
                     isLenient = true
                 })
+            }
+
+            install(ContentEncoding) {
+                gzip()
+                deflate()
             }
 
             install(WebSockets) {

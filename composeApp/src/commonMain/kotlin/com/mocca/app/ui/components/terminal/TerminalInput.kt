@@ -8,8 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -346,20 +351,31 @@ fun RichChatInput(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
+                .heightIn(min = 80.dp, max = 240.dp)
                 .padding(TerminalSpacing.inputPadding)
         ) {
             BasicTextField(
                 value = value,
                 onValueChange = handleValueChange,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && 
+                            event.key == Key.Enter && 
+                            event.isCtrlPressed) {
+                            onSendClick()
+                            true
+                        } else {
+                            false
+                        }
+                    },
                 enabled = enabled,
                 textStyle = TerminalTypography.bodyMedium.copy(
                     color = TerminalColors.white
                 ),
                 cursorBrush = SolidColor(TerminalColors.white),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { onSendClick() }),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
+                keyboardActions = KeyboardActions.Default,
                 decorationBox = { innerTextField ->
                     Row {
                         Text(

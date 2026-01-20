@@ -9,161 +9,161 @@ import kotlinx.serialization.json.JsonElement
  * Based on the official OpenCode SDK event types.
  */
 @Serializable
-sealed class ServerEvent {
-    abstract val type: String
+sealed interface ServerEvent {
+    val type: String
     
     @Serializable
     @SerialName("server.connected")
     data class Connected(
         override val type: String = "server.connected",
         val properties: ConnectedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("server.heartbeat")
     data class Heartbeat(
         override val type: String = "server.heartbeat",
         val properties: HeartbeatProperties = HeartbeatProperties()
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("session.updated")
     data class SessionUpdated(
         override val type: String = "session.updated",
         val properties: SessionUpdatedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("session.deleted")
     data class SessionDeleted(
         override val type: String = "session.deleted",
         val properties: SessionDeletedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("session.idle")
     data class SessionIdle(
         override val type: String = "session.idle",
         val properties: SessionIdleProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("session.error")
     data class SessionError(
         override val type: String = "session.error",
         val properties: SessionErrorProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("message.updated")
     data class MessageUpdated(
         override val type: String = "message.updated",
         val properties: MessageUpdatedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("message.removed")
     data class MessageRemoved(
         override val type: String = "message.removed",
         val properties: MessageRemovedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("message.part.updated")
     data class MessagePartUpdated(
         override val type: String = "message.part.updated",
         val properties: MessagePartUpdatedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("message.part.removed")
     data class MessagePartRemoved(
         override val type: String = "message.part.removed",
         val properties: MessagePartRemovedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("permission.updated")
     data class PermissionUpdated(
         override val type: String = "permission.updated",
         val properties: LegacyPermissionProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("permission.asked")
     data class PermissionAsked(
         override val type: String = "permission.asked",
         val properties: PermissionAskedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("permission.replied")
     data class PermissionReplied(
         override val type: String = "permission.replied",
         val properties: PermissionRepliedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("question.asked")
     data class QuestionAsked(
         override val type: String = "question.asked",
         val properties: QuestionAskedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("question.replied")
     data class QuestionReplied(
         override val type: String = "question.replied",
         val properties: QuestionRepliedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("file.edited")
     data class FileEdited(
         override val type: String = "file.edited",
         val properties: FileEditedProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("file.watcher.updated")
     data class FileWatcherUpdated(
         override val type: String = "file.watcher.updated",
         val properties: FileWatcherProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("installation.updated")
     data class InstallationUpdated(
         override val type: String = "installation.updated",
         val properties: InstallationProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("lsp.client.diagnostics")
     data class LspDiagnostics(
         override val type: String = "lsp.client.diagnostics",
         val properties: LspDiagnosticsProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("log")
     data class Log(
         override val type: String = "log",
         val properties: LogProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     @SerialName("agent.status")
     data class AgentStatus(
         override val type: String = "agent.status",
         val properties: AgentStatusProperties
-    ) : ServerEvent()
+    ) : ServerEvent
     
     @Serializable
     data class Unknown(
         override val type: String,
         val rawData: String? = null
-    ) : ServerEvent()
+    ) : ServerEvent
 }
 
 @Serializable
@@ -271,7 +271,8 @@ data class MessageRemovedProperties(
 
 @Serializable
 data class MessagePartUpdatedProperties(
-    val part: MessagePartInfo
+    val part: MessagePartInfo,
+    val delta: String? = null
 )
 
 @Serializable

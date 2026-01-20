@@ -35,7 +35,8 @@ val commonModule = module {
     // Dynamic HttpClient Provider - recreates client when server config changes
     single {
         HttpClientProvider(
-            serverConfigRepository = get()
+            serverConfigRepository = get(),
+            networkObserver = getOrNull()
         )
     }
     
