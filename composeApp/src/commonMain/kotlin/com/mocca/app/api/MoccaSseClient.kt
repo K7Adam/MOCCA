@@ -7,6 +7,7 @@ import io.ktor.client.plugins.sse.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.isActive
 import kotlinx.serialization.json.Json
@@ -75,7 +76,9 @@ class MoccaSseClient(
                 
                 Napier.i(">>> Starting to collect from incoming channel...")
                 
-                this.incoming.collect { sseEvent ->
+                this.incoming
+                    .buffer(100)
+                    .collect { sseEvent ->
                     Napier.i(">>> SSE Event received: id=${sseEvent.id}, event=${sseEvent.event}, data length=${sseEvent.data?.length ?: 0}")
                     
                     val data = sseEvent.data
@@ -139,7 +142,9 @@ class MoccaSseClient(
                     )
                 ))
                 
-                this.incoming.collect { sseEvent ->
+                this.incoming
+                    .buffer(100)
+                    .collect { sseEvent ->
                     val data = sseEvent.data
                     if (data.isNullOrBlank()) return@collect
                     

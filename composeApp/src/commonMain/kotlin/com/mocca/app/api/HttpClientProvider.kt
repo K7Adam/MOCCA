@@ -380,6 +380,18 @@ class HttpClientProvider(
                 showRetryEvents()
             }
 
+            install(HttpRequestRetry) {
+                retryOnServerErrors(maxRetries = 3)
+                exponentialDelay()
+                retryIf { _, response ->
+                    response.status.value.let { it in 500..599 }
+                }
+                retryOnExceptionIf { _, cause ->
+                    cause is io.ktor.client.network.sockets.SocketTimeoutException ||
+                    cause is io.ktor.client.network.sockets.ConnectTimeoutException
+                }
+            }
+
             install(HttpTimeout) {
                 requestTimeoutMillis = 120_000
                 connectTimeoutMillis = 10_000

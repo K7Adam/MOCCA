@@ -10,6 +10,15 @@ actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
         readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
         writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         retryOnConnectionFailure(true)
+        
+        // HTTP/2 Multiplexing & Connection Pooling
+        val dispatcher = okhttp3.Dispatcher().apply {
+            maxRequestsPerHost = 16
+            maxRequests = 32
+        }
+        dispatcher(dispatcher)
+        
+        connectionPool(okhttp3.ConnectionPool(10, 5, java.util.concurrent.TimeUnit.MINUTES))
     }
 }
 
