@@ -3,10 +3,12 @@ package com.mocca.app.ui.screens.git
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
@@ -110,7 +112,9 @@ class GitScreen : Screen {
                 
                 // Tabs
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
                 ) {
                     GitTab.entries.forEach { tab ->
@@ -118,8 +122,7 @@ class GitScreen : Screen {
                         TabPillButton(
                             text = tab.title.uppercase(),
                             isSelected = isSelected,
-                            onClick = { screenModel.selectTab(tab) },
-                            modifier = Modifier.weight(1f)
+                            onClick = { screenModel.selectTab(tab) }
                         )
                     }
                 }

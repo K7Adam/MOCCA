@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
@@ -61,12 +62,19 @@ class SettingsScreen : Screen {
                 .background(TerminalColors.background)
         ) {
             // Header
-            Box(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(TerminalColors.surface)
-                    .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.md)
+                    .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.md),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                TerminalIconButton(
+                    icon = Icons.AutoMirrored.Filled.ArrowBack,
+                    onClick = { navigator.pop() },
+                    iconColor = TerminalColors.textSecondary
+                )
+                Spacer(modifier = Modifier.width(TerminalSpacing.md))
                 Text(
                     text = "SETTINGS",
                     color = TerminalColors.white,
