@@ -6,9 +6,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.TerminalSpacing
 import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 
@@ -63,6 +63,7 @@ fun TerminalText(
 /**
  * Terminal header text - bold, uppercase, with optional prefix.
  * Used for section headers like "[ CONTEXT_INFO ]"
+ * Redesigned for God Mode with decorative line and better contrast.
  */
 @Composable
 fun TerminalHeader(
@@ -79,13 +80,44 @@ fun TerminalHeader(
         text
     }
     
-    Text(
-        text = displayText.uppercase(),
-        modifier = modifier,
-        color = color,
-        style = MaterialTheme.typography.headlineMedium,
-        fontWeight = FontWeight.Bold
-    )
+    Column(modifier = modifier) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            // High-contrast accent indicator
+            Box(
+                modifier = Modifier
+                    .size(width = 4.dp, height = 24.dp)
+                    .background(TerminalColors.accentGreen)
+            )
+            
+            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+            
+            Text(
+                text = displayText.uppercase(),
+                color = color,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 2.sp
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+        
+        // Decorative terminal line
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(
+                    brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                        colors = listOf(
+                            TerminalColors.accentGreen,
+                            TerminalColors.accentGreen.copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+    }
 }
 
 /**

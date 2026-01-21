@@ -84,7 +84,13 @@ class SessionsScreen : Screen {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TerminalHeader(text = "SESSIONS", showBrackets = true)
+                TerminalHeader(
+                    text = "SESSIONS", 
+                    showBrackets = true,
+                    modifier = Modifier.weight(1f)
+                )
+                
+                Spacer(modifier = Modifier.width(TerminalSpacing.md))
                 
                 Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
                     // ═══════════════════════════════════════════════════════════════════════════════

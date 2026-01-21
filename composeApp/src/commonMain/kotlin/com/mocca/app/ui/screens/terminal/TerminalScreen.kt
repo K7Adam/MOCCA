@@ -81,7 +81,7 @@ class TerminalScreen : Screen {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     TerminalIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },

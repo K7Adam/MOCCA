@@ -62,7 +62,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                     iconColor = TerminalColors.white
                 )
                 Spacer(modifier = Modifier.width(TerminalSpacing.md))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     TerminalHeader(text = "DIFF_VIEW: $path", showBrackets = true)
                     Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
                         if (staged) {

@@ -9,7 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -50,19 +50,27 @@ class McpScreen : Screen {
                     .background(TerminalColors.background)
                     .padding(TerminalSpacing.lg)
             ) {
-                // Header (modified to include Add button if crowded, but FAB is better)
+                // Header with Back Button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        TerminalHeader(text = "MCP_SERVER_CONTROL", showBrackets = true)
+                    TerminalIconButton(
+                        icon = Icons.AutoMirrored.Filled.ArrowBack,
+                        onClick = { navigator.pop() },
+                        iconColor = TerminalColors.white
+                    )
+                    
+                    Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                    
+                    Column(modifier = Modifier.weight(1f)) {
+                        TerminalHeader(text = "MCP_JSON_CONFIG", showBrackets = true)
                         Spacer(modifier = Modifier.height(TerminalSpacing.xs))
                         Text(
-                            text = "${state.connectedCount}/${state.totalCount} SERVERS_CONNECTED",
+                            text = "${state.connectedCount}/${state.totalCount} SERVERS_ACTIVE",
                             color = if (state.connectedCount > 0) TerminalColors.statusOnline else TerminalColors.grey,
-                            style = TerminalTypography.labelSmall
+                            style = TerminalTypography.labelSmall,
+                            modifier = Modifier.padding(start = 16.dp)
                         )
                     }
                     
@@ -210,65 +218,43 @@ private fun McpServerCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .border(TerminalSpacing.borderThin, statusColor.copy(alpha = 0.5f), RectangleShape)
+            .background(TerminalColors.surfaceVariant.copy(alpha = 0.5f))
+            .border(TerminalSpacing.borderThin, statusColor.copy(alpha = 0.3f), RectangleShape)
             .clickable(onClick = onClick)
+            .padding(TerminalSpacing.md)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(TerminalSpacing.md),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Status indicator
-            StatusSquare(
-                color = statusColor,
-                modifier = Modifier.size(12.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(TerminalSpacing.md))
-            
-            // Server info
-            Column(modifier = Modifier.weight(1f)) {
+            // Code-like syntax for the server name
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = server.name.uppercase(),
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    text = "{ ",
+                    color = TerminalColors.grey,
+                    style = TerminalTypography.code
+                )
+                Text(
+                    text = "\"${server.name}\"",
+                    color = TerminalColors.syntaxString,
+                    style = TerminalTypography.code,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = server.displayType,
-                        color = TerminalColors.grey,
-                        style = TerminalTypography.labelSmall
-                    )
-                    if (server.toolCount > 0) {
-                        Text(
-                            text = "${server.toolCount} tools",
-                            color = TerminalColors.greyLight,
-                            style = TerminalTypography.labelSmall
-                        )
-                    }
-                }
+                Text(
+                    text = " }",
+                    color = TerminalColors.grey,
+                    style = TerminalTypography.code
+                )
             }
-            
-            // Status text
-            Text(
-                text = getStatusText(server.status.status),
-                color = statusColor,
-                style = TerminalTypography.labelSmall,
-                modifier = Modifier.padding(end = TerminalSpacing.sm)
-            )
             
             // Toggle or loading
             if (isOperationInProgress) {
                 CircularProgressIndicator(
                     color = TerminalColors.statusWaiting,
-                    modifier = Modifier.size(24.dp),
+                    modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
                 )
             } else {
@@ -279,35 +265,62 @@ private fun McpServerCard(
             }
         }
         
+        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        
+        // Metadata Row (JSON-style)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+        ) {
+            McpMetaField(label = "type", value = server.displayType, color = TerminalColors.syntaxKeyword)
+            if (server.toolCount > 0) {
+                McpMetaField(label = "tools", value = server.toolCount.toString(), color = TerminalColors.syntaxFunction)
+            }
+            McpMetaField(label = "status", value = getStatusText(server.status.status), color = statusColor)
+        }
+        
         // Error message if any
         server.status.error?.let { error ->
-            HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
-            )
+            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.error.copy(alpha = 0.1f))
-                    .padding(TerminalSpacing.sm),
+                    .background(TerminalColors.error.copy(alpha = 0.05f))
+                    .padding(TerminalSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Error,
-                    contentDescription = null,
-                    tint = TerminalColors.error,
-                    modifier = Modifier.size(14.dp)
-                )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
                 Text(
-                    text = error,
+                    text = "!! error: ",
                     color = TerminalColors.error,
-                    style = TerminalTypography.labelSmall,
-                    maxLines = 2,
+                    style = TerminalTypography.codeSmall,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "\"$error\"",
+                    color = TerminalColors.error.copy(alpha = 0.8f),
+                    style = TerminalTypography.codeSmall,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun McpMetaField(label: String, value: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = "$label: ",
+            color = TerminalColors.grey,
+            style = TerminalTypography.codeSmall
+        )
+        Text(
+            text = value,
+            color = color,
+            style = TerminalTypography.codeSmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 
