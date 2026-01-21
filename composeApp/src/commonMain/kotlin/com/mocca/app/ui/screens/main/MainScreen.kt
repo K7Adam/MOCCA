@@ -99,6 +99,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         isCreatingSession = state.isCreatingSession,
                         loadingSessionId = state.loadingSessionId,
                         newlyCreatedSessionId = state.newlyCreatedSessionId,
+                        isRefreshing = state.isLoading,
                         onSessionClick = { session ->
                             screenModel.selectSession(session.id) {
                                 panelState.closePanel()
@@ -109,7 +110,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 panelState.closePanel()
                             }
                         },
-                        onClearHistoryClick = { screenModel.clearHistory() }
+                        onRefresh = { screenModel.refreshAll() }
                     )
                 },
                 centerPanel = {

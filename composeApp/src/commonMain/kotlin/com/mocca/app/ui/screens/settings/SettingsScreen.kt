@@ -115,7 +115,8 @@ class SettingsScreen : Screen {
                     TerminalButton(
                         text = "ADD SERVER",
                         onClick = { screenModel.addNewServer() },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        height = TerminalSpacing.buttonHeightCompact
                     )
                 }
                 
@@ -180,7 +181,7 @@ class SettingsScreen : Screen {
                                                         uriHandler.openUri(url)
                                                     }
                                                 },
-                                                height = 40.dp
+                                                height = TerminalSpacing.buttonHeightCompact
                                             )
                                             Spacer(modifier = Modifier.height(TerminalSpacing.sm))
                                             Text("- OR -", color = TerminalColors.textTertiary, style = TerminalTypography.labelSmall)
@@ -199,7 +200,7 @@ class SettingsScreen : Screen {
                                             text = "SAVE KEY",
                                             onClick = { screenModel.setManualKey(providerId, manualKey) },
                                             enabled = manualKey.isNotBlank(),
-                                            height = 36.dp
+                                            height = TerminalSpacing.buttonHeightSmall
                                         )
                                     }
                                 }
@@ -343,14 +344,16 @@ class SettingsScreen : Screen {
                                 text = "SAVE TOKEN",
                                 onClick = { screenModel.saveGitHubToken(tokenInput) },
                                 enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                height = TerminalSpacing.buttonHeightCompact
                             )
                             
                             TerminalButton(
                                 text = "CHECK FOR UPDATES",
                                 onClick = { screenModel.checkForUpdates() },
                                 enabled = !state.isLoading,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                height = TerminalSpacing.buttonHeightCompact
                             )
                         }
                         
@@ -602,7 +605,8 @@ private fun TerminalServerEditDialog(
                         )
                     )
                 },
-                enabled = name.isNotBlank() && baseUrl.isNotBlank()
+                enabled = name.isNotBlank() && baseUrl.isNotBlank(),
+                height = TerminalSpacing.buttonHeightCompact
             )
         },
         dismissButton = {

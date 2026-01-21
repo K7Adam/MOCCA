@@ -27,10 +27,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ripple
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -58,6 +61,7 @@ import com.mocca.app.ui.theme.TerminalTypography
  * Matches mockup: mockups_screens/context_&_history_sidebar/screen.png
  * Refactored for modern UI/UX.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContextHistoryPanel(
     sessions: List<Session>,
@@ -72,9 +76,10 @@ fun ContextHistoryPanel(
     isCreatingSession: Boolean = false,      // Loading state for INIT_NEW_SESSION button
     loadingSessionId: String? = null,        // ID of session being loaded
     newlyCreatedSessionId: String? = null,   // ID of newly created session (for animation)
+    isRefreshing: Boolean = false,           // Pull-to-refresh state
     onSessionClick: (Session) -> Unit = {},
     onNewSessionClick: () -> Unit = {},
-    onClearHistoryClick: () -> Unit = {}
+    onRefresh: () -> Unit = {}
 ) {
     val isMcpOnline = mcpStatus.equals("ONLINE", ignoreCase = true)
     
@@ -109,9 +114,10 @@ fun ContextHistoryPanel(
             isCreatingSession = isCreatingSession,
             loadingSessionId = loadingSessionId,
             newlyCreatedSessionId = newlyCreatedSessionId,
+            isRefreshing = isRefreshing,
             onSessionClick = onSessionClick,
             onNewSessionClick = onNewSessionClick,
-            onClearHistoryClick = onClearHistoryClick,
+            onRefresh = onRefresh,
             modifier = Modifier.weight(1f)
         )
     }
@@ -162,6 +168,7 @@ private fun AgentHeader() {
 /**
  * Conversation history list with new session button.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConversationHistorySection(
     sessions: List<Session>,
@@ -169,9 +176,10 @@ private fun ConversationHistorySection(
     isCreatingSession: Boolean,
     loadingSessionId: String?,
     newlyCreatedSessionId: String?,
+    isRefreshing: Boolean,
     onSessionClick: (Session) -> Unit,
     onNewSessionClick: () -> Unit,
-    onClearHistoryClick: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -187,11 +195,6 @@ private fun ConversationHistorySection(
                 style = TerminalTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
-            TerminalTextButton(
-                text = "CLEAR",
-                onClick = onClearHistoryClick,
-                textColor = TerminalColors.textTertiary
-            )
         }
         
         Spacer(modifier = Modifier.height(TerminalSpacing.sm))
@@ -204,76 +207,82 @@ private fun ConversationHistorySection(
         
         Spacer(modifier = Modifier.height(TerminalSpacing.md))
         
-        // Session list with animations
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        // Session list with animations and pull-to-refresh
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = onRefresh,
+            modifier = Modifier.fillMaxWidth().weight(1f)
         ) {
-            items(
-                items = sessions,
-                key = { it.id }
-            ) { session ->
-                // Animate new session appearing
-                val isNewSession = session.id == newlyCreatedSessionId
-                val isLoading = session.id == loadingSessionId
-                val isActive = session.id == currentSessionId
-                
-                AnimatedVisibility(
-                    visible = true,
-                    enter = if (isNewSession) {
-                        expandVertically(
-                            animationSpec = tween(200),
-                            expandFrom = Alignment.Top
-                        ) + fadeIn(animationSpec = tween(200))
-                    } else {
-                        fadeIn(animationSpec = tween(0))
-                    }
-                ) {
-                    TerminalSessionCard(
-                        isActive = isActive,
-                        modifier = Modifier.clickable { onSessionClick(session) }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            ) {
+                items(
+                    items = sessions,
+                    key = { it.id }
+                ) { session ->
+                    // Animate new session appearing
+                    val isNewSession = session.id == newlyCreatedSessionId
+                    val isLoading = session.id == loadingSessionId
+                    val isActive = session.id == currentSessionId
+                    
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = true,
+                        enter = if (isNewSession) {
+                            expandVertically(
+                                animationSpec = tween(200),
+                                expandFrom = Alignment.Top
+                            ) + fadeIn(animationSpec = tween(200))
+                        } else {
+                            fadeIn(animationSpec = tween(0))
+                        }
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
+                        TerminalSessionCard(
+                            isActive = isActive,
+                            modifier = Modifier.clickable { onSessionClick(session) }
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(
-                                        text = "#${formatSessionId(session.id)}",
-                                        color = if (isActive) TerminalColors.white else TerminalColors.textSecondary,
-                                        style = TerminalTypography.labelSmall,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    
-                                    if (isLoading) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(12.dp),
-                                            strokeWidth = 2.dp,
-                                            color = TerminalColors.statusWaiting
-                                        )
-                                    } else {
+                            Row(
+                                verticalAlignment = Alignment.Top,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
                                         Text(
-                                            text = formatTimeAgo(session.updatedAt),
-                                            color = TerminalColors.textTertiary,
-                                            style = TerminalTypography.labelSmall
+                                            text = "#${formatSessionId(session.id)}",
+                                            color = if (isActive) TerminalColors.white else TerminalColors.textSecondary,
+                                            style = TerminalTypography.labelSmall,
+                                            fontWeight = FontWeight.Bold
                                         )
+                                        
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(12.dp),
+                                                strokeWidth = 2.dp,
+                                                color = TerminalColors.statusWaiting
+                                            )
+                                        } else {
+                                            Text(
+                                                text = formatTimeAgo(session.updatedAt),
+                                                color = TerminalColors.textTertiary,
+                                                style = TerminalTypography.labelSmall
+                                            )
+                                        }
                                     }
+                                    
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    
+                                    Text(
+                                        text = session.title ?: "Untitled Session",
+                                        color = if (isActive) TerminalColors.white else TerminalColors.textTertiary,
+                                        style = TerminalTypography.bodySmall,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
-                                
-                                Spacer(modifier = Modifier.height(4.dp))
-                                
-                                Text(
-                                    text = session.title ?: "Untitled Session",
-                                    color = if (isActive) TerminalColors.white else TerminalColors.textTertiary,
-                                    style = TerminalTypography.bodySmall,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
                             }
                         }
                     }
