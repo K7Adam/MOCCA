@@ -1236,10 +1236,12 @@ val result = apiClient.getLspStatus()
 result.onSuccess { lspStatusList ->
     lspStatusList.forEach { lspStatus ->
         // LspStatus fields:
-        // - serverID: String
-        // - path: String
-        // - state: String
-        println("LSP server: ${lspStatus.serverID} - ${lspStatus.state}")
+        // - id: String (e.g., "kotlin-ls")
+        // - name: String (e.g., "kotlin-ls")
+        // - root: String (project root path, may be empty)
+        // - status: String ("connected", "disconnected", "error")
+        // - isRunning: Boolean (computed: status == "connected" || status == "running")
+        println("LSP server: ${lspStatus.name} - ${lspStatus.status}")
     }
 }
 ```
