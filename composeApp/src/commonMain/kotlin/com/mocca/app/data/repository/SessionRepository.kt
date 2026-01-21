@@ -169,7 +169,7 @@ class SessionRepository(
     /**
      * Get messages for a session with caching.
      */
-    fun getMessages(sessionId: String): Flow<Resource<List<Message>>> = channelFlow {
+    fun getMessages(sessionId: String, limit: Long = 50): Flow<Resource<List<Message>>> = channelFlow {
         send(Resource.Loading())
 
         // 1. Memory
@@ -179,7 +179,7 @@ class SessionRepository(
 
         // 2. DB Observer
         val dbJob = launch {
-            localCache.observeRecentMessages(sessionId, 50).collect { messages ->
+            localCache.observeRecentMessages(sessionId, limit).collect { messages ->
                 cacheMutex.withLock { memoryCache[sessionId] = messages }
                 send(Resource.Success(messages))
             }

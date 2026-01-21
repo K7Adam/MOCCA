@@ -79,11 +79,25 @@ fun ChatContent(screenModel: ChatScreenModel) {
         }
     }
     
+    // Pagination Trigger (Reverse layout: Top is end of list)
+    val isAtTop by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
+        }
+    }
+
+    LaunchedEffect(isAtTop) {
+        if (isAtTop) screenModel.loadMoreMessages()
+    }
+    
+    // Auto-scroll to bottom on new messages
     LaunchedEffect(messages.size, streamingText) {
         if (messages.isNotEmpty() || streamingText.isNotEmpty()) {
-            if (listState.firstVisibleItemIndex > 1) {
-                 listState.animateScrollToItem(0)
-            } else {
+            // Only auto-scroll if user is already at the bottom
+            if (listState.firstVisibleItemIndex <= 1) {
                  listState.animateScrollToItem(0)
             }
         }

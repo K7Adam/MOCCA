@@ -75,6 +75,9 @@ class ChatScreenModel(
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent: SharedFlow<String> = _navigationEvent.asSharedFlow()
 
+    private var messagesJob: Job? = null
+    private var currentLimit = 50L
+
     val aggregatedMessages: StateFlow<ImmutableList<Message>> = _state
         .map { s -> s.messages to s.childSessions }
         .distinctUntilChanged()
@@ -473,8 +476,9 @@ class ChatScreenModel(
     }
     
     private fun loadMessages() {
-        screenModelScope.launch {
-            sessionRepository.getMessages(sessionId).collect { resource ->
+        messagesJob?.cancel()
+        messagesJob = screenModelScope.launch {
+            sessionRepository.getMessages(sessionId, currentLimit).collect { resource ->
                 when (resource) {
                     is Resource.Loading -> {
                         _state.value = _state.value.copy(isLoading = true, messages = resource.data ?: _state.value.messages)
@@ -492,12 +496,6 @@ class ChatScreenModel(
                             // Look it up in our loaded provider info
                             val providers = _state.value.providerInfo?.all ?: emptyList()
                             val provider = providers.find { provider -> 
-                                // Check if this provider has the model. 
-                                // provider.models is JsonElement, so we need safe checking or if it was parsed differently.
-                                // Actually ProviderInfo.models is JsonElement? but usually parsed or we can just assume 
-                                // we need a better lookup if Models are not fully parsed.
-                                // Let's check sessionRepository helper first or just iterate if possible.
-                                // For now, simple heuristic:
                                 provider.models.toString().contains(lastModelId) 
                             }
 
@@ -520,6 +518,12 @@ class ChatScreenModel(
                 }
             }
         }
+    }
+
+    fun loadMoreMessages() {
+        if (_state.value.isLoading) return
+        currentLimit += 50
+        loadMessages()
     }
     
     private fun connectToEventStream() {
