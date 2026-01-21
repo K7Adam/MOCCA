@@ -63,9 +63,23 @@ class MoccaApiClient(
         getClient().get("$baseUrl/global/health").body()
     }
     
-    suspend fun getAppInfo(): Result<AppInfo> = safeCall("getAppInfo") {
-        getClient().get("$baseUrl/app").body()
-    }
+    /**
+     * @deprecated This endpoint returns HTML, not JSON. Use [getHealth] instead.
+     * The /app endpoint is a frontend route, not a REST API endpoint.
+     * 
+     * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
+     */
+    @Deprecated(
+        message = "The /app endpoint returns HTML. Use getHealth() for server status.",
+        replaceWith = ReplaceWith("getHealth()"),
+        level = DeprecationLevel.ERROR
+    )
+    suspend fun getAppInfo(): Result<AppInfo> = Result.failure(
+        NetworkError.ServerError(
+            statusCode = 406,
+            message = "Deprecated: /app returns HTML. Use getHealth() instead."
+        )
+    )
 
     // Sessions
     suspend fun listSessions(): Result<List<Session>> = safeRequest("listSessions") {
@@ -566,11 +580,23 @@ class MoccaApiClient(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /**
-     * Get full list of available tools with definitions.
+     * @deprecated This endpoint returns HTML, not JSON. Use [getToolIds] instead.
+     * The /tool endpoint is a frontend route, not a REST API endpoint.
+     * For tool discovery, use getToolIds() which calls /experimental/tool/ids.
+     * 
+     * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
      */
-    suspend fun getTools(): Result<ToolList> = safeCall("getTools") {
-        getClient().get("$baseUrl/tool").body()
-    }
+    @Deprecated(
+        message = "The /tool endpoint returns HTML. Use getToolIds() for tool discovery.",
+        replaceWith = ReplaceWith("getToolIds()"),
+        level = DeprecationLevel.ERROR
+    )
+    suspend fun getTools(): Result<ToolList> = Result.failure(
+        NetworkError.ServerError(
+            statusCode = 406,
+            message = "Deprecated: /tool returns HTML. Use getToolIds() instead."
+        )
+    )
     
     // Agents
     suspend fun getAgents(): Result<List<Agent>> = safeRequest("getAgents") {
@@ -740,6 +766,9 @@ class MoccaApiClient(
     /**
      * Safer request handler that parses body as text first to handle potential error objects
      * returned with 200 OK status, or non-200 responses with error bodies.
+     * 
+     * Includes Content-Type validation to detect routing errors (HTML returned instead of JSON).
+     * Reference: OPENCODE_API_ANALYSIS.md - Header-Based Validation recommendation
      */
     private suspend inline fun <reified T> safeRequest(
         tag: String = "API",
@@ -750,6 +779,21 @@ class MoccaApiClient(
         return withRetry(policy, tag) {
             val response = getClient().block()
             val bodyText = response.bodyAsText()
+
+            // 0. Content-Type validation: Detect HTML responses (routing errors)
+            val contentType = response.contentType()
+            if (contentType != null) {
+                val isHtml = contentType.match(ContentType.Text.Html) ||
+                    contentType.contentType == "text" && contentType.contentSubtype == "html"
+                if (isHtml) {
+                    Napier.e("$tag: Received HTML instead of JSON. Possible routing error.")
+                    throw NetworkError.ServerError(
+                        statusCode = 406, // Not Acceptable
+                        message = "Routing error: Expected JSON but received HTML. " +
+                            "Endpoint may be a frontend route, not a REST API."
+                    )
+                }
+            }
 
             // 1. Check for non-success status code
             if (!response.status.isSuccess()) {
