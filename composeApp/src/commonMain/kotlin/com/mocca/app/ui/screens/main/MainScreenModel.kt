@@ -12,6 +12,10 @@ import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.domain.model.Session
+import com.mocca.app.domain.model.SessionGroup
+import com.mocca.app.domain.model.SessionRunningState
+import com.mocca.app.domain.model.SessionStatus
+import com.mocca.app.domain.model.ServerEvent
 import com.mocca.app.domain.model.UpdateInfo
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,16 +69,27 @@ data class MainScreenState(
     val isMcpLoading: Boolean = false,
     
     // App info
-    val appVersion: String = "V2.0.4",
+    val appVersion: String = "V1.0.4",
     
     // Update info
     val updateInfo: UpdateInfo? = null,
     val isUpdateAvailable: Boolean = false,
     val isDownloadingUpdate: Boolean = false,
-    val downloadProgress: Float = 0f
+    val downloadProgress: Float = 0f,
+    
+    // Session grouping and real-time status
+    val sessionGroups: List<SessionGroup> = emptyList(),
+    val runningSessionIds: Set<String> = emptySet(), // Sessions with active agent/LLM
+    val expandedGroupIds: Set<String> = emptySet() // IDs of expanded session groups
 ) {
     val mcpConnectedCount: Int get() = mcpServers.count { it.isConnected }
     val mcpTotalCount: Int get() = mcpServers.size
+    
+    /** Check if any session in the entire list is currently running */
+    val hasAnyRunningSession: Boolean get() = runningSessionIds.isNotEmpty()
+    
+    /** Get count of currently running sessions */
+    val runningSessionCount: Int get() = runningSessionIds.size
 }
 
 /**
@@ -96,6 +111,7 @@ class MainScreenModel(
         observeAppConnectionState()
         observeConnectionState()
         observeMcpServers()
+        observeSessionEvents() // NEW: Observe SSE events for real-time session status
         loadSessions()
         checkForUpdates()
         if (initialSessionId != null) {
@@ -236,6 +252,120 @@ class MainScreenModel(
         }
     }
     
+    /**
+     * Observe SSE events for real-time session status updates.
+     * Updates runningSessionIds based on session.updated, session.idle, and session.error events.
+     */
+    private fun observeSessionEvents() {
+        screenModelScope.launch {
+            eventStreamRepository.events.collect { event ->
+                when (event) {
+                    is ServerEvent.SessionUpdated -> {
+                        val session = event.properties.info
+                        val isRunning = session.status == SessionStatus.RUNNING
+                        
+                        _state.update { current ->
+                            val newRunningIds = if (isRunning) {
+                                current.runningSessionIds + session.id
+                            } else {
+                                current.runningSessionIds - session.id
+                            }
+                            
+                            // Update session in the list and groups
+                            val updatedSessions = current.sessions.map { 
+                                if (it.id == session.id) session else it 
+                            }
+                            val updatedGroups = buildSessionGroups(updatedSessions)
+                            
+                            current.copy(
+                                sessions = updatedSessions,
+                                sessionGroups = updatedGroups,
+                                runningSessionIds = newRunningIds
+                            )
+                        }
+                        Napier.d("Session ${session.id} status: ${session.status}, running: $isRunning")
+                    }
+                    
+                    is ServerEvent.SessionIdle -> {
+                        val sessionId = event.properties.sessionID
+                        _state.update { current ->
+                            current.copy(
+                                runningSessionIds = current.runningSessionIds - sessionId
+                            )
+                        }
+                        Napier.d("Session $sessionId is now idle")
+                    }
+                    
+                    is ServerEvent.SessionError -> {
+                        val sessionId = event.properties.sessionID
+                        if (sessionId != null) {
+                            _state.update { current ->
+                                current.copy(
+                                    runningSessionIds = current.runningSessionIds - sessionId
+                                )
+                            }
+                            Napier.w("Session $sessionId encountered error")
+                        }
+                    }
+                    
+                    is ServerEvent.SessionDeleted -> {
+                        val sessionId = event.properties.info.id
+                        _state.update { current ->
+                            val updatedSessions = current.sessions.filter { it.id != sessionId }
+                            val updatedGroups = buildSessionGroups(updatedSessions)
+                            current.copy(
+                                sessions = updatedSessions,
+                                sessionGroups = updatedGroups,
+                                runningSessionIds = current.runningSessionIds - sessionId
+                            )
+                        }
+                        Napier.d("Session $sessionId deleted")
+                    }
+                    
+                    else -> { /* Ignore other events */ }
+                }
+            }
+        }
+    }
+    
+    /**
+     * Build session groups from flat session list (used by observeSessionEvents).
+     */
+    private fun buildSessionGroups(sessions: List<Session>): List<SessionGroup> {
+        // Separate root sessions (no parent) from child sessions
+        val rootSessions = sessions.filter { session ->
+            val hasParent = !session.effectiveParentID.isNullOrBlank()
+            val isInternal = session.title.orEmpty().let { title ->
+                title.startsWith("Background:") || 
+                title.startsWith("look_at:") ||
+                title.contains("subagent", ignoreCase = true)
+            }
+            !hasParent && !isInternal
+        }
+        
+        // Group children by parent ID
+        val childrenByParent = sessions.filter { session ->
+            val hasParent = !session.effectiveParentID.isNullOrBlank()
+            val isInternal = session.title.orEmpty().let { title ->
+                title.startsWith("Background:") || 
+                title.startsWith("look_at:") ||
+                title.contains("subagent", ignoreCase = true)
+            }
+            hasParent || isInternal
+        }.groupBy { it.effectiveParentID ?: "internal" }
+        
+        // Build groups
+        return rootSessions.map { parent ->
+            val children = childrenByParent[parent.id] ?: emptyList()
+            val isExpanded = _state.value.expandedGroupIds.contains(parent.id)
+            SessionGroup(
+                parent = parent,
+                children = children.sortedByDescending { it.updatedAt },
+                isExpanded = isExpanded
+            )
+        }.sortedByDescending { it.lastActivityTime }
+    }
+    
     fun refreshMcpServers() {
         screenModelScope.launch {
             mcpRepository.refresh()
@@ -315,10 +445,15 @@ class MainScreenModel(
                         val sessions = (resource.data as? List<Session>) ?: emptyList()
                         // Sort sessions by update time here to avoid expensive sorting in UI recomposition
                         val sortedSessions = sessions.sortedByDescending { it.updatedAt }
+                        
+                        // Build session groups with parent-child hierarchy
+                        val sessionGroups = buildSessionGroups(sortedSessions)
+                        
                         _state.update { current ->
                             val newState = current.copy(
                                 isLoading = false,
-                                sessions = sortedSessions
+                                sessions = sortedSessions,
+                                sessionGroups = sessionGroups
                             )
                             // Auto-select first session if none selected and sessions exist
                             if (current.currentSessionId == null && sessions.isNotEmpty()) {
@@ -333,6 +468,9 @@ class MainScreenModel(
                                 newState
                             }
                         }
+                        
+                        // Fetch real-time session status after loading sessions
+                        fetchSessionStatus()
                     }
                     is Resource.Error<*> -> _state.update { 
                         it.copy(
@@ -342,6 +480,55 @@ class MainScreenModel(
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * Fetch real-time session status from API.
+     */
+    private fun fetchSessionStatus() {
+        screenModelScope.launch {
+            try {
+                sessionRepository.getSessionStatus().fold(
+                    onSuccess = { statusMap ->
+                        val runningIds = statusMap.filter { (_, status) ->
+                            status.isBusy || status.isRetrying
+                        }.keys
+                        _state.update { it.copy(runningSessionIds = runningIds) }
+                        Napier.d("Session status updated: ${runningIds.size} running sessions")
+                    },
+                    onFailure = { error ->
+                        Napier.w("Failed to fetch session status: ${error.message}")
+                    }
+                )
+            } catch (e: Exception) {
+                Napier.e("Error fetching session status", e)
+            }
+        }
+    }
+    
+    /**
+     * Toggle expand/collapse state of a session group.
+     */
+    fun toggleGroupExpanded(parentSessionId: String) {
+        _state.update { current ->
+            val newExpandedIds = if (current.expandedGroupIds.contains(parentSessionId)) {
+                current.expandedGroupIds - parentSessionId
+            } else {
+                current.expandedGroupIds + parentSessionId
+            }
+            // Rebuild groups with new expanded state
+            val updatedGroups = current.sessionGroups.map { group ->
+                if (group.parent.id == parentSessionId) {
+                    group.copy(isExpanded = newExpandedIds.contains(parentSessionId))
+                } else {
+                    group
+                }
+            }
+            current.copy(
+                expandedGroupIds = newExpandedIds,
+                sessionGroups = updatedGroups
+            )
         }
     }
     

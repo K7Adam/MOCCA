@@ -890,3 +890,66 @@ data class ToolDefinition(
     val schema: JsonElement? = null,
     val category: String? = null
 )
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SESSION GROUPING MODELS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Represents a parent session with its child sessions (forks/sub-agents).
+ * Used for displaying grouped session hierarchy in the conversation list.
+ */
+@Immutable
+data class SessionGroup(
+    val parent: Session,
+    val children: List<Session> = emptyList(),
+    val isExpanded: Boolean = false
+) {
+    /** Check if any session in this group (parent or children) is currently running */
+    val hasRunningSession: Boolean
+        get() = parent.status == SessionStatus.RUNNING || 
+                children.any { it.status == SessionStatus.RUNNING }
+    
+    /** Get all running sessions in this group */
+    val runningSessions: List<Session>
+        get() = listOfNotNull(parent.takeIf { it.status == SessionStatus.RUNNING }) +
+                children.filter { it.status == SessionStatus.RUNNING }
+    
+    /** Total count including parent and children */
+    val totalCount: Int get() = 1 + children.size
+    
+    /** Most recent activity time across all sessions in group */
+    val lastActivityTime: Long
+        get() = maxOf(parent.updatedAt, children.maxOfOrNull { it.updatedAt } ?: 0L)
+}
+
+/**
+ * Extended session status with real-time running state from SSE.
+ * Combines static SessionStatus with live SessionStatusInfo.
+ */
+@Immutable
+data class SessionRunningState(
+    val sessionId: String,
+    val isRunning: Boolean = false,
+    val statusType: String = "idle", // "idle", "busy", "retry"
+    val statusMessage: String? = null,
+    val retryAttempt: Int? = null,
+    val nextRetryTime: Long? = null
+) {
+    val isBusy: Boolean get() = statusType == "busy"
+    val isRetrying: Boolean get() = statusType == "retry"
+    val isIdle: Boolean get() = statusType == "idle"
+    
+    companion object {
+        fun fromSessionStatusInfo(sessionId: String, info: SessionStatusInfo): SessionRunningState {
+            return SessionRunningState(
+                sessionId = sessionId,
+                isRunning = info.isBusy || info.isRetrying,
+                statusType = info.type,
+                statusMessage = info.message,
+                retryAttempt = info.attempt,
+                nextRetryTime = info.next
+            )
+        }
+    }
+}

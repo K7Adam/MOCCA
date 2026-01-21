@@ -89,6 +89,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 leftPanel = {
                     ContextHistoryPanel(
                         sessions = state.sessions,
+                        sessionGroups = state.sessionGroups,
+                        runningSessionIds = state.runningSessionIds,
                         currentSessionId = state.currentSessionId,
                         mcpStatus = state.mcpStatus,
                         model = state.modelName,
@@ -110,7 +112,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 panelState.closePanel()
                             }
                         },
-                        onRefresh = { screenModel.refreshAll() }
+                        onRefresh = { screenModel.refreshAll() },
+                        onGroupExpandToggle = { groupId ->
+                            screenModel.toggleGroupExpanded(groupId)
+                        }
                     )
                 },
                 centerPanel = {
