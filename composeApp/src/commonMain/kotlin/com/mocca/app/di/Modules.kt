@@ -149,7 +149,8 @@ val screenModelModule = module {
             initialSessionId = params.getOrNull(),
             sessionRepository = get(),
             eventStreamRepository = get(),
-            commandRepository = get()
+            commandRepository = get(),
+            agentRepository = get()
         )
     }
     

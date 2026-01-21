@@ -6,6 +6,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.SessionRepository
 import com.mocca.app.data.repository.CommandRepository
+import com.mocca.app.data.repository.AgentRepository
 import com.mocca.app.domain.model.*
 import com.mocca.app.util.TerminalCommand
 import io.github.aakira.napier.Napier
@@ -56,7 +57,8 @@ class ChatScreenModel(
     initialSessionId: String?,
     private val sessionRepository: SessionRepository,
     private val eventStreamRepository: EventStreamRepository,
-    private val commandRepository: CommandRepository
+    private val commandRepository: CommandRepository,
+    private val agentRepository: AgentRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(ChatState(sessionId = initialSessionId ?: ""))
@@ -446,9 +448,40 @@ class ChatScreenModel(
                 }
             }
             sessionRepository.getModes().onSuccess { modes ->
-                val defaultMode = sessionRepository.getDefaultMode()
-                _state.value = _state.value.copy(modes = modes, selectedModeId = defaultMode)
+                // Legacy mode fetch - keep as fallback or remove if unused
             }
+            
+            // Fetch real agents (Sisyphus, etc.) and map to modes
+            agentRepository.getAgents().collect { resource ->
+                if (resource is Resource.Success) {
+                    val agents = resource.data
+                    val modes = agents.filter { !it.hidden }.map { agent ->
+                        Mode(
+                            id = agent.name,
+                            name = agent.name,
+                            description = agent.description
+                        )
+                    }
+                    
+                    val defaultMode = sessionRepository.getDefaultMode()
+                    // If current selection is invalid, reset to default or first available
+                    val currentSelection = _state.value.selectedModeId
+                    val newSelection = if (modes.any { it.id == currentSelection }) {
+                        currentSelection
+                    } else {
+                        defaultMode
+                    }
+                    
+                    _state.value = _state.value.copy(modes = modes, selectedModeId = newSelection)
+                    
+                    // Update agent name display
+                    if (newSelection != null) {
+                        val modeName = modes.find { it.id == newSelection }?.name ?: newSelection.uppercase()
+                        _state.value = _state.value.copy(agentName = modeName.uppercase())
+                    }
+                }
+            }
+
             sessionRepository.getCurrentModelInfo()?.let { (modelName, agentName) ->
                 _state.value = _state.value.copy(modelName = modelName, agentName = agentName)
             }
