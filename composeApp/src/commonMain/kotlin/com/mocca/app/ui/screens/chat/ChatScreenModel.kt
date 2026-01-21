@@ -18,7 +18,6 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import org.koin.core.parameter.parametersOf
 
 @Immutable
 data class ChatState(
@@ -128,12 +127,26 @@ class ChatScreenModel(
 
         Napier.i("ChatScreenModel switching to session: $newSessionId")
         
+        // Preserve provider/model state across session switches to keep the model selector functional.
+        // These are global configuration values that don't change per-session.
+        val currentState = _state.value
         _state.value = ChatState(
             sessionId = newSessionId,
             isLoading = true,
             connectionStatus = eventStreamRepository.connectionStatus.value,
-            modelName = _state.value.modelName,
-            agentName = _state.value.agentName
+            // Preserve display names
+            modelName = currentState.modelName,
+            agentName = currentState.agentName,
+            // CRITICAL: Preserve provider info so model selector remains clickable
+            providerInfo = currentState.providerInfo,
+            selectedProviderId = currentState.selectedProviderId,
+            selectedModelId = currentState.selectedModelId,
+            // Preserve modes and recent models (global config, not session-specific)
+            modes = currentState.modes,
+            selectedModeId = currentState.selectedModeId,
+            recentModels = currentState.recentModels,
+            // Preserve commands (global, not session-specific)
+            commands = currentState.commands
         )
         _inputText.value = ""
         _streamingText.value = ""
