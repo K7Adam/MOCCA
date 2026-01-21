@@ -7,15 +7,32 @@ CREATE TABLE MessageEntity (
     createdAt INTEGER NOT NULL,
     model TEXT,
     cost REAL,
+    isRead INTEGER AS kotlin.Boolean NOT NULL DEFAULT 1,
+    metadata TEXT,
     FOREIGN KEY (sessionId) REFERENCES SessionEntity(id) ON DELETE CASCADE
 );
 
 -- Create index for faster session lookups
 CREATE INDEX idx_message_session ON MessageEntity(sessionId);
 
+-- Create index for chronological sorting
+CREATE INDEX idx_message_timestamp ON MessageEntity(createdAt);
+
+-- Create partial index for fast unread count
+CREATE INDEX idx_message_unread ON MessageEntity(sessionId, isRead) WHERE isRead = 0;
+
 -- Select messages by session, ordered chronologically
 selectBySession:
 SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt ASC;
+
+-- Select messages by session with cursor-based pagination
+-- Fetches older messages (createdAt < cursor) ordered by time DESC
+selectBySessionPaged:
+SELECT * FROM MessageEntity 
+WHERE sessionId = :sessionId 
+AND (:cursor IS NULL OR createdAt < :cursor)
+ORDER BY createdAt DESC 
+LIMIT :limit;
 
 -- Select message by ID
 selectById:
@@ -23,8 +40,8 @@ SELECT * FROM MessageEntity WHERE id = ?;
 
 -- Insert or replace message
 insertOrReplace:
-INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost, isRead, metadata)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Delete message by ID
 deleteById:
@@ -41,6 +58,14 @@ DELETE FROM MessageEntity;
 -- Count messages in session
 countBySession:
 SELECT COUNT(*) FROM MessageEntity WHERE sessionId = ?;
+
+-- Count unread messages in session
+countUnread:
+SELECT COUNT(*) FROM MessageEntity WHERE sessionId = ? AND isRead = 0;
+
+-- Mark all messages in session as read
+markAsRead:
+UPDATE MessageEntity SET isRead = 1 WHERE sessionId = ?;
 
 -- Get last message in session
 selectLastBySession:

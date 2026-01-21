@@ -7,8 +7,12 @@ CREATE TABLE SessionEntity (
     status TEXT NOT NULL DEFAULT 'idle',
     cost REAL NOT NULL DEFAULT 0.0,
     parentId TEXT,
-    isSynced INTEGER AS kotlin.Boolean DEFAULT 1 NOT NULL
+    isSynced INTEGER AS kotlin.Boolean DEFAULT 1 NOT NULL,
+    lastFetchedAt INTEGER
 );
+
+-- Create index for faster sorting by updates
+CREATE INDEX idx_session_updated ON SessionEntity(updatedAt);
 
 -- Select all sessions ordered by most recent
 selectAll:
@@ -20,8 +24,8 @@ SELECT * FROM SessionEntity WHERE id = ?;
 
 -- Insert or replace session
 insertOrReplace:
-INSERT OR REPLACE INTO SessionEntity(id, title, createdAt, updatedAt, status, cost, parentId, isSynced)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO SessionEntity(id, title, createdAt, updatedAt, status, cost, parentId, isSynced, lastFetchedAt)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Delete session by ID
 deleteById:
@@ -38,6 +42,10 @@ UPDATE SessionEntity SET status = ?, updatedAt = ? WHERE id = ?;
 -- Mark session as synced
 markSynced:
 UPDATE SessionEntity SET isSynced = 1 WHERE id = ?;
+
+-- Update last fetched timestamp (Cache Invalidation)
+updateLastFetched:
+UPDATE SessionEntity SET lastFetchedAt = ? WHERE id = ?;
 
 -- Get unsynced sessions
 selectUnsynced:

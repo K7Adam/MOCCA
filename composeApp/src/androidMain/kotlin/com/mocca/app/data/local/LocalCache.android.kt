@@ -63,7 +63,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 status = session.status.name.lowercase(),
                 cost = 0.0,
                 parentId = session.effectiveParentID,
-                isSynced = true
+                isSynced = true,
+                lastFetchedAt = session.lastFetchedAt
             )
         } catch (e: Exception) {
             Napier.w("Failed to cache session", e)
@@ -107,6 +108,15 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
     
+    override suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message> {
+        return try {
+            messageQueries.selectBySessionPaged(sessionId, cursor, limit).executeAsList().map { it.toMessage() }
+        } catch (e: Exception) {
+            Napier.w("Failed to get paged messages", e)
+            emptyList()
+        }
+    }
+    
     override suspend fun getMessage(messageId: String): Message? {
         return try {
             messageQueries.selectById(messageId).executeAsOneOrNull()?.toMessage()
@@ -127,10 +137,35 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 parts = partsJson,
                 createdAt = message.createdAt,
                 model = message.model,
-                cost = message.cost
+                cost = message.cost,
+                isRead = message.isRead,
+                metadata = message.metadata
             )
         } catch (e: Exception) {
             Napier.w("Failed to cache message", e)
+        }
+    }
+
+    override suspend fun insertMessages(messages: List<Message>) {
+        try {
+            database.transaction {
+                messages.forEach { message ->
+                    val partsJson = json.encodeToString(ListSerializer(MessagePart.serializer()), message.parts)
+                    messageQueries.insertOrReplace(
+                        id = message.id,
+                        sessionId = message.sessionId,
+                        role = message.role.name.lowercase(),
+                        parts = partsJson,
+                        createdAt = message.createdAt,
+                        model = message.model,
+                        cost = message.cost,
+                        isRead = message.isRead,
+                        metadata = message.metadata
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Napier.w("Failed to batch cache messages", e)
         }
     }
     
@@ -574,7 +609,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             } catch (e: Exception) {
                 SessionStatus.IDLE
             },
-            parentID = parentId
+            parentID = parentId,
+            lastFetchedAt = lastFetchedAt
         )
     }
 
@@ -595,7 +631,9 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             },
             createdAt = createdAt,
             model = model,
-            cost = cost
+            cost = cost,
+            isRead = isRead,
+            metadata = metadata
         )
     }
 

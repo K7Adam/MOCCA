@@ -25,7 +25,8 @@ data class Session(
     val permission: List<SessionPermission>? = null, // Tool permissions
     val revert: SessionRevertInfo? = null, // Revert state for undo/redo
     @SerialName("shareID")
-    val shareID: String? = null // Share ID for public sharing
+    val shareID: String? = null, // Share ID for public sharing
+    val lastFetchedAt: Long? = null
 ) {
     // Convenience accessors for time fields
     val createdAt: Long get() = time?.created ?: 0L
@@ -322,7 +323,9 @@ data class Message(
     val parts: List<MessagePart>,
     val createdAt: Long,
     val model: String? = null,
-    val cost: Double? = null
+    val cost: Double? = null,
+    val isRead: Boolean = true,
+    val metadata: String? = null
 ) {
     companion object {
         fun fromResponse(response: MessageResponse): Message {
@@ -366,7 +369,9 @@ data class Message(
                 },
                 createdAt = response.info.time?.created ?: 0L,
                 model = response.info.model?.modelID,
-                cost = response.info.cost
+                cost = response.info.cost,
+                isRead = true,
+                metadata = null
             )
         }
     }

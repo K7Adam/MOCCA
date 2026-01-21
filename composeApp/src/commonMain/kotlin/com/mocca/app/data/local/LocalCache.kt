@@ -24,8 +24,10 @@ interface LocalCache {
 
     // Messages
     suspend fun getMessages(sessionId: String): List<Message>
+    suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message> // Added
     suspend fun getMessage(messageId: String): Message?
     suspend fun insertMessage(message: Message)
+    suspend fun insertMessages(messages: List<Message>) // Added
     suspend fun updateMessage(message: Message)
     suspend fun deleteMessages(sessionId: String)
     suspend fun deleteMessage(messageId: String)
