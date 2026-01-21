@@ -15,6 +15,40 @@ import kotlinx.coroutines.withContext
 class ConfigRepository(
     private val apiClient: MoccaApiClient
 ) {
+    /**
+     * Get full configuration from /config endpoint.
+     * This includes default provider, default model, modes, etc.
+     */
+    fun getConfig(): Flow<Resource<ConfigResponse>> = flow {
+        emit(Resource.Loading())
+        apiClient.getConfig().fold(
+            onSuccess = { config ->
+                Napier.i { "Config loaded: defaultModel=${config.model}, modes=${config.modes.size}" }
+                emit(Resource.Success(config))
+            },
+            onFailure = { error ->
+                Napier.e("Failed to fetch config", error)
+                emit(Resource.Error(error.message ?: "Failed to fetch config"))
+            }
+        )
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Get providers configuration from /config/providers endpoint.
+     */
+    fun getProvidersConfig(): Flow<Resource<ProvidersConfig>> = flow {
+        emit(Resource.Loading())
+        apiClient.getProvidersConfig().fold(
+            onSuccess = { config ->
+                Napier.i { "Providers config loaded: ${config.providers.size} providers" }
+                emit(Resource.Success(config))
+            },
+            onFailure = { error ->
+                Napier.e("Failed to fetch providers config", error)
+                emit(Resource.Error(error.message ?: "Failed to fetch providers config"))
+            }
+        )
+    }.flowOn(Dispatchers.IO)
     // ═══════════════════════════════════════════════════════════════════════
     // OAUTH & PROVIDER AUTHENTICATION (Priority 1.1)
     // ═══════════════════════════════════════════════════════════════════════

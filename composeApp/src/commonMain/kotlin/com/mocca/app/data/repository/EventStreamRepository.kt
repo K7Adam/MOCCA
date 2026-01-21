@@ -33,7 +33,7 @@ class EventStreamRepository(
         // Automatically reconnect SSE when the HttpClient is recreated
         httpClientProvider.onClientRecreated = {
             Napier.i("HttpClient recreated, restarting SSE connection...")
-            reconnect()
+            reconnect(force = true)
         }
     }
     
@@ -248,14 +248,27 @@ class EventStreamRepository(
     
     /**
      * Force a reconnection attempt.
+     * @param force If true, restarts connection even if already connected or connecting.
      */
-    fun reconnect() {
-        if (_connectionStatus.value !is ConnectionStatus.Connected) {
-            reconnectAttempts = 0
-            autoReconnect = true
-            _connectionStatus.value = ConnectionStatus.Connecting
-            startConnection()
+    fun reconnect(force: Boolean = false) {
+        val currentStatus = _connectionStatus.value
+        
+        // Prevent redundant reconnections
+        if (!force) {
+            if (currentStatus is ConnectionStatus.Connected) {
+                Napier.d("Already connected, ignoring reconnect request")
+                return
+            }
+            if (currentStatus is ConnectionStatus.Connecting) {
+                Napier.d("Already connecting, ignoring reconnect request")
+                return
+            }
         }
+
+        reconnectAttempts = 0
+        autoReconnect = true
+        _connectionStatus.value = ConnectionStatus.Connecting
+        startConnection()
     }
 
     /**

@@ -175,7 +175,7 @@ class MoccaSseClient(
         return when (type) {
             // Connection events
             "server.connected" -> json.decodeFromString<ServerEvent.Connected>(data)
-            "server.heartbeat" -> ServerEvent.Unknown(type = type, rawData = data) // Heartbeat from server
+            "server.heartbeat" -> json.decodeFromString<ServerEvent.Heartbeat>(data)
             
             // Session events
             "session.updated" -> json.decodeFromString<ServerEvent.SessionUpdated>(data)

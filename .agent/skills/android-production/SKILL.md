@@ -1,81 +1,60 @@
 ---
-name: android-production
-description: Unit testing, performance profiling, security implementation, Play Store deployment for Android apps. Use for testing strategies, release preparation, or production-quality concerns.
+name: android-release-protocol
+description: Use when preparing for release, configuring CI/CD, or setting up build variants. MANDATORY for production builds. Enforces R8/ProGuard, Signing, and Versioning.
 ---
 
-# Android Production Skill
+# Android Release Protocol
 
-## Quick Start
+## ⚠️ CRITICAL: Production Readiness
 
-### Unit Testing
-```kotlin
-@Test
-fun loadUser_updates_state() = runTest {
-    val user = User(1, "John")
-    val mockRepo = mockk<UserRepository>()
-    coEvery { mockRepo.getUser(1) } returns user
-    
-    val viewModel = UserViewModel(mockRepo)
-    viewModel.loadUser(1)
-    
-    assertEquals(user, viewModel.state.value)
-}
-```
+You are a Release Engineer. You do not ship debug builds. You do not leak secrets. You ensure **integrity and optimization**.
 
-### Security
-```kotlin
-// Encrypted storage
-val prefs = EncryptedSharedPreferences.create(context, "secret",
-    MasterKey.Builder(context).build(), AES256_SIV, AES256_GCM)
+**Shipping a debug key or unoptimized code is a critical failure.**
 
-// SSL pinning
-CertificatePinner.Builder()
-    .add("api.example.com", "sha256/...").build()
-```
+## 1. The Configuration Protocol (MANDATORY)
 
-### Play Store Deployment
-```bash
-./gradlew bundleRelease
-# Upload to Google Play Console
-# Monitor crashes and ratings
-```
+You MUST configure builds in this order:
 
-## Key Concepts
+### Phase 1: Build Variants
+1.  **Debug**: `debuggable true`, `minificationEnabled false`.
+2.  **Release**: `debuggable false`, `minificationEnabled true` (R8).
+    *   Constraint: Keep ProGuard rules minimal and documented.
 
-### Testing
-- Unit tests (70-80% coverage)
-- Integration tests
-- UI tests with Espresso
-- Mock external dependencies
+### Phase 2: Signing Config
+1.  **Keystore**: NEVER check `.jks` into git.
+2.  **Properties**: Read `storePassword`/`keyPassword` from environment variables or `local.properties`.
+    *   Constraint: CI pipeline must inject these securely.
 
-### Performance
-- ANR prevention
-- Memory leak detection
-- 60 FPS target
-- Battery optimization
+### Phase 3: Versioning Strategy
+1.  **Version Code**: Monotonic integer (Automate via CI timestamp or commit count).
+2.  **Version Name**: Semantic Versioning (`major.minor.patch`).
 
-### Security
-- Data encryption
-- HTTPS/SSL pinning
-- Permission handling
-- OWASP Top 10
+## 2. Mandatory Optimization Patterns
 
-### Deployment
-- Internal → Closed → Open → Production
-- Staged rollout strategy
-- Crash analytics monitoring
-- User rating management
+### Code Shrinking (R8)
+- **ALWAYS** enable `isMinifyEnabled = true` for release.
+- **ALWAYS** enable `isShrinkResources = true` for release.
+- **Action**: Verify `proguard-rules.pro` keeps reflection-based models (Serialization).
 
-## Best Practices
+### Manifest Cleanup
+- **ALWAYS** remove `android:debuggable` (handled by Gradle).
+- **ALWAYS** verify permissions are minimal (Remove unused).
 
-✅ Write comprehensive tests
-✅ Profile regularly
-✅ Implement security features
-✅ Monitor production apps
-✅ Use staged rollouts
+## 3. Pre-Flight Checklist (The Gatekeeper)
 
-## Resources
+Before handing off an APK/AAB:
 
-- [Testing Guide](https://developer.android.com/training/testing)
-- [Security & Privacy](https://developer.android.com/privacy-and-security)
-- [Play Console Help](https://support.google.com/googleplay)
+1.  **Lint Check**: Run `./gradlew lintRelease`. Must be 0 errors.
+2.  **Test Suite**: Run `./gradlew testReleaseUnitTest`. Must pass.
+3.  **Smoke Test**: Install Release build on Emulator.
+    *   *Verify*: Does it crash on startup? (R8 issues).
+    *   *Verify*: Do network calls work? (ProGuard serialization issues).
+
+## 4. Verification
+
+- [ ] **Debuggable**: Is it false?
+- [ ] **Minified**: Is R8 enabled?
+- [ ] **Secrets**: Are keys/passwords NOT in source code?
+- [ ] **Logging**: Are `Log.d` calls stripped or disabled?
+
+**IF ANY CHECK FAILS: STOP. FIX BUILD CONFIG.**

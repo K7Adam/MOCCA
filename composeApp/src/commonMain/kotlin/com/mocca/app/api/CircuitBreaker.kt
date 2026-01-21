@@ -287,8 +287,8 @@ sealed class NetworkError(override val message: String, override val cause: Thro
         fun from(e: Throwable): NetworkError {
             return when (e) {
                 is NetworkError -> e
-                is io.ktor.client.plugins.ServerResponseException -> ServerError(e.response.status.value, e.message ?: "Server Error")
-                is io.ktor.client.plugins.ClientRequestException -> ServerError(e.response.status.value, e.message ?: "Client Error")
+                is io.ktor.client.plugins.ServerResponseException -> ServerError(e.response.status.value, e.message)
+                is io.ktor.client.plugins.ClientRequestException -> ServerError(e.response.status.value, e.message)
                 is io.ktor.client.network.sockets.ConnectTimeoutException,
                 is io.ktor.client.network.sockets.SocketTimeoutException,
                 is io.ktor.client.plugins.HttpRequestTimeoutException -> TimeoutError("Connection timed out", e)

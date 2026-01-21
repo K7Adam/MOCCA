@@ -1,70 +1,75 @@
 ---
-name: android-data-storage
-description: Room database, DataStore, SharedPreferences, SQLCipher encryption for Android apps. Use for data persistence, database operations, or secure storage implementation.
+name: android-data-persistence
+description: Use when implementing local database, file storage, or preferences. MANDATORY for all data layer work. Enforces Repository pattern, Room/SQLDelight usage, and Encryption.
 ---
 
-# Android Data Storage Skill
+# Android Data Persistence Protocol
 
-## Quick Start
+## ⚠️ CRITICAL: Data Integrity & Security
 
-### Room Entity & DAO
-```kotlin
-@Entity
-data class User(@PrimaryKey val id: Int, val name: String)
+You are a Data Engineer. You do not write "quick SQL queries". You build **robust, secure, and performant** data layers.
 
-@Dao
-interface UserDao {
-    @Query("SELECT * FROM User")
-    suspend fun getAllUsers(): List<User>
-    
-    @Insert
-    suspend fun insert(user: User)
-}
-```
+**Leaking sensitive data or blocking the Main Thread is a critical failure.**
 
-### EncryptedSharedPreferences
-```kotlin
-val prefs = EncryptedSharedPreferences.create(context, "secret",
-    MasterKey.Builder(context).setKeyScheme(AES256_GCM).build(),
-    AES256_SIV, AES256_GCM)
+## 1. The Implementation Order (MANDATORY)
 
-prefs.edit { putString("token", value) }
-```
+You MUST implement data persistence in this exact order:
 
-### DataStore
-```kotlin
-val dataStore = context.createDataStore("settings")
-val preferences = dataStore.data.map { it[KEY] ?: "" }
-```
+### Phase 1: Schema Definition
+1.  **Entity/Table**: Define the data structure.
+    *   Constraint: Annotated with `@Entity` (Room) or `.sq` file (SQLDelight).
+    *   Constraint: Primary keys MUST be immutable.
+    *   **Optimization**: DEFINE INDEXES for all query columns (`WHERE`, `JOIN`, `ORDER BY`).
 
-## Key Concepts
+### Phase 2: DAO/Queries
+1.  **Interface**: Define data access methods.
+    *   Constraint: ALL return types MUST be `suspend` or `Flow`.
+    *   Constraint: NO blocking calls allowed.
 
-### Room Advantages
-- Type-safe queries
-- Compile-time checks
-- Suspend/Flow support
-- Migration management
+### Phase 3: Repository (The Gatekeeper)
+1.  **Implementation**: Map Database Entities to Domain Models.
+    *   Action: Handle database exceptions.
+    *   Action: Expose clean `Flow<Resource<T>>` to Domain.
 
-### SharedPreferences
-- Simple key-value store
-- Use Encrypted version for sensitive data
-- Limited to small data
+### Phase 4: Migration Strategy
+1.  **Version Bump**: Increment database version.
+2.  **Migration Script**: Write the explicit SQL migration.
+    *   Action: Verify data integrity after migration.
 
-### DataStore
-- Modern SharedPreferences
-- Coroutine-native
-- Type-safe
-- ACID transactions
+## 2. Mandatory Patterns
 
-## Best Practices
+### Database (Room/SQLDelight)
+- **ALWAYS** use `@Transaction` for multi-step operations.
+- **NEVER** expose Entities/DTOs to the UI layer.
+- **ALWAYS** index foreign keys and query columns.
 
-✅ Use Room for complex data
-✅ Encrypt sensitive data
-✅ Implement proper migrations
-✅ Handle database errors
-✅ Test database operations
+### Secure Storage (EncryptedSharedPreferences/DataStore)
+- **ALWAYS** use `EncryptedSharedPreferences` for tokens/secrets.
+- **NEVER** store plain-text passwords or auth tokens in standard `SharedPreferences`.
+- **ALWAYS** use `DataStore` (Proto/Preferences) for complex user settings.
 
-## Resources
+### File Storage
+- **ALWAYS** use `Context.filesDir` or `Context.cacheDir`.
+- **NEVER** hardcode paths (`/sdcard`).
+- **ALWAYS** scope file access to `Dispatchers.IO`.
 
-- [Room Documentation](https://developer.android.com/training/data-storage/room)
-- [DataStore Guide](https://developer.android.com/topic/libraries/architecture/datastore)
+## 3. Performance Optimization (Index Audit)
+
+Before finalizing any schema change, perform this audit:
+
+1.  **Query Analysis**: List all queries running against the table.
+2.  **Index Check**:
+    *   Is there an index on columns used in `WHERE`?
+    *   Is there an index on foreign keys used in `JOIN`?
+    *   Is there an index on `ORDER BY` columns?
+3.  **N+1 Check**: Ensure Lists are fetched with `@Relation` or single query, not loops.
+
+## 4. Verification Checklist
+
+- [ ] **Thread Safety**: Are ALL DAO methods `suspend` or `Flow`?
+- [ ] **Encryption**: Are auth tokens stored in EncryptedSharedPreferences?
+- [ ] **Indexing**: Are all `WHERE/JOIN` columns indexed?
+- [ ] **Mapping**: Is the Repository mapping Entities -> Domain Models?
+- [ ] **Migration**: Is there a migration path for this schema change?
+
+**IF ANY CHECK FAILS: STOP. REFACTOR IMMEDIATELY.**

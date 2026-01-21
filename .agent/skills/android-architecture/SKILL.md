@@ -1,88 +1,74 @@
 ---
 name: android-architecture
-description: MVVM pattern, Clean Architecture, Repository pattern, Hilt dependency injection for Android apps. Use for architectural decisions, pattern implementation, or refactoring code structure.
+description: Use when creating new features or defining app structure. MANDATORY for all feature implementation. Enforces Voyager ScreenModel, Koin DI, and Clean Architecture.
 ---
 
-# Android Architecture Skill
+# Android Architecture Protocol (KMP/Voyager/Koin)
 
-## Quick Start
+## ⚠️ CRITICAL: Stack Alignment
 
-### MVVM Pattern
-```kotlin
-@HiltViewModel
-class UserViewModel @Inject constructor(
-    private val repository: UserRepository
-) : ViewModel() {
-    private val _state = MutableLiveData<UiState>()
-    val state: LiveData<UiState> = _state
-    
-    fun loadUser(id: Int) {
-        viewModelScope.launch {
-            _state.value = repository.getUser(id)
+You are a Kotlin Multiplatform Architect. You do **NOT** use Hilt or Android ViewModel.
+You use **Koin** and **Voyager**.
+
+**Using Hilt or Jetpack Navigation is a critical failure.**
+
+## 1. The Implementation Order (MANDATORY)
+
+### Phase 1: Domain Layer (Pure Kotlin)
+*Dependencies: None*
+1.  **Models**: Data classes (e.g., `User`).
+    *   Constraint: `@Serializable` if needed for Ktor/KVS.
+2.  **Repository Interface**: `interface UserRepository`.
+    *   Constraint: Return `Flow<Resource<T>>` or `suspend` Result.
+
+### Phase 2: Data Layer (Implementation)
+*Dependencies: Ktor, SQLDelight*
+1.  **Repository Implementation**: `class UserRepositoryImpl : UserRepository`.
+    *   Action: Inject `HttpClient` and `Database` via Koin.
+2.  **Koin Module**: Define in `appModule` or feature module.
+    *   Code: `singleOf(::UserRepositoryImpl) { bind<UserRepository>() }`.
+
+### Phase 3: Presentation Layer (Voyager)
+*Dependencies: Voyager, Koin*
+1.  **ScreenModel**: Extend `StateScreenModel<UiState>(initialState)`.
+    *   *Constraint*: Do NOT extend `androidx.lifecycle.ViewModel`.
+    *   *Action*: Inject UseCases/Repositories via constructor.
+2.  **Screen**: Implement `Screen` interface.
+    *   *Code*:
+        ```kotlin
+        class FeatureScreen : Screen {
+            @Composable
+            override fun Content() {
+                val screenModel = koinScreenModel<FeatureScreenModel>()
+                val state by screenModel.state.collectAsState()
+                
+                FeatureContent(state = state)
+            }
         }
-    }
-}
-```
+        ```
 
-### Repository Pattern
-```kotlin
-interface UserRepository {
-    suspend fun getUser(id: Int): User
-}
+## 2. Mandatory Patterns
 
-class UserRepositoryImpl(
-    private val dao: UserDao,
-    private val api: UserApi
-) : UserRepository {
-    override suspend fun getUser(id: Int): User {
-        return dao.getUser(id) ?: api.fetchUser(id)
-    }
-}
-```
+### Dependency Injection (Koin)
+- **ALWAYS** use constructor injection.
+- **ALWAYS** define modules in `di/Modules.kt`.
+- **NEVER** use field injection (`by inject()`) inside classes (except legacy Android components).
 
-### Dependency Injection (Hilt)
-```kotlin
-@Module
-@InstallIn(SingletonComponent::class)
-object RepositoryModule {
-    @Provides
-    fun provideUserRepository(dao: UserDao, api: UserApi): UserRepository {
-        return UserRepositoryImpl(dao, api)
-    }
-}
-```
+### Navigation (Voyager)
+- **ALWAYS** implement `Screen` interface.
+- **ALWAYS** use `LocalNavigator.currentOrThrow`.
+- **NEVER** use `NavController` or Fragment transactions.
 
-## Key Concepts
+### State Management
+- **ALWAYS** use `StateScreenModel` from Voyager.
+- **ALWAYS** expose `state: StateFlow<UiState>`.
+- **NEVER** use `LiveData`.
 
-### MVVM Benefits
-- Lifecycle awareness
-- Configuration change handling
-- Separation of concerns
-- Testability
+## 3. Verification Checklist
 
-### Clean Architecture Layers
-- Domain: Business rules
-- Application: Use cases
-- Presentation: UI
-- Infrastructure: Data sources
+- [ ] **Architecture**: Is `ScreenModel` used instead of `ViewModel`?
+- [ ] **DI**: Is Koin used (no `@Inject` annotations)?
+- [ ] **Navigation**: Is Voyager `Screen` interface used?
+- [ ] **Imports**: Are `androidx.lifecycle` imports minimized?
 
-### SOLID Principles
-- S: Single Responsibility
-- O: Open/Closed
-- L: Liskov Substitution
-- I: Interface Segregation
-- D: Dependency Inversion
-
-## Best Practices
-
-✅ Dependency injection
-✅ Interface-based design
-✅ Layered architecture
-✅ Single responsibility
-✅ Testable code
-
-## Resources
-
-- [Architecture Guide](https://developer.android.com/jetpack/guide)
-- [SOLID Principles](https://en.wikipedia.org/wiki/SOLID)
-- [Hilt Documentation](https://developer.android.com/training/dependency-injection/hilt-android)
+**IF ANY CHECK FAILS: STOP. REFACTOR IMMEDIATELY.**

@@ -115,6 +115,7 @@ sqldelight {
     databases {
         create("AppDatabase") {
             packageName.set("com.mocca.app.db")
+            version = 2
             // Schema now in commonMain/sqldelight, generated for all targets
         }
     }

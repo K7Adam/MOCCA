@@ -1,77 +1,60 @@
 ---
 name: android-networking
-description: Retrofit, OkHttp, REST APIs, SSL pinning, error handling for Android apps. Use for API integration, HTTP clients, or network configuration.
+description: Use when implementing API clients. MANDATORY for network layer. Enforces Ktor Client, ContentNegotiation, and Safe Result Handling.
 ---
 
-# Android Networking Skill
+# Android Networking Protocol (Ktor)
 
-## Quick Start
+## ⚠️ CRITICAL: Ktor Client Usage
 
-### Retrofit Setup
+You are a KMP Network Engineer. You use **Ktor Client**, not Retrofit.
+
+**Using Retrofit is a critical failure.**
+
+## 1. The Implementation Order (MANDATORY)
+
+### Phase 1: API Definition
+1.  **DTOs**: `@Serializable` data classes.
+2.  **Client Usage**: Inject `HttpClient` into Repository/DataSource.
+    *   *Constraint*: Do NOT create new clients manually. Use the Koin-provided singleton.
+
+### Phase 2: Request Pattern
 ```kotlin
-interface UserApi {
-    @GET("/users/{id}")
-    suspend fun getUser(@Path("id") id: Int): UserDto
-    
-    @POST("/users")
-    suspend fun createUser(@Body user: UserDto): UserDto
+// ✅ Correct Ktor usage
+suspend fun fetchUser(id: String): Resource<User> = safeApiCall {
+    val dto = client.get("users/$id").body<UserDto>()
+    dto.toDomain()
 }
-
-val retrofit = Retrofit.Builder()
-    .baseUrl("https://api.example.com/")
-    .addConverterFactory(GsonConverterFactory.create())
-    .build()
-
-val api = retrofit.create(UserApi::class.java)
 ```
 
-### OkHttp Configuration
-```kotlin
-val client = OkHttpClient.Builder()
-    .addInterceptor(HttpLoggingInterceptor())
-    .connectTimeout(30, TimeUnit.SECONDS)
-    .certificatePinner(CertificatePinner.Builder()
-        .add("api.example.com", "sha256/...").build())
-    .build()
-```
+### Phase 3: Configuration (Centralized)
+*   **ContentNegotiation**: JSON (Kotlinx Serialization).
+*   **Logging**: Napier.
+*   **Timeouts**: `HttpTimeout` plugin.
+
+## 2. Mandatory Patterns
+
+### Ktor Client
+- **ALWAYS** use `client.get()`, `client.post()`.
+- **ALWAYS** use `body<T>()` for deserialization.
+- **NEVER** parse JSON manually.
 
 ### Error Handling
-```kotlin
-sealed class Result<T> {
-    data class Success<T>(val data: T) : Result<T>()
-    data class Error<T>(val exception: Exception) : Result<T>()
-}
-```
+- **ALWAYS** wrap calls in a safe block catching:
+    *   `ClientRequestException`
+    *   `ServerResponseException`
+    *   `IOException`
+- **ALWAYS** map to `Resource.Error`.
 
-## Key Concepts
+### Serialization
+- **ALWAYS** use `@Serializable` (kotlinx.serialization).
+- **ALWAYS** set `ignoreUnknownKeys = true` in global config.
 
-### HTTP Methods
-- GET: Fetch data
-- POST: Create resource
-- PUT/PATCH: Update
-- DELETE: Remove
+## 3. Verification Checklist
 
-### Retrofit Features
-- Type-safe interfaces
-- Automatic serialization
-- Suspend function support
-- Error callbacks
+- [ ] **Library**: Is Ktor Client used?
+- [ ] **Injection**: Is `HttpClient` injected via Koin?
+- [ ] **Safety**: Are exceptions caught?
+- [ ] **Logging**: Is Napier used for logging?
 
-### Network Security
-- HTTPS/TLS enforcement
-- SSL pinning
-- Certificate validation
-- Secure token storage
-
-## Best Practices
-
-✅ Use HTTPS always
-✅ Implement SSL pinning
-✅ Handle errors gracefully
-✅ Optimize request/response size
-✅ Cache when possible
-
-## Resources
-
-- [Retrofit Guide](https://square.github.io/retrofit/)
-- [OkHttp Documentation](https://square.github.io/okhttp/)
+**IF ANY CHECK FAILS: STOP. REFACTOR IMMEDIATELY.**

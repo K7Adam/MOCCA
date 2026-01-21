@@ -1,73 +1,88 @@
 ---
-name: android-ui-design
-description: XML layouts, ConstraintLayout, Material Design 3, accessibility for Android apps. Use for UI implementation, layout design, or Material components.
+name: android-ui-implementation
+description: Use when implementing UI designs to ensure consistency, accessibility, and Material 3 compliance. MANDATORY for all UI styling work.
 ---
 
-# Android UI Design Skill
+# Android UI Implementation Standards
 
-## Quick Start
+## ⚠️ CRITICAL: Design System Consistency
 
-### ConstraintLayout
-```xml
-<androidx.constraintlayout.widget.ConstraintLayout>
-    <Button
-        android:id="@+id/btn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-</androidx.constraintlayout.widget.ConstraintLayout>
-```
+You are a UI Engineer. You do not "guess" colors or sizes. You **implement specifications** using the Design System.
 
-### Jetpack Compose
+**Hardcoding colors, sizes, or strings is a critical failure.**
+
+## 1. The Implementation Protocol (MANDATORY)
+
+You MUST implement UI changes following this strict protocol:
+
+### Phase 1: Resource Extraction
+1.  **Strings**: Extract ALL text to `strings.xml`.
+    *   Constraint: NO hardcoded strings in code (except `@Preview`).
+2.  **Dimens**: Check `dimens.xml` or Theme tokens for spacing.
+    *   Constraint: Use `8.dp`, `16.dp` grid. NO magic numbers (e.g., `13.dp`).
+3.  **Colors**: Use `MaterialTheme.colorScheme`.
+    *   Constraint: NO `Color.Red` or hex codes. Use `MaterialTheme.colorScheme.error`.
+
+### Phase 2: Component Selection
+1.  **Material 3**: ALWAYS use M3 components first.
+    *   `Button`, `Card`, `TextField`, `TopAppBar`.
+    *   Constraint: Do not build custom components if a Material one exists.
+2.  **Icons**: Use `Icons.Default` or `painterResource`.
+    *   Constraint: ALWAYS provide `contentDescription` for accessibility.
+
+### Phase 3: Layout Structure
+1.  **Containers**: Use `Scaffold` for top-level screens.
+2.  **Lists**: Use `LazyColumn` for scrollable content.
+    *   Constraint: NEVER nest scrollable containers (e.g., `LazyColumn` inside `Column(Modifier.verticalScroll)`).
+3.  **Modifiers**: Order matters.
+    *   Order: Size -> Padding -> Background -> Clickable -> Padding (Internal).
+
+## 2. Accessibility Standards (MANDATORY)
+
+- **Touch Targets**: MUST be at least 48x48dp.
+- **Content Description**: MUST be present for all meaningful images.
+  - Use `null` for decorative images.
+- **Text Scaling**: MUST use `sp` for text size (never `dp`).
+- **Contrast**: Text MUST pass WCAG AA contrast ratio against background.
+
+## 3. Theme Usage Rules
+
+### Colors
+- **Primary**: Main actions (FAB, Submit button).
+- **Secondary**: Selection controls, highlights.
+- **Surface**: Backgrounds of cards/sheets.
+- **Background**: Global app background.
+- **Error**: Error states.
+
+**Pattern:**
 ```kotlin
-Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-    Text("Hello Compose", fontSize = 20.sp)
-    Button(onClick = { }) { Text("Click Me") }
-}
+// ✅ Correct
+Text(
+    text = stringResource(R.string.title),
+    color = MaterialTheme.colorScheme.onSurface,
+    style = MaterialTheme.typography.titleLarge
+)
+
+// ❌ Incorrect
+Text(
+    text = "Title",
+    color = Color(0xFF000000),
+    fontSize = 20.sp
+)
 ```
 
-### Material Design 3
-```kotlin
-Scaffold(
-    topBar = { TopAppBar(title = { Text("MyApp") }) }
-) { padding ->
-    // Content
-}
-```
+### Typography
+- **Display/Headline**: Large headers.
+- **Title**: Section headers (AppBars).
+- **Body**: Long form text.
+- **Label**: Buttons, captions.
 
-## Key Concepts
+## 4. Verification Checklist
 
-### Constraint Types
-- Start/End, Top/Bottom
-- Chains (spread, packed)
-- Guidelines
-- Barriers
-- Bias
+- [ ] **Resources**: Are all strings in `strings.xml`?
+- [ ] **Theme**: Are all colors/fonts from `MaterialTheme`?
+- [ ] **A11y**: Do images have descriptions? Are touch targets >48dp?
+- [ ] **Layout**: Does layout work in Landscape and Dark Mode?
+- [ ] **Magic Numbers**: Are all raw numbers removed/replaced with tokens?
 
-### Compose State
-```kotlin
-var count by remember { mutableStateOf(0) }
-Button(onClick = { count++ }) { Text("Count: $count") }
-```
-
-### Material Components
-- Buttons (filled, outlined, text)
-- Cards, FABs, Dialogs
-- Navigation patterns
-- Theme system
-
-## Best Practices
-
-✅ Use ConstraintLayout for efficiency
-✅ Implement Material Design
-✅ Test on multiple screen sizes
-✅ Optimize rendering performance
-✅ Support accessibility
-
-## Resources
-
-- [ConstraintLayout Guide](https://developer.android.com/training/constraint-layout)
-- [Compose Documentation](https://developer.android.com/develop/ui/compose)
-- [Material Design 3](https://m3.material.io/)
+**IF ANY CHECK FAILS: STOP. REFACTOR IMMEDIATELY.**

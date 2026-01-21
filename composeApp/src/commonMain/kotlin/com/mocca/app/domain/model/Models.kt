@@ -658,6 +658,7 @@ data class TerminalResizeRequest(
  */
 @Serializable
 data class ConfigResponse(
+    val model: String? = null, // Default model (e.g., "anthropic/claude-sonnet-4-5")
     val providers: List<Provider> = emptyList(),
     val agents: List<AgentConfig> = emptyList(),
     val modes: List<Mode> = emptyList()
@@ -820,12 +821,17 @@ data class Project(
     val name: String? = null,
     val path: String? = null,
     val directory: String? = null,
+    val worktree: String? = null,
     val vcs: VcsType? = null,
     val createdAt: Long? = null
 ) {
     /** Display name with fallback to path or directory */
     val displayName: String
-        get() = name ?: path?.substringAfterLast('/') ?: directory?.substringAfterLast('/') ?: "Unknown Project"
+        get() = name 
+            ?: worktree?.substringAfterLast('/')?.substringAfterLast('\\') // Handle both separators
+            ?: path?.substringAfterLast('/')?.substringAfterLast('\\') 
+            ?: directory?.substringAfterLast('/')?.substringAfterLast('\\') 
+            ?: "Unknown Project"
 }
 
 @Serializable
