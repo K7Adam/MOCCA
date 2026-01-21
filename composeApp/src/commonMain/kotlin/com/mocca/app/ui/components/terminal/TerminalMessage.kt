@@ -48,6 +48,14 @@ import com.mocca.app.ui.theme.TerminalShapes
 import com.mocca.app.ui.theme.TerminalSpacing
 import com.mocca.app.ui.theme.TerminalTypography
 
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Terminal
+import com.mocca.app.domain.model.SessionStatus
+
+// ... (existing imports)
+
 /**
  * Terminal-styled message bubble.
  * Modern refactor: Rounded corners, distinct user/agent styles.
@@ -173,7 +181,7 @@ fun TerminalMessage(
                             TerminalFileBlock(part)
                         }
                         is MessagePart.SubTask -> {
-                            // Subtasks handled separately or embedded
+                            TerminalSubTaskBlock(part)
                         }
                         is MessagePart.Thinking -> {
                             // Thinking content is shown via TerminalThinkingIndicator during streaming
@@ -185,6 +193,172 @@ fun TerminalMessage(
         }
     }
 }
+
+@Composable
+fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
+    var expanded by remember { mutableStateOf(part.status == SessionStatus.RUNNING) }
+    
+    val statusColor = when (part.status) {
+        SessionStatus.RUNNING -> TerminalColors.accentGreen
+        SessionStatus.COMPLETED -> TerminalColors.grey
+        SessionStatus.ERROR -> TerminalColors.error
+        SessionStatus.IDLE -> TerminalColors.textTertiary
+    }
+    
+    val statusIcon = when (part.status) {
+        SessionStatus.RUNNING -> Icons.Default.PlayArrow
+        SessionStatus.COMPLETED -> Icons.Default.CheckCircle
+        SessionStatus.ERROR -> Icons.Default.Error
+        SessionStatus.IDLE -> Icons.Default.Terminal
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(TerminalShapes.medium)
+            .border(1.dp, statusColor.copy(alpha = 0.5f), TerminalShapes.medium)
+            .background(TerminalColors.surface, TerminalShapes.medium)
+    ) {
+        // Header
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .padding(TerminalSpacing.sm)
+                .background(statusColor.copy(alpha = 0.1f)),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = statusIcon,
+                contentDescription = null,
+                tint = statusColor,
+                modifier = Modifier.size(16.dp)
+            )
+            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "SUBTASK: ${part.title.uppercase()}",
+                    style = TerminalTypography.labelSmall,
+                    color = statusColor,
+                    fontWeight = FontWeight.Bold
+                )
+                if (part.status == SessionStatus.RUNNING && part.streamingText.isNotEmpty()) {
+                    Text(
+                        text = "Executing...",
+                        style = TerminalTypography.labelSmall,
+                        color = TerminalColors.textTertiary
+                    )
+                }
+            }
+            
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = statusColor,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+
+        // Expanded Content
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs)
+            ) {
+                HorizontalDivider(color = statusColor.copy(alpha = 0.2f))
+                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                
+                if (part.messages.isEmpty() && part.streamingText.isEmpty()) {
+                    Text(
+                        text = "Initializing subtask environment...",
+                        style = TerminalTypography.bodySmall,
+                        color = TerminalColors.textSecondary,
+                        modifier = Modifier.padding(bottom = TerminalSpacing.sm)
+                    )
+                } else {
+                    // Render sub-messages
+                    val displayMessages = part.messages.filter { msg ->
+                        msg.role == MessageRole.USER || msg.parts.isNotEmpty()
+                    }
+                    
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                    ) {
+                        displayMessages.forEach { msg ->
+                            TerminalSubMessage(msg)
+                        }
+                        
+                        if (part.streamingText.isNotEmpty()) {
+                            MarkdownText(
+                                markdown = part.streamingText + "█",
+                                style = TerminalTypography.bodySmall,
+                                color = TerminalColors.textSecondary
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun TerminalSubMessage(message: Message) {
+    val isUser = message.role == MessageRole.USER
+    val color = if (isUser) TerminalColors.textSecondary else TerminalColors.white
+    
+    Row(modifier = Modifier.fillMaxWidth()) {
+        if (!isUser) {
+            Text(
+                text = ">", 
+                color = TerminalColors.accentGreen, 
+                style = TerminalTypography.bodySmall,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+        
+        Column {
+            message.parts.forEach { part ->
+                when (part) {
+                    is MessagePart.Text -> {
+                        MarkdownText(
+                            markdown = part.text,
+                            style = TerminalTypography.bodySmall,
+                            color = color
+                        )
+                    }
+                    is MessagePart.ToolInvocation -> {
+                        Text(
+                            text = "[Tool: ${part.name}]",
+                            style = TerminalTypography.labelSmall,
+                            color = TerminalColors.textTertiary
+                        )
+                    }
+                    is MessagePart.ToolResult -> {
+                         Text(
+                            text = "[Result]",
+                            style = TerminalTypography.labelSmall,
+                            color = TerminalColors.textTertiary
+                        )
+                    }
+                    // Recursion for nested subtasks is possible but let's limit it
+                    is MessagePart.SubTask -> {
+                        Text(
+                            text = "[Nested Subtask: ${part.title}]",
+                             style = TerminalTypography.labelSmall,
+                            color = TerminalColors.accentGreen
+                        )
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+}
+
 
 @Composable
 fun TerminalReasoningBlock(part: MessagePart.Reasoning) {

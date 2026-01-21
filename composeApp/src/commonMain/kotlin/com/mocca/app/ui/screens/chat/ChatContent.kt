@@ -14,6 +14,7 @@ import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Rocket
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatContent(screenModel: ChatScreenModel) {
     val state by screenModel.state.collectAsState()
@@ -98,7 +100,9 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 showTodos = state.showTodoPanel,
                 onTodoClick = { screenModel.toggleTodoPanel() },
                 onShareClick = { showShareDialog = true },
-                onSummarizeClick = { screenModel.summarizeSession() }
+                onSummarizeClick = { screenModel.summarizeSession() },
+                onRefreshClick = { screenModel.refreshData() },
+                isRefreshing = state.isLoading
             )
         }
         
@@ -321,7 +325,9 @@ private fun ChatHeader(
     showTodos: Boolean,
     onTodoClick: () -> Unit,
     onShareClick: () -> Unit,
-    onSummarizeClick: () -> Unit
+    onSummarizeClick: () -> Unit,
+    onRefreshClick: () -> Unit,
+    isRefreshing: Boolean
 ) {
     // Modern header with transparent/blurred background
     Row(
@@ -341,6 +347,15 @@ private fun ChatHeader(
         )
         
         Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+            // Add Refresh Button
+            TerminalIconButton(
+                icon = Icons.Default.Refresh,
+                onClick = onRefreshClick,
+                iconColor = if (isRefreshing) TerminalColors.accentGreen else TerminalColors.textSecondary,
+                size = 36.dp,
+                contentDescription = "Refresh"
+            )
+
             TerminalIconButton(
                 icon = Icons.Default.Description,
                 onClick = onSummarizeClick,
