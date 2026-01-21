@@ -74,3 +74,18 @@ UPDATE MessageEntity SET isRead = 1 WHERE sessionId = ?;
 -- Get last message in session
 selectLastBySession:
 SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt DESC LIMIT 1;
+
+-- Prune old messages, keeping the N most recent per session is hard in SQLite without window functions.
+-- Simpler: Delete messages older than timestamp.
+-- OR: Delete messages where id NOT IN (top N).
+-- Global prune: Keep N most recent overall? No, per session.
+-- Prune by session:
+pruneMessagesBySession:
+DELETE FROM MessageEntity 
+WHERE sessionId = :sessionId 
+AND id NOT IN (
+    SELECT id FROM MessageEntity 
+    WHERE sessionId = :sessionId 
+    ORDER BY createdAt DESC 
+    LIMIT :keepCount
+);

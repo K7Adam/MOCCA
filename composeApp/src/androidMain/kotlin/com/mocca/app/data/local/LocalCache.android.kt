@@ -208,6 +208,14 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
 
+    override suspend fun pruneMessages(sessionId: String, keepCount: Long) {
+        try {
+            messageQueries.pruneMessagesBySession(sessionId, keepCount)
+        } catch (e: Exception) {
+            Napier.w("Failed to prune messages", e)
+        }
+    }
+
     // ==================== Server Configs ====================
 
     override suspend fun getAllServerConfigs(): List<ServerConfig> {

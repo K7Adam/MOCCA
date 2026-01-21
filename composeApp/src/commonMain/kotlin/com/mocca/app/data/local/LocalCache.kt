@@ -33,6 +33,7 @@ interface LocalCache {
     suspend fun updateMessage(message: Message)
     suspend fun deleteMessages(sessionId: String)
     suspend fun deleteMessage(messageId: String)
+    suspend fun pruneMessages(sessionId: String, keepCount: Long) // Added
 
     // Server Configs
     suspend fun getAllServerConfigs(): List<ServerConfig>
