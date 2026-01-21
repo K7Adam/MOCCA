@@ -53,7 +53,7 @@ fun GlobalActivityIndicator(
             .size(8.dp)
             .alpha(alpha)
             .background(
-                color = TerminalColors.statusOnline,
+                color = TerminalColors.accentGreen,
                 shape = CircleShape
             )
     )
@@ -86,7 +86,7 @@ fun CompactActivityIndicator(
             .size(6.dp)
             .alpha(alpha)
             .background(
-                color = TerminalColors.statusOnline,
+                color = TerminalColors.accentGreen,
                 shape = CircleShape
             )
     )

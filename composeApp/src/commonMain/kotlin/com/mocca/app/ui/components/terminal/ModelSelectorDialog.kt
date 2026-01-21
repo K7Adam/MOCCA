@@ -86,7 +86,7 @@ fun ModelSelectorDialog(
                 Text(
                     text = "> ",
                     style = TerminalTypography.bodySmall,
-                    color = TerminalColors.statusOnline
+                    color = TerminalColors.accentGreen
                 )
                 androidx.compose.foundation.text.BasicTextField(
                     value = searchQuery,
@@ -162,7 +162,7 @@ fun ModelSelectorDialog(
                        Text(
                            text = "// RECENT",
                            style = TerminalTypography.labelSmall,
-                           color = TerminalColors.statusOnline,
+                           color = TerminalColors.accentGreen,
                            modifier = Modifier.padding(
                                start = TerminalSpacing.sm,
                                top = TerminalSpacing.sm,
@@ -183,7 +183,7 @@ fun ModelSelectorDialog(
                                    }
                                    .background(
                                        if (isSelected) 
-                                           TerminalColors.statusOnline.copy(alpha = 0.2f) 
+                                           TerminalColors.accentGreen.copy(alpha = 0.2f) 
                                        else 
                                            TerminalColors.background
                                    )
@@ -197,7 +197,7 @@ fun ModelSelectorDialog(
                                Text(
                                    text = "> ${recent.modelId.uppercase()} [${recent.providerId.uppercase()}]",
                                    style = TerminalTypography.bodySmall,
-                                   color = if (isSelected) TerminalColors.statusOnline else TerminalColors.white
+                                   color = if (isSelected) TerminalColors.accentGreen else TerminalColors.white
                                )
                            }
                        }
@@ -217,7 +217,7 @@ fun ModelSelectorDialog(
                         Text(
                             text = "// CONNECTED",
                             style = TerminalTypography.labelSmall,
-                            color = TerminalColors.statusOnline,
+                            color = TerminalColors.accentGreen,
                             modifier = Modifier.padding(
                                 start = TerminalSpacing.sm,
                                 top = TerminalSpacing.sm,
@@ -347,7 +347,7 @@ private fun ProviderSection(
                         .clickable(enabled = enabled) { onModelSelected(modelId) }
                         .background(
                             if (isSelected) 
-                                TerminalColors.statusOnline.copy(alpha = 0.2f) 
+                                TerminalColors.accentGreen.copy(alpha = 0.2f) 
                             else 
                                 TerminalColors.background
                         )
@@ -364,7 +364,7 @@ private fun ProviderSection(
                         text = "> ${modelId.replace("-", " ").uppercase()}",
                         style = TerminalTypography.bodySmall,
                         color = when {
-                            isSelected -> TerminalColors.statusOnline
+                            isSelected -> TerminalColors.accentGreen
                             enabled -> TerminalColors.greyLight
                             else -> TerminalColors.greyDark
                         }
@@ -374,7 +374,7 @@ private fun ProviderSection(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = "Selected",
-                            tint = TerminalColors.statusOnline,
+                            tint = TerminalColors.accentGreen,
                             modifier = Modifier.size(16.dp)
                         )
                     }

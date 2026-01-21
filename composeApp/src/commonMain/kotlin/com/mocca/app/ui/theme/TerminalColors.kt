@@ -132,8 +132,8 @@ object TerminalColors {
     // STATUS COLORS
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Online/Connected - bright green */
-    val statusOnline = Color(0xFF30D158)
+    /** Online/Connected - mint green */
+    val statusOnline = accentGreen
     
     /** Offline/Disconnected - red */
     val statusOffline = Color(0xFFFF453A)
@@ -147,8 +147,8 @@ object TerminalColors {
     /** Processing indicator */
     val statusProcessing = Color(0xFF00D9A5)
     
-    /** Success - bright green */
-    val success = Color(0xFF30D158)
+    /** Success - mint green */
+    val success = accentGreen
     
     /** Error - alert red */
     val error = Color(0xFFFF453A)
@@ -202,7 +202,7 @@ object TerminalColors {
     val diffDeletion = Color(0xFF330000)
     
     /** Code addition text */
-    val diffAdditionText = Color(0xFF30D158)
+    val diffAdditionText = accentGreen
     
     /** Code deletion text */
     val diffDeletionText = Color(0xFFFF453A)

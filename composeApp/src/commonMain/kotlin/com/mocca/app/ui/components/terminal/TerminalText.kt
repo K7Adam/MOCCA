@@ -334,7 +334,7 @@ fun ConsoleLogLine(
     showPrefix: Boolean = true
 ) {
     val (prefixText, prefixColor) = when (status) {
-        ConsoleLogStatus.DONE -> "[DONE]" to TerminalColors.statusOnline
+        ConsoleLogStatus.DONE -> "[DONE]" to TerminalColors.accentGreen
         ConsoleLogStatus.WAIT -> "[WAIT]" to TerminalColors.statusWaiting
         ConsoleLogStatus.ERROR -> "[ERROR]" to TerminalColors.error
         ConsoleLogStatus.INFO -> "[INFO]" to TerminalColors.greyLight

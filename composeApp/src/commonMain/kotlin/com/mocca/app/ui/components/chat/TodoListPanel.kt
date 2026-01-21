@@ -100,8 +100,8 @@ private fun TodoItem(todo: Todo) {
         // Status Icon
         val (icon, color) = when (todo.status) {
             TodoStatus.PENDING -> Icons.Default.Pending to TerminalColors.grey
-            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow to TerminalColors.statusOnline
-            TodoStatus.COMPLETED -> Icons.Default.CheckCircle to TerminalColors.statusOnline
+            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow to TerminalColors.accentGreen
+            TodoStatus.COMPLETED -> Icons.Default.CheckCircle to TerminalColors.accentGreen
             TodoStatus.CANCELLED -> Icons.Default.Close to TerminalColors.greyDark
         }
         

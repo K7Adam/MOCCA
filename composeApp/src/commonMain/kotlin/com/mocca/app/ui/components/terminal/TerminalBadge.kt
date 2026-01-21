@@ -115,7 +115,7 @@ fun TerminalStatusBadge(
     showDot: Boolean = true
 ) {
     val (dotColor, textColor) = when (status) {
-        TerminalStatus.ONLINE -> TerminalColors.statusOnline to TerminalColors.statusOnline
+        TerminalStatus.ONLINE -> TerminalColors.accentGreen to TerminalColors.accentGreen
         TerminalStatus.OFFLINE -> TerminalColors.statusOffline to TerminalColors.statusOffline
         TerminalStatus.WAITING -> TerminalColors.statusWaiting to TerminalColors.statusWaiting
         TerminalStatus.IDLE -> TerminalColors.textTertiary to TerminalColors.textTertiary
@@ -159,13 +159,28 @@ enum class TerminalStatus {
 fun StatusDot(
     color: Color,
     modifier: Modifier = Modifier,
-    size: Dp = TerminalSpacing.statusDotSize
+    size: Dp = TerminalSpacing.statusDotSize,
+    showGlow: Boolean = true
 ) {
     Box(
-        modifier = modifier
-            .size(size)
-            .background(color, CircleShape)
-    )
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        if (showGlow) {
+            // Subtle glow/outer ring
+            Box(
+                modifier = Modifier
+                    .size(size + 2.dp)
+                    .background(color.copy(alpha = 0.2f), CircleShape)
+            )
+        }
+        // Core dot
+        Box(
+            modifier = Modifier
+                .size(size)
+                .background(color, CircleShape)
+        )
+    }
 }
 
 /**
@@ -254,15 +269,15 @@ fun TerminalConnectedBadge(
     Row(
         modifier = modifier
             .clip(shape)
-            .background(TerminalColors.statusOnline.copy(alpha = 0.15f), shape)
+            .background(TerminalColors.accentGreen.copy(alpha = 0.15f), shape)
             .padding(horizontal = TerminalSpacing.badgePaddingHorizontal, vertical = TerminalSpacing.badgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
-        StatusDot(color = TerminalColors.statusOnline, size = TerminalSpacing.statusDotSizeSmall)
+        StatusDot(color = TerminalColors.accentGreen, size = TerminalSpacing.statusDotSizeSmall)
         Text(
             text = "CONNECTED",
-            color = TerminalColors.statusOnline,
+            color = TerminalColors.accentGreen,
             style = TerminalTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )

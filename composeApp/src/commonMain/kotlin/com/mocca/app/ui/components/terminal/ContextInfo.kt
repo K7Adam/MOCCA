@@ -76,12 +76,14 @@ fun ContextInfoGrid(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
                 ) {
-                    StatusDot(
-                        color = if (isMcpOnline) TerminalColors.statusOnline else TerminalColors.statusOffline
-                    )
+                    if (!isMcpOnline) {
+                        StatusDot(
+                            color = TerminalColors.statusOffline
+                        )
+                    }
                     Text(
                         text = mcpStatus.uppercase(),
-                        color = TerminalColors.white,
+                        color = if (isMcpOnline) TerminalColors.white else TerminalColors.statusOffline,
                         style = TerminalTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -260,9 +262,11 @@ fun ContextInfoContainer(
                 style = TerminalTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
-            StatusDot(
-                color = if (isMcpOnline) TerminalColors.statusOnline else TerminalColors.statusOffline
-            )
+            if (!isMcpOnline) {
+                StatusDot(
+                    color = TerminalColors.statusOffline
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(TerminalSpacing.md))

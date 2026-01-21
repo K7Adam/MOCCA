@@ -98,7 +98,7 @@ private fun SuggestionRow(
                 SuggestionType.MODE -> "@"
             },
             style = TerminalTypography.bodyMedium,
-            color = TerminalColors.statusOnline
+            color = TerminalColors.accentGreen
         )
         Spacer(modifier = Modifier.width(TerminalSpacing.sm))
         Column {

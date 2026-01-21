@@ -32,12 +32,12 @@ fun GitServerNotRunningDialog(
                     onStartServer()
                     onDismiss()
                 }) {
-                    Text("Start Server", color = TerminalColors.statusOnline)
+                    Text("Start Server", color = TerminalColors.accentGreen)
                 }
             } else {
                 // If ADB help is shown, main action is just "OK" (dismiss)
                 TextButton(onClick = onDismiss) {
-                    Text("OK", color = TerminalColors.statusOnline)
+                    Text("OK", color = TerminalColors.accentGreen)
                 }
             }
         },

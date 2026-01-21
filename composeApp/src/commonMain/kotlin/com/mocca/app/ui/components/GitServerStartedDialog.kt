@@ -27,7 +27,7 @@ fun GitServerStartedDialog(
                 onRetryConnection()
                 onDismiss()
             }) {
-                Text("Retry Connection", color = TerminalColors.statusOnline)
+                Text("Retry Connection", color = TerminalColors.accentGreen)
             }
         },
         dismissButton = {
@@ -39,7 +39,7 @@ fun GitServerStartedDialog(
             Text(
                 "Git Server Started",
                 fontWeight = FontWeight.Bold,
-                color = TerminalColors.statusOnline
+                color = TerminalColors.accentGreen
             )
         },
         text = {
@@ -51,7 +51,7 @@ fun GitServerStartedDialog(
         },
         tonalElevation = 6.dp,
         icon = {
-            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = TerminalColors.statusOnline)
+            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = TerminalColors.accentGreen)
         },
         containerColor = TerminalColors.surface,
         titleContentColor = TerminalColors.white,

@@ -79,14 +79,14 @@ private fun BaseToolCard(
     val backgroundColor = when (state) {
         ToolState.PENDING -> TerminalColors.surfaceVariant.copy(alpha = 0.3f)
         ToolState.RUNNING -> TerminalColors.statusWaiting.copy(alpha = 0.1f)
-        ToolState.COMPLETED -> TerminalColors.statusOnline.copy(alpha = 0.1f)
+        ToolState.COMPLETED -> TerminalColors.accentGreen.copy(alpha = 0.1f)
         ToolState.ERROR -> TerminalColors.error.copy(alpha = 0.2f)
     }
     
     val borderColor = when (state) {
         ToolState.PENDING -> TerminalColors.border.copy(alpha = 0.3f)
         ToolState.RUNNING -> TerminalColors.statusWaiting.copy(alpha = 0.5f)
-        ToolState.COMPLETED -> TerminalColors.statusOnline.copy(alpha = 0.3f)
+        ToolState.COMPLETED -> TerminalColors.accentGreen.copy(alpha = 0.3f)
         ToolState.ERROR -> TerminalColors.error.copy(alpha = 0.5f)
     }
     
@@ -244,7 +244,7 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = TerminalColors.statusOnline
+                    tint = TerminalColors.accentGreen
                 )
             }
         }
@@ -402,7 +402,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Visibility,
-        iconTint = TerminalColors.statusOnline,
+        iconTint = TerminalColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             // Show line range if specified
@@ -688,7 +688,7 @@ fun TodoToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = part.title ?: "Task List",
         icon = Icons.Default.Checklist,
-        iconTint = TerminalColors.statusOnline,
+        iconTint = TerminalColors.accentGreen,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
@@ -777,7 +777,7 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: subagentType ?: part.title,
         icon = Icons.Default.AccountTree,
-        iconTint = TerminalColors.statusOnline,
+        iconTint = TerminalColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
@@ -825,7 +825,7 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         iconTint = when (part.state) {
             ToolState.PENDING -> TerminalColors.grey
             ToolState.RUNNING -> TerminalColors.statusWaiting
-            ToolState.COMPLETED -> TerminalColors.statusOnline
+            ToolState.COMPLETED -> TerminalColors.accentGreen
             ToolState.ERROR -> TerminalColors.error
         },
         modifier = modifier
@@ -1151,7 +1151,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = "Done: ${completed.size}",
                         style = TerminalTypography.labelSmall,
-                        color = TerminalColors.statusOnline
+                        color = TerminalColors.accentGreen
                     )
                 }
             }
@@ -1239,7 +1239,7 @@ private fun TodoItemRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = TerminalColors.statusOnline
+                    tint = TerminalColors.accentGreen
                 )
             }
             else -> {

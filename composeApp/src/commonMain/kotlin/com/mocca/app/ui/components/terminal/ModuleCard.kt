@@ -160,17 +160,17 @@ fun ModuleRowItem(
             .padding(vertical = TerminalSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Status indicator (rounded)
-        StatusDot(
-            color = when {
-                !isEnabled -> TerminalColors.textTertiary
-                isConnected -> TerminalColors.statusOnline
-                else -> TerminalColors.statusOffline
-            },
-            size = TerminalSpacing.statusDotSizeLarge
-        )
-        
-        Spacer(modifier = Modifier.width(TerminalSpacing.md))
+        // Status indicator (Only show if not normal state: Disabled or Disconnected)
+        if (!isEnabled || !isConnected) {
+            StatusDot(
+                color = when {
+                    !isEnabled -> TerminalColors.textTertiary
+                    else -> TerminalColors.statusOffline
+                },
+                size = TerminalSpacing.statusDotSizeLarge
+            )
+            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+        }
         
         // Text content
         Column(modifier = Modifier.weight(1f)) {
@@ -413,14 +413,17 @@ fun SkillsEngineModule(
                     .padding(vertical = TerminalSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatusDot(
-                    color = if (skill.isActive) TerminalColors.statusOnline else TerminalColors.grey,
-                    size = 8.dp
-                )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                if (!skill.isActive) {
+                    StatusDot(
+                        color = TerminalColors.grey,
+                        size = 6.dp,
+                        showGlow = false
+                    )
+                    Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                }
                 Text(
                     text = skill.name.uppercase(),
-                    color = TerminalColors.white,
+                    color = if (skill.isActive) TerminalColors.white else TerminalColors.textTertiary,
                     style = TerminalTypography.bodySmall
                 )
             }

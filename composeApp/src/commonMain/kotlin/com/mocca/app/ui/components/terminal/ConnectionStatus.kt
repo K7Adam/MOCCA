@@ -165,14 +165,21 @@ fun InlineConnectionStatus(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
     ) {
-        StatusDot(
-            color = if (isConnected) TerminalColors.statusOnline else TerminalColors.statusOffline
-        )
-        Text(
-            text = if (isConnected) "NO SIGNAL" else (serverName?.uppercase() ?: "CONNECTED"),
-            color = TerminalColors.textSecondary,
-            style = TerminalTypography.labelSmall
-        )
+        if (!isConnected) {
+            StatusDot(color = TerminalColors.statusOffline)
+            Text(
+                text = "NO SIGNAL",
+                color = TerminalColors.statusOffline,
+                style = TerminalTypography.labelSmall
+            )
+        } else {
+            // Minimalist: show connected text without dot
+            Text(
+                text = (serverName?.uppercase() ?: "CONNECTED"),
+                color = TerminalColors.textSecondary,
+                style = TerminalTypography.labelSmall
+            )
+        }
     }
 }
 

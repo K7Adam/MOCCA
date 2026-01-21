@@ -40,7 +40,7 @@ fun PermissionRequestDialog(
             Icon(
                 Icons.Default.Warning,
                 contentDescription = null,
-                tint = TerminalColors.statusOnline
+                tint = TerminalColors.accentGreen
             )
         },
         title = {
