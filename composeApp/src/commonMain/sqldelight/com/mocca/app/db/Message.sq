@@ -25,6 +25,10 @@ CREATE INDEX idx_message_unread ON MessageEntity(sessionId, isRead) WHERE isRead
 selectBySession:
 SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt ASC;
 
+-- Select recent messages (for initial load)
+selectRecent:
+SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt DESC LIMIT ?;
+
 -- Select messages by session with cursor-based pagination
 -- Fetches older messages (createdAt < cursor) ordered by time DESC
 selectBySessionPaged:

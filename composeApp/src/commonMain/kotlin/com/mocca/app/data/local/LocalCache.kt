@@ -24,7 +24,9 @@ interface LocalCache {
 
     // Messages
     suspend fun getMessages(sessionId: String): List<Message>
-    suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message> // Added
+    suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message>
+    fun observeMessages(sessionId: String): kotlinx.coroutines.flow.Flow<List<Message>>
+    fun observeRecentMessages(sessionId: String, limit: Long): kotlinx.coroutines.flow.Flow<List<Message>> // Added
     suspend fun getMessage(messageId: String): Message?
     suspend fun insertMessage(message: Message)
     suspend fun insertMessages(messages: List<Message>) // Added

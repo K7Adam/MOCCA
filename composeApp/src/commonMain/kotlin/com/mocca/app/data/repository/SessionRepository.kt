@@ -5,9 +5,14 @@ import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
@@ -18,6 +23,10 @@ class SessionRepository(
     private val apiClient: MoccaApiClient,
     private val localCache: LocalCache
 ) {
+    // Memory Cache
+    private val memoryCache = mutableMapOf<String, List<Message>>()
+    private val cacheMutex = Mutex()
+
     // Default model/provider - should be configurable from settings
     // These will be populated from /config/providers
     private var defaultModelId: String = "" // Loaded dynamically from loadDefaultConfig()
@@ -160,33 +169,52 @@ class SessionRepository(
     /**
      * Get messages for a session with caching.
      */
-    fun getMessages(sessionId: String): Flow<Resource<List<Message>>> = flow {
-        emit(Resource.Loading())
+    fun getMessages(sessionId: String): Flow<Resource<List<Message>>> = channelFlow {
+        send(Resource.Loading())
 
-        // 1. Return cached messages first
-        val cached = localCache.getMessages(sessionId)
-        if (cached.isNotEmpty()) {
-            emit(Resource.Loading(cached))
+        // 1. Memory
+        cacheMutex.withLock { memoryCache[sessionId] }?.let {
+            send(Resource.Success(it))
         }
 
-        // 2. Fetch fresh messages from network
-        val result = apiClient.getMessages(sessionId)
-        result.fold(
-            onSuccess = { responses ->
-                // Convert MessageResponse to Message for UI
-                val messages = responses.map { Message.fromResponse(it) }
-                // Cache the fresh messages
-                messages.forEach { message ->
-                    localCache.insertMessage(message)
-                }
-                emit(Resource.Success(messages))
-            },
-            onFailure = { error ->
-                Napier.e("Failed to fetch messages", error)
-                emit(Resource.Error(error.message ?: "Failed to fetch messages", cached))
+        // 2. DB Observer
+        val dbJob = launch {
+            localCache.observeRecentMessages(sessionId, 50).collect { messages ->
+                cacheMutex.withLock { memoryCache[sessionId] = messages }
+                send(Resource.Success(messages))
             }
-        )
+        }
+
+        // 3. Network Refresh
+        launch {
+            val result = apiClient.getMessages(sessionId)
+            result.fold(
+                onSuccess = { responses ->
+                    val messages = responses.map { Message.fromResponse(it) }
+                    localCache.insertMessages(messages)
+                },
+                onFailure = { error ->
+                    Napier.e("Failed to refresh messages", error)
+                    val current = cacheMutex.withLock { memoryCache[sessionId] } ?: emptyList()
+                    send(Resource.Error(error.message ?: "Failed to refresh messages", current))
+                }
+            )
+        }
+        
+        awaitClose { dbJob.cancel() }
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Load older messages for pagination.
+     */
+    suspend fun loadMoreMessages(sessionId: String, cursor: Long, limit: Long = 50): Resource<List<Message>> {
+        return try {
+            val messages = localCache.getMessagesPaged(sessionId, cursor, limit)
+            Resource.Success(messages)
+        } catch (e: Exception) {
+            Resource.Error(e.message ?: "Failed to load history")
+        }
+    }
 
     /**
      * Send a message to a session (async - uses SSE for streaming response).

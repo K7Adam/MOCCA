@@ -2,12 +2,16 @@ package com.mocca.app.data.local
 
 import android.content.Context
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
+import app.cash.sqldelight.coroutines.asFlow
+import app.cash.sqldelight.coroutines.mapToList
 import com.mocca.app.db.AppDatabase
 import com.mocca.app.db.MessageEntity
 import com.mocca.app.db.ServerConfigEntity
 import com.mocca.app.db.SessionEntity
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
@@ -115,6 +119,20 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             Napier.w("Failed to get paged messages", e)
             emptyList()
         }
+    }
+
+    override fun observeMessages(sessionId: String): kotlinx.coroutines.flow.Flow<List<Message>> {
+        return messageQueries.selectBySession(sessionId)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map { it.toMessage() } }
+    }
+
+    override fun observeRecentMessages(sessionId: String, limit: Long): kotlinx.coroutines.flow.Flow<List<Message>> {
+        return messageQueries.selectRecent(sessionId, limit)
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map { it.toMessage() }.reversed() } // Reverse to chronological order
     }
     
     override suspend fun getMessage(messageId: String): Message? {

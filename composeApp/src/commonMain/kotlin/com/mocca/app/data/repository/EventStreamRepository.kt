@@ -1,6 +1,7 @@
 package com.mocca.app.data.repository
 
 import com.mocca.app.api.HttpClientProvider
+import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
@@ -25,7 +26,8 @@ class EventStreamRepository(
     private val sseClient: MoccaSseClient,
     private val httpClientProvider: HttpClientProvider,
     private val networkObserver: NetworkObserver? = null,
-    private val localCache: LocalCache? = null
+    private val localCache: LocalCache? = null,
+    private val apiClient: MoccaApiClient? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -462,10 +464,18 @@ class EventStreamRepository(
                     localCache?.updateSessionStatus(messageInfo.sessionID, "running")
                     
                     // CRITICAL FIX: Persist the updated message immediately
-                    // This ensures that when ChatScreenModel calls loadMessages(), it gets the fresh data
-                    // We need to fetch the message content since the event might just be metadata
-                    // Ideally we should have the content here, but for now we rely on the UI to fetch
-                    // However, we MUST ensure the cache is at least not conflicting
+                    // Use apiClient to fetch the session messages (since getMessage might not exist)
+                    if (apiClient != null && localCache != null) {
+                        Napier.i("Refreshing messages for session: ${messageInfo.sessionID}")
+                        val result = apiClient.getMessages(messageInfo.sessionID)
+                        result.onSuccess { responses ->
+                            val messages = responses.map { Message.fromResponse(it) }
+                            localCache.insertMessages(messages)
+                            Napier.i("Messages persisted to DB for session: ${messageInfo.sessionID}")
+                        }.onFailure { e ->
+                            Napier.w("Failed to fetch/persist messages", e)
+                        }
+                    }
                 } catch (e: Exception) {
                     Napier.w("Failed to update session status", e)
                 }
