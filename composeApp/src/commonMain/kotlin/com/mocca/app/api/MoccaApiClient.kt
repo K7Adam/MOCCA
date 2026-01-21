@@ -618,7 +618,7 @@ class MoccaApiClient(
         getClient().get("$baseUrl/formatter")
     }
     
-    // LSP Status
+// LSP Status
     suspend fun getLspStatus(): Result<List<LspStatus>> = safeRequest("getLspStatus") {
         getClient().get("$baseUrl/lsp")
     }

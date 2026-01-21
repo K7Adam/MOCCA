@@ -96,7 +96,7 @@ class DashboardScreenModel(
             get() = (vcsInfo as? Resource.Success)?.data?.changeCount ?: 0
         
         val activeLspServers: List<LspStatus>
-            get() = (lspStatus as? Resource.Success)?.data?.filter { it.status == "running" } ?: emptyList()
+            get() = (lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()
         
         val connectedMcpServers: List<Pair<String, McpServerStatus>>
             get() = (mcpServers as? Resource.Success)?.data
