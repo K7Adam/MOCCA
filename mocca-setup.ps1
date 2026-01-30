@@ -519,19 +519,26 @@ function Start-OpenCodeServer {
 function Start-GitServer {
     param([int]$GitServerPort)
     
+    Write-DebugLog "Start-GitServer: Called with GitServerPort=$GitServerPort" "DEBUG"
+    
     if ($SkipGitServer) {
+        Write-DebugLog "Start-GitServer: Skipped by user (-SkipGitServer flag)" "DEBUG"
         return @{ Success = $false; Message = "Skipped by user" }
     }
     
     Write-StatusMessage "🔧 Checking Git HTTP server on port $GitServerPort..." -Type "Info"
     
     # Check if already running
+    Write-DebugLog "Start-GitServer: Testing if server already running on port $GitServerPort" "DEBUG"
     if (Test-ServerRunning -TestPort $GitServerPort) {
+        Write-DebugLog "Start-GitServer: Server already running on port $GitServerPort" "INFO"
         Write-StatusMessage "   ✓ Git server already running on port $GitServerPort" -Type "Success"
         return @{ Success = $true; WasAlreadyRunning = $true }
     }
+    Write-DebugLog "Start-GitServer: No server running on port $GitServerPort" "DEBUG"
     
     # Find Bun
+    Write-DebugLog "Start-GitServer: Searching for bun.exe" "DEBUG"
     $bunPath = $null
     $bunPaths = @(
         (Get-Command bun -ErrorAction SilentlyContinue)?.Source
@@ -542,19 +549,23 @@ function Start-GitServer {
     
     foreach ($p in $bunPaths) {
         if ($p) {
+            Write-DebugLog "Start-GitServer: Checking bun path: $p" "DEBUG"
             if (Test-Path $p) {
                 $bunPath = $p
+                Write-DebugLog "Start-GitServer: Found bun at: $bunPath" "INFO"
                 break
             }
             $matches = Get-Item $p -ErrorAction SilentlyContinue
             if ($matches) {
                 $bunPath = $matches | Select-Object -First 1
+                Write-DebugLog "Start-GitServer: Found bun via wildcard at: $bunPath" "INFO"
                 break
             }
         }
     }
     
     if (-not $bunPath) {
+        Write-DebugLog "Start-GitServer: bun.exe NOT FOUND" "ERROR"
         Write-StatusMessage "   ⚠ Bun not found - Git server requires Bun" -Type "Warning"
         Write-StatusMessage "   Install: winget install OpenJS.Bun OR https://bun.sh" -Type "Dim"
         return @{ Success = $false; Message = "Bun not found" }
@@ -564,32 +575,46 @@ function Start-GitServer {
     $opencodeDir = "$PSScriptRoot\.opencode"
     $pluginScript = "$opencodeDir\plugin\git-plugin.js"
     
+    Write-DebugLog "Start-GitServer: Looking for plugin at: $pluginScript" "DEBUG"
     if (-not (Test-Path $pluginScript)) {
+        Write-DebugLog "Start-GitServer: Plugin NOT FOUND at $pluginScript" "ERROR"
         Write-StatusMessage "   ⚠ Git plugin not found at $pluginScript" -Type "Warning"
         return @{ Success = $false; Message = "Plugin not found" }
     }
+    Write-DebugLog "Start-GitServer: Plugin found at $pluginScript" "DEBUG"
     
     # Check if node_modules exists (dependencies installed)
+    Write-DebugLog "Start-GitServer: Checking for node_modules at $opencodeDir\node_modules" "DEBUG"
     if (-not (Test-Path "$opencodeDir\node_modules")) {
+        Write-DebugLog "Start-GitServer: node_modules not found, running bun install" "WARN"
         Write-StatusMessage "   Installing dependencies..." -Type "Info"
         try {
             Push-Location $opencodeDir
             $installOutput = bun install 2>&1
             Pop-Location
+            Write-DebugLog "Start-GitServer: bun install completed" "INFO"
             Write-StatusMessage "   ✓ Dependencies installed" -Type "Success"
         }
         catch {
+            Write-DebugLog "Start-GitServer: bun install failed: $_" "ERROR"
             Write-StatusMessage "   ⚠ Failed to install dependencies: $_" -Type "Warning"
         }
     }
+    else {
+        Write-DebugLog "Start-GitServer: node_modules already exists" "DEBUG"
+    }
     
     Write-StatusMessage "   Starting Git HTTP server on port $GitServerPort..." -Type "Info"
+    Write-DebugLog "Start-GitServer: Preparing to start server on port $GitServerPort" "INFO"
     
     try {
         # Find available port if needed
+        Write-DebugLog "Start-GitServer: Checking if port $GitServerPort is available" "DEBUG"
         if (-not (Test-PortAvailable -TestPort $GitServerPort)) {
+            Write-DebugLog "Start-GitServer: Port $GitServerPort is busy, finding alternative" "WARN"
             $newPort = Find-AvailablePort -StartPort 4097
             if ($newPort) {
+                Write-DebugLog "Start-GitServer: Using alternative port $newPort" "INFO"
                 Write-StatusMessage "   ⚠ Port $GitServerPort busy, using $newPort" -Type "Warning"
                 $GitServerPort = $newPort
             }
@@ -600,6 +625,7 @@ function Start-GitServer {
         }
         
         # CRITICAL: Run from .opencode directory so imports work
+        Write-DebugLog "Start-GitServer: Creating ProcessStartInfo" "DEBUG"
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $bunPath
         $psi.Arguments = "run plugin/git-plugin.js"
@@ -612,33 +638,57 @@ function Start-GitServer {
         
         # Set environment variable for the server port
         $psi.EnvironmentVariables["GIT_SERVER_PORT"] = $GitServerPort
+        Write-DebugLog "Start-GitServer: Environment set - GIT_SERVER_PORT=$GitServerPort" "DEBUG"
+        Write-DebugLog "Start-GitServer: Working directory=$opencodeDir" "DEBUG"
+        Write-DebugLog "Start-GitServer: Command=$bunPath $($psi.Arguments)" "DEBUG"
         
+        Write-DebugLog "Start-GitServer: Starting process..." "INFO"
         $process = [System.Diagnostics.Process]::Start($psi)
+        Write-DebugLog "Start-GitServer: Process started with ID: $($process.Id)" "INFO"
         
-        # Wait and check
+        # Wait and check with logging
+        Write-DebugLog "Start-GitServer: Waiting 3 seconds for server to start..." "DEBUG"
         Start-Sleep -Seconds 3
         
+        Write-DebugLog "Start-GitServer: Testing if server is running on port $GitServerPort" "DEBUG"
         if (Test-ServerRunning -TestPort $GitServerPort) {
+            Write-DebugLog "Start-GitServer: Server is RUNNING on port $GitServerPort (PID: $($process.Id))" "INFO"
             Write-StatusMessage "   ✓ Git server started on port $GitServerPort (PID: $($process.Id))" -Type "Success"
             return @{ Success = $true; WasAlreadyRunning = $false }
         }
+        Write-DebugLog "Start-GitServer: Server not responding on port $GitServerPort after 3 seconds" "WARN"
         
         if ($process.HasExited) {
+            Write-DebugLog "Start-GitServer: Process has EXITED (ExitCode: $($process.ExitCode))" "ERROR"
+            $stdout = $process.StandardOutput.ReadToEnd()
             $err = $process.StandardError.ReadToEnd()
+            Write-DebugLog "Start-GitServer: STDOUT length: $($stdout.Length) chars" "DEBUG"
+            Write-DebugLog "Start-GitServer: STDERR length: $($err.Length) chars" "DEBUG"
+            Write-DebugLog "Start-GitServer: STDOUT: $stdout" "DEBUG"
+            Write-DebugLog "Start-GitServer: STDERR: $err" "ERROR"
             Write-StatusMessage "   ✗ Git server exited immediately" -Type "Error"
             if ($err -match "Cannot find module") {
+                Write-DebugLog "Start-GitServer: Detected 'Cannot find module' error" "ERROR"
                 Write-StatusMessage "   🔧 TO FIX: Run 'bun install' in $opencodeDir" -Type "Warning"
             }
-            else {
+            elseif ($err) {
+                Write-DebugLog "Start-GitServer: Displaying error to user" "DEBUG"
                 Write-StatusMessage "   Error: $err" -Type "Dim"
             }
-            return @{ Success = $false; Message = "Process exited" }
+            else {
+                Write-DebugLog "Start-GitServer: No stderr captured" "WARN"
+                Write-StatusMessage "   Error: Process exited with code $($process.ExitCode), no output captured" -Type "Dim"
+            }
+            return @{ Success = $false; Message = "Process exited with code $($process.ExitCode)" }
         }
         
+        Write-DebugLog "Start-GitServer: Process still running (PID: $($process.Id)), assuming startup in progress" "INFO"
         Write-StatusMessage "   ✓ Git server starting (PID: $($process.Id))" -Type "Success"
         return @{ Success = $true; WasAlreadyRunning = $false }
     }
     catch {
+        Write-DebugLog "Start-GitServer: EXCEPTION - $_" "ERROR"
+        Write-DebugLog "Start-GitServer: Exception type: $($_.Exception.GetType().FullName)" "ERROR"
         Write-StatusMessage "   ✗ Failed to start Git server: $_" -Type "Error"
         return @{ Success = $false; Message = $_.Exception.Message }
     }
