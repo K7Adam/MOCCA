@@ -75,6 +75,7 @@ class GlobalActivityManager {
     private fun updateState() {
         _activityCount.value = activeActivities.size
         _isActive.value = activeActivities.isNotEmpty()
+        // Create immutable copy to ensure thread safety
         _activeActivityTags.value = activeActivities.keys.toSet()
     }
     

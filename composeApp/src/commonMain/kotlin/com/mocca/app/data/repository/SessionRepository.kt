@@ -1,5 +1,6 @@
 package com.mocca.app.data.repository
 
+import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
@@ -18,10 +19,14 @@ import kotlinx.datetime.Clock
 
 /**
  * Repository for Session management with offline-first caching.
+ * 
+ * PERFORMANCE: Uses request deduplication to prevent duplicate API calls
+ * when multiple consumers request the same data simultaneously.
  */
 class SessionRepository(
     private val apiClient: MoccaApiClient,
-    private val localCache: LocalCache
+    private val localCache: LocalCache,
+    private val httpClientProvider: HttpClientProvider? = null
 ) {
     // Memory Cache
     private val memoryCache = mutableMapOf<String, List<Message>>()
@@ -65,12 +70,22 @@ class SessionRepository(
 
     /**
      * Get a single session by ID.
+     * 
+     * PERFORMANCE: Uses request deduplication to prevent duplicate API calls
+     * when multiple consumers request the same session simultaneously.
      */
     suspend fun getSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
+        // Use deduplication if available
+        httpClientProvider?.withDeduplication("getSession:$sessionId") {
+            fetchSessionInternal(sessionId)
+        } ?: fetchSessionInternal(sessionId)
+    }
+    
+    private suspend fun fetchSessionInternal(sessionId: String): Resource<Session> {
         // Check cache first
         val cached = localCache.getSession(sessionId)
 
-        apiClient.listSessions().fold(
+        return apiClient.listSessions().fold(
             onSuccess = { sessions ->
                 val session = sessions.find { it.id == sessionId }
                 if (session != null) {

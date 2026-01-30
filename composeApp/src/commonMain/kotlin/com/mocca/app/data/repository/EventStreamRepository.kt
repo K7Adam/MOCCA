@@ -3,6 +3,7 @@ package com.mocca.app.data.repository
 import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
+import com.mocca.app.api.NetworkConfig
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import com.mocca.app.util.NetworkObserver
@@ -45,17 +46,18 @@ class EventStreamRepository(
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
     private var reconnectAttempts = 0
-    private val maxReconnectAttempts = 10
+    private val maxReconnectAttempts = NetworkConfig.SSE_MAX_RECONNECT_ATTEMPTS
     
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected)
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
     
-    // Increased buffer capacity and use SUSPEND to prevent event loss
+    // OPTIMIZED: Increased buffer capacity from 128 to 256 for high-throughput sessions
     // REPLAY=1 is CRITICAL: Ensures the last event (like SessionIdle) is not missed if collector reconnects
+    // Uses DROP_OLDEST to prevent blocking when buffer is full (better than SUSPEND for real-time events)
     private val _events = MutableSharedFlow<ServerEvent>(
         replay = 1,
-        extraBufferCapacity = 128,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.SUSPEND
+        extraBufferCapacity = 256,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
     )
     val events: SharedFlow<ServerEvent> = _events.asSharedFlow()
     
@@ -199,10 +201,9 @@ class EventStreamRepository(
      * Calculate exponential backoff delay.
      */
     private fun calculateBackoff(attempt: Int): Long {
-        val baseDelay = 1000L
-        val maxDelay = 30000L
-        val delay = (baseDelay * (1 shl minOf(attempt - 1, 5))).coerceAtMost(maxDelay)
-        return delay + (0..500).random() // Add jitter
+        val delay = (NetworkConfig.SSE_RECONNECT_BASE_DELAY_MS * (1 shl minOf(attempt - 1, 5)))
+            .coerceAtMost(NetworkConfig.SSE_RECONNECT_MAX_DELAY_MS)
+        return delay + (0..NetworkConfig.SSE_RECONNECT_JITTER_MS.toInt()).random()
     }
     
     /**

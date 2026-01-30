@@ -2,6 +2,7 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.data.local.LocalCache
+import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
@@ -18,9 +19,14 @@ import kotlinx.serialization.json.Json
 
 /**
  * Repository for managing server configurations.
+ * 
+ * SECURITY: This repository uses SecureTokenStorage to encrypt/decrypt authentication
+ * tokens before storing them in the database. Tokens are encrypted using Android Keystore
+ * with AES-256-GCM encryption, providing hardware-backed security when available.
  */
 class ServerConfigRepository(
-    private val localCache: LocalCache
+    private val localCache: LocalCache,
+    private val secureTokenStorage: SecureTokenStorage? = null
 ) {
     private val _activeServer = MutableStateFlow<ServerConfig?>(null)
     val activeServer: StateFlow<ServerConfig?> = _activeServer.asStateFlow()
@@ -32,11 +38,14 @@ class ServerConfigRepository(
     /**
      * Load the active server from cache.
      * Also handles migration from old emulator-only default to Tailscale default for physical devices.
+     * 
+     * SECURITY: If the stored auth token is encrypted, it will be decrypted using
+     * SecureTokenStorage before being returned.
      */
     private fun loadActiveServer() {
         runBlocking(Dispatchers.IO) {
             try {
-                val config = localCache.getActiveServerConfig()
+                val config = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
                 
                 // If no server configured, create default
                 if (config == null) {
@@ -67,13 +76,41 @@ class ServerConfigRepository(
             }
         }
     }
+    
+    /**
+     * Decrypt server config auth token if it's encrypted.
+     * 
+     * SECURITY: Checks if the auth token is encrypted (Base64) and decrypts it
+     * using SecureTokenStorage. If decryption fails, returns original config.
+     */
+    private fun decryptConfigIfNeeded(config: ServerConfig): ServerConfig {
+        if (secureTokenStorage == null || config.authToken.isNullOrEmpty()) {
+            return config
+        }
+        
+        return try {
+            if (secureTokenStorage.isEncrypted(config.authToken)) {
+                val decryptedToken = secureTokenStorage.decrypt(config.authToken)
+                config.copy(authToken = decryptedToken)
+            } else {
+                // Token is not encrypted (legacy data), return as-is
+                config
+            }
+        } catch (e: Exception) {
+            Napier.e("Failed to decrypt auth token for server ${config.id}", e)
+            // Return config with null token to prevent using corrupted data
+            config.copy(authToken = null)
+        }
+    }
 
     /**
      * Get all configured servers.
+     * 
+     * SECURITY: Auth tokens are decrypted before being returned.
      */
     suspend fun getAllServers(): List<ServerConfig> {
         return try {
-            localCache.getAllServerConfigs()
+            localCache.getAllServerConfigs().map { decryptConfigIfNeeded(it) }
         } catch (e: Exception) {
             Napier.w("Failed to get servers", e)
             emptyList()
@@ -82,10 +119,26 @@ class ServerConfigRepository(
 
     /**
      * Add or update a server configuration.
+     * 
+     * SECURITY: If the config has an authToken, it will be encrypted using
+     * SecureTokenStorage before being saved to the database.
      */
     suspend fun saveServer(config: ServerConfig) {
         try {
-            localCache.insertServerConfig(config)
+            // Encrypt auth token if present and secure storage is available
+            val configToSave = if (secureTokenStorage != null && !config.authToken.isNullOrEmpty()) {
+                try {
+                    val encryptedToken = secureTokenStorage.encrypt(config.authToken)
+                    config.copy(authToken = encryptedToken)
+                } catch (e: Exception) {
+                    Napier.e("Failed to encrypt auth token, saving plaintext", e)
+                    config
+                }
+            } else {
+                config
+            }
+            
+            localCache.insertServerConfig(configToSave)
             
             if (config.isActive) {
                 localCache.setActiveServerConfig(config.id)
@@ -124,9 +177,11 @@ class ServerConfigRepository(
 
     /**
      * Get the current active server configuration.
+     * 
+     * SECURITY: Returns the cached config with decrypted auth token (if applicable).
      */
     fun getActiveServerConfig(): ServerConfig {
-        return _activeServer.value ?: createDefaultConfig()
+        return _activeServer.value?.let { decryptConfigIfNeeded(it) } ?: createDefaultConfig()
     }
 
     /**
