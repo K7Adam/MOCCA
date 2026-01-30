@@ -21,6 +21,7 @@ import com.mocca.app.ui.screens.git.GitScreenModel
 import com.mocca.app.ui.screens.main.MainScreenModel
 import com.mocca.app.ui.screens.mcp.McpScreenModel
 import com.mocca.app.ui.screens.onboarding.OnboardingScreenModel
+import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.sessions.SessionsScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
@@ -226,7 +227,7 @@ val screenModelModule = module {
         OnboardingWizardModel(
             serverConfigRepository = get(),
             appConnectionManager = get(),
-            serverDiscoveryManager = getOrNull()
+            serverDiscovery = getOrNull()
         )
     }
     

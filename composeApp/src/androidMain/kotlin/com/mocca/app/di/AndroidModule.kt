@@ -30,7 +30,7 @@ val androidModule = module {
     single<SecureTokenStorage> { SecureTokenStorageImpl(androidContext()) }
     
     // Server discovery for auto-discovery of OpenCode servers
-    single { ServerDiscoveryManager(androidContext()) }
+    single<com.mocca.app.discovery.ServerDiscovery> { ServerDiscoveryManager(androidContext()) }
     
     // OPTIMIZED: Coil ImageLoader with memory and disk cache configuration
     single {

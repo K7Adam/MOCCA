@@ -38,7 +38,7 @@ import kotlin.coroutines.resumeWithException
  * 2. Can advertise the OpenCode server for discovery by other devices
  * 3. Provides Flow-based API for reactive discovery
  */
-class ServerDiscoveryManager(private val context: Context) {
+class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
     
     companion object {
         private const val TAG = "ServerDiscoveryManager"
@@ -69,7 +69,7 @@ class ServerDiscoveryManager(private val context: Context) {
      * Emits DiscoveryEvent through the returned Flow.
      * Discovery automatically stops after timeout or when the Flow is cancelled.
      */
-    fun startDiscovery(): Flow<DiscoveryEvent> = callbackFlow {
+    override fun startDiscovery(): Flow<DiscoveryEvent> = callbackFlow {
         if (_discoveryState.value == DiscoveryState.SCANNING) {
             Napier.w("$TAG: Discovery already running")
             send(DiscoveryEvent.Error("Discovery already in progress"))
@@ -170,7 +170,7 @@ class ServerDiscoveryManager(private val context: Context) {
     /**
      * Start discovery as a suspend function that returns all discovered servers.
      */
-    suspend fun discoverServers(timeoutMs: Long = DISCOVERY_TIMEOUT_MS): DiscoveryResult {
+    override suspend fun discoverServers(timeoutMs: Long): DiscoveryResult {
         return withContext(Dispatchers.IO) {
             val startTime = System.currentTimeMillis()
             val servers = mutableListOf<DiscoveredServer>()
@@ -206,7 +206,7 @@ class ServerDiscoveryManager(private val context: Context) {
     /**
      * Stop the current discovery process.
      */
-    fun stopDiscovery() {
+    override fun stopDiscovery() {
         stopDiscoveryInternal()
     }
     
@@ -334,8 +334,10 @@ class ServerDiscoveryManager(private val context: Context) {
     /**
      * Check if the device supports multicast (required for mDNS).
      */
-    fun isMulticastSupported(): Boolean {
-        return wifiManager.isMulticastEnabled || true // Most modern devices support it
+    override fun isMulticastSupported(): Boolean {
+        // Most modern Android devices support multicast
+        // We attempt to acquire the lock and proceed regardless
+        return true
     }
     
     private fun acquireMulticastLock() {
@@ -367,7 +369,7 @@ class ServerDiscoveryManager(private val context: Context) {
     /**
      * Get the list of currently discovered servers.
      */
-    fun getDiscoveredServers(): List<DiscoveredServer> {
+    override fun getDiscoveredServers(): List<DiscoveredServer> {
         return discoveredServers.values.toList()
     }
 }

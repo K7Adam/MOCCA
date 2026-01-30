@@ -5,7 +5,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.discovery.DiscoveryResult
-import com.mocca.app.discovery.ServerDiscoveryManager
+import com.mocca.app.discovery.ServerDiscovery
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.QrConnectionPayload
 import io.github.aakira.napier.Napier
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val appConnectionManager: AppConnectionManager,
-    private val serverDiscoveryManager: ServerDiscoveryManager? = null
+    private val serverDiscovery: ServerDiscovery? = null
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(OnboardingWizardState())
@@ -38,7 +38,7 @@ class OnboardingWizardModel(
     init {
         loadSavedServers()
         // Auto-start discovery if available
-        if (serverDiscoveryManager != null) {
+        if (serverDiscovery != null) {
             startDiscovery()
         }
     }
@@ -81,8 +81,8 @@ class OnboardingWizardModel(
         
         screenModelScope.launch {
             try {
-                val result = if (serverDiscoveryManager != null) {
-                    serverDiscoveryManager.discoverServers(timeoutMs = 5000)
+                val result = if (serverDiscovery != null) {
+                    serverDiscovery.discoverServers(timeoutMs = 5000)
                 } else {
                     DiscoveryResult(emptyList(), com.mocca.app.discovery.DiscoveryState.STOPPED)
                 }

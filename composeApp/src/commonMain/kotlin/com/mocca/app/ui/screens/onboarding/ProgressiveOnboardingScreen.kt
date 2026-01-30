@@ -10,6 +10,7 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.with
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,6 +67,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.delay
 
 /**
  * Progressive onboarding screen with wizard-style flow.
@@ -420,8 +422,7 @@ private fun SelectServerStep(
             text = "Scan QR Code",
             onClick = onScanQr,
             icon = Icons.Default.QrCodeScanner,
-            modifier = Modifier.fillMaxWidth(),
-            variant = TerminalButtonVariant.OUTLINED
+            modifier = Modifier.fillMaxWidth()
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -674,13 +675,4 @@ private fun ErrorMessage(
             modifier = Modifier.clickable(onClick = onRetry)
         )
     }
-}
-
-// Import missing
-import androidx.compose.foundation.clickable
-
-// Button variant enum for TerminalButton (placeholder - should be in TerminalButton.kt)
-enum class TerminalButtonVariant {
-    DEFAULT,
-    OUTLINED
 }

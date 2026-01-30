@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -180,7 +181,7 @@ private fun QrScannerView(
                     val preview = Preview.Builder()
                         .build()
                         .also {
-                            it.surfaceProvider = previewView.surfaceProvider
+                            it.setSurfaceProvider(previewView.surfaceProvider)
                         }
                     
                     val imageAnalysis = ImageAnalysis.Builder()
@@ -545,6 +546,3 @@ private fun QrSuccessView(
         )
     }
 }
-
-// Import missing
-import androidx.compose.foundation.clickable
