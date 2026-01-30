@@ -3,11 +3,14 @@
 
 <#
 .SYNOPSIS
-    MOCCA Setup Script v4.1 - "Actually Works" Edition
+    MOCCA Setup Script v5.0 - "Just Works" Edition
 
 .DESCRIPTION
-    Intelligent setup for MOCCA app connection with auto-port detection,
-    comprehensive diagnostics, and terminal QR codes.
+    Intelligent setup for MOCCA app connection with:
+    - Auto-start of OpenCode and Git HTTP servers
+    - Terminal QR codes for easy mobile scanning
+    - Proper Tailscale serve integration
+    - ADB port forwarding for emulators
 
 .EXAMPLE
     .\mocca-setup.ps1
@@ -45,7 +48,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$script:Version = "4.1.1"
+$script:Version = "5.0.0"
 $script:StartTime = Get-Date
 $script:LogFile = "$env:TEMP\mocca-setup-debug-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
 
@@ -156,7 +159,7 @@ function Show-Header {
     Write-Host @"
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
-║   MOCCA Setup v$script:Version - "Actually Works" Edition                  ║
+║   MOCCA Setup v$script:Version - "Just Works" Edition                    ║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor $Colors.Accent
@@ -234,7 +237,100 @@ function Test-ServerRunning {
 
 #region QR Code Display
 
+# QR Code library path (cached in temp)
+$script:QRCoderPath = "$env:TEMP\QRCoder\lib\net40\QRCoder.dll"
+$script:QRCoderLoaded = $false
+
+function Initialize-QRCodeLibrary {
+    <#
+    .SYNOPSIS
+        Downloads and loads QRCoder library for terminal QR code generation.
+    #>
+    
+    if ($script:QRCoderLoaded) {
+        return $true
+    }
+    
+    # Check if already cached
+    if (-not (Test-Path $script:QRCoderPath)) {
+        Write-DebugLog "Initialize-QRCodeLibrary: Downloading QRCoder..." "DEBUG"
+        try {
+            $zipPath = "$env:TEMP\qrcoder.zip"
+            $extractPath = "$env:TEMP\QRCoder"
+            
+            # Download from NuGet
+            [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+            Invoke-WebRequest "https://www.nuget.org/api/v2/package/QRCoder/1.4.3" -OutFile $zipPath -UseBasicParsing
+            
+            # Extract
+            if (Test-Path $extractPath) {
+                Remove-Item $extractPath -Recurse -Force -ErrorAction SilentlyContinue
+            }
+            Expand-Archive -Path $zipPath -DestinationPath $extractPath -Force
+            Remove-Item $zipPath -ErrorAction SilentlyContinue
+            
+            Write-DebugLog "Initialize-QRCodeLibrary: QRCoder downloaded and cached" "INFO"
+        }
+        catch {
+            Write-DebugLog "Initialize-QRCodeLibrary: Failed to download QRCoder - $_" "WARN"
+            return $false
+        }
+    }
+    
+    # Load the assembly
+    try {
+        Add-Type -Path $script:QRCoderPath -ErrorAction Stop
+        $script:QRCoderLoaded = $true
+        Write-DebugLog "Initialize-QRCodeLibrary: QRCoder library loaded" "DEBUG"
+        return $true
+    }
+    catch {
+        Write-DebugLog "Initialize-QRCodeLibrary: Failed to load QRCoder - $_" "ERROR"
+        return $false
+    }
+}
+
+function Get-TerminalQRCode {
+    <#
+    .SYNOPSIS
+        Generates a QR code as Unicode block characters for terminal display.
+    .PARAMETER Text
+        The text to encode in the QR code.
+    .OUTPUTS
+        Array of strings representing the QR code lines.
+    #>
+    param([string]$Text)
+    
+    if (-not (Initialize-QRCodeLibrary)) {
+        return $null
+    }
+    
+    try {
+        $qrGenerator = New-Object QRCoder.QRCodeGenerator
+        $qrCodeData = $qrGenerator.CreateQrCode($Text, [QRCoder.QRCodeGenerator+ECCLevel]::L)
+        $qrCode = New-Object QRCoder.AsciiQRCode($qrCodeData)
+        
+        # Get the QR code as ASCII with double-width blocks for better proportions
+        # Using full block (█) for dark and two spaces for light
+        $qrString = $qrCode.GetGraphic(1, "██", "  ")
+        
+        return $qrString
+    }
+    catch {
+        Write-DebugLog "Get-TerminalQRCode: Error generating QR code - $_" "ERROR"
+        return $null
+    }
+}
+
 function Show-TerminalQRCode {
+    <#
+    .SYNOPSIS
+        Displays a QR code directly in the terminal using Unicode blocks.
+    .PARAMETER Text
+        The URL or text to encode.
+    .PARAMETER Label
+        Optional label to display above the QR code.
+    #>
     param(
         [string]$Text,
         [string]$Label = ""
@@ -245,21 +341,40 @@ function Show-TerminalQRCode {
         Write-Host "  $Label" -ForegroundColor $Colors.Accent
     }
     
-    # Encode URL for QR API
-    $encoded = [System.Web.HttpUtility]::UrlEncode($Text)
-    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$encoded"
+    # Try to generate actual QR code
+    $qrCode = Get-TerminalQRCode -Text $Text
     
-    # Draw a box around the connection info
-    $line = "─" * [Math]::Min($Text.Length + 6, 50)
-    Write-Host "  ┌$line┐" -ForegroundColor $Colors.Success
-    Write-Host "  │  📱 SCAN THIS URL:" -ForegroundColor $Colors.Normal
-    Write-Host "  │     $Text" -ForegroundColor $Colors.Success
-    Write-Host "  └$line┘" -ForegroundColor $Colors.Success
-    
-    Write-Host ""
-    Write-Host "  💡 QR Code: $qrUrl" -ForegroundColor $Colors.Dim
-    Write-Host "     (Open this URL to see scannable QR code)" -ForegroundColor $Colors.Dim
-    Write-Host ""
+    if ($qrCode) {
+        # Display the QR code with proper indentation
+        Write-Host ""
+        foreach ($line in $qrCode) {
+            # Trim and add indentation, invert colors for dark terminal
+            $trimmedLine = $line.TrimEnd()
+            if ($trimmedLine) {
+                Write-Host "    $trimmedLine" -ForegroundColor $Colors.Normal
+            }
+        }
+        Write-Host ""
+        Write-Host "    📱 Scan above OR enter manually:" -ForegroundColor $Colors.Dim
+        Write-Host "    $Text" -ForegroundColor $Colors.Success
+        Write-Host ""
+    }
+    else {
+        # Fallback: Display URL info and external QR link
+        $encoded = [System.Web.HttpUtility]::UrlEncode($Text)
+        $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$encoded"
+        
+        # Draw a box around the connection info
+        $line = "─" * [Math]::Min($Text.Length + 6, 50)
+        Write-Host "  ┌$line┐" -ForegroundColor $Colors.Success
+        Write-Host "  │  📱 SCAN THIS URL:" -ForegroundColor $Colors.Normal
+        Write-Host "  │     $Text" -ForegroundColor $Colors.Success
+        Write-Host "  └$line┘" -ForegroundColor $Colors.Success
+        
+        Write-Host ""
+        Write-Host "  💡 QR Code (external): $qrUrl" -ForegroundColor $Colors.Dim
+        Write-Host ""
+    }
 }
 
 #endregion
@@ -625,10 +740,11 @@ function Start-GitServer {
         }
         
         # CRITICAL: Run from .opencode directory so imports work
+        # CRITICAL: Must pass 'start-server' argument for standalone mode!
         Write-DebugLog "Start-GitServer: Creating ProcessStartInfo" "DEBUG"
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $bunPath
-        $psi.Arguments = "run plugin/git-plugin.js"
+        $psi.Arguments = "run plugin/git-plugin.js start-server"
         $psi.WorkingDirectory = $opencodeDir  # THIS IS THE KEY FIX!
         $psi.UseShellExecute = $false
         $psi.RedirectStandardOutput = $true
@@ -640,7 +756,7 @@ function Start-GitServer {
         $psi.EnvironmentVariables["GIT_SERVER_PORT"] = $GitServerPort
         Write-DebugLog "Start-GitServer: Environment set - GIT_SERVER_PORT=$GitServerPort" "DEBUG"
         Write-DebugLog "Start-GitServer: Working directory=$opencodeDir" "DEBUG"
-        Write-DebugLog "Start-GitServer: Command=$bunPath $($psi.Arguments)" "DEBUG"
+        Write-DebugLog "Start-GitServer: Command=$bunPath run plugin/git-plugin.js start-server" "DEBUG"
         
         Write-DebugLog "Start-GitServer: Starting process..." "INFO"
         $process = [System.Diagnostics.Process]::Start($psi)
@@ -759,40 +875,143 @@ function Test-TailscaleAvailable {
     return $null -ne (Get-Command tailscale -ErrorAction SilentlyContinue)
 }
 
+function Get-TailscaleHostname {
+    <#
+    .SYNOPSIS
+        Gets the current Tailscale hostname (MagicDNS name).
+    #>
+    if (-not (Test-TailscaleAvailable)) {
+        return $null
+    }
+    
+    try {
+        $status = tailscale status --json 2>$null | ConvertFrom-Json
+        if ($status.Self.DNSName) {
+            return $status.Self.DNSName.TrimEnd('.')
+        }
+    }
+    catch {}
+    
+    return $null
+}
+
+function Get-TailscaleServeStatus {
+    <#
+    .SYNOPSIS
+        Gets current Tailscale serve configuration.
+    #>
+    if (-not (Test-TailscaleAvailable)) {
+        return $null
+    }
+    
+    try {
+        $status = tailscale serve status --json 2>$null | ConvertFrom-Json
+        return $status
+    }
+    catch {
+        return $null
+    }
+}
+
 function Enable-TailscaleServe {
-    param([int]$SrvPort, [int]$GitSrvPort)
+    <#
+    .SYNOPSIS
+        Configures Tailscale serve to proxy OpenCode and Git servers.
+    .DESCRIPTION
+        Uses the 2024 Tailscale serve syntax:
+        - tailscale serve https:443 / http://localhost:4096
+        - tailscale serve https:443 /git http://localhost:4097
+        
+        This creates a single HTTPS endpoint with path-based routing.
+    #>
+    param(
+        [int]$SrvPort,
+        [int]$GitSrvPort
+    )
     
     if (-not (Test-TailscaleAvailable)) {
-        Write-StatusMessage "📡 Tailscale not installed - skip with -EnableTailscaleServe" -Type "Dim"
-        return $false
+        Write-StatusMessage "📡 Tailscale not installed" -Type "Dim"
+        return @{ Success = $false; Message = "Not installed" }
     }
     
     Write-StatusMessage "📡 Configuring Tailscale serve..." -Type "Info"
+    Write-DebugLog "Enable-TailscaleServe: Starting configuration" "DEBUG"
     
     try {
-        # Check current status
-        $serveStatus = tailscale serve status 2>&1
-        
-        if ($serveStatus -match "https://.*\.tail.*\.ts\.net") {
-            Write-StatusMessage "   ✓ Tailscale serve already configured" -Type "Success"
-            $serveStatus | Select-String "https://" | ForEach-Object {
-                Write-StatusMessage "      $_" -Type "Dim"
-            }
-            return $true
+        # Check current Tailscale status
+        $status = tailscale status --json 2>$null | ConvertFrom-Json
+        if (-not $status.Self) {
+            Write-StatusMessage "   ⚠ Tailscale not connected" -Type "Warning"
+            return @{ Success = $false; Message = "Not connected to tailnet" }
         }
         
-        # Configure serve
-        Write-StatusMessage "   Setting up HTTPS endpoints..." -Type "Dim"
-        $result = tailscale serve --port 443 "/" "http://localhost:$SrvPort" 2>&1
-        $result2 = tailscale serve --port 443 "/git" "http://localhost:$GitSrvPort" 2>&1
+        $hostname = $status.Self.DNSName.TrimEnd('.')
+        Write-DebugLog "Enable-TailscaleServe: Tailscale hostname=$hostname" "DEBUG"
         
-        Write-StatusMessage "   ✓ Tailscale serve configured!" -Type "Success"
-        Write-StatusMessage "     Your device is now accessible via HTTPS on your tailnet" -Type "Dim"
-        return $true
+        # Check existing serve config
+        $existingServe = Get-TailscaleServeStatus
+        if ($existingServe) {
+            Write-DebugLog "Enable-TailscaleServe: Existing serve config found" "DEBUG"
+        }
+        
+        # Configure OpenCode server on root path
+        Write-StatusMessage "   Setting up HTTPS proxy..." -Type "Dim"
+        Write-DebugLog "Enable-TailscaleServe: Configuring / -> http://localhost:$SrvPort" "DEBUG"
+        
+        # Use 2024 syntax: tailscale serve https:443 / http://localhost:PORT
+        $result1 = & tailscale serve https:443 / "http://localhost:$SrvPort" 2>&1
+        Write-DebugLog "Enable-TailscaleServe: Root path result: $result1" "DEBUG"
+        
+        # Configure Git server on /git path
+        Write-DebugLog "Enable-TailscaleServe: Configuring /git -> http://localhost:$GitSrvPort" "DEBUG"
+        $result2 = & tailscale serve https:443 /git "http://localhost:$GitSrvPort" 2>&1
+        Write-DebugLog "Enable-TailscaleServe: Git path result: $result2" "DEBUG"
+        
+        # Verify configuration
+        Start-Sleep -Milliseconds 500
+        $verifyStatus = tailscale serve status 2>&1
+        Write-DebugLog "Enable-TailscaleServe: Final status: $verifyStatus" "DEBUG"
+        
+        if ($verifyStatus -match "https://") {
+            Write-StatusMessage "   ✓ Tailscale serve configured!" -Type "Success"
+            Write-StatusMessage "     https://$hostname → OpenCode" -Type "Dim"
+            Write-StatusMessage "     https://$hostname/git → Git Server" -Type "Dim"
+            return @{ 
+                Success = $true
+                Hostname = $hostname
+                Url = "https://$hostname"
+            }
+        }
+        else {
+            Write-StatusMessage "   ⚠ Tailscale serve may need manual setup" -Type "Warning"
+            Write-StatusMessage "     Run: tailscale serve https:443 / http://localhost:$SrvPort" -Type "Dim"
+            return @{ Success = $false; Message = "Configuration not verified" }
+        }
     }
     catch {
+        Write-DebugLog "Enable-TailscaleServe: Exception - $_" "ERROR"
         Write-StatusMessage "   ⚠ Failed to configure Tailscale: $_" -Type "Warning"
-        return $false
+        return @{ Success = $false; Message = $_.Exception.Message }
+    }
+}
+
+function Disable-TailscaleServe {
+    <#
+    .SYNOPSIS
+        Removes Tailscale serve configuration.
+    #>
+    if (-not (Test-TailscaleAvailable)) {
+        return
+    }
+    
+    try {
+        Write-DebugLog "Disable-TailscaleServe: Removing serve configuration" "DEBUG"
+        $null = tailscale serve https:443 / off 2>&1
+        $null = tailscale serve https:443 /git off 2>&1
+        Write-DebugLog "Disable-TailscaleServe: Configuration removed" "DEBUG"
+    }
+    catch {
+        Write-DebugLog "Disable-TailscaleServe: Error - $_" "WARN"
     }
 }
 
@@ -982,11 +1201,11 @@ $gitResult = Start-GitServer -GitServerPort $GitPort
 Write-DebugLog "Git result: Success=$($gitResult.Success), WasAlreadyRunning=$($gitResult.WasAlreadyRunning), Message='$($gitResult.Message)'" "INFO"
 
 # Configure Tailscale if requested
-$tailscaleServeOk = $false
+$tailscaleResult = $null
 if ($EnableTailscaleServe) {
     Write-DebugLog "Configuring Tailscale serve..." "DEBUG"
-    $tailscaleServeOk = Enable-TailscaleServe -SrvPort $actualPort -GitSrvPort $GitPort
-    Write-DebugLog "Tailscale serve result: $tailscaleServeOk" "DEBUG"
+    $tailscaleResult = Enable-TailscaleServe -SrvPort $actualPort -GitSrvPort $GitPort
+    Write-DebugLog "Tailscale serve result: Success=$($tailscaleResult.Success)" "DEBUG"
 }
 
 # Display results

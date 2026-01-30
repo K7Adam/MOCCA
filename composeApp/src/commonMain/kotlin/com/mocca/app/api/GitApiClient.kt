@@ -277,75 +277,51 @@ class GitApiClient(
         val config = serverConfigProvider()
         val baseUrl = config.baseUrl.trimEnd('/')
         
-        // Check if using Tailscale serve with path-based routing
-        val isTailscale = NetworkConfig.ServiceEndpoints.isTailscaleUrl(baseUrl)
-        val usesPaths = NetworkConfig.ServiceEndpoints.usesTailscalePaths(baseUrl)
+        // Use the centralized getGitEndpoint() which handles all connection types
+        val gitUrl = NetworkConfig.ServiceEndpoints.getGitEndpoint(baseUrl)
+        val isTailscalePathRouting = NetworkConfig.ServiceEndpoints.usesTailscalePaths(baseUrl)
+        val isLocal = NetworkConfig.ServiceEndpoints.isLocalConnection(baseUrl)
         
-        if (isTailscale && usesPaths) {
-            // For Tailscale serve with paths like https://host.tail.ts.net/git
-            val tailscaleGitUrl = NetworkConfig.ServiceEndpoints.getGitEndpoint(baseUrl)
-            Napier.i("$TAG: Using Tailscale serve path routing: $tailscaleGitUrl")
-            configuredUrlAttempts++
-            val checkResult = GitServerChecker.checkServerRunning(getClient(), tailscaleGitUrl)
-            if (GitServerChecker.isServerAvailable(checkResult)) {
-                Napier.i("$TAG: [SUCCESS] Tailscale Git endpoint working: $tailscaleGitUrl (${checkResult.third}ms)")
-                configuredUrlSuccess = true
-                cachedWorkingUrl = tailscaleGitUrl
-                logConnectionStats()
-                return@withLock tailscaleGitUrl
-            }
-        }
+        Napier.i("$TAG: Resolving Git URL from base: $baseUrl")
+        Napier.d("$TAG: Connection type - Tailscale paths: $isTailscalePathRouting, Local: $isLocal")
+        Napier.d("$TAG: Computed Git URL: $gitUrl")
         
-        // Standard port-based URL resolution
-        val configuredUrl = try {
-            val regex = Regex("""https?://([^:/]+)""")
-            val match = regex.find(baseUrl)
-            if (match != null) {
-                "http://${match.groupValues[1]}:$GIT_SERVER_PORT"
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            Napier.w("$TAG: Failed to parse configured URL: ${e.message}")
-            null
-        }
-
-        val localhostUrl = "http://127.0.0.1:$GIT_SERVER_PORT"
-
-        if (configuredUrl == null) {
-            Napier.w("$TAG: No configured URL found, using localhost: $localhostUrl")
-            cachedWorkingUrl = localhostUrl
-            localhostAttempts++
-            return@withLock localhostUrl
-        }
-
-        Napier.d("$TAG: [Attempt $connectionAttempts] Checking configured URL: $configuredUrl")
+        // Try the computed URL first
         configuredUrlAttempts++
-        val checkResult = GitServerChecker.checkServerRunning(getClient(), configuredUrl)
+        val checkResult = GitServerChecker.checkServerRunning(getClient(), gitUrl)
         if (GitServerChecker.isServerAvailable(checkResult)) {
-            Napier.i("$TAG: [SUCCESS] Configured URL working: $configuredUrl (${checkResult.third}ms)")
+            Napier.i("$TAG: [SUCCESS] Git endpoint working: $gitUrl (${checkResult.third}ms)")
             configuredUrlSuccess = true
-            cachedWorkingUrl = configuredUrl
+            cachedWorkingUrl = gitUrl
             logConnectionStats()
-            return@withLock configuredUrl
+            return@withLock gitUrl
         }
-
-        Napier.w("$TAG: [ATTEMPT $connectionAttempts] Configured URL failed: ${checkResult.second}, trying localhost")
-        localhostAttempts++
-        val localhostCheck = GitServerChecker.checkServerRunning(getClient(), localhostUrl)
-
-        return if (GitServerChecker.isServerAvailable(localhostCheck)) {
-            Napier.i("$TAG: [FALLBACK SUCCESS] Localhost working: $localhostUrl (${localhostCheck.third}ms)")
-            localhostSuccess = true
-            cachedWorkingUrl = localhostUrl
-            logConnectionStats()
-            localhostUrl
-        } else {
-            Napier.e("$TAG: [ATTEMPT $connectionAttempts] Both URLs failed, using configured URL: $configuredUrl")
-            Napier.e("$TAG: Configured error: ${checkResult.second}, Localhost error: ${localhostCheck.second}")
-            logConnectionStats()
-            configuredUrl
+        
+        Napier.w("$TAG: [ATTEMPT $connectionAttempts] Primary Git URL failed: ${checkResult.second}")
+        
+        // Fallback: Try localhost only for non-Tailscale connections
+        // (Tailscale connections shouldn't fallback to localhost - it won't work)
+        if (!NetworkConfig.ServiceEndpoints.isTailscaleUrl(baseUrl)) {
+            val localhostUrl = "http://127.0.0.1:$GIT_SERVER_PORT"
+            Napier.d("$TAG: Trying localhost fallback: $localhostUrl")
+            localhostAttempts++
+            val localhostCheck = GitServerChecker.checkServerRunning(getClient(), localhostUrl)
+            
+            if (GitServerChecker.isServerAvailable(localhostCheck)) {
+                Napier.i("$TAG: [FALLBACK SUCCESS] Localhost working: $localhostUrl (${localhostCheck.third}ms)")
+                localhostSuccess = true
+                cachedWorkingUrl = localhostUrl
+                logConnectionStats()
+                return@withLock localhostUrl
+            }
+            
+            Napier.e("$TAG: [ATTEMPT $connectionAttempts] Localhost fallback also failed: ${localhostCheck.second}")
         }
+        
+        // Return the computed URL even if check failed (let the actual request fail with better error)
+        Napier.e("$TAG: All Git URL attempts failed, using computed URL: $gitUrl")
+        logConnectionStats()
+        gitUrl
     }
 
     private suspend fun gitServerUrl(): String {

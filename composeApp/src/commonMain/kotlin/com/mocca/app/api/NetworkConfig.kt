@@ -153,13 +153,42 @@ object NetworkConfig {
      * When using Tailscale serve with different paths, these define the endpoint mapping.
      */
     object ServiceEndpoints {
-        /** Get the Git server endpoint path */
+        /**
+         * Get the Git server endpoint URL based on the base URL.
+         * 
+         * Connection scenarios:
+         * 1. Tailscale HTTPS (https://host.tail.ts.net) → Append /git path
+         * 2. Tailscale with explicit port (https://host.tail.ts.net:4096) → Swap port to 4097
+         * 3. Localhost/Emulator (http://10.0.2.2:4096) → Swap port to 4097
+         * 4. LAN (http://192.168.x.x:4096) → Swap port to 4097
+         * 5. Direct IP without port → Use HTTP with port 4097
+         */
         fun getGitEndpoint(baseUrl: String): String {
-            return if (isTailscaleUrl(baseUrl)) {
-                "${baseUrl.trimEnd('/')}${TailscaleServe.GIT_PATH}"
-            } else {
-                baseUrl.replace(":$OPENCODE_SERVER_PORT", ":$GIT_SERVER_PORT")
+            val trimmedUrl = baseUrl.trimEnd('/')
+            
+            // Check if this is a Tailscale URL using path-based routing (HTTPS without explicit port)
+            if (isTailscaleUrl(trimmedUrl) && usesTailscalePaths(trimmedUrl)) {
+                return "$trimmedUrl${TailscaleServe.GIT_PATH}"
             }
+            
+            // For all other cases, swap the port from 4096 to 4097
+            // This handles:
+            // - Explicit port URLs: http://host:4096 → http://host:4097
+            // - Tailscale with port: https://host.tail.ts.net:4096 → https://host.tail.ts.net:4097
+            // - Any URL with OpenCode port
+            val portSwapped = trimmedUrl.replace(":$OPENCODE_SERVER_PORT", ":$GIT_SERVER_PORT")
+            
+            // If port wasn't in URL (e.g., http://192.168.1.5), append it
+            if (portSwapped == trimmedUrl && !trimmedUrl.contains(":$GIT_SERVER_PORT")) {
+                // Extract host and build HTTP URL with Git port
+                val hostRegex = Regex("""https?://([^:/]+)""")
+                val match = hostRegex.find(trimmedUrl)
+                if (match != null) {
+                    return "http://${match.groupValues[1]}:$GIT_SERVER_PORT"
+                }
+            }
+            
+            return portSwapped
         }
         
         /** Check if URL is a Tailscale hostname */
@@ -167,9 +196,35 @@ object NetworkConfig {
             return url.contains(".tail") && url.contains(".ts.net")
         }
         
-        /** Check if URL uses Tailscale serve paths */
+        /**
+         * Check if URL should use Tailscale serve path-based routing.
+         * 
+         * Path-based routing is used when:
+         * - URL is a Tailscale URL
+         * - URL does NOT have an explicit port (meaning it's using default HTTPS 443)
+         * 
+         * This indicates the user is using `tailscale serve` with path routing:
+         *   / → localhost:4096 (OpenCode)
+         *   /git → localhost:4097 (Git Server)
+         */
         fun usesTailscalePaths(url: String): Boolean {
-            return isTailscaleUrl(url) && !url.contains(":$GIT_SERVER_PORT")
+            if (!isTailscaleUrl(url)) return false
+            
+            // Check if URL has explicit port (port swap mode) or no port (path mode)
+            val hasExplicitPort = url.contains(":$OPENCODE_SERVER_PORT") || 
+                                  url.contains(":$GIT_SERVER_PORT") ||
+                                  Regex(""":(\d{4,5})""").containsMatchIn(url)
+            
+            return !hasExplicitPort
+        }
+        
+        /**
+         * Check if this is a local connection (emulator or localhost).
+         */
+        fun isLocalConnection(url: String): Boolean {
+            return url.contains(EMULATOR_HOST_IP) || 
+                   url.contains("127.0.0.1") || 
+                   url.contains("localhost")
         }
     }
     

@@ -665,7 +665,10 @@ const GitPlugin = async (context) => {
 if (process.argv.includes('start-server')) {
     console.log('[Git Plugin] Standalone mode detected');
     const workDir = process.cwd();
-    startEmbeddedServer(workDir, 4097).then(success => {
+    // Use environment variable for port, default to 4097
+    const port = parseInt(process.env.GIT_SERVER_PORT, 10) || 4097;
+    console.log(`[Git Plugin] Starting on port ${port}...`);
+    startEmbeddedServer(workDir, port).then(success => {
         if (!success) process.exit(1);
         // Keep process alive
         setInterval(() => {}, 1000 * 60 * 60);

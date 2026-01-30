@@ -1,5 +1,6 @@
 package com.mocca.app.domain.model
 
+import com.mocca.app.api.NetworkConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -12,16 +13,44 @@ data class DiscoveredServer(
     val port: Int,
     val authToken: String? = null,
     val source: DiscoverySource,
-    val discoveredAt: Long = System.currentTimeMillis()
+    val discoveredAt: Long = System.currentTimeMillis(),
+    val useHttps: Boolean = false
 ) {
+    /**
+     * Generates the base URL for this server.
+     * 
+     * For Tailscale HTTPS connections (port 443), omits the port from URL.
+     * For standard connections, includes the port.
+     */
     val baseUrl: String
-        get() = "http://$host:$port"
+        get() {
+            val protocol = if (useHttps) "https" else "http"
+            return if (useHttps && port == 443) {
+                "$protocol://$host"
+            } else {
+                "$protocol://$host:$port"
+            }
+        }
+    
+    /**
+     * Check if this is a Tailscale server based on hostname.
+     */
+    val isTailscale: Boolean
+        get() = NetworkConfig.ServiceEndpoints.isTailscaleUrl("https://$host")
     
     fun toServerConfig(id: String = name.lowercase().replace(" ", "-")): ServerConfig {
+        val connectionType = when {
+            isTailscale -> ConnectionType.TAILSCALE
+            host == NetworkConfig.EMULATOR_HOST_IP -> ConnectionType.LOCAL
+            host == "127.0.0.1" || host == "localhost" -> ConnectionType.LOCAL
+            else -> ConnectionType.LAN
+        }
+        
         return ServerConfig(
             id = id,
             name = name,
             baseUrl = baseUrl,
+            connectionType = connectionType,
             authType = if (authToken != null) AuthType.BEARER else AuthType.NONE,
             authToken = authToken,
             isActive = true
@@ -52,10 +81,11 @@ enum class DiscoverySource {
 @Serializable
 data class QrConnectionPayload(
     val host: String,
-    val port: Int = 4096,
+    val port: Int = NetworkConfig.OPENCODE_SERVER_PORT,
     val token: String? = null,
     val version: String = "1.0",
-    val name: String = "OpenCode Server"
+    val name: String = "OpenCode Server",
+    val useHttps: Boolean = false
 ) {
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
@@ -68,14 +98,40 @@ data class QrConnectionPayload(
             }
         }
         
+        /**
+         * Parse a URL into a QrConnectionPayload.
+         * 
+         * Supports:
+         * - http://host:port (standard)
+         * - https://host:port (HTTPS with explicit port)
+         * - https://host.tail.ts.net (Tailscale HTTPS, port defaults to 443)
+         * - http://10.0.2.2:4096 (Emulator)
+         * - http://192.168.x.x:4096 (LAN)
+         */
         fun fromUrl(url: String): QrConnectionPayload? {
             return try {
-                val regex = Regex("""http://([^:/]+):(\d+)""")
+                // Regex to match: protocol://host[:port]
+                // Groups: (1) protocol, (2) host, (3) optional port
+                val regex = Regex("""(https?)://([^:/]+)(?::(\d+))?""")
                 val match = regex.find(url)
+                
                 if (match != null) {
+                    val protocol = match.groupValues[1]
+                    val host = match.groupValues[2]
+                    val portString = match.groupValues[3]
+                    val isHttps = protocol == "https"
+                    
+                    // Determine port: explicit port > default based on protocol
+                    val port = when {
+                        portString.isNotEmpty() -> portString.toInt()
+                        isHttps -> NetworkConfig.TailscaleServe.DEFAULT_HTTPS_PORT
+                        else -> NetworkConfig.OPENCODE_SERVER_PORT
+                    }
+                    
                     QrConnectionPayload(
-                        host = match.groupValues[1],
-                        port = match.groupValues[2].toInt()
+                        host = host,
+                        port = port,
+                        useHttps = isHttps
                     )
                 } else {
                     null
@@ -86,13 +142,18 @@ data class QrConnectionPayload(
         }
     }
     
+    /**
+     * Convert this QR payload to a DiscoveredServer.
+     * Properly propagates HTTPS setting for Tailscale connections.
+     */
     fun toDiscoveredServer(): DiscoveredServer {
         return DiscoveredServer(
             name = name,
             host = host,
             port = port,
             authToken = token,
-            source = DiscoverySource.QR_CODE
+            source = DiscoverySource.QR_CODE,
+            useHttps = useHttps
         )
     }
 }
