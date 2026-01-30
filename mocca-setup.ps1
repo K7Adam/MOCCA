@@ -117,15 +117,21 @@ function Find-AvailablePort {
 function Test-ServerRunning {
     param(
         [int]$TestPort,
-        [int]$TimeoutMs = 2000
+        [int]$TimeoutMs = 3000
     )
     
     try {
         $client = New-Object System.Net.Sockets.TcpClient
-        $result = $client.BeginConnect("localhost", $TestPort, $null, $null)
-        $success = $result.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+        $connectionTask = $client.ConnectAsync("127.0.0.1", $TestPort)
+        $waited = $connectionTask.Wait($TimeoutMs)
+        
+        if ($waited -and $client.Connected) {
+            $client.Close()
+            return $true
+        }
+        
         $client.Close()
-        return $success
+        return $false
     }
     catch {
         return $false
