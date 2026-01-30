@@ -21,9 +21,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Suggestion item for the popup.
@@ -68,8 +68,8 @@ fun SuggestionPopup(
             modifier = Modifier
                 .width(300.dp) // Fixed width for suggestions
                 .heightIn(max = 200.dp)
-                .background(TerminalColors.background, RectangleShape)
-                .border(TerminalSpacing.borderStandard, TerminalColors.border, RectangleShape)
+                .background(AppColors.background, RectangleShape)
+                .border(AppSpacing.borderStandard, AppColors.border, RectangleShape)
         ) {
             LazyColumn {
                 items(suggestions) { item ->
@@ -89,7 +89,7 @@ private fun SuggestionRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick(item) }
-            .padding(TerminalSpacing.sm),
+            .padding(AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
@@ -97,21 +97,21 @@ private fun SuggestionRow(
                 SuggestionType.COMMAND -> "/"
                 SuggestionType.MODE -> "@"
             },
-            style = TerminalTypography.bodyMedium,
-            color = TerminalColors.accentGreen
+            style = AppTypography.bodyMedium,
+            color = AppColors.accentGreen
         )
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         Column {
             Text(
                 text = item.label,
-                style = TerminalTypography.bodyMedium,
-                color = TerminalColors.white
+                style = AppTypography.bodyMedium,
+                color = AppColors.white
             )
             item.description?.let { desc ->
                 Text(
                     text = desc,
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey
                 )
             }
         }

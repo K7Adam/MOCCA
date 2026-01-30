@@ -29,10 +29,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Terminal-style thinking indicator for Claude/o1 extended reasoning.
@@ -62,35 +62,35 @@ fun TerminalThinkingIndicator(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.sm)
+            .padding(vertical = AppSpacing.sm)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = TerminalSpacing.xs, start = TerminalSpacing.sm)
+            modifier = Modifier.padding(bottom = AppSpacing.xs, start = AppSpacing.sm)
         ) {
             // Brain icon with pulse
             Box(
                 modifier = Modifier
                     .size(16.dp)
                     .background(
-                        TerminalColors.statusThinking.copy(alpha = pulseAlpha),
+                        AppColors.statusThinking.copy(alpha = pulseAlpha),
                         CircleShape
                     )
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
             Text(
                 text = "THINKING...",
-                color = TerminalColors.statusThinking,
-                style = TerminalTypography.labelSmall,
+                color = AppColors.statusThinking,
+                style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             // Elapsed time
             if (elapsedMs > 0) {
                 Text(
                     text = formatThinkingDuration(elapsedMs),
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
             }
         }
@@ -109,29 +109,29 @@ private fun ExpandableThinkingPreview(content: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .background(TerminalColors.background.copy(alpha = 0.5f), TerminalShapes.medium)
+            .clip(AppShapes.medium)
+            .background(AppColors.background.copy(alpha = 0.5f), AppShapes.medium)
             .border(
-                width = TerminalSpacing.borderThin,
-                color = TerminalColors.statusThinking.copy(alpha = 0.3f),
-                shape = TerminalShapes.medium
+                width = AppSpacing.borderThin,
+                color = AppColors.statusThinking.copy(alpha = 0.3f),
+                shape = AppShapes.medium
             )
             .clickable { expanded = !expanded }
-            .padding(TerminalSpacing.sm)
+            .padding(AppSpacing.sm)
     ) {
         Text(
             text = if (expanded) content else content.take(100) + if (content.length > 100) "..." else "",
-            color = TerminalColors.textSecondary,
-            style = TerminalTypography.bodySmall,
+            color = AppColors.textSecondary,
+            style = AppTypography.bodySmall,
             maxLines = if (expanded) Int.MAX_VALUE else 2
         )
         
         if (content.length > 100) {
-            Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = if (expanded) "COLLAPSE" else "EXPAND",
-                color = TerminalColors.statusThinking.copy(alpha = 0.7f),
-                style = TerminalTypography.labelSmall,
+                color = AppColors.statusThinking.copy(alpha = 0.7f),
+                style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold
             )
         }

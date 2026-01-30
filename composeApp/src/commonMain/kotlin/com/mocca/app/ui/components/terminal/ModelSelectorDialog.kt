@@ -20,9 +20,9 @@ import androidx.compose.ui.window.Dialog
 import com.mocca.app.domain.model.ProviderInfo
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.domain.model.RecentModel
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -43,34 +43,34 @@ fun ModelSelectorDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.8f)
-                .background(TerminalColors.background, RectangleShape)
-                .border(TerminalSpacing.borderStandard, TerminalColors.borderLight, RectangleShape)
+                .background(AppColors.background, RectangleShape)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
         ) {
             // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.surface)
-                    .padding(TerminalSpacing.md),
+                    .background(AppColors.surface)
+                    .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "// SELECT MODEL",
-                    style = TerminalTypography.titleMedium,
-                    color = TerminalColors.white,
+                    style = AppTypography.titleMedium,
+                    color = AppColors.white,
                     fontWeight = FontWeight.Bold
                 )
                 TerminalIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = TerminalColors.grey
+                    iconColor = AppColors.grey
                 )
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
             
             // Search bar
@@ -79,30 +79,30 @@ fun ModelSelectorDialog(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.surface)
-                    .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
+                    .background(AppColors.surface)
+                    .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "> ",
-                    style = TerminalTypography.bodySmall,
-                    color = TerminalColors.accentGreen
+                    style = AppTypography.bodySmall,
+                    color = AppColors.accentGreen
                 )
                 androidx.compose.foundation.text.BasicTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    textStyle = TerminalTypography.bodySmall.copy(color = TerminalColors.white),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = TerminalSpacing.xs),
+                        .padding(start = AppSpacing.xs),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         Box {
                             if (searchQuery.isEmpty()) {
                                 Text(
                                     text = "Search models...",
-                                    style = TerminalTypography.bodySmall,
-                                    color = TerminalColors.greyDark
+                                    style = AppTypography.bodySmall,
+                                    color = AppColors.greyDark
                                 )
                             }
                             innerTextField()
@@ -113,15 +113,15 @@ fun ModelSelectorDialog(
                     TerminalIconButton(
                         icon = Icons.Default.Close,
                         onClick = { searchQuery = "" },
-                        iconColor = TerminalColors.grey,
+                        iconColor = AppColors.grey,
                         size = 16.dp
                     )
                 }
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
             
             // Provider/Model list
@@ -129,7 +129,7 @@ fun ModelSelectorDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(TerminalSpacing.sm)
+                    .padding(AppSpacing.sm)
             ) {
                 // Only show authenticated providers (those in the connected list)
                 val authenticatedProviders = providerResponse.all.filter { 
@@ -161,12 +161,12 @@ fun ModelSelectorDialog(
                    item {
                        Text(
                            text = "// RECENT",
-                           style = TerminalTypography.labelSmall,
-                           color = TerminalColors.accentGreen,
+                           style = AppTypography.labelSmall,
+                           color = AppColors.accentGreen,
                            modifier = Modifier.padding(
-                               start = TerminalSpacing.sm,
-                               top = TerminalSpacing.sm,
-                               bottom = TerminalSpacing.xs
+                               start = AppSpacing.sm,
+                               top = AppSpacing.sm,
+                               bottom = AppSpacing.xs
                            )
                        )
                    }
@@ -183,21 +183,21 @@ fun ModelSelectorDialog(
                                    }
                                    .background(
                                        if (isSelected) 
-                                           TerminalColors.accentGreen.copy(alpha = 0.2f) 
+                                           AppColors.accentGreen.copy(alpha = 0.2f) 
                                        else 
-                                           TerminalColors.background
+                                           AppColors.background
                                    )
                                    .padding(
-                                       horizontal = TerminalSpacing.md,
-                                       vertical = TerminalSpacing.xs
+                                       horizontal = AppSpacing.md,
+                                       vertical = AppSpacing.xs
                                    ),
                                horizontalArrangement = Arrangement.SpaceBetween,
                                verticalAlignment = Alignment.CenterVertically
                            ) {
                                Text(
                                    text = "> ${recent.modelId.uppercase()} [${recent.providerId.uppercase()}]",
-                                   style = TerminalTypography.bodySmall,
-                                   color = if (isSelected) TerminalColors.accentGreen else TerminalColors.white
+                                   style = AppTypography.bodySmall,
+                                   color = if (isSelected) AppColors.accentGreen else AppColors.white
                                )
                            }
                        }
@@ -205,9 +205,9 @@ fun ModelSelectorDialog(
                    
                    item {
                        HorizontalDivider(
-                           thickness = TerminalSpacing.borderThin,
-                           color = TerminalColors.border,
-                           modifier = Modifier.padding(vertical = TerminalSpacing.sm)
+                           thickness = AppSpacing.borderThin,
+                           color = AppColors.border,
+                           modifier = Modifier.padding(vertical = AppSpacing.sm)
                        )
                    }
                 }
@@ -216,12 +216,12 @@ fun ModelSelectorDialog(
                     item {
                         Text(
                             text = "// CONNECTED",
-                            style = TerminalTypography.labelSmall,
-                            color = TerminalColors.accentGreen,
+                            style = AppTypography.labelSmall,
+                            color = AppColors.accentGreen,
                             modifier = Modifier.padding(
-                                start = TerminalSpacing.sm,
-                                top = TerminalSpacing.sm,
-                                bottom = TerminalSpacing.xs
+                                start = AppSpacing.sm,
+                                top = AppSpacing.sm,
+                                bottom = AppSpacing.xs
                             )
                         )
                     }
@@ -245,9 +245,9 @@ fun ModelSelectorDialog(
                     item {
                         Text(
                             text = "// NO MATCHES",
-                            style = TerminalTypography.labelSmall,
-                            color = TerminalColors.grey,
-                            modifier = Modifier.padding(TerminalSpacing.md)
+                            style = AppTypography.labelSmall,
+                            color = AppColors.grey,
+                            modifier = Modifier.padding(AppSpacing.md)
                         )
                     }
                 } else {
@@ -255,17 +255,17 @@ fun ModelSelectorDialog(
                     item {
                         Text(
                             text = "// NO PROVIDERS CONFIGURED",
-                            style = TerminalTypography.labelSmall,
-                            color = TerminalColors.grey,
-                            modifier = Modifier.padding(TerminalSpacing.md)
+                            style = AppTypography.labelSmall,
+                            color = AppColors.grey,
+                            modifier = Modifier.padding(AppSpacing.md)
                         )
                         Text(
                             text = "Configure providers in opencode settings.",
-                            style = TerminalTypography.bodySmall,
-                            color = TerminalColors.greyDark,
+                            style = AppTypography.bodySmall,
+                            color = AppColors.greyDark,
                             modifier = Modifier.padding(
-                                start = TerminalSpacing.md,
-                                top = TerminalSpacing.xs
+                                start = AppSpacing.md,
+                                top = AppSpacing.xs
                             )
                         )
                     }
@@ -291,7 +291,7 @@ private fun ProviderSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.xs)
+            .padding(vertical = AppSpacing.xs)
     ) {
         // Provider header
         Row(
@@ -300,33 +300,33 @@ private fun ProviderSection(
                 .clickable { manualExpanded = !manualExpanded }
                 .background(
                     if (provider.id == selectedProviderId) 
-                        TerminalColors.surface 
+                        AppColors.surface 
                     else 
-                        TerminalColors.background
+                        AppColors.background
                 )
-                .padding(TerminalSpacing.sm),
+                .padding(AppSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = if (expanded) "[-]" else "[+]",
-                    style = TerminalTypography.bodySmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.bodySmall,
+                    color = AppColors.grey
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
                     text = provider.name.uppercase(),
-                    style = TerminalTypography.bodyMedium,
-                    color = if (enabled) TerminalColors.white else TerminalColors.greyDark,
+                    style = AppTypography.bodyMedium,
+                    color = if (enabled) AppColors.white else AppColors.greyDark,
                     fontWeight = FontWeight.Bold
                 )
             }
             
             Text(
                 text = "${provider.modelCount} models",
-                style = TerminalTypography.labelSmall,
-                color = TerminalColors.grey
+                style = AppTypography.labelSmall,
+                color = AppColors.grey
             )
         }
         
@@ -347,26 +347,26 @@ private fun ProviderSection(
                         .clickable(enabled = enabled) { onModelSelected(modelId) }
                         .background(
                             if (isSelected) 
-                                TerminalColors.accentGreen.copy(alpha = 0.2f) 
+                                AppColors.accentGreen.copy(alpha = 0.2f) 
                             else 
-                                TerminalColors.background
+                                AppColors.background
                         )
                         .padding(
-                            start = TerminalSpacing.xl,
-                            end = TerminalSpacing.md,
-                            top = TerminalSpacing.xs,
-                            bottom = TerminalSpacing.xs
+                            start = AppSpacing.xl,
+                            end = AppSpacing.md,
+                            top = AppSpacing.xs,
+                            bottom = AppSpacing.xs
                         ),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "> ${modelId.replace("-", " ").uppercase()}",
-                        style = TerminalTypography.bodySmall,
+                        style = AppTypography.bodySmall,
                         color = when {
-                            isSelected -> TerminalColors.accentGreen
-                            enabled -> TerminalColors.greyLight
-                            else -> TerminalColors.greyDark
+                            isSelected -> AppColors.accentGreen
+                            enabled -> AppColors.greyLight
+                            else -> AppColors.greyDark
                         }
                     )
                     
@@ -374,7 +374,7 @@ private fun ProviderSection(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = "Selected",
-                            tint = TerminalColors.accentGreen,
+                            tint = AppColors.accentGreen,
                             modifier = Modifier.size(16.dp)
                         )
                     }

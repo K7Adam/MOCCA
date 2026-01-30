@@ -16,9 +16,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
 import com.mocca.app.ui.components.terminal.TerminalButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
@@ -40,7 +40,7 @@ fun PermissionRequestDialog(
             Icon(
                 Icons.Default.Warning,
                 contentDescription = null,
-                tint = TerminalColors.accentGreen
+                tint = AppColors.accentGreen
             )
         },
         title = {
@@ -54,20 +54,20 @@ fun PermissionRequestDialog(
             ) {
                 Text(
                     text = stringResource(Res.string.ai_wants_to),
-                    style = TerminalTypography.bodyMedium
+                    style = AppTypography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 // Permission type
                 Surface(
                     shape = RectangleShape,
-                    color = TerminalColors.surfaceVariant
+                    color = AppColors.surfaceVariant
                 ) {
                     Text(
                         text = permission.permission,
                         modifier = Modifier.padding(12.dp),
-                        style = TerminalTypography.titleMedium,
-                        color = TerminalColors.white
+                        style = AppTypography.titleMedium,
+                        color = AppColors.white
                     )
                 }
                 
@@ -77,28 +77,28 @@ fun PermissionRequestDialog(
                     
                     Text(
                         text = stringResource(Res.string.details),
-                        style = TerminalTypography.labelMedium
+                        style = AppTypography.labelMedium
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     
                     Surface(
                         shape = RectangleShape,
-                        color = TerminalColors.surfaceVariant,
+                        color = AppColors.surfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(12.dp)) {
                             permission.patterns.take(10).forEach { pattern ->
                                 Text(
                                     text = pattern,
-                                    style = TerminalTypography.bodySmall,
-                                    color = TerminalColors.grey
+                                    style = AppTypography.bodySmall,
+                                    color = AppColors.grey
                                 )
                             }
                             if (permission.patterns.size > 10) {
                                 Text(
                                     text = "... and ${permission.patterns.size - 10} more",
-                                    style = TerminalTypography.bodySmall,
-                                    color = TerminalColors.grey
+                                    style = AppTypography.bodySmall,
+                                    color = AppColors.grey
                                 )
                             }
                         }
@@ -110,8 +110,8 @@ fun PermissionRequestDialog(
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Already allowed: ${permission.always.take(3).joinToString(", ")}",
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.border
+                        style = AppTypography.bodySmall,
+                        color = AppColors.border
                     )
                 }
                 
@@ -121,14 +121,14 @@ fun PermissionRequestDialog(
                     
                     Surface(
                         shape = RectangleShape,
-                        color = TerminalColors.surfaceVariant,
+                        color = AppColors.surfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = formatMetadataMap(permission.metadata),
                             modifier = Modifier.padding(12.dp),
-                            style = TerminalTypography.bodySmall,
-                            color = TerminalColors.grey
+                            style = AppTypography.bodySmall,
+                            color = AppColors.grey
                         )
                     }
                 }
@@ -145,8 +145,8 @@ fun PermissionRequestDialog(
                     onClick = onApprove,
                     shape = RectangleShape,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = TerminalColors.white,
-                        contentColor = TerminalColors.background
+                        containerColor = AppColors.white,
+                        contentColor = AppColors.background
                     )
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null)
@@ -160,7 +160,7 @@ fun PermissionRequestDialog(
                 onClick = onDeny,
                 shape = RectangleShape,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = TerminalColors.grey
+                    contentColor = AppColors.grey
                 )
             ) {
                 Icon(Icons.Default.Close, contentDescription = null)
@@ -204,20 +204,20 @@ fun LoadingScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalColors.background),
+            .background(AppColors.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             CircularProgressIndicator(
-                color = TerminalColors.white
+                color = AppColors.white
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = message.uppercase(),
-                style = TerminalTypography.bodyMedium,
-                color = TerminalColors.grey
+                style = AppTypography.bodyMedium,
+                color = AppColors.grey
             )
         }
     }
@@ -231,32 +231,32 @@ fun ErrorScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalColors.background),
+            .background(AppColors.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(TerminalSpacing.xxl)
+            modifier = Modifier.padding(AppSpacing.xxl)
         ) {
             Text(
                 text = "[!]",
-                style = TerminalTypography.displayLarge,
-                color = TerminalColors.error
+                style = AppTypography.displayLarge,
+                color = AppColors.error
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = stringResource(Res.string.error_occurred).uppercase(),
-                style = TerminalTypography.headlineSmall,
-                color = TerminalColors.white
+                style = AppTypography.headlineSmall,
+                color = AppColors.white
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = message,
-                style = TerminalTypography.bodyMedium,
-                color = TerminalColors.grey
+                style = AppTypography.bodyMedium,
+                color = AppColors.grey
             )
             if (onRetry != null) {
-                Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
                 TerminalButton(
                     text = stringResource(Res.string.retry).uppercase(),
                     onClick = onRetry
@@ -276,34 +276,34 @@ fun EmptyContent(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalColors.background),
+            .background(AppColors.background),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(TerminalSpacing.xxl)
+            modifier = Modifier.padding(AppSpacing.xxl)
         ) {
             Text(
                 text = icon,
-                style = TerminalTypography.displayLarge,
-                color = TerminalColors.grey
+                style = AppTypography.displayLarge,
+                color = AppColors.grey
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = title.uppercase(),
-                style = TerminalTypography.headlineSmall,
-                color = TerminalColors.white
+                style = AppTypography.headlineSmall,
+                color = AppColors.white
             )
             if (subtitle != null) {
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
                     text = subtitle,
-                    style = TerminalTypography.bodyMedium,
-                    color = TerminalColors.grey
+                    style = AppTypography.bodyMedium,
+                    color = AppColors.grey
                 )
             }
             if (action != null) {
-                Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
                 action()
             }
         }

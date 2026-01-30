@@ -12,6 +12,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.NetworkWifi
+import androidx.compose.material.icons.filled.NetworkWifi1Bar
+import androidx.compose.material.icons.filled.NetworkWifi2Bar
+import androidx.compose.material.icons.filled.NetworkWifi3Bar
+import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,8 +29,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.api.ConnectionQuality
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Terminal-styled top bar and divider components.
@@ -49,33 +57,33 @@ fun TerminalTopBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(TerminalColors.background, RectangleShape)
+            .background(AppColors.background, RectangleShape)
     ) {
         // Content row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TerminalSpacing.topBarHeight)
-                .padding(horizontal = TerminalSpacing.lg),
+                .height(AppSpacing.topBarHeight)
+                .padding(horizontal = AppSpacing.lg),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 if (navigationIcon != null && onNavigationClick != null) {
                     TerminalIconButton(
                         icon = navigationIcon,
                         onClick = onNavigationClick,
-                        iconColor = TerminalColors.white
+                        iconColor = AppColors.white
                     )
                 }
                 
                 Text(
                     text = "// ${title.uppercase()}",
-                    color = TerminalColors.white,
-                    style = MaterialTheme.typography.headlineMedium,
+                    color = AppColors.white,
+                    style = AppTypography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -90,8 +98,8 @@ fun TerminalTopBar(
         if (showDivider) {
             HorizontalDivider(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                thickness = TerminalSpacing.borderStandard,
-                color = TerminalColors.white
+                thickness = AppSpacing.borderStandard,
+                color = AppColors.white
             )
         }
     }
@@ -112,8 +120,8 @@ fun TerminalStatusLine(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                horizontal = TerminalSpacing.lg,
-                vertical = TerminalSpacing.sm
+                horizontal = AppSpacing.lg,
+                vertical = AppSpacing.sm
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -121,17 +129,17 @@ fun TerminalStatusLine(
         // Left - System info
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             Text(
                 text = leftText.uppercase(),
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.labelSmall
+                color = AppColors.grey,
+                style = AppTypography.labelSmall
             )
             Text(
                 text = centerText.uppercase(),
-                color = TerminalColors.white,
-                style = MaterialTheme.typography.labelLarge,
+                color = AppColors.white,
+                style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -151,8 +159,8 @@ fun TerminalStatusLine(
 @Composable
 fun TerminalDivider(
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.border,
-    thickness: Dp = TerminalSpacing.borderThin
+    color: Color = AppColors.border,
+    thickness: Dp = AppSpacing.borderThin
 ) {
     HorizontalDivider(
         modifier = modifier,
@@ -167,8 +175,8 @@ fun TerminalDivider(
 @Composable
 fun TerminalDividerProminent(
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white,
-    thickness: Dp = TerminalSpacing.borderStandard
+    color: Color = AppColors.white,
+    thickness: Dp = AppSpacing.borderStandard
 ) {
     HorizontalDivider(
         modifier = modifier,
@@ -185,22 +193,22 @@ fun TerminalDividerProminent(
 fun TerminalSectionDivider(
     text: String,
     modifier: Modifier = Modifier,
-    textColor: Color = TerminalColors.grey,
-    lineColor: Color = TerminalColors.border
+    textColor: Color = AppColors.grey,
+    lineColor: Color = AppColors.border
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         Text(
             text = "> ${text.uppercase()}",
             color = textColor,
-            style = MaterialTheme.typography.labelMedium
+            style = AppTypography.labelMedium
         )
         HorizontalDivider(
             modifier = Modifier.weight(1f),
-            thickness = TerminalSpacing.borderThin,
+            thickness = AppSpacing.borderThin,
             color = lineColor
         )
     }
@@ -223,9 +231,9 @@ fun PanelHeader(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TerminalSpacing.lg),
+            .padding(AppSpacing.lg),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         if (icon != null) {
             icon()
@@ -234,18 +242,81 @@ fun PanelHeader(
         Box {
             Text(
                 text = title.uppercase(),
-                color = TerminalColors.white,
-                style = MaterialTheme.typography.headlineLarge,
+                color = AppColors.white,
+                style = AppTypography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle.uppercase(),
-                    color = TerminalColors.grey,
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = TerminalSpacing.xl + TerminalSpacing.xs)
+                    color = AppColors.grey,
+                    style = AppTypography.labelSmall,
+                    modifier = Modifier.padding(top = AppSpacing.xl + AppSpacing.xs)
                 )
             }
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONNECTION QUALITY INDICATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Connection quality indicator showing network status.
+ * 
+ * @param quality The current connection quality
+ * @param modifier Modifier for styling
+ */
+@Composable
+fun ConnectionQualityIndicator(
+    quality: ConnectionQuality,
+    modifier: Modifier = Modifier
+) {
+    val (icon, color, description) = when (quality) {
+        ConnectionQuality.EXCELLENT -> Triple(
+            Icons.Filled.NetworkWifi,
+            AppColors.success,
+            "EXCELLENT"
+        )
+        ConnectionQuality.GOOD -> Triple(
+            Icons.Filled.NetworkWifi3Bar,
+            AppColors.success,
+            "GOOD"
+        )
+        ConnectionQuality.POOR -> Triple(
+            Icons.Filled.NetworkWifi2Bar,
+            AppColors.warning,
+            "POOR"
+        )
+        ConnectionQuality.OFFLINE -> Triple(
+            Icons.Filled.WifiOff,
+            AppColors.error,
+            "OFFLINE"
+        )
+        ConnectionQuality.UNKNOWN -> Triple(
+            Icons.Filled.NetworkWifi1Bar,
+            AppColors.grey,
+            "UNKNOWN"
+        )
+    }
+    
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = "Connection: $description",
+            tint = color,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = description,
+            color = color,
+            style = AppTypography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

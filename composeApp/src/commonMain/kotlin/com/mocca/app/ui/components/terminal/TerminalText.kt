@@ -24,8 +24,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 
@@ -44,7 +44,7 @@ import kotlinx.coroutines.delay
 fun TerminalText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white,
+    color: Color = AppColors.white,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
@@ -69,7 +69,7 @@ fun TerminalText(
 fun TerminalHeader(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white,
+    color: Color = AppColors.white,
     prefix: String = "[",
     suffix: String = "]",
     showBrackets: Boolean = true
@@ -86,10 +86,10 @@ fun TerminalHeader(
             Box(
                 modifier = Modifier
                     .size(width = 4.dp, height = 24.dp)
-                    .background(TerminalColors.accentGreen)
+                    .background(AppColors.accentGreen)
             )
             
-            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+            Spacer(modifier = Modifier.width(AppSpacing.md))
             
             Text(
                 text = displayText.uppercase(),
@@ -100,7 +100,7 @@ fun TerminalHeader(
             )
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
         
         // Decorative terminal line
         Box(
@@ -110,8 +110,8 @@ fun TerminalHeader(
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
-                            TerminalColors.accentGreen,
-                            TerminalColors.accentGreen.copy(alpha = 0.1f),
+                            AppColors.accentGreen,
+                            AppColors.accentGreen.copy(alpha = 0.1f),
                             Color.Transparent
                         )
                     )
@@ -128,7 +128,7 @@ fun TerminalHeader(
 fun TerminalLabel(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.greyLight
+    color: Color = AppColors.greyLight
 ) {
     Text(
         text = text.uppercase(),
@@ -146,7 +146,7 @@ fun TerminalLabel(
 fun TerminalMeta(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.grey
+    color: Color = AppColors.grey
 ) {
     Text(
         text = text.uppercase(),
@@ -173,7 +173,7 @@ fun TerminalMeta(
 fun TypewriterText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white,
+    color: Color = AppColors.white,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
     typingDelayMs: Long = 50L,
     initialDelayMs: Long = 0L,
@@ -230,7 +230,7 @@ fun TypewriterText(
 fun TypewriterCycleText(
     texts: List<String>,
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white,
+    color: Color = AppColors.white,
     style: TextStyle = MaterialTheme.typography.headlineMedium,
     typingDelayMs: Long = 80L,
     eraseDelayMs: Long = 40L,
@@ -297,7 +297,7 @@ fun BlinkingCursor(
     modifier: Modifier = Modifier,
     width: Dp = 10.dp,
     height: Dp = 18.dp,
-    color: Color = TerminalColors.white,
+    color: Color = AppColors.white,
     blinkDurationMs: Int = 530
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "cursor")
@@ -334,15 +334,15 @@ fun ConsoleLogLine(
     showPrefix: Boolean = true
 ) {
     val (prefixText, prefixColor) = when (status) {
-        ConsoleLogStatus.DONE -> "[DONE]" to TerminalColors.accentGreen
-        ConsoleLogStatus.WAIT -> "[WAIT]" to TerminalColors.statusWaiting
-        ConsoleLogStatus.ERROR -> "[ERROR]" to TerminalColors.error
-        ConsoleLogStatus.INFO -> "[INFO]" to TerminalColors.greyLight
+        ConsoleLogStatus.DONE -> "[DONE]" to AppColors.accentGreen
+        ConsoleLogStatus.WAIT -> "[WAIT]" to AppColors.statusWaiting
+        ConsoleLogStatus.ERROR -> "[ERROR]" to AppColors.error
+        ConsoleLogStatus.INFO -> "[INFO]" to AppColors.greyLight
     }
     
     val textColor = when (status) {
-        ConsoleLogStatus.WAIT -> TerminalColors.white
-        else -> TerminalColors.grey
+        ConsoleLogStatus.WAIT -> AppColors.white
+        else -> AppColors.grey
     }
     
     Row(modifier = modifier) {
@@ -355,7 +355,7 @@ fun ConsoleLogLine(
             )
             Text(
                 text = " > ",
-                color = TerminalColors.grey,
+                color = AppColors.grey,
                 style = MaterialTheme.typography.bodySmall
             )
         }

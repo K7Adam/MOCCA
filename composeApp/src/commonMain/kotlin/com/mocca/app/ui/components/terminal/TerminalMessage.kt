@@ -43,10 +43,10 @@ import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.RichToolCard
 import com.mocca.app.ui.screens.chat.MarkdownText
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
@@ -72,18 +72,18 @@ fun TerminalMessage(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.sm),
+            .padding(vertical = AppSpacing.sm),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
         // Message Header
         Row(
-            modifier = Modifier.padding(bottom = TerminalSpacing.xs, start = if (isUser) 0.dp else TerminalSpacing.sm, end = if (isUser) TerminalSpacing.sm else 0.dp),
+            modifier = Modifier.padding(bottom = AppSpacing.xs, start = if (isUser) 0.dp else AppSpacing.sm, end = if (isUser) AppSpacing.sm else 0.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
         ) {
             val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
             val label = if (isUser) "USER" else "AGENT"
-            val color = if (isUser) TerminalColors.textSecondary else TerminalColors.accentGreen
+            val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
             
             if (!isUser) {
                 Icon(
@@ -92,26 +92,26 @@ fun TerminalMessage(
                     tint = color,
                     modifier = Modifier.size(12.dp)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
             }
             
             Text(
                 text = label,
                 color = color,
-                style = TerminalTypography.labelSmall,
+                style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold
             )
             
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             Text(
                 text = formatTime(message.createdAt),
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.labelSmall
+                color = AppColors.textTertiary,
+                style = AppTypography.labelSmall
             )
             
             if (isUser) {
-                Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
@@ -147,25 +147,25 @@ fun TerminalMessage(
                 .fillMaxWidth(if (isUser) 0.85f else 1f)
                 .clip(shape)
                 .background(
-                    if (isUser) TerminalColors.surfaceVariant else TerminalColors.surfaceContainer,
+                    if (isUser) AppColors.surfaceVariant else AppColors.surfaceContainer,
                     shape
                 )
                 .border(
-                    width = TerminalSpacing.borderThin,
-                    color = if (isUser) TerminalColors.border else TerminalColors.borderLight,
+                    width = AppSpacing.borderThin,
+                    color = if (isUser) AppColors.border else AppColors.borderLight,
                     shape = shape
                 )
         ) {
             Column(
-                modifier = Modifier.padding(TerminalSpacing.cardPadding)
+                modifier = Modifier.padding(AppSpacing.cardPadding)
             ) {
                 message.parts.forEach { part ->
                     when (part) {
                         is MessagePart.Text -> {
                             MarkdownText(
                                 markdown = part.text,
-                                style = TerminalTypography.bodyMedium,
-                                color = TerminalColors.white
+                                style = AppTypography.bodyMedium,
+                                color = AppColors.white
                             )
                         }
                         is MessagePart.Reasoning -> {
@@ -187,7 +187,7 @@ fun TerminalMessage(
                             // Thinking content is shown via TerminalThinkingIndicator during streaming
                         }
                     }
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                 }
             }
         }
@@ -199,10 +199,10 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
     var expanded by remember { mutableStateOf(part.status == SessionStatus.RUNNING) }
     
     val statusColor = when (part.status) {
-        SessionStatus.RUNNING -> TerminalColors.accentGreen
-        SessionStatus.COMPLETED -> TerminalColors.grey
-        SessionStatus.ERROR -> TerminalColors.error
-        SessionStatus.IDLE -> TerminalColors.textTertiary
+        SessionStatus.RUNNING -> AppColors.accentGreen
+        SessionStatus.COMPLETED -> AppColors.grey
+        SessionStatus.ERROR -> AppColors.error
+        SessionStatus.IDLE -> AppColors.textTertiary
     }
     
     val statusIcon = when (part.status) {
@@ -215,16 +215,16 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .border(1.dp, statusColor.copy(alpha = 0.5f), TerminalShapes.medium)
-            .background(TerminalColors.surface, TerminalShapes.medium)
+            .clip(AppShapes.medium)
+            .border(1.dp, statusColor.copy(alpha = 0.5f), AppShapes.medium)
+            .background(AppColors.surface, AppShapes.medium)
     ) {
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable { expanded = !expanded }
-                .padding(TerminalSpacing.sm)
+                .padding(AppSpacing.sm)
                 .background(statusColor.copy(alpha = 0.1f)),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -234,20 +234,20 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
                 tint = statusColor,
                 modifier = Modifier.size(16.dp)
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = "SUBTASK: ${part.title.uppercase()}",
-                    style = TerminalTypography.labelSmall,
+                    style = AppTypography.labelSmall,
                     color = statusColor,
                     fontWeight = FontWeight.Bold
                 )
                 if (part.status == SessionStatus.RUNNING && part.streamingText.isNotEmpty()) {
                     Text(
                         text = "Executing...",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.textTertiary
+                        style = AppTypography.labelSmall,
+                        color = AppColors.textTertiary
                     )
                 }
             }
@@ -265,17 +265,17 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs)
+                    .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
             ) {
                 HorizontalDivider(color = statusColor.copy(alpha = 0.2f))
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 
                 if (part.messages.isEmpty() && part.streamingText.isEmpty()) {
                     Text(
                         text = "Initializing subtask environment...",
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.textSecondary,
-                        modifier = Modifier.padding(bottom = TerminalSpacing.sm)
+                        style = AppTypography.bodySmall,
+                        color = AppColors.textSecondary,
+                        modifier = Modifier.padding(bottom = AppSpacing.sm)
                     )
                 } else {
                     // Render sub-messages
@@ -284,7 +284,7 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
                     }
                     
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
                         displayMessages.forEach { msg ->
                             TerminalSubMessage(msg)
@@ -293,12 +293,12 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
                         if (part.streamingText.isNotEmpty()) {
                             MarkdownText(
                                 markdown = part.streamingText + "█",
-                                style = TerminalTypography.bodySmall,
-                                color = TerminalColors.textSecondary
+                                style = AppTypography.bodySmall,
+                                color = AppColors.textSecondary
                             )
                         }
                     }
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                 }
             }
         }
@@ -308,14 +308,14 @@ fun TerminalSubTaskBlock(part: MessagePart.SubTask) {
 @Composable
 fun TerminalSubMessage(message: Message) {
     val isUser = message.role == MessageRole.USER
-    val color = if (isUser) TerminalColors.textSecondary else TerminalColors.white
+    val color = if (isUser) AppColors.textSecondary else AppColors.white
     
     Row(modifier = Modifier.fillMaxWidth()) {
         if (!isUser) {
             Text(
                 text = ">", 
-                color = TerminalColors.accentGreen, 
-                style = TerminalTypography.bodySmall,
+                color = AppColors.accentGreen, 
+                style = AppTypography.bodySmall,
                 modifier = Modifier.padding(end = 8.dp)
             )
         }
@@ -326,30 +326,30 @@ fun TerminalSubMessage(message: Message) {
                     is MessagePart.Text -> {
                         MarkdownText(
                             markdown = part.text,
-                            style = TerminalTypography.bodySmall,
+                            style = AppTypography.bodySmall,
                             color = color
                         )
                     }
                     is MessagePart.ToolInvocation -> {
                         Text(
                             text = "[Tool: ${part.name}]",
-                            style = TerminalTypography.labelSmall,
-                            color = TerminalColors.textTertiary
+                            style = AppTypography.labelSmall,
+                            color = AppColors.textTertiary
                         )
                     }
                     is MessagePart.ToolResult -> {
                          Text(
                             text = "[Result]",
-                            style = TerminalTypography.labelSmall,
-                            color = TerminalColors.textTertiary
+                            style = AppTypography.labelSmall,
+                            color = AppColors.textTertiary
                         )
                     }
                     // Recursion for nested subtasks is possible but let's limit it
                     is MessagePart.SubTask -> {
                         Text(
                             text = "[Nested Subtask: ${part.title}]",
-                             style = TerminalTypography.labelSmall,
-                            color = TerminalColors.accentGreen
+                             style = AppTypography.labelSmall,
+                            color = AppColors.accentGreen
                         )
                     }
                     else -> {}
@@ -367,10 +367,10 @@ fun TerminalReasoningBlock(part: MessagePart.Reasoning) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.medium)
-            .background(TerminalColors.background.copy(alpha = 0.5f), TerminalShapes.medium)
-            .padding(TerminalSpacing.sm)
+            .clip(AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+            .background(AppColors.background.copy(alpha = 0.5f), AppShapes.medium)
+            .padding(AppSpacing.sm)
     ) {
         Row(
             modifier = Modifier
@@ -381,20 +381,20 @@ fun TerminalReasoningBlock(part: MessagePart.Reasoning) {
             Icon(
                 imageVector = Icons.Default.Lightbulb,
                 contentDescription = null,
-                tint = TerminalColors.statusThinking,
+                tint = AppColors.statusThinking,
                 modifier = Modifier.size(14.dp)
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "THOUGHT PROCESS [${part.timeMs}ms]",
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelSmall,
+                color = AppColors.textSecondary,
+                style = AppTypography.labelSmall,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = TerminalColors.textSecondary,
+                tint = AppColors.textSecondary,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -402,14 +402,14 @@ fun TerminalReasoningBlock(part: MessagePart.Reasoning) {
         AnimatedVisibility(visible = expanded) {
             Column {
                 HorizontalDivider(
-                    modifier = Modifier.padding(vertical = TerminalSpacing.sm),
-                    thickness = TerminalSpacing.borderThin,
-                    color = TerminalColors.border
+                    modifier = Modifier.padding(vertical = AppSpacing.sm),
+                    thickness = AppSpacing.borderThin,
+                    color = AppColors.border
                 )
                 Text(
                     text = part.content,
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.bodySmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.bodySmall
                 )
             }
         }
@@ -423,9 +423,9 @@ fun TerminalToolResultBlock(part: MessagePart.ToolResult) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .background(TerminalColors.surface, TerminalShapes.medium)
-            .padding(TerminalSpacing.sm)
+            .clip(AppShapes.medium)
+            .background(AppColors.surface, AppShapes.medium)
+            .padding(AppSpacing.sm)
     ) {
         Row(
             modifier = Modifier
@@ -435,24 +435,24 @@ fun TerminalToolResultBlock(part: MessagePart.ToolResult) {
         ) {
             Text(
                 text = "TOOL OUTPUT",
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelSmall,
+                color = AppColors.textSecondary,
+                style = AppTypography.labelSmall,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = TerminalColors.textSecondary,
+                tint = AppColors.textSecondary,
                 modifier = Modifier.size(16.dp)
             )
         }
         
         AnimatedVisibility(visible = expanded) {
             Column {
-                Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Text(
                     text = part.result,
-                    color = TerminalColors.whiteMuted,
+                    color = AppColors.whiteMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -465,22 +465,22 @@ fun TerminalFileBlock(part: MessagePart.File) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.medium)
-            .padding(TerminalSpacing.sm),
+            .clip(AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+            .padding(AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Description,
             contentDescription = null,
-            tint = TerminalColors.textSecondary,
+            tint = AppColors.textSecondary,
             modifier = Modifier.size(14.dp)
         )
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         Text(
             text = part.filename ?: "ATTACHMENT",
-            color = TerminalColors.textSecondary,
-            style = TerminalTypography.bodySmall
+            color = AppColors.textSecondary,
+            style = AppTypography.bodySmall
         )
     }
 }
@@ -496,25 +496,25 @@ fun TerminalStreamingMessage(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.sm),
+            .padding(vertical = AppSpacing.sm),
         horizontalAlignment = Alignment.Start
     ) {
         // Header
         Row(
-            modifier = Modifier.padding(bottom = TerminalSpacing.xs, start = TerminalSpacing.sm),
+            modifier = Modifier.padding(bottom = AppSpacing.xs, start = AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.SmartToy,
                 contentDescription = null,
-                tint = TerminalColors.accentGreen,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(12.dp)
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
             Text(
                 text = "AGENT STREAMING...",
-                color = TerminalColors.accentGreen,
-                style = TerminalTypography.labelSmall,
+                color = AppColors.accentGreen,
+                style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -532,20 +532,20 @@ fun TerminalStreamingMessage(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(TerminalColors.surfaceContainer, shape)
+                .background(AppColors.surfaceContainer, shape)
                 .border(
-                    width = TerminalSpacing.borderThin,
-                    color = TerminalColors.accentGreen.copy(alpha = 0.5f),
+                    width = AppSpacing.borderThin,
+                    color = AppColors.accentGreen.copy(alpha = 0.5f),
                     shape = shape
                 )
         ) {
             Column(
-                modifier = Modifier.padding(TerminalSpacing.cardPadding)
+                modifier = Modifier.padding(AppSpacing.cardPadding)
             ) {
                 MarkdownText(
                     markdown = text + "█", // Cursor effect
-                    style = TerminalTypography.bodyMedium,
-                    color = TerminalColors.white
+                    style = AppTypography.bodyMedium,
+                    color = AppColors.white
                 )
             }
         }

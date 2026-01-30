@@ -17,9 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import kotlinx.coroutines.delay
 
 @Composable
@@ -39,21 +39,21 @@ fun TerminalProcessingIndicator() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.sm),
+            .padding(vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = frames[frameIndex],
-            color = TerminalColors.accentGreen,
-            style = TerminalTypography.headlineSmall,
+            color = AppColors.accentGreen,
+            style = AppTypography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.width(24.dp)
         )
         
         Text(
             text = "PROCESSING REQUEST...",
-            color = TerminalColors.accentGreen,
-            style = TerminalTypography.labelSmall,
+            color = AppColors.accentGreen,
+            style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
     }

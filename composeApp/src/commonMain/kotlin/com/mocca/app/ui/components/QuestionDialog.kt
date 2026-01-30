@@ -18,9 +18,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.QuestionRequest
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Dialog for handling interactive questions from OpenCode.
@@ -69,13 +69,13 @@ fun QuestionDialog(
             Icon(
                 @Suppress("DEPRECATION") Icons.Default.Help,
                 contentDescription = null,
-                tint = TerminalColors.white
+                tint = AppColors.white
             )
         },
         title = {
             Text(
                 text = "OpenCode needs input",
-                style = TerminalTypography.titleMedium
+                style = AppTypography.titleMedium
             )
         },
         text = {
@@ -83,34 +83,34 @@ fun QuestionDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
-                    .padding(vertical = TerminalSpacing.sm),
-                verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+                    .padding(vertical = AppSpacing.sm),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
             ) {
                 request.questions.forEachIndexed { index, question ->
                     val isMultiple = question.multiple
                     
-                    Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                         // Header/Question text
                         if (question.header.isNotBlank()) {
                             Text(
                                 text = question.header,
-                                style = TerminalTypography.titleSmall,
+                                style = AppTypography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         Text(
                             text = question.question,
-                            style = TerminalTypography.bodyMedium
+                            style = AppTypography.bodyMedium
                         )
                         
                         // Options or Text Field
                         if (question.options.isNotEmpty()) {
                             Surface(
                                 shape = RectangleShape,
-                                color = TerminalColors.surfaceVariant.copy(alpha = 0.3f),
+                                color = AppColors.surfaceVariant.copy(alpha = 0.3f),
                                 border = BorderStroke(
                                     1.dp, 
-                                    TerminalColors.border
+                                    AppColors.border
                                 )
                             ) {
                                 Column {
@@ -133,7 +133,7 @@ fun QuestionDialog(
                                                         }
                                                     }
                                                 )
-                                                .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
+                                                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             if (isMultiple) {
@@ -147,17 +147,17 @@ fun QuestionDialog(
                                                     onClick = null // Handled by toggleable
                                                 )
                                             }
-                                            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                                            Spacer(modifier = Modifier.width(AppSpacing.md))
                                             Column {
                                                 Text(
                                                     text = option.label,
-                                                    style = TerminalTypography.bodyMedium
+                                                    style = AppTypography.bodyMedium
                                                 )
                                                 if (option.description.isNotBlank()) {
                                                     Text(
                                                         text = option.description,
-                                                        style = TerminalTypography.bodySmall,
-                                                        color = TerminalColors.grey
+                                                        style = AppTypography.bodySmall,
+                                                        color = AppColors.grey
                                                     )
                                                 }
                                             }
@@ -178,7 +178,7 @@ fun QuestionDialog(
                                 placeholder = { 
                                     Text(
                                         text = "Enter your answer",
-                                        style = TerminalTypography.bodyMedium
+                                        style = AppTypography.bodyMedium
                                     ) 
                                 },
                                 shape = RectangleShape
@@ -188,8 +188,8 @@ fun QuestionDialog(
                     
                     if (index < request.questions.lastIndex) {
                         HorizontalDivider(
-                            modifier = Modifier.padding(vertical = TerminalSpacing.sm),
-                            color = TerminalColors.border
+                            modifier = Modifier.padding(vertical = AppSpacing.sm),
+                            color = AppColors.border
                         )
                     }
                 }
@@ -206,10 +206,10 @@ fun QuestionDialog(
                 shape = RectangleShape
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
                     text = "Submit",
-                    style = TerminalTypography.labelMedium
+                    style = AppTypography.labelMedium
                 )
             }
         },
@@ -217,20 +217,20 @@ fun QuestionDialog(
             OutlinedButton(
                 onClick = onReject,
                 shape = RectangleShape,
-                border = BorderStroke(1.dp, TerminalColors.border)
+                border = BorderStroke(1.dp, AppColors.border)
             ) {
                 Icon(Icons.Default.Close, contentDescription = null)
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
                     text = "Reject",
-                    style = TerminalTypography.labelMedium
+                    style = AppTypography.labelMedium
                 )
             }
         },
         shape = RectangleShape,
-        containerColor = TerminalColors.surface,
-        titleContentColor = TerminalColors.white,
-        textContentColor = TerminalColors.whiteDim,
-        iconContentColor = TerminalColors.white
+        containerColor = AppColors.surface,
+        titleContentColor = AppColors.white,
+        textContentColor = AppColors.whiteDim,
+        iconContentColor = AppColors.white
     )
 }

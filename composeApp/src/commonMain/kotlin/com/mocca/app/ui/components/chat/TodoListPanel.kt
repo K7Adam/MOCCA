@@ -22,9 +22,9 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Todo
 import com.mocca.app.domain.model.TodoStatus
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 @Composable
 fun TodoListPanel(
@@ -41,10 +41,10 @@ fun TodoListPanel(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TerminalColors.surface)
+                .background(AppColors.surface)
                 .border(
-                    width = TerminalSpacing.borderThin,
-                    color = TerminalColors.border,
+                    width = AppSpacing.borderThin,
+                    color = AppColors.border,
                     shape = RectangleShape
                 )
         ) {
@@ -52,14 +52,14 @@ fun TodoListPanel(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.surfaceVariant)
-                    .padding(TerminalSpacing.sm),
+                    .background(AppColors.surfaceVariant)
+                    .padding(AppSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "// SESSION_PLAN [${todos.count { it.status == TodoStatus.COMPLETED }}/${todos.size}]",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey
                 )
             }
             
@@ -67,18 +67,18 @@ fun TodoListPanel(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(TerminalSpacing.md),
+                        .padding(AppSpacing.md),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "NO_PLAN_DETECTED",
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.greyDark
+                        style = AppTypography.bodySmall,
+                        color = AppColors.greyDark
                     )
                 }
             } else {
                 Column(
-                    modifier = Modifier.padding(TerminalSpacing.sm)
+                    modifier = Modifier.padding(AppSpacing.sm)
                 ) {
                     todos.forEach { todo ->
                         TodoItem(todo)
@@ -99,10 +99,10 @@ private fun TodoItem(todo: Todo) {
     ) {
         // Status Icon
         val (icon, color) = when (todo.status) {
-            TodoStatus.PENDING -> Icons.Default.Pending to TerminalColors.grey
-            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow to TerminalColors.accentGreen
-            TodoStatus.COMPLETED -> Icons.Default.CheckCircle to TerminalColors.accentGreen
-            TodoStatus.CANCELLED -> Icons.Default.Close to TerminalColors.greyDark
+            TodoStatus.PENDING -> Icons.Default.Pending to AppColors.grey
+            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow to AppColors.accentGreen
+            TodoStatus.COMPLETED -> Icons.Default.CheckCircle to AppColors.accentGreen
+            TodoStatus.CANCELLED -> Icons.Default.Close to AppColors.greyDark
         }
         
         Icon(
@@ -112,13 +112,13 @@ private fun TodoItem(todo: Todo) {
             modifier = Modifier.size(16.dp).padding(top = 2.dp)
         )
         
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         
         Text(
             text = todo.content,
-            style = TerminalTypography.bodySmall,
+            style = AppTypography.bodySmall,
             color = if (todo.status == TodoStatus.COMPLETED || todo.status == TodoStatus.CANCELLED) 
-                TerminalColors.grey else TerminalColors.white
+                AppColors.grey else AppColors.white
         )
     }
 }

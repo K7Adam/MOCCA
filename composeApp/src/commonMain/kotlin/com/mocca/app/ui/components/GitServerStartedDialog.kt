@@ -9,7 +9,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 
 /**
  * Alert dialog for Git server started successfully.
@@ -27,34 +27,34 @@ fun GitServerStartedDialog(
                 onRetryConnection()
                 onDismiss()
             }) {
-                Text("Retry Connection", color = TerminalColors.accentGreen)
+                Text("Retry Connection", color = AppColors.accentGreen)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("OK", color = TerminalColors.grey)
+                Text("OK", color = AppColors.grey)
             }
         },
         title = {
             Text(
                 "Git Server Started",
                 fontWeight = FontWeight.Bold,
-                color = TerminalColors.accentGreen
+                color = AppColors.accentGreen
             )
         },
         text = {
             Text(
                 "Git server is now running!\n\n" +
                 "The application will attempt to connect now.",
-                color = TerminalColors.whiteDim
+                color = AppColors.whiteDim
             )
         },
         tonalElevation = 6.dp,
         icon = {
-            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = TerminalColors.accentGreen)
+            Icon(imageVector = Icons.Filled.CheckCircle, contentDescription = null, tint = AppColors.accentGreen)
         },
-        containerColor = TerminalColors.surface,
-        titleContentColor = TerminalColors.white,
-        textContentColor = TerminalColors.whiteDim
+        containerColor = AppColors.surface,
+        titleContentColor = AppColors.white,
+        textContentColor = AppColors.whiteDim
     )
 }

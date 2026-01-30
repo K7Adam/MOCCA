@@ -18,10 +18,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -47,11 +47,11 @@ import androidx.compose.runtime.getValue
 fun TerminalRoleBadge(
     role: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.badgeBackground,
-    textColor: Color = TerminalColors.badgeText,
-    paddingHorizontal: Dp = TerminalSpacing.badgePaddingHorizontal,
-    paddingVertical: Dp = TerminalSpacing.badgePaddingVertical,
-    shape: Shape = TerminalShapes.badge
+    backgroundColor: Color = AppColors.badgeBackground,
+    textColor: Color = AppColors.badgeText,
+    paddingHorizontal: Dp = AppSpacing.badgePaddingHorizontal,
+    paddingVertical: Dp = AppSpacing.badgePaddingVertical,
+    shape: Shape = AppShapes.badge
 ) {
     Box(
         modifier = modifier
@@ -62,7 +62,7 @@ fun TerminalRoleBadge(
         Text(
             text = role.uppercase(),
             color = textColor,
-            style = TerminalTypography.labelSmall,
+            style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
     }
@@ -77,23 +77,23 @@ fun TerminalOutlinedBadge(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Transparent,
-    textColor: Color = TerminalColors.textSecondary,
-    borderColor: Color = TerminalColors.border,
-    paddingHorizontal: Dp = TerminalSpacing.badgePaddingHorizontal,
-    paddingVertical: Dp = TerminalSpacing.badgePaddingVertical,
-    shape: Shape = TerminalShapes.pill
+    textColor: Color = AppColors.textSecondary,
+    borderColor: Color = AppColors.border,
+    paddingHorizontal: Dp = AppSpacing.badgePaddingHorizontal,
+    paddingVertical: Dp = AppSpacing.badgePaddingVertical,
+    shape: Shape = AppShapes.pill
 ) {
     Box(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .border(AppSpacing.borderThin, borderColor, shape)
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = TerminalTypography.labelSmall,
+            style = AppTypography.labelSmall,
             fontWeight = FontWeight.Medium
         )
     }
@@ -115,19 +115,19 @@ fun TerminalStatusBadge(
     showDot: Boolean = true
 ) {
     val (dotColor, textColor) = when (status) {
-        TerminalStatus.ONLINE -> TerminalColors.accentGreen to TerminalColors.accentGreen
-        TerminalStatus.OFFLINE -> TerminalColors.statusOffline to TerminalColors.statusOffline
-        TerminalStatus.WAITING -> TerminalColors.statusWaiting to TerminalColors.statusWaiting
-        TerminalStatus.IDLE -> TerminalColors.textTertiary to TerminalColors.textTertiary
+        TerminalStatus.ONLINE -> AppColors.accentGreen to AppColors.accentGreen
+        TerminalStatus.OFFLINE -> AppColors.statusOffline to AppColors.statusOffline
+        TerminalStatus.WAITING -> AppColors.statusWaiting to AppColors.statusWaiting
+        TerminalStatus.IDLE -> AppColors.textTertiary to AppColors.textTertiary
     }
     
     Row(
         modifier = modifier
-            .clip(TerminalShapes.pill)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
-            .padding(horizontal = TerminalSpacing.badgePaddingHorizontal, vertical = TerminalSpacing.badgePaddingVertical),
+            .clip(AppShapes.pill)
+            .background(AppColors.surfaceVariant, AppShapes.pill)
+            .padding(horizontal = AppSpacing.badgePaddingHorizontal, vertical = AppSpacing.badgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         if (showDot) {
             StatusDot(color = dotColor)
@@ -135,7 +135,7 @@ fun TerminalStatusBadge(
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = TerminalTypography.labelSmall,
+            style = AppTypography.labelSmall,
             fontWeight = FontWeight.Medium
         )
     }
@@ -159,7 +159,7 @@ enum class TerminalStatus {
 fun StatusDot(
     color: Color,
     modifier: Modifier = Modifier,
-    size: Dp = TerminalSpacing.statusDotSize,
+    size: Dp = AppSpacing.statusDotSize,
     showGlow: Boolean = true
 ) {
     Box(
@@ -191,7 +191,7 @@ fun StatusDot(
 fun StatusSquare(
     color: Color,
     modifier: Modifier = Modifier,
-    size: Dp = TerminalSpacing.statusDotSize,
+    size: Dp = AppSpacing.statusDotSize,
     isTransitioning: Boolean = false
 ) {
     if (isTransitioning) {
@@ -209,16 +209,16 @@ fun StatusSquare(
         Box(
             modifier = modifier
                 .size(size)
-                .clip(TerminalShapes.extraSmall)
-                .background(color.copy(alpha = alpha), TerminalShapes.extraSmall)
-                .border(1.dp, color, TerminalShapes.extraSmall)
+                .clip(AppShapes.extraSmall)
+                .background(color.copy(alpha = alpha), AppShapes.extraSmall)
+                .border(1.dp, color, AppShapes.extraSmall)
         )
     } else {
         Box(
             modifier = modifier
                 .size(size)
-                .clip(TerminalShapes.extraSmall)
-                .background(color, TerminalShapes.extraSmall)
+                .clip(AppShapes.extraSmall)
+                .background(color, AppShapes.extraSmall)
         )
     }
 }
@@ -234,11 +234,11 @@ fun StatusSquare(
 fun TerminalTag(
     text: String,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.surfaceVariant,
-    textColor: Color = TerminalColors.textSecondary,
-    paddingHorizontal: Dp = TerminalSpacing.tagPaddingHorizontal,
-    paddingVertical: Dp = TerminalSpacing.tagPaddingVertical,
-    shape: Shape = TerminalShapes.tag
+    backgroundColor: Color = AppColors.surfaceVariant,
+    textColor: Color = AppColors.textSecondary,
+    paddingHorizontal: Dp = AppSpacing.tagPaddingHorizontal,
+    paddingVertical: Dp = AppSpacing.tagPaddingVertical,
+    shape: Shape = AppShapes.tag
 ) {
     Box(
         modifier = modifier
@@ -249,7 +249,7 @@ fun TerminalTag(
         Text(
             text = text.uppercase(),
             color = textColor,
-            style = TerminalTypography.labelSmall
+            style = AppTypography.labelSmall
         )
     }
 }
@@ -264,21 +264,21 @@ fun TerminalTag(
 @Composable
 fun TerminalConnectedBadge(
     modifier: Modifier = Modifier,
-    shape: Shape = TerminalShapes.pill
+    shape: Shape = AppShapes.pill
 ) {
     Row(
         modifier = modifier
             .clip(shape)
-            .background(TerminalColors.accentGreen.copy(alpha = 0.15f), shape)
-            .padding(horizontal = TerminalSpacing.badgePaddingHorizontal, vertical = TerminalSpacing.badgePaddingVertical),
+            .background(AppColors.accentGreen.copy(alpha = 0.15f), shape)
+            .padding(horizontal = AppSpacing.badgePaddingHorizontal, vertical = AppSpacing.badgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
-        StatusDot(color = TerminalColors.accentGreen, size = TerminalSpacing.statusDotSizeSmall)
+        StatusDot(color = AppColors.accentGreen, size = AppSpacing.statusDotSizeSmall)
         Text(
             text = "CONNECTED",
-            color = TerminalColors.accentGreen,
-            style = TerminalTypography.labelSmall,
+            color = AppColors.accentGreen,
+            style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
     }
@@ -293,8 +293,8 @@ fun TerminalEditBadge(
 ) {
     Text(
         text = "EDIT",
-        color = TerminalColors.textSecondary,
-        style = TerminalTypography.labelSmall,
+        color = AppColors.textSecondary,
+        style = AppTypography.labelSmall,
         modifier = modifier
     )
 }

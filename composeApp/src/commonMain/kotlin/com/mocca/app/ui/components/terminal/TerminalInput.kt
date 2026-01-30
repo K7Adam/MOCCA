@@ -50,10 +50,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Modern MOCCA input components with pill-shaped design.
@@ -79,10 +79,10 @@ fun TerminalInput(
     enabled: Boolean = true,
     singleLine: Boolean = true,
     showPrompt: Boolean = false, // Modern design doesn't use terminal prompts
-    backgroundColor: Color = TerminalColors.surfaceContainer,
-    borderColor: Color = TerminalColors.border,
-    borderWidth: Dp = TerminalSpacing.borderThin,
-    shape: Shape = TerminalShapes.input,
+    backgroundColor: Color = AppColors.surfaceContainer,
+    borderColor: Color = AppColors.border,
+    borderWidth: Dp = AppSpacing.borderThin,
+    shape: Shape = AppShapes.input,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -91,21 +91,21 @@ fun TerminalInput(
         if (label != null) {
             Text(
                 text = label.uppercase(),
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelMedium
+                color = AppColors.textSecondary,
+                style = AppTypography.labelMedium
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
         }
         
         // Input field with rounded corners
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TerminalSpacing.inputHeight)
+                .height(AppSpacing.inputHeight)
                 .clip(shape)
                 .background(backgroundColor, shape)
                 .border(borderWidth, borderColor, shape)
-                .padding(horizontal = TerminalSpacing.inputPaddingHorizontal)
+                .padding(horizontal = AppSpacing.inputPaddingHorizontal)
         ) {
             Row(
                 modifier = Modifier.align(Alignment.CenterStart),
@@ -114,8 +114,8 @@ fun TerminalInput(
                 if (showPrompt) {
                     Text(
                         text = "> ",
-                        color = TerminalColors.accentGreen,
-                        style = TerminalTypography.bodyMedium
+                        color = AppColors.accentGreen,
+                        style = AppTypography.bodyMedium
                     )
                 }
                 
@@ -125,10 +125,10 @@ fun TerminalInput(
                     modifier = Modifier.weight(1f),
                     enabled = enabled,
                     singleLine = singleLine,
-                    textStyle = TerminalTypography.bodyMedium.copy(
-                        color = TerminalColors.white
+                    textStyle = AppTypography.bodyMedium.copy(
+                        color = AppColors.white
                     ),
-                    cursorBrush = SolidColor(TerminalColors.accentGreen),
+                    cursorBrush = SolidColor(AppColors.accentGreen),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     decorationBox = { innerTextField ->
@@ -136,8 +136,8 @@ fun TerminalInput(
                             if (value.isEmpty()) {
                                 Text(
                                     text = placeholder,
-                                    color = TerminalColors.textPlaceholder,
-                                    style = TerminalTypography.bodyMedium
+                                    color = AppColors.textPlaceholder,
+                                    style = AppTypography.bodyMedium
                                 )
                             }
                             innerTextField()
@@ -149,11 +149,11 @@ fun TerminalInput(
         
         // Hint (optional helper text)
         if (hint != null) {
-            Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = hint,
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.labelSmall
+                color = AppColors.textTertiary,
+                style = AppTypography.labelSmall
             )
         }
     }
@@ -289,16 +289,16 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceContainer, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
     ) {
         // Status bar (MODEL + MODE) - clickable to open selectors
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)
-                .padding(horizontal = TerminalSpacing.inputPaddingHorizontal),
+                .padding(horizontal = AppSpacing.inputPaddingHorizontal),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -310,30 +310,30 @@ fun RichChatInput(
             ) {
                 Text(
                     text = "MODEL: $modelName".uppercase(),
-                    color = if (providerResponse != null) TerminalColors.textSecondary else TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 if (providerResponse != null) {
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "▼",
-                        color = TerminalColors.textTertiary,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelSmall
                     )
                 }
             }
             
             Text(
                 text = "MODE: $agentName".uppercase(),
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.labelSmall
+                color = AppColors.textTertiary,
+                style = AppTypography.labelSmall
             )
         }
         
         // Divider
         HorizontalDivider(
-            thickness = TerminalSpacing.borderThin,
-            color = TerminalColors.border
+            thickness = AppSpacing.borderThin,
+            color = AppColors.border
         )
         
         // Attached files display (if any)
@@ -341,8 +341,8 @@ fun RichChatInput(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TerminalSpacing.inputPaddingHorizontal, vertical = TerminalSpacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                    .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 attachedFiles.forEach { file ->
                     AttachmentChip(
@@ -353,8 +353,8 @@ fun RichChatInput(
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
         }
         
@@ -363,7 +363,7 @@ fun RichChatInput(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 80.dp, max = 240.dp)
-                .padding(TerminalSpacing.inputPaddingHorizontal)
+                .padding(AppSpacing.inputPaddingHorizontal)
         ) {
             BasicTextField(
                 value = value,
@@ -381,10 +381,10 @@ fun RichChatInput(
                         }
                     },
                 enabled = enabled,
-                textStyle = TerminalTypography.bodyMedium.copy(
-                    color = TerminalColors.white
+                textStyle = AppTypography.bodyMedium.copy(
+                    color = AppColors.white
                 ),
-                cursorBrush = SolidColor(TerminalColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accentGreen),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,
                 decorationBox = { innerTextField ->
@@ -392,8 +392,8 @@ fun RichChatInput(
                         if (value.isEmpty()) {
                             Text(
                                 text = placeholder,
-                                color = TerminalColors.textPlaceholder,
-                                style = TerminalTypography.bodyMedium
+                                color = AppColors.textPlaceholder,
+                                style = AppTypography.bodyMedium
                             )
                         }
                         innerTextField()
@@ -414,16 +414,16 @@ fun RichChatInput(
         
         // Divider
         HorizontalDivider(
-            thickness = TerminalSpacing.borderThin,
-            color = TerminalColors.border
+            thickness = AppSpacing.borderThin,
+            color = AppColors.border
         )
         
         // Action toolbar with mode buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(TerminalSpacing.actionToolbarHeight)
-                .padding(horizontal = TerminalSpacing.sm),
+                .height(AppSpacing.actionToolbarHeight)
+                .padding(horizontal = AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // @ mention button - inserts @
@@ -431,24 +431,24 @@ fun RichChatInput(
                 icon = Icons.Default.Add,
                 onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
                 size = 36.dp,
-                iconColor = TerminalColors.textSecondary
+                iconColor = AppColors.textSecondary
             )
             
             // / command button - inserts /
             TerminalTextButton(
                 text = "/",
                 onClick = { handleValueChange("/") },
-                textColor = TerminalColors.textSecondary
+                textColor = AppColors.textSecondary
             )
             
             // Divider
-            Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
             VerticalDivider(
                 modifier = Modifier.height(16.dp),
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
             
             // Mode selector buttons (as pills)
             if (modes.isNotEmpty()) {
@@ -459,7 +459,7 @@ fun RichChatInput(
                         isSelected = isSelected,
                         onClick = { onModeSelected(if (isSelected) null else mode.id) }
                     )
-                    Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
                 }
             } else {
                 // Fallback static mode button
@@ -477,10 +477,10 @@ fun RichChatInput(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachClick,
                 size = 36.dp,
-                iconColor = TerminalColors.textSecondary
+                iconColor = AppColors.textSecondary
             )
             
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             // Send button (pill-shaped)
             TerminalCompactButton(
@@ -516,35 +516,35 @@ private fun AttachmentChip(
 ) {
     Row(
         modifier = Modifier
-            .clip(TerminalShapes.pill)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.pill)
-            .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xs),
+            .clip(AppShapes.pill)
+            .background(AppColors.surfaceVariant, AppShapes.pill)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.pill)
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             Icons.Default.AttachFile,
             contentDescription = null,
-            tint = TerminalColors.textSecondary,
+            tint = AppColors.textSecondary,
             modifier = Modifier.size(12.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = file.name.take(20),
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.textSecondary
+            style = AppTypography.labelSmall,
+            color = AppColors.textSecondary
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             text = "(${file.displaySize})",
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.textTertiary
+            style = AppTypography.labelSmall,
+            color = AppColors.textTertiary
         )
-        Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+        Spacer(modifier = Modifier.width(AppSpacing.xs))
         Icon(
             Icons.Default.Close,
             contentDescription = "Remove",
-            tint = TerminalColors.textTertiary,
+            tint = AppColors.textTertiary,
             modifier = Modifier
                 .size(14.dp)
                 .clickable { onRemove() }
@@ -570,7 +570,7 @@ fun CommandLineInput(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     placeholder: String = "Enter command...",
-    shape: Shape = TerminalShapes.input,
+    shape: Shape = AppShapes.input,
     // ═══════════════════════════════════════════════════════════════════════════════
     // COMMAND HISTORY (Priority 5.3) - History navigation callbacks
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -581,9 +581,9 @@ fun CommandLineInput(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(TerminalColors.surfaceContainer, shape)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, shape)
-            .padding(horizontal = TerminalSpacing.inputPaddingHorizontal, vertical = TerminalSpacing.inputPaddingVertical),
+            .background(AppColors.surfaceContainer, shape)
+            .border(AppSpacing.borderThin, AppColors.border, shape)
+            .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BasicTextField(
@@ -592,10 +592,10 @@ fun CommandLineInput(
             modifier = Modifier.weight(1f),
             enabled = enabled,
             singleLine = true,
-            textStyle = TerminalTypography.bodyMedium.copy(
-                color = TerminalColors.white
+            textStyle = AppTypography.bodyMedium.copy(
+                color = AppColors.white
             ),
-            cursorBrush = SolidColor(TerminalColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.accentGreen),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             decorationBox = { innerTextField ->
@@ -603,8 +603,8 @@ fun CommandLineInput(
                     if (value.isEmpty()) {
                         Text(
                             text = placeholder,
-                            color = TerminalColors.textPlaceholder,
-                            style = TerminalTypography.bodyMedium
+                            color = AppColors.textPlaceholder,
+                            style = AppTypography.bodyMedium
                         )
                     }
                     innerTextField()
@@ -617,14 +617,14 @@ fun CommandLineInput(
         // ═══════════════════════════════════════════════════════════════════════════════
         if (onHistoryUp != null || onHistoryDown != null) {
             Column(
-                modifier = Modifier.padding(horizontal = TerminalSpacing.xs)
+                modifier = Modifier.padding(horizontal = AppSpacing.xs)
             ) {
                 if (onHistoryUp != null) {
                     TerminalIconButton(
                         icon = Icons.Default.KeyboardArrowUp,
                         onClick = onHistoryUp,
                         enabled = enabled,
-                        iconColor = TerminalColors.textSecondary,
+                        iconColor = AppColors.textSecondary,
                         size = 24.dp,
                         contentDescription = "Previous command"
                     )
@@ -634,7 +634,7 @@ fun CommandLineInput(
                         icon = Icons.Default.KeyboardArrowDown,
                         onClick = onHistoryDown,
                         enabled = enabled,
-                        iconColor = TerminalColors.textSecondary,
+                        iconColor = AppColors.textSecondary,
                         size = 24.dp,
                         contentDescription = "Next command"
                     )
@@ -642,15 +642,15 @@ fun CommandLineInput(
             }
         }
         
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         
         // Send button (circular FAB style)
         TerminalFab(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = 48.dp,
-            backgroundColor = if (value.isNotBlank()) TerminalColors.buttonBackground else TerminalColors.greyDark,
-            iconColor = if (value.isNotBlank()) TerminalColors.buttonText else TerminalColors.textTertiary
+            backgroundColor = if (value.isNotBlank()) AppColors.buttonBackground else AppColors.greyDark,
+            iconColor = if (value.isNotBlank()) AppColors.buttonText else AppColors.textTertiary
         )
     }
 }

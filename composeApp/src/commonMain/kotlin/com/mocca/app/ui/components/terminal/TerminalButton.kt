@@ -32,10 +32,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Modern MOCCA button components with pill-shaped design.
@@ -56,11 +56,11 @@ fun TerminalButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = TerminalColors.buttonBackground,
-    textColor: Color = TerminalColors.buttonText,
-    disabledBackgroundColor: Color = TerminalColors.greyDark,
-    disabledTextColor: Color = TerminalColors.grey,
-    height: Dp = TerminalSpacing.buttonHeight,
+    backgroundColor: Color = AppColors.buttonBackground,
+    textColor: Color = AppColors.buttonText,
+    disabledBackgroundColor: Color = AppColors.greyDark,
+    disabledTextColor: Color = AppColors.grey,
+    height: Dp = AppSpacing.buttonHeight,
     showBrackets: Boolean = false, // Changed default - modern design doesn't use brackets
     icon: ImageVector? = null,
     showArrow: Boolean = false
@@ -82,7 +82,7 @@ fun TerminalButton(
             .fillMaxWidth()
             .height(height)
             .scale(scale)
-            .background(bgColor, TerminalShapes.pill)
+            .background(bgColor, AppShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -107,20 +107,20 @@ fun TerminalButton(
                     tint = txtColor,
                     modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
             }
             Text(
                 text = displayText.uppercase(),
                 color = txtColor,
-                style = TerminalTypography.labelLarge,
+                style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
             if (showArrow) {
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
                     text = "→",
                     color = txtColor,
-                    style = TerminalTypography.labelLarge
+                    style = AppTypography.labelLarge
                 )
             }
         }
@@ -141,12 +141,12 @@ fun TerminalOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    borderColor: Color = TerminalColors.borderLight,
-    textColor: Color = TerminalColors.white,
-    disabledBorderColor: Color = TerminalColors.greyDark,
-    disabledTextColor: Color = TerminalColors.grey,
-    borderWidth: Dp = TerminalSpacing.borderThin,
-    height: Dp = TerminalSpacing.buttonHeight,
+    borderColor: Color = AppColors.borderLight,
+    textColor: Color = AppColors.white,
+    disabledBorderColor: Color = AppColors.greyDark,
+    disabledTextColor: Color = AppColors.grey,
+    borderWidth: Dp = AppSpacing.borderThin,
+    height: Dp = AppSpacing.buttonHeight,
     showBrackets: Boolean = false,
     icon: ImageVector? = null
 ) {
@@ -167,8 +167,8 @@ fun TerminalOutlinedButton(
             .fillMaxWidth()
             .height(height)
             .scale(scale)
-            .background(Color.Transparent, TerminalShapes.pill)
-            .border(borderWidth, brdColor, TerminalShapes.pill)
+            .background(Color.Transparent, AppShapes.pill)
+            .border(borderWidth, brdColor, AppShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -193,12 +193,12 @@ fun TerminalOutlinedButton(
                     tint = txtColor,
                     modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
             }
             Text(
                 text = displayText.uppercase(),
                 color = txtColor,
-                style = TerminalTypography.labelMedium,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -218,10 +218,10 @@ fun TerminalCompactButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = TerminalColors.white,
-    textColor: Color = TerminalColors.background,
+    backgroundColor: Color = AppColors.white,
+    textColor: Color = AppColors.background,
     height: Dp = 40.dp,
-    paddingHorizontal: Dp = TerminalSpacing.pillPaddingHorizontal,
+    paddingHorizontal: Dp = AppSpacing.pillPaddingHorizontal,
     icon: ImageVector? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -232,14 +232,14 @@ fun TerminalCompactButton(
         label = "buttonScale"
     )
     
-    val bgColor = if (enabled) backgroundColor else TerminalColors.greyDark
-    val txtColor = if (enabled) textColor else TerminalColors.grey
+    val bgColor = if (enabled) backgroundColor else AppColors.greyDark
+    val txtColor = if (enabled) textColor else AppColors.grey
     
     Box(
         modifier = modifier
             .height(height)
             .scale(scale)
-            .background(bgColor, TerminalShapes.pill)
+            .background(bgColor, AppShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -265,12 +265,12 @@ fun TerminalCompactButton(
                     tint = txtColor,
                     modifier = Modifier.size(16.dp)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
             }
             Text(
                 text = text.uppercase(),
                 color = txtColor,
-                style = TerminalTypography.labelMedium,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -291,11 +291,11 @@ fun TabPillButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    activeBackgroundColor: Color = TerminalColors.primary,
-    activeTextColor: Color = TerminalColors.white,
+    activeBackgroundColor: Color = AppColors.primary,
+    activeTextColor: Color = AppColors.white,
     inactiveBackgroundColor: Color = Color.Transparent,
-    inactiveBorderColor: Color = TerminalColors.borderLight,
-    inactiveTextColor: Color = TerminalColors.textSecondary
+    inactiveBorderColor: Color = AppColors.borderLight,
+    inactiveTextColor: Color = AppColors.textSecondary
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     
@@ -304,11 +304,11 @@ fun TabPillButton(
             .height(40.dp)
             .then(
                 if (isSelected) {
-                    Modifier.background(activeBackgroundColor, TerminalShapes.pill)
+                    Modifier.background(activeBackgroundColor, AppShapes.pill)
                 } else {
                     Modifier
-                        .background(inactiveBackgroundColor, TerminalShapes.pill)
-                        .border(TerminalSpacing.borderThin, inactiveBorderColor, TerminalShapes.pill)
+                        .background(inactiveBackgroundColor, AppShapes.pill)
+                        .border(AppSpacing.borderThin, inactiveBorderColor, AppShapes.pill)
                 }
             )
             .clickable(
@@ -316,13 +316,13 @@ fun TabPillButton(
                 indication = ripple(color = Color.White.copy(alpha = 0.1f)),
                 onClick = onClick
             )
-            .padding(horizontal = TerminalSpacing.pillPaddingHorizontal),
+            .padding(horizontal = AppSpacing.pillPaddingHorizontal),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color = if (isSelected) activeTextColor else inactiveTextColor,
-            style = TerminalTypography.labelMedium,
+            style = AppTypography.labelMedium,
             fontWeight = FontWeight.Medium
         )
     }
@@ -343,9 +343,9 @@ fun TerminalIconButton(
     contentDescription: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = Color.Transparent,
-    iconColor: Color = TerminalColors.white,
+    iconColor: Color = AppColors.white,
     borderColor: Color? = null,
-    size: Dp = TerminalSpacing.iconButtonSize
+    size: Dp = AppSpacing.iconButtonSize
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -355,16 +355,16 @@ fun TerminalIconButton(
         label = "iconButtonScale"
     )
     
-    val tintColor = if (enabled) iconColor else TerminalColors.grey
+    val tintColor = if (enabled) iconColor else AppColors.grey
     
     Box(
         modifier = modifier
             .size(size)
             .scale(scale)
-            .background(backgroundColor, TerminalShapes.circle)
+            .background(backgroundColor, AppShapes.circle)
             .then(
                 if (borderColor != null) {
-                    Modifier.border(TerminalSpacing.borderThin, borderColor, TerminalShapes.circle)
+                    Modifier.border(AppSpacing.borderThin, borderColor, AppShapes.circle)
                 } else {
                     Modifier
                 }
@@ -407,9 +407,9 @@ fun TerminalFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    backgroundColor: Color = TerminalColors.buttonBackground,
-    iconColor: Color = TerminalColors.buttonText,
-    size: Dp = TerminalSpacing.fabSize
+    backgroundColor: Color = AppColors.buttonBackground,
+    iconColor: Color = AppColors.buttonText,
+    size: Dp = AppSpacing.fabSize
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -423,7 +423,7 @@ fun TerminalFab(
         modifier = modifier
             .size(size)
             .scale(scale)
-            .background(backgroundColor, TerminalShapes.circle)
+            .background(backgroundColor, AppShapes.circle)
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(
@@ -456,10 +456,10 @@ fun TerminalTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textColor: Color = TerminalColors.greyLight
+    textColor: Color = AppColors.greyLight
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val color = if (enabled) textColor else TerminalColors.greyDark
+    val color = if (enabled) textColor else AppColors.greyDark
     
     Box(
         modifier = modifier
@@ -475,13 +475,13 @@ fun TerminalTextButton(
                     Modifier
                 }
             )
-            .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm),
+            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             color = color,
-            style = TerminalTypography.labelMedium,
+            style = AppTypography.labelMedium,
             fontWeight = FontWeight.Medium
         )
     }

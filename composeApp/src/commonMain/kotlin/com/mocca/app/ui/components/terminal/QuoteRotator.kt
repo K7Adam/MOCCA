@@ -27,8 +27,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 import kotlinx.coroutines.delay
 
 /**
@@ -65,7 +65,7 @@ fun QuoteRotator(
     intervalMs: Long = 4000L,
     fadeInDurationMs: Int = 500,
     fadeOutDurationMs: Int = 500,
-    textColor: Color = TerminalColors.white,
+    textColor: Color = AppColors.white,
     showAsciiArt: Boolean = true,
     versionText: String? = null,
     serverText: String? = null,
@@ -84,7 +84,7 @@ fun QuoteRotator(
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
         // ASCII art globe/logo
         if (showAsciiArt) {
@@ -99,16 +99,16 @@ fun QuoteRotator(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(24.dp),
                     strokeWidth = 2.dp,
-                    color = TerminalColors.statusWaiting
+                    color = AppColors.statusWaiting
                 )
                 Text(
                     text = loadingText,
-                    color = TerminalColors.statusWaiting,
+                    color = AppColors.statusWaiting,
                     style = MaterialTheme.typography.labelMedium,
                     textAlign = TextAlign.Center
                 )
@@ -143,7 +143,7 @@ fun QuoteRotator(
             val metaText = listOfNotNull(versionText, serverText).joinToString(" • ")
             Text(
                 text = metaText.uppercase(),
-                color = TerminalColors.greyDark,
+                color = AppColors.greyDark,
                 style = MaterialTheme.typography.labelSmall,
                 textAlign = TextAlign.Center
             )
@@ -161,7 +161,7 @@ fun QuoteRotator(
 @Composable
 fun AsciiGlobe(
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.grey
+    color: Color = AppColors.grey
 ) {
     val asciiArt = """
            .---.
@@ -191,7 +191,7 @@ fun AsciiGlobe(
 @Composable
 fun AsciiTerminal(
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.grey
+    color: Color = AppColors.grey
 ) {
     val asciiArt = """
         ┌─────────────────────┐
@@ -217,7 +217,7 @@ fun AsciiTerminal(
 @Composable
 fun DecorativeBrackets(
     modifier: Modifier = Modifier,
-    color: Color = TerminalColors.white
+    color: Color = AppColors.white
 ) {
     Text(
         text = "[[ ]]",

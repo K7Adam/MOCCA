@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.mocca.app.data.GlobalActivityManager
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 import org.koin.compose.koinInject
 
 /**
@@ -53,7 +53,7 @@ fun GlobalActivityIndicator(
             .size(8.dp)
             .alpha(alpha)
             .background(
-                color = TerminalColors.accentGreen,
+                color = AppColors.accentGreen,
                 shape = CircleShape
             )
     )
@@ -86,7 +86,7 @@ fun CompactActivityIndicator(
             .size(6.dp)
             .alpha(alpha)
             .background(
-                color = TerminalColors.accentGreen,
+                color = AppColors.accentGreen,
                 shape = CircleShape
             )
     )

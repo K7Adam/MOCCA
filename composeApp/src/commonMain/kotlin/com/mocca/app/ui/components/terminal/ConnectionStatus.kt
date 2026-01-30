@@ -22,10 +22,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material3.MaterialTheme
 
 /**
@@ -52,47 +52,47 @@ fun ConnectionStatusBanner(
             Quadruple(
                 Icons.Default.WifiOff,
                 status.error ?: "NO CONNECTION",
-                TerminalColors.surfaceContainer,
-                TerminalColors.statusOffline
+                AppColors.surfaceContainer,
+                AppColors.statusOffline
             )
         is ConnectionBannerStatus.Connecting ->
             Quadruple(
                 Icons.Default.Warning,
                 "CONNECTING... (${status.attempt}/${status.maxAttempts})",
-                TerminalColors.surfaceContainer,
-                TerminalColors.statusWaiting
+                AppColors.surfaceContainer,
+                AppColors.statusWaiting
             )
         is ConnectionBannerStatus.WaitingForNetwork ->
             Quadruple(
                 Icons.Default.WifiOff,
                 "WAITING FOR NETWORK",
-                TerminalColors.surfaceContainer,
-                TerminalColors.statusWaiting
+                AppColors.surfaceContainer,
+                AppColors.statusWaiting
             )
         is ConnectionBannerStatus.Reconnecting ->
             Quadruple(
                 Icons.Default.Warning,
                 "RECONNECTING... (${status.attempt}/${status.maxAttempts})",
-                TerminalColors.surfaceContainer,
-                TerminalColors.statusWaiting
+                AppColors.surfaceContainer,
+                AppColors.statusWaiting
             )
         is ConnectionBannerStatus.Error ->
             Quadruple(
                 Icons.Default.Warning,
                 status.message,
-                TerminalColors.surfaceContainer,
-                TerminalColors.error
+                AppColors.surfaceContainer,
+                AppColors.error
             )
     }
     
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .background(backgroundColor, TerminalShapes.medium)
+            .clip(AppShapes.medium)
+            .background(backgroundColor, AppShapes.medium)
             .padding(
-                horizontal = TerminalSpacing.lg,
-                vertical = TerminalSpacing.md
+                horizontal = AppSpacing.lg,
+                vertical = AppSpacing.md
             )
     ) {
         Row(
@@ -102,7 +102,7 @@ fun ConnectionStatusBanner(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 Icon(
                     imageVector = icon,
@@ -112,19 +112,19 @@ fun ConnectionStatusBanner(
                 Text(
                     text = message.uppercase(),
                     color = textColor,
-                    style = TerminalTypography.labelMedium,
+                    style = AppTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
             
             Row(
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 if (onRetryClick != null) {
                     TerminalTextButton(
                         text = "RETRY",
                         onClick = onRetryClick,
-                        textColor = TerminalColors.white
+                        textColor = AppColors.white
                     )
                 }
             }
@@ -163,21 +163,21 @@ fun InlineConnectionStatus(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         if (!isConnected) {
-            StatusDot(color = TerminalColors.statusOffline)
+            StatusDot(color = AppColors.statusOffline)
             Text(
                 text = "NO SIGNAL",
-                color = TerminalColors.statusOffline,
-                style = TerminalTypography.labelSmall
+                color = AppColors.statusOffline,
+                style = AppTypography.labelSmall
             )
         } else {
             // Minimalist: show connected text without dot
             Text(
                 text = (serverName?.uppercase() ?: "CONNECTED"),
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelSmall
+                color = AppColors.textSecondary,
+                style = AppTypography.labelSmall
             )
         }
     }
@@ -198,9 +198,9 @@ fun NotImplementedBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.medium)
-            .padding(TerminalSpacing.lg)
+            .clip(AppShapes.medium)
+            .background(AppColors.surfaceVariant, AppShapes.medium)
+            .padding(AppSpacing.lg)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -208,15 +208,15 @@ fun NotImplementedBanner(
         ) {
             Text(
                 text = "NOT IMPLEMENTED",
-                color = TerminalColors.statusWaiting,
-                style = TerminalTypography.labelMedium,
+                color = AppColors.statusWaiting,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = "${featureName.uppercase()} feature is under development",
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.bodySmall
+                color = AppColors.textTertiary,
+                style = AppTypography.bodySmall
             )
         }
     }
@@ -240,35 +240,35 @@ fun TerminalEmptyState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TerminalSpacing.xxl),
+            .padding(AppSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = TerminalColors.textTertiary
+                tint = AppColors.textTertiary
             )
         }
         
         Text(
             text = title.uppercase(),
-            color = TerminalColors.white,
-            style = TerminalTypography.headlineSmall,
+            color = AppColors.white,
+            style = AppTypography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.bodySmall
+                color = AppColors.textSecondary,
+                style = AppTypography.bodySmall
             )
         }
         
         if (action != null) {
-            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             action()
         }
     }
@@ -289,15 +289,15 @@ fun TerminalLoadingState(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TerminalSpacing.xxl),
+            .padding(AppSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         // Simple text-based loading indicator
         TypewriterText(
             text = message.uppercase(),
-            color = TerminalColors.white,
-            style = TerminalTypography.headlineSmall,
+            color = AppColors.white,
+            style = AppTypography.headlineSmall,
             typingDelayMs = 100L,
             showCursor = true
         )

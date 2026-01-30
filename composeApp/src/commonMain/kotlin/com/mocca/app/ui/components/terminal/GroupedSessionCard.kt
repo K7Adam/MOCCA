@@ -44,10 +44,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -101,21 +101,21 @@ fun RunningSessionIndicator(
                 modifier = Modifier
                     .size((8 * pulseScale).dp)
                     .alpha(pulseAlpha * 0.5f)
-                    .background(TerminalColors.accentGreen, CircleShape)
+                    .background(AppColors.accentGreen, CircleShape)
             )
             // Core dot
             Box(
                 modifier = Modifier
                     .size(8.dp)
-                    .background(TerminalColors.accentGreen, CircleShape)
+                    .background(AppColors.accentGreen, CircleShape)
             )
         }
         
         // Status label
         Text(
             text = statusLabel,
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.accentGreen,
+            style = AppTypography.labelSmall,
+            color = AppColors.accentGreen,
             fontWeight = FontWeight.Bold,
             fontSize = 10.sp,
             letterSpacing = 1.sp
@@ -154,22 +154,22 @@ private fun StackedChildPreview(
                     .zIndex(i.toFloat())
                     .size(width = 40.dp, height = 24.dp)
                     .alpha(alpha)
-                    .clip(TerminalShapes.small)
+                    .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            TerminalColors.accentGreen.copy(alpha = 0.2f)
+                            AppColors.accentGreen.copy(alpha = 0.2f)
                         } else {
-                            TerminalColors.surfaceContainer
+                            AppColors.surfaceContainer
                         }
                     )
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            TerminalColors.accentGreen.copy(alpha = 0.5f)
+                            AppColors.accentGreen.copy(alpha = 0.5f)
                         } else {
-                            TerminalColors.border
+                            AppColors.border
                         },
-                        shape = TerminalShapes.small
+                        shape = AppShapes.small
                     )
             )
         }
@@ -219,16 +219,16 @@ fun GroupedSessionCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(TerminalShapes.sessionCard)
-                    .background(TerminalColors.surfaceContainer, TerminalShapes.sessionCard)
+                    .clip(AppShapes.sessionCard)
+                    .background(AppColors.surfaceContainer, AppShapes.sessionCard)
                     .then(
                         if (isActive) {
                             Modifier.drawBehind {
                                 drawRect(
-                                    color = TerminalColors.accentGreen,
+                                    color = AppColors.accentGreen,
                                     topLeft = Offset(0f, 0f),
                                     size = androidx.compose.ui.geometry.Size(
-                                        TerminalSpacing.activeIndicatorWidth.toPx(),
+                                        AppSpacing.activeIndicatorWidth.toPx(),
                                         size.height
                                     )
                                 )
@@ -239,19 +239,19 @@ fun GroupedSessionCard(
                         if (isRunning) {
                             Modifier.border(
                                 width = 1.dp,
-                                color = TerminalColors.accentGreen.copy(alpha = 0.5f),
-                                shape = TerminalShapes.sessionCard
+                                color = AppColors.accentGreen.copy(alpha = 0.5f),
+                                shape = AppShapes.sessionCard
                             )
                         } else {
                             Modifier.border(
-                                width = TerminalSpacing.borderThin,
-                                color = TerminalColors.border,
-                                shape = TerminalShapes.sessionCard
+                                width = AppSpacing.borderThin,
+                                color = AppColors.border,
+                                shape = AppShapes.sessionCard
                             )
                         }
                     )
                     .clickable { onSessionClick(group.parent) }
-                    .padding(TerminalSpacing.cardPadding)
+                    .padding(AppSpacing.cardPadding)
             ) {
                 // Header row: Title + Running indicator
                 Row(
@@ -261,8 +261,8 @@ fun GroupedSessionCard(
                 ) {
                     Text(
                         text = group.parent.title ?: "Untitled Session",
-                        style = TerminalTypography.titleSmall,
-                        color = TerminalColors.textPrimary,
+                        style = AppTypography.titleSmall,
+                        color = AppColors.textPrimary,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -296,15 +296,15 @@ fun GroupedSessionCard(
                         ) {
                             Text(
                                 text = "${group.children.size} sub-session${if (group.children.size > 1) "s" else ""}",
-                                style = TerminalTypography.labelSmall,
-                                color = TerminalColors.textTertiary
+                                style = AppTypography.labelSmall,
+                                color = AppColors.textTertiary
                             )
                             
                             if (hasRunningChild) {
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
-                                        .background(TerminalColors.accentGreen, CircleShape)
+                                        .background(AppColors.accentGreen, CircleShape)
                                 )
                             }
                         }
@@ -313,7 +313,7 @@ fun GroupedSessionCard(
                             imageVector = if (group.isExpanded) Icons.Filled.ExpandLess
                                 else Icons.Filled.ExpandMore,
                             contentDescription = if (group.isExpanded) "Collapse" else "Expand",
-                            tint = TerminalColors.textTertiary,
+                            tint = AppColors.textTertiary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -364,16 +364,16 @@ private fun ChildSessionCard(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.medium)
+            .clip(AppShapes.medium)
             .background(
-                if (isRunning) TerminalColors.accentGreen.copy(alpha = 0.1f)
-                else TerminalColors.surfaceVariant
+                if (isRunning) AppColors.accentGreen.copy(alpha = 0.1f)
+                else AppColors.surfaceVariant
             )
             .border(
                 width = 1.dp,
-                color = if (isRunning) TerminalColors.accentGreen.copy(alpha = 0.3f)
-                else TerminalColors.border,
-                shape = TerminalShapes.medium
+                color = if (isRunning) AppColors.accentGreen.copy(alpha = 0.3f)
+                else AppColors.border,
+                shape = AppShapes.medium
             )
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp),
@@ -391,8 +391,8 @@ private fun ChildSessionCard(
         
         Text(
             text = displayTitle,
-            style = TerminalTypography.bodySmall,
-            color = TerminalColors.textPrimary,
+            style = AppTypography.bodySmall,
+            color = AppColors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)

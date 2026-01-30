@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.RichToolState
 import com.mocca.app.domain.model.ToolState
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalTypography
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.AppSpacing
 import kotlinx.serialization.json.*
 
 /**
@@ -77,35 +77,35 @@ private fun BaseToolCard(
     var expanded by remember { mutableStateOf(false) }
     
     val backgroundColor = when (state) {
-        ToolState.PENDING -> TerminalColors.surfaceVariant.copy(alpha = 0.3f)
-        ToolState.RUNNING -> TerminalColors.statusWaiting.copy(alpha = 0.1f)
-        ToolState.COMPLETED -> TerminalColors.accentGreen.copy(alpha = 0.1f)
-        ToolState.ERROR -> TerminalColors.error.copy(alpha = 0.2f)
+        ToolState.PENDING -> AppColors.surfaceVariant.copy(alpha = 0.3f)
+        ToolState.RUNNING -> AppColors.statusWaiting.copy(alpha = 0.1f)
+        ToolState.COMPLETED -> AppColors.accentGreen.copy(alpha = 0.1f)
+        ToolState.ERROR -> AppColors.error.copy(alpha = 0.2f)
     }
     
     val borderColor = when (state) {
-        ToolState.PENDING -> TerminalColors.border.copy(alpha = 0.3f)
-        ToolState.RUNNING -> TerminalColors.statusWaiting.copy(alpha = 0.5f)
-        ToolState.COMPLETED -> TerminalColors.accentGreen.copy(alpha = 0.3f)
-        ToolState.ERROR -> TerminalColors.error.copy(alpha = 0.5f)
+        ToolState.PENDING -> AppColors.border.copy(alpha = 0.3f)
+        ToolState.RUNNING -> AppColors.statusWaiting.copy(alpha = 0.5f)
+        ToolState.COMPLETED -> AppColors.accentGreen.copy(alpha = 0.3f)
+        ToolState.ERROR -> AppColors.error.copy(alpha = 0.5f)
     }
     
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = TerminalSpacing.xs)
-            .border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+            .padding(vertical = AppSpacing.xs)
+            .border(AppSpacing.borderThin, borderColor, RectangleShape)
             .clip(RectangleShape)
             .clickable { expanded = !expanded }
             .animateContentSize(),
         shape = RectangleShape,
         color = backgroundColor
     ) {
-        Column(modifier = Modifier.padding(TerminalSpacing.md)) {
+        Column(modifier = Modifier.padding(AppSpacing.md)) {
             // Header row
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 // Tool icon with state indicator
                 Box {
@@ -131,7 +131,7 @@ private fun BaseToolCard(
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
                                 .background(
-                                    TerminalColors.statusWaiting.copy(alpha = alpha),
+                                    AppColors.statusWaiting.copy(alpha = alpha),
                                     RectangleShape
                                 )
                         )
@@ -141,7 +141,7 @@ private fun BaseToolCard(
                 // Tool name
                 Text(
                     text = toolName,
-                    style = TerminalTypography.labelMedium,
+                    style = AppTypography.labelMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = iconTint
                 )
@@ -150,8 +150,8 @@ private fun BaseToolCard(
                 if (!title.isNullOrBlank()) {
                     Text(
                         text = title,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey,
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -171,16 +171,16 @@ private fun BaseToolCard(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse" else "Expand",
                     modifier = Modifier.size(18.dp),
-                    tint = TerminalColors.grey
+                    tint = AppColors.grey
                 )
             }
             
             // Expandable content
             AnimatedVisibility(visible = expanded) {
-                Column(modifier = Modifier.padding(top = TerminalSpacing.md)) {
+                Column(modifier = Modifier.padding(top = AppSpacing.md)) {
                     HorizontalDivider(
-                        color = TerminalColors.border.copy(alpha = 0.5f),
-                        modifier = Modifier.padding(bottom = TerminalSpacing.md)
+                        color = AppColors.border.copy(alpha = 0.5f),
+                        modifier = Modifier.padding(bottom = AppSpacing.md)
                     )
                     content()
                 }
@@ -195,19 +195,19 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
         ToolState.PENDING -> {
             Text(
                 text = "Pending",
-                style = TerminalTypography.labelSmall,
-                color = TerminalColors.grey
+                style = AppTypography.labelSmall,
+                color = AppColors.grey
             )
         }
         ToolState.RUNNING -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(12.dp),
                     strokeWidth = 2.dp,
-                    color = TerminalColors.statusWaiting
+                    color = AppColors.statusWaiting
                 )
                 
                 // Live elapsed time display
@@ -223,14 +223,14 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
                     
                     Text(
                         text = formatDuration(elapsedMs),
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.statusWaiting
+                        style = AppTypography.labelSmall,
+                        color = AppColors.statusWaiting
                     )
                 } else {
                     Text(
                         text = "Running",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.statusWaiting
+                        style = AppTypography.labelSmall,
+                        color = AppColors.statusWaiting
                     )
                 }
             }
@@ -238,31 +238,31 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
         ToolState.COMPLETED -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
                 Icon(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = TerminalColors.accentGreen
+                    tint = AppColors.accentGreen
                 )
             }
         }
         ToolState.ERROR -> {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = TerminalColors.error
+                    tint = AppColors.error
                 )
                 Text(
                     text = "Error",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.error
+                    style = AppTypography.labelSmall,
+                    color = AppColors.error
                 )
             }
         }
@@ -282,10 +282,10 @@ fun BashToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: command.take(50),
         icon = Icons.Default.Terminal,
-        iconTint = TerminalColors.statusWaiting,
+        iconTint = AppColors.statusWaiting,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Command
             if (command.isNotBlank()) {
                 CodeBlock(
@@ -299,18 +299,18 @@ fun BashToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
             if (!workdir.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Icon(
                         Icons.Default.Folder,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = TerminalColors.grey
+                        tint = AppColors.grey
                     )
                     Text(
                         text = workdir,
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -347,26 +347,26 @@ fun EditToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Edit,
-        iconTint = TerminalColors.white,
+        iconTint = AppColors.white,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // File path
             if (!filePath.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Icon(
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = TerminalColors.grey
+                        tint = AppColors.grey
                     )
                     Text(
                         text = filePath,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey,
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -402,14 +402,14 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Visibility,
-        iconTint = TerminalColors.accentGreen,
+        iconTint = AppColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             // Show line range if specified
             if (limit != null || offset != null) {
                 Surface(
                     shape = RectangleShape,
-                    color = TerminalColors.surfaceVariant
+                    color = AppColors.surfaceVariant
                 ) {
                     Text(
                         text = buildString {
@@ -419,31 +419,31 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                                 append("$limit lines")
                             }
                         },
-                        style = TerminalTypography.labelSmall,
+                        style = AppTypography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = TerminalColors.grey
+                        color = AppColors.grey
                     )
                 }
             }
         }
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // File path
             if (!filePath.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Icon(
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = TerminalColors.grey
+                        tint = AppColors.grey
                     )
                     Text(
                         text = filePath,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -478,25 +478,25 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = pattern ?: part.title,
         icon = Icons.Default.Search,
-        iconTint = TerminalColors.statusWaiting,
+        iconTint = AppColors.statusWaiting,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Pattern
             if (!pattern.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Text(
                         text = "Pattern:",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                     Text(
                         text = pattern,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.white
+                        style = AppTypography.bodySmall,
+                        color = AppColors.white
                     )
                 }
             }
@@ -505,17 +505,17 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
             if (!path.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Text(
                         text = "In:",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                     Text(
                         text = path,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -545,26 +545,26 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = pattern ?: part.title,
         icon = Icons.Default.FindInPage,
-        iconTint = TerminalColors.white,
+        iconTint = AppColors.white,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Search pattern
             if (!pattern.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Text(
                         text = "Search:",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                     Text(
                         text = pattern,
-                        style = TerminalTypography.bodySmall,
+                        style = AppTypography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = TerminalColors.white
+                        color = AppColors.white
                     )
                 }
             }
@@ -573,17 +573,17 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
             if (!include.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Text(
                         text = "Files:",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                     Text(
                         text = include,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -611,10 +611,10 @@ fun ListToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = path,
         icon = Icons.Default.Folder,
-        iconTint = TerminalColors.statusWaiting,
+        iconTint = AppColors.statusWaiting,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             part.output?.takeIf { it.isNotBlank() }?.let { output ->
                 FileListView(output)
             }
@@ -638,26 +638,26 @@ fun WriteToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifie
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = @Suppress("DEPRECATION") Icons.Default.NoteAdd,
-        iconTint = TerminalColors.white,
+        iconTint = AppColors.white,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // File path
             if (!filePath.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Icon(
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = TerminalColors.grey
+                        tint = AppColors.grey
                     )
                     Text(
                         text = filePath,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -688,10 +688,10 @@ fun TodoToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = part.title ?: "Task List",
         icon = Icons.Default.Checklist,
-        iconTint = TerminalColors.accentGreen,
+        iconTint = AppColors.accentGreen,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             part.output?.takeIf { it.isNotBlank() }?.let { output ->
                 TodoListView(output)
             }
@@ -713,26 +713,26 @@ fun WebFetchToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modi
         state = part.state,
         title = url?.take(50) ?: part.title,
         icon = Icons.Default.Language,
-        iconTint = TerminalColors.statusWaiting,
+        iconTint = AppColors.statusWaiting,
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // URL
             if (!url.isNullOrBlank()) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     Icon(
                         Icons.Default.Link,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = TerminalColors.white
+                        tint = AppColors.white
                     )
                     Text(
                         text = url,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.white,
+                        style = AppTypography.bodySmall,
+                        color = AppColors.white,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -743,8 +743,8 @@ fun WebFetchToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modi
             if (!format.isNullOrBlank()) {
                 Text(
                     text = "Format: $format",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey
                 )
             }
             
@@ -777,25 +777,25 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: subagentType ?: part.title,
         icon = Icons.Default.AccountTree,
-        iconTint = TerminalColors.accentGreen,
+        iconTint = AppColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
                 Surface(
                     shape = RectangleShape,
-                    color = TerminalColors.surfaceVariant
+                    color = AppColors.surfaceVariant
                 ) {
                     Text(
                         text = subagentType,
-                        style = TerminalTypography.labelSmall,
+                        style = AppTypography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = TerminalColors.white
+                        color = AppColors.white
                     )
                 }
             }
         }
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Agent response preview
             part.output?.takeIf { it.isNotBlank() }?.let { output ->
                 CodeBlock(
@@ -823,14 +823,14 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         title = part.title,
         icon = Icons.Default.Build,
         iconTint = when (part.state) {
-            ToolState.PENDING -> TerminalColors.grey
-            ToolState.RUNNING -> TerminalColors.statusWaiting
-            ToolState.COMPLETED -> TerminalColors.accentGreen
-            ToolState.ERROR -> TerminalColors.error
+            ToolState.PENDING -> AppColors.grey
+            ToolState.RUNNING -> AppColors.statusWaiting
+            ToolState.COMPLETED -> AppColors.accentGreen
+            ToolState.ERROR -> AppColors.error
         },
         modifier = modifier
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Input
             if (part.input.isNotBlank()) {
                 CodeBlock(
@@ -872,24 +872,24 @@ private fun CodeBlock(
         if (!label.isNullOrBlank()) {
             Text(
                 text = label,
-                style = TerminalTypography.labelSmall,
-                color = TerminalColors.grey,
-                modifier = Modifier.padding(bottom = TerminalSpacing.xs)
+                style = AppTypography.labelSmall,
+                color = AppColors.grey,
+                modifier = Modifier.padding(bottom = AppSpacing.xs)
             )
         }
         
         Surface(
             shape = RectangleShape,
-            color = TerminalColors.surfaceVariant.copy(alpha = 0.5f),
+            color = AppColors.surfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier.fillMaxWidth()
         ) {
             val scrollState = rememberScrollState()
             Text(
                 text = code.lines().take(maxLines).joinToString("\n"),
-                style = TerminalTypography.code,
-                color = TerminalColors.white,
+                style = AppTypography.code,
+                color = AppColors.white,
                 modifier = Modifier
-                    .padding(TerminalSpacing.md)
+                    .padding(AppSpacing.md)
                     .horizontalScroll(scrollState)
             )
         }
@@ -900,24 +900,24 @@ private fun CodeBlock(
 private fun ErrorBlock(error: String) {
     Surface(
         shape = RectangleShape,
-        color = TerminalColors.error.copy(alpha = 0.2f),
+        color = AppColors.error.copy(alpha = 0.2f),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(TerminalSpacing.md),
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm),
+            modifier = Modifier.padding(AppSpacing.md),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
             verticalAlignment = Alignment.Top
         ) {
             Icon(
                 Icons.Default.Error,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = TerminalColors.error
+                tint = AppColors.error
             )
             Text(
                 text = error,
-                style = TerminalTypography.bodySmall,
-                color = TerminalColors.error
+                style = AppTypography.bodySmall,
+                color = AppColors.error
             )
         }
     }
@@ -934,8 +934,8 @@ private fun ShowDuration(richState: RichToolState) {
     if (duration != null && duration > 0) {
         Text(
             text = formatDuration(duration),
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.grey.copy(alpha = 0.7f)
+            style = AppTypography.labelSmall,
+            color = AppColors.grey.copy(alpha = 0.7f)
         )
     }
 }
@@ -944,29 +944,29 @@ private fun ShowDuration(richState: RichToolState) {
 private fun DiffView(oldText: String, newText: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         // Removed lines
         if (oldText.isNotBlank()) {
             Surface(
                 shape = RectangleShape,
-                color = TerminalColors.diffDeletion,
+                color = AppColors.diffDeletion,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(modifier = Modifier.padding(TerminalSpacing.sm)) {
+                Row(modifier = Modifier.padding(AppSpacing.sm)) {
                     Text(
                         text = "-",
-                        style = TerminalTypography.bodySmall,
+                        style = AppTypography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = TerminalColors.diffDeletionText,
+                        color = AppColors.diffDeletionText,
                         modifier = Modifier.width(20.dp)
                     )
                     // Use LazyColumn logic (simulated with scrollable Column for now as nested lazy layouts are tricky)
                     // For massive files, we just let the outer container scroll, but we remove the 'take(20)' limit.
                     Text(
                         text = oldText.lines().joinToString("\n"),
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.diffDeletionText.copy(alpha = 0.8f)
+                        style = AppTypography.bodySmall,
+                        color = AppColors.diffDeletionText.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -976,21 +976,21 @@ private fun DiffView(oldText: String, newText: String) {
         if (newText.isNotBlank()) {
             Surface(
                 shape = RectangleShape,
-                color = TerminalColors.diffAddition,
+                color = AppColors.diffAddition,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(modifier = Modifier.padding(TerminalSpacing.sm)) {
+                Row(modifier = Modifier.padding(AppSpacing.sm)) {
                     Text(
                         text = "+",
-                        style = TerminalTypography.bodySmall,
+                        style = AppTypography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = TerminalColors.diffAdditionText,
+                        color = AppColors.diffAdditionText,
                         modifier = Modifier.width(20.dp)
                     )
                     Text(
                         text = newText.lines().joinToString("\n"),
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.diffAdditionText.copy(alpha = 0.9f)
+                        style = AppTypography.bodySmall,
+                        color = AppColors.diffAdditionText.copy(alpha = 0.9f)
                     )
                 }
             }
@@ -1003,52 +1003,52 @@ private fun FileListView(output: String) {
     val files = output.trim().lines().filter { it.isNotBlank() }.take(50)
     val fileCount = output.trim().lines().count { it.isNotBlank() }
     
-    Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
         Text(
             text = "Found $fileCount file${if (fileCount != 1) "s" else ""}",
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.grey
+            style = AppTypography.labelSmall,
+            color = AppColors.grey
         )
         
         Surface(
             shape = RectangleShape,
-            color = TerminalColors.surfaceVariant.copy(alpha = 0.3f),
+            color = AppColors.surfaceVariant.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
-                    .padding(TerminalSpacing.sm)
+                    .padding(AppSpacing.sm)
                     .heightIn(max = 200.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 files.forEach { file ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs),
-                        modifier = Modifier.padding(vertical = TerminalSpacing.xxs)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                        modifier = Modifier.padding(vertical = AppSpacing.xxs)
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(4.dp)
                                 .background(
-                                    TerminalColors.white.copy(alpha = 0.6f),
+                                    AppColors.white.copy(alpha = 0.6f),
                                     RectangleShape
                                 )
                         )
                         Text(
                             text = file.trim(),
-                            style = TerminalTypography.bodySmall,
+                            style = AppTypography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = TerminalColors.white
+                            color = AppColors.white
                         )
                     }
                 }
                 if (fileCount > 50) {
                     Text(
                         text = "... and ${fileCount - 50} more",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -1061,21 +1061,21 @@ private fun GrepResultsView(output: String) {
     val lines = output.trim().lines().filter { it.isNotBlank() }.take(30)
     val totalMatches = output.trim().lines().count { it.isNotBlank() }
     
-    Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)) {
+    Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
         Text(
             text = "Found $totalMatches match${if (totalMatches != 1) "es" else ""}",
-            style = TerminalTypography.labelSmall,
-            color = TerminalColors.grey
+            style = AppTypography.labelSmall,
+            color = AppColors.grey
         )
         
         Surface(
             shape = RectangleShape,
-            color = TerminalColors.surfaceVariant.copy(alpha = 0.3f),
+            color = AppColors.surfaceVariant.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
                 modifier = Modifier
-                    .padding(TerminalSpacing.sm)
+                    .padding(AppSpacing.sm)
                     .heightIn(max = 250.dp)
                     .verticalScroll(rememberScrollState())
             ) {
@@ -1083,31 +1083,31 @@ private fun GrepResultsView(output: String) {
                     // Parse grep format: file:line:content
                     val parts = line.split(":", limit = 3)
                     Row(
-                        modifier = Modifier.padding(vertical = TerminalSpacing.xxs),
-                        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                        modifier = Modifier.padding(vertical = AppSpacing.xxs),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                     ) {
                         if (parts.size >= 2) {
                             Text(
                                 text = parts[0].substringAfterLast('/'),
-                                style = TerminalTypography.labelSmall,
-                                color = TerminalColors.white
+                                style = AppTypography.labelSmall,
+                                color = AppColors.white
                             )
                             if (parts.size >= 3) {
                                 Text(
                                     text = ":${parts[1]}",
-                                    style = TerminalTypography.labelSmall,
-                                    color = TerminalColors.grey
+                                    style = AppTypography.labelSmall,
+                                    color = AppColors.grey
                                 )
                             }
                         }
                     }
                     Text(
                         text = if (parts.size >= 3) parts[2] else line,
-                        style = TerminalTypography.bodySmall,
+                        style = AppTypography.bodySmall,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(start = TerminalSpacing.sm),
-                        color = TerminalColors.whiteDim
+                        modifier = Modifier.padding(start = AppSpacing.sm),
+                        color = AppColors.whiteDim
                     )
                 }
             }
@@ -1132,26 +1132,26 @@ private fun TodoListView(output: String) {
         val pending = todos.filter { it.status == "pending" }
         val completed = todos.filter { it.status == "completed" }
         
-        Column(verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+        Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Summary
-            Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
                 Text(
                     text = "Total: ${todos.size}",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey
                 )
                 if (inProgress.isNotEmpty()) {
                     Text(
                         text = "In Progress: ${inProgress.size}",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.statusWaiting
+                        style = AppTypography.labelSmall,
+                        color = AppColors.statusWaiting
                     )
                 }
                 if (completed.isNotEmpty()) {
                     Text(
                         text = "Done: ${completed.size}",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.accentGreen
+                        style = AppTypography.labelSmall,
+                        color = AppColors.accentGreen
                     )
                 }
             }
@@ -1172,8 +1172,8 @@ private fun TodoListView(output: String) {
                 TextButton(onClick = { showCompleted = !showCompleted }) {
                     Text(
                         text = if (showCompleted) "Hide completed (${completed.size})" else "Show completed (${completed.size})",
-                        style = TerminalTypography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                 }
                 if (showCompleted) {
@@ -1187,8 +1187,8 @@ private fun TodoListView(output: String) {
         // Fall back to plain text
         Text(
             text = output.take(500),
-            style = TerminalTypography.bodySmall,
-            color = TerminalColors.white
+            style = AppTypography.bodySmall,
+            color = AppColors.white
         )
     }
 }
@@ -1208,9 +1208,9 @@ private fun TodoItemRow(
     isCompleted: Boolean = false
 ) {
     Row(
-        modifier = Modifier.padding(vertical = TerminalSpacing.xxs),
+        modifier = Modifier.padding(vertical = AppSpacing.xxs),
         verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         // Status indicator
         when {
@@ -1229,7 +1229,7 @@ private fun TodoItemRow(
                         .size(8.dp)
                         .offset(y = 4.dp)
                         .background(
-                            TerminalColors.statusWaiting.copy(alpha = alpha),
+                            AppColors.statusWaiting.copy(alpha = alpha),
                             RectangleShape
                         )
                 )
@@ -1239,7 +1239,7 @@ private fun TodoItemRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = TerminalColors.accentGreen
+                    tint = AppColors.accentGreen
                 )
             }
             else -> {
@@ -1247,31 +1247,31 @@ private fun TodoItemRow(
                     modifier = Modifier
                         .size(8.dp)
                         .offset(y = 4.dp)
-                        .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+                        .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
                 )
             }
         }
         
         Text(
             text = todo.content,
-            style = TerminalTypography.bodySmall,
+            style = AppTypography.bodySmall,
             color = if (isCompleted) 
-                TerminalColors.grey 
+                AppColors.grey 
             else 
-                TerminalColors.white
+                AppColors.white
         )
         
         // Priority badge
         if (todo.priority == "high") {
             Surface(
                 shape = RectangleShape,
-                color = TerminalColors.error.copy(alpha = 0.3f)
+                color = AppColors.error.copy(alpha = 0.3f)
             ) {
                 Text(
                     text = "HIGH",
-                    style = TerminalTypography.labelSmall,
-                    modifier = Modifier.padding(horizontal = TerminalSpacing.xs, vertical = 1.dp),
-                    color = TerminalColors.error
+                    style = AppTypography.labelSmall,
+                    modifier = Modifier.padding(horizontal = AppSpacing.xs, vertical = 1.dp),
+                    color = AppColors.error
                 )
             }
         }

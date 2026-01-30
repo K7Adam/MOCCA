@@ -36,10 +36,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Module card components for the right swipe dashboard panel.
@@ -66,43 +66,43 @@ fun ModuleCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.moduleCard)
-            .background(TerminalColors.moduleBackground, TerminalShapes.moduleCard)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.moduleCard)
+            .clip(AppShapes.moduleCard)
+            .background(AppColors.moduleBackground, AppShapes.moduleCard)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.moduleCard)
     ) {
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = TerminalSpacing.cardPadding,
-                    vertical = TerminalSpacing.md
+                    horizontal = AppSpacing.cardPadding,
+                    vertical = AppSpacing.md
                 ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 if (icon != null) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = TerminalColors.textSecondary,
+                        tint = AppColors.textSecondary,
                         modifier = Modifier.size(16.dp)
                     )
                 } else {
                     Text(
                         text = "{ }",
-                        color = TerminalColors.textTertiary,
-                        style = TerminalTypography.bodyMedium
+                        color = AppColors.textTertiary,
+                        style = AppTypography.bodyMedium
                     )
                 }
                 Text(
                     text = title.uppercase(),
-                    color = TerminalColors.white,
-                    style = TerminalTypography.labelLarge, // Updated typography
+                    color = AppColors.white,
+                    style = AppTypography.labelLarge, // Updated typography
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -116,8 +116,8 @@ fun ModuleCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = TerminalSpacing.cardPadding)
-                .padding(bottom = TerminalSpacing.cardPadding),
+                .padding(horizontal = AppSpacing.cardPadding)
+                .padding(bottom = AppSpacing.cardPadding),
             content = content
         )
     }
@@ -150,34 +150,34 @@ fun ModuleRowItem(
                 if (onClick != null) {
                     Modifier.clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = TerminalColors.white.copy(alpha = 0.1f)),
+                        indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
                 } else {
                     Modifier
                 }
             )
-            .padding(vertical = TerminalSpacing.sm),
+            .padding(vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Status indicator (Only show if not normal state: Disabled or Disconnected)
         if (!isEnabled || !isConnected) {
             StatusDot(
                 color = when {
-                    !isEnabled -> TerminalColors.textTertiary
-                    else -> TerminalColors.statusOffline
+                    !isEnabled -> AppColors.textTertiary
+                    else -> AppColors.statusOffline
                 },
-                size = TerminalSpacing.statusDotSizeLarge
+                size = AppSpacing.statusDotSizeLarge
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+            Spacer(modifier = Modifier.width(AppSpacing.md))
         }
         
         // Text content
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) TerminalColors.white else TerminalColors.textSecondary,
-                style = TerminalTypography.bodyMedium.copy(
+                color = if (isEnabled) AppColors.white else AppColors.textSecondary,
+                style = AppTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) TextDecoration.LineThrough else TextDecoration.None
                 ),
                 fontWeight = FontWeight.Medium,
@@ -186,8 +186,8 @@ fun ModuleRowItem(
             )
             Text(
                 text = subtitle,
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.bodySmall,
+                color = AppColors.textTertiary,
+                style = AppTypography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -195,7 +195,7 @@ fun ModuleRowItem(
         
         // Toggle switch
         if (showToggle && onToggle != null) {
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             TerminalToggle(
                 checked = isEnabled,
                 onCheckedChange = onToggle,
@@ -225,16 +225,16 @@ fun TerminalToggle(
         modifier = modifier,
         enabled = enabled,
         colors = SwitchDefaults.colors(
-            checkedThumbColor = TerminalColors.background,
-            checkedTrackColor = TerminalColors.accentGreen,
-            checkedBorderColor = TerminalColors.accentGreen,
-            uncheckedThumbColor = TerminalColors.white,
-            uncheckedTrackColor = TerminalColors.surfaceVariant,
-            uncheckedBorderColor = TerminalColors.border,
-            disabledCheckedThumbColor = TerminalColors.grey,
-            disabledCheckedTrackColor = TerminalColors.surfaceVariant,
-            disabledUncheckedThumbColor = TerminalColors.grey,
-            disabledUncheckedTrackColor = TerminalColors.surfaceVariant
+            checkedThumbColor = AppColors.background,
+            checkedTrackColor = AppColors.accentGreen,
+            checkedBorderColor = AppColors.accentGreen,
+            uncheckedThumbColor = AppColors.white,
+            uncheckedTrackColor = AppColors.surfaceVariant,
+            uncheckedBorderColor = AppColors.border,
+            disabledCheckedThumbColor = AppColors.grey,
+            disabledCheckedTrackColor = AppColors.surfaceVariant,
+            disabledUncheckedThumbColor = AppColors.grey,
+            disabledUncheckedTrackColor = AppColors.surfaceVariant
         )
     )
 }
@@ -254,19 +254,19 @@ fun ModuleActionButton(
 ) {
     Box(
         modifier = modifier
-            .clip(TerminalShapes.small)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.small)
+            .clip(AppShapes.small)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.small)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = TerminalColors.white.copy(alpha = 0.1f)),
+                indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
                 onClick = onClick
             )
-            .padding(horizontal = TerminalSpacing.sm, vertical = 4.dp)
+            .padding(horizontal = AppSpacing.sm, vertical = 4.dp)
     ) {
         Text(
             text = text.uppercase(),
-            color = TerminalColors.textSecondary,
-            style = TerminalTypography.labelSmall
+            color = AppColors.textSecondary,
+            style = AppTypography.labelSmall
         )
     }
 }
@@ -307,8 +307,8 @@ fun McpConfigModule(
             )
             if (index < servers.lastIndex) {
                 HorizontalDivider(
-                    thickness = TerminalSpacing.borderThin,
-                    color = TerminalColors.border
+                    thickness = AppSpacing.borderThin,
+                    color = AppColors.border
                 )
             }
         }
@@ -345,7 +345,7 @@ fun GitStatusModule(
                 icon = Icons.Default.ChevronRight,
                 onClick = onExpandClick,
                 size = 32.dp,
-                iconColor = TerminalColors.textSecondary
+                iconColor = AppColors.textSecondary
             )
         }
     ) {
@@ -356,26 +356,26 @@ fun GitStatusModule(
             Column {
                 Text(
                     text = "BRANCH",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = branchName,
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "CHANGES",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = "$changedFiles FILES",
-                    color = if (changedFiles > 0) TerminalColors.statusWaiting else TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = if (changedFiles > 0) AppColors.statusWaiting else AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -401,7 +401,7 @@ fun SkillsEngineModule(
                 icon = Icons.Default.Settings,
                 onClick = onFilterClick,
                 size = 32.dp,
-                iconColor = TerminalColors.textSecondary
+                iconColor = AppColors.textSecondary
             )
         }
     ) {
@@ -410,21 +410,21 @@ fun SkillsEngineModule(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onSkillClick(skill.id) }
-                    .padding(vertical = TerminalSpacing.xs),
+                    .padding(vertical = AppSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (!skill.isActive) {
                     StatusDot(
-                        color = TerminalColors.grey,
+                        color = AppColors.grey,
                         size = 6.dp,
                         showGlow = false
                     )
-                    Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
                 }
                 Text(
                     text = skill.name.uppercase(),
-                    color = if (skill.isActive) TerminalColors.white else TerminalColors.textTertiary,
-                    style = TerminalTypography.bodySmall
+                    color = if (skill.isActive) AppColors.white else AppColors.textTertiary,
+                    style = AppTypography.bodySmall
                 )
             }
         }

@@ -25,8 +25,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 
 /**
  * Skeleton loading placeholder for messages.
@@ -51,13 +51,13 @@ fun MessageSkeleton(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TerminalSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            .padding(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         // Role badge skeleton
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             SkeletonBlock(
                 width = 60.dp,
@@ -106,9 +106,9 @@ fun CompactMessageSkeleton(
     )
     
     Row(
-        modifier = modifier.padding(TerminalSpacing.sm),
+        modifier = modifier.padding(AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         SkeletonBlock(width = 48.dp, height = 14.dp, alpha = alpha)
         SkeletonBlock(width = 120.dp, height = 12.dp, alpha = alpha * 0.8f)
@@ -136,14 +136,14 @@ fun ToolCardSkeleton(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(TerminalColors.surfaceVariant.copy(alpha = 0.2f), RectangleShape)
-            .padding(TerminalSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            .background(AppColors.surfaceVariant.copy(alpha = 0.2f), RectangleShape)
+            .padding(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         // Header row
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             // Icon placeholder
             SkeletonBlock(width = 18.dp, height = 18.dp, alpha = alpha)
@@ -184,8 +184,8 @@ fun SessionItemSkeleton(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(TerminalSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+            .padding(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         // Title line
         SkeletonBlock(
@@ -195,7 +195,7 @@ fun SessionItemSkeleton(
         )
         // Subtitle line
         Row(
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             SkeletonBlock(width = 80.dp, height = 12.dp, alpha = alpha * 0.7f)
             SkeletonBlock(width = 60.dp, height = 12.dp, alpha = alpha * 0.6f)
@@ -219,7 +219,7 @@ private fun SkeletonBlock(
             .height(height)
             .alpha(alpha)
             .background(
-                color = TerminalColors.grey,
+                color = AppColors.grey,
                 shape = RectangleShape
             )
     )

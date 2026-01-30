@@ -17,9 +17,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
 
 /**
  * Modern MOCCA card containers with rounded corners.
@@ -37,11 +37,11 @@ import com.mocca.app.ui.theme.TerminalSpacing
 @Composable
 fun TerminalCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.surfaceContainer,
-    borderColor: Color = TerminalColors.border,
-    borderWidth: Dp = TerminalSpacing.borderThin,
-    contentPadding: Dp = TerminalSpacing.cardPadding,
-    shape: Shape = TerminalShapes.card,
+    backgroundColor: Color = AppColors.surfaceContainer,
+    borderColor: Color = AppColors.border,
+    borderWidth: Dp = AppSpacing.borderThin,
+    contentPadding: Dp = AppSpacing.cardPadding,
+    shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -61,11 +61,11 @@ fun TerminalCard(
 @Composable
 fun TerminalCardElevated(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.cardBackground,
-    borderColor: Color = TerminalColors.borderLight,
-    borderWidth: Dp = TerminalSpacing.borderThin,
-    contentPadding: Dp = TerminalSpacing.cardPadding,
-    shape: Shape = TerminalShapes.card,
+    backgroundColor: Color = AppColors.cardBackground,
+    borderColor: Color = AppColors.borderLight,
+    borderWidth: Dp = AppSpacing.borderThin,
+    contentPadding: Dp = AppSpacing.cardPadding,
+    shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -91,11 +91,11 @@ fun TerminalCardElevated(
 @Composable
 fun StatusMonitorCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.surfaceContainer,
-    borderColor: Color = TerminalColors.border,
-    borderWidth: Dp = TerminalSpacing.borderThin,
-    contentPadding: Dp = TerminalSpacing.cardPaddingLarge,
-    shape: Shape = TerminalShapes.extraLarge,
+    backgroundColor: Color = AppColors.surfaceContainer,
+    borderColor: Color = AppColors.border,
+    borderWidth: Dp = AppSpacing.borderThin,
+    contentPadding: Dp = AppSpacing.cardPaddingLarge,
+    shape: Shape = AppShapes.extraLarge,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Box(
@@ -122,16 +122,16 @@ fun StatusMonitorCard(
 @Composable
 fun TerminalSectionCard(
     modifier: Modifier = Modifier,
-    leftBorderColor: Color = TerminalColors.accentGreen,
-    leftBorderWidth: Dp = TerminalSpacing.borderStandard,
-    backgroundColor: Color = TerminalColors.surfaceVariant,
-    contentPadding: Dp = TerminalSpacing.lg,
+    leftBorderColor: Color = AppColors.accentGreen,
+    leftBorderWidth: Dp = AppSpacing.borderStandard,
+    backgroundColor: Color = AppColors.surfaceVariant,
+    contentPadding: Dp = AppSpacing.lg,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
-            .clip(TerminalShapes.medium)
-            .background(backgroundColor, TerminalShapes.medium)
+            .clip(AppShapes.medium)
+            .background(backgroundColor, AppShapes.medium)
             .drawBehind {
                 drawRect(
                     color = leftBorderColor,
@@ -157,12 +157,12 @@ fun TerminalSectionCard(
 fun TerminalSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    backgroundColor: Color = TerminalColors.surfaceContainer,
-    borderColor: Color = TerminalColors.border,
-    activeIndicatorColor: Color = TerminalColors.accentGreen,
-    activeIndicatorWidth: Dp = TerminalSpacing.activeIndicatorWidth,
-    contentPadding: Dp = TerminalSpacing.cardPadding,
-    shape: Shape = TerminalShapes.sessionCard,
+    backgroundColor: Color = AppColors.surfaceContainer,
+    borderColor: Color = AppColors.border,
+    activeIndicatorColor: Color = AppColors.accentGreen,
+    activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
+    contentPadding: Dp = AppSpacing.cardPadding,
+    shape: Shape = AppShapes.sessionCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -186,7 +186,7 @@ fun TerminalSessionCard(
                     Modifier
                 }
             )
-            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .border(AppSpacing.borderThin, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
@@ -203,17 +203,17 @@ fun TerminalSessionCard(
 @Composable
 fun ModuleToolCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.moduleBackground,
-    borderColor: Color = TerminalColors.border,
-    contentPadding: Dp = TerminalSpacing.modulePadding,
-    shape: Shape = TerminalShapes.moduleCard,
+    backgroundColor: Color = AppColors.moduleBackground,
+    borderColor: Color = AppColors.border,
+    contentPadding: Dp = AppSpacing.modulePadding,
+    shape: Shape = AppShapes.moduleCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .border(AppSpacing.borderThin, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
@@ -229,17 +229,17 @@ fun ModuleToolCard(
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = TerminalColors.glassBackground,
-    borderColor: Color = TerminalColors.glassBorder,
-    contentPadding: Dp = TerminalSpacing.cardPadding,
-    shape: Shape = TerminalShapes.card,
+    backgroundColor: Color = AppColors.glassBackground,
+    borderColor: Color = AppColors.glassBorder,
+    contentPadding: Dp = AppSpacing.cardPadding,
+    shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .border(TerminalSpacing.borderThin, borderColor, shape)
+            .border(AppSpacing.borderThin, borderColor, shape)
             .padding(contentPadding),
         content = content
     )

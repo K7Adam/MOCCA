@@ -25,10 +25,10 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material3.MaterialTheme
 
 /**
@@ -55,10 +55,10 @@ fun ContextInfoGrid(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceContainer, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-            .padding(TerminalSpacing.cardPadding)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .padding(AppSpacing.cardPadding)
     ) {
         // Row 1: MCP_STATUS and MODEL
         Row(
@@ -69,22 +69,22 @@ fun ContextInfoGrid(
             Column {
                 Text(
                     text = "MCP STATUS",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
                     if (!isMcpOnline) {
                         StatusDot(
-                            color = TerminalColors.statusOffline
+                            color = AppColors.statusOffline
                         )
                     }
                     Text(
                         text = mcpStatus.uppercase(),
-                        color = if (isMcpOnline) TerminalColors.white else TerminalColors.statusOffline,
-                        style = TerminalTypography.bodyMedium,
+                        color = if (isMcpOnline) AppColors.white else AppColors.statusOffline,
+                        style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -94,19 +94,19 @@ fun ContextInfoGrid(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "MODEL",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = model.uppercase(),
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Row 2: LATENCY and PORT
         Row(
@@ -117,13 +117,13 @@ fun ContextInfoGrid(
             Column {
                 Text(
                     text = "LATENCY",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = latency.uppercase(),
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -132,13 +132,13 @@ fun ContextInfoGrid(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "PORT",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = port.uppercase(),
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -176,17 +176,17 @@ fun ContextWindowBar(
             ) {
                 Text(
                     text = "CTX WINDOW",
-                    color = TerminalColors.textTertiary,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
                 Text(
                     text = "${formatTokenCount(usedTokens)}/${formatTokenCount(maxTokens)}",
-                    color = TerminalColors.white,
-                    style = TerminalTypography.labelSmall
+                    color = AppColors.white,
+                    style = AppTypography.labelSmall
                 )
             }
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
         }
         
         // Progress bar (pill shaped)
@@ -194,25 +194,25 @@ fun ContextWindowBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(barHeight)
-                .clip(TerminalShapes.pill)
-                .background(TerminalColors.surfaceVariant, TerminalShapes.pill)
+                .clip(AppShapes.pill)
+                .background(AppColors.surfaceVariant, AppShapes.pill)
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(usagePercent)
                     .fillMaxHeight() // Missing import, fix later or use Modifier.fillMaxHeight()
-                    .clip(TerminalShapes.pill)
-                    .background(TerminalColors.accentGreen, TerminalShapes.pill)
+                    .clip(AppShapes.pill)
+                    .background(AppColors.accentGreen, AppShapes.pill)
             )
         }
         
         // Usage percent label
         if (showLabels) {
-            Spacer(modifier = Modifier.height(TerminalSpacing.xxs))
+            Spacer(modifier = Modifier.height(AppSpacing.xxs))
             Text(
                 text = "$usagePercentInt% USED",
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.labelSmall,
+                color = AppColors.textTertiary,
+                style = AppTypography.labelSmall,
                 modifier = Modifier.align(Alignment.End)
             )
         }
@@ -258,18 +258,18 @@ fun ContextInfoContainer(
         ) {
             Text(
                 text = "CONTEXT INFO",
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelMedium,
+                color = AppColors.textSecondary,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
             if (!isMcpOnline) {
                 StatusDot(
-                    color = TerminalColors.statusOffline
+                    color = AppColors.statusOffline
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Info grid
         ContextInfoGrid(
@@ -280,7 +280,7 @@ fun ContextInfoContainer(
             port = port
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Context window bar
         ContextWindowBar(
