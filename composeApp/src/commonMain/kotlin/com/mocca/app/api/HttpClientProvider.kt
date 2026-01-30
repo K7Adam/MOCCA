@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.json.Json
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -93,10 +94,10 @@ class HttpClientProvider(
     
     // Track recent request performance for quality calculation
     private val recentLatencies = mutableListOf<Long>()
-    private val maxLatencyHistory = 20
+    private val maxLatencyHistory = NetworkConfig.ConnectionQuality.MAX_LATENCY_HISTORY
     private var recentSuccesses = 0
     private var recentTotal = 0
-    private val maxSampleSize = 50
+    private val maxSampleSize = NetworkConfig.ConnectionQuality.MAX_SAMPLE_SIZE
     
     /**
      * Record a successful request for quality monitoring.
@@ -153,10 +154,11 @@ class HttpClientProvider(
         val consecutiveFailures = if (success) 0 else current.consecutiveFailures + 1
         
         val quality = when {
-            consecutiveFailures >= 3 -> ConnectionQuality.OFFLINE
-            successRate < 0.5f -> ConnectionQuality.OFFLINE
-            successRate < 0.8f || avgLatency > 5000 -> ConnectionQuality.POOR
-            avgLatency > 2000 -> ConnectionQuality.GOOD
+            consecutiveFailures >= NetworkConfig.ConnectionQuality.OFFLINE_FAILURE_THRESHOLD -> ConnectionQuality.OFFLINE
+            successRate < NetworkConfig.ConnectionQuality.POOR_SUCCESS_RATE -> ConnectionQuality.OFFLINE
+            successRate < NetworkConfig.ConnectionQuality.DEGRADED_SUCCESS_RATE || 
+                avgLatency > NetworkConfig.ConnectionQuality.POOR_LATENCY_MS -> ConnectionQuality.POOR
+            avgLatency > NetworkConfig.ConnectionQuality.DEGRADED_LATENCY_MS -> ConnectionQuality.GOOD
             else -> ConnectionQuality.EXCELLENT
         }
         
@@ -343,13 +345,17 @@ class HttpClientProvider(
         // Notify listeners that a NEW client is ready
         onClientRecreated?.invoke()
 
-        // Delay closing the old client to allow in-flight requests to complete or timeout naturally
-        // This prevents CancellationException on pending requests during config switch
-        // INCREASED GRACE PERIOD: 5s -> 15s to match typical request timeouts
+        // OPTIMIZED: Reduced grace period from 15s to 5s with timeout-aware disposal
+        // This reduces memory pressure while still allowing in-flight requests to complete
         scope.launch {
-            kotlinx.coroutines.delay(15_000) 
+            kotlinx.coroutines.delay(NetworkConfig.CLIENT_GRACE_PERIOD_MS)
             try {
-                oldClient?.close()
+                withTimeoutOrNull(NetworkConfig.CLIENT_CLOSE_TIMEOUT_MS) {
+                    oldClient?.close()
+                } ?: run {
+                    oldClient?.close()
+                    Napier.w("Old HttpClient close timed out, force closing")
+                }
                 Napier.i("Old HttpClient closed after grace period")
             } catch (e: Exception) {
                 Napier.w("Error closing old HttpClient", e)
@@ -372,7 +378,7 @@ class HttpClientProvider(
             }
 
             install(WebSockets) {
-                pingIntervalMillis = 30_000
+                pingIntervalMillis = NetworkConfig.WEBSOCKET_PING_INTERVAL_MS
             }
 
             install(SSE) {
@@ -393,9 +399,9 @@ class HttpClientProvider(
             }
 
             install(HttpTimeout) {
-                requestTimeoutMillis = 120_000
-                connectTimeoutMillis = 10_000
-                socketTimeoutMillis = 120_000
+                requestTimeoutMillis = NetworkConfig.REQUEST_TIMEOUT_MS
+                connectTimeoutMillis = NetworkConfig.CONNECT_TIMEOUT_MS
+                socketTimeoutMillis = NetworkConfig.SOCKET_TIMEOUT_MS
             }
 
             // Only install Auth if Bearer token is configured

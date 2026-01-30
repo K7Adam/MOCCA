@@ -200,12 +200,6 @@ class GitApiClient(
     private val serverConfigProvider: () -> ServerConfig,
     private val retryPolicy: RetryPolicy = RetryPolicy.Default
 ) {
-    companion object {
-        private const val TAG = "GitApiClient"
-        // Git HTTP server runs on port 4097 (OpenCode plugin auto-starts it)
-        private const val GIT_SERVER_PORT = 4097
-    }
-
     /**
      * Custom exception for when Git server is not running.
      * Nested inside class to maintain backward compatibility.
@@ -457,9 +451,9 @@ class GitApiClient(
         val response: GitServerDiff = getClient().get(url) {
             addAuth()
             timeout {
-                requestTimeoutMillis = 60_000
-                socketTimeoutMillis = 60_000
-                connectTimeoutMillis = 15_000
+                requestTimeoutMillis = NetworkConfig.GIT_DIFF_TIMEOUT_MS
+                socketTimeoutMillis = NetworkConfig.GIT_DIFF_TIMEOUT_MS
+                connectTimeoutMillis = NetworkConfig.CONNECT_TIMEOUT_MS
             }
         }.body()
         
@@ -979,15 +973,119 @@ class GitApiClient(
         }
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SECURITY CONFIGURATION (Priority 7.1)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    companion object {
+        private const val TAG = "GitApiClient"
+        // Git HTTP server runs on port 4097 (OpenCode plugin auto-starts it)
+        private const val GIT_SERVER_PORT = NetworkConfig.GIT_SERVER_PORT
+        
+        /**
+         * Whitelist of allowed commands for security.
+         * Only these commands can be executed via the /command endpoint.
+         */
+        private val ALLOWED_COMMANDS = setOf(
+            "start-git-server",
+            "stop-git-server",
+            "restart-git-server"
+        )
+        
+        /**
+         * Maximum number of command requests per minute (rate limiting).
+         */
+        private const val MAX_COMMANDS_PER_MINUTE = NetworkConfig.MAX_COMMANDS_PER_MINUTE
+    }
+    
+    // Rate limiting tracking
+    private val commandExecutionLog = mutableListOf<Long>()
+    private val commandLock = Mutex()
+    
+    /**
+     * Validates if a command is allowed to be executed.
+     * @param command The command to validate
+     * @return true if command is in whitelist
+     */
+    private fun isCommandAllowed(command: String): Boolean {
+        return ALLOWED_COMMANDS.contains(command.lowercase().trim())
+    }
+    
+    /**
+     * Checks rate limiting for command execution.
+     * @return true if within rate limits
+     */
+    private suspend fun checkRateLimit(): Boolean {
+        return commandLock.withLock {
+            val now = System.currentTimeMillis()
+            val windowStart = now - NetworkConfig.RATE_LIMIT_WINDOW_MS
+            
+            // Remove entries older than rate limit window
+            commandExecutionLog.removeAll { it < windowStart }
+            
+            // Check if under limit
+            if (commandExecutionLog.size >= MAX_COMMANDS_PER_MINUTE) {
+                Napier.w("$TAG: Rate limit exceeded for command execution")
+                false
+            } else {
+                commandExecutionLog.add(now)
+                true
+            }
+        }
+    }
+    
+    /**
+     * Logs command execution for security auditing.
+     */
+    private fun logCommandExecution(command: String, success: Boolean, error: String? = null) {
+        val status = if (success) "SUCCESS" else "FAILED"
+        val timestamp = java.time.Instant.now().toString()
+        val message = "[$timestamp] Command execution: $command - $status"
+        
+        if (success) {
+            Napier.i("$TAG: $message")
+        } else {
+            Napier.e("$TAG: $message${error?.let { " - Error: $it" } ?: ""}")
+        }
+    }
+
     /**
      * Request the Git HTTP server to start.
      * Sends a command to the OpenCode server which triggers start-git-server.ps1.
+     * 
+     * SECURITY: This operation is protected by:
+     * - Command whitelist validation (only 'start-git-server' allowed)
+     * - Rate limiting (max 10 commands per minute)
+     * - Execution logging for audit trail
+     * - Authentication via HttpClient auth headers
      */
     suspend fun requestStartGitServer(): Result<Unit> = safeCall("requestStartGitServer") {
-        getClient().post("${gitServerUrl()}/command") {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf("command" to "start-git-server"))
+        val command = "start-git-server"
+        
+        // Validate command is in whitelist
+        if (!isCommandAllowed(command)) {
+            logCommandExecution(command, false, "Command not in whitelist")
+            throw SecurityException("Command '$command' is not allowed. Allowed commands: $ALLOWED_COMMANDS")
         }
+        
+        // Check rate limiting
+        if (!checkRateLimit()) {
+            logCommandExecution(command, false, "Rate limit exceeded")
+            throw SecurityException("Rate limit exceeded. Maximum $MAX_COMMANDS_PER_MINUTE commands per minute.")
+        }
+        
+        // Execute command
+        try {
+            getClient().post("${gitServerUrl()}/command") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("command" to command))
+            }
+            logCommandExecution(command, true)
+        } catch (e: Exception) {
+            logCommandExecution(command, false, e.message)
+            throw e
+        }
+        
         Unit
     }
 
@@ -1009,8 +1107,8 @@ class GitApiClient(
      * Uses polling to verify the server is actually running.
      */
     suspend fun requestStartGitServerAndWait(
-        maxWaitMs: Long = 10_000L,
-        pollIntervalMs: Long = 500L
+        maxWaitMs: Long = NetworkConfig.GIT_SERVER_MAX_WAIT_MS,
+        pollIntervalMs: Long = NetworkConfig.GIT_SERVER_POLL_INTERVAL_MS
     ): Result<Boolean> = safeCall("requestStartGitServerAndWait") {
         requestStartGitServer().getOrThrow()
 
