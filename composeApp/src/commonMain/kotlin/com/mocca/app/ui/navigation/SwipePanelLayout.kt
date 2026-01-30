@@ -25,7 +25,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 import kotlin.math.roundToInt
 
 enum class PanelState {
@@ -63,7 +63,7 @@ fun SwipePanelLayout(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(TerminalColors.background)
+            .background(AppColors.background)
     ) {
         val density = LocalDensity.current
         val maxWidth = constraints.maxWidth.toFloat()

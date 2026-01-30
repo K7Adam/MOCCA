@@ -8,7 +8,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ANSI COLOR PARSING (Priority 5.2)
@@ -99,7 +99,7 @@ object AnsiParser {
      */
     fun parse(
         text: String,
-        defaultForeground: Color = TerminalColors.statusOnline
+        defaultForeground: Color = AppColors.statusOnline
     ): AnnotatedString {
         if (!text.contains("\u001B[")) {
             // Fast path: no ANSI sequences
@@ -292,7 +292,7 @@ object AnsiParser {
 /**
  * Extension function to parse ANSI sequences in a string.
  */
-fun String.parseAnsi(defaultColor: Color = TerminalColors.statusOnline): AnnotatedString {
+fun String.parseAnsi(defaultColor: Color = AppColors.statusOnline): AnnotatedString {
     return AnsiParser.parse(this, defaultColor)
 }
 
