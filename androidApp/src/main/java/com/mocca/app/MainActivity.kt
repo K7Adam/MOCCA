@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.App
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             // Surface fills entire screen (edge-to-edge) with theme background
-            Surface(modifier = Modifier.fillMaxSize(), color = TerminalColors.background) {
+            Surface(modifier = Modifier.fillMaxSize(), color = AppColors.background) {
                 // Box with safeDrawingPadding ensures content doesn't overlap
                 // with status bar, navigation bar, or display cutouts
                 Box(modifier = Modifier.safeDrawingPadding()) {
