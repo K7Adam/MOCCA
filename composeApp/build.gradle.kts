@@ -7,9 +7,13 @@ plugins {
     alias(libs.plugins.sqldelight)
 }
 
-// Compose Compiler configuration for stability
+// Compose Compiler configuration for stability and metrics
 composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
+    
+    // Enable Compose metrics for performance analysis
+    metricsDestination = layout.buildDirectory.dir("compose_metrics")
+    reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
 
 kotlin {
@@ -47,7 +51,7 @@ kotlin {
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.serialization.kotlinx.json)
             // Ktor Encoding (Compression)
-            implementation("io.ktor:ktor-client-encoding:3.0.3")
+            implementation(libs.ktor.client.encoding)
 
             // Koin DI
             implementation(libs.koin.core)
@@ -84,11 +88,11 @@ kotlin {
             implementation(libs.highlights)
 
             // SLF4J for Ktor logging
-            implementation("org.slf4j:slf4j-simple:2.0.9")
+            implementation(libs.slf4j.simple)
             
-            // FileKit for cross-platform file picking (latest stable)
-            implementation("io.github.vinceglb:filekit-core:0.12.0")
-            implementation("io.github.vinceglb:filekit-dialogs-compose:0.12.0")
+            // FileKit for cross-platform file picking
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.compose)
 
             // Paging 3
             implementation(libs.paging.common)

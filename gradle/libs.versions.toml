@@ -21,6 +21,8 @@ agp = "9.0.0-rc03"
 detekt = "1.23.6"
 paging = "3.3.0"
 paging-compose = "3.3.0"
+slf4j = "2.0.16"
+filekit = "0.12.0"
 
 [libraries]
 paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
@@ -34,6 +36,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-client-auth = { module = "io.ktor:ktor-client-auth", version.ref = "ktor" }
 ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
 ktor-client-sse = { module = "io.ktor:ktor-client-sse", version.ref = "ktor" }
+ktor-client-encoding = { module = "io.ktor:ktor-client-encoding", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
@@ -65,6 +68,9 @@ compose-material3-adaptive-layout = { module = "org.jetbrains.compose.material3.
 compose-material3-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "compose-material3-adaptive" }
 
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
+filekit-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
 
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.0" }

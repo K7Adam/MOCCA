@@ -1,12 +1,18 @@
 package com.mocca.app.di
 
+import coil3.ImageLoader
+import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
 import com.mocca.app.data.local.LocalCacheFactory
+import com.mocca.app.data.security.SecureTokenStorage
+import com.mocca.app.data.security.SecureTokenStorageImpl
 import com.mocca.app.domain.manager.AndroidUpdateManager
 import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.provider.AndroidAppVersionProvider
 import com.mocca.app.domain.provider.AppVersionProvider
 import com.mocca.app.util.NetworkObserver
 import com.mocca.app.util.NetworkObserverImpl
+import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -18,4 +24,25 @@ val androidModule = module {
     single<NetworkObserver> { NetworkObserverImpl(androidContext()) }
     single<PlatformUpdateManager> { AndroidUpdateManager(androidContext()) }
     single<AppVersionProvider> { AndroidAppVersionProvider(androidContext()) }
+    
+    // Override with Android Keystore implementation
+    single<SecureTokenStorage> { SecureTokenStorageImpl(androidContext()) }
+    
+    // OPTIMIZED: Coil ImageLoader with memory and disk cache configuration
+    single {
+        ImageLoader.Builder(androidContext())
+            .memoryCache {
+                MemoryCache.Builder()
+                    // Use 15% of app memory for image cache
+                    .maxSizePercent(androidContext(), 0.15)
+                    .build()
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(androidContext().cacheDir.resolve("image_cache").absolutePath.toPath())
+                    .maxSizeBytes(50 * 1024 * 1024) // 50MB disk cache
+                    .build()
+            }
+            .build()
+    }
 }
