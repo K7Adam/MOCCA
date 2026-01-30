@@ -1,5 +1,6 @@
 package com.mocca.app.data.repository
 
+import com.mocca.app.api.NetworkConfig
 import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.security.SecureTokenStorage
@@ -196,23 +197,74 @@ class ServerConfigRepository(
             ServerConfig(
                 id = "default",
                 name = "Local Server",
-                baseUrl = "http://$defaultHost:4096",
+                baseUrl = "http://$defaultHost:${NetworkConfig.OPENCODE_SERVER_PORT}",
                 connectionType = ConnectionType.LOCAL,
                 authType = AuthType.NONE,
                 authToken = null,
                 isActive = true
             )
         } else {
+            // For physical devices, create a placeholder Tailscale config
+            // User should replace with their actual tailscale hostname
             ServerConfig(
                 id = "tailscale-default",
                 name = "Tailscale Server",
-                baseUrl = "https://omen.tail0b932a.ts.net",
+                baseUrl = "https://your-device.tailXXXX.ts.net",
                 connectionType = ConnectionType.TAILSCALE,
                 authType = AuthType.NONE,
                 authToken = null,
                 isActive = true
             )
         }
+    }
+    
+    /**
+     * Create a Tailscale serve configuration.
+     * This is used when the OpenCode server is exposed via `tailscale serve`.
+     * 
+     * Example setup on server:
+     *   tailscale serve --port 443 / http://localhost:4096
+     *   tailscale serve --port 443 /git http://localhost:4097
+     * 
+     * @param tailscaleHostname The Tailscale hostname (e.g., "mydevice.tail1234.ts.net")
+     * @param useHttps Whether to use HTTPS (default true for Tailscale)
+     */
+    fun createTailscaleServeConfig(
+        tailscaleHostname: String,
+        useHttps: Boolean = true
+    ): ServerConfig {
+        val protocol = if (useHttps) "https" else "http"
+        val cleanHostname = tailscaleHostname.removePrefix("https://").removePrefix("http://")
+        
+        return ServerConfig(
+            id = "tailscale-serve-${cleanHostname.hashCode()}",
+            name = "Tailscale ($cleanHostname)",
+            baseUrl = "$protocol://$cleanHostname",
+            connectionType = ConnectionType.TAILSCALE,
+            authType = AuthType.NONE,
+            authToken = null,
+            isActive = false
+        )
+    }
+    
+    /**
+     * Create a LAN connection configuration.
+     * @param lanIp The LAN IP address (e.g., "192.168.1.100")
+     * @param port The port number (default 4096)
+     */
+    fun createLanConfig(
+        lanIp: String,
+        port: Int = NetworkConfig.OPENCODE_SERVER_PORT
+    ): ServerConfig {
+        return ServerConfig(
+            id = "lan-${lanIp.replace(".", "-")}-$port",
+            name = "LAN ($lanIp)",
+            baseUrl = "http://$lanIp:$port",
+            connectionType = ConnectionType.LAN,
+            authType = AuthType.NONE,
+            authToken = null,
+            isActive = false
+        )
     }
 
     suspend fun checkServerHealth(baseUrl: String): Boolean {

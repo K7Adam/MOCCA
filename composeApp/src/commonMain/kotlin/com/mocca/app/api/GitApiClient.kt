@@ -276,6 +276,27 @@ class GitApiClient(
 
         val config = serverConfigProvider()
         val baseUrl = config.baseUrl.trimEnd('/')
+        
+        // Check if using Tailscale serve with path-based routing
+        val isTailscale = NetworkConfig.ServiceEndpoints.isTailscaleUrl(baseUrl)
+        val usesPaths = NetworkConfig.ServiceEndpoints.usesTailscalePaths(baseUrl)
+        
+        if (isTailscale && usesPaths) {
+            // For Tailscale serve with paths like https://host.tail.ts.net/git
+            val tailscaleGitUrl = NetworkConfig.ServiceEndpoints.getGitEndpoint(baseUrl)
+            Napier.i("$TAG: Using Tailscale serve path routing: $tailscaleGitUrl")
+            configuredUrlAttempts++
+            val checkResult = GitServerChecker.checkServerRunning(getClient(), tailscaleGitUrl)
+            if (GitServerChecker.isServerAvailable(checkResult)) {
+                Napier.i("$TAG: [SUCCESS] Tailscale Git endpoint working: $tailscaleGitUrl (${checkResult.third}ms)")
+                configuredUrlSuccess = true
+                cachedWorkingUrl = tailscaleGitUrl
+                logConnectionStats()
+                return@withLock tailscaleGitUrl
+            }
+        }
+        
+        // Standard port-based URL resolution
         val configuredUrl = try {
             val regex = Regex("""https?://([^:/]+)""")
             val match = regex.find(baseUrl)

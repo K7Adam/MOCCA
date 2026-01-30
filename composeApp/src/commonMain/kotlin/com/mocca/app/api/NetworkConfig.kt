@@ -110,7 +110,7 @@ object NetworkConfig {
     const val AGGRESSIVE_MAX_RETRIES = 5
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // GIT SERVER
+    // SERVER PORTS & ENDPOINTS
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /** Git HTTP server port */
@@ -121,6 +121,57 @@ object NetworkConfig {
     
     /** Android emulator host IP */
     const val EMULATOR_HOST_IP = "10.0.2.2"
+    
+    /** Default tailscale hostname pattern */
+    const val TAILSCALE_HOST_PATTERN = "*.tail*.ts.net"
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TAILSCALE SERVE / FUNNEL SUPPORT
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Tailscale serve configuration paths.
+     * These are the path mappings when using `tailscale serve` command.
+     * Example: tailscale serve --port 4096 / http://localhost:4096
+     */
+    object TailscaleServe {
+        /** Path for OpenCode API server */
+        const val OPENCODE_PATH = "/"
+        
+        /** Path for Git HTTP server */
+        const val GIT_PATH = "/git"
+        
+        /** Default serve port for Tailscale HTTPS */
+        const val DEFAULT_HTTPS_PORT = 443
+        
+        /** Default serve port for Tailscale HTTP */
+        const val DEFAULT_HTTP_PORT = 80
+    }
+    
+    /**
+     * Service endpoints for multi-port architecture.
+     * When using Tailscale serve with different paths, these define the endpoint mapping.
+     */
+    object ServiceEndpoints {
+        /** Get the Git server endpoint path */
+        fun getGitEndpoint(baseUrl: String): String {
+            return if (isTailscaleUrl(baseUrl)) {
+                "${baseUrl.trimEnd('/')}${TailscaleServe.GIT_PATH}"
+            } else {
+                baseUrl.replace(":$OPENCODE_SERVER_PORT", ":$GIT_SERVER_PORT")
+            }
+        }
+        
+        /** Check if URL is a Tailscale hostname */
+        fun isTailscaleUrl(url: String): Boolean {
+            return url.contains(".tail") && url.contains(".ts.net")
+        }
+        
+        /** Check if URL uses Tailscale serve paths */
+        fun usesTailscalePaths(url: String): Boolean {
+            return isTailscaleUrl(url) && !url.contains(":$GIT_SERVER_PORT")
+        }
+    }
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CIRCUIT BREAKER
