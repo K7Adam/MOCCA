@@ -3,6 +3,8 @@ package com.mocca.app.ui.components.terminal
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -34,11 +36,12 @@ fun UpdateDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(max = 500.dp) // Constrain max height to prevent overflow
                 .background(AppColors.surfaceElevated, AppShapes.dialog)
                 .border(AppSpacing.borderThin, AppColors.border, AppShapes.dialog)
                 .padding(AppSpacing.lg)
         ) {
-            // Header
+            // Header (always visible, not scrollable)
             Text(
                 text = "UPDATE AVAILABLE",
                 color = AppColors.accentGreen,
@@ -57,49 +60,57 @@ fun UpdateDialog(
 
             Spacer(modifier = Modifier.height(AppSpacing.md))
 
-            // Release Notes
-            if (updateInfo.releaseNotes.isNotBlank()) {
-                Text(
-                    text = updateInfo.releaseNotes,
-                    color = AppColors.textSecondary,
-                    style = AppTypography.bodyMedium
-                )
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-            }
+            // Scrollable content area for release notes
+            Column(
+                modifier = Modifier
+                    .weight(1f, fill = false) // Take available space but don't force expansion
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Release Notes
+                if (updateInfo.releaseNotes.isNotBlank()) {
+                    Text(
+                        text = updateInfo.releaseNotes,
+                        color = AppColors.textSecondary,
+                        style = AppTypography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                }
 
-            // Size
-            Text(
-                text = "Download size: ${updateInfo.size / 1024 / 1024} MB",
-                color = AppColors.textTertiary,
-                style = AppTypography.labelSmall
-            )
+                // Size
+                Text(
+                    text = "Download size: ${updateInfo.size / 1024 / 1024} MB",
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
+                )
+
+                // Error Message (inside scrollable area if content is long)
+                if (error != null) {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(AppColors.alertRedDim, AppShapes.small)
+                            .padding(AppSpacing.md)
+                    ) {
+                        Text(
+                            text = "DOWNLOAD FAILED",
+                            color = AppColors.alertRed,
+                            style = AppTypography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                        Text(
+                            text = error,
+                            color = AppColors.alertRed,
+                            style = AppTypography.bodySmall
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(AppSpacing.lg))
 
-            // Error Message
-            if (error != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(AppColors.alertRedDim, AppShapes.small)
-                        .padding(AppSpacing.md)
-                ) {
-                    Text(
-                        text = "DOWNLOAD FAILED",
-                        color = AppColors.alertRed,
-                        style = AppTypography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(AppSpacing.xs))
-                    Text(
-                        text = error,
-                        color = AppColors.alertRed,
-                        style = AppTypography.bodySmall
-                    )
-                }
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-            }
-
+            // Buttons (always visible at bottom, not scrollable)
             when {
                 isDownloading -> {
                     // Progress Bar

@@ -369,18 +369,55 @@ class GitScreenModel(
 
     fun requestStartGitServer() {
         screenModelScope.launch {
-            _uiState.update { it.copy(isStartingServer = true, serverStartProgress = "Sending start command...", showServerNotRunningDialog = false) }
+            val currentAttempt = _uiState.value.serverStartAttempt + 1
+            val maxAttempts = _uiState.value.maxServerStartAttempts
+            
+            _uiState.update { it.copy(
+                isStartingServer = true, 
+                serverStartProgress = "Sending start command (attempt $currentAttempt/$maxAttempts)...", 
+                showServerNotRunningDialog = true, // Show dialog with progress
+                serverStartAttempt = currentAttempt
+            ) }
+            
             gitRepository.requestStartGitServerAndWait(maxWaitMs = 15_000L, pollIntervalMs = 500L).onSuccess { serverStarted ->
                 if (serverStarted) {
-                    _uiState.update { it.copy(isStartingServer = false, serverStartProgress = null, showServerStartedDialog = true, error = null) }
-                    delay(500); loadStatus()
-                } else { onGitServerStartFailed("Server did not start") }
-            }.onFailure { e -> onGitServerStartFailed(e.message ?: "Unknown error") }
+                    _uiState.update { it.copy(
+                        isStartingServer = false, 
+                        serverStartProgress = null, 
+                        showServerNotRunningDialog = false,
+                        showServerStartedDialog = true, 
+                        error = null,
+                        serverStartAttempt = 0
+                    )}
+                    delay(500)
+                    loadStatus()
+                } else { 
+                    onGitServerStartFailed("Server did not start", currentAttempt, maxAttempts) 
+                }
+            }.onFailure { e -> 
+                onGitServerStartFailed(e.message ?: "Unknown error", currentAttempt, maxAttempts) 
+            }
         }
     }
 
-    private fun onGitServerStartFailed(reason: String) {
-        _uiState.update { it.copy(isStartingServer = false, serverStartProgress = null, warningMessage = "Could not start git server: $reason\n\nPlease run 'start-git-server.ps1' on host manually.") }
+    private fun onGitServerStartFailed(reason: String, attempt: Int, maxAttempts: Int) {
+        val canRetry = attempt < maxAttempts
+        
+        _uiState.update { it.copy(
+            isStartingServer = canRetry, // Keep loading if we're going to retry
+            serverStartProgress = if (canRetry) "Retrying..." else null,
+            showServerNotRunningDialog = !canRetry, // Show dialog only if exhausted all retries
+            warningMessage = if (!canRetry) "Could not start Git services after $maxAttempts attempts.\n\nError: $reason" else null,
+            serverStartAttempt = if (canRetry) attempt else 0
+        )}
+        
+        // Auto-retry if we haven't exhausted attempts
+        if (canRetry) {
+            screenModelScope.launch {
+                delay(2000) // Wait 2 seconds before retry
+                requestStartGitServer()
+            }
+        }
     }
 }
 
@@ -405,7 +442,9 @@ data class GitUiState(
     val showAdbReverseHelp: Boolean = false,
     val showServerStartedDialog: Boolean = false,
     val isStartingServer: Boolean = false,
-    val serverStartProgress: String? = null
+    val serverStartProgress: String? = null,
+    val serverStartAttempt: Int = 0,
+    val maxServerStartAttempts: Int = 3
 ) {
     val hasChanges: Boolean get() = status?.hasChanges == true
     val currentBranch: String get() = status?.branch ?: "unknown"

@@ -61,6 +61,7 @@ import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
 import com.mocca.app.ui.components.terminal.TerminalButton
 import com.mocca.app.ui.components.terminal.TerminalInput
+import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -121,6 +122,7 @@ class ProgressiveOnboardingScreen : Screen {
             ) { step ->
                 when (step) {
                     OnboardingStep.WELCOME -> WelcomeStep(
+                        onScanQr = { /* QR scanning will be handled */ },
                         onStartDiscovery = { screenModel.onAction(OnboardingAction.StartDiscovery) },
                         onManualEntry = { 
                             screenModel.onAction(OnboardingAction.ManualEntryUpdated("", ""))
@@ -209,6 +211,7 @@ private fun WizardProgressIndicator(
 
 @Composable
 private fun WelcomeStep(
+    onScanQr: () -> Unit,
     onStartDiscovery: () -> Unit,
     onManualEntry: () -> Unit
 ) {
@@ -251,25 +254,122 @@ private fun WelcomeStep(
             textAlign = TextAlign.Center
         )
         
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
+        
+        // Setup checklist
+        SetupChecklist()
+        
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         
-        // Auto-discover button
+        // Primary action: QR Scan
         TerminalButton(
-            text = "Find My Server",
-            onClick = onStartDiscovery,
+            text = "Scan QR Code",
+            onClick = onScanQr,
+            icon = Icons.Default.QrCodeScanner,
             showArrow = true,
             modifier = Modifier.fillMaxWidth()
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
-        // Manual entry option
+        // Secondary: Auto-discover
+        TerminalOutlinedButton(
+            text = "Find Server Automatically",
+            onClick = onStartDiscovery,
+            modifier = Modifier.fillMaxWidth(),
+            height = AppSpacing.buttonHeightCompact
+        )
+        
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+        
+        // Tertiary: Manual entry
         Text(
             text = "Enter server address manually",
             style = AppTypography.bodyMedium,
             color = AppColors.textSecondary,
             modifier = Modifier.clickable(onClick = onManualEntry)
         )
+    }
+}
+
+@Composable
+private fun SetupChecklist() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .padding(AppSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+    ) {
+        Text(
+            text = "SETUP CHECKLIST",
+            style = AppTypography.labelSmall,
+            color = AppColors.textSecondary
+        )
+        
+        ChecklistItem(
+            number = "1",
+            text = "Install OpenCode on your computer",
+            subtext = "Download from github.com/opencode-ai/opencode"
+        )
+        
+        ChecklistItem(
+            number = "2",
+            text = "Run setup script on your computer",
+            subtext = ".\\mocca-setup.ps1 (generates QR code)"
+        )
+        
+        ChecklistItem(
+            number = "3",
+            text = "Scan the QR code with this app",
+            subtext = "Point camera at the code on your screen"
+        )
+    }
+}
+
+@Composable
+private fun ChecklistItem(
+    number: String,
+    text: String,
+    subtext: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+    ) {
+        // Number circle
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .background(AppColors.accentGreen.copy(alpha = 0.2f), CircleShape)
+                .border(AppSpacing.borderThin, AppColors.accentGreen, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = number,
+                style = AppTypography.labelMedium,
+                color = AppColors.accentGreen,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = text,
+                style = AppTypography.bodyMedium,
+                color = AppColors.white,
+                fontWeight = FontWeight.Medium
+            )
+            
+            Text(
+                text = subtext,
+                style = AppTypography.bodySmall,
+                color = AppColors.textTertiary
+            )
+        }
     }
 }
 

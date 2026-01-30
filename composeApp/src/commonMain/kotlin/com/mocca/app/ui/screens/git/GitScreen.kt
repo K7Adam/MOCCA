@@ -202,7 +202,10 @@ class GitScreen : Screen {
                 com.mocca.app.ui.components.GitServerNotRunningDialog(
                     onDismiss = { screenModel.hideServerNotRunningDialog() },
                     onStartServer = { screenModel.requestStartGitServer() },
-                    showAdbHelp = uiState.showAdbReverseHelp
+                    showAdbHelp = uiState.showAdbReverseHelp,
+                    isAttemptingStart = uiState.isStartingServer,
+                    attemptCount = uiState.serverStartAttempt,
+                    maxAttempts = uiState.maxServerStartAttempts
                 )
             }
 
