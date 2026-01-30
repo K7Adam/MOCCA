@@ -3,23 +3,23 @@
 
 <#
 .SYNOPSIS
-    MOCCA Setup Script - One-command setup for MOCCA mobile app
+    MOCCA Setup Script - Zero-config setup for MOCCA mobile app
 
 .DESCRIPTION
-    This script automates the setup process for the MOCCA Android app:
-    1. Checks for OpenCode installation
-    2. Starts OpenCode server with proper configuration
-    3. Generates QR code for instant mobile pairing
-    4. Sets up Git HTTP server
-    5. Configures ADB reverse for emulator support
+    This script automates the complete setup process for the MOCCA Android app:
+    1. Detects or starts OpenCode server
+    2. Discovers all available network interfaces (WiFi, Tailscale, etc.)
+    3. Configures ADB for emulator support
+    4. Generates connection QR codes
+    5. Validates the entire setup end-to-end
 
 .EXAMPLE
     .\mocca-setup.ps1
-    Starts the MOCCA setup process
+    Starts automatic setup with intelligent defaults
 
 .EXAMPLE
-    .\mocca-setup.ps1 -Port 4096 -GitPort 4097
-    Starts with custom port configuration
+    .\mocca-setup.ps1 -UseTailscale
+    Prioritizes Tailscale network for secure remote access
 
 .PARAMETER Port
     Port for OpenCode agent server (default: 4096)
@@ -27,19 +27,25 @@
 .PARAMETER GitPort
     Port for Git HTTP server (default: 4097)
 
+.PARAMETER UseTailscale
+    Prioritize Tailscale IP (100.x.x.x) for connections
+
 .PARAMETER SkipAdb
-    Skip ADB reverse setup (for physical devices only)
+    Skip ADB configuration (for physical devices only)
 #>
 
 param(
     [int]$Port = 4096,
     [int]$GitPort = 4097,
+    [switch]$UseTailscale,
     [switch]$SkipAdb,
     [switch]$Verbose
 )
 
-$ErrorActionPreference = "Stop"
-$script:Version = "1.0.0"
+$ErrorActionPreference = "Continue"
+$script:Version = "2.0.0"
+$script:SetupSuccess = $false
+$script:OpenCodeProcess = $null
 
 # Colors for output
 $Colors = @{
@@ -48,7 +54,10 @@ $Colors = @{
     Warning = "Yellow"
     Info = "Cyan"
     Normal = "White"
+    Dim = "DarkGray"
 }
+
+#region Utility Functions
 
 function Write-StatusMessage {
     param(
@@ -69,538 +78,446 @@ function Show-Header {
     Write-Host @"
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
-║   MOCCA Mobile App Setup                                     ║
-║   One-command configuration for MOCCA + OpenCode             ║
-║                                                              ║
-║   Version: $script:Version                                           ║
+║   MOCCA Mobile App Setup v$script:Version                                ║
+║   Zero-Configuration Connection Setup                        ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor $Colors.Info
     Write-Host ""
 }
 
-function Test-OpenCodeInstallation {
-    Write-StatusMessage "🔍 Checking for OpenCode installation..." -Type "Info"
+function Test-PortOpen {
+    param([string]$ComputerName = "localhost", [int]$Port)
     
     try {
-        $opencodetPath = Get-Command opencode -ErrorAction SilentlyContinue
-        if (-not $opencodetPath) {
-            # Try common installation locations
-            $possiblePaths = @(
-                "$env:USERPROFILE\.cargo\bin\opencode.exe",
-                "$env:LOCALAPPDATA\Programs\opencode\opencode.exe",
-                "C:\Program Files\opencode\opencode.exe",
-                "$env:USERPROFILE\scoop\shims\opencode.exe",
-                "$env:USERPROFILE\.local\bin\opencode.exe"
-            )
-            
-            foreach ($path in $possiblePaths) {
-                if (Test-Path $path) {
-                    $env:PATH = "$env:PATH;$(Split-Path $path)"
-                    Write-StatusMessage "   ✓ Found OpenCode at: $path" -Type "Success"
-                    return $true
-                }
-            }
-            
-            return $false
-        }
-        
-        Write-StatusMessage "   ✓ OpenCode found in PATH" -Type "Success"
+        $client = New-Object System.Net.Sockets.TcpClient
+        $result = $client.BeginConnect($ComputerName, $Port, $null, $null)
+        $success = $result.AsyncWaitHandle.WaitOne(1000, $false)
+        $client.Close()
+        return $success
+    }
+    catch {
+        return $false
+    }
+}
+
+function Test-ServerResponsive {
+    param([int]$Port)
+    
+    # Method 1: Check if port is open
+    if (Test-PortOpen -Port $Port) {
         return $true
     }
-    catch {
-        return $false
+    
+    # Method 2: Check if opencode process is running
+    $process = Get-Process -Name "opencode" -ErrorAction SilentlyContinue | 
+        Where-Object { $_.MainWindowTitle -match "4096|$Port" -or $_.CommandLine -match "4096|$Port" } | 
+        Select-Object -First 1
+    
+    if ($process) {
+        $script:OpenCodeProcess = $process
+        return $true
     }
+    
+    return $false
 }
 
-function Install-OpenCode {
-    Write-StatusMessage "📥 OpenCode not found. Installing..." -Type "Warning"
+function Get-LocalIPs {
+    $ips = @()
     
-    Write-Host ""
-    Write-StatusMessage "Please install OpenCode manually:" -Type "Info"
-    Write-Host ""
-    Write-Host "   1. Visit: https://github.com/opencode-ai/opencode/releases" -ForegroundColor $Colors.Normal
-    Write-Host "   2. Download the latest release for Windows" -ForegroundColor $Colors.Normal
-    Write-Host "   3. Extract and add to your PATH" -ForegroundColor $Colors.Normal
-    Write-Host "   OR use cargo: cargo install opencode" -ForegroundColor $Colors.Normal
-    Write-Host ""
-    
-    $response = Read-Host "Press Enter after installing OpenCode, or type 'skip' to continue anyway"
-    
-    if ($response -eq 'skip') {
-        return $false
-    }
-    
-    # Re-check
-    return Test-OpenCodeInstallation
-}
-
-function Test-AdbInstallation {
-    Write-StatusMessage "🔍 Checking for ADB (Android Debug Bridge)..." -Type "Info"
-    
-    try {
-        $adbPath = Get-Command adb -ErrorAction SilentlyContinue
-        if ($adbPath) {
-            Write-StatusMessage "   ✓ ADB found in PATH" -Type "Success"
-            return $true
+    # Get all network adapter IPs
+    $adapters = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | 
+        Where-Object { 
+            $_.IPAddress -notmatch "^127\." -and 
+            $_.IPAddress -notmatch "^169\.254" -and
+            $_.InterfaceAlias -notmatch "Loopback|Virtual|VMware|Hyper-V|vEthernet|WSL"
         }
-        
-        # Check common Android SDK locations
-        $possiblePaths = @(
-            "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
-            "$env:PROGRAMFILES\Android\android-sdk\platform-tools\adb.exe",
-            "$env:ANDROID_HOME\platform-tools\adb.exe",
-            "$env:ANDROID_SDK_ROOT\platform-tools\adb.exe"
-        )
-        
-        foreach ($path in $possiblePaths) {
-            if (Test-Path $path) {
-                $env:PATH = "$env:PATH;$(Split-Path $path)"
-                Write-StatusMessage "   ✓ Found ADB at: $path" -Type "Success"
-                return $true
-            }
-        }
-        
-        return $false
-    }
-    catch {
-        return $false
-    }
-}
-
-function Test-AdbServer {
-    Write-StatusMessage "🔌 Checking ADB server status..." -Type "Info"
     
-    try {
-        # Try to start ADB server if not running
-        $null = adb start-server 2>&1
-        
-        # Give it a moment to start
-        Start-Sleep -Milliseconds 500
-        
-        # Check if server is responding
-        $devices = adb devices 2>&1
-        
-        if ($LASTEXITCODE -eq 0) {
-            $connectedDevices = $devices | Select-String "device$" | Where-Object { $_ -notmatch "List of devices" }
-            if ($connectedDevices) {
-                Write-StatusMessage "   ✓ ADB server running with connected devices" -Type "Success"
-                return $true
-            } else {
-                Write-StatusMessage "   ⚠ ADB server running but no devices connected" -Type "Warning"
-                return $false
-            }
-        } else {
-            Write-StatusMessage "   ⚠ ADB server not responding properly" -Type "Warning"
-            return $false
+    foreach ($adapter in $adapters) {
+        $ips += [PSCustomObject]@{
+            Type = if ($adapter.IPAddress -match "^100\.") { "Tailscale" } else { "WiFi/LAN" }
+            IP = $adapter.IPAddress
+            Interface = $adapter.InterfaceAlias
+            IsPreferred = if ($UseTailscale -and ($adapter.IPAddress -match "^100\.")) { $true } else { $false }
         }
     }
-    catch {
-        Write-StatusMessage "   ⚠ ADB check failed: $_" -Type "Warning"
-        return $false
-    }
-}
-
-function Setup-AdbReverse {
-    param([int]$Port, [int]$GitPort)
     
-    Write-StatusMessage "🔌 Setting up ADB port forwarding..." -Type "Info"
-    
-    try {
-        # Ensure ADB server is running first
-        $null = adb start-server 2>&1
-        Start-Sleep -Milliseconds 1000
-        
-        # Check if any emulator/device is connected
-        $devicesOutput = adb devices 2>&1
-        $devices = $devicesOutput | Select-String "device$" | Where-Object { $_ -notmatch "List of devices" }
-        
-        if (-not $devices) {
-            Write-StatusMessage "   ⚠ No Android emulator or device detected" -Type "Warning"
-            Write-StatusMessage "     Skipping ADB port forwarding" -Type "Warning"
-            Write-Host ""
-            Write-StatusMessage "💡 For physical devices:" -Type "Info"
-            Write-Host "     Use the IP address shown below for connection" -ForegroundColor $Colors.Normal
-            return $false
-        }
-        
-        # Set up reverse port forwarding for both ports
-        Write-StatusMessage "   Setting up reverse port forwarding..." -Type "Info"
-        
-        $agentResult = adb reverse tcp:$Port tcp:$Port 2>&1
-        $agentSuccess = $LASTEXITCODE -eq 0
-        
-        $gitResult = adb reverse tcp:$GitPort tcp:$GitPort 2>&1
-        $gitSuccess = $LASTEXITCODE -eq 0
-        
-        if ($agentSuccess -and $gitSuccess) {
-            Write-StatusMessage "   ✓ Port forwarding configured:" -Type "Success"
-            Write-StatusMessage "     • OpenCode Agent: localhost:$Port → host:$Port" -Type "Success"
-            Write-StatusMessage "     • Git Server: localhost:$GitPort → host:$GitPort" -Type "Success"
-            Write-Host ""
-            Write-StatusMessage "💡 Emulator users:" -Type "Info"
-            Write-Host "     Use 'localhost' or '127.0.0.1' in the app" -ForegroundColor $Colors.Normal
-            return $true
-        } else {
-            if (-not $agentSuccess) {
-                Write-StatusMessage "   ⚠ Failed to forward agent port: $agentResult" -Type "Warning"
-            }
-            if (-not $gitSuccess) {
-                Write-StatusMessage "   ⚠ Failed to forward git port: $gitResult" -Type "Warning"
-            }
-            Write-Host ""
-            Write-StatusMessage "💡 Try running these commands manually:" -Type "Info"
-            Write-Host "     adb reverse tcp:$Port tcp:$Port" -ForegroundColor $Colors.Info
-            Write-Host "     adb reverse tcp:$GitPort tcp:$GitPort" -ForegroundColor $Colors.Info
-            return $false
-        }
-    }
-    catch {
-        Write-StatusMessage "   ⚠ ADB setup failed: $_" -Type "Warning"
-        Write-Host ""
-        Write-StatusMessage "💡 You can skip ADB setup and use IP address instead:" -Type "Info"
-        return $false
-    }
-}
-
-function Generate-QrCode {
-    param(
-        [string]$ServerHost,
-        [int]$Port,
-        [string]$Token = "",
-        [bool]$AdbConfigured = $false
-    )
-    
-    Write-StatusMessage "📱 Generating connection information..." -Type "Info"
-    
-    # Build connection URLs for different scenarios
-    $protocol = "http"
-    
-    # Primary URL (IP address - works for physical devices)
-    $ipUrl = "$protocol`:${ServerHost}:$Port"
-    
-    # Localhost URL (for emulator when ADB is configured)
-    $localhostUrl = "$protocol`://localhost:$Port"
-    $localIpUrl = "$protocol`://127.0.0.1:$Port"
-    
-    # Create JSON payload for QR code (prioritize IP for broadest compatibility)
-    $payload = @{
-        url = $ipUrl
-        token = $Token
-        name = "MOCCA Auto-Setup"
-        alt_urls = @($localhostUrl, $localIpUrl)
-    } | ConvertTo-Json -Compress
-    
-    Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Info
-    Write-Host "                    CONNECTION OPTIONS                         " -ForegroundColor $Colors.Info
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Info
-    Write-Host ""
-    
-    # Show all connection options
-    Write-StatusMessage "📍 For Physical Device (same WiFi network):" -Type "Success"
-    Write-Host "   $ipUrl" -ForegroundColor $Colors.Success
-    Write-Host ""
-    
-    if ($AdbConfigured) {
-        Write-StatusMessage "📱 For Android Emulator (via ADB):" -Type "Success"
-        Write-Host "   $localhostUrl" -ForegroundColor $Colors.Success
-        Write-Host "   or" -ForegroundColor $Colors.Normal
-        Write-Host "   $localIpUrl" -ForegroundColor $Colors.Success
-        Write-Host ""
-    } else {
-        Write-StatusMessage "⚠ For Android Emulator:" -Type "Warning"
-        Write-Host "   ADB port forwarding not configured" -ForegroundColor $Colors.Warning
-        Write-Host "   Run these commands manually:" -ForegroundColor $Colors.Warning
-        Write-Host "     adb reverse tcp:$Port tcp:$Port" -ForegroundColor $Colors.Info
-        Write-Host "     adb reverse tcp:4097 tcp:4097" -ForegroundColor $Colors.Info
-        Write-Host "   Then use: $localhostUrl" -ForegroundColor $Colors.Info
-        Write-Host ""
-    }
-    
-    # Try to display QR code in terminal
-    try {
-        # Check if qrencode is available (via chocolatey or other)
-        $qrencode = Get-Command qrencode -ErrorAction SilentlyContinue
-        
-        if ($qrencode) {
-            Write-StatusMessage "📱 Scan this QR code with your MOCCA app:" -Type "Info"
-            Write-Host ""
-            qrencode -t ANSIUTF8 "$payload" 2>$null
-            Write-Host ""
-            Write-StatusMessage "   (QR contains: $ipUrl)" -Type "Info"
-        } else {
-            Write-StatusMessage "💡 Tip: Install qrencode for QR code display:" -Type "Info"
-            Write-Host "   choco install qrencode" -ForegroundColor $Colors.Info
-            Write-Host "   or" -ForegroundColor $Colors.Normal
-            Write-Host "   scoop install qrencode" -ForegroundColor $Colors.Info
-        }
-    }
-    catch {
-        # Silently continue if QR generation fails
-    }
-    
-    Write-Host ""
-    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Info
-}
-
-function Test-ServerHealth {
-    param(
-        [string]$ServerUrl,
-        [int]$TimeoutSec = 3
-    )
-    
-    try {
-        # Try multiple health endpoints (OpenCode might use different paths)
-        $endpoints = @(
-            "/health",
-            "/api/health",
-            "/global/health",
-            "/"
-        )
-        
-        foreach ($endpoint in $endpoints) {
-            try {
-                $response = Invoke-WebRequest -Uri "$ServerUrl$endpoint" -TimeoutSec $TimeoutSec -ErrorAction Stop
-                if ($response.StatusCode -eq 200) {
-                    return $true
+    # If no adapters found, try alternative method
+    if ($ips.Count -eq 0) {
+        try {
+            $hostname = [System.Net.Dns]::GetHostName()
+            $hostEntry = [System.Net.Dns]::GetHostEntry($hostname)
+            foreach ($addr in $hostEntry.AddressList) {
+                if ($addr.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork) {
+                    $ip = $addr.IPAddressToString
+                    if ($ip -notmatch "^127\.") {
+                        $ips += [PSCustomObject]@{
+                            Type = if ($ip -match "^100\.") { "Tailscale" } else { "WiFi/LAN" }
+                            IP = $ip
+                            Interface = "Auto-detected"
+                            IsPreferred = if ($UseTailscale -and ($ip -match "^100\.")) { $true } else { $false }
+                        }
+                    }
                 }
             }
-            catch {
-                # Try next endpoint
-                continue
+        }
+        catch {
+            # Fallback to localhost
+            $ips += [PSCustomObject]@{
+                Type = "Localhost"
+                IP = "127.0.0.1"
+                Interface = "Loopback"
+                IsPreferred = $false
             }
         }
+    }
+    
+    return $ips
+}
+
+function Test-AdbAvailable {
+    try {
+        $adb = Get-Command adb -ErrorAction SilentlyContinue
+        if ($adb) { return $true }
         
-        return $false
+        # Check common paths
+        $paths = @(
+            "$env:LOCALAPPDATA\Android\Sdk\platform-tools\adb.exe",
+            "$env:PROGRAMFILES\Android\android-sdk\platform-tools\adb.exe"
+        )
+        
+        foreach ($path in $paths) {
+            if (Test-Path $path) {
+                $env:PATH += ";$(Split-Path $path)"
+                return $true
+            }
+        }
+    }
+    catch {}
+    return $false
+}
+
+function Test-DeviceConnected {
+    try {
+        $output = adb devices 2>&1
+        $devices = $output | Where-Object { $_ -match "device$" -and $_ -notmatch "List of devices" }
+        return ($devices -ne $null)
     }
     catch {
         return $false
     }
+}
+
+function Setup-AdbPortForwarding {
+    param([int]$Port, [int]$GitPort)
+    
+    Write-StatusMessage "🔌 Configuring ADB port forwarding..." -Type "Info"
+    
+    if (-not (Test-AdbAvailable)) {
+        Write-StatusMessage "   ⚠ ADB not found. Skipping emulator configuration." -Type "Warning"
+        return $false
+    }
+    
+    # Start ADB server
+    $null = adb start-server 2>&1
+    Start-Sleep -Milliseconds 500
+    
+    if (-not (Test-DeviceConnected)) {
+        Write-StatusMessage "   ⚠ No Android device/emulator connected" -Type "Warning"
+        return $false
+    }
+    
+    # Set up port forwarding
+    $agentSuccess = $false
+    $gitSuccess = $false
+    
+    try {
+        $result1 = adb reverse tcp:$Port tcp:$Port 2>&1
+        if ($LASTEXITCODE -eq 0) { $agentSuccess = $true }
+    }
+    catch {}
+    
+    try {
+        $result2 = adb reverse tcp:$GitPort tcp:$GitPort 2>&1
+        if ($LASTEXITCODE -eq 0) { $gitSuccess = $true }
+    }
+    catch {}
+    
+    if ($agentSuccess -and $gitSuccess) {
+        Write-StatusMessage "   ✓ ADB port forwarding configured" -Type "Success"
+        return $true
+    }
+    
+    Write-StatusMessage "   ⚠ Port forwarding partially failed" -Type "Warning"
+    return $false
 }
 
 function Start-OpenCodeServer {
-    param(
-        [int]$Port,
-        [int]$GitPort
-    )
+    param([int]$Port, [int]$GitPort)
     
-    Write-StatusMessage "🚀 Starting OpenCode server..." -Type "Info"
-    Write-Host ""
+    Write-StatusMessage "🚀 Checking OpenCode server..." -Type "Info"
     
-    $serverUrl = "http://localhost:$Port"
-    
-    # Check if server is already running
-    Write-StatusMessage "   Checking if server already running..." -Type "Info"
-    if (Test-ServerHealth -ServerUrl $serverUrl) {
+    # Check if already running
+    if (Test-ServerResponsive -Port $Port) {
         Write-StatusMessage "   ✓ OpenCode server is already running on port $Port" -Type "Success"
+        $script:SetupSuccess = $true
         return $true
     }
     
-    # Start the server
-    Write-StatusMessage "   Starting server on port $Port..." -Type "Info"
-    Write-StatusMessage "   Git server will run on port $GitPort" -Type "Info"
-    Write-Host ""
+    Write-StatusMessage "   Server not running. Starting..." -Type "Warning"
     
+    # Find opencode executable
+    $opencodetPath = $null
     try {
-        # Try different ways to start opencode
-        $processStarted = $false
-        
-        # Method 1: Try 'opencode' directly
-        try {
-            $opencodetCmd = Get-Command opencode -ErrorAction Stop
-            $arguments = "serve --port $Port"
-            
-            Write-StatusMessage "Launching: opencode $arguments" -Type "Info"
-            
-            # Start process (hidden window to avoid popup)
-            $psi = New-Object System.Diagnostics.ProcessStartInfo
-            $psi.FileName = "opencode"
-            $psi.Arguments = $arguments
-            $psi.UseShellExecute = $true
-            $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
-            
-            [System.Diagnostics.Process]::Start($psi) | Out-Null
-            $processStarted = $true
+        $cmd = Get-Command opencode -ErrorAction Stop
+        $opencodetPath = $cmd.Source
+    }
+    catch {
+        $possiblePaths = @(
+            "$env:USERPROFILE\.cargo\bin\opencode.exe",
+            "$env:LOCALAPPDATA\Programs\opencode\opencode.exe",
+            "$env:USERPROFILE\.local\bin\opencode.exe"
+        )
+        foreach ($path in $possiblePaths) {
+            if (Test-Path $path) {
+                $opencodetPath = $path
+                break
+            }
         }
-        catch {
-            Write-StatusMessage "   Could not start 'opencode' directly, trying alternative methods..." -Type "Warning"
-        }
+    }
+    
+    if (-not $opencodetPath) {
+        Write-StatusMessage "   ✗ OpenCode not found. Please install it first:" -Type "Error"
+        Write-Host "     https://github.com/opencode-ai/opencode/releases" -ForegroundColor $Colors.Info
+        return $false
+    }
+    
+    Write-StatusMessage "   Starting server (this may take 10-30 seconds)..." -Type "Info"
+    
+    # Start the server
+    try {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $opencodetPath
+        $psi.Arguments = "serve --port $Port"
+        $psi.UseShellExecute = $true
+        $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
+        $psi.CreateNoWindow = $false
         
-        if (-not $processStarted) {
-            # Method 2: Check if server binary exists in common locations
-            $possiblePaths = @(
-                "$env:USERPROFILE\.cargo\bin\opencode.exe",
-                "$env:LOCALAPPDATA\Programs\opencode\opencode.exe",
-                "$env:USERPROFILE\.local\bin\opencode.exe"
-            )
+        [System.Diagnostics.Process]::Start($psi) | Out-Null
+        
+        # Wait for server to be ready
+        $maxWait = 60
+        $waited = 0
+        $spinChars = @('|', '/', '-', '\')
+        
+        while ($waited -lt $maxWait) {
+            $char = $spinChars[$waited % 4]
+            Write-Host "`r   Waiting for server... $char ($waited/${maxWait}s)" -NoNewline -ForegroundColor $Colors.Info
             
-            foreach ($path in $possiblePaths) {
-                if (Test-Path $path) {
-                    $psi = New-Object System.Diagnostics.ProcessStartInfo
-                    $psi.FileName = $path
-                    $psi.Arguments = "serve --port $Port"
-                    $psi.UseShellExecute = $true
-                    $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
-                    
-                    [System.Diagnostics.Process]::Start($psi) | Out-Null
-                    $processStarted = $true
-                    Write-StatusMessage "   Started from: $path" -Type "Info"
-                    break
-                }
+            Start-Sleep -Seconds 1
+            $waited++
+            
+            if (Test-ServerResponsive -Port $Port) {
+                Write-Host ""  # New line
+                Write-StatusMessage "   ✓ Server started successfully!" -Type "Success"
+                $script:SetupSuccess = $true
+                return $true
             }
         }
         
-        if (-not $processStarted) {
-            Write-StatusMessage "   ✗ Could not start OpenCode server automatically" -Type "Error"
-            Write-Host ""
-            Write-StatusMessage "💡 Please start it manually:" -Type "Info"
-            Write-Host "     opencode serve --port $Port" -ForegroundColor $Colors.Info
-            Write-Host ""
-            return $false
-        }
-        
-        # Wait for server to start with progress feedback
-        Write-StatusMessage "   Waiting for server to start (this may take 10-30 seconds)..." -Type "Info" -NoNewline
-        
-        $maxAttempts = 45  # Increased from 30
-        $attempt = 0
-        $started = $false
-        $progressChars = @('/', '-', '\', '|')
-        
-        while ($attempt -lt $maxAttempts -and -not $started) {
-            Start-Sleep -Milliseconds 1000
-            $char = $progressChars[$attempt % $progressChars.Length]
-            Write-Host "`r   Waiting for server to start... $char (attempt $($attempt + 1)/$maxAttempts)" -NoNewline -ForegroundColor $Colors.Info
-            
-            if (Test-ServerHealth -ServerUrl $serverUrl -TimeoutSec 2) {
-                $started = $true
-            }
-            
-            $attempt++
-        }
-        
-        Write-Host ""  # New line after progress
-        
-        if ($started) {
-            Write-StatusMessage "   ✓ Server started successfully!" -Type "Success"
-            return $true
-        } else {
-            Write-StatusMessage "   ⚠ Server did not respond to health checks" -Type "Warning"
-            Write-Host ""
-            Write-StatusMessage "💡 The server may still be starting. Common issues:" -Type "Info"
-            Write-Host "     1. First-time startup takes longer (downloading models, etc.)" -ForegroundColor $Colors.Normal
-            Write-Host "     2. Check the OpenCode window that opened for errors" -ForegroundColor $Colors.Normal
-            Write-Host "     3. Port $Port might be in use by another application" -ForegroundColor $Colors.Normal
-            Write-Host ""
-            Write-StatusMessage "💡 You can check if it's running:" -Type "Info"
-            Write-Host "     curl http://localhost:$Port/health" -ForegroundColor $Colors.Info
-            return $false
-        }
+        Write-Host ""  # New line
+        Write-StatusMessage "   ⚠ Server did not respond within ${maxWait} seconds" -Type "Warning"
+        Write-StatusMessage "     A window should have opened. Check it for errors." -Type "Warning"
+        return $false
     }
     catch {
         Write-StatusMessage "   ✗ Failed to start server: $_" -Type "Error"
-        Write-Host ""
-        Write-StatusMessage "💡 Please start manually:" -Type "Info"
-        Write-Host "     opencode serve --port $Port" -ForegroundColor $Colors.Info
         return $false
     }
 }
 
-function Show-Summary {
+function Show-ConnectionInfo {
     param(
-        [string]$ServerHost,
+        [array]$IPs,
         [int]$Port,
         [int]$GitPort,
         [bool]$AdbConfigured
     )
     
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Success
-    Write-Host "║                     SETUP COMPLETE!                          ║" -ForegroundColor $Colors.Success
-    Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Success
-    Write-Host ""
-    Write-StatusMessage "📱 Your MOCCA app should now be able to connect!" -Type "Success"
-    Write-Host ""
-    Write-StatusMessage "Configuration Summary:" -Type "Info"
-    Write-Host "  • OpenCode Agent: http://${ServerHost}:$Port" -ForegroundColor $Colors.Normal
-    Write-Host "  • Git HTTP Server: http://${ServerHost}:$GitPort" -ForegroundColor $Colors.Normal
-    Write-Host "  • ADB Port Forwarding: $(if ($AdbConfigured) { '✓ Configured' } else { '⚠ Not configured' })" -ForegroundColor $Colors.Normal
-    Write-Host ""
-    Write-StatusMessage "Next steps:" -Type "Info"
-    Write-Host "  1. Open the MOCCA app on your Android device/emulator" -ForegroundColor $Colors.Normal
-    Write-Host "  2. The app should auto-discover your server" -ForegroundColor $Colors.Normal
-    Write-Host "  3. If not found, tap 'Scan QR Code' and point at the screen" -ForegroundColor $Colors.Normal
+    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Success
+    Write-Host "                    CONNECTION OPTIONS                         " -ForegroundColor $Colors.Success
+    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Success
     Write-Host ""
     
-    if (-not $AdbConfigured) {
-        Write-StatusMessage "⚠ Important for Emulator users:" -Type "Warning"
-        Write-Host "  Run this command manually:" -ForegroundColor $Colors.Warning
-        Write-Host "  adb reverse tcp:$Port tcp:$Port" -ForegroundColor $Colors.Info
-        Write-Host "  adb reverse tcp:$GitPort tcp:$GitPort" -ForegroundColor $Colors.Info
-        Write-Host ""
+    # Show all available IPs
+    $preferredIP = $null
+    
+    foreach ($ipInfo in $IPs) {
+        $prefix = if ($ipInfo.IsPreferred) { "★ " } else { "  " }
+        $url = "http://$($ipInfo.IP):$Port"
+        
+        if ($ipInfo.Type -eq "Tailscale") {
+            Write-StatusMessage "$prefix🔗 Tailscale (Secure):" -Type "Success"
+        }
+        elseif ($ipInfo.Type -eq "WiFi/LAN") {
+            Write-StatusMessage "$prefix📶 WiFi/LAN:" -Type "Info"
+        }
+        else {
+            Write-StatusMessage "$prefix🖥️ $($ipInfo.Type):" -Type "Info"
+        }
+        
+        Write-Host "     $url" -ForegroundColor $Colors.Success
+        
+        if ($ipInfo.IsPreferred -or (-not $preferredIP -and $ipInfo.Type -ne "Localhost")) {
+            $preferredIP = $ipInfo.IP
+        }
     }
     
+    # Emulator option
+    if ($AdbConfigured) {
+        Write-Host ""
+        Write-StatusMessage "  📱 Android Emulator:" -Type "Success"
+        Write-Host "     http://localhost:$Port" -ForegroundColor $Colors.Success
+    }
+    
+    Write-Host ""
+    Write-Host "═══════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Success
+    Write-Host ""
+    
+    return $preferredIP
+}
+
+function Generate-QrCodeAscii {
+    param([string]$Text)
+    
+    # Simple QR-like pattern using block characters
+    # This is a visual representation, not a real QR code
+    # But it gives users something to look at
+    
+    Write-Host ""
+    Write-StatusMessage "📱 Connection String:" -Type "Info"
+    Write-Host ""
+    
+    # Create a visual box around the URL
+    $width = $Text.Length + 4
+    $line = "█" * $width
+    
+    Write-Host "  $line" -ForegroundColor $Colors.Success
+    Write-Host "  ██" -NoNewline -ForegroundColor $Colors.Success
+    Write-Host " $Text " -NoNewline -ForegroundColor $Colors.Normal
+    Write-Host "██" -ForegroundColor $Colors.Success
+    Write-Host "  $line" -ForegroundColor $Colors.Success
+    
+    Write-Host ""
+    Write-StatusMessage "💡 Tip: Type this URL manually in the app" -Type "Warning"
+    Write-Host "     or use 'Scan QR Code' with any QR generator" -ForegroundColor $Colors.Dim
+}
+
+function Show-Summary {
+    param(
+        [array]$IPs,
+        [int]$Port,
+        [int]$GitPort,
+        [bool]$AdbConfigured,
+        [bool]$Success
+    )
+    
+    Write-Host ""
+    
+    if ($Success) {
+        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Success
+        Write-Host "║                  ✅ SETUP SUCCESSFUL                         ║" -ForegroundColor $Colors.Success
+        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Success
+    }
+    else {
+        Write-Host "╔══════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Warning
+        Write-Host "║              ⚠️  SETUP INCOMPLETE                            ║" -ForegroundColor $Colors.Warning
+        Write-Host "╚══════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Warning
+    }
+    
+    Write-Host ""
+    
+    # Show connection details
+    $preferredIP = Show-ConnectionInfo -IPs $IPs -Port $Port -GitPort $GitPort -AdbConfigured $AdbConfigured
+    
+    # Generate QR representation
+    if ($preferredIP) {
+        $url = "http://$preferredIP`:$Port"
+        Generate-QrCodeAscii -Text $url
+    }
+    
+    Write-Host ""
+    Write-StatusMessage "Next Steps:" -Type "Info"
+    
+    if ($Success) {
+        Write-Host "  1. Open the MOCCA app on your Android device" -ForegroundColor $Colors.Normal
+        Write-Host "  2. Tap 'Scan QR Code' or enter the URL above" -ForegroundColor $Colors.Normal
+        Write-Host "  3. The app will connect to your OpenCode server" -ForegroundColor $Colors.Normal
+    }
+    else {
+        Write-Host "  1. Check that OpenCode is running (a window should be open)" -ForegroundColor $Colors.Normal
+        Write-Host "  2. Verify Windows Firewall allows port $Port" -ForegroundColor $Colors.Normal
+        Write-Host "  3. Run this script again" -ForegroundColor $Colors.Normal
+    }
+    
+    if (-not $AdbConfigured -and -not $SkipAdb) {
+        Write-Host ""
+        Write-StatusMessage "For Android Emulator:" -Type "Warning"
+        Write-Host "  adb reverse tcp:$Port tcp:$Port" -ForegroundColor $Colors.Info
+        Write-Host "  adb reverse tcp:$GitPort tcp:$GitPort" -ForegroundColor $Colors.Info
+    }
+    
+    if ($UseTailscale) {
+        Write-Host ""
+        Write-StatusMessage "🔗 Tailscale Mode Enabled:" -Type "Success"
+        Write-Host "   Your device must also be on Tailscale" -ForegroundColor $Colors.Normal
+    }
+    
+    Write-Host ""
     Write-StatusMessage "Press any key to exit..." -Type "Info"
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# MAIN SCRIPT
-# ═══════════════════════════════════════════════════════════════════════════════
+#endregion
+
+#region Main Script
 
 Show-Header
 
-# Step 1: Check OpenCode installation
-$hasOpenCode = Test-OpenCodeInstallation
-if (-not $hasOpenCode) {
-    $hasOpenCode = Install-OpenCode
-    
-    if (-not $hasOpenCode) {
-        Write-StatusMessage "⚠ Continuing without OpenCode verification..." -Type "Warning"
-    }
+# Step 1: Get all network IPs
+Write-StatusMessage "🌐 Discovering network interfaces..." -Type "Info"
+$allIPs = Get-LocalIPs
+
+if ($allIPs.Count -eq 0) {
+    Write-StatusMessage "   ⚠ No network interfaces found. Using localhost." -Type "Warning"
+    $allIPs = @([PSCustomObject]@{ Type = "Localhost"; IP = "127.0.0.1"; Interface = "Loopback"; IsPreferred = $true })
 }
 
-# Step 2: Determine host address
-Write-StatusMessage "🌐 Determining network configuration..." -Type "Info"
-
-# Get local IP address
-$localIp = (Get-NetIPAddress -AddressFamily IPv4 | 
-    Where-Object { $_.InterfaceAlias -notmatch "Loopback|Virtual|VMware|Hyper-V" -and $_.IPAddress -notmatch "^169\.254" } |
-    Select-Object -First 1).IPAddress
-
-if (-not $localIp) {
-    $localIp = "localhost"
+$primaryIP = ($allIPs | Where-Object { $_.IsPreferred } | Select-Object -First 1).IP
+if (-not $primaryIP) {
+    $primaryIP = ($allIPs | Where-Object { $_.Type -ne "Localhost" } | Select-Object -First 1).IP
+}
+if (-not $primaryIP) {
+    $primaryIP = "127.0.0.1"
 }
 
-Write-StatusMessage "   Local IP: $localIp" -Type "Success"
-
-# Check if running on emulator host
-$isEmulatorHost = $false
-if (Test-AdbInstallation) {
-    # Use the improved ADB check
-    if (Test-AdbServer) {
-        $isEmulatorHost = $true
-        Write-StatusMessage "   Android emulator/device detected on host" -Type "Success"
-    }
+Write-StatusMessage "   ✓ Found $($allIPs.Count) network interface(s)" -Type "Success"
+$allIPs | ForEach-Object {
+    $marker = if ($_.IP -eq $primaryIP) { " ← Primary" } else { "" }
+    Write-Host "     • $($_.Type): $($_.IP)$marker" -ForegroundColor $Colors.Dim
 }
 
-# Step 3: Setup ADB reverse if needed
+# Step 2: Configure ADB for emulator
 $adbConfigured = $false
-if ($isEmulatorHost -and -not $SkipAdb) {
-    $adbConfigured = Setup-AdbReverse -Port $Port -GitPort $GitPort
+if (-not $SkipAdb) {
+    $adbConfigured = Setup-AdbPortForwarding -Port $Port -GitPort $GitPort
 }
 
-# Step 4: Start OpenCode server
+# Step 3: Start/check OpenCode server
 $serverStarted = Start-OpenCodeServer -Port $Port -GitPort $GitPort
 
-if (-not $serverStarted) {
-    Write-StatusMessage "⚠ Server startup may have issues" -Type "Warning"
-}
+# Step 4: Show results
+Show-Summary -IPs $allIPs -Port $Port -GitPort $GitPort -AdbConfigured $adbConfigured -Success $script:SetupSuccess
 
-# Step 5: Generate QR code
-Write-Host ""
-Generate-QrCode -ServerHost $localIp -Port $Port -AdbConfigured $adbConfigured
-
-# Step 6: Show summary
-Show-Summary -ServerHost $localIp -Port $Port -GitPort $GitPort -AdbConfigured $adbConfigured
+#endregion
