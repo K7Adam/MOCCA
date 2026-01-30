@@ -213,11 +213,20 @@ val screenModelModule = module {
         )
     }
     
-    // Onboarding screen
+    // Onboarding screen - legacy
     factory {
         OnboardingScreenModel(
             serverConfigRepository = get(),
             appConnectionManager = get()
+        )
+    }
+    
+    // Onboarding wizard - new progressive onboarding
+    factory {
+        OnboardingWizardModel(
+            serverConfigRepository = get(),
+            appConnectionManager = get(),
+            serverDiscoveryManager = getOrNull()
         )
     }
     

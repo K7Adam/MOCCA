@@ -398,4 +398,165 @@ class AppConnectionManager(
             else -> "${ageMinutes / 60}h ago"
         }
     }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SMART CONNECTION RECOVERY WITH DISCOVERY (New for Zero-Config UX)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Try to connect using a list of potential servers.
+     * This implements the smart recovery that tries discovered servers first,
+     * then saved servers, then falls back to defaults.
+     * 
+     * @param candidateServers List of servers to try in order
+     * @return true if connected to any server, false otherwise
+     */
+    suspend fun connectWithDiscovery(candidateServers: List<ServerConfig>): Boolean {
+        if (candidateServers.isEmpty()) {
+            Napier.w("No candidate servers provided for discovery connection")
+            return false
+        }
+        
+        Napier.i("Attempting smart connection with ${candidateServers.size} candidate servers")
+        
+        for ((index, server) in candidateServers.withIndex()) {
+            if (!_isNetworkAvailable.value) {
+                Napier.w("Network unavailable, aborting discovery connection")
+                _connectionState.value = AppConnectionState.WaitingForNetwork
+                return false
+            }
+            
+            Napier.d("Trying server ${index + 1}/${candidateServers.size}: ${server.name} at ${server.baseUrl}")
+            _connectionState.value = AppConnectionState.Connecting(
+                attempt = index + 1,
+                maxAttempts = candidateServers.size
+            )
+            
+            // Set this server as active temporarily
+            serverConfigRepository.setActiveServer(server.id)
+            
+            val result = withContext(Dispatchers.IO) {
+                performHealthCheck(server)
+            }
+            
+            result.fold(
+                onSuccess = { appInfo ->
+                    Napier.i("Successfully connected to ${server.name} via discovery")
+                    _consecutiveFailures.value = 0
+                    _hasEverConnected.value = true
+                    _lastSuccessfulCheck.value = Clock.System.now().toEpochMilliseconds()
+                    _connectionState.value = AppConnectionState.Connected(
+                        serverInfo = appInfo,
+                        checkedAt = Clock.System.now().toEpochMilliseconds(),
+                        latencyMs = 0
+                    )
+                    
+                    // Save this successful server if not already saved
+                    scope.launch {
+                        try {
+                            val existingServers = serverConfigRepository.getAllServers()
+                            if (existingServers.none { it.baseUrl == server.baseUrl }) {
+                                serverConfigRepository.saveServer(server)
+                                Napier.d("Saved new discovered server: ${server.name}")
+                            }
+                        } catch (e: Exception) {
+                            Napier.w("Could not save discovered server", e)
+                        }
+                    }
+                    
+                    startPeriodicHealthCheck()
+                    return true
+                },
+                onFailure = { error ->
+                    Napier.d("Failed to connect to ${server.name}: ${error.message}")
+                    // Continue to next server
+                }
+            )
+        }
+        
+        // All servers failed
+        Napier.w("All ${candidateServers.size} candidate servers failed")
+        _consecutiveFailures.value = maxReconnectAttempts
+        _connectionState.value = AppConnectionState.Disconnected(
+            error = "Could not connect to any discovered server. Please check your OpenCode server.",
+            checkedAt = Clock.System.now().toEpochMilliseconds()
+        )
+        return false
+    }
+    
+    /**
+     * Get a list of candidate servers to try in order of priority:
+     * 1. Last successful server (if any)
+     * 2. Saved servers
+     * 3. Auto-detected emulator localhost
+     * 4. Default configurations
+     */
+    suspend fun getCandidateServers(): List<ServerConfig> {
+        val candidates = mutableListOf<ServerConfig>()
+        
+        // Add saved servers first
+        try {
+            val savedServers = serverConfigRepository.getAllServers()
+            candidates.addAll(savedServers)
+            Napier.d("Added ${savedServers.size} saved servers to candidates")
+        } catch (e: Exception) {
+            Napier.w("Could not load saved servers", e)
+        }
+        
+        // Add auto-detected emulator config if not already present
+        val emulatorConfig = ServerConfig(
+            id = "emulator-auto",
+            name = "Android Emulator",
+            baseUrl = "http://10.0.2.2:4096",
+            connectionType = com.mocca.app.domain.model.ConnectionType.LOCAL,
+            authType = com.mocca.app.domain.model.AuthType.NONE,
+            isActive = false
+        )
+        if (candidates.none { it.baseUrl == emulatorConfig.baseUrl }) {
+            candidates.add(emulatorConfig)
+            Napier.d("Added auto-detected emulator config")
+        }
+        
+        return candidates.distinctBy { it.baseUrl }
+    }
+    
+    /**
+     * Smart connect that uses discovery, saved servers, and defaults in sequence.
+     * This is the main entry point for the new zero-config onboarding.
+     */
+    fun smartConnect(discoveredServers: List<ServerConfig> = emptyList()) {
+        scope.launch {
+            val candidates = mutableListOf<ServerConfig>()
+            
+            // Prioritize discovered servers
+            candidates.addAll(discoveredServers)
+            
+            // Add other candidates
+            candidates.addAll(getCandidateServers())
+            
+            // Remove duplicates
+            val uniqueCandidates = candidates.distinctBy { it.baseUrl }
+            
+            Napier.i("Smart connect with ${uniqueCandidates.size} unique candidates (${discoveredServers.size} discovered)")
+            
+            val connected = connectWithDiscovery(uniqueCandidates)
+            
+            if (!connected) {
+                Napier.w("Smart connect failed to find any working server")
+            }
+        }
+    }
+    
+    /**
+     * Check if we're running on an Android emulator.
+     * Useful for auto-configuring the 10.0.2.2 localhost mapping.
+     */
+    fun isEmulator(): Boolean {
+        return (android.os.Build.FINGERPRINT?.startsWith("google/sdk_gphone") == true ||
+                android.os.Build.FINGERPRINT?.startsWith("generic") == true ||
+                android.os.Build.HARDWARE?.contains("goldfish") == true ||
+                android.os.Build.HARDWARE?.contains("ranchu") == true ||
+                android.os.Build.BRAND == "generic" ||
+                android.os.Build.DEVICE?.startsWith("generic") == true)
+    }
 }
