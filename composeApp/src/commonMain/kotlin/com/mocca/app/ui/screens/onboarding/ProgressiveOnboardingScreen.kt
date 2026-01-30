@@ -122,7 +122,11 @@ class ProgressiveOnboardingScreen : Screen {
             ) { step ->
                 when (step) {
                     OnboardingStep.WELCOME -> WelcomeStep(
-                        onScanQr = { /* QR scanning will be handled */ },
+                        onScanQr = { 
+                            navigator.push(QrScannerScreen { discoveredServer ->
+                                screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
+                            })
+                        },
                         onStartDiscovery = { screenModel.onAction(OnboardingAction.StartDiscovery) },
                         onManualEntry = { 
                             screenModel.onAction(OnboardingAction.ManualEntryUpdated("", ""))
@@ -141,7 +145,11 @@ class ProgressiveOnboardingScreen : Screen {
                         onServerSelected = { server ->
                             screenModel.onAction(OnboardingAction.ServerSelected(server))
                         },
-                        onScanQr = { /* QR scanning handled by parent */ },
+                        onScanQr = { 
+                            navigator.push(QrScannerScreen { discoveredServer ->
+                                screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
+                            })
+                        },
                         onManualEntry = { url, token ->
                             screenModel.onAction(OnboardingAction.ManualEntryUpdated(url, token))
                         },
