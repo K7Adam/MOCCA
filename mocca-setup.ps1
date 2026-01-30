@@ -40,12 +40,89 @@ param(
     [switch]$UseTailscale,
     [switch]$EnableTailscaleServe,
     [switch]$SkipAdb,
-    [switch]$SkipGitServer
+    [switch]$SkipGitServer,
+    [switch]$DebugMode
 )
 
 $ErrorActionPreference = "Stop"
-$script:Version = "4.1.0"
+$script:Version = "4.1.1"
 $script:StartTime = Get-Date
+$script:LogFile = "$env:TEMP\mocca-setup-debug-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+
+#region Debug Logging
+
+function Write-DebugLog {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
+    $logEntry = "[$timestamp] [$Level] $Message"
+    
+    # Always write to log file
+    Add-Content -Path $script:LogFile -Value $logEntry -ErrorAction SilentlyContinue
+    
+    # Also display if debug mode enabled
+    if ($DebugMode) {
+        $color = switch ($Level) {
+            "ERROR" { "Red" }
+            "WARN" { "Yellow" }
+            "DEBUG" { "DarkGray" }
+            default { "Cyan" }
+        }
+        Write-Host "  [DBG] $Message" -ForegroundColor $color
+    }
+}
+
+function Start-DebugSession {
+    if ($DebugMode) {
+        Write-Host "`n╔════════════════════════════════════════════════════════════════╗" -ForegroundColor Magenta
+        Write-Host "║              DEBUG MODE ENABLED - VERBOSE LOGGING              ║" -ForegroundColor Magenta
+        Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor Magenta
+        Write-Host "  Log file: $script:LogFile" -ForegroundColor DarkGray
+        Write-Host ""
+        
+        # Write initial system info
+        Write-DebugLog "=== MOCCA Setup Debug Session Started ===" "INFO"
+        Write-DebugLog "Script Version: $script:Version" "INFO"
+        Write-DebugLog "PowerShell Version: $($PSVersionTable.PSVersion)" "INFO"
+        Write-DebugLog "OS: $($PSVersionTable.OS)" "INFO"
+        Write-DebugLog "Working Directory: $(Get-Location)" "INFO"
+        Write-DebugLog "Parameters: Port=$Port, GitPort=$GitPort, UseTailscale=$UseTailscale, EnableTailscaleServe=$EnableTailscaleServe" "INFO"
+        
+        # Network diagnostics
+        Write-DebugLog "=== Network Diagnostics ===" "INFO"
+        try {
+            $hostname = [System.Net.Dns]::GetHostName()
+            Write-DebugLog "Hostname: $hostname" "INFO"
+            
+            $ipAddresses = [System.Net.Dns]::GetHostAddresses($hostname) | Where-Object { $_.AddressFamily -eq 'InterNetwork' }
+            foreach ($ip in $ipAddresses) {
+                Write-DebugLog "IP Address: $($ip.IPAddressToString)" "INFO"
+            }
+        }
+        catch {
+            Write-DebugLog "Failed to get network info: $_" "ERROR"
+        }
+        
+        # Check for processes
+        Write-DebugLog "=== Process Check ===" "INFO"
+        $processes = @("opencode", "bun", "node", "adb")
+        foreach ($proc in $processes) {
+            $found = Get-Process -Name $proc -ErrorAction SilentlyContinue
+            if ($found) {
+                Write-DebugLog "Process '$proc' found (PID: $($found.Id), Count: $($found.Count))" "INFO"
+            }
+            else {
+                Write-DebugLog "Process '$proc' not running" "DEBUG"
+            }
+        }
+        
+        Write-Host ""
+    }
+}
+
+#endregion
 
 # Colors
 $Colors = @{
@@ -89,13 +166,17 @@ function Show-Header {
 function Test-PortAvailable {
     param([int]$TestPort)
     
+    Write-DebugLog "Test-PortAvailable: Testing port $TestPort" "DEBUG"
+    
     try {
         $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $TestPort)
         $listener.Start()
         $listener.Stop()
+        Write-DebugLog "Test-PortAvailable: Port $TestPort is AVAILABLE" "DEBUG"
         return $true
     }
     catch {
+        Write-DebugLog "Test-PortAvailable: Port $TestPort is BUSY ($($_.Exception.Message))" "DEBUG"
         return $false
     }
 }
@@ -106,11 +187,15 @@ function Find-AvailablePort {
         [int]$MaxPort = 4105
     )
     
+    Write-DebugLog "Find-AvailablePort: Searching from $StartPort to $MaxPort" "DEBUG"
+    
     for ($p = $StartPort; $p -le $MaxPort; $p++) {
         if (Test-PortAvailable -TestPort $p) {
+            Write-DebugLog "Find-AvailablePort: Found available port $p" "DEBUG"
             return $p
         }
     }
+    Write-DebugLog "Find-AvailablePort: No available ports found in range!" "ERROR"
     return $null
 }
 
@@ -120,20 +205,27 @@ function Test-ServerRunning {
         [int]$TimeoutMs = 3000
     )
     
+    Write-DebugLog "Test-ServerRunning: Testing connection to port $TestPort (timeout: ${TimeoutMs}ms)" "DEBUG"
+    
     try {
         $client = New-Object System.Net.Sockets.TcpClient
         $connectionTask = $client.ConnectAsync("127.0.0.1", $TestPort)
         $waited = $connectionTask.Wait($TimeoutMs)
         
+        Write-DebugLog "Test-ServerRunning: Wait completed=$waited, Connected=$($client.Connected)" "DEBUG"
+        
         if ($waited -and $client.Connected) {
             $client.Close()
+            Write-DebugLog "Test-ServerRunning: Port $TestPort IS RUNNING (connected successfully)" "DEBUG"
             return $true
         }
         
         $client.Close()
+        Write-DebugLog "Test-ServerRunning: Port $TestPort NOT RESPONDING (waited=$waited, connected=$($client.Connected))" "DEBUG"
         return $false
     }
     catch {
+        Write-DebugLog "Test-ServerRunning: Port $TestPort ERROR - $($_.Exception.GetType().Name): $($_.Exception.Message)" "DEBUG"
         return $false
     }
 }
@@ -259,43 +351,65 @@ function Get-NetworkInterfaces {
 function Start-OpenCodeServer {
     param([int]$OpenCodePort)
     
+    Write-DebugLog "Start-OpenCodeServer: Called with requested port $OpenCodePort" "DEBUG"
     Write-StatusMessage "🚀 Checking OpenCode server on port $OpenCodePort..." -Type "Info"
     
     # Check if already running on requested port
+    Write-DebugLog "Start-OpenCodeServer: Testing if server already running on port $OpenCodePort" "DEBUG"
     if (Test-ServerRunning -TestPort $OpenCodePort) {
+        Write-DebugLog "Start-OpenCodeServer: Server already running on port $OpenCodePort" "INFO"
         Write-StatusMessage "   ✓ OpenCode already running on port $OpenCodePort" -Type "Success"
         return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
     }
+    Write-DebugLog "Start-OpenCodeServer: Server not found on requested port $OpenCodePort" "DEBUG"
     
     # Check if running on any other port (scan common range)
+    Write-DebugLog "Start-OpenCodeServer: Scanning ports 4096-4100 for existing server" "DEBUG"
     Write-StatusMessage "   Checking for OpenCode on other ports..." -Type "Dim"
     for ($testPort = 4096; $testPort -le 4100; $testPort++) {
-        if ($testPort -ne $OpenCodePort -and (Test-ServerRunning -TestPort $testPort)) {
-            Write-StatusMessage "   ⚠ OpenCode found running on port $testPort (not $OpenCodePort)" -Type "Warning"
-            $choice = Read-Host "   Use port $testPort instead? [Y/n]"
-            if ($choice -ne 'n') {
-                return @{ Success = $true; WasAlreadyRunning = $true; Port = $testPort }
+        if ($testPort -ne $OpenCodePort) {
+            Write-DebugLog "Start-OpenCodeServer: Testing port $testPort..." "DEBUG"
+            if (Test-ServerRunning -TestPort $testPort) {
+                Write-DebugLog "Start-OpenCodeServer: Found server running on port $testPort!" "INFO"
+                Write-StatusMessage "   ⚠ OpenCode found running on port $testPort (not $OpenCodePort)" -Type "Warning"
+                $choice = Read-Host "   Use port $testPort instead? [Y/n]"
+                if ($choice -ne 'n') {
+                    Write-DebugLog "Start-OpenCodeServer: User chose to use port $testPort" "INFO"
+                    return @{ Success = $true; WasAlreadyRunning = $true; Port = $testPort }
+                }
+                Write-DebugLog "Start-OpenCodeServer: User declined to use port $testPort, continuing" "DEBUG"
             }
         }
     }
     
     # Check for opencode process
+    Write-DebugLog "Start-OpenCodeServer: Checking for opencode.exe process" "DEBUG"
     $process = Get-Process -Name "opencode" -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($process) {
+        Write-DebugLog "Start-OpenCodeServer: Found opencode process (PID: $($process.Id))" "INFO"
         Write-StatusMessage "   ⚠ OpenCode process found (PID: $($process.Id)) but not responding" -Type "Warning"
         Write-StatusMessage "     Server may still be starting..." -Type "Dim"
         
-        # Wait and retry
+        # Wait and retry with logging
+        Write-DebugLog "Start-OpenCodeServer: Waiting for process to start responding (20 seconds max)" "DEBUG"
         for ($i = 0; $i -lt 10; $i++) {
             Start-Sleep -Seconds 2
+            Write-DebugLog "Start-OpenCodeServer: Retry $i/10 - testing port $OpenCodePort" "DEBUG"
             if (Test-ServerRunning -TestPort $OpenCodePort) {
+                Write-DebugLog "Start-OpenCodeServer: Server is now responding on port $OpenCodePort!" "INFO"
                 Write-StatusMessage "   ✓ OpenCode is now responding!" -Type "Success"
                 return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
             }
         }
+        Write-DebugLog "Start-OpenCodeServer: Timed out waiting for process to respond" "WARN"
+    }
+    else {
+        Write-DebugLog "Start-OpenCodeServer: No opencode.exe process found" "DEBUG"
     }
     
     # Find opencode executable
+    # Find opencode executable
+    Write-DebugLog "Start-OpenCodeServer: Searching for opencode.exe" "DEBUG"
     $exe = $null
     $searchPaths = @(
         (Get-Command opencode -ErrorAction SilentlyContinue)?.Source
@@ -309,20 +423,24 @@ function Start-OpenCodeServer {
     
     foreach ($p in $searchPaths) {
         if ($p) {
+            Write-DebugLog "Start-OpenCodeServer: Checking path: $p" "DEBUG"
             if (Test-Path $p) {
                 $exe = $p
+                Write-DebugLog "Start-OpenCodeServer: Found at: $exe" "INFO"
                 break
             }
             # Try wildcard for winget path
             $matches = Get-Item $p -ErrorAction SilentlyContinue
             if ($matches) {
                 $exe = $matches | Select-Object -First 1
+                Write-DebugLog "Start-OpenCodeServer: Found via wildcard at: $exe" "INFO"
                 break
             }
         }
     }
     
     if (-not $exe) {
+        Write-DebugLog "Start-OpenCodeServer: opencode.exe NOT FOUND after checking all paths" "ERROR"
         Write-StatusMessage "   ✗ OpenCode not found!" -Type "Error"
         Write-StatusMessage "" -Type "Normal"
         Write-StatusMessage "   🔧 TO FIX:" -Type "Warning"
@@ -336,19 +454,27 @@ function Start-OpenCodeServer {
     
     Write-StatusMessage "   Found OpenCode at: $exe" -Type "Dim"
     Write-StatusMessage "   Starting server on port $OpenCodePort..." -Type "Info"
+    Write-DebugLog "Start-OpenCodeServer: Starting process '$exe' with args 'serve --port $OpenCodePort'" "INFO"
     
     try {
         # Check if port is available
+        Write-DebugLog "Start-OpenCodeServer: Checking if port $OpenCodePort is available" "DEBUG"
         if (-not (Test-PortAvailable -TestPort $OpenCodePort)) {
+            Write-DebugLog "Start-OpenCodeServer: Port $OpenCodePort is not available, finding alternative" "WARN"
             $newPort = Find-AvailablePort -StartPort 4096
             if ($newPort) {
+                Write-DebugLog "Start-OpenCodeServer: Using alternative port $newPort" "INFO"
                 Write-StatusMessage "   ⚠ Port $OpenCodePort is busy, using port $newPort instead" -Type "Warning"
                 $OpenCodePort = $newPort
             }
             else {
+                Write-DebugLog "Start-OpenCodeServer: No available ports found in range 4096-4105" "ERROR"
                 Write-StatusMessage "   ✗ No available ports found (tried 4096-4105)" -Type "Error"
                 return @{ Success = $false; Message = "No available ports"; Port = $OpenCodePort }
             }
+        }
+        else {
+            Write-DebugLog "Start-OpenCodeServer: Port $OpenCodePort is available" "DEBUG"
         }
         
         $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -358,20 +484,28 @@ function Start-OpenCodeServer {
         $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
         $psi.CreateNoWindow = $false
         
-        [System.Diagnostics.Process]::Start($psi) | Out-Null
+        Write-DebugLog "Start-OpenCodeServer: Launching process..." "DEBUG"
+        $startedProcess = [System.Diagnostics.Process]::Start($psi)
+        Write-DebugLog "Start-OpenCodeServer: Process started with ID: $($startedProcess.Id)" "INFO"
         
         # Wait for startup with progress
-        Write-StatusMessage "   Waiting for server..." -Type "Info" -NoNewline
+        Write-StatusMessage "   Waiting for server (port $OpenCodePort)..." -Type "Info" -NoNewline
+        Write-DebugLog "Start-OpenCodeServer: Waiting up to 30 seconds for server to respond..." "DEBUG"
         for ($i = 0; $i -lt 30; $i++) {
             Start-Sleep -Seconds 1
             Write-Host "." -NoNewline -ForegroundColor $Colors.Info
-            if (Test-ServerRunning -TestPort $OpenCodePort) {
+            $isRunning = Test-ServerRunning -TestPort $OpenCodePort
+            Write-DebugLog "Start-OpenCodeServer: Second $i - Test-ServerRunning returned: $isRunning" "DEBUG"
+            if ($isRunning) {
                 Write-Host ""
+                Write-DebugLog "Start-OpenCodeServer: Server is RUNNING on port $OpenCodePort!" "INFO"
                 Write-StatusMessage "   ✓ OpenCode server started on port $OpenCodePort!" -Type "Success"
                 return @{ Success = $true; WasAlreadyRunning = $false; Port = $OpenCodePort }
             }
         }
         Write-Host ""
+        Write-DebugLog "Start-OpenCodeServer: TIMED OUT after 30 seconds - server not responding" "ERROR"
+        Write-DebugLog "Start-OpenCodeServer: Process may still be starting - check OpenCode window for errors" "WARN"
         Write-StatusMessage "   ⚠ Server didn't respond within 30 seconds" -Type "Warning"
         Write-StatusMessage "     An OpenCode window should have opened - check it for errors" -Type "Dim"
         return @{ Success = $false; Message = "Timeout"; Port = $OpenCodePort }
@@ -755,14 +889,25 @@ function Show-Troubleshooting {
 
 #region Main Execution
 
+# Initialize debug logging first
+Start-DebugSession
+
 Show-Header
+
+Write-DebugLog "=== MAIN EXECUTION STARTED ===" "INFO"
 
 # Check prerequisites
 Write-StatusMessage "🔍 Scanning system..." -Type "Info"
+Write-DebugLog "Starting system scan..." "DEBUG"
 
 # Get network interfaces
 Write-StatusMessage "🌐 Detecting network interfaces..." -Type "Info"
+Write-DebugLog "Calling Get-NetworkInterfaces..." "DEBUG"
 $networkInterfaces = Get-NetworkInterfaces
+Write-DebugLog "Get-NetworkInterfaces returned $($networkInterfaces.Count) interfaces" "DEBUG"
+foreach ($iface in $networkInterfaces) {
+    Write-DebugLog "  Interface: $($iface.Type) - $($iface.IP) ($($iface.Interface))" "DEBUG"
+}
 if ($networkInterfaces.Count -gt 0) {
     Write-StatusMessage "   ✓ Found $($networkInterfaces.Count) connection option(s)" -Type "Success"
 }
@@ -771,21 +916,31 @@ else {
 }
 
 # Setup ADB
+Write-DebugLog "Setting up ADB port forwarding..." "DEBUG"
 $adbConfigured = Setup-AdbPortForwarding -MainPort $Port -GitSrvPort $GitPort
+Write-DebugLog "ADB configured: $adbConfigured" "DEBUG"
 
 # Start servers
+Write-DebugLog "=== STARTING SERVERS ===" "INFO"
+Write-DebugLog "Starting OpenCode server on port $Port..." "DEBUG"
 $openCodeResult = Start-OpenCodeServer -OpenCodePort $Port
+Write-DebugLog "OpenCode result: Success=$($openCodeResult.Success), WasAlreadyRunning=$($openCodeResult.WasAlreadyRunning), Port=$($openCodeResult.Port), Message='$($openCodeResult.Message)'" "INFO"
 $actualPort = $openCodeResult.Port  # May have changed if auto-detected
 
+Write-DebugLog "Starting Git server on port $GitPort..." "DEBUG"
 $gitResult = Start-GitServer -GitServerPort $GitPort
+Write-DebugLog "Git result: Success=$($gitResult.Success), WasAlreadyRunning=$($gitResult.WasAlreadyRunning), Message='$($gitResult.Message)'" "INFO"
 
 # Configure Tailscale if requested
 $tailscaleServeOk = $false
 if ($EnableTailscaleServe) {
+    Write-DebugLog "Configuring Tailscale serve..." "DEBUG"
     $tailscaleServeOk = Enable-TailscaleServe -SrvPort $actualPort -GitSrvPort $GitPort
+    Write-DebugLog "Tailscale serve result: $tailscaleServeOk" "DEBUG"
 }
 
 # Display results
+Write-DebugLog "=== DISPLAYING RESULTS ===" "DEBUG"
 Show-ConnectionOptions `
     -Interfaces $networkInterfaces `
     -MainPort $actualPort `
@@ -803,6 +958,7 @@ Show-Troubleshooting `
 
 # Final status
 $elapsed = [math]::Round(((Get-Date) - $script:StartTime).TotalSeconds)
+Write-DebugLog "=== EXECUTION COMPLETE (took ${elapsed}s) ===" "INFO"
 
 Write-Host ""
 if ($openCodeResult.Success) {
@@ -811,6 +967,10 @@ if ($openCodeResult.Success) {
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Success
     Write-Host ""
     Write-StatusMessage "📱 Open MOCCA app and scan a QR code above to connect" -Type "Info"
+    if ($DebugMode) {
+        Write-Host ""
+        Write-StatusMessage "📄 Debug log saved to: $script:LogFile" -Type "Dim"
+    }
     Write-Host ""
     Write-StatusMessage "Press any key to exit..." -Type "Dim"
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -821,6 +981,10 @@ else {
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Error
     Write-Host ""
     Write-StatusMessage "See 🔧 TROUBLESHOOTING section above for fixes" -Type "Warning"
+    if ($DebugMode) {
+        Write-Host ""
+        Write-StatusMessage "📄 Debug log saved to: $script:LogFile" -Type "Dim"
+    }
     Write-Host ""
     exit 1
 }
