@@ -6,14 +6,14 @@
 Shared UI library implementing the **Terminal Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast "Pitch Black" terminal aesthetic, designed for developers who prefer a CLI-like experience on mobile.
 
 ## THEME RULES
-The application MUST strictly adhere to the `TerminalTheme`. **Do NOT use Material 3 defaults** (rounded corners, pastel colors, elevation shadows).
+The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (rounded corners, pastel colors, elevation shadows).
 
-- **Theme Composable**: Use `TerminalTheme { ... }` as the root of all screens.
+- **Theme Composable**: Use `AppTheme { ... }` as the root of all screens.
 - **Background**: **Pitch Black** (`#000000`) is mandatory for all primary backgrounds.
-- **Corners**: **0dp corners** (RectangleShape) for all buttons, cards, and input fields.
-- **Typography**: **Monospace** only (using `TerminalTypography`). 
-    - Use `TerminalTypography.bodyMedium` for standard text.
-    - Use `TerminalTypography.displayLarge` for terminal-style ASCII indicators.
+- **Corners**: Rounded corners (16dp-32dp) for interactive elements (buttons, inputs, cards).
+- **Typography**: Use `AppTypography` for all text styles.
+    - Use `AppTypography.bodyMedium` for standard text.
+    - Use `AppTypography.headlineSmall` for terminal-style ASCII indicators.
 - **Borders**: 1dp or 2dp solid white borders for active elements or containers.
 
 ## KEY COMPONENTS
@@ -34,8 +34,8 @@ The application MUST strictly adhere to the `TerminalTheme`. **Do NOT use Materi
 - `ToolCards.kt`: Specialized rendering for `ToolUse` and `ToolResult` data structures.
 
 ## ANTI-PATTERNS
-- **Material 3 Mixing**: NEVER use `MaterialTheme.colorScheme` or `MaterialTheme.shapes`. Use `TerminalTheme.extendedColors` and `TerminalTheme.shapes` (which are all 0dp).
-- **Rounded Corners**: Avoid any `RoundedCornerShape`. Use `RectangleShape` or `RoundedCornerShape(0.dp)`.
+- **Material 3 Mixing**: NEVER use `MaterialTheme.colorScheme` or `MaterialTheme.shapes`. Use `AppColors` and `AppShapes`.
+- **RectangleShape for Interactive Elements**: NEVER use `RectangleShape` for buttons, cards, or inputs. Use `AppShapes.pill`, `AppShapes.card`, or `AppShapes.medium`.
 - **Legacy Components**: **DEPRECATED**: `ToolConfirmationDialog.kt` is removed. Use `PermissionRequestDialog` in `CommonComponents.kt`.
-- **Color Literals**: Avoid `Color(0xFF...)`. Always use `TerminalColors` or `TerminalTheme.extendedColors`.
+- **Color Literals**: Avoid `Color(0xFF...)`. Always use `AppColors`.
 - **Main Thread Logic**: Components must remain stateless. Pass click events and state updates up to the `ScreenModel`.

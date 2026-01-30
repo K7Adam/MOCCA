@@ -25,7 +25,7 @@ MOCCA/
 | Task | Location | Notes |
 |------|----------|-------|
 | **Entry Point** | `androidApp/.../MoccaApp.kt` | Koin init, Napier logging |
-| **Root UI** | `composeApp/.../ui/App.kt` | `TerminalTheme`, Navigator |
+| **Root UI** | `composeApp/.../ui/App.kt` | `AppTheme`, Navigator |
 | **Git Server** | `composeApp/.../api/GitApiClient.kt` | Auto-start logic (Port 4097) |
 | **DB Schema** | `composeApp/.../data/db/*.sq` | SQLDelight definitions |
 | **E2E Tests** | `maestro-workspace/flows/` | YAML-based UI tests |
@@ -43,7 +43,7 @@ MOCCA/
 - **Environment**: `serverConfigProvider` auto-detects `10.0.2.2` (Emulator) vs Tailscale/LAN.
 
 ## ANTI-PATTERNS (STRICT)
-- **NEVER** use `RectangleShape` for interactive elements (buttons, inputs, cards). Use `TerminalShapes.card`, `TerminalShapes.pill`, etc.
+- **NEVER** use `RectangleShape` for interactive elements (buttons, inputs, cards). Use `AppShapes.card`, `AppShapes.pill`, etc.
 - **NEVER** use `ToolConfirmation` (Deprecated) -> Use `PermissionRequest`.
 - **NEVER** use relative paths.
 - **NEVER** block main thread (use `sendMessageAsync`).
