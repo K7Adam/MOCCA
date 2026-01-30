@@ -12,6 +12,8 @@ import com.mocca.app.data.local.LocalCacheFactory
 import com.mocca.app.data.repository.*
 import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.McpRepository
+import com.mocca.app.data.security.SecureTokenStorage
+import com.mocca.app.data.security.NoOpSecureTokenStorage
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.files.FilesScreenModel
 import com.mocca.app.ui.screens.git.GitDiffScreenModel
@@ -64,7 +66,7 @@ val commonModule = module {
     }
     
     // Repositories
-    single { SessionRepository(get(), get()) }
+    single { SessionRepository(get(), get(), get()) }
     single { 
         EventStreamRepository(
             sseClient = get(),
@@ -93,7 +95,10 @@ val commonModule = module {
     single { ConfigRepository(get()) }
     singleOf(::UpdateRepository)
     singleOf(::GitHubApiClient)
-    
+
+    // Global update notifier - allows any screen to trigger update dialog
+    singleOf(::UpdateNotifier)
+
     // Global Activity Manager - singleton for tracking background activity
     single { GlobalActivityManager() }
     
@@ -126,8 +131,14 @@ val cacheModule = module {
         factory.create()
     }
     
+    // Secure token storage for encrypting auth tokens
+    // Platform-specific modules will override this with actual implementation
+    single<SecureTokenStorage> {
+        NoOpSecureTokenStorage
+    }
+    
     single {
-        ServerConfigRepository(get())
+        ServerConfigRepository(get(), get())
     }
 }
 
@@ -164,7 +175,8 @@ val screenModelModule = module {
             appConnectionManager = get(),
             updateRepository = get(),
             settingsRepository = get(),
-            configRepository = get()
+            configRepository = get(),
+            updateNotifier = get()
         )
     }
     
@@ -196,7 +208,8 @@ val screenModelModule = module {
             eventStreamRepository = get(),
             appConnectionManager = get(),
             mcpRepository = get(),
-            updateRepository = get()
+            updateRepository = get(),
+            updateNotifier = get()
         )
     }
     

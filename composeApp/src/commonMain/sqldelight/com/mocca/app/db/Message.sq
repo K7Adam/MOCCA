@@ -21,6 +21,12 @@ CREATE INDEX idx_message_timestamp ON MessageEntity(createdAt);
 -- Create partial index for fast unread count
 CREATE INDEX idx_message_unread ON MessageEntity(sessionId, isRead) WHERE isRead = 0;
 
+-- OPTIMIZED: Composite index for session + createdAt (common query pattern)
+CREATE INDEX idx_message_session_created ON MessageEntity(sessionId, createdAt DESC);
+
+-- OPTIMIZED: Covering index for unread messages query
+CREATE INDEX idx_message_unread_covering ON MessageEntity(sessionId, isRead, id, createdAt) WHERE isRead = 0;
+
 -- Select messages by session, ordered chronologically
 selectBySession:
 SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt ASC;

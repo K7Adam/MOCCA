@@ -14,6 +14,12 @@ CREATE TABLE SessionEntity (
 -- Create index for faster sorting by updates
 CREATE INDEX idx_session_updated ON SessionEntity(updatedAt);
 
+-- OPTIMIZED: Composite index for status + updatedAt (for filtering active sessions)
+CREATE INDEX idx_session_status_updated ON SessionEntity(status, updatedAt DESC);
+
+-- OPTIMIZED: Index for unsynced sessions query
+CREATE INDEX idx_session_unsynced ON SessionEntity(isSynced) WHERE isSynced = 0;
+
 -- Select all sessions ordered by most recent
 selectAll:
 SELECT * FROM SessionEntity ORDER BY updatedAt DESC;
