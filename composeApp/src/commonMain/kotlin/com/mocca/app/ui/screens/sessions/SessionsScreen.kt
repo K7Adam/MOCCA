@@ -45,9 +45,9 @@ import com.mocca.app.ui.components.terminal.TerminalProcessingIndicator
 import com.mocca.app.ui.components.terminal.TerminalSessionCard
 import com.mocca.app.ui.screens.workspace.WorkspaceScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import androidx.compose.material3.MaterialTheme
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -74,13 +74,13 @@ class SessionsScreen : Screen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
+                .background(AppColors.background)
         ) {
             // Terminal Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TerminalSpacing.lg),
+                    .padding(AppSpacing.lg),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -90,9 +90,9 @@ class SessionsScreen : Screen {
                     modifier = Modifier.weight(1f)
                 )
                 
-                Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                Spacer(modifier = Modifier.width(AppSpacing.md))
                 
-                Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                     // ═══════════════════════════════════════════════════════════════════════════════
                     // SESSION SEARCH (Priority 5.6) - Search toggle button
                     // ═══════════════════════════════════════════════════════════════════════════════
@@ -100,7 +100,7 @@ class SessionsScreen : Screen {
                         icon = Icons.Default.Search,
                         onClick = { screenModel.toggleSearch() },
                         contentDescription = "Search",
-                        iconColor = if (state.isSearchVisible) TerminalColors.statusOnline else TerminalColors.grey
+                        iconColor = if (state.isSearchVisible) AppColors.statusOnline else AppColors.grey
                     )
                     TerminalIconButton(
                         icon = Icons.Default.Settings,
@@ -125,13 +125,13 @@ class SessionsScreen : Screen {
                     onClear = { screenModel.clearSearch() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = TerminalSpacing.lg, vertical = TerminalSpacing.sm)
+                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
                 )
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
             
             // Main Content
@@ -202,7 +202,7 @@ class SessionsScreen : Screen {
                                 Column(
                                     modifier = Modifier
                                         .fillMaxSize()
-                                        .padding(TerminalSpacing.xxl),
+                                        .padding(AppSpacing.xxl),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
                                 ) {
@@ -210,13 +210,13 @@ class SessionsScreen : Screen {
                                         Icons.Default.SearchOff,
                                         contentDescription = null,
                                         modifier = Modifier.size(48.dp),
-                                        tint = TerminalColors.grey
+                                        tint = AppColors.grey
                                     )
-                                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                                    Spacer(modifier = Modifier.height(AppSpacing.md))
                                     Text(
                                         text = "NO_RESULTS_FOR: \"${state.searchQuery}\"",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = TerminalColors.greyLight
+                                        style = AppTypography.bodyMedium,
+                                        color = AppColors.greyLight
                                     )
                                 }
                             }
@@ -240,7 +240,7 @@ class SessionsScreen : Screen {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(TerminalSpacing.lg)
+                                            .padding(AppSpacing.lg)
                                     ) {
                                         TerminalButton(
                                             text = "NEW_SESSION",
@@ -257,8 +257,8 @@ class SessionsScreen : Screen {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .align(Alignment.TopCenter),
-                                color = TerminalColors.statusWaiting,
-                                trackColor = TerminalColors.border
+                                color = AppColors.statusWaiting,
+                                trackColor = AppColors.border
                             )
                         }
                     }
@@ -278,30 +278,30 @@ private fun TerminalNotConnectedContent(
     icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.CloudOff
 ) {
     Column(
-        modifier = modifier.padding(TerminalSpacing.xxl),
+        modifier = modifier.padding(AppSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
             icon,
             contentDescription = null,
             modifier = Modifier.size(64.dp),
-            tint = TerminalColors.grey
+            tint = AppColors.grey
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = title.uppercase(),
-            style = MaterialTheme.typography.headlineSmall,
-            color = TerminalColors.white
+            style = AppTypography.headlineSmall,
+            color = AppColors.white
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TerminalColors.greyLight
+            style = AppTypography.bodyMedium,
+            color = AppColors.greyLight
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+        Spacer(modifier = Modifier.height(AppSpacing.xl))
         Row(
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             TerminalButton(
                 text = "CONFIGURE",
@@ -331,15 +331,15 @@ private fun TerminalConnectionProgressContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CircularProgressIndicator(
-            color = TerminalColors.statusWaiting,
+            color = AppColors.statusWaiting,
             strokeWidth = 2.dp,
             modifier = Modifier.size(24.dp)
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
         Text(
             text = message.uppercase(),
-            style = MaterialTheme.typography.bodyMedium,
-            color = TerminalColors.greyLight
+            style = AppTypography.bodyMedium,
+            color = AppColors.greyLight
         )
     }
 }
@@ -350,21 +350,21 @@ private fun TerminalEmptySessionsContent(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier.padding(TerminalSpacing.xxl),
+        modifier = modifier.padding(AppSpacing.xxl),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = stringResource(Res.string.no_sessions).uppercase(),
-            style = MaterialTheme.typography.headlineSmall,
-            color = TerminalColors.white
+            style = AppTypography.headlineSmall,
+            color = AppColors.white
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = stringResource(Res.string.no_sessions_hint),
-            style = MaterialTheme.typography.bodyMedium,
-            color = TerminalColors.greyLight
+            style = AppTypography.bodyMedium,
+            color = AppColors.greyLight
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+        Spacer(modifier = Modifier.height(AppSpacing.xl))
         TerminalButton(
             text = "NEW_SESSION",
             onClick = onCreateClick,
@@ -385,8 +385,8 @@ private fun TerminalSessionsList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(TerminalSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+        contentPadding = PaddingValues(AppSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
         items(
             items = sessions,
@@ -412,31 +412,31 @@ private fun TerminalSessionCard(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) TerminalColors.statusOnline else TerminalColors.border
-    val bgColor = if (isSelected) TerminalColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent
+    val borderColor = if (isSelected) AppColors.statusOnline else AppColors.border
+    val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(bgColor, RectangleShape)
-            .border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+            .border(AppSpacing.borderThin, borderColor, RectangleShape)
             .clickable(onClick = onClick)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TerminalSpacing.md),
+                .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Active indicator bar
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .width(TerminalSpacing.activeIndicatorWidth)
+                        .width(AppSpacing.activeIndicatorWidth)
                         .height(48.dp)
-                        .background(TerminalColors.statusOnline, RectangleShape)
+                        .background(AppColors.statusOnline, RectangleShape)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                Spacer(modifier = Modifier.width(AppSpacing.md))
             }
             
             Column(
@@ -444,42 +444,42 @@ private fun TerminalSessionCard(
             ) {
                 Text(
                     text = (session.title ?: stringResource(Res.string.untitled_session)).uppercase(),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (isSelected) TerminalColors.statusOnline else TerminalColors.white,
+                    style = AppTypography.titleMedium,
+                    color = if (isSelected) AppColors.statusOnline else AppColors.white,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     TerminalStatusChip(status = session.status)
                     Text(
                         text = formatTime(session.updatedAt),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.labelSmall,
+                        color = AppColors.grey
                     )
                     session.summary?.let { summary ->
                         if (summary.files > 0) {
                             Text(
                                 text = stringResource(Res.string.files_count_suffix, summary.files),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TerminalColors.greyLight
+                                style = AppTypography.labelSmall,
+                                color = AppColors.greyLight
                             )
                         }
                     }
                     if (childSessions.isNotEmpty()) {
                         Box(
                             modifier = Modifier
-                                .border(TerminalSpacing.borderThin, TerminalColors.greyLight, RectangleShape)
-                                .padding(horizontal = TerminalSpacing.xs, vertical = TerminalSpacing.xxs)
+                                .border(AppSpacing.borderThin, AppColors.greyLight, RectangleShape)
+                                .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xxs)
                         ) {
                             Text(
                                 text = stringResource(Res.string.tasks_count_suffix, childSessions.size),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TerminalColors.greyLight
+                                style = AppTypography.labelSmall,
+                                color = AppColors.greyLight
                             )
                         }
                     }
@@ -489,7 +489,7 @@ private fun TerminalSessionCard(
             TerminalIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDeleteClick,
-                iconColor = TerminalColors.error,
+                iconColor = AppColors.error,
                 contentDescription = stringResource(Res.string.delete_session)
             )
         }
@@ -499,21 +499,21 @@ private fun TerminalSessionCard(
 @Composable
 private fun TerminalStatusChip(status: SessionStatus) {
     val (color, textRes) = when (status) {
-        SessionStatus.IDLE -> TerminalColors.grey to Res.string.session_idle
-        SessionStatus.RUNNING -> TerminalColors.statusOnline to Res.string.session_running
-        SessionStatus.COMPLETED -> TerminalColors.success to Res.string.session_completed
-        SessionStatus.ERROR -> TerminalColors.error to Res.string.session_error
+        SessionStatus.IDLE -> AppColors.grey to Res.string.session_idle
+        SessionStatus.RUNNING -> AppColors.statusOnline to Res.string.session_running
+        SessionStatus.COMPLETED -> AppColors.success to Res.string.session_completed
+        SessionStatus.ERROR -> AppColors.error to Res.string.session_error
     }
     
     Box(
         modifier = Modifier
             .background(color.copy(alpha = 0.1f), RectangleShape)
-            .border(TerminalSpacing.borderThin, color, RectangleShape)
-            .padding(horizontal = TerminalSpacing.sm, vertical = TerminalSpacing.xxs)
+            .border(AppSpacing.borderThin, color, RectangleShape)
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
     ) {
         Text(
             text = stringResource(textRes).uppercase(),
-            style = MaterialTheme.typography.labelSmall,
+            style = AppTypography.labelSmall,
             color = color
         )
     }
@@ -548,9 +548,9 @@ private fun TerminalSearchBar(
     
     Box(
         modifier = modifier
-            .background(TerminalColors.surface, RectangleShape)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
-            .padding(TerminalSpacing.sm)
+            .background(AppColors.surface, RectangleShape)
+            .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
+            .padding(AppSpacing.sm)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -560,10 +560,10 @@ private fun TerminalSearchBar(
                 Icons.Default.Search,
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = TerminalColors.grey
+                tint = AppColors.grey
             )
             
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             BasicTextField(
                 value = query,
@@ -571,10 +571,10 @@ private fun TerminalSearchBar(
                 modifier = Modifier
                     .weight(1f)
                     .focusRequester(focusRequester),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    color = TerminalColors.white
+                textStyle = AppTypography.bodyMedium.copy(
+                    color = AppColors.white
                 ),
-                cursorBrush = SolidColor(TerminalColors.statusOnline),
+                cursorBrush = SolidColor(AppColors.statusOnline),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),
@@ -583,8 +583,8 @@ private fun TerminalSearchBar(
                         if (query.isEmpty()) {
                             Text(
                                 text = "SEARCH_SESSIONS...",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TerminalColors.grey
+                                style = AppTypography.bodyMedium,
+                                color = AppColors.grey
                             )
                         }
                         innerTextField()
@@ -593,11 +593,11 @@ private fun TerminalSearchBar(
             )
             
             if (query.isNotEmpty()) {
-                Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
                 TerminalIconButton(
                     icon = Icons.Default.Clear,
                     onClick = onClear,
-                    iconColor = TerminalColors.grey,
+                    iconColor = AppColors.grey,
                     contentDescription = "Clear"
                 )
             }

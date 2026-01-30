@@ -41,10 +41,10 @@ import com.mocca.app.ui.components.terminal.TerminalIconButton
 import com.mocca.app.ui.components.terminal.TerminalInput
 import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
 import com.mocca.app.ui.components.terminal.TerminalTextButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.ui.platform.LocalUriHandler
 
 class SettingsScreen : Screen {
@@ -59,26 +59,26 @@ class SettingsScreen : Screen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
+                .background(AppColors.background)
         ) {
             // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.surface)
-                    .padding(horizontal = TerminalSpacing.screenPaddingHorizontal, vertical = TerminalSpacing.md),
+                    .background(AppColors.surface)
+                    .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TerminalIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = TerminalColors.textSecondary
+                    iconColor = AppColors.textSecondary
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                Spacer(modifier = Modifier.width(AppSpacing.md))
                 Text(
                     text = "SETTINGS",
-                    color = TerminalColors.white,
-                    style = TerminalTypography.labelLarge,
+                    color = AppColors.white,
+                    style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -86,16 +86,16 @@ class SettingsScreen : Screen {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = TerminalSpacing.screenPaddingHorizontal),
-                verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg),
-                contentPadding = PaddingValues(top = TerminalSpacing.lg, bottom = TerminalSpacing.screenPaddingBottom)
+                    .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg),
+                contentPadding = PaddingValues(top = AppSpacing.lg, bottom = AppSpacing.screenPaddingBottom)
             ) {
                 // Servers Section
                 item {
                     Text(
                         text = "SERVERS",
-                        color = TerminalColors.textSecondary,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
                     )
                 }
                 
@@ -116,17 +116,17 @@ class SettingsScreen : Screen {
                         text = "ADD SERVER",
                         onClick = { screenModel.addNewServer() },
                         modifier = Modifier.fillMaxWidth(),
-                        height = TerminalSpacing.buttonHeightCompact
+                        height = AppSpacing.buttonHeightCompact
                     )
                 }
                 
                 // Provider Authentication Section
                 item {
-                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
                     Text(
                         text = "PROVIDER AUTHENTICATION",
-                        color = TerminalColors.textSecondary,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
                     )
                 }
                 
@@ -148,29 +148,29 @@ class SettingsScreen : Screen {
                                             screenModel.loadAuthMethods(providerId)
                                         }
                                     }
-                                    .padding(vertical = TerminalSpacing.sm),
+                                    .padding(vertical = AppSpacing.sm),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
                                     text = providerId.uppercase(),
-                                    color = TerminalColors.white,
-                                    style = TerminalTypography.bodyMedium,
+                                    color = AppColors.white,
+                                    style = AppTypography.bodyMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = if (isExpanded) "[-]" else "[+]",
-                                    color = TerminalColors.textTertiary,
-                                    style = TerminalTypography.labelSmall
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelSmall
                                 )
                             }
                             
                             if (isExpanded) {
-                                Column(modifier = Modifier.padding(start = TerminalSpacing.md, bottom = TerminalSpacing.md)) {
+                                Column(modifier = Modifier.padding(start = AppSpacing.md, bottom = AppSpacing.md)) {
                                     val methods = state.providerAuthMethods[providerId]
                                     
                                     if (state.authLoading && state.selectedProviderId == providerId) {
-                                        Text("Loading auth methods...", color = TerminalColors.textTertiary, style = TerminalTypography.labelSmall)
+                                        Text("Loading auth methods...", color = AppColors.textTertiary, style = AppTypography.labelSmall)
                                     } else {
                                         // OAuth Button
                                         if (methods?.any { it.type == "oauth" } == true) {
@@ -181,11 +181,11 @@ class SettingsScreen : Screen {
                                                         uriHandler.openUri(url)
                                                     }
                                                 },
-                                                height = TerminalSpacing.buttonHeightCompact
+                                                height = AppSpacing.buttonHeightCompact
                                             )
-                                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                                            Text("- OR -", color = TerminalColors.textTertiary, style = TerminalTypography.labelSmall)
-                                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                            Text("- OR -", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                            Spacer(modifier = Modifier.height(AppSpacing.sm))
                                         }
                                         
                                         // Manual Key Input
@@ -195,29 +195,29 @@ class SettingsScreen : Screen {
                                             placeholder = "API KEY",
                                             label = null
                                         )
-                                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
                                         TerminalCompactButton(
                                             text = "SAVE KEY",
                                             onClick = { screenModel.setManualKey(providerId, manualKey) },
                                             enabled = manualKey.isNotBlank(),
-                                            height = TerminalSpacing.buttonHeightSmall
+                                            height = AppSpacing.buttonHeightSmall
                                         )
                                     }
                                 }
                             }
                             
-                            HorizontalDivider(color = TerminalColors.border, thickness = 0.5.dp)
+                            HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
                         }
                     }
                 }
 
                 // App Configuration Section
                 item {
-                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
                     Text(
                         text = "APP CONFIGURATION",
-                        color = TerminalColors.textSecondary,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
                     )
                 }
 
@@ -234,59 +234,59 @@ class SettingsScreen : Screen {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "DEFAULT PROVIDER",
-                                    color = TerminalColors.textTertiary,
-                                    style = TerminalTypography.labelSmall
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelSmall
                                 )
                                 Text(
                                     text = defaultProvider.uppercase(),
-                                    color = if (state.serverDefaultProvider != null) TerminalColors.statusOnline else TerminalColors.textSecondary,
-                                    style = TerminalTypography.bodyMedium
+                                    color = if (state.serverDefaultProvider != null) AppColors.statusOnline else AppColors.textSecondary,
+                                    style = AppTypography.bodyMedium
                                 )
                             }
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = "DEFAULT MODEL",
-                                    color = TerminalColors.textTertiary,
-                                    style = TerminalTypography.labelSmall
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelSmall
                                 )
                                 Text(
                                     text = defaultModel,
-                                    color = if (state.serverDefaultModel != null) TerminalColors.statusOnline else TerminalColors.textSecondary,
-                                    style = TerminalTypography.bodySmall
+                                    color = if (state.serverDefaultModel != null) AppColors.statusOnline else AppColors.textSecondary,
+                                    style = AppTypography.bodySmall
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
 
                         // Show available modes from server
                         if (state.serverModes.isNotEmpty()) {
                             Text(
                                 text = "AVAILABLE MODES",
-                                color = TerminalColors.textTertiary,
-                                style = TerminalTypography.labelSmall
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
                             )
-                            Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                            Spacer(modifier = Modifier.height(AppSpacing.xs))
                             Text(
                                 text = state.serverModes.joinToString(", ") { it.name },
-                                color = TerminalColors.textSecondary,
-                                style = TerminalTypography.labelSmall
+                                color = AppColors.textSecondary,
+                                style = AppTypography.labelSmall
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                        Spacer(modifier = Modifier.height(AppSpacing.lg))
 
                         // Info note about server-side configuration
                         Text(
                             text = "Provider and model are configured on the OpenCode server.",
-                            color = TerminalColors.textTertiary,
-                            style = TerminalTypography.labelSmall
+                            color = AppColors.textTertiary,
+                            style = AppTypography.labelSmall
                         )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
                             text = "Update these settings via /config command in OpenCode.",
-                            color = TerminalColors.textTertiary,
-                            style = TerminalTypography.labelSmall
+                            color = AppColors.textTertiary,
+                            style = AppTypography.labelSmall
                         )
                     }
                 }
@@ -307,11 +307,11 @@ class SettingsScreen : Screen {
                 
                 // Auto Update Section
                 item {
-                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
                     Text(
                         text = "APP UPDATES",
-                        color = TerminalColors.textSecondary,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
                     )
                 }
                 
@@ -322,10 +322,10 @@ class SettingsScreen : Screen {
                         
                         Text(
                             text = "GitHub Personal Access Token (for private repo access)",
-                            color = TerminalColors.textSecondary,
-                            style = TerminalTypography.labelSmall
+                            color = AppColors.textSecondary,
+                            style = AppTypography.labelSmall
                         )
-                        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
                         
                         TerminalInput(
                             value = tokenInput,
@@ -334,18 +334,18 @@ class SettingsScreen : Screen {
                             placeholder = "ghp_..."
                         )
                         
-                        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
                         
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
                         ) {
                             TerminalOutlinedButton(
                                 text = "SAVE TOKEN",
                                 onClick = { screenModel.saveGitHubToken(tokenInput) },
                                 enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken,
                                 modifier = Modifier.weight(1f),
-                                height = TerminalSpacing.buttonHeightCompact
+                                height = AppSpacing.buttonHeightCompact
                             )
                             
                             TerminalButton(
@@ -353,18 +353,18 @@ class SettingsScreen : Screen {
                                 onClick = { screenModel.checkForUpdates() },
                                 enabled = !state.isLoading,
                                 modifier = Modifier.weight(1f),
-                                height = TerminalSpacing.buttonHeightCompact
+                                height = AppSpacing.buttonHeightCompact
                             )
                         }
                         
                         // Show message if any
                         state.message?.let { message ->
-                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = message,
                                 color = if (message.contains("failed", ignoreCase = true) || message.contains("error", ignoreCase = true)) 
-                                    TerminalColors.error else TerminalColors.statusOnline,
-                                style = TerminalTypography.labelSmall
+                                    AppColors.error else AppColors.statusOnline,
+                                style = AppTypography.labelSmall
                             )
                         }
                     }
@@ -395,64 +395,64 @@ private fun TerminalServerCard(
     onDelete: () -> Unit,
     onCheckConnection: () -> Unit
 ) {
-    val borderColor = if (isActive) TerminalColors.statusOnline else TerminalColors.border
+    val borderColor = if (isActive) AppColors.statusOnline else AppColors.border
     
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceContainer, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, borderColor, TerminalShapes.card)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.card)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
     ) {
         // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onActivate)
-                .background(if (isActive) TerminalColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent)
-                .padding(TerminalSpacing.md),
+                .background(if (isActive) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent)
+                .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatusDot(
-                color = if (isActive) TerminalColors.statusOnline else TerminalColors.grey,
+                color = if (isActive) AppColors.statusOnline else AppColors.grey,
                 size = 12.dp
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.md))
+            Spacer(modifier = Modifier.width(AppSpacing.md))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name.uppercase(),
-                    color = if (isActive) TerminalColors.statusOnline else TerminalColors.white,
-                    style = TerminalTypography.bodyMedium,
+                    color = if (isActive) AppColors.statusOnline else AppColors.white,
+                    style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = server.baseUrl,
-                    color = TerminalColors.textSecondary,
-                    style = TerminalTypography.bodySmall
+                    color = AppColors.textSecondary,
+                    style = AppTypography.bodySmall
                 )
             }
             
             if (isActive) {
                 Text(
                     text = "ACTIVE",
-                    color = TerminalColors.statusOnline,
-                    style = TerminalTypography.labelSmall,
+                    color = AppColors.statusOnline,
+                    style = AppTypography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
         
         HorizontalDivider(
-            thickness = TerminalSpacing.borderThin,
-            color = TerminalColors.border
+            thickness = AppSpacing.borderThin,
+            color = AppColors.border
         )
         
         // Actions
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(TerminalSpacing.sm),
+                .padding(AppSpacing.sm),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -461,14 +461,14 @@ private fun TerminalServerCard(
                 modifier = Modifier
                     .weight(1f)
                     .clickable(onClick = onCheckConnection)
-                    .padding(horizontal = TerminalSpacing.sm),
+                    .padding(horizontal = AppSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val (statusIcon, statusColor) = when (connectionStatus) {
-                    ServerConnectionStatus.UNKNOWN -> Icons.Default.QuestionMark to TerminalColors.textTertiary
-                    ServerConnectionStatus.CHECKING -> Icons.Default.Sync to TerminalColors.statusWaiting
-                    ServerConnectionStatus.CONNECTED -> Icons.Default.CheckCircle to TerminalColors.statusOnline
-                    ServerConnectionStatus.FAILED -> Icons.Default.Error to TerminalColors.error
+                    ServerConnectionStatus.UNKNOWN -> Icons.Default.QuestionMark to AppColors.textTertiary
+                    ServerConnectionStatus.CHECKING -> Icons.Default.Sync to AppColors.statusWaiting
+                    ServerConnectionStatus.CONNECTED -> Icons.Default.CheckCircle to AppColors.statusOnline
+                    ServerConnectionStatus.FAILED -> Icons.Default.Error to AppColors.error
                 }
                 
                 Icon(
@@ -477,11 +477,11 @@ private fun TerminalServerCard(
                     tint = statusColor,
                     modifier = Modifier.size(14.dp)
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.xs))
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
                 Text(
                     text = connectionStatus.name,
                     color = statusColor,
-                    style = TerminalTypography.labelSmall
+                    style = AppTypography.labelSmall
                 )
             }
             
@@ -489,12 +489,12 @@ private fun TerminalServerCard(
             TerminalIconButton(
                 icon = Icons.Default.Edit,
                 onClick = onEdit,
-                iconColor = TerminalColors.textSecondary
+                iconColor = AppColors.textSecondary
             )
             TerminalIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDelete,
-                iconColor = TerminalColors.alertRed
+                iconColor = AppColors.alertRed
             )
         }
     }
@@ -515,18 +515,18 @@ private fun TerminalServerEditDialog(
     // Modern dialog using AlertDialog or custom rounded overlay
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        shape = TerminalShapes.dialog,
+        containerColor = AppColors.surfaceElevated,
+        shape = AppShapes.dialog,
         title = {
             Text(
                 text = if (isNewServer) "ADD SERVER" else "EDIT SERVER",
-                color = TerminalColors.white,
-                style = TerminalTypography.headlineSmall
+                color = AppColors.white,
+                style = AppTypography.headlineSmall
             )
         },
         text = {
             Column {
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 
                 TerminalInput(
                     value = name,
@@ -535,7 +535,7 @@ private fun TerminalServerEditDialog(
                     placeholder = "My Server"
                 )
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 
                 TerminalInput(
                     value = baseUrl,
@@ -545,43 +545,43 @@ private fun TerminalServerEditDialog(
                     hint = "Use Tailscale IP (100.x) or LAN IP"
                 )
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 
                 // Connection Type Selector
                 Text(
                     text = "CONNECTION TYPE",
-                    color = TerminalColors.textSecondary,
-                    style = TerminalTypography.labelMedium
+                    color = AppColors.textSecondary,
+                    style = AppTypography.labelMedium
                 )
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
-                Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                     ConnectionType.entries.take(3).forEach { type ->
                         val isSelected = connectionType == type
                         Box(
                             modifier = Modifier
-                                .clip(TerminalShapes.pill)
+                                .clip(AppShapes.pill)
                                 .border(
-                                    width = TerminalSpacing.borderThin,
-                                    color = if (isSelected) TerminalColors.statusOnline else TerminalColors.border,
-                                    shape = TerminalShapes.pill
+                                    width = AppSpacing.borderThin,
+                                    color = if (isSelected) AppColors.statusOnline else AppColors.border,
+                                    shape = AppShapes.pill
                                 )
                                 .background(
-                                    if (isSelected) TerminalColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent,
-                                    TerminalShapes.pill
+                                    if (isSelected) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent,
+                                    AppShapes.pill
                                 )
                                 .clickable { connectionType = type }
-                                .padding(horizontal = TerminalSpacing.md, vertical = TerminalSpacing.sm)
+                                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm)
                         ) {
                             Text(
                                 text = type.name,
-                                color = if (isSelected) TerminalColors.statusOnline else TerminalColors.textSecondary,
-                                style = TerminalTypography.labelSmall
+                                color = if (isSelected) AppColors.statusOnline else AppColors.textSecondary,
+                                style = AppTypography.labelSmall
                             )
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 
                 TerminalInput(
                     value = authToken,
@@ -606,7 +606,7 @@ private fun TerminalServerEditDialog(
                     )
                 },
                 enabled = name.isNotBlank() && baseUrl.isNotBlank(),
-                height = TerminalSpacing.buttonHeightCompact
+                height = AppSpacing.buttonHeightCompact
             )
         },
         dismissButton = {

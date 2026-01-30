@@ -34,7 +34,7 @@ import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
-import com.mocca.app.ui.theme.TerminalColors
+import com.mocca.app.ui.theme.AppColors
 import org.koin.core.parameter.parametersOf
 
 /**
@@ -66,8 +66,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 updateInfo = state.updateInfo!!,
                 isDownloading = state.isDownloadingUpdate,
                 progress = state.downloadProgress,
+                error = state.updateError,
                 onUpdate = { screenModel.startUpdate() },
-                onDismiss = { screenModel.dismissUpdate() }
+                onDismiss = { screenModel.dismissUpdate() },
+                onRetry = { screenModel.retryUpdate() }
             )
         }
         
@@ -83,7 +85,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
+                .background(AppColors.background)
         ) {
             SwipePanelLayout(
                 leftPanel = {

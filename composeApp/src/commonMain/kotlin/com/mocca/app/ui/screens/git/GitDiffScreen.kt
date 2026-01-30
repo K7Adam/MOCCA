@@ -13,9 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,8 +28,9 @@ import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.terminal.TerminalHeader
 import com.mocca.app.ui.components.terminal.TerminalIconButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen {
     @Composable
@@ -48,8 +47,8 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
-                .padding(TerminalSpacing.lg)
+                .background(AppColors.background)
+                .padding(AppSpacing.lg)
         ) {
             // Header
             Row(
@@ -59,28 +58,28 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 TerminalIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = TerminalColors.white
+                    iconColor = AppColors.white
                 )
-                Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
                     TerminalHeader(text = "DIFF_VIEW: $path", showBrackets = true)
-                    Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                         if (staged) {
-                            Text("STAGED", color = TerminalColors.statusOnline, style = MaterialTheme.typography.labelSmall)
+                            Text("STAGED", color = AppColors.statusOnline, style = AppTypography.labelSmall)
                         } else {
-                            Text("WORKING_TREE", color = TerminalColors.statusWaiting, style = MaterialTheme.typography.labelSmall)
+                            Text("WORKING_TREE", color = AppColors.statusWaiting, style = AppTypography.labelSmall)
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
 
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(TerminalSpacing.borderThin, TerminalColors.borderLight, RectangleShape)
+                    .border(AppSpacing.borderThin, AppColors.borderLight, RectangleShape)
             ) {
                 when {
                     uiState.isLoading -> LoadingScreen()
@@ -113,20 +112,19 @@ private fun FileDiffItem(file: GitDiffFile) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(TerminalColors.surface)
-                .padding(TerminalSpacing.sm),
+                .background(AppColors.surface)
+                .padding(AppSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
+                Text(
                 text = file.path,
-                color = TerminalColors.white,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                color = AppColors.white,
+                style = AppTypography.labelMedium
             )
             Text(
                 text = "+${file.additions} -${file.deletions}",
-                color = TerminalColors.grey,
-                style = MaterialTheme.typography.labelSmall
+                color = AppColors.grey,
+                style = AppTypography.labelSmall
             )
         }
 
@@ -136,25 +134,24 @@ private fun FileDiffItem(file: GitDiffFile) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.greyDark)
-                    .padding(horizontal = TerminalSpacing.sm, vertical = 2.dp)
+                    .background(AppColors.greyDark)
+                    .padding(horizontal = AppSpacing.sm, vertical = 2.dp)
             ) {
                 Text(
                     text = hunk.header,
-                    color = TerminalColors.greyLight,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace
+                    color = AppColors.greyLight,
+                    style = AppTypography.monoLabel
                 )
             }
 
             // Lines
             hunk.lines.forEach { line ->
                 val bgColor = when (line.type) {
-                    DiffLineType.ADDITION -> Color(0xFF1E3A2F) // Dark Green
-                    DiffLineType.DELETION -> Color(0xFF3A1E1E) // Dark Red
-                    else -> Color.Transparent
+                    DiffLineType.ADDITION -> AppColors.diffAddition
+                    DiffLineType.DELETION -> AppColors.diffDeletion
+                    else -> AppColors.background
                 }
-                
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -163,27 +160,26 @@ private fun FileDiffItem(file: GitDiffFile) {
                     // Line Numbers
                     Text(
                         text = "${line.oldLineNumber ?: ""} ",
-                        color = TerminalColors.grey,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.width(32.dp).padding(start = 4.dp),
-                        fontSize = 10.sp
+                        color = AppColors.grey,
+                        style = AppTypography.monoLabel,
+                        modifier = Modifier.width(32.dp).padding(start = 4.dp)
                     )
                     Text(
                         text = "${line.newLineNumber ?: ""} ",
-                        color = TerminalColors.grey,
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        modifier = Modifier.width(32.dp),
-                        fontSize = 10.sp
+                        color = AppColors.grey,
+                        style = AppTypography.monoLabel,
+                        modifier = Modifier.width(32.dp)
                     )
-                    
+
                     // Content
                     Text(
                         text = line.content,
-                        color = TerminalColors.white,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace,
+                        color = when (line.type) {
+                            DiffLineType.ADDITION -> AppColors.diffAdditionText
+                            DiffLineType.DELETION -> AppColors.diffDeletionText
+                            else -> AppColors.white
+                        },
+                        style = AppTypography.codeSmall,
                         modifier = Modifier.padding(start = 4.dp),
                         softWrap = false
                     )

@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppTypography
 import com.mikepenz.markdown.m3.Markdown
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
@@ -44,8 +44,8 @@ fun MessageBubble(
     val alignment = if (isUser) Alignment.End else Alignment.Start
     
     // Terminal style: User bubbles use surfaceVariant, Assistant is plain text/markdown
-    val containerColor = if (isUser) TerminalColors.surfaceVariant else Color.Transparent
-    val contentColor = if (isUser) TerminalColors.white else TerminalColors.white
+    val containerColor = if (isUser) AppColors.surfaceVariant else Color.Transparent
+    val contentColor = if (isUser) AppColors.white else AppColors.white
     
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -58,8 +58,8 @@ fun MessageBubble(
         if (!isUser) {
             Text(
                 text = message.role.name.lowercase().replaceFirstChar { it.uppercase() },
-                style = TerminalTypography.labelSmall,
-                color = TerminalColors.grey,
+                style = AppTypography.labelSmall,
+                color = AppColors.grey,
                 modifier = Modifier.padding(start = 8.dp, bottom = 2.dp)
             )
         }
@@ -150,10 +150,10 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, TerminalColors.border, RectangleShape)
+            .border(1.dp, AppColors.border, RectangleShape)
             .clickable { expanded = !expanded },
         shape = RectangleShape,
-        color = TerminalColors.surface
+        color = AppColors.surface
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -161,32 +161,32 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
                     Icons.Default.Info, // Lightbulb icon ideal here
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = TerminalColors.statusOnline
+                    tint = AppColors.statusOnline
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Thinking Process (${part.timeMs}ms)",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.statusOnline
+                    style = AppTypography.labelSmall,
+                    color = AppColors.statusOnline
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = TerminalColors.grey
+                    tint = AppColors.grey
                 )
             }
             
             AnimatedVisibility(visible = expanded) {
                 Column {
                     Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(color = TerminalColors.border)
+                    HorizontalDivider(color = AppColors.border)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = part.content,
-                        style = TerminalTypography.bodySmall,
-                        color = TerminalColors.grey
+                        style = AppTypography.bodySmall,
+                        color = AppColors.grey
                     )
                 }
             }
@@ -206,22 +206,22 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { expanded = !expanded },
-        color = TerminalColors.surfaceVariant.copy(alpha = 0.5f),
+        color = AppColors.surfaceVariant.copy(alpha = 0.5f),
         shape = RectangleShape
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "Tool Output",
-                    style = TerminalTypography.labelSmall,
-                    color = TerminalColors.grey
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = TerminalColors.grey
+                    tint = AppColors.grey
                 )
             }
             
@@ -229,8 +229,8 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = part.result,
-                    style = TerminalTypography.bodySmall,
-                    color = TerminalColors.white
+                    style = AppTypography.bodySmall,
+                    color = AppColors.white
                 )
             }
         }

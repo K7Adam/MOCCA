@@ -27,9 +27,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.McpConnectionStatus
 import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.ui.components.terminal.*
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.domain.model.McpServerConfig
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -47,8 +47,8 @@ class McpScreen : Screen {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(TerminalColors.background)
-                    .padding(TerminalSpacing.lg)
+                    .background(AppColors.background)
+                    .padding(AppSpacing.lg)
             ) {
                 // Header with Back Button
                 Row(
@@ -58,37 +58,37 @@ class McpScreen : Screen {
                     TerminalIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = TerminalColors.white
+                        iconColor = AppColors.white
                     )
                     
-                    Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.width(AppSpacing.md))
                     
                     Column(modifier = Modifier.weight(1f)) {
                         TerminalHeader(text = "MCP_JSON_CONFIG", showBrackets = true)
-                        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
                             text = "${state.connectedCount}/${state.totalCount} SERVERS_ACTIVE",
-                            color = if (state.connectedCount > 0) TerminalColors.statusOnline else TerminalColors.grey,
-                            style = TerminalTypography.labelSmall,
+                            color = if (state.connectedCount > 0) AppColors.statusOnline else AppColors.grey,
+                            style = AppTypography.labelSmall,
                             modifier = Modifier.padding(start = 16.dp)
                         )
                     }
                     
-                    Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                         TerminalIconButton(
                             icon = Icons.Default.Refresh,
                             onClick = { screenModel.refresh() },
-                            iconColor = if (state.isRefreshing) TerminalColors.statusWaiting else TerminalColors.greyLight
+                            iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.greyLight
                         )
                         TerminalIconButton(
                             icon = Icons.Default.Add,
                             onClick = { showAddDialog = true },
-                            iconColor = TerminalColors.statusOnline
+                            iconColor = AppColors.statusOnline
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                Spacer(modifier = Modifier.height(AppSpacing.lg))
                 
                 // Error message
                 state.error?.let { error ->
@@ -96,7 +96,7 @@ class McpScreen : Screen {
                         message = error,
                         onDismiss = { screenModel.clearError() }
                     )
-                    Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
                 }
                 
                 // Loading state
@@ -107,14 +107,14 @@ class McpScreen : Screen {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(
-                                color = TerminalColors.statusWaiting,
+                                color = AppColors.statusWaiting,
                                 modifier = Modifier.size(32.dp)
                             )
-                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = "LOADING_MCP_STATUS...",
-                                color = TerminalColors.grey,
-                                style = TerminalTypography.bodyMedium
+                                color = AppColors.grey,
+                                style = AppTypography.bodyMedium
                             )
                         }
                     }
@@ -124,33 +124,33 @@ class McpScreen : Screen {
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .border(TerminalSpacing.borderThin, TerminalColors.greyDark, RectangleShape),
+                            .border(AppSpacing.borderThin, AppColors.greyDark, RectangleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.padding(TerminalSpacing.xl)
+                            modifier = Modifier.padding(AppSpacing.xl)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.CloudOff,
                                 contentDescription = null,
-                                tint = TerminalColors.greyDark,
+                                tint = AppColors.greyDark,
                                 modifier = Modifier.size(48.dp)
                             )
-                            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                            Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = "NO_MCP_SERVERS_FOUND",
-                                color = TerminalColors.grey,
-                                style = TerminalTypography.bodyLarge,
+                                color = AppColors.grey,
+                                style = AppTypography.bodyLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
                             Text(
                                 text = "Add a server to get started",
-                                color = TerminalColors.greyDark,
-                                style = TerminalTypography.bodySmall
+                                color = AppColors.greyDark,
+                                style = AppTypography.bodySmall
                             )
-                            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                            Spacer(modifier = Modifier.height(AppSpacing.lg))
                             TerminalButton(
                                 text = "ADD_SERVER",
                                 onClick = { showAddDialog = true }
@@ -161,7 +161,7 @@ class McpScreen : Screen {
                     // Server list
                     LazyColumn(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
                         items(state.servers, key = { it.name }) { server ->
                             McpServerCard(
@@ -209,19 +209,19 @@ private fun McpServerCard(
     onClick: () -> Unit
 ) {
     val statusColor = when {
-        server.status.isConnected -> TerminalColors.statusOnline
-        server.status.needsAuth -> TerminalColors.statusWaiting
-        server.status.hasFailed -> TerminalColors.error
-        else -> TerminalColors.grey
+        server.status.isConnected -> AppColors.statusOnline
+        server.status.needsAuth -> AppColors.statusWaiting
+        server.status.hasFailed -> AppColors.error
+        else -> AppColors.grey
     }
     
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TerminalColors.surfaceVariant.copy(alpha = 0.5f))
-            .border(TerminalSpacing.borderThin, statusColor.copy(alpha = 0.3f), RectangleShape)
+            .background(AppColors.surfaceVariant.copy(alpha = 0.5f))
+            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), RectangleShape)
             .clickable(onClick = onClick)
-            .padding(TerminalSpacing.md)
+            .padding(AppSpacing.md)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -232,28 +232,28 @@ private fun McpServerCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "{ ",
-                    color = TerminalColors.grey,
-                    style = TerminalTypography.code
+                    color = AppColors.grey,
+                    style = AppTypography.code
                 )
                 Text(
                     text = "\"${server.name}\"",
-                    color = TerminalColors.syntaxString,
-                    style = TerminalTypography.code,
+                    color = AppColors.syntaxString,
+                    style = AppTypography.code,
                     fontWeight = FontWeight.Bold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
                     text = " }",
-                    color = TerminalColors.grey,
-                    style = TerminalTypography.code
+                    color = AppColors.grey,
+                    style = AppTypography.code
                 )
             }
             
             // Toggle or loading
             if (isOperationInProgress) {
                 CircularProgressIndicator(
-                    color = TerminalColors.statusWaiting,
+                    color = AppColors.statusWaiting,
                     modifier = Modifier.size(20.dp),
                     strokeWidth = 2.dp
                 )
@@ -265,40 +265,40 @@ private fun McpServerCard(
             }
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         
         // Metadata Row (JSON-style)
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)
         ) {
-            McpMetaField(label = "type", value = server.displayType, color = TerminalColors.syntaxKeyword)
+            McpMetaField(label = "type", value = server.displayType, color = AppColors.syntaxKeyword)
             if (server.toolCount > 0) {
-                McpMetaField(label = "tools", value = server.toolCount.toString(), color = TerminalColors.syntaxFunction)
+                McpMetaField(label = "tools", value = server.toolCount.toString(), color = AppColors.syntaxFunction)
             }
             McpMetaField(label = "status", value = getStatusText(server.status.status), color = statusColor)
         }
         
         // Error message if any
         server.status.error?.let { error ->
-            Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(TerminalColors.error.copy(alpha = 0.05f))
-                    .padding(TerminalSpacing.xs),
+                    .background(AppColors.error.copy(alpha = 0.05f))
+                    .padding(AppSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = "!! error: ",
-                    color = TerminalColors.error,
-                    style = TerminalTypography.codeSmall,
+                    color = AppColors.error,
+                    style = AppTypography.codeSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = "\"$error\"",
-                    color = TerminalColors.error.copy(alpha = 0.8f),
-                    style = TerminalTypography.codeSmall,
+                    color = AppColors.error.copy(alpha = 0.8f),
+                    style = AppTypography.codeSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -312,13 +312,13 @@ private fun McpMetaField(label: String, value: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "$label: ",
-            color = TerminalColors.grey,
-            style = TerminalTypography.codeSmall
+            color = AppColors.grey,
+            style = AppTypography.codeSmall
         )
         Text(
             text = value,
             color = color,
-            style = TerminalTypography.codeSmall,
+            style = AppTypography.codeSmall,
             fontWeight = FontWeight.Bold
         )
     }
@@ -332,29 +332,29 @@ private fun McpErrorBanner(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TerminalColors.error.copy(alpha = 0.1f))
-            .border(TerminalSpacing.borderThin, TerminalColors.error, RectangleShape)
-            .padding(TerminalSpacing.md),
+            .background(AppColors.error.copy(alpha = 0.1f))
+            .border(AppSpacing.borderThin, AppColors.error, RectangleShape)
+            .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Error,
             contentDescription = null,
-            tint = TerminalColors.error,
+            tint = AppColors.error,
             modifier = Modifier.size(18.dp)
         )
-        Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.sm))
         Text(
             text = message,
-            color = TerminalColors.error,
-            style = TerminalTypography.bodySmall,
+            color = AppColors.error,
+            style = AppTypography.bodySmall,
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = onDismiss) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Dismiss",
-                tint = TerminalColors.error,
+                tint = AppColors.error,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -371,7 +371,7 @@ private fun McpServerDetailsDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalColors.background.copy(alpha = 0.95f))
+            .background(AppColors.background.copy(alpha = 0.95f))
             .clickable(enabled = false) {},
         contentAlignment = Alignment.Center
     ) {
@@ -379,41 +379,41 @@ private fun McpServerDetailsDialog(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.8f)
-                .background(TerminalColors.background)
-                .border(TerminalSpacing.borderStandard, TerminalColors.borderLight, RectangleShape)
+                .background(AppColors.background)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
         ) {
             // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TerminalSpacing.md),
+                    .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
                         text = server.name.uppercase(),
-                        color = TerminalColors.white,
-                        style = TerminalTypography.headlineSmall,
+                        color = AppColors.white,
+                        style = AppTypography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${server.displayType} | ${getStatusText(server.status.status)}",
-                        color = TerminalColors.grey,
-                        style = TerminalTypography.labelSmall
+                        color = AppColors.grey,
+                        style = AppTypography.labelSmall
                     )
                 }
                 
                 TerminalIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = TerminalColors.greyLight
+                    iconColor = AppColors.greyLight
                 )
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
             
             // Content
@@ -421,43 +421,43 @@ private fun McpServerDetailsDialog(
                 modifier = Modifier
                     .weight(1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(TerminalSpacing.md)
+                    .padding(AppSpacing.md)
             ) {
                 // Tools section
                 server.status.tools?.takeIf { it.isNotEmpty() }?.let { tools ->
                     Text(
                         text = "// TOOLS (${server.toolCount})",
-                        color = TerminalColors.statusOnline,
-                        style = TerminalTypography.labelMedium
+                        color = AppColors.statusOnline,
+                        style = AppTypography.labelMedium
                     )
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                     
                     tools.forEach { tool ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = TerminalSpacing.xs),
+                                .padding(vertical = AppSpacing.xs),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Build,
                                 contentDescription = null,
-                                tint = TerminalColors.greyLight,
+                                tint = AppColors.greyLight,
                                 modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                            Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = tool.name,
-                                    color = TerminalColors.white,
-                                    style = TerminalTypography.bodySmall,
+                                    color = AppColors.white,
+                                    style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 tool.description?.let { desc ->
                                     Text(
                                         text = desc,
-                                        color = TerminalColors.grey,
-                                        style = TerminalTypography.labelSmall,
+                                        color = AppColors.grey,
+                                        style = AppTypography.labelSmall,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -465,85 +465,85 @@ private fun McpServerDetailsDialog(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                    Spacer(modifier = Modifier.height(AppSpacing.lg))
                 }
                 
                 // Resources section
                 server.status.resources?.takeIf { it.isNotEmpty() }?.let { resources ->
                     Text(
                         text = "// RESOURCES (${server.resourceCount})",
-                        color = TerminalColors.statusWaiting,
-                        style = TerminalTypography.labelMedium
+                        color = AppColors.statusWaiting,
+                        style = AppTypography.labelMedium
                     )
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                     
                     resources.forEach { resource ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = TerminalSpacing.xs),
+                                .padding(vertical = AppSpacing.xs),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = null,
-                                tint = TerminalColors.greyLight,
+                                tint = AppColors.greyLight,
                                 modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                            Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = resource.name,
-                                    color = TerminalColors.white,
-                                    style = TerminalTypography.bodySmall,
+                                    color = AppColors.white,
+                                    style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = resource.uri,
-                                    color = TerminalColors.grey,
-                                    style = TerminalTypography.labelSmall
+                                    color = AppColors.grey,
+                                    style = AppTypography.labelSmall
                                 )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                    Spacer(modifier = Modifier.height(AppSpacing.lg))
                 }
                 
                 // Prompts section
                 server.status.prompts?.takeIf { it.isNotEmpty() }?.let { prompts ->
                     Text(
                         text = "// PROMPTS (${server.promptCount})",
-                        color = TerminalColors.whiteDim,
-                        style = TerminalTypography.labelMedium
+                        color = AppColors.whiteDim,
+                        style = AppTypography.labelMedium
                     )
-                    Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
                     
                     prompts.forEach { prompt ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = TerminalSpacing.xs),
+                                .padding(vertical = AppSpacing.xs),
                             verticalAlignment = Alignment.Top
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Chat,
                                 contentDescription = null,
-                                tint = TerminalColors.greyLight,
+                                tint = AppColors.greyLight,
                                 modifier = Modifier.size(14.dp)
                             )
-                            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+                            Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = prompt.name,
-                                    color = TerminalColors.white,
-                                    style = TerminalTypography.bodySmall,
+                                    color = AppColors.white,
+                                    style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 prompt.description?.let { desc ->
                                     Text(
                                         text = desc,
-                                        color = TerminalColors.grey,
-                                        style = TerminalTypography.labelSmall
+                                        color = AppColors.grey,
+                                        style = AppTypography.labelSmall
                                     )
                                 }
                             }
@@ -556,29 +556,29 @@ private fun McpServerDetailsDialog(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(TerminalSpacing.xl),
+                            .padding(AppSpacing.xl),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = if (server.isConnected) "NO_CAPABILITIES_EXPOSED" else "CONNECT_TO_VIEW_CAPABILITIES",
-                            color = TerminalColors.grey,
-                            style = TerminalTypography.bodyMedium
+                            color = AppColors.grey,
+                            style = AppTypography.bodyMedium
                         )
                     }
                 }
             }
             
             HorizontalDivider(
-                thickness = TerminalSpacing.borderThin,
-                color = TerminalColors.border
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
             
             // Footer actions
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(TerminalSpacing.md),
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                    .padding(AppSpacing.md),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
                 TerminalOutlinedButton(
                     text = "CLOSE",
@@ -619,20 +619,20 @@ private fun AddMcpServerDialog(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(TerminalColors.background.copy(alpha = 0.9f))
+            .background(AppColors.background.copy(alpha = 0.9f))
             .clickable(enabled = false) {},
         contentAlignment = Alignment.Center
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .background(TerminalColors.background, RectangleShape)
-                .border(TerminalSpacing.borderStandard, TerminalColors.borderLight, RectangleShape)
-                .padding(TerminalSpacing.lg)
+                .background(AppColors.background, RectangleShape)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
+                .padding(AppSpacing.lg)
         ) {
             TerminalHeader(text = "ADD_MCP_SERVER", showBrackets = true)
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             
             TerminalInput(
                 value = name,
@@ -641,7 +641,7 @@ private fun AddMcpServerDialog(
                 placeholder = "weather-server"
             )
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             
             TerminalInput(
                 value = command,
@@ -651,7 +651,7 @@ private fun AddMcpServerDialog(
                 hint = "Executable to run"
             )
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             
             TerminalInput(
                 value = args,
@@ -661,7 +661,7 @@ private fun AddMcpServerDialog(
                 hint = "Space separated arguments"
             )
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             
             TerminalInput(
                 value = env,
@@ -671,9 +671,9 @@ private fun AddMcpServerDialog(
                 hint = "Comma separated env vars (optional)"
             )
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
             
-            Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
                 TerminalOutlinedButton(
                     text = "CANCEL",
                     onClick = onDismiss,

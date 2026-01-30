@@ -29,8 +29,8 @@ import com.mocca.app.ui.components.terminal.SkillItem
 import com.mocca.app.ui.components.terminal.SkillsEngineModule
 import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
 import com.mocca.app.ui.components.terminal.TerminalButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 
 /**
  * Right swipe panel: Modular tools dashboard.
@@ -57,10 +57,10 @@ fun DashboardPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TerminalColors.background)
-            .padding(TerminalSpacing.lg)
+            .background(AppColors.background)
+            .padding(AppSpacing.lg)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
         // Project Module
         ProjectModule(
@@ -117,7 +117,7 @@ fun DashboardPanel(
         }
         
         Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+        Spacer(modifier = Modifier.height(AppSpacing.xl))
         
         // Refresh All Button (Modern rounded button)
         TerminalOutlinedButton(
@@ -127,7 +127,7 @@ fun DashboardPanel(
             modifier = Modifier.fillMaxWidth()
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         
         // Settings Button
         TerminalOutlinedButton(
@@ -137,7 +137,7 @@ fun DashboardPanel(
             modifier = Modifier.fillMaxWidth()
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         
         // Open Terminal Button
         TerminalButton(
@@ -148,7 +148,7 @@ fun DashboardPanel(
         )
         
         // Bottom padding
-        Spacer(modifier = Modifier.height(TerminalSpacing.screenPaddingBottom))
+        Spacer(modifier = Modifier.height(AppSpacing.screenPaddingBottom))
     }
 }
 

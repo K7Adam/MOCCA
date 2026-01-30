@@ -31,10 +31,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.terminal.*
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
@@ -67,11 +67,11 @@ class GitScreen : Screen {
             }
         }
         
-        Box(modifier = Modifier.fillMaxSize().background(TerminalColors.background)) {
+        Box(modifier = Modifier.fillMaxSize().background(AppColors.background)) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(TerminalSpacing.lg)
+                    .padding(AppSpacing.lg)
             ) {
                 // Header
                 Row(
@@ -83,39 +83,39 @@ class GitScreen : Screen {
                         TerminalIconButton(
                             icon = Icons.AutoMirrored.Filled.ArrowBack,
                             onClick = { navigator.pop() },
-                            iconColor = TerminalColors.textSecondary
+                            iconColor = AppColors.textSecondary
                         )
-                        Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                        Spacer(modifier = Modifier.width(AppSpacing.md))
                         Column {
                             Text(
                                 text = "GIT CONTROL",
-                                style = TerminalTypography.labelLarge,
-                                color = TerminalColors.white,
+                                style = AppTypography.labelLarge,
+                                color = AppColors.white,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "BRANCH: ${uiState.currentBranch}",
-                                color = TerminalColors.statusOnline,
-                                style = TerminalTypography.labelSmall
+                                color = AppColors.statusOnline,
+                                style = AppTypography.labelSmall
                             )
                         }
                     }
                     
-                    Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
-                        TerminalIconButton(icon = Icons.Default.Sync, onClick = { screenModel.fetch() }, contentDescription = "FETCH", iconColor = TerminalColors.textSecondary)
-                        TerminalIconButton(icon = Icons.Default.Download, onClick = { screenModel.pull() }, contentDescription = "PULL", iconColor = TerminalColors.textSecondary)
-                        TerminalIconButton(icon = Icons.Default.Upload, onClick = { screenModel.push() }, contentDescription = "PUSH", iconColor = TerminalColors.textSecondary)
+                    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                        TerminalIconButton(icon = Icons.Default.Sync, onClick = { screenModel.fetch() }, contentDescription = "FETCH", iconColor = AppColors.textSecondary)
+                        TerminalIconButton(icon = Icons.Default.Download, onClick = { screenModel.pull() }, contentDescription = "PULL", iconColor = AppColors.textSecondary)
+                        TerminalIconButton(icon = Icons.Default.Upload, onClick = { screenModel.push() }, contentDescription = "PUSH", iconColor = AppColors.textSecondary)
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                Spacer(modifier = Modifier.height(AppSpacing.lg))
                 
                 // Tabs
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     GitTab.entries.forEach { tab ->
                         val isSelected = selectedTab == tab
@@ -127,16 +127,16 @@ class GitScreen : Screen {
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+                Spacer(modifier = Modifier.height(AppSpacing.lg))
                 
                 // Content Area
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth()
-                        .clip(TerminalShapes.card)
-                        .background(TerminalColors.surfaceContainer, TerminalShapes.card)
-                        .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
+                        .clip(AppShapes.card)
+                        .background(AppColors.surfaceContainer, AppShapes.card)
+                        .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
                 ) {
                     when {
                         uiState.isLoading -> LoadingScreen()
@@ -210,17 +210,17 @@ class GitScreen : Screen {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(TerminalColors.background.copy(alpha = 0.9f)),
+                        .background(AppColors.background.copy(alpha = 0.9f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
                     ) {
-                        CircularProgressIndicator(color = TerminalColors.accentGreen, strokeWidth = 2.dp)
-                        Text(text = "STARTING GIT SERVER...", color = TerminalColors.white, style = MaterialTheme.typography.titleMedium)
+                        CircularProgressIndicator(color = AppColors.accentGreen, strokeWidth = 2.dp)
+                        Text(text = "STARTING GIT SERVER...", color = AppColors.white, style = AppTypography.titleMedium)
                         uiState.serverStartProgress?.let { progress ->
-                            Text(text = progress.uppercase(), color = TerminalColors.textSecondary, style = TerminalTypography.bodySmall)
+                            Text(text = progress.uppercase(), color = AppColors.textSecondary, style = AppTypography.bodySmall)
                         }
                     }
                 }
@@ -231,15 +231,15 @@ class GitScreen : Screen {
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .padding(TerminalSpacing.md)
-                        .clip(TerminalShapes.pill)
-                        .background(if (toastIsWarning) TerminalColors.statusWaiting else TerminalColors.statusOnline)
-                        .padding(horizontal = TerminalSpacing.lg, vertical = TerminalSpacing.sm)
+                        .padding(AppSpacing.md)
+                        .clip(AppShapes.pill)
+                        .background(if (toastIsWarning) AppColors.statusWaiting else AppColors.statusOnline)
+                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
                 ) {
                     Text(
                         text = message.uppercase(), 
-                        color = TerminalColors.background, 
-                        style = TerminalTypography.labelMedium,
+                        color = AppColors.background, 
+                        style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -258,8 +258,8 @@ private fun StatusTab(
     val status = uiState.status
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(TerminalSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+        contentPadding = PaddingValues(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         item { StatusHeader(status) }
         item {
@@ -291,7 +291,7 @@ private fun StatusTab(
         }
         if (uiState.stagedCount > 0) {
             item { 
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 TerminalButton(
                     text = "COMMIT ${uiState.stagedCount} FILES", 
                     onClick = { screenModel.showCommitDialog() }, 
@@ -304,9 +304,9 @@ private fun StatusTab(
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = TerminalColors.statusOnline, modifier = Modifier.size(48.dp))
+                        Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AppColors.statusOnline, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("WORKING TREE CLEAN", style = MaterialTheme.typography.headlineSmall, color = TerminalColors.statusOnline)
+                        Text("WORKING TREE CLEAN", style = AppTypography.headlineSmall, color = AppColors.statusOnline)
                     }
                 }
             }
@@ -320,7 +320,7 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val currentBranch = uiState.currentBranch
     var selectedBranch by remember { mutableStateOf<String?>(null) }
     
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(TerminalSpacing.md), verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
         val localBranches = branches.filter { !it.remote }
         if (localBranches.isNotEmpty()) {
             item { SectionHeader("LOCAL BRANCHES") }
@@ -330,7 +330,7 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
         }
         val remoteBranches = branches.filter { it.remote }
         if (remoteBranches.isNotEmpty()) {
-            item { Spacer(Modifier.height(TerminalSpacing.lg)); SectionHeader("REMOTE BRANCHES") }
+            item { Spacer(Modifier.height(AppSpacing.lg)); SectionHeader("REMOTE BRANCHES") }
             items(items = remoteBranches, key = { "remote-${it.name}" }) { branch ->
                 BranchItem(branch = branch, isCurrent = false, onClick = { selectedBranch = branch.name })
             }
@@ -351,23 +351,23 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 @Composable
 private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val remotes = uiState.remotes
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(TerminalSpacing.md), verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
         item { SectionHeader(title = "REMOTES [${remotes.size}]", action = { TerminalTextButton("ADD", onClick = { screenModel.showAddRemoteDialog() }) }) }
         items(items = remotes, key = { it.name }) { remote ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(TerminalShapes.card)
-                    .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-                    .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-                    .padding(TerminalSpacing.md), 
+                    .clip(AppShapes.card)
+                    .background(AppColors.surfaceVariant, AppShapes.card)
+                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+                    .padding(AppSpacing.md), 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = remote.name.uppercase(), color = TerminalColors.white, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text(text = remote.url, style = MaterialTheme.typography.bodySmall, color = TerminalColors.textTertiary)
+                    Text(text = remote.name.uppercase(), color = AppColors.white, style = AppTypography.bodyMedium, fontWeight = FontWeight.Bold)
+                    Text(text = remote.url, style = AppTypography.bodySmall, color = AppColors.textTertiary)
                 }
-                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.removeRemote(remote.name) }, iconColor = TerminalColors.alertRed)
+                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.removeRemote(remote.name) }, iconColor = AppColors.alertRed)
             }
         }
     }
@@ -376,22 +376,22 @@ private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 @Composable
 private fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val tags = uiState.tags
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(TerminalSpacing.md), verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
         item { SectionHeader(title = "TAGS [${tags.size}]", action = { TerminalTextButton("CREATE", onClick = { screenModel.showCreateTagDialog() }) }) }
         items(tags) { tag ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(TerminalShapes.card)
-                    .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-                    .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-                    .padding(TerminalSpacing.sm), 
+                    .clip(AppShapes.card)
+                    .background(AppColors.surfaceVariant, AppShapes.card)
+                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+                    .padding(AppSpacing.sm), 
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null, tint = TerminalColors.accentGreen, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(TerminalSpacing.sm))
-                Text(text = tag, color = TerminalColors.white, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f))
-                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.deleteTag(tag) }, iconColor = TerminalColors.alertRed)
+                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null, tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(AppSpacing.sm))
+                Text(text = tag, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f))
+                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.deleteTag(tag) }, iconColor = AppColors.alertRed)
             }
         }
     }
@@ -402,20 +402,20 @@ private fun StatusHeader(status: GitStatusResponse?) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-            .padding(TerminalSpacing.md)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .padding(AppSpacing.md)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "BRANCH: ${status?.branch ?: "UNKNOWN"}", color = TerminalColors.white, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-            if (status?.upstream != null) { Text(text = "UPSTREAM: ${status.upstream}", color = TerminalColors.textTertiary, style = MaterialTheme.typography.bodySmall) }
+            Text(text = "BRANCH: ${status?.branch ?: "UNKNOWN"}", color = AppColors.white, style = AppTypography.bodyMedium, fontWeight = FontWeight.Bold)
+            if (status?.upstream != null) { Text(text = "UPSTREAM: ${status.upstream}", color = AppColors.textTertiary, style = AppTypography.bodySmall) }
         }
         if (status?.ahead ?: 0 > 0 || status?.behind ?: 0 > 0) {
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                if (status?.ahead ?: 0 > 0) { Text("${status?.ahead} AHEAD", color = TerminalColors.statusOnline, style = MaterialTheme.typography.labelSmall) }
-                if (status?.behind ?: 0 > 0) { Text("${status?.behind} BEHIND", color = TerminalColors.error, style = MaterialTheme.typography.labelSmall) }
+                if (status?.ahead ?: 0 > 0) { Text("${status?.ahead} AHEAD", color = AppColors.statusOnline, style = AppTypography.labelSmall) }
+                if (status?.behind ?: 0 > 0) { Text("${status?.behind} BEHIND", color = AppColors.error, style = AppTypography.labelSmall) }
             }
         }
     }
@@ -424,31 +424,31 @@ private fun StatusHeader(status: GitStatusResponse?) {
 @Composable
 private fun SectionHeader(title: String, action: @Composable (() -> Unit)? = null) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(text = title, color = TerminalColors.textSecondary, style = TerminalTypography.labelMedium)
+        Text(text = title, color = AppColors.textSecondary, style = AppTypography.labelMedium)
         action?.invoke()
     }
 }
 
 @Composable
 private fun FileChangeItem(change: GitFileChange, staged: Boolean, onStage: (() -> Unit)? = null, onUnstage: (() -> Unit)? = null, onDiscard: (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
-    val statusColor = when (change.status) { GitFileStatus.ADDED -> TerminalColors.statusOnline; GitFileStatus.MODIFIED -> TerminalColors.statusWaiting; GitFileStatus.DELETED -> TerminalColors.error; GitFileStatus.RENAMED -> TerminalColors.statusOffline; else -> TerminalColors.white }
+    val statusColor = when (change.status) { GitFileStatus.ADDED -> AppColors.statusOnline; GitFileStatus.MODIFIED -> AppColors.statusWaiting; GitFileStatus.DELETED -> AppColors.error; GitFileStatus.RENAMED -> AppColors.statusOffline; else -> AppColors.white }
     val statusChar = when (change.status) { GitFileStatus.ADDED -> "A"; GitFileStatus.MODIFIED -> "M"; GitFileStatus.DELETED -> "D"; GitFileStatus.RENAMED -> "R"; else -> "?" }
     
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
             .clickable { onClick?.invoke() }
-            .padding(TerminalSpacing.sm), 
+            .padding(AppSpacing.sm), 
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(24.dp).clip(TerminalShapes.extraSmall).background(statusColor.copy(alpha = 0.2f), TerminalShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = statusChar, color = statusColor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium) }
-        Spacer(Modifier.width(TerminalSpacing.sm))
-        Text(text = change.path, color = TerminalColors.white, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (staged) { onUnstage?.let { TerminalIconButton(icon = Icons.Default.Remove, onClick = it, contentDescription = "Unstage", iconColor = TerminalColors.textSecondary) } }
-        else { onStage?.let { TerminalIconButton(icon = Icons.Default.Add, onClick = it, contentDescription = "Stage", iconColor = TerminalColors.statusOnline) }; onDiscard?.let { TerminalIconButton(icon = Icons.AutoMirrored.Filled.Undo, onClick = it, contentDescription = "Discard", iconColor = TerminalColors.alertRed) } }
+        Box(modifier = Modifier.size(24.dp).clip(AppShapes.extraSmall).background(statusColor.copy(alpha = 0.2f), AppShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = statusChar, color = statusColor, fontWeight = FontWeight.Bold, style = AppTypography.bodyMedium) }
+        Spacer(Modifier.width(AppSpacing.sm))
+        Text(text = change.path, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (staged) { onUnstage?.let { TerminalIconButton(icon = Icons.Default.Remove, onClick = it, contentDescription = "Unstage", iconColor = AppColors.textSecondary) } }
+        else { onStage?.let { TerminalIconButton(icon = Icons.Default.Add, onClick = it, contentDescription = "Stage", iconColor = AppColors.statusOnline) }; onDiscard?.let { TerminalIconButton(icon = Icons.AutoMirrored.Filled.Undo, onClick = it, contentDescription = "Discard", iconColor = AppColors.alertRed) } }
     }
 }
 
@@ -457,39 +457,39 @@ private fun UntrackedFileItem(path: String, onStage: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-            .padding(TerminalSpacing.sm), 
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .padding(AppSpacing.sm), 
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(modifier = Modifier.size(24.dp).clip(TerminalShapes.extraSmall).background(TerminalColors.surfaceContainer, TerminalShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = "?", color = TerminalColors.textTertiary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium) }
-        Spacer(Modifier.width(TerminalSpacing.sm))
-        Text(text = path, color = TerminalColors.white, style = MaterialTheme.typography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        TerminalIconButton(icon = Icons.Default.Add, onClick = onStage, contentDescription = "Stage", iconColor = TerminalColors.statusOnline)
+        Box(modifier = Modifier.size(24.dp).clip(AppShapes.extraSmall).background(AppColors.surfaceContainer, AppShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = "?", color = AppColors.textTertiary, fontWeight = FontWeight.Bold, style = AppTypography.bodyMedium) }
+        Spacer(Modifier.width(AppSpacing.sm))
+        Text(text = path, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        TerminalIconButton(icon = Icons.Default.Add, onClick = onStage, contentDescription = "Stage", iconColor = AppColors.statusOnline)
     }
 }
 
 @Composable
 private fun BranchItem(branch: GitBranch, isCurrent: Boolean, onClick: () -> Unit) {
-    val bgColor = if (isCurrent) TerminalColors.statusOnline.copy(alpha = 0.1f) else TerminalColors.surfaceVariant
-    val borderColor = if (isCurrent) TerminalColors.statusOnline else TerminalColors.border
+    val bgColor = if (isCurrent) AppColors.statusOnline.copy(alpha = 0.1f) else AppColors.surfaceVariant
+    val borderColor = if (isCurrent) AppColors.statusOnline else AppColors.border
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(bgColor, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, borderColor, TerminalShapes.card)
+            .clip(AppShapes.card)
+            .background(bgColor, AppShapes.card)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
             .clickable(onClick = onClick)
-            .padding(TerminalSpacing.md), 
+            .padding(AppSpacing.md), 
         verticalAlignment = Alignment.CenterVertically
     ) {
-        if (isCurrent) { Icon(Icons.Default.Check, contentDescription = "Current", tint = TerminalColors.statusOnline, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(TerminalSpacing.sm)) }
+        if (isCurrent) { Icon(Icons.Default.Check, contentDescription = "Current", tint = AppColors.statusOnline, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(AppSpacing.sm)) }
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = branch.name, color = if (isCurrent) TerminalColors.statusOnline else TerminalColors.white, style = MaterialTheme.typography.bodyMedium, fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal)
-            if (branch.upstream != null) { Text(text = "TRACKS: ${branch.upstream}", style = MaterialTheme.typography.labelSmall, color = TerminalColors.textTertiary) }
+            Text(text = branch.name, color = if (isCurrent) AppColors.statusOnline else AppColors.white, style = AppTypography.bodyMedium, fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal)
+            if (branch.upstream != null) { Text(text = "TRACKS: ${branch.upstream}", style = AppTypography.labelSmall, color = AppColors.textTertiary) }
         }
-        if (branch.ahead > 0 || branch.behind > 0) { Row(horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) { if (branch.ahead > 0) { Text("+${branch.ahead}", color = TerminalColors.statusOnline, style = MaterialTheme.typography.labelSmall) }; if (branch.behind > 0) { Text("-${branch.behind}", color = TerminalColors.error, style = MaterialTheme.typography.labelSmall) } } }
+        if (branch.ahead > 0 || branch.behind > 0) { Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) { if (branch.ahead > 0) { Text("+${branch.ahead}", color = AppColors.statusOnline, style = AppTypography.labelSmall) }; if (branch.behind > 0) { Text("-${branch.behind}", color = AppColors.error, style = AppTypography.labelSmall) } } }
     }
 }
 
@@ -498,19 +498,19 @@ private fun CommitItem(commit: GitCommit, dateFormat: SimpleDateFormat) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-            .padding(TerminalSpacing.md)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .padding(AppSpacing.md)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = commit.shortHash, style = MaterialTheme.typography.bodySmall, color = TerminalColors.accentGreen)
-            Text(text = dateFormat.format(Date(commit.date)), style = MaterialTheme.typography.labelSmall, color = TerminalColors.textTertiary)
+            Text(text = commit.shortHash, style = AppTypography.bodySmall, color = AppColors.accentGreen)
+            Text(text = dateFormat.format(Date(commit.date)), style = AppTypography.labelSmall, color = AppColors.textTertiary)
         }
-        Spacer(Modifier.height(TerminalSpacing.sm))
-        Text(text = commit.message, color = TerminalColors.white, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(TerminalSpacing.sm))
-        Text(text = "AUTHOR: ${commit.author}", style = MaterialTheme.typography.labelSmall, color = TerminalColors.textSecondary)
+        Spacer(Modifier.height(AppSpacing.sm))
+        Text(text = commit.message, color = AppColors.white, style = AppTypography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.height(AppSpacing.sm))
+        Text(text = "AUTHOR: ${commit.author}", style = AppTypography.labelSmall, color = AppColors.textSecondary)
     }
 }
 
@@ -518,8 +518,8 @@ private fun CommitItem(commit: GitCommit, dateFormat: SimpleDateFormat) {
 private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> Unit, onCommit: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        title = { Text("COMMIT CHANGES", style = TerminalTypography.labelLarge, color = TerminalColors.white) },
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             TerminalInput(
                 value = message,
@@ -534,7 +534,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
         },
-        shape = TerminalShapes.dialog
+        shape = AppShapes.dialog
     )
 }
 
@@ -542,8 +542,8 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
 private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit, onCreate: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        title = { Text("CREATE STASH", style = TerminalTypography.labelLarge, color = TerminalColors.white) },
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             TerminalInput(
                 value = message,
@@ -558,7 +558,7 @@ private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
         },
-        shape = TerminalShapes.dialog
+        shape = AppShapes.dialog
     )
 }
 
@@ -570,20 +570,20 @@ private fun StashesSection(stashes: List<GitStash>, onCreateStash: () -> Unit, o
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(TerminalShapes.card)
-                    .background(TerminalColors.surfaceVariant, TerminalShapes.card)
-                    .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.card)
-                    .padding(TerminalSpacing.sm), 
+                    .clip(AppShapes.card)
+                    .background(AppColors.surfaceVariant, AppShapes.card)
+                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+                    .padding(AppSpacing.sm), 
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "stash@{${stash.index}}", color = TerminalColors.statusWaiting, style = MaterialTheme.typography.labelSmall)
-                    Text(text = stash.message, color = TerminalColors.white, style = MaterialTheme.typography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(text = "stash@{${stash.index}}", color = AppColors.statusWaiting, style = AppTypography.labelSmall)
+                    Text(text = stash.message, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Row {
-                    TerminalIconButton(icon = Icons.Default.Upload, onClick = { onPop(stash.index) }, contentDescription = "Pop", iconColor = TerminalColors.statusOnline)
-                    TerminalIconButton(icon = Icons.Default.PlayArrow, onClick = { onApply(stash.index) }, contentDescription = "Apply", iconColor = TerminalColors.white)
-                    TerminalIconButton(icon = Icons.Default.Delete, onClick = { onDrop(stash.index) }, contentDescription = "Drop", iconColor = TerminalColors.error)
+                    TerminalIconButton(icon = Icons.Default.Upload, onClick = { onPop(stash.index) }, contentDescription = "Pop", iconColor = AppColors.statusOnline)
+                    TerminalIconButton(icon = Icons.Default.PlayArrow, onClick = { onApply(stash.index) }, contentDescription = "Apply", iconColor = AppColors.white)
+                    TerminalIconButton(icon = Icons.Default.Delete, onClick = { onDrop(stash.index) }, contentDescription = "Drop", iconColor = AppColors.error)
                 }
             }
         }
@@ -597,12 +597,12 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        title = { Text("ADD REMOTE", style = TerminalTypography.labelLarge, color = TerminalColors.white) },
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
                 TerminalInput(value = name, onValueChange = { name = it }, label = "REMOTE NAME", placeholder = "origin")
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 TerminalInput(value = url, onValueChange = { url = it }, label = "REMOTE URL", placeholder = "https://github.com/...")
             }
         },
@@ -612,7 +612,7 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
         },
-        shape = TerminalShapes.dialog
+        shape = AppShapes.dialog
     )
 }
 
@@ -623,12 +623,12 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        title = { Text("CREATE TAG", style = TerminalTypography.labelLarge, color = TerminalColors.white) },
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
                 TerminalInput(value = name, onValueChange = { name = it }, label = "TAG NAME", placeholder = "v1.0.0")
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 TerminalInput(value = msg, onValueChange = { msg = it }, label = "TAG MESSAGE", placeholder = "Release version 1.0.0")
             }
         },
@@ -638,7 +638,7 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
         },
-        shape = TerminalShapes.dialog
+        shape = AppShapes.dialog
     )
 }
 
@@ -646,7 +646,7 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
 private fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val commits = uiState.log?.commits ?: emptyList()
     val dateFormat = remember { SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()) }
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(TerminalSpacing.md), verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)) {
+    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
         items(items = commits, key = { it.hash }) { commit -> CommitItem(commit, dateFormat) }
         if (uiState.log?.hasMore == true) {
             item { TerminalButton(text = "LOAD MORE", onClick = { screenModel.loadLog(skip = commits.size) }, modifier = Modifier.fillMaxWidth() ) }
@@ -658,16 +658,16 @@ private fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
 private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout: () -> Unit, onMerge: () -> Unit, onRebase: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = TerminalColors.surfaceElevated,
-        title = { Text("BRANCH ACTIONS", style = TerminalTypography.labelLarge, color = TerminalColors.white) },
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
-                Text(text = branch, color = TerminalColors.statusOnline, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(vertical = TerminalSpacing.md))
-                Spacer(modifier = Modifier.height(TerminalSpacing.md))
+                Text(text = branch, color = AppColors.statusOnline, style = AppTypography.bodyMedium, modifier = Modifier.padding(vertical = AppSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
                 TerminalButton(text = "CHECKOUT", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 TerminalButton(text = "MERGE INTO CURRENT", onClick = onMerge, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 TerminalButton(text = "REBASE CURRENT ONTO", onClick = onRebase, modifier = Modifier.fillMaxWidth())
             }
         },
@@ -675,6 +675,6 @@ private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
         },
-        shape = TerminalShapes.dialog
+        shape = AppShapes.dialog
     )
 }

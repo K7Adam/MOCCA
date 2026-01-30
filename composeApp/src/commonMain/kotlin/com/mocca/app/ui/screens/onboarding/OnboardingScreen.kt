@@ -43,10 +43,10 @@ import com.mocca.app.ui.components.terminal.StatusMonitorCard
 import com.mocca.app.ui.components.terminal.TerminalButton
 import com.mocca.app.ui.components.terminal.TerminalInput
 import com.mocca.app.ui.screens.main.MainScreen
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Onboarding screen for initial connection setup.
@@ -71,13 +71,13 @@ class OnboardingScreen : Screen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
-                .padding(TerminalSpacing.screenPaddingHorizontal)
+                .background(AppColors.background)
+                .padding(AppSpacing.screenPaddingHorizontal)
         ) {
             // Top status bar
             TopStatusBar(hasSignal = state.isConnected || state.probeState == ProbeState.SUCCESS)
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.sectionGap))
+            Spacer(modifier = Modifier.height(AppSpacing.sectionGap))
             
             // Boot sequence console (kept for flavor, but modernized)
             AnimatedVisibility(
@@ -108,7 +108,7 @@ class OnboardingScreen : Screen {
                         probeMessage = state.probeMessage
                     )
                     
-                    Spacer(modifier = Modifier.height(TerminalSpacing.xxl))
+                    Spacer(modifier = Modifier.height(AppSpacing.xxl))
                     
                     // Connection form
                     ConnectionForm(
@@ -127,7 +127,7 @@ class OnboardingScreen : Screen {
             
             // Footer
             FooterInfo()
-            Spacer(modifier = Modifier.height(TerminalSpacing.screenPaddingBottom))
+            Spacer(modifier = Modifier.height(AppSpacing.screenPaddingBottom))
         }
     }
 }
@@ -140,29 +140,29 @@ private fun TopStatusBar(hasSignal: Boolean) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = TerminalSpacing.screenPaddingTop),
+            .padding(top = AppSpacing.screenPaddingTop),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = "OPENCODE_TERM",
-            color = TerminalColors.white,
-            style = TerminalTypography.headlineSmall,
+            color = AppColors.white,
+            style = AppTypography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
         
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             StatusDot(
-                color = if (hasSignal) TerminalColors.statusOnline else TerminalColors.statusOffline,
-                size = TerminalSpacing.statusDotSize
+                color = if (hasSignal) AppColors.statusOnline else AppColors.statusOffline,
+                size = AppSpacing.statusDotSize
             )
             Text(
                 text = if (hasSignal) "SIGNAL_OK" else "NO_SIGNAL",
-                color = if (hasSignal) TerminalColors.statusOnline else TerminalColors.textSecondary,
-                style = TerminalTypography.labelSmall
+                color = if (hasSignal) AppColors.statusOnline else AppColors.textSecondary,
+                style = AppTypography.labelSmall
             )
         }
     }
@@ -178,23 +178,23 @@ private fun BootSequenceConsole(
 ) {
     Column(
         modifier = modifier
-            .clip(TerminalShapes.medium)
-            .background(TerminalColors.surfaceVariant, TerminalShapes.medium)
-            .padding(TerminalSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.xs)
+            .clip(AppShapes.medium)
+            .background(AppColors.surfaceVariant, AppShapes.medium)
+            .padding(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         Text(
             text = "SYS_BOOT_SEQ_${(100..999).random()}",
-            color = TerminalColors.textTertiary,
-            style = TerminalTypography.labelSmall
+            color = AppColors.textTertiary,
+            style = AppTypography.labelSmall
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         
         logs.forEach { entry ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 Text(
                     text = when (entry.status) {
@@ -205,17 +205,17 @@ private fun BootSequenceConsole(
                         BootStatus.PENDING -> "[----]"
                     },
                     color = when (entry.status) {
-                        BootStatus.DONE -> TerminalColors.statusOnline
-                        BootStatus.ERROR -> TerminalColors.error
-                        BootStatus.WAIT -> TerminalColors.statusWaiting
-                        else -> TerminalColors.textTertiary
+                        BootStatus.DONE -> AppColors.statusOnline
+                        BootStatus.ERROR -> AppColors.error
+                        BootStatus.WAIT -> AppColors.statusWaiting
+                        else -> AppColors.textTertiary
                     },
-                    style = TerminalTypography.bodySmall
+                    style = AppTypography.bodySmall
                 )
                 Text(
                     text = entry.message,
-                    color = TerminalColors.white,
-                    style = TerminalTypography.bodySmall
+                    color = AppColors.white,
+                    style = AppTypography.bodySmall
                 )
                 if (entry.status == BootStatus.RUNNING) {
                     BlinkingCursor()
@@ -243,22 +243,22 @@ private fun ProbingStatusCard(
             Text(
                 text = probeMessage.uppercase(),
                 color = when (probeState) {
-                    ProbeState.SUCCESS -> TerminalColors.statusOnline
-                    ProbeState.FAILED -> TerminalColors.error
-                    ProbeState.PROBING -> TerminalColors.statusWaiting
-                    ProbeState.IDLE -> TerminalColors.textSecondary
+                    ProbeState.SUCCESS -> AppColors.statusOnline
+                    ProbeState.FAILED -> AppColors.error
+                    ProbeState.PROBING -> AppColors.statusWaiting
+                    ProbeState.IDLE -> AppColors.textSecondary
                 },
-                style = TerminalTypography.headlineMedium,
+                style = AppTypography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
             
             if (probeState == ProbeState.PROBING) {
-                Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "Attempting connection",
-                        color = TerminalColors.textSecondary,
-                        style = TerminalTypography.bodyMedium
+                        color = AppColors.textSecondary,
+                        style = AppTypography.bodyMedium
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     BlinkingCursor()
@@ -283,7 +283,7 @@ private fun ConnectionForm(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TerminalSpacing.lg)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
         // Server address field
         TerminalInput(
@@ -313,28 +313,28 @@ private fun ConnectionForm(
         if (connectionError != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(TerminalShapes.medium)
-                    .background(TerminalColors.alertRedDim, TerminalShapes.medium)
-                    .padding(TerminalSpacing.md)
+                    .clip(AppShapes.medium)
+                    .background(AppColors.alertRedDim, AppShapes.medium)
+                    .padding(AppSpacing.md)
             ) {
                 Text(
                     text = "!",
-                    color = TerminalColors.alertRed,
-                    style = TerminalTypography.labelLarge,
+                    color = AppColors.alertRed,
+                    style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = connectionError,
-                    color = TerminalColors.alertRed,
-                    style = TerminalTypography.bodySmall
+                    color = AppColors.alertRed,
+                    style = AppTypography.bodySmall
                 )
             }
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Connect button
         TerminalButton(
@@ -358,8 +358,8 @@ private fun FooterInfo() {
     ) {
         Text(
             text = "OPENCODE_AGENT_V1.0 // UNENCRYPTED_LOCAL_LINK",
-            color = TerminalColors.textTertiary,
-            style = TerminalTypography.labelSmall
+            color = AppColors.textTertiary,
+            style = AppTypography.labelSmall
         )
     }
 }

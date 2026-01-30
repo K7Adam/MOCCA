@@ -23,9 +23,9 @@ import com.mocca.app.ui.screens.chat.ChatScreen
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 data class WorkspaceScreen(val sessionId: String) : Screen {
 
@@ -36,7 +36,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
+                .background(AppColors.background)
         ) {
             // Content area
             Box(
@@ -76,8 +76,8 @@ private fun TerminalBottomNavBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TerminalColors.surface)
-            .border(TerminalSpacing.borderThin, TerminalColors.border, RectangleShape)
+            .background(AppColors.surface)
+            .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
     ) {
         items.forEach { item ->
             val isSelected = selectedIndex == item.index
@@ -106,16 +106,16 @@ private fun TerminalNavItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val backgroundColor = if (isSelected) TerminalColors.white else TerminalColors.surface
-    val contentColor = if (isSelected) TerminalColors.background else TerminalColors.grey
-    val borderColor = if (isSelected) TerminalColors.white else TerminalColors.border
+    val backgroundColor = if (isSelected) AppColors.white else AppColors.surface
+    val contentColor = if (isSelected) AppColors.background else AppColors.grey
+    val borderColor = if (isSelected) AppColors.white else AppColors.border
     
     Column(
         modifier = modifier
             .background(backgroundColor, RectangleShape)
-            .border(TerminalSpacing.borderThin, borderColor, RectangleShape)
+            .border(AppSpacing.borderThin, borderColor, RectangleShape)
             .clickable(onClick = onClick)
-            .padding(vertical = TerminalSpacing.sm),
+            .padding(vertical = AppSpacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -125,10 +125,10 @@ private fun TerminalNavItem(
             tint = contentColor,
             modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.height(TerminalSpacing.xs))
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = label,
-            style = TerminalTypography.labelSmall,
+            style = AppTypography.labelSmall,
             color = contentColor,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )

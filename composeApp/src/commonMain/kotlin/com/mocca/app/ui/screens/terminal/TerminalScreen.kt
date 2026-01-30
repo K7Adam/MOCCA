@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,9 +24,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.terminal.CommandLineInput
 import com.mocca.app.ui.components.terminal.TerminalHeader
 import com.mocca.app.ui.components.terminal.TerminalIconButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.util.parseAnsi
 
 class TerminalScreen : Screen {
@@ -72,8 +71,8 @@ class TerminalScreen : Screen {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(TerminalColors.background)
-                .padding(TerminalSpacing.lg)
+                .background(AppColors.background)
+                .padding(AppSpacing.lg)
         ) {
             // Header
             Row(
@@ -85,21 +84,21 @@ class TerminalScreen : Screen {
                     TerminalIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = TerminalColors.white
+                        iconColor = AppColors.white
                     )
-                    Spacer(modifier = Modifier.width(TerminalSpacing.md))
+                    Spacer(modifier = Modifier.width(AppSpacing.md))
                     TerminalHeader(text = "REMOTE_TERMINAL", showBrackets = true)
                 }
                 
                 // Show current terminal size
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     Text(
                         text = "${state.currentCols}x${state.currentRows}",
-                        style = TerminalTypography.code.copy(fontSize = 10.sp),
-                        color = TerminalColors.grey
+                        style = AppTypography.code.copy(fontSize = 10.sp),
+                        color = AppColors.grey
                     )
                     
                     TerminalIconButton(
@@ -110,15 +109,15 @@ class TerminalScreen : Screen {
                 }
             }
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             
             // Terminal Output with resize tracking
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(TerminalColors.surface)
-                    .padding(TerminalSpacing.md)
+                    .background(AppColors.surface)
+                    .padding(AppSpacing.md)
                     .onSizeChanged { size ->
                         containerSize = size
                     }
@@ -130,19 +129,18 @@ class TerminalScreen : Screen {
                 
                 // Parse ANSI escape sequences for colored output
                 val parsedOutput = remember(state.output) {
-                    state.output.parseAnsi(TerminalColors.statusOnline)
+                    state.output.parseAnsi(AppColors.statusOnline)
                 }
                 
                 SelectionContainer {
                     Text(
                         text = parsedOutput,
-                        style = TerminalTypography.code.copy(fontSize = 12.sp, lineHeight = 14.sp),
-                        fontFamily = FontFamily.Monospace
+                        style = AppTypography.code.copy(fontSize = 12.sp, lineHeight = 14.sp)
                     )
                 }
             }
             
-            Spacer(modifier = Modifier.height(TerminalSpacing.md))
+            Spacer(modifier = Modifier.height(AppSpacing.md))
             
             // ═══════════════════════════════════════════════════════════════════════════════
             // COMMAND HISTORY (Priority 5.3) - Input with history navigation

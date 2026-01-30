@@ -54,10 +54,10 @@ import com.mocca.app.ui.components.terminal.StatusSquare
 import com.mocca.app.ui.components.terminal.TerminalHeader
 import com.mocca.app.ui.components.terminal.TerminalSessionCard
 import com.mocca.app.ui.components.terminal.TerminalTextButton
-import com.mocca.app.ui.theme.TerminalColors
-import com.mocca.app.ui.theme.TerminalShapes
-import com.mocca.app.ui.theme.TerminalSpacing
-import com.mocca.app.ui.theme.TerminalTypography
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Left swipe panel: Context info + Session history.
@@ -92,13 +92,13 @@ fun ContextHistoryPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(TerminalColors.background)
-            .padding(TerminalSpacing.lg)
+            .background(AppColors.background)
+            .padding(AppSpacing.lg)
     ) {
         // Agent header
         AgentHeader()
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.lg))
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
         
         // Context info section
         ContextInfoContainer(
@@ -111,7 +111,7 @@ fun ContextHistoryPanel(
             maxTokens = maxTokens
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.xl))
+        Spacer(modifier = Modifier.height(AppSpacing.xl))
         
         // Conversation history section (use grouped if available)
         ConversationHistorySection(
@@ -139,21 +139,21 @@ fun ContextHistoryPanel(
 private fun AgentHeader() {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         // Terminal/monitor icon (rounded)
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .clip(TerminalShapes.medium)
-                .background(TerminalColors.surfaceContainer, TerminalShapes.medium)
-                .border(TerminalSpacing.borderThin, TerminalColors.border, TerminalShapes.medium),
+                .clip(AppShapes.medium)
+                .background(AppColors.surfaceContainer, AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Computer,
                 contentDescription = null,
-                tint = TerminalColors.white,
+                tint = AppColors.white,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -161,14 +161,14 @@ private fun AgentHeader() {
         Column {
             Text(
                 text = "AGENT_01",
-                color = TerminalColors.white,
-                style = TerminalTypography.headlineSmall,
+                color = AppColors.white,
+                style = AppTypography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = "v2.4.0-STABLE",
-                color = TerminalColors.textTertiary,
-                style = TerminalTypography.bodySmall
+                color = AppColors.textTertiary,
+                style = AppTypography.bodySmall
             )
         }
     }
@@ -207,8 +207,8 @@ private fun ConversationHistorySection(
         ) {
             Text(
                 text = "CONVERSATION HISTORY",
-                color = TerminalColors.textSecondary,
-                style = TerminalTypography.labelMedium,
+                color = AppColors.textSecondary,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
             
@@ -221,7 +221,7 @@ private fun ConversationHistorySection(
             }
         }
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
         
         // New session button with loading state
         NewSessionButton(
@@ -229,7 +229,7 @@ private fun ConversationHistorySection(
             isLoading = isCreatingSession
         )
         
-        Spacer(modifier = Modifier.height(TerminalSpacing.md))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Session list with pull-to-refresh
         PullToRefreshBox(
@@ -241,7 +241,7 @@ private fun ConversationHistorySection(
                 // Grouped session view
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(TerminalSpacing.md)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(
                         items = sessionGroups,
@@ -264,7 +264,7 @@ private fun ConversationHistorySection(
                 // Flat session view (fallback)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(TerminalSpacing.sm)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     items(
                         items = sessions,
@@ -302,8 +302,8 @@ private fun ConversationHistorySection(
                                         ) {
                                             Text(
                                                 text = "#${formatSessionId(session.id)}",
-                                                color = if (isActive) TerminalColors.white else TerminalColors.textSecondary,
-                                                style = TerminalTypography.labelSmall,
+                                                color = if (isActive) AppColors.white else AppColors.textSecondary,
+                                                style = AppTypography.labelSmall,
                                                 fontWeight = FontWeight.Bold
                                             )
                                             
@@ -322,13 +322,13 @@ private fun ConversationHistorySection(
                                                     CircularProgressIndicator(
                                                         modifier = Modifier.size(12.dp),
                                                         strokeWidth = 2.dp,
-                                                        color = TerminalColors.statusWaiting
+                                                        color = AppColors.statusWaiting
                                                     )
                                                 } else {
                                                     Text(
                                                         text = formatTimeAgo(session.updatedAt),
-                                                        color = TerminalColors.textTertiary,
-                                                        style = TerminalTypography.labelSmall
+                                                        color = AppColors.textTertiary,
+                                                        style = AppTypography.labelSmall
                                                     )
                                                 }
                                             }
@@ -338,8 +338,8 @@ private fun ConversationHistorySection(
                                         
                                         Text(
                                             text = session.title ?: "Untitled Session",
-                                            color = if (isActive) TerminalColors.white else TerminalColors.textTertiary,
-                                            style = TerminalTypography.bodySmall,
+                                            color = if (isActive) AppColors.white else AppColors.textTertiary,
+                                            style = AppTypography.bodySmall,
                                             maxLines = 2,
                                             overflow = TextOverflow.Ellipsis
                                         )
@@ -364,7 +364,7 @@ private fun NewSessionButton(
     isLoading: Boolean = false
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (isLoading) TerminalColors.statusWaiting else TerminalColors.border,
+        targetValue = if (isLoading) AppColors.statusWaiting else AppColors.border,
         animationSpec = tween(150),
         label = "borderColor"
     )
@@ -372,16 +372,16 @@ private fun NewSessionButton(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(TerminalShapes.card)
-            .border(TerminalSpacing.borderThin, borderColor, TerminalShapes.card)
-            .background(TerminalColors.surfaceContainer, TerminalShapes.card)
+            .clip(AppShapes.card)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.card)
             .clickable(
                 enabled = !isLoading,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = TerminalColors.white.copy(alpha = 0.1f)),
+                indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
                 onClick = onClick
             )
-            .padding(TerminalSpacing.md),
+            .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center
     ) {
@@ -389,27 +389,27 @@ private fun NewSessionButton(
             CircularProgressIndicator(
                 modifier = Modifier.size(16.dp),
                 strokeWidth = 2.dp,
-                color = TerminalColors.statusWaiting
+                color = AppColors.statusWaiting
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "CREATING...",
-                color = TerminalColors.statusWaiting,
-                style = TerminalTypography.labelMedium,
+                color = AppColors.statusWaiting,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
         } else {
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "New session",
-                tint = TerminalColors.accentGreen,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(TerminalSpacing.sm))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "NEW SESSION",
-                color = TerminalColors.white,
-                style = TerminalTypography.labelMedium,
+                color = AppColors.white,
+                style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
         }

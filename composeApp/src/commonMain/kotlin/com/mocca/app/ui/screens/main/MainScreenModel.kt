@@ -7,6 +7,7 @@ import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.data.repository.UpdateNotifier
 import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.Message
@@ -76,6 +77,7 @@ data class MainScreenState(
     val isUpdateAvailable: Boolean = false,
     val isDownloadingUpdate: Boolean = false,
     val downloadProgress: Float = 0f,
+    val updateError: String? = null,
     
     // Session grouping and real-time status
     val sessionGroups: List<SessionGroup> = emptyList(),
@@ -101,7 +103,8 @@ class MainScreenModel(
     private val eventStreamRepository: EventStreamRepository,
     private val appConnectionManager: AppConnectionManager,
     private val mcpRepository: McpRepository,
-    private val updateRepository: UpdateRepository
+    private val updateRepository: UpdateRepository,
+    private val updateNotifier: UpdateNotifier
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
@@ -112,10 +115,33 @@ class MainScreenModel(
         observeConnectionState()
         observeMcpServers()
         observeSessionEvents() // NEW: Observe SSE events for real-time session status
+        observeUpdateNotifications() // NEW: Observe manual update checks from other screens
         loadSessions()
         checkForUpdates()
         if (initialSessionId != null) {
             loadMessages(initialSessionId)
+        }
+    }
+
+    /**
+     * Observe update notifications from other screens (e.g., Settings).
+     * This allows manual update checks to trigger the update dialog.
+     */
+    private fun observeUpdateNotifications() {
+        screenModelScope.launch {
+            updateNotifier.pendingUpdate.collect { updateInfo ->
+                if (updateInfo != null) {
+                    _state.update {
+                        it.copy(
+                            updateInfo = updateInfo,
+                            isUpdateAvailable = true,
+                            updateError = null
+                        )
+                    }
+                    // Clear the notification so it doesn't trigger again
+                    updateNotifier.clearNotification()
+                }
+            }
         }
     }
     
@@ -145,26 +171,78 @@ class MainScreenModel(
 
     fun startUpdate() {
         val info = _state.value.updateInfo ?: return
-        
+
         screenModelScope.launch {
-            _state.update { it.copy(isDownloadingUpdate = true, downloadProgress = 0f) }
-            
+            _state.update {
+                it.copy(
+                    isDownloadingUpdate = true,
+                    downloadProgress = 0f,
+                    updateError = null
+                )
+            }
+
             try {
                 updateRepository.downloadAndInstall(info, "mocca-update.apk")
                     .collect { progress ->
                         _state.update { it.copy(downloadProgress = progress) }
                     }
                 // Install triggered automatically by repository at end of flow
+                // Dismiss dialog after successful download/install trigger
+                _state.update { it.copy(isUpdateAvailable = false, isDownloadingUpdate = false) }
             } catch (e: Exception) {
-                _state.update { it.copy(isDownloadingUpdate = false, error = "Update failed: ${e.message}") }
-            } finally {
-                _state.update { it.copy(isDownloadingUpdate = false) }
+                Napier.e("Update download failed", e, "MainScreenModel")
+                _state.update {
+                    it.copy(
+                        isDownloadingUpdate = false,
+                        updateError = e.message ?: "Download failed"
+                    )
+                }
             }
         }
     }
-    
+
+    fun retryUpdate() {
+        // Clear error and retry download
+        _state.update { it.copy(updateError = null) }
+        startUpdate()
+    }
+
     fun dismissUpdate() {
-        _state.update { it.copy(isUpdateAvailable = false) }
+        _state.update {
+            it.copy(
+                isUpdateAvailable = false,
+                updateError = null
+            )
+        }
+    }
+
+    /**
+     * Trigger update check and show dialog if update available.
+     * Used for manual update checks (e.g., from Settings screen).
+     */
+    fun checkForUpdatesManual() {
+        screenModelScope.launch {
+            try {
+                updateRepository.checkForUpdate().fold(
+                    onSuccess = { updateInfo ->
+                        if (updateInfo != null) {
+                            _state.update {
+                                it.copy(
+                                    updateInfo = updateInfo,
+                                    isUpdateAvailable = true,
+                                    updateError = null
+                                )
+                            }
+                        }
+                    },
+                    onFailure = { e ->
+                        Napier.w("Manual update check failed", e)
+                    }
+                )
+            } catch (e: Exception) {
+                Napier.e("Error during manual update check", e)
+            }
+        }
     }
 
     private fun observeAppConnectionState() {

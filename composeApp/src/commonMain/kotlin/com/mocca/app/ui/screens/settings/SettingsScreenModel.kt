@@ -8,6 +8,7 @@ import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.data.repository.SettingsRepository
+import com.mocca.app.data.repository.UpdateNotifier
 import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
@@ -59,7 +60,8 @@ class SettingsScreenModel(
     private val appConnectionManager: AppConnectionManager,
     private val updateRepository: UpdateRepository,
     private val settingsRepository: SettingsRepository,
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val updateNotifier: UpdateNotifier
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -237,33 +239,34 @@ class SettingsScreenModel(
     fun checkForUpdates() {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, message = "Checking for updates...")
-            
+
             updateRepository.checkForUpdate().fold(
                 onSuccess = { updateInfo ->
                     if (updateInfo != null) {
+                        // Notify global update notifier so MainScreen shows the dialog
+                        updateNotifier.notifyUpdateAvailable(updateInfo)
                         _state.value = _state.value.copy(
                             isLoading = false,
-                            message = "Update available: ${updateInfo.version}"
+                            message = "Update available: ${updateInfo.version}. Return to main screen to install."
                         )
-                        // Note: MainScreen should observe updateInfo globally or we trigger it via repository
-                        // For now, this just notifies the user in settings.
-                        // Ideally, we'd trigger the global update dialog.
-                        // We can't easily trigger MainScreen dialog from here without shared state.
-                        // Let's assume the user sees the message and goes back to main screen where checking happens automatically on start?
-                        // No, let's make it better. The repository check itself doesn't trigger UI.
-                        // We need a way to tell the app an update is ready.
-                        // But for manual check, showing a toast/message is fine for now.
                     } else {
                         _state.value = _state.value.copy(
                             isLoading = false,
-                            message = "No updates available"
+                            message = "No updates available - you have the latest version"
                         )
                     }
                 },
                 onFailure = { e ->
+                    val errorMsg = e.message ?: "Unknown error"
+                    val friendlyMsg = when {
+                        errorMsg.contains("401") -> "Authentication failed. Check your GitHub token."
+                        errorMsg.contains("404") -> "Repository not found. Check repository settings."
+                        errorMsg.contains("No releases") -> "No releases found in repository."
+                        else -> "Update check failed: $errorMsg"
+                    }
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        message = "Update check failed: ${e.message}"
+                        message = friendlyMsg
                     )
                 }
             )
