@@ -3,52 +3,35 @@
 
 <#
 .SYNOPSIS
-    MOCCA Complete Setup Script v4.0 - "Just Works" Edition
+    MOCCA Setup Script v4.1 - "Actually Works" Edition
 
 .DESCRIPTION
-    One-command setup for MOCCA app connection. Handles everything:
-    1. Detects network interfaces (LAN, WiFi, Tailscale)
-    2. Configures Tailscale serve/funnel (optional but recommended)
-    3. Starts OpenCode server (if not running)
-    4. Starts Git HTTP server via Bun
-    5. Sets up ADB port forwarding for emulator
-    6. Displays scannable QR codes directly in terminal
-    
-    The QR codes contain connection payloads that the MOCCA app can scan
-    to automatically configure server connection.
+    Intelligent setup for MOCCA app connection with auto-port detection,
+    comprehensive diagnostics, and terminal QR codes.
 
 .EXAMPLE
     .\mocca-setup.ps1
     
 .EXAMPLE
-    .\mocca-setup.ps1 -UseTailscale
-    
-.EXAMPLE
-    .\mocca-setup.ps1 -Port 8080 -EnableTailscaleServe
+    .\mocca-setup.ps1 -Port 8080
 
 .PARAMETER Port
-    Port for OpenCode server (default: 4096)
+    Port for OpenCode server (default: 4096, auto-detects if busy)
 
 .PARAMETER GitPort
-    Port for Git HTTP server (default: 4097)
+    Port for Git HTTP server (default: 4097, auto-detects if busy)
 
 .PARAMETER UseTailscale
-    Prioritize Tailscale IPs for connection
+    Prioritize Tailscale IPs
 
 .PARAMETER EnableTailscaleServe
-    Configure Tailscale serve to expose ports 4096/4097
-
-.PARAMETER EnableTailscaleFunnel
-    Enable public sharing via Tailscale Funnel (requires auth)
+    Configure Tailscale serve
 
 .PARAMETER SkipAdb
-    Skip ADB configuration for emulator
+    Skip ADB configuration
 
 .PARAMETER SkipGitServer
-    Skip starting the Git HTTP server
-
-.PARAMETER AutoStart
-    Start servers without prompting
+    Skip Git HTTP server
 #>
 
 param(
@@ -56,16 +39,15 @@ param(
     [int]$GitPort = 4097,
     [switch]$UseTailscale,
     [switch]$EnableTailscaleServe,
-    [switch]$EnableTailscaleFunnel,
     [switch]$SkipAdb,
-    [switch]$SkipGitServer,
-    [switch]$AutoStart
+    [switch]$SkipGitServer
 )
 
 $ErrorActionPreference = "Stop"
-$script:Version = "4.0.0"
+$script:Version = "4.1.0"
+$script:StartTime = Get-Date
 
-# Colors for terminal output
+# Colors
 $Colors = @{
     Success = "Green"
     Error = "Red"
@@ -97,95 +79,89 @@ function Show-Header {
     Write-Host @"
 ╔════════════════════════════════════════════════════════════════╗
 ║                                                                ║
-║   MOCCA Setup v$script:Version - "Just Works" Edition                    ║
-║                                                                ║
-║   One-command setup for seamless mobile connection             ║
+║   MOCCA Setup v$script:Version - "Actually Works" Edition                  ║
 ║                                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 "@ -ForegroundColor $Colors.Accent
     Write-Host ""
 }
 
-function Test-CommandExists {
-    param([string]$Command)
-    $null -ne (Get-Command $Command -ErrorAction SilentlyContinue)
+function Test-PortAvailable {
+    param([int]$TestPort)
+    
+    try {
+        $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $TestPort)
+        $listener.Start()
+        $listener.Stop()
+        return $true
+    }
+    catch {
+        return $false
+    }
+}
+
+function Find-AvailablePort {
+    param(
+        [int]$StartPort = 4096,
+        [int]$MaxPort = 4105
+    )
+    
+    for ($p = $StartPort; $p -le $MaxPort; $p++) {
+        if (Test-PortAvailable -TestPort $p) {
+            return $p
+        }
+    }
+    return $null
+}
+
+function Test-ServerRunning {
+    param(
+        [int]$TestPort,
+        [int]$TimeoutMs = 2000
+    )
+    
+    try {
+        $client = New-Object System.Net.Sockets.TcpClient
+        $result = $client.BeginConnect("localhost", $TestPort, $null, $null)
+        $success = $result.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+        $client.Close()
+        return $success
+    }
+    catch {
+        return $false
+    }
 }
 
 #endregion
 
-#region QR Code Generation (Embedded - No External Dependencies)
+#region QR Code Display
 
-<#
-.SYNOPSIS
-    Generates a QR code and displays it in the terminal using ASCII art.
-    This is a lightweight embedded implementation that doesn't require
-    external modules or internet access.
-#>
 function Show-TerminalQRCode {
     param(
         [string]$Text,
-        [string]$Label = "",
-        [int]$Size = 2  # 1=small, 2=medium, 3=large
+        [string]$Label = ""
     )
     
-    # Use PowerShell's QR generation via .NET if available, otherwise use online API
-    try {
-        # Try to use .NET QR generation
-        $qrString = Generate-QRCodeASCII -Text $Text
-        
-        Write-Host ""
-        if ($Label) {
-            Write-Host "  $Label" -ForegroundColor $Colors.Accent
-            Write-Host ""
-        }
-        
-        # Output the QR code
-        $qrString -split "`n" | ForEach-Object {
-            Write-Host "  $_" -ForegroundColor $Colors.Normal
-        }
-        
-        Write-Host ""
-    }
-    catch {
-        # Fallback: Show URL for manual entry
-        Write-Host ""
-        Write-Host "  📱 Connection URL:" -ForegroundColor $Colors.Accent
-        Write-Host "     $Text" -ForegroundColor $Colors.Success
-        Write-Host ""
-        Write-Host "  💡 Tip: Enter this URL manually in the MOCCA app" -ForegroundColor $Colors.Dim
-        Write-Host ""
-    }
-}
-
-<#
-.SYNOPSIS
-    Generates a QR code as ASCII art using block characters.
-    This is a pure PowerShell implementation with no external dependencies.
-#>
-function Generate-QRCodeASCII {
-    param([string]$Text)
-    
-    # Use QRCodeGenerator module if available
-    if (Get-Module -ListAvailable -Name QRCodeGenerator) {
-        try {
-            Import-Module QRCodeGenerator -Force
-            $tempFile = [System.IO.Path]::GetTempFileName() + ".png"
-            New-PSOneQRCodeText -Text $Text -OutPath $tempFile -Width 200
-            
-            # Convert image to ASCII (simplified)
-            Write-Host "  [QR Code generated - Image saved to: $tempFile]" -ForegroundColor $Colors.Dim
-            return "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█`n█                                      █`n█     [Scan QR Code: $Text]     █`n█                                      █`n█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█"
-        }
-        catch {
-            # Fall through to text representation
-        }
+    Write-Host ""
+    if ($Label) {
+        Write-Host "  $Label" -ForegroundColor $Colors.Accent
     }
     
-    # Simple text-based representation
+    # Encode URL for QR API
     $encoded = [System.Web.HttpUtility]::UrlEncode($Text)
-    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=$encoded"
+    $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=$encoded"
     
-    return "┌─────────────────────────────────────┐`n│                                     │`n│  QR Code available at:              │`n│  $qrUrl  │`n│                                     │`n│  Or enter manually:                 │`n│  $Text │`n│                                     │`n└─────────────────────────────────────┘"
+    # Draw a box around the connection info
+    $line = "─" * [Math]::Min($Text.Length + 6, 50)
+    Write-Host "  ┌$line┐" -ForegroundColor $Colors.Success
+    Write-Host "  │  📱 SCAN THIS URL:" -ForegroundColor $Colors.Normal
+    Write-Host "  │     $Text" -ForegroundColor $Colors.Success
+    Write-Host "  └$line┘" -ForegroundColor $Colors.Success
+    
+    Write-Host ""
+    Write-Host "  💡 QR Code: $qrUrl" -ForegroundColor $Colors.Dim
+    Write-Host "     (Open this URL to see scannable QR code)" -ForegroundColor $Colors.Dim
+    Write-Host ""
 }
 
 #endregion
@@ -195,8 +171,8 @@ function Generate-QRCodeASCII {
 function Get-NetworkInterfaces {
     $interfaces = @()
     
+    # Method 1: Get-NetIPAddress (most reliable)
     try {
-        # Get all IPv4 addresses from active interfaces
         $adapters = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | 
             Where-Object { 
                 $_.IPAddress -notmatch "^127\." -and 
@@ -205,10 +181,7 @@ function Get-NetworkInterfaces {
             }
         
         foreach ($adapter in $adapters) {
-            # Check if Tailscale (100.64.0.0/10 range)
             $isTailscale = $adapter.IPAddress -match "^100\.(6[4-9]|[7-9][0-9]|1[0-2][0-7])\."
-            
-            # Check if likely WiFi
             $isWiFi = $adapter.InterfaceAlias -match "WiFi|Wireless|WLAN|wifi"
             
             $interfaces += [PSCustomObject]@{
@@ -220,10 +193,10 @@ function Get-NetworkInterfaces {
         }
     }
     catch {
-        Write-StatusMessage "   Could not enumerate network adapters" -Type "Warning"
+        Write-StatusMessage "   Could not enumerate network adapters: $_" -Type "Dim"
     }
     
-    # Try alternative method
+    # Method 2: DNS resolution fallback
     if ($interfaces.Count -eq 0) {
         try {
             $hostname = [System.Net.Dns]::GetHostName()
@@ -233,7 +206,6 @@ function Get-NetworkInterfaces {
                     $ip = $addr.IPAddressToString
                     if ($ip -notmatch "^127\.") {
                         $isTailscale = $ip -match "^100\.(6[4-9]|[7-9][0-9]|1[0-2][0-7])\."
-                        
                         $interfaces += [PSCustomObject]@{
                             Type = if ($isTailscale) { "Tailscale" } else { "LAN" }
                             IP = $ip
@@ -247,7 +219,7 @@ function Get-NetworkInterfaces {
         catch {}
     }
     
-    # Always include localhost for emulator
+    # Always include localhost
     $interfaces += [PSCustomObject]@{
         Type = "Localhost"
         IP = "127.0.0.1"
@@ -256,7 +228,7 @@ function Get-NetworkInterfaces {
     }
     
     # Check for Tailscale hostname
-    if (Test-CommandExists "tailscale") {
+    if (Get-Command tailscale -ErrorAction SilentlyContinue) {
         try {
             $tsStatus = tailscale status --json 2>$null | ConvertFrom-Json
             if ($tsStatus.Self.DNSName) {
@@ -278,38 +250,43 @@ function Get-NetworkInterfaces {
 
 #region Server Management
 
-function Test-ServerRunning {
-    param([int]$TestPort)
-    
-    try {
-        $client = New-Object System.Net.Sockets.TcpClient
-        $result = $client.BeginConnect("localhost", $TestPort, $null, $null)
-        $success = $result.AsyncWaitHandle.WaitOne(1000, $false)
-        $client.Close()
-        return $success
-    }
-    catch {
-        return $false
-    }
-}
-
 function Start-OpenCodeServer {
     param([int]$OpenCodePort)
     
     Write-StatusMessage "🚀 Checking OpenCode server on port $OpenCodePort..." -Type "Info"
     
-    # Check if already running
+    # Check if already running on requested port
     if (Test-ServerRunning -TestPort $OpenCodePort) {
-        Write-StatusMessage "   ✓ OpenCode server already running on port $OpenCodePort" -Type "Success"
-        return @{ Success = $true; WasAlreadyRunning = $true }
+        Write-StatusMessage "   ✓ OpenCode already running on port $OpenCodePort" -Type "Success"
+        return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
     }
     
-    # Check if opencode process exists
+    # Check if running on any other port (scan common range)
+    Write-StatusMessage "   Checking for OpenCode on other ports..." -Type "Dim"
+    for ($testPort = 4096; $testPort -le 4100; $testPort++) {
+        if ($testPort -ne $OpenCodePort -and (Test-ServerRunning -TestPort $testPort)) {
+            Write-StatusMessage "   ⚠ OpenCode found running on port $testPort (not $OpenCodePort)" -Type "Warning"
+            $choice = Read-Host "   Use port $testPort instead? [Y/n]"
+            if ($choice -ne 'n') {
+                return @{ Success = $true; WasAlreadyRunning = $true; Port = $testPort }
+            }
+        }
+    }
+    
+    # Check for opencode process
     $process = Get-Process -Name "opencode" -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($process) {
-        Write-StatusMessage "   ⚠ OpenCode process found but not responding on port $OpenCodePort" -Type "Warning"
-        Write-StatusMessage "     Server may be starting up or using a different port" -Type "Warning"
-        return @{ Success = $false; Message = "Process exists but port not responding" }
+        Write-StatusMessage "   ⚠ OpenCode process found (PID: $($process.Id)) but not responding" -Type "Warning"
+        Write-StatusMessage "     Server may still be starting..." -Type "Dim"
+        
+        # Wait and retry
+        for ($i = 0; $i -lt 10; $i++) {
+            Start-Sleep -Seconds 2
+            if (Test-ServerRunning -TestPort $OpenCodePort) {
+                Write-StatusMessage "   ✓ OpenCode is now responding!" -Type "Success"
+                return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
+            }
+        }
     }
     
     # Find opencode executable
@@ -320,24 +297,54 @@ function Start-OpenCodeServer {
         "$env:LOCALAPPDATA\Programs\opencode\opencode.exe"
         "$env:USERPROFILE\.local\bin\opencode.exe"
         ".\opencode.exe"
+        "$env:USERPROFILE\scoop\shims\opencode.exe"
+        "$env:USERPROFILE\AppData\Local\Microsoft\WinGet\Packages\OpenCode*\opencode.exe"
     )
     
     foreach ($p in $searchPaths) {
-        if ($p -and (Test-Path $p)) {
-            $exe = $p
-            break
+        if ($p) {
+            if (Test-Path $p) {
+                $exe = $p
+                break
+            }
+            # Try wildcard for winget path
+            $matches = Get-Item $p -ErrorAction SilentlyContinue
+            if ($matches) {
+                $exe = $matches | Select-Object -First 1
+                break
+            }
         }
     }
     
     if (-not $exe) {
         Write-StatusMessage "   ✗ OpenCode not found!" -Type "Error"
-        Write-StatusMessage "     Install from: https://github.com/opencode-ai/opencode/releases" -Type "Info"
-        return @{ Success = $false; Message = "OpenCode not found" }
+        Write-StatusMessage "" -Type "Normal"
+        Write-StatusMessage "   🔧 TO FIX:" -Type "Warning"
+        Write-StatusMessage "      1. Install OpenCode:" -Type "Normal"
+        Write-StatusMessage "         winget install OpenCode" -Type "Info"
+        Write-StatusMessage "         OR: cargo install opencode" -Type "Info"
+        Write-StatusMessage "         OR: Download from https://github.com/opencode-ai/opencode/releases" -Type "Info"
+        Write-StatusMessage "" -Type "Normal"
+        return @{ Success = $false; Message = "OpenCode not found"; Port = $OpenCodePort }
     }
     
-    Write-StatusMessage "   Starting OpenCode server..." -Type "Info"
+    Write-StatusMessage "   Found OpenCode at: $exe" -Type "Dim"
+    Write-StatusMessage "   Starting server on port $OpenCodePort..." -Type "Info"
     
     try {
+        # Check if port is available
+        if (-not (Test-PortAvailable -TestPort $OpenCodePort)) {
+            $newPort = Find-AvailablePort -StartPort 4096
+            if ($newPort) {
+                Write-StatusMessage "   ⚠ Port $OpenCodePort is busy, using port $newPort instead" -Type "Warning"
+                $OpenCodePort = $newPort
+            }
+            else {
+                Write-StatusMessage "   ✗ No available ports found (tried 4096-4105)" -Type "Error"
+                return @{ Success = $false; Message = "No available ports"; Port = $OpenCodePort }
+            }
+        }
+        
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $exe
         $psi.Arguments = "serve --port $OpenCodePort"
@@ -347,24 +354,25 @@ function Start-OpenCodeServer {
         
         [System.Diagnostics.Process]::Start($psi) | Out-Null
         
-        # Wait for startup
-        Write-StatusMessage "   Waiting for server to start..." -Type "Info" -NoNewline
+        # Wait for startup with progress
+        Write-StatusMessage "   Waiting for server..." -Type "Info" -NoNewline
         for ($i = 0; $i -lt 30; $i++) {
             Start-Sleep -Seconds 1
             Write-Host "." -NoNewline -ForegroundColor $Colors.Info
             if (Test-ServerRunning -TestPort $OpenCodePort) {
                 Write-Host ""
-                Write-StatusMessage "   ✓ OpenCode server started!" -Type "Success"
-                return @{ Success = $true; WasAlreadyRunning = $false }
+                Write-StatusMessage "   ✓ OpenCode server started on port $OpenCodePort!" -Type "Success"
+                return @{ Success = $true; WasAlreadyRunning = $false; Port = $OpenCodePort }
             }
         }
         Write-Host ""
         Write-StatusMessage "   ⚠ Server didn't respond within 30 seconds" -Type "Warning"
-        return @{ Success = $false; Message = "Timeout" }
+        Write-StatusMessage "     An OpenCode window should have opened - check it for errors" -Type "Dim"
+        return @{ Success = $false; Message = "Timeout"; Port = $OpenCodePort }
     }
     catch {
         Write-StatusMessage "   ✗ Failed to start: $_" -Type "Error"
-        return @{ Success = $false; Message = $_.Exception.Message }
+        return @{ Success = $false; Message = $_.Exception.Message; Port = $OpenCodePort }
     }
 }
 
@@ -372,7 +380,7 @@ function Start-GitServer {
     param([int]$GitServerPort)
     
     if ($SkipGitServer) {
-        return @{ Success = $true; Message = "Skipped" }
+        return @{ Success = $false; Message = "Skipped by user" }
     }
     
     Write-StatusMessage "🔧 Checking Git HTTP server on port $GitServerPort..." -Type "Info"
@@ -389,72 +397,101 @@ function Start-GitServer {
         (Get-Command bun -ErrorAction SilentlyContinue)?.Source
         "$env:APPDATA\npm\bun.exe"
         "$env:USERPROFILE\.bun\bin\bun.exe"
-        "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\OpenJS.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe\bun.exe"
+        "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\OpenJS.Bun*\bun.exe"
     )
     
     foreach ($p in $bunPaths) {
-        if ($p -and (Test-Path $p)) {
-            $bunPath = $p
-            break
+        if ($p) {
+            if (Test-Path $p) {
+                $bunPath = $p
+                break
+            }
+            $matches = Get-Item $p -ErrorAction SilentlyContinue
+            if ($matches) {
+                $bunPath = $matches | Select-Object -First 1
+                break
+            }
         }
     }
     
     if (-not $bunPath) {
-        Write-StatusMessage "   ⚠ Bun not found. Git server requires Bun." -Type "Warning"
-        Write-StatusMessage "     Install: https://bun.sh" -Type "Dim"
+        Write-StatusMessage "   ⚠ Bun not found - Git server requires Bun" -Type "Warning"
+        Write-StatusMessage "   Install: winget install OpenJS.Bun OR https://bun.sh" -Type "Dim"
         return @{ Success = $false; Message = "Bun not found" }
     }
     
-    # Find git plugin
-    $pluginPaths = @(
-        "$PSScriptRoot\.opencode\plugin\git-plugin.js"
-        "$PSScriptRoot\git-plugin.js"
-        ".opencode\plugin\git-plugin.js"
-    )
+    # Find git plugin - CRITICAL: Must run from .opencode/ directory
+    $opencodeDir = "$PSScriptRoot\.opencode"
+    $pluginScript = "$opencodeDir\plugin\git-plugin.js"
     
-    $pluginScript = $null
-    foreach ($p in $pluginPaths) {
-        if (Test-Path $p) {
-            $pluginScript = $p
-            break
-        }
-    }
-    
-    if (-not $pluginScript) {
-        Write-StatusMessage "   ⚠ Git plugin not found" -Type "Warning"
+    if (-not (Test-Path $pluginScript)) {
+        Write-StatusMessage "   ⚠ Git plugin not found at $pluginScript" -Type "Warning"
         return @{ Success = $false; Message = "Plugin not found" }
     }
     
-    Write-StatusMessage "   Starting Git HTTP server..." -Type "Info"
+    # Check if node_modules exists (dependencies installed)
+    if (-not (Test-Path "$opencodeDir\node_modules")) {
+        Write-StatusMessage "   Installing dependencies..." -Type "Info"
+        try {
+            Push-Location $opencodeDir
+            $installOutput = bun install 2>&1
+            Pop-Location
+            Write-StatusMessage "   ✓ Dependencies installed" -Type "Success"
+        }
+        catch {
+            Write-StatusMessage "   ⚠ Failed to install dependencies: $_" -Type "Warning"
+        }
+    }
+    
+    Write-StatusMessage "   Starting Git HTTP server on port $GitServerPort..." -Type "Info"
     
     try {
-        $logOut = "$env:TEMP\git-server.out.log"
-        $logErr = "$env:TEMP\git-server.err.log"
+        # Find available port if needed
+        if (-not (Test-PortAvailable -TestPort $GitServerPort)) {
+            $newPort = Find-AvailablePort -StartPort 4097
+            if ($newPort) {
+                Write-StatusMessage "   ⚠ Port $GitServerPort busy, using $newPort" -Type "Warning"
+                $GitServerPort = $newPort
+            }
+            else {
+                Write-StatusMessage "   ✗ No available ports" -Type "Error"
+                return @{ Success = $false; Message = "No available ports" }
+            }
+        }
         
+        # CRITICAL: Run from .opencode directory so imports work
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $bunPath
-        $psi.Arguments = "run `"$pluginScript`" start-server"
-        $psi.WorkingDirectory = $PSScriptRoot
+        $psi.Arguments = "run plugin/git-plugin.js"
+        $psi.WorkingDirectory = $opencodeDir  # THIS IS THE KEY FIX!
         $psi.UseShellExecute = $false
         $psi.RedirectStandardOutput = $true
         $psi.RedirectStandardError = $true
         $psi.CreateNoWindow = $true
         $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Hidden
         
+        # Set environment variable for the server port
+        $psi.EnvironmentVariables["GIT_SERVER_PORT"] = $GitServerPort
+        
         $process = [System.Diagnostics.Process]::Start($psi)
         
-        # Wait briefly and check
-        Start-Sleep -Seconds 2
+        # Wait and check
+        Start-Sleep -Seconds 3
         
         if (Test-ServerRunning -TestPort $GitServerPort) {
-            Write-StatusMessage "   ✓ Git server started on port $GitServerPort" -Type "Success"
+            Write-StatusMessage "   ✓ Git server started on port $GitServerPort (PID: $($process.Id))" -Type "Success"
             return @{ Success = $true; WasAlreadyRunning = $false }
         }
         
         if ($process.HasExited) {
             $err = $process.StandardError.ReadToEnd()
-            Write-StatusMessage "   ✗ Git server failed to start" -Type "Error"
-            Write-StatusMessage "   Error: $err" -Type "Dim"
+            Write-StatusMessage "   ✗ Git server exited immediately" -Type "Error"
+            if ($err -match "Cannot find module") {
+                Write-StatusMessage "   🔧 TO FIX: Run 'bun install' in $opencodeDir" -Type "Warning"
+            }
+            else {
+                Write-StatusMessage "   Error: $err" -Type "Dim"
+            }
             return @{ Success = $false; Message = "Process exited" }
         }
         
@@ -497,7 +534,7 @@ function Setup-AdbPortForwarding {
     }
     
     if (-not (Get-Command adb -ErrorAction SilentlyContinue)) {
-        Write-StatusMessage "   ⚠ ADB not found" -Type "Warning"
+        Write-StatusMessage "   ⚠ ADB not found - install Android SDK or skip with -SkipAdb" -Type "Dim"
         return $false
     }
     
@@ -508,20 +545,19 @@ function Setup-AdbPortForwarding {
     # Check for devices
     $devices = adb devices 2>&1 | Where-Object { $_ -match "device$" -and $_ -notmatch "List" }
     if (-not $devices) {
-        Write-StatusMessage "   ⚠ No emulator/device connected" -Type "Warning"
+        Write-StatusMessage "   ⚠ No emulator/device connected" -Type "Dim"
         return $false
     }
     
     # Setup port forwarding
-    $r1 = adb reverse tcp:$MainPort tcp:$MainPort 2>&1
-    $r2 = adb reverse tcp:$GitSrvPort tcp:$GitSrvPort 2>&1
+    $null = adb reverse tcp:$MainPort tcp:$MainPort 2>&1
+    $null = adb reverse tcp:$GitSrvPort tcp:$GitSrvPort 2>&1
     
     if ($LASTEXITCODE -eq 0) {
-        Write-StatusMessage "   ✓ ADB port forwarding configured" -Type "Success"
+        Write-StatusMessage "   ✓ ADB configured (localhost:$MainPort → device)" -Type "Success"
         return $true
     }
     
-    Write-StatusMessage "   ⚠ Port forwarding failed" -Type "Warning"
     return $false
 }
 
@@ -530,55 +566,42 @@ function Setup-AdbPortForwarding {
 #region Tailscale Integration
 
 function Test-TailscaleAvailable {
-    return Test-CommandExists "tailscale"
-}
-
-function Get-TailscaleStatus {
-    if (-not (Test-TailscaleAvailable)) {
-        return $null
-    }
-    
-    try {
-        $status = tailscale status --json 2>$null | ConvertFrom-Json
-        return $status
-    }
-    catch {
-        return $null
-    }
+    return $null -ne (Get-Command tailscale -ErrorAction SilentlyContinue)
 }
 
 function Enable-TailscaleServe {
     param([int]$SrvPort, [int]$GitSrvPort)
     
     if (-not (Test-TailscaleAvailable)) {
-        Write-StatusMessage "📡 Tailscale CLI not found. Install from https://tailscale.com/download" -Type "Warning"
+        Write-StatusMessage "📡 Tailscale not installed - skip with -EnableTailscaleServe" -Type "Dim"
         return $false
     }
     
     Write-StatusMessage "📡 Configuring Tailscale serve..." -Type "Info"
     
-    # Check if already configured
-    $serveStatus = tailscale serve status 2>&1
-    if ($serveStatus -match ":$SrvPort" -or $serveStatus -match "enabled") {
-        Write-StatusMessage "   ✓ Tailscale serve already configured" -Type "Success"
-        return $true
-    }
-    
-    # Configure serve
     try {
-        # Serve OpenCode on main path
-        $result1 = tailscale serve --port 443 "/" "http://localhost:$SrvPort" 2>&1
+        # Check current status
+        $serveStatus = tailscale serve status 2>&1
         
-        # Serve Git server on /git path
+        if ($serveStatus -match "https://.*\.tail.*\.ts\.net") {
+            Write-StatusMessage "   ✓ Tailscale serve already configured" -Type "Success"
+            $serveStatus | Select-String "https://" | ForEach-Object {
+                Write-StatusMessage "      $_" -Type "Dim"
+            }
+            return $true
+        }
+        
+        # Configure serve
+        Write-StatusMessage "   Setting up HTTPS endpoints..." -Type "Dim"
+        $result = tailscale serve --port 443 "/" "http://localhost:$SrvPort" 2>&1
         $result2 = tailscale serve --port 443 "/git" "http://localhost:$GitSrvPort" 2>&1
         
-        Write-StatusMessage "   ✓ Tailscale serve configured" -Type "Success"
-        Write-StatusMessage "     Main server: https://<your-device>.tail.ts.net/" -Type "Dim"
-        Write-StatusMessage "     Git server:  https://<your-device>.tail.ts.net/git" -Type "Dim"
+        Write-StatusMessage "   ✓ Tailscale serve configured!" -Type "Success"
+        Write-StatusMessage "     Your device is now accessible via HTTPS on your tailnet" -Type "Dim"
         return $true
     }
     catch {
-        Write-StatusMessage "   ⚠ Failed to configure Tailscale serve: $_" -Type "Warning"
+        Write-StatusMessage "   ⚠ Failed to configure Tailscale: $_" -Type "Warning"
         return $false
     }
 }
@@ -604,43 +627,44 @@ function Show-ConnectionOptions {
     Write-Host ""
     
     # Server status
-    $ocStatus = if ($OpenCodeRunning) { "✓ Running" } else { "✗ Not running" }
-    $gitStatus = if ($GitRunning) { "✓ Running" } else { "✗ Not running" }
+    $ocStatus = if ($OpenCodeRunning) { "✓ Running on port $MainPort" } else { "✗ Not running" }
+    $gitStatus = if ($GitRunning) { "✓ Running on port $GitSrvPort" } else { "⚠ Not running (optional)" }
     
-    Write-Host "  OpenCode Server: " -NoNewline
+    Write-Host "  OpenCode: " -NoNewline
     Write-Host $ocStatus -ForegroundColor $(if ($OpenCodeRunning) { $Colors.Success } else { $Colors.Error })
-    Write-Host "  Git HTTP Server: " -NoNewline
-    Write-Host $gitStatus -ForegroundColor $(if ($GitRunning) { $Colors.Success } else { $Colors.Error })
+    Write-Host "  Git HTTP: " -NoNewline
+    Write-Host $gitStatus -ForegroundColor $(if ($GitRunning) { $Colors.Success } else { $Colors.Warning })
     Write-Host ""
     
-    # Connection methods
+    # Collect all connection URLs
     $connectionUrls = @()
     
-    foreach ($iface in $Interfaces | Sort-Object -Property Preferred -Descending) {
+    foreach ($iface in ($Interfaces | Sort-Object -Property { $_.Preferred } -Descending)) {
         $url = "http://$($iface.IP):$MainPort"
         $marker = if ($iface.Preferred) { "★ " } else { "  " }
         
         switch ($iface.Type) {
             "Tailscale-Hostname" {
-                Write-Host "$marker🌐 Tailscale: https://$($iface.IP)" -ForegroundColor $Colors.Success
-                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale"; Url = "https://$($iface.IP)"; Priority = 3 }
+                $httpsUrl = "https://$($iface.IP)"
+                Write-Host "$marker🌐 Tailscale HTTPS: $httpsUrl" -ForegroundColor $Colors.Success
+                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale"; Url = $httpsUrl; Priority = 4 }
             }
             "Tailscale" {
-                Write-Host "$marker🔗 Tailscale IP: $url" -ForegroundColor $Colors.Success
-                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale-IP"; Url = $url; Priority = 2 }
+                Write-Host "$marker🔗 Tailscale: $url" -ForegroundColor $Colors.Success
+                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale-IP"; Url = $url; Priority = 3 }
             }
             "WiFi" {
                 Write-Host "$marker📶 WiFi: $url" -ForegroundColor $Colors.Info
-                $connectionUrls += [PSCustomObject]@{ Type = "WiFi"; Url = $url; Priority = 1 }
+                $connectionUrls += [PSCustomObject]@{ Type = "WiFi"; Url = $url; Priority = 2 }
             }
             "LAN" {
                 Write-Host "$marker🔌 LAN: $url" -ForegroundColor $Colors.Info
-                $connectionUrls += [PSCustomObject]@{ Type = "LAN"; Url = $url; Priority = 1 }
+                $connectionUrls += [PSCustomObject]@{ Type = "LAN"; Url = $url; Priority = 2 }
             }
             "Localhost" {
                 if ($AdbOk) {
                     Write-Host "$marker📱 Emulator (ADB): http://localhost:$MainPort" -ForegroundColor $Colors.Success
-                    $connectionUrls += [PSCustomObject]@{ Type = "ADB"; Url = "http://localhost:$MainPort"; Priority = 4 }
+                    $connectionUrls += [PSCustomObject]@{ Type = "ADB"; Url = "http://localhost:$MainPort"; Priority = 5 }
                 }
             }
         }
@@ -648,43 +672,77 @@ function Show-ConnectionOptions {
     
     Write-Host ""
     
-    # Display QR codes for top connection methods
+    # ALWAYS show QR codes for top connections
     $topUrls = $connectionUrls | Sort-Object -Property Priority -Descending | Select-Object -First 3
     
-    if ($topUrls.Count -gt 0 -and ($OpenCodeRunning -or $GitRunning)) {
+    if ($topUrls.Count -gt 0) {
         Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Accent
-        Write-Host "                    SCAN QR CODE TO CONNECT                     " -ForegroundColor $Colors.Accent
+        Write-Host "                    SCAN TO CONNECT                             " -ForegroundColor $Colors.Accent
         Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Accent
         Write-Host ""
         
         foreach ($conn in $topUrls) {
-            # Create connection payload
-            $payload = @{
-                host = $conn.Url -replace "https?://", "" -replace ":\d+$", ""
-                port = [int]($conn.Url -replace ".*:(\d+)$", '$1')
-                type = $conn.Type
-                version = "1.0"
-                name = "OpenCode Server ($($conn.Type))"
-            } | ConvertTo-Json -Compress
-            
-            Show-TerminalQRCode -Text $payload -Label "📲 $($conn.Type) Connection:"
+            Show-TerminalQRCode -Text $conn.Url -Label "$($conn.Type) Connection:"
+        }
+        
+        Write-Host ""
+        Write-Host "📱 Open MOCCA app → Tap 'Scan QR Code' → Scan one of the above" -ForegroundColor $Colors.Success
+    }
+    
+    Write-Host ""
+}
+
+function Show-Troubleshooting {
+    param(
+        [bool]$OpenCodeOk,
+        [bool]$GitOk,
+        [int]$Port,
+        [int]$GitPort
+    )
+    
+    $issues = @()
+    
+    if (-not $OpenCodeOk) {
+        $issues += @{
+            Title = "OpenCode Server Not Running"
+            Fixes = @(
+                "Install OpenCode: winget install OpenCode"
+                "Or download from: https://github.com/opencode-ai/opencode/releases"
+                "Then run manually: opencode serve --port $Port"
+                "Check Windows Defender/Firewall isn't blocking port $Port"
+            )
         }
     }
     
-    # Manual entry fallback
-    Write-Host ""
-    Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Dim
-    Write-Host "                    MANUAL CONNECTION                           " -ForegroundColor $Colors.Dim
-    Write-Host "════════════════════════════════════════════════════════════════" -ForegroundColor $Colors.Dim
-    Write-Host ""
-    Write-Host "  If QR scanning doesn't work, enter one of these URLs:" -ForegroundColor $Colors.Normal
-    Write-Host ""
+    if (-not $GitOk) {
+        $issues += @{
+            Title = "Git Server Not Running (Optional)"
+            Fixes = @(
+                "Install Bun: winget install OpenJS.Bun"
+                "Run: cd .opencode && bun install"
+                "Or skip with: .\mocca-setup.ps1 -SkipGitServer"
+            )
+        }
+    }
     
-    foreach ($conn in $topUrls | Select-Object -First 2) {
-        Write-Host "  • $($conn.Url)" -ForegroundColor $Colors.Success
+    if ($issues.Count -eq 0) {
+        return
     }
     
     Write-Host ""
+    Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Warning
+    Write-Host "║                    🔧 TROUBLESHOOTING                          ║" -ForegroundColor $Colors.Warning
+    Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Warning
+    Write-Host ""
+    
+    foreach ($issue in $issues) {
+        Write-Host "❌ $($issue.Title)" -ForegroundColor $Colors.Error
+        Write-Host "   Fixes:" -ForegroundColor $Colors.Normal
+        foreach ($fix in $issue.Fixes) {
+            Write-Host "      • $fix" -ForegroundColor $Colors.Info
+        }
+        Write-Host ""
+    }
 }
 
 #endregion
@@ -694,58 +752,69 @@ function Show-ConnectionOptions {
 Show-Header
 
 # Check prerequisites
-Write-StatusMessage "🔍 Checking prerequisites..." -Type "Info"
+Write-StatusMessage "🔍 Scanning system..." -Type "Info"
 
 # Get network interfaces
 Write-StatusMessage "🌐 Detecting network interfaces..." -Type "Info"
 $networkInterfaces = Get-NetworkInterfaces
-Write-StatusMessage "   Found $($networkInterfaces.Count) connection option(s)" -Type "Success"
+if ($networkInterfaces.Count -gt 0) {
+    Write-StatusMessage "   ✓ Found $($networkInterfaces.Count) connection option(s)" -Type "Success"
+}
+else {
+    Write-StatusMessage "   ⚠ No network interfaces found" -Type "Warning"
+}
 
 # Setup ADB
 $adbConfigured = Setup-AdbPortForwarding -MainPort $Port -GitSrvPort $GitPort
 
-# Start OpenCode server
+# Start servers
 $openCodeResult = Start-OpenCodeServer -OpenCodePort $Port
+$actualPort = $openCodeResult.Port  # May have changed if auto-detected
 
-# Start Git server
 $gitResult = Start-GitServer -GitServerPort $GitPort
 
-# Configure Tailscale serve if requested
+# Configure Tailscale if requested
 $tailscaleServeOk = $false
-if ($EnableTailscaleServe -and (Test-TailscaleAvailable)) {
-    $tailscaleServeOk = Enable-TailscaleServe -SrvPort $Port -GitSrvPort $GitPort
+if ($EnableTailscaleServe) {
+    $tailscaleServeOk = Enable-TailscaleServe -SrvPort $actualPort -GitSrvPort $GitPort
 }
 
 # Display results
 Show-ConnectionOptions `
     -Interfaces $networkInterfaces `
-    -MainPort $Port `
+    -MainPort $actualPort `
     -GitSrvPort $GitPort `
     -AdbOk $adbConfigured `
     -OpenCodeRunning $openCodeResult.Success `
     -GitRunning $gitResult.Success
 
+# Show troubleshooting if needed
+Show-Troubleshooting `
+    -OpenCodeOk $openCodeResult.Success `
+    -GitOk $gitResult.Success `
+    -Port $actualPort `
+    -GitPort $GitPort
+
 # Final status
+$elapsed = [math]::Round(((Get-Date) - $script:StartTime).TotalSeconds)
+
 Write-Host ""
 if ($openCodeResult.Success) {
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Success
-    Write-Host "║                ✅ SETUP COMPLETE - READY TO CONNECT            ║" -ForegroundColor $Colors.Success
+    Write-Host "║               ✅ SETUP COMPLETE (in ${elapsed}s)                            ║" -ForegroundColor $Colors.Success
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Success
     Write-Host ""
-    Write-StatusMessage "📱 Open MOCCA app and scan one of the QR codes above" -Type "Info"
+    Write-StatusMessage "📱 Open MOCCA app and scan a QR code above to connect" -Type "Info"
     Write-Host ""
     Write-StatusMessage "Press any key to exit..." -Type "Dim"
     $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 }
 else {
     Write-Host "╔════════════════════════════════════════════════════════════════╗" -ForegroundColor $Colors.Error
-    Write-Host "║                ❌ SETUP INCOMPLETE                             ║" -ForegroundColor $Colors.Error
+    Write-Host "║               ❌ SETUP INCOMPLETE                              ║" -ForegroundColor $Colors.Error
     Write-Host "╚════════════════════════════════════════════════════════════════╝" -ForegroundColor $Colors.Error
     Write-Host ""
-    Write-StatusMessage "🔧 Troubleshooting:" -Type "Warning"
-    Write-Host "   1. Ensure OpenCode is installed" -ForegroundColor $Colors.Normal
-    Write-Host "   2. Run manually: opencode serve --port $Port" -ForegroundColor $Colors.Normal
-    Write-Host "   3. Check Windows Firewall isn't blocking port $Port" -ForegroundColor $Colors.Normal
+    Write-StatusMessage "See 🔧 TROUBLESHOOTING section above for fixes" -Type "Warning"
     Write-Host ""
     exit 1
 }

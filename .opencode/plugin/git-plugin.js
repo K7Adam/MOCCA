@@ -420,8 +420,9 @@ const GitPlugin = async (context) => {
     
     // START HTTP SERVER IMMEDIATELY (before returning hooks)
     try {
-        console.log('[Git Plugin] Starting embedded HTTP server...');
-        const started = await startEmbeddedServer(workDir, 4097);
+        const serverPort = parseInt(process.env.GIT_SERVER_PORT, 10) || 4097;
+        console.log(`[Git Plugin] Starting embedded HTTP server on port ${serverPort}...`);
+        const started = await startEmbeddedServer(workDir, serverPort);
         if (started) {
             console.log('[Git Plugin] ✓ Server started successfully');
         } else {
