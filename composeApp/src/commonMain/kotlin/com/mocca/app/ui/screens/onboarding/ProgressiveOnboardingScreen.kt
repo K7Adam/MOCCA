@@ -8,7 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.with
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -115,7 +115,7 @@ class ProgressiveOnboardingScreen : Screen {
             AnimatedContent(
                 targetState = state.currentStep,
                 transitionSpec = {
-                    slideInHorizontally { width -> width } + fadeIn() with
+                    slideInHorizontally { width -> width } + fadeIn() togetherWith
                     slideOutHorizontally { width -> -width } + fadeOut()
                 },
                 modifier = Modifier.weight(1f)

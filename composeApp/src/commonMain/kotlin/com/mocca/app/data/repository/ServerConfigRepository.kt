@@ -48,32 +48,39 @@ class ServerConfigRepository(
             try {
                 val config = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
                 
-                // If no server configured, create default
+                // If no server configured, create default (only for emulator)
                 if (config == null) {
                     val default = createDefaultConfig()
-                    localCache.insertServerConfig(default)
-                    _activeServer.value = default
+                    if (default != null) {
+                        localCache.insertServerConfig(default)
+                        _activeServer.value = default
+                    } else {
+                        // Physical device without config - leave null to trigger onboarding
+                        _activeServer.value = null
+                    }
                     return@runBlocking
                 }
                 
                 // Migration: If on physical device (empty default host) and using emulator IP,
-                // prompt user to reconfigure by showing the Tailscale default
+                // clear the config to force reconfiguration via onboarding
                 val defaultHost = getPlatformDefaultHost()
                 val isPhysicalDevice = defaultHost.isEmpty()
                 val isUsingEmulatorIp = config.baseUrl.contains("10.0.2.2")
                 
                 if (isPhysicalDevice && isUsingEmulatorIp) {
-                    Napier.i("Detected physical device with emulator IP config - creating Tailscale default")
-                    val tailscaleDefault = createDefaultConfig()
-                    localCache.insertServerConfig(tailscaleDefault)
-                    localCache.setActiveServerConfig(tailscaleDefault.id)
-                    _activeServer.value = tailscaleDefault
+                    Napier.i("Detected physical device with emulator IP config - clearing to force onboarding")
+                    localCache.deleteServerConfig(config.id)
+                    _activeServer.value = null
                 } else {
                     _activeServer.value = config
                 }
             } catch (e: Exception) {
                 Napier.w("Failed to load active server", e)
-                _activeServer.value = createDefaultConfig()
+                // Only set default if we're on emulator (createDefaultConfig returns non-null)
+                val default = createDefaultConfig()
+                if (default != null) {
+                    _activeServer.value = default
+                }
             }
         }
     }
@@ -81,8 +88,9 @@ class ServerConfigRepository(
     /**
      * Decrypt server config auth token if it's encrypted.
      * 
-     * SECURITY: Checks if the auth token is encrypted (Base64) and decrypts it
-     * using SecureTokenStorage. If decryption fails, returns original config.
+     * SECURITY: Checks if the auth token was encrypted by this app (has specific prefix)
+     * and decrypts it using SecureTokenStorage. If decryption fails or token is not
+     * app-encrypted, returns original config with token intact.
      */
     private fun decryptConfigIfNeeded(config: ServerConfig): ServerConfig {
         if (secureTokenStorage == null || config.authToken.isNullOrEmpty()) {
@@ -91,16 +99,18 @@ class ServerConfigRepository(
         
         return try {
             if (secureTokenStorage.isEncrypted(config.authToken)) {
+                // Try to decrypt - if it fails, the token might be a raw Base64 token from QR code
                 val decryptedToken = secureTokenStorage.decrypt(config.authToken)
                 config.copy(authToken = decryptedToken)
             } else {
-                // Token is not encrypted (legacy data), return as-is
+                // Token is not encrypted (raw token from QR/manual entry), return as-is
                 config
             }
         } catch (e: Exception) {
-            Napier.e("Failed to decrypt auth token for server ${config.id}", e)
-            // Return config with null token to prevent using corrupted data
-            config.copy(authToken = null)
+            // Decryption failed - token is likely raw Base64 from QR code, not app-encrypted
+            Napier.d("Token for server ${config.id} appears to be raw (not app-encrypted), using as-is")
+            // Return config with original token intact for QR code tokens
+            config
         }
     }
 
@@ -188,12 +198,13 @@ class ServerConfigRepository(
     /**
      * Create a default server configuration.
      * - Android emulator: Uses 10.0.2.2 to reach host machine's localhost.
-     * - Physical devices: Creates a Tailscale config with placeholder URL that user must configure.
+     * - Physical devices: Returns empty config that triggers onboarding.
      */
     fun createDefaultConfig(): ServerConfig {
         val defaultHost = getPlatformDefaultHost()
         
         return if (defaultHost.isNotEmpty()) {
+            // Android emulator - use 10.0.2.2
             ServerConfig(
                 id = "default",
                 name = "Local Server",
@@ -204,13 +215,13 @@ class ServerConfigRepository(
                 isActive = true
             )
         } else {
-            // For physical devices, create a placeholder Tailscale config
-            // User should replace with their actual tailscale hostname
+            // Physical device - return empty config that requires onboarding
+            // Empty baseUrl signals the UI to show onboarding instead of connecting
             ServerConfig(
-                id = "tailscale-default",
-                name = "Tailscale Server",
-                baseUrl = "https://your-device.tailXXXX.ts.net",
-                connectionType = ConnectionType.TAILSCALE,
+                id = "needs-onboarding",
+                name = "Setup Required",
+                baseUrl = "",  // Empty signals onboarding needed
+                connectionType = ConnectionType.LOCAL,
                 authType = AuthType.NONE,
                 authToken = null,
                 isActive = true

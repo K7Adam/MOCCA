@@ -2,6 +2,7 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.api.getHttpEngine
 import com.mocca.app.domain.model.AppInfo
+import com.mocca.app.domain.model.AuthType
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.util.NetworkObserver
 import io.github.aakira.napier.Napier
@@ -10,6 +11,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -320,7 +322,14 @@ class AppConnectionManager(
     private suspend fun performHealthCheck(server: ServerConfig): Result<AppInfo?> {
         return try {
             val client = getOrCreateClient()
-            val response = client.get("${server.baseUrl.trimEnd('/')}/global/health")
+            val response = client.get("${server.baseUrl.trimEnd('/')}/global/health") {
+                // Add authentication headers if configured
+                if (server.authType == AuthType.BASIC && !server.authToken.isNullOrEmpty()) {
+                    header(HttpHeaders.Authorization, "Basic ${server.authToken}")
+                } else if (server.authType == AuthType.BEARER && !server.authToken.isNullOrEmpty()) {
+                    header(HttpHeaders.Authorization, "Bearer ${server.authToken}")
+                }
+            }
             
             if (response.status.value in 200..299) {
                 val appInfo = try {

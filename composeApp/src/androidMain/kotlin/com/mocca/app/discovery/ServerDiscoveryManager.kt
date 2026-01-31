@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import android.os.Build
 import java.net.InetAddress
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -237,7 +238,13 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
             }
             
             override fun onServiceResolved(resolvedInfo: NsdServiceInfo) {
-                val host = resolvedInfo.host?.hostAddress
+                // Use hostAddresses (API 34+) with fallback to deprecated host for older versions
+                val host = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                    resolvedInfo.hostAddresses.firstOrNull()?.hostAddress
+                } else {
+                    @Suppress("DEPRECATION")
+                    resolvedInfo.host?.hostAddress
+                }
                 val port = resolvedInfo.port
                 val name = resolvedInfo.serviceName
                 
@@ -263,6 +270,9 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
         }
         
         try {
+            // resolveService is deprecated in API 34+ but registerServiceInfoCallback requires API 34+
+            // Using @Suppress for backward compatibility with older Android versions
+            @Suppress("DEPRECATION")
             nsdManager.resolveService(serviceInfo, resolveListener)
         } catch (e: Exception) {
             Napier.e("$TAG: Error resolving service", e)

@@ -235,6 +235,61 @@ function Test-ServerRunning {
 
 #endregion
 
+#region Password Management
+
+$script:PasswordFile = "$env:TEMP\mocca-server-password.txt"
+$script:ServerUsername = "opencode"
+
+function Get-ServerPassword {
+    <#
+    .SYNOPSIS
+        Gets or generates the OpenCode server password.
+    #>
+    if (Test-Path $script:PasswordFile) {
+        $password = Get-Content $script:PasswordFile -Raw
+        if ($password) {
+            Write-DebugLog "Using existing password from $script:PasswordFile" "DEBUG"
+            return $password.Trim()
+        }
+    }
+    
+    # Generate a new random password
+    $password = New-RandomPassword -Length 24
+    $password | Set-Content $script:PasswordFile -Force
+    Write-DebugLog "Generated new password and saved to $script:PasswordFile" "INFO"
+    return $password
+}
+
+function New-RandomPassword {
+    <#
+    .SYNOPSIS
+        Generates a cryptographically secure random password.
+    #>
+    param([int]$Length = 24)
+    
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*-_+="
+    $bytes = New-Object byte[] $Length
+    $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+    $rng.GetBytes($bytes)
+    $rng.Dispose()
+    
+    $password = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
+    return $password
+}
+
+function Get-BasicAuthToken {
+    <#
+    .SYNOPSIS
+        Generates Base64 encoded Basic Auth token (username:password).
+    #>
+    $password = Get-ServerPassword
+    $credentials = "$script:ServerUsername`:$password"
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($credentials)
+    return [Convert]::ToBase64String($bytes)
+}
+
+#endregion
+
 #region QR Code Display
 
 # QR Code library path (cached in temp)
@@ -469,12 +524,16 @@ function Start-OpenCodeServer {
     Write-DebugLog "Start-OpenCodeServer: Called with requested port $OpenCodePort" "DEBUG"
     Write-StatusMessage "🚀 Checking OpenCode server on port $OpenCodePort..." -Type "Info"
     
+    # Get or generate password for server authentication
+    $serverPassword = Get-ServerPassword
+    Write-DebugLog "Start-OpenCodeServer: Server password configured (length: $($serverPassword.Length))" "DEBUG"
+    
     # Check if already running on requested port
     Write-DebugLog "Start-OpenCodeServer: Testing if server already running on port $OpenCodePort" "DEBUG"
     if (Test-ServerRunning -TestPort $OpenCodePort) {
         Write-DebugLog "Start-OpenCodeServer: Server already running on port $OpenCodePort" "INFO"
         Write-StatusMessage "   ✓ OpenCode already running on port $OpenCodePort" -Type "Success"
-        return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
+        return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort; AuthToken = (Get-BasicAuthToken) }
     }
     Write-DebugLog "Start-OpenCodeServer: Server not found on requested port $OpenCodePort" "DEBUG"
     
@@ -490,7 +549,7 @@ function Start-OpenCodeServer {
                 $choice = Read-Host "   Use port $testPort instead? [Y/n]"
                 if ($choice -ne 'n') {
                     Write-DebugLog "Start-OpenCodeServer: User chose to use port $testPort" "INFO"
-                    return @{ Success = $true; WasAlreadyRunning = $true; Port = $testPort }
+                    return @{ Success = $true; WasAlreadyRunning = $true; Port = $testPort; AuthToken = (Get-BasicAuthToken) }
                 }
                 Write-DebugLog "Start-OpenCodeServer: User declined to use port $testPort, continuing" "DEBUG"
             }
@@ -513,7 +572,7 @@ function Start-OpenCodeServer {
             if (Test-ServerRunning -TestPort $OpenCodePort) {
                 Write-DebugLog "Start-OpenCodeServer: Server is now responding on port $OpenCodePort!" "INFO"
                 Write-StatusMessage "   ✓ OpenCode is now responding!" -Type "Success"
-                return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort }
+                return @{ Success = $true; WasAlreadyRunning = $true; Port = $OpenCodePort; AuthToken = (Get-BasicAuthToken) }
             }
         }
         Write-DebugLog "Start-OpenCodeServer: Timed out waiting for process to respond" "WARN"
@@ -595,16 +654,21 @@ function Start-OpenCodeServer {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $exe
         $psi.Arguments = "serve --port $OpenCodePort"
-        $psi.UseShellExecute = $true
+        $psi.UseShellExecute = $false  # Must be false to set environment variables
         $psi.WindowStyle = [System.Diagnostics.ProcessWindowStyle]::Normal
         $psi.CreateNoWindow = $false
         
-        Write-DebugLog "Start-OpenCodeServer: Launching process..." "DEBUG"
+        # Set password for HTTP Basic Authentication
+        $psi.EnvironmentVariables["OPENCODE_SERVER_PASSWORD"] = $serverPassword
+        $psi.EnvironmentVariables["OPENCODE_SERVER_USERNAME"] = $script:ServerUsername
+        Write-DebugLog "Start-OpenCodeServer: Environment set - OPENCODE_SERVER_USERNAME=$script:ServerUsername" "DEBUG"
+        
+        Write-DebugLog "Start-OpenCodeServer: Launching process with authentication..." "DEBUG"
         $startedProcess = [System.Diagnostics.Process]::Start($psi)
         Write-DebugLog "Start-OpenCodeServer: Process started with ID: $($startedProcess.Id)" "INFO"
         
         # Wait for startup with progress
-        Write-StatusMessage "   Waiting for server (port $OpenCodePort)..." -Type "Info" -NoNewline
+        Write-StatusMessage "   Waiting for server (port $OpenCodePort) with auth..." -Type "Info" -NoNewline
         Write-DebugLog "Start-OpenCodeServer: Waiting up to 30 seconds for server to respond..." "DEBUG"
         for ($i = 0; $i -lt 30; $i++) {
             Start-Sleep -Seconds 1
@@ -613,9 +677,10 @@ function Start-OpenCodeServer {
             Write-DebugLog "Start-OpenCodeServer: Second $i - Test-ServerRunning returned: $isRunning" "DEBUG"
             if ($isRunning) {
                 Write-Host ""
-                Write-DebugLog "Start-OpenCodeServer: Server is RUNNING on port $OpenCodePort!" "INFO"
-                Write-StatusMessage "   ✓ OpenCode server started on port $OpenCodePort!" -Type "Success"
-                return @{ Success = $true; WasAlreadyRunning = $false; Port = $OpenCodePort }
+                Write-DebugLog "Start-OpenCodeServer: Server is RUNNING on port $OpenCodePort with auth enabled!" "INFO"
+                Write-StatusMessage "   ✓ OpenCode server started on port $OpenCodePort (with auth)!" -Type "Success"
+                $authToken = Get-BasicAuthToken
+                return @{ Success = $true; WasAlreadyRunning = $false; Port = $OpenCodePort; AuthToken = $authToken }
             }
         }
         Write-Host ""
@@ -1026,7 +1091,8 @@ function Show-ConnectionOptions {
         [int]$GitSrvPort,
         [bool]$AdbOk,
         [bool]$OpenCodeRunning,
-        [bool]$GitRunning
+        [bool]$GitRunning,
+        [string]$AuthToken = $null
     )
     
     Write-Host ""
@@ -1036,7 +1102,7 @@ function Show-ConnectionOptions {
     Write-Host ""
     
     # Server status
-    $ocStatus = if ($OpenCodeRunning) { "✓ Running on port $MainPort" } else { "✗ Not running" }
+    $ocStatus = if ($OpenCodeRunning) { "✓ Running on port $MainPort (with auth)" } else { "✗ Not running" }
     $gitStatus = if ($GitRunning) { "✓ Running on port $GitSrvPort" } else { "⚠ Not running (optional)" }
     
     Write-Host "  OpenCode: " -NoNewline
@@ -1056,24 +1122,24 @@ function Show-ConnectionOptions {
             "Tailscale-Hostname" {
                 $httpsUrl = "https://$($iface.IP)"
                 Write-Host "$marker🌐 Tailscale HTTPS: $httpsUrl" -ForegroundColor $Colors.Success
-                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale"; Url = $httpsUrl; Priority = 4 }
+                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale"; Url = $httpsUrl; Priority = 4; UseHttps = $true }
             }
             "Tailscale" {
                 Write-Host "$marker🔗 Tailscale: $url" -ForegroundColor $Colors.Success
-                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale-IP"; Url = $url; Priority = 3 }
+                $connectionUrls += [PSCustomObject]@{ Type = "Tailscale-IP"; Url = $url; Priority = 3; UseHttps = $false }
             }
             "WiFi" {
                 Write-Host "$marker📶 WiFi: $url" -ForegroundColor $Colors.Info
-                $connectionUrls += [PSCustomObject]@{ Type = "WiFi"; Url = $url; Priority = 2 }
+                $connectionUrls += [PSCustomObject]@{ Type = "WiFi"; Url = $url; Priority = 2; UseHttps = $false }
             }
             "LAN" {
                 Write-Host "$marker🔌 LAN: $url" -ForegroundColor $Colors.Info
-                $connectionUrls += [PSCustomObject]@{ Type = "LAN"; Url = $url; Priority = 2 }
+                $connectionUrls += [PSCustomObject]@{ Type = "LAN"; Url = $url; Priority = 2; UseHttps = $false }
             }
             "Localhost" {
                 if ($AdbOk) {
                     Write-Host "$marker📱 Emulator (ADB): http://localhost:$MainPort" -ForegroundColor $Colors.Success
-                    $connectionUrls += [PSCustomObject]@{ Type = "ADB"; Url = "http://localhost:$MainPort"; Priority = 5 }
+                    $connectionUrls += [PSCustomObject]@{ Type = "ADB"; Url = "http://localhost:$MainPort"; Priority = 5; UseHttps = $false }
                 }
             }
         }
@@ -1091,7 +1157,31 @@ function Show-ConnectionOptions {
         Write-Host ""
         
         foreach ($conn in $topUrls) {
-            Show-TerminalQRCode -Text $conn.Url -Label "$($conn.Type) Connection:"
+            # Build JSON payload with auth token
+            $qrPayload = @{}
+            
+            # Parse URL to extract host and port
+            if ($conn.Url -match "(https?)://([^:/]+)(?::(\d+))?") {
+                $qrPayload["host"] = $matches[2]
+                $qrPayload["port"] = if ($matches[3]) { [int]$matches[3] } else { if ($matches[1] -eq "https") { 443 } else { $MainPort } }
+                $qrPayload["useHttps"] = $matches[1] -eq "https"
+            } else {
+                $qrPayload["host"] = $conn.Url -replace "https?://", "" -replace ":\d+$", ""
+                $qrPayload["port"] = $MainPort
+                $qrPayload["useHttps"] = $conn.UseHttps
+            }
+            
+            $qrPayload["name"] = "OpenCode Server"
+            $qrPayload["version"] = "1.0"
+            if ($AuthToken) {
+                $qrPayload["token"] = $AuthToken
+            }
+            
+            # Convert to JSON
+            $qrJson = $qrPayload | ConvertTo-Json -Compress
+            
+            Show-TerminalQRCode -Text $qrJson -Label "$($conn.Type) Connection (scan with MOCCA):"
+            Write-Host "  JSON: $qrJson" -ForegroundColor $Colors.Dim
         }
         
         Write-Host ""
@@ -1216,7 +1306,8 @@ Show-ConnectionOptions `
     -GitSrvPort $GitPort `
     -AdbOk $adbConfigured `
     -OpenCodeRunning $openCodeResult.Success `
-    -GitRunning $gitResult.Success
+    -GitRunning $gitResult.Success `
+    -AuthToken $openCodeResult.AuthToken
 
 # Show troubleshooting if needed
 Show-Troubleshooting `

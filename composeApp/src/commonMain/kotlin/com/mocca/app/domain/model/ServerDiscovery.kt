@@ -51,7 +51,7 @@ data class DiscoveredServer(
             name = name,
             baseUrl = baseUrl,
             connectionType = connectionType,
-            authType = if (authToken != null) AuthType.BEARER else AuthType.NONE,
+            authType = if (authToken != null) AuthType.BASIC else AuthType.NONE,
             authToken = authToken,
             isActive = true
         )

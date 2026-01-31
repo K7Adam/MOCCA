@@ -299,7 +299,8 @@ class HttpClientProvider(
     
     /**
      * Get the current HttpClient instance.
-     * Creates one if it doesn't exist.
+     * Creates one if it doesn't exist and config is available.
+     * @throws IllegalStateException if no server config is available
      */
     suspend fun getClient(): HttpClient {
         return mutex.withLock {
