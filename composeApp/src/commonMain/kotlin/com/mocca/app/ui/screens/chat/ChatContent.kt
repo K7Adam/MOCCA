@@ -109,14 +109,36 @@ fun ChatContent(screenModel: ChatScreenModel) {
             .background(AppColors.background)
     ) {
         state.session?.let { session ->
-            ChatHeader(
+            GodHeader(
                 title = session.title ?: "SESSION_${session.id.take(8)}",
-                showTodos = state.showTodoPanel,
-                onTodoClick = { screenModel.toggleTodoPanel() },
-                onShareClick = { showShareDialog = true },
-                onSummarizeClick = { screenModel.summarizeSession() },
-                onRefreshClick = { screenModel.refreshData() },
-                isRefreshing = state.isLoading
+                subtitle = "mobile-agent-v2",
+                subtitleIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Rocket,
+                        contentDescription = null,
+                        tint = AppColors.white.copy(alpha = 0.4f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                },
+                actions = {
+                    IconButton(onClick = { screenModel.refreshData() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
+                        )
+                    }
+                    IconButton(onClick = { showShareDialog = true }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
+                    }
+                    IconButton(onClick = { screenModel.toggleTodoPanel() }) {
+                        Icon(
+                            imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Todos",
+                            tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
+                        )
+                    }
+                }
             )
         }
         
@@ -515,24 +537,43 @@ private fun EmptySessionState(onInit: () -> Unit) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 40.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Rocket,
-                contentDescription = null,
-                tint = AppColors.textTertiary,
-                modifier = Modifier.size(64.dp)
-            )
-            Spacer(modifier = Modifier.height(AppSpacing.md))
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(AppColors.surfaceElevated, AppShapes.circle)
+                    .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.circle),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.RocketLaunch,
+                    contentDescription = null,
+                    tint = AppColors.accentGreen,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "SESSION READY",
+                text = "READY TO INITIALIZE",
                 style = AppTypography.headlineSmall,
-                color = AppColors.textTertiary
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(AppSpacing.lg))
-            TerminalButton(
-                text = "INITIALIZE PROJECT",
-                onClick = onInit
+            Spacer(modifier = Modifier.height(12.dp))
+            Text(
+                text = "Select a model to begin the project analysis and generation session.",
+                style = AppTypography.bodyMedium,
+                color = AppColors.white.copy(alpha = 0.4f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            GodButton(
+                text = "INITIALIZE",
+                onClick = onInit,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -555,78 +596,67 @@ private fun InitSessionDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
-        shape = AppShapes.dialog,
+        containerColor = Color(0xFF111111),
+        shape = RoundedCornerShape(32.dp),
         title = { 
             Text(
-                text = "INITIALIZE PROJECT", 
-                style = AppTypography.labelMedium, 
-                color = AppColors.white
+                text = "INITIALIZE", 
+                style = AppTypography.titleLarge, 
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold
             ) 
         },
         text = {
             Column {
                 Text(
-                    text = "Select an AI model to analyze the project:",
-                    style = AppTypography.bodySmall,
-                    color = AppColors.textSecondary
+                    text = "PROVIDER",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f),
+                    letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-                
-                Text("PROVIDER", color = AppColors.accentGreen, style = AppTypography.labelSmall)
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Spacer(modifier = Modifier.height(12.dp))
                 providerInfo.all.forEach { providerItem ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { 
-                                selectedProvider = providerItem.id 
-                                selectedModel = (providerItem.models as? JsonObject)?.keys?.firstOrNull() ?: ""
-                            }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Use a custom radio-like indicator
-                        Box(
-                            modifier = Modifier
-                                .size(16.dp)
-                                .clip(AppShapes.circle)
-                                .border(1.dp, if (selectedProvider == providerItem.id) AppColors.accentGreen else AppColors.grey, AppShapes.circle)
-                                .background(if (selectedProvider == providerItem.id) AppColors.accentGreen else Color.Transparent)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = providerItem.name,
-                            color = if (selectedProvider == providerItem.id) AppColors.white else AppColors.textSecondary
-                        )
-                    }
+                    GodListItem(
+                        title = providerItem.name,
+                        subtitle = providerItem.id,
+                        icon = {
+                            Icon(
+                                imageVector = if (selectedProvider == providerItem.id) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                                contentDescription = null,
+                                tint = if (selectedProvider == providerItem.id) AppColors.accentGreen else AppColors.white.copy(alpha = 0.2f)
+                            )
+                        },
+                        onClick = { 
+                            selectedProvider = providerItem.id 
+                            selectedModel = (providerItem.models as? JsonObject)?.keys?.firstOrNull() ?: ""
+                        }
+                    )
                 }
                 
-                Spacer(modifier = Modifier.height(AppSpacing.md))
+                Spacer(modifier = Modifier.height(24.dp))
                 
-                Text("MODEL", color = AppColors.accentGreen, style = AppTypography.labelSmall)
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                LazyColumn(modifier = Modifier.height(150.dp)) {
-                    items(currentModelIds) { modelId ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { selectedModel = modelId }
-                                .padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(16.dp)
-                                    .clip(AppShapes.circle)
-                                    .border(1.dp, if (selectedModel == modelId) AppColors.accentGreen else AppColors.grey, AppShapes.circle)
-                                    .background(if (selectedModel == modelId) AppColors.accentGreen else Color.Transparent)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = modelId,
-                                color = if (selectedModel == modelId) AppColors.white else AppColors.textSecondary,
-                                style = AppTypography.bodySmall
+                Text(
+                    text = "MODEL",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f),
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Box(modifier = Modifier.height(200.dp)) {
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        items(currentModelIds) { modelId ->
+                            GodListItem(
+                                title = modelId,
+                                subtitle = "AI Model",
+                                icon = {
+                                    Icon(
+                                        imageVector = if (selectedModel == modelId) Icons.Default.CheckCircle else Icons.Default.Circle,
+                                        contentDescription = null,
+                                        tint = if (selectedModel == modelId) AppColors.accentGreen else AppColors.white.copy(alpha = 0.1f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                },
+                                onClick = { selectedModel = modelId }
                             )
                         }
                     }
@@ -634,17 +664,16 @@ private fun InitSessionDialog(
             }
         },
         confirmButton = {
-            TerminalCompactButton(
-                text = "START",
+            GodButton(
+                text = "START SESSION",
                 onClick = { onInit(selectedProvider, selectedModel) },
                 enabled = selectedProvider.isNotEmpty() && selectedModel.isNotEmpty()
             )
         },
         dismissButton = {
-            TerminalTextButton(
-                text = "CANCEL",
-                onClick = onDismiss
-            )
+            TextButton(onClick = onDismiss) {
+                Text("CANCEL", color = AppColors.white.copy(alpha = 0.4f), style = AppTypography.labelMedium)
+            }
         }
     )
 }

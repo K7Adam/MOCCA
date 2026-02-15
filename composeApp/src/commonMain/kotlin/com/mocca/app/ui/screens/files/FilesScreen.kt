@@ -49,134 +49,62 @@ class FilesScreen : Screen {
         val screenModel = koinScreenModel<FilesScreenModel>()
         val state by screenModel.state.collectAsState()
         
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.background)
-                .padding(AppSpacing.lg)
-        ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    TerminalIconButton(
-                        icon = Icons.AutoMirrored.Filled.ArrowBack,
-                        onClick = { navigator.pop() },
-                        iconColor = AppColors.textSecondary
-                    )
-                    Spacer(modifier = Modifier.width(AppSpacing.md))
-                    Text(
-                        text = "FILE EXPLORER",
-                        style = AppTypography.labelLarge,
-                        color = AppColors.white,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                TerminalIconButton(
-                    icon = Icons.Default.Refresh,
-                    onClick = { screenModel.loadFiles(state.currentPath) },
-                    contentDescription = "REFRESH",
-                    iconColor = AppColors.textSecondary
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(AppSpacing.md))
-            
-            // Breadcrumb navigation
-            TerminalBreadcrumbBar(
-                pathHistory = state.pathHistory,
-                canNavigateUp = state.pathHistory.size > 1,
-                onNavigateUp = { screenModel.navigateUp() }
-            )
-            
-            Spacer(modifier = Modifier.height(AppSpacing.md))
-            
-            // Content
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clip(AppShapes.card)
-                    .background(AppColors.surfaceContainer, AppShapes.card)
-                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-            ) {
-                if (state.isLoading) {
-                    LoadingScreen()
-                } else if (state.selectedFile != null && state.fileContent != null) {
-                    // File viewer
-                    TerminalFileViewer(
-                        fileName = state.selectedFile!!.name,
-                        content = state.fileContent!!.content,
-                        language = state.fileContent!!.language,
-                        onClose = { screenModel.closeFileViewer() }
-                    )
-                } else {
-                    // File list
-                    TerminalFilesList(
-                        files = state.files,
-                        onFileClick = { screenModel.selectFile(it) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TerminalBreadcrumbBar(
-    pathHistory: List<String>,
-    canNavigateUp: Boolean,
-    onNavigateUp: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.pill)
-            .background(AppColors.surfaceVariant, AppShapes.pill)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.pill)
-            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (canNavigateUp) {
-            TerminalIconButton(
-                icon = Icons.AutoMirrored.Filled.ArrowBack,
-                onClick = onNavigateUp,
-                size = 24.dp,
-                iconColor = AppColors.textSecondary
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-        }
-        
-        Icon(
-            Icons.Default.Home,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-            tint = AppColors.statusOnline
-        )
-        
-        Spacer(modifier = Modifier.width(AppSpacing.xs))
-        
-        Row(
-            modifier = Modifier.horizontalScroll(rememberScrollState()),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            pathHistory.lastOrNull()?.let { path ->
-                if (path.isNotEmpty()) {
-                    path.split("/").forEach { segment ->
-                        Text(
-                            text = " / ",
-                            color = AppColors.textTertiary,
-                            style = AppTypography.bodySmall
+        Scaffold(
+            topBar = {
+                GodHeader(
+                    title = "Files",
+                    onBackClick = { navigator.pop() },
+                    subtitle = "mobile-agent-v2",
+                    subtitleIcon = {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.4f),
+                            modifier = Modifier.size(16.dp)
                         )
-                        Text(
-                            text = segment,
-                            style = AppTypography.bodySmall,
-                            color = AppColors.white,
-                            fontWeight = FontWeight.Bold
+                    },
+                    actions = {
+                        IconButton(onClick = { screenModel.loadFiles(state.currentPath) }) {
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = AppColors.white)
+                        }
+                    }
+                )
+            },
+            containerColor = AppColors.background
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // Breadcrumb navigation
+                GodBreadcrumbBar(
+                    pathHistory = state.pathHistory,
+                    canNavigateUp = state.pathHistory.size > 1,
+                    onNavigateUp = { screenModel.navigateUp() }
+                )
+                
+                // Content
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    if (state.isLoading) {
+                        LoadingScreen()
+                    } else if (state.selectedFile != null && state.fileContent != null) {
+                        // File viewer
+                        GodFileViewer(
+                            fileName = state.selectedFile!!.name,
+                            content = state.fileContent!!.content,
+                            language = state.fileContent!!.language,
+                            onClose = { screenModel.closeFileViewer() }
+                        )
+                    } else {
+                        // File list
+                        GodFilesList(
+                            files = state.files,
+                            onFileClick = { screenModel.selectFile(it) }
                         )
                     }
                 }
@@ -186,7 +114,70 @@ private fun TerminalBreadcrumbBar(
 }
 
 @Composable
-private fun TerminalFilesList(
+private fun GodBreadcrumbBar(
+    pathHistory: List<String>,
+    canNavigateUp: Boolean,
+    onNavigateUp: () -> Unit
+) {
+    Surface(
+        color = AppColors.background,
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .horizontalScroll(rememberScrollState()),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            if (canNavigateUp) {
+                IconButton(
+                    onClick = onNavigateUp,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Up",
+                        tint = AppColors.white,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+            
+            Icon(
+                Icons.Default.Home,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = AppColors.accentGreen
+            )
+            
+            pathHistory.lastOrNull()?.let { path ->
+                if (path.isNotEmpty()) {
+                    path.split("/").filter { it.isNotEmpty() }.forEach { segment ->
+                        Icon(
+                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.2f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = segment,
+                            style = AppTypography.labelMedium,
+                            color = AppColors.white,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GodFilesList(
     files: List<FileInfo>,
     onFileClick: (FileInfo) -> Unit
 ) {
@@ -197,23 +188,43 @@ private fun TerminalFilesList(
         ) {
             Text(
                 text = "DIRECTORY EMPTY",
-                style = AppTypography.bodyMedium,
-                color = AppColors.textTertiary
+                style = AppTypography.labelMedium,
+                color = AppColors.white.copy(alpha = 0.2f),
+                letterSpacing = 1.sp
             )
         }
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(AppSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(
                 items = files,
                 key = { it.path },
                 contentType = { if (it.isDirectory) "directory" else "file" }
             ) { file ->
-                TerminalFileItem(
-                    file = file,
+                GodListItem(
+                    title = file.name,
+                    subtitle = if (file.isDirectory) "Folder" else formatFileSize(file.size ?: 0),
+                    icon = {
+                        Icon(
+                            imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
+                            contentDescription = null,
+                            tint = if (file.isDirectory) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailing = {
+                        if (file.isDirectory) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = AppColors.white.copy(alpha = 0.2f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    },
                     onClick = { onFileClick(file) }
                 )
             }
@@ -222,61 +233,7 @@ private fun TerminalFilesList(
 }
 
 @Composable
-private fun TerminalFileItem(
-    file: FileInfo,
-    onClick: () -> Unit
-) {
-    val icon = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name)
-    val iconColor = if (file.isDirectory) AppColors.accentGreen else AppColors.textSecondary
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.medium)
-            .clickable(onClick = onClick)
-            .padding(vertical = AppSpacing.sm, horizontal = AppSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconColor,
-            modifier = Modifier.size(20.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(AppSpacing.md))
-        
-        Text(
-            text = file.name,
-            color = AppColors.white,
-            style = AppTypography.bodyMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
-        )
-        
-        if (file.size != null) {
-            Text(
-                text = formatFileSize(file.size),
-                color = AppColors.textTertiary,
-                style = AppTypography.labelSmall
-            )
-        }
-        
-        if (file.isDirectory) {
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-            Icon(
-                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = null,
-                tint = AppColors.textTertiary,
-                modifier = Modifier.size(16.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun TerminalFileViewer(
+private fun GodFileViewer(
     fileName: String,
     content: String,
     language: String?,
@@ -286,41 +243,51 @@ private fun TerminalFileViewer(
         modifier = Modifier.fillMaxSize()
     ) {
         // Viewer Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(AppColors.surfaceVariant)
-                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+        Surface(
+            color = AppColors.surface,
+            modifier = Modifier.fillMaxWidth(),
+            border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
         ) {
-            Icon(
-                getFileIcon(fileName),
-                contentDescription = null,
-                tint = AppColors.accentGreen,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.md))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = fileName.uppercase(),
-                    style = AppTypography.bodyMedium,
-                    color = AppColors.white,
-                    fontWeight = FontWeight.Bold
+            Row(
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    getFileIcon(fileName),
+                    contentDescription = null,
+                    tint = AppColors.accentGreen,
+                    modifier = Modifier.size(20.dp)
                 )
-                if (language != null) {
+                Spacer(modifier = Modifier.width(16.dp))
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = language.uppercase(),
-                        style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        text = fileName,
+                        style = AppTypography.titleSmall,
+                        color = AppColors.white,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (language != null) {
+                        Text(
+                            text = language.uppercase(),
+                            style = AppTypography.labelSmall,
+                            color = AppColors.white.copy(alpha = 0.4f)
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = onClose,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "Close",
+                        tint = AppColors.white,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
-            TerminalIconButton(
-                icon = Icons.Default.Close,
-                onClick = onClose,
-                iconColor = AppColors.white,
-                size = 32.dp
-            )
         }
         
         // File Content
@@ -331,12 +298,12 @@ private fun TerminalFileViewer(
                 .background(AppColors.background)
                 .verticalScroll(rememberScrollState())
                 .horizontalScroll(rememberScrollState())
-                .padding(AppSpacing.md)
+                .padding(20.dp)
         ) {
             Text(
                 text = content,
-                style = AppTypography.code, // Use code typography
-                color = AppColors.whiteMuted
+                style = AppTypography.code,
+                color = AppColors.whiteDim
             )
         }
     }

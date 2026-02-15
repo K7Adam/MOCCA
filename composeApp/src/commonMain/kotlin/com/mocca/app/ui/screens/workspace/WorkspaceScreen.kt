@@ -1,136 +1,347 @@
 package com.mocca.app.ui.screens.workspace
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mocca.app.ui.components.*
 import com.mocca.app.ui.screens.chat.ChatScreen
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.*
+
+// Add missing icons if they don't exist in standard Icons.Default
+// Note: Some icons might be from Material Symbols, using best matches.
+val Icons.Default.Dataset get() = Icons.Default.Storage
+val Icons.Default.DragIndicator get() = Icons.Default.DragHandle
 
 data class WorkspaceScreen(val sessionId: String) : Screen {
 
     @Composable
     override fun Content() {
         var selectedIndex by remember { mutableStateOf(0) }
+        val navigator = LocalNavigator.currentOrThrow
         
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.background)
-        ) {
-            // Content area
+        Scaffold(
+            topBar = {
+                GodHeader(
+                    title = if (selectedIndex == 0) "Workspace_01" else getTabTitle(selectedIndex),
+                    onBackClick = { navigator.pop() },
+                    subtitle = if (selectedIndex == 0) null else "SESSION: $sessionId",
+                    actions = {
+                        IconButton(onClick = { /* Settings */ }) {
+                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.white.copy(alpha = 0.5f))
+                        }
+                    }
+                )
+            },
+            containerColor = AppColors.background,
+            bottomBar = {
+                GodBottomNavBar(
+                    selectedIndex = selectedIndex,
+                    onItemSelected = { selectedIndex = it }
+                )
+            }
+        ) { padding ->
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(padding)
             ) {
                 when (selectedIndex) {
-                    0 -> ChatScreen(sessionId).Content()
-                    1 -> FilesScreen().Content()
-                    2 -> TerminalScreen().Content()
-                    3 -> GitScreen().Content()
+                    0 -> DashboardContent(sessionId)
+                    1 -> ChatScreen(sessionId).Content()
+                    2 -> FilesScreen().Content()
+                    3 -> TerminalScreen().Content()
+                    4 -> GitScreen().Content()
                 }
             }
-            
-            // Terminal-style bottom navigation bar
-            TerminalBottomNavBar(
-                selectedIndex = selectedIndex,
-                onItemSelected = { selectedIndex = it }
+        }
+    }
+
+    private fun getTabTitle(index: Int): String = when (index) {
+        0 -> "Dashboard"
+        1 -> "Chat"
+        2 -> "Explorer"
+        3 -> "Terminal"
+        4 -> "Git"
+        else -> "Workspace"
+    }
+}
+
+@Composable
+private fun DashboardContent(sessionId: String) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // MCP Server Status (1x1)
+                GodModuleCard(
+                    modifier = Modifier.weight(1f).height(160.dp),
+                    title = "MCP SERVER",
+                    icon = Icons.Default.Dns,
+                    status = "Online",
+                    subtitle = "12ms latency",
+                    statusColor = AppColors.accentGreen
+                )
+                
+                // Skills (1x1)
+                GodModuleCard(
+                    modifier = Modifier.weight(1f).height(160.dp),
+                    title = "SKILLS",
+                    icon = Icons.Default.Extension,
+                    content = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            repeat(3) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.medium)
+                                        .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.medium),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (it == 0) Icons.Default.Code else if (it == 1) Icons.Default.Terminal else Icons.Default.Dataset,
+                                        contentDescription = null,
+                                        tint = AppColors.white.copy(alpha = 0.7f),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .background(AppColors.white.copy(alpha = 0.05f), AppShapes.medium),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text("+3", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f), fontSize = 10.sp)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        // Git Activity (2x1)
+        item {
+            GodModuleCard(
+                modifier = Modifier.fillMaxWidth().height(180.dp),
+                title = "GIT ACTIVITY",
+                icon = Icons.Default.Commit,
+                subtitle = "main • Last commit 2m ago",
+                content = {
+                    Box(modifier = Modifier.fillMaxSize().padding(top = 16.dp)) {
+                        Text(
+                            text = "feat: modular grid",
+                            style = AppTypography.monoLabel,
+                            color = AppColors.white.copy(alpha = 0.7f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .background(Color(0xFF222222), AppShapes.small)
+                                .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.small)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        )
+                        // TODO: Add SVG-like path drawing for git graph
+                    }
+                }
+            )
+        }
+
+        // Mini Terminal (2x1)
+        item {
+            GodModuleCard(
+                modifier = Modifier.fillMaxWidth().height(200.dp),
+                title = "TERMINAL",
+                icon = Icons.Default.Terminal,
+                content = {
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.4f),
+                        shape = AppShapes.medium,
+                        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f)),
+                        modifier = Modifier.fillMaxSize().padding(top = 12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("> git checkout -b feat/workspace", style = AppTypography.codeSmall, color = AppColors.white.copy(alpha = 0.5f))
+                            Text("Switched to a new branch 'feat/workspace'", style = AppTypography.codeSmall, color = AppColors.white.copy(alpha = 0.5f))
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text("✔", color = AppColors.accentGreen, style = AppTypography.codeSmall)
+                                Text("Ready in 240ms", color = AppColors.white, style = AppTypography.codeSmall)
+                            }
+                            Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(">", color = AppColors.accentGreen, style = AppTypography.codeSmall)
+                                Box(modifier = Modifier.size(8.dp, 16.dp).background(AppColors.accentGreen))
+                            }
+                        }
+                    }
+                }
             )
         }
     }
 }
 
 @Composable
-private fun TerminalBottomNavBar(
+private fun GodModuleCard(
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    status: String? = null,
+    subtitle: String? = null,
+    statusColor: Color = AppColors.white,
+    content: @Composable (ColumnScope.() -> Unit)? = null
+) {
+    Surface(
+        modifier = modifier,
+        color = Color(0xFF111111),
+        shape = RoundedCornerShape(32.dp),
+        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
+                        .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.circle),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(icon, contentDescription = null, tint = AppColors.white, modifier = Modifier.size(20.dp))
+                    if (status == "Online") {
+                        Box(
+                            modifier = Modifier
+                                .size(10.dp)
+                                .align(Alignment.TopEnd)
+                                .offset(x = 2.dp, y = (-2).dp)
+                                .background(AppColors.accentGreen, AppShapes.circle)
+                                .border(2.dp, Color(0xFF111111), AppShapes.circle)
+                        )
+                    }
+                }
+                Icon(
+                    Icons.Default.DragIndicator,
+                    contentDescription = null,
+                    tint = AppColors.white.copy(alpha = 0.1f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            
+            Spacer(modifier = Modifier.weight(1f))
+            
+            Text(
+                text = title,
+                style = AppTypography.labelSmall,
+                color = AppColors.white.copy(alpha = 0.4f),
+                letterSpacing = 1.sp
+            )
+            
+            if (status != null) {
+                Text(
+                    text = status,
+                    style = AppTypography.titleLarge,
+                    color = AppColors.white,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = if (title == "MCP SERVER") AppTypography.codeSmall else AppTypography.bodySmall,
+                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f)
+                )
+            }
+            
+            content?.invoke(this)
+        }
+    }
+}
+
+@Composable
+private fun GodBottomNavBar(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit
 ) {
     val items = listOf(
-        NavItem(0, "CHAT", Icons.AutoMirrored.Filled.Chat),
-        NavItem(1, "FILES", Icons.Default.Folder),
-        NavItem(2, "TERM", Icons.Default.Terminal),
-        NavItem(3, "GIT", Icons.Default.Code)
+        NavItem(0, "DASH", Icons.Default.GridView),
+        NavItem(1, "CHAT", Icons.AutoMirrored.Filled.Chat),
+        NavItem(2, "FILES", Icons.Default.Folder),
+        NavItem(3, "TERM", Icons.Default.Terminal),
+        NavItem(4, "GIT", Icons.Default.Code)
     )
     
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(AppColors.surface)
-            .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
+    Surface(
+        color = AppColors.background.copy(alpha = 0.9f),
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
     ) {
-        items.forEach { item ->
-            val isSelected = selectedIndex == item.index
-            TerminalNavItem(
-                label = item.label,
-                icon = item.icon,
-                isSelected = isSelected,
-                onClick = { onItemSelected(item.index) },
-                modifier = Modifier.weight(1f)
-            )
+        Row(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .height(72.dp)
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            items.forEach { item ->
+                val isSelected = selectedIndex == item.index
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable(onClick = { onItemSelected(item.index) })
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = item.label,
+                        tint = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.3f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = item.label,
+                        style = AppTypography.labelSmall,
+                        color = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.3f),
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        fontSize = 9.sp
+                    )
+                }
+            }
         }
-    }
-}
-
-private data class NavItem(
-    val index: Int,
-    val label: String,
-    val icon: ImageVector
-)
-
-@Composable
-private fun TerminalNavItem(
-    label: String,
-    icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val backgroundColor = if (isSelected) AppColors.white else AppColors.surface
-    val contentColor = if (isSelected) AppColors.background else AppColors.grey
-    val borderColor = if (isSelected) AppColors.white else AppColors.border
-    
-    Column(
-        modifier = modifier
-            .background(backgroundColor, RectangleShape)
-            .border(AppSpacing.borderThin, borderColor, RectangleShape)
-            .clickable(onClick = onClick)
-            .padding(vertical = AppSpacing.sm),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = contentColor,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.height(AppSpacing.xs))
-        Text(
-            text = label,
-            style = AppTypography.labelSmall,
-            color = contentColor,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-        )
     }
 }

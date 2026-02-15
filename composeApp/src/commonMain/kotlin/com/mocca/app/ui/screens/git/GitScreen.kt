@@ -1,5 +1,6 @@
 package com.mocca.app.ui.screens.git
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,21 +21,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.ui.components.ErrorScreen
-import com.mocca.app.ui.components.LoadingScreen
+import com.mocca.app.ui.components.*
 import com.mocca.app.ui.components.terminal.*
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.*
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
@@ -42,6 +39,10 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Git Control Center - Modern "God Mode" UI for Git operations.
+ * Ported from high-fidelity HTML/Tailwind mocks.
+ */
 class GitScreen : Screen {
     @Composable
     override fun Content() {
@@ -67,185 +68,98 @@ class GitScreen : Screen {
             }
         }
         
-        Box(modifier = Modifier.fillMaxSize().background(AppColors.background)) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(AppSpacing.lg)
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        TerminalIconButton(
-                            icon = Icons.AutoMirrored.Filled.ArrowBack,
-                            onClick = { navigator.pop() },
-                            iconColor = AppColors.textSecondary
+        Scaffold(
+            topBar = {
+                GodHeader(
+                    title = selectedTab.title,
+                    onBackClick = { navigator.pop() },
+                    subtitle = "mobile-agent-v2",
+                    subtitleIcon = {
+                        Icon(
+                            imageVector = Icons.Default.FolderOpen,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.4f),
+                            modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(AppSpacing.md))
-                        Column {
-                            Text(
-                                text = "GIT CONTROL",
-                                style = AppTypography.labelLarge,
-                                color = AppColors.white,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "BRANCH: ${uiState.currentBranch}",
-                                color = AppColors.statusOnline,
-                                style = AppTypography.labelSmall
-                            )
+                    },
+                    actions = {
+                        IconButton(onClick = { /* More actions */ }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.white)
                         }
                     }
+                )
+            },
+            containerColor = AppColors.background,
+            floatingActionButton = {
+                GitFloatingBar(
+                    onFetch = { screenModel.fetch() },
+                    onPull = { screenModel.pull() },
+                    onPush = { screenModel.push() }
+                )
+            },
+            floatingActionButtonPosition = FabPosition.Center
+        ) { padding ->
+            Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Tabs Navigation
+                    GitTabsNavigation(selectedTab, onTabSelected = { screenModel.selectTab(it) })
                     
-                    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-                        TerminalIconButton(icon = Icons.Default.Sync, onClick = { screenModel.fetch() }, contentDescription = "FETCH", iconColor = AppColors.textSecondary)
-                        TerminalIconButton(icon = Icons.Default.Download, onClick = { screenModel.pull() }, contentDescription = "PULL", iconColor = AppColors.textSecondary)
-                        TerminalIconButton(icon = Icons.Default.Upload, onClick = { screenModel.push() }, contentDescription = "PUSH", iconColor = AppColors.textSecondary)
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(AppSpacing.lg))
-                
-                // Tabs
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
-                ) {
-                    GitTab.entries.forEach { tab ->
-                        val isSelected = selectedTab == tab
-                        TabPillButton(
-                            text = tab.title.uppercase(),
-                            isSelected = isSelected,
-                            onClick = { screenModel.selectTab(tab) }
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(AppSpacing.lg))
-                
-                // Content Area
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .clip(AppShapes.card)
-                        .background(AppColors.surfaceContainer, AppShapes.card)
-                        .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-                ) {
-                    when {
-                        uiState.isLoading -> LoadingScreen()
-                        uiState.error != null -> ErrorScreen(
-                            message = uiState.error!!,
-                            onRetry = {
-                                screenModel.clearError()
-                                screenModel.selectTab(selectedTab)
-                            }
-                        )
-                        else -> when (selectedTab) {
-                            GitTab.STATUS -> StatusTab(
-                                uiState,
-                                screenModel,
-                                onNavigateToDiff = { path, staged ->
-                                    navigator.push(GitDiffScreen(path, staged))
+                    // Main Content
+                    Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+                        when {
+                            uiState.isLoading -> LoadingScreen()
+                            uiState.error != null -> ErrorScreen(
+                                message = uiState.error!!,
+                                onRetry = {
+                                    screenModel.clearError()
+                                    screenModel.selectTab(selectedTab)
                                 }
                             )
-                            GitTab.BRANCHES -> BranchesTab(uiState, screenModel)
-                            GitTab.LOG -> LogTab(uiState, screenModel)
-                            GitTab.REMOTES -> RemotesTab(uiState, screenModel)
-                            GitTab.TAGS -> TagsTab(uiState, screenModel)
-                        }
-                    }
-
-                    // Dialogs
-                    if (uiState.showCommitDialog) {
-                        TerminalCommitDialog(
-                            message = uiState.commitMessage,
-                            onMessageChange = { screenModel.updateCommitMessage(it) },
-                            onCommit = { screenModel.commit(uiState.commitMessage) },
-                            onDismiss = { screenModel.hideCommitDialog() }
-                        )
-                    }
-                    
-                    if (uiState.showStashDialog) {
-                        CreateStashDialog(
-                            message = uiState.stashMessage,
-                            onMessageChange = { screenModel.updateStashMessage(it) },
-                            onCreate = { screenModel.createStash(uiState.stashMessage.ifBlank { null }) },
-                            onDismiss = { screenModel.hideStashDialog() }
-                        )
-                    }
-                    
-                    if (uiState.showAddRemoteDialog) {
-                        AddRemoteDialog(
-                            onAdd = { name, url -> screenModel.addRemote(name, url); screenModel.hideAddRemoteDialog() },
-                            onDismiss = { screenModel.hideAddRemoteDialog() }
-                        )
-                    }
-                    
-                    if (uiState.showCreateTagDialog) {
-                        CreateTagDialog(
-                            onAdd = { name, msg -> screenModel.createTag(name, msg.ifBlank { null }); screenModel.hideCreateTagDialog() },
-                            onDismiss = { screenModel.hideCreateTagDialog() }
-                        )
-                    }
-                }
-            }
-
-            // Overlays
-            if (uiState.showServerNotRunningDialog) {
-                com.mocca.app.ui.components.GitServerNotRunningDialog(
-                    onDismiss = { screenModel.hideServerNotRunningDialog() },
-                    onStartServer = { screenModel.requestStartGitServer() },
-                    showAdbHelp = uiState.showAdbReverseHelp,
-                    isAttemptingStart = uiState.isStartingServer,
-                    attemptCount = uiState.serverStartAttempt,
-                    maxAttempts = uiState.maxServerStartAttempts
-                )
-            }
-
-            if (uiState.isStartingServer) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AppColors.background.copy(alpha = 0.9f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
-                    ) {
-                        CircularProgressIndicator(color = AppColors.accentGreen, strokeWidth = 2.dp)
-                        Text(text = "STARTING GIT SERVER...", color = AppColors.white, style = AppTypography.titleMedium)
-                        uiState.serverStartProgress?.let { progress ->
-                            Text(text = progress.uppercase(), color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                            else -> when (selectedTab) {
+                                GitTab.STATUS -> GitStatusSummary(uiState, screenModel, onNavigateToDiff = { path, staged ->
+                                    navigator.push(GitDiffScreen(path, staged))
+                                })
+                                GitTab.BRANCHES -> BranchesTab(uiState, screenModel)
+                                GitTab.LOG -> LogTab(uiState, screenModel)
+                                GitTab.REMOTES -> RemotesTab(uiState, screenModel)
+                                GitTab.TAGS -> TagsTab(uiState, screenModel)
+                            }
                         }
                     }
                 }
-            }
 
-            toastMessage?.let { message ->
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(AppSpacing.md)
-                        .clip(AppShapes.pill)
-                        .background(if (toastIsWarning) AppColors.statusWaiting else AppColors.statusOnline)
-                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
+                // Dialogs & Overlays
+                GitOverlays(uiState, screenModel)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GitTabsNavigation(selectedTab: GitTab, onTabSelected: (GitTab) -> Unit) {
+    Surface(
+        color = AppColors.background,
+        modifier = Modifier.fillMaxWidth(),
+        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(vertical = 16.dp, horizontal = 20.dp)
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            GitTab.entries.forEach { tab ->
+                val isSelected = selectedTab == tab
+                Button(
+                    onClick = { onTabSelected(tab) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isSelected) AppColors.primary else AppColors.white.copy(alpha = 0.05f),
+                        contentColor = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.6f)
+                    ),
+                    shape = AppShapes.pill,
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    Text(
-                        text = message.uppercase(), 
-                        color = AppColors.background, 
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Text(text = tab.title, style = AppTypography.labelMedium)
                 }
             }
         }
@@ -253,56 +167,158 @@ class GitScreen : Screen {
 }
 
 @Composable
-private fun StatusTab(
-    uiState: GitUiState, 
+private fun GitFloatingBar(
+    onFetch: () -> Unit,
+    onPull: () -> Unit,
+    onPush: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.padding(bottom = 16.dp),
+        color = Color(0xFF1C1C1E),
+        shape = AppShapes.pill,
+        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)),
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onFetch, modifier = Modifier.padding(horizontal = 12.dp)) {
+                Text("Refetch", color = AppColors.white, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+            }
+            
+            Box(modifier = Modifier.size(1.dp, 16.dp).background(AppColors.white.copy(alpha = 0.1f)))
+            
+            TextButton(onClick = onPull, modifier = Modifier.padding(horizontal = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Pull", color = AppColors.white, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                    Box(modifier = Modifier.size(6.dp).background(AppColors.primary, AppShapes.circle))
+                }
+            }
+
+            Box(modifier = Modifier.size(1.dp, 16.dp).background(AppColors.white.copy(alpha = 0.1f)))
+
+            TextButton(onClick = onPush, modifier = Modifier.padding(horizontal = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Push", color = AppColors.primary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = AppColors.primary, modifier = Modifier.size(16.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GitStatusSummary(
+    uiState: GitUiState,
     screenModel: GitScreenModel,
     onNavigateToDiff: (String, Boolean) -> Unit
 ) {
     val status = uiState.status
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(AppSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
-        item { StatusHeader(status) }
         item {
-            StashesSection(
-                stashes = uiState.stashes,
-                onCreateStash = { screenModel.showStashDialog() },
-                onPop = { screenModel.popStash(it) },
-                onApply = { screenModel.applyStash(it) },
-                onDrop = { screenModel.dropStash(it) }
+            Text(
+                text = "Status",
+                style = AppTypography.displaySmall,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = AppColors.white
             )
         }
+
+        // Staged Section
         if (status != null && status.staged.isNotEmpty()) {
-            item { SectionHeader(title = "STAGED CHANGES [${status.staged.size}]", action = { TerminalTextButton(text = "UNSTAGE ALL", onClick = { screenModel.unstageAll() }) }) }
-            itemsIndexed(items = status.staged, key = { index, change -> "staged-$index-${change.path}" }) { _, change ->
-                FileChangeItem(change = change, staged = true, onUnstage = { screenModel.unstageFile(change.path) }, onClick = { onNavigateToDiff(change.path, true) })
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "STAGED",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.white.copy(alpha = 0.4f),
+                        letterSpacing = 1.sp
+                    )
+                    GodBadge(
+                        text = "${status.staged.size} FILES",
+                        containerColor = AppColors.primary.copy(alpha = 0.2f),
+                        contentColor = AppColors.primary
+                    )
+                }
+            }
+            items(status.staged) { change ->
+                GodListItem(
+                    title = change.path.substringAfterLast('/'),
+                    subtitle = "Modified • ${change.status}",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = AppColors.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    onClick = { onNavigateToDiff(change.path, true) }
+                )
             }
         }
+
+        // Unstaged Section
         if (status != null && status.unstaged.isNotEmpty()) {
-            item { SectionHeader(title = "CHANGES [${status.unstaged.size}]", action = { TerminalTextButton(text = "STAGE ALL", onClick = { screenModel.stageAll() }) }) }
-            itemsIndexed(status.unstaged, key = { index, change -> "unstaged-$index-${change.path}" }) { _, change ->
-                FileChangeItem(change = change, staged = false, onStage = { screenModel.stageFile(change.path) }, onDiscard = { screenModel.discardFile(change.path) }, onClick = { onNavigateToDiff(change.path, false) })
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "UNSTAGED",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.white.copy(alpha = 0.4f),
+                        letterSpacing = 1.sp
+                    )
+                    GodBadge(
+                        text = "${status.unstaged.size} FILE",
+                        containerColor = AppColors.white.copy(alpha = 0.1f),
+                        contentColor = AppColors.white.copy(alpha = 0.6f)
+                    )
+                }
+            }
+            items(status.unstaged) { change ->
+                GodListItem(
+                    title = change.path.substringAfterLast('/'),
+                    subtitle = "Modified • ${change.status}",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Remove,
+                            contentDescription = null,
+                            tint = AppColors.alertRed,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    onClick = { onNavigateToDiff(change.path, false) }
+                )
             }
         }
-        if (status != null && status.untracked.isNotEmpty()) {
-            item { SectionHeader(title = "UNTRACKED FILES [${status.untracked.size}]") }
-            items(status.untracked, key = { "untracked-$it" }) { path ->
-                UntrackedFileItem(path = path, onStage = { screenModel.stageFile(path) })
-            }
-        }
+        
         if (uiState.stagedCount > 0) {
             item { 
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                TerminalButton(
+                Spacer(modifier = Modifier.height(16.dp))
+                GodButton(
                     text = "COMMIT ${uiState.stagedCount} FILES", 
                     onClick = { screenModel.showCommitDialog() }, 
-                    icon = Icons.Default.Check,
+                    icon = { Icon(Icons.Default.Check, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
                 ) 
             }
         }
+        
         if (status?.clean == true) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
@@ -323,19 +339,71 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val currentBranch = uiState.currentBranch
     var selectedBranch by remember { mutableStateOf<String?>(null) }
     
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         val localBranches = branches.filter { !it.remote }
         if (localBranches.isNotEmpty()) {
-            item { SectionHeader("LOCAL BRANCHES") }
+            item {
+                Text(
+                    text = "LOCAL BRANCHES",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
             items(items = localBranches, key = { "local-${it.name}" }) { branch ->
-                BranchItem(branch = branch, isCurrent = branch.name == currentBranch, onClick = { selectedBranch = branch.name })
+                GodListItem(
+                    title = branch.name,
+                    subtitle = if (branch.upstream != null) "Tracks: ${branch.upstream}" else "Local only",
+                    icon = {
+                        Icon(
+                            imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
+                            contentDescription = null,
+                            tint = if (branch.name == currentBranch) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailing = {
+                        if (branch.ahead > 0 || branch.behind > 0) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
+                                if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.alertRed)
+                            }
+                        }
+                    },
+                    onClick = { selectedBranch = branch.name }
+                )
             }
         }
+
         val remoteBranches = branches.filter { it.remote }
         if (remoteBranches.isNotEmpty()) {
-            item { Spacer(Modifier.height(AppSpacing.lg)); SectionHeader("REMOTE BRANCHES") }
+            item {
+                Spacer(Modifier.height(16.dp))
+                Text(
+                    text = "REMOTE BRANCHES",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f),
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
             items(items = remoteBranches, key = { "remote-${it.name}" }) { branch ->
-                BranchItem(branch = branch, isCurrent = false, onClick = { selectedBranch = branch.name })
+                GodListItem(
+                    title = branch.name,
+                    subtitle = "Remote branch",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Cloud,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.2f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    onClick = { selectedBranch = branch.name }
+                )
             }
         }
     }
@@ -352,26 +420,207 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 }
 
 @Composable
-private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
-    val remotes = uiState.remotes
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-        item { SectionHeader(title = "REMOTES [${remotes.size}]", action = { TerminalTextButton("ADD", onClick = { screenModel.showAddRemoteDialog() }) }) }
-        items(items = remotes, key = { it.name }) { remote ->
-            Row(
+private fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
+    val commits = uiState.log?.commits ?: emptyList()
+    
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
+    ) {
+        itemsIndexed(items = commits, key = { _, commit -> commit.hash }) { index, commit ->
+            LogTimelineItem(
+                commit = commit,
+                isLast = index == commits.size - 1,
+                hasMore = uiState.log?.hasMore == true
+            )
+        }
+        
+        if (uiState.log?.hasMore == true) {
+            item {
+                Box(modifier = Modifier.padding(start = 20.dp, top = 16.dp)) {
+                    GodButton(
+                        text = "LOAD MORE",
+                        onClick = { screenModel.loadLog(skip = commits.size) },
+                        containerColor = AppColors.white.copy(alpha = 0.05f),
+                        contentColor = AppColors.white
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LogTimelineItem(
+    commit: GitCommit,
+    isLast: Boolean,
+    hasMore: Boolean
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        // Timeline Column
+        Column(
+            modifier = Modifier.width(40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Top circle
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(AppShapes.card)
-                    .background(AppColors.surfaceVariant, AppShapes.card)
-                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-                    .padding(AppSpacing.md), 
+                    .size(40.dp)
+                    .background(AppColors.surfaceElevated, AppShapes.circle)
+                    .border(BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)), AppShapes.circle),
+                contentAlignment = Alignment.Center
+            ) {
+                if (commit.author.contains("Bot", ignoreCase = true)) {
+                    Icon(
+                        imageVector = Icons.Default.SmartToy,
+                        contentDescription = null,
+                        tint = AppColors.white.copy(alpha = 0.4f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                } else {
+                    // Placeholder for avatar
+                    Text(
+                        text = commit.author.take(1).uppercase(),
+                        style = AppTypography.labelMedium,
+                        color = AppColors.white
+                    )
+                }
+            }
+            
+            // Connecting line
+            if (!isLast || hasMore) {
+                Box(
+                    modifier = Modifier
+                        .width(2.dp)
+                        .height(80.dp)
+                        .background(AppColors.white.copy(alpha = 0.1f))
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.width(16.dp))
+        
+        // Content Column
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = 4.dp, bottom = 24.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = remote.name.uppercase(), color = AppColors.white, style = AppTypography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text(text = remote.url, style = AppTypography.bodySmall, color = AppColors.textTertiary)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = commit.message,
+                        style = AppTypography.titleSmall,
+                        color = AppColors.white,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+                    if (commit.author.contains("Bot", ignoreCase = true)) {
+                        GodBadge(
+                            text = "BOT",
+                            containerColor = AppColors.primary.copy(alpha = 0.2f),
+                            contentColor = AppColors.primary
+                        )
+                    }
                 }
-                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.removeRemote(remote.name) }, iconColor = AppColors.alertRed)
+                Text(
+                    text = commit.shortHash,
+                    style = AppTypography.codeSmall,
+                    color = AppColors.white.copy(alpha = 0.3f),
+                    modifier = Modifier
+                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.badge)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                )
             }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = commit.message,
+                style = AppTypography.bodySmall,
+                color = AppColors.white.copy(alpha = 0.6f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = commit.author,
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.3f),
+                    fontWeight = FontWeight.Medium
+                )
+                Box(modifier = Modifier.size(4.dp).background(AppColors.white.copy(alpha = 0.2f), AppShapes.circle))
+                Text(
+                    text = "3 min ago", 
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.3f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
+    val remotes = uiState.remotes
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "REMOTES",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f)
+                )
+                GodButton(
+                    text = "ADD",
+                    onClick = { screenModel.showAddRemoteDialog() },
+                    containerColor = AppColors.white.copy(alpha = 0.05f),
+                    contentColor = AppColors.white,
+                    modifier = Modifier.height(32.dp)
+                )
+            }
+        }
+        items(items = remotes, key = { it.name }) { remote ->
+            GodListItem(
+                title = remote.name.uppercase(),
+                subtitle = remote.url,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Link,
+                        contentDescription = null,
+                        tint = AppColors.white.copy(alpha = 0.4f)
+                    )
+                },
+                trailing = {
+                    IconButton(onClick = { screenModel.removeRemote(remote.name) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.alertRed.copy(alpha = 0.6f))
+                    }
+                }
+            )
         }
     }
 }
@@ -379,142 +628,179 @@ private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 @Composable
 private fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val tags = uiState.tags
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-        item { SectionHeader(title = "TAGS [${tags.size}]", action = { TerminalTextButton("CREATE", onClick = { screenModel.showCreateTagDialog() }) }) }
-        items(tags) { tag ->
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(20.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        item {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(AppShapes.card)
-                    .background(AppColors.surfaceVariant, AppShapes.card)
-                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-                    .padding(AppSpacing.sm), 
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.AutoMirrored.Filled.Label, contentDescription = null, tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(AppSpacing.sm))
-                Text(text = tag, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f))
-                TerminalIconButton(icon = Icons.Default.Delete, onClick = { screenModel.deleteTag(tag) }, iconColor = AppColors.alertRed)
+                Text(
+                    text = "TAGS",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.white.copy(alpha = 0.4f)
+                )
+                GodButton(
+                    text = "CREATE",
+                    onClick = { screenModel.showCreateTagDialog() },
+                    containerColor = AppColors.white.copy(alpha = 0.05f),
+                    contentColor = AppColors.white,
+                    modifier = Modifier.height(32.dp)
+                )
+            }
+        }
+        items(tags) { tag ->
+            GodListItem(
+                title = tag,
+                subtitle = "Release tag",
+                icon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Label,
+                        contentDescription = null,
+                        tint = AppColors.accentGreen.copy(alpha = 0.6f)
+                    )
+                },
+                trailing = {
+                    IconButton(onClick = { screenModel.deleteTag(tag) }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.alertRed.copy(alpha = 0.6f))
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
+    val toastMessage = uiState.warningMessage ?: uiState.operationResult
+    val toastIsWarning = uiState.warningMessage != null
+
+    // Dialogs
+    if (uiState.showCommitDialog) {
+        TerminalCommitDialog(
+            message = uiState.commitMessage,
+            onMessageChange = { screenModel.updateCommitMessage(it) },
+            onCommit = { screenModel.commit(uiState.commitMessage) },
+            onDismiss = { screenModel.hideCommitDialog() }
+        )
+    }
+
+    if (uiState.showStashDialog) {
+        CreateStashDialog(
+            message = uiState.stashMessage,
+            onMessageChange = { screenModel.updateStashMessage(it) },
+            onCreate = { screenModel.createStash(uiState.stashMessage.ifBlank { null }) },
+            onDismiss = { screenModel.hideStashDialog() }
+        )
+    }
+
+    if (uiState.showAddRemoteDialog) {
+        AddRemoteDialog(
+            onAdd = { name, url -> screenModel.addRemote(name, url); screenModel.hideAddRemoteDialog() },
+            onDismiss = { screenModel.hideAddRemoteDialog() }
+        )
+    }
+
+    if (uiState.showCreateTagDialog) {
+        CreateTagDialog(
+            onAdd = { name, msg -> screenModel.createTag(name, msg.ifBlank { null }); screenModel.hideCreateTagDialog() },
+            onDismiss = { screenModel.hideCreateTagDialog() }
+        )
+    }
+
+    if (uiState.showServerNotRunningDialog) {
+        com.mocca.app.ui.components.GitServerNotRunningDialog(
+            onDismiss = { screenModel.hideServerNotRunningDialog() },
+            onStartServer = { screenModel.requestStartGitServer() },
+            showAdbHelp = uiState.showAdbReverseHelp,
+            isAttemptingStart = uiState.isStartingServer,
+            attemptCount = uiState.serverStartAttempt,
+            maxAttempts = uiState.maxServerStartAttempts
+        )
+    }
+
+    if (uiState.isStartingServer) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(AppColors.background.copy(alpha = 0.9f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
+                CircularProgressIndicator(color = AppColors.accentGreen, strokeWidth = 2.dp)
+                Text(text = "STARTING GIT SERVER...", color = AppColors.white, style = AppTypography.titleMedium)
+                uiState.serverStartProgress?.let { progress ->
+                    Text(text = progress.uppercase(), color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                }
+            }
+        }
+    }
+
+    toastMessage?.let { message ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 100.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            Surface(
+                color = if (toastIsWarning) AppColors.error else AppColors.accentGreen,
+                shape = AppShapes.pill,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (toastIsWarning) Icons.Default.Warning else Icons.Default.Check,
+                        contentDescription = null,
+                        tint = AppColors.background,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = message.uppercase(),
+                        color = AppColors.background,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun StatusHeader(status: GitStatusResponse?) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-            .padding(AppSpacing.md)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = "BRANCH: ${status?.branch ?: "UNKNOWN"}", color = AppColors.white, style = AppTypography.bodyMedium, fontWeight = FontWeight.Bold)
-            if (status?.upstream != null) { Text(text = "UPSTREAM: ${status.upstream}", color = AppColors.textTertiary, style = AppTypography.bodySmall) }
-        }
-        if (status?.ahead ?: 0 > 0 || status?.behind ?: 0 > 0) {
-            Spacer(Modifier.height(8.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                if (status?.ahead ?: 0 > 0) { Text("${status?.ahead} AHEAD", color = AppColors.statusOnline, style = AppTypography.labelSmall) }
-                if (status?.behind ?: 0 > 0) { Text("${status?.behind} BEHIND", color = AppColors.error, style = AppTypography.labelSmall) }
+private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout: () -> Unit, onMerge: () -> Unit, onRebase: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
+        text = {
+            Column {
+                Text(text = branch, color = AppColors.statusOnline, style = AppTypography.bodyMedium, modifier = Modifier.padding(vertical = AppSpacing.md))
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                GodButton(text = "CHECKOUT", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                GodButton(text = "MERGE INTO CURRENT", onClick = onMerge, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.white, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                GodButton(text = "REBASE CURRENT ONTO", onClick = onRebase, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.white, modifier = Modifier.fillMaxWidth())
             }
-        }
-    }
-}
-
-@Composable
-private fun SectionHeader(title: String, action: @Composable (() -> Unit)? = null) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(text = title, color = AppColors.textSecondary, style = AppTypography.labelMedium)
-        action?.invoke()
-    }
-}
-
-@Composable
-private fun FileChangeItem(change: GitFileChange, staged: Boolean, onStage: (() -> Unit)? = null, onUnstage: (() -> Unit)? = null, onDiscard: (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
-    val statusColor = when (change.status) { GitFileStatus.ADDED -> AppColors.statusOnline; GitFileStatus.MODIFIED -> AppColors.statusWaiting; GitFileStatus.DELETED -> AppColors.error; GitFileStatus.RENAMED -> AppColors.statusOffline; else -> AppColors.white }
-    val statusChar = when (change.status) { GitFileStatus.ADDED -> "A"; GitFileStatus.MODIFIED -> "M"; GitFileStatus.DELETED -> "D"; GitFileStatus.RENAMED -> "R"; else -> "?" }
-    
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-            .clickable { onClick?.invoke() }
-            .padding(AppSpacing.sm), 
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(modifier = Modifier.size(24.dp).clip(AppShapes.extraSmall).background(statusColor.copy(alpha = 0.2f), AppShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = statusChar, color = statusColor, fontWeight = FontWeight.Bold, style = AppTypography.bodyMedium) }
-        Spacer(Modifier.width(AppSpacing.sm))
-        Text(text = change.path, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        if (staged) { onUnstage?.let { TerminalIconButton(icon = Icons.Default.Remove, onClick = it, contentDescription = "Unstage", iconColor = AppColors.textSecondary) } }
-        else { onStage?.let { TerminalIconButton(icon = Icons.Default.Add, onClick = it, contentDescription = "Stage", iconColor = AppColors.statusOnline) }; onDiscard?.let { TerminalIconButton(icon = Icons.AutoMirrored.Filled.Undo, onClick = it, contentDescription = "Discard", iconColor = AppColors.alertRed) } }
-    }
-}
-
-@Composable
-private fun UntrackedFileItem(path: String, onStage: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-            .padding(AppSpacing.sm), 
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(modifier = Modifier.size(24.dp).clip(AppShapes.extraSmall).background(AppColors.surfaceContainer, AppShapes.extraSmall), contentAlignment = Alignment.Center) { Text(text = "?", color = AppColors.textTertiary, fontWeight = FontWeight.Bold, style = AppTypography.bodyMedium) }
-        Spacer(Modifier.width(AppSpacing.sm))
-        Text(text = path, color = AppColors.white, style = AppTypography.bodySmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        TerminalIconButton(icon = Icons.Default.Add, onClick = onStage, contentDescription = "Stage", iconColor = AppColors.statusOnline)
-    }
-}
-
-@Composable
-private fun BranchItem(branch: GitBranch, isCurrent: Boolean, onClick: () -> Unit) {
-    val bgColor = if (isCurrent) AppColors.statusOnline.copy(alpha = 0.1f) else AppColors.surfaceVariant
-    val borderColor = if (isCurrent) AppColors.statusOnline else AppColors.border
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(bgColor, AppShapes.card)
-            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
-            .clickable(onClick = onClick)
-            .padding(AppSpacing.md), 
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        if (isCurrent) { Icon(Icons.Default.Check, contentDescription = "Current", tint = AppColors.statusOnline, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(AppSpacing.sm)) }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = branch.name, color = if (isCurrent) AppColors.statusOnline else AppColors.white, style = AppTypography.bodyMedium, fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal)
-            if (branch.upstream != null) { Text(text = "TRACKS: ${branch.upstream}", style = AppTypography.labelSmall, color = AppColors.textTertiary) }
-        }
-        if (branch.ahead > 0 || branch.behind > 0) { Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) { if (branch.ahead > 0) { Text("+${branch.ahead}", color = AppColors.statusOnline, style = AppTypography.labelSmall) }; if (branch.behind > 0) { Text("-${branch.behind}", color = AppColors.error, style = AppTypography.labelSmall) } } }
-    }
-}
-
-@Composable
-private fun CommitItem(commit: GitCommit, dateFormat: SimpleDateFormat) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-            .padding(AppSpacing.md)
-    ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(text = commit.shortHash, style = AppTypography.bodySmall, color = AppColors.accentGreen)
-            Text(text = dateFormat.format(Date(commit.date)), style = AppTypography.labelSmall, color = AppColors.textTertiary)
-        }
-        Spacer(Modifier.height(AppSpacing.sm))
-        Text(text = commit.message, color = AppColors.white, style = AppTypography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Spacer(Modifier.height(AppSpacing.sm))
-        Text(text = "AUTHOR: ${commit.author}", style = AppTypography.labelSmall, color = AppColors.textSecondary)
-    }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TerminalTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+        },
+        shape = AppShapes.dialog
+    )
 }
 
 @Composable
@@ -532,7 +818,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
             )
         },
         confirmButton = {
-            TerminalButton(text = "COMMIT", onClick = onCommit, enabled = message.isNotBlank())
+            GodButton(text = "COMMIT", onClick = onCommit, enabled = message.isNotBlank())
         },
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
@@ -556,41 +842,13 @@ private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit
             )
         },
         confirmButton = {
-            TerminalButton(text = "STASH", onClick = onCreate)
+            GodButton(text = "STASH", onClick = onCreate)
         },
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
-}
-
-@Composable
-private fun StashesSection(stashes: List<GitStash>, onCreateStash: () -> Unit, onPop: (Int) -> Unit, onApply: (Int) -> Unit, onDrop: (Int) -> Unit) {
-    Column {
-        SectionHeader(title = "STASHES [${stashes.size}]", action = { TerminalTextButton(text = "CREATE", onClick = onCreateStash) })
-        stashes.forEach { stash ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(AppShapes.card)
-                    .background(AppColors.surfaceVariant, AppShapes.card)
-                    .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
-                    .padding(AppSpacing.sm), 
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "stash@{${stash.index}}", color = AppColors.statusWaiting, style = AppTypography.labelSmall)
-                    Text(text = stash.message, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                Row {
-                    TerminalIconButton(icon = Icons.Default.Upload, onClick = { onPop(stash.index) }, contentDescription = "Pop", iconColor = AppColors.statusOnline)
-                    TerminalIconButton(icon = Icons.Default.PlayArrow, onClick = { onApply(stash.index) }, contentDescription = "Apply", iconColor = AppColors.white)
-                    TerminalIconButton(icon = Icons.Default.Delete, onClick = { onDrop(stash.index) }, contentDescription = "Drop", iconColor = AppColors.error)
-                }
-            }
-        }
-    }
 }
 
 @Composable
@@ -610,7 +868,7 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
             }
         },
         confirmButton = {
-            TerminalButton(text = "ADD", onClick = { onAdd(name, url) }, enabled = name.isNotBlank() && url.isNotBlank())
+            GodButton(text = "ADD", onClick = { onAdd(name, url) }, enabled = name.isNotBlank() && url.isNotBlank())
         },
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
@@ -636,47 +894,10 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
             }
         },
         confirmButton = {
-            TerminalButton(text = "CREATE", onClick = { onAdd(name, msg) }, enabled = name.isNotBlank())
+            GodButton(text = "CREATE", onClick = { onAdd(name, msg) }, enabled = name.isNotBlank())
         },
         dismissButton = {
             TerminalTextButton(text = "CANCEL", onClick = onDismiss)
-        },
-        shape = AppShapes.dialog
-    )
-}
-
-@Composable
-private fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
-    val commits = uiState.log?.commits ?: emptyList()
-    val dateFormat = remember { SimpleDateFormat("MMM dd, HH:mm", Locale.getDefault()) }
-    LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(AppSpacing.md), verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-        items(items = commits, key = { it.hash }) { commit -> CommitItem(commit, dateFormat) }
-        if (uiState.log?.hasMore == true) {
-            item { TerminalButton(text = "LOAD MORE", onClick = { screenModel.loadLog(skip = commits.size) }, modifier = Modifier.fillMaxWidth() ) }
-        }
-    }
-}
-
-@Composable
-private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout: () -> Unit, onMerge: () -> Unit, onRebase: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
-        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
-        text = {
-            Column {
-                Text(text = branch, color = AppColors.statusOnline, style = AppTypography.bodyMedium, modifier = Modifier.padding(vertical = AppSpacing.md))
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-                TerminalButton(text = "CHECKOUT", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                TerminalButton(text = "MERGE INTO CURRENT", onClick = onMerge, modifier = Modifier.fillMaxWidth())
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                TerminalButton(text = "REBASE CURRENT ONTO", onClick = onRebase, modifier = Modifier.fillMaxWidth())
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
         },
         shape = AppShapes.dialog
     )
