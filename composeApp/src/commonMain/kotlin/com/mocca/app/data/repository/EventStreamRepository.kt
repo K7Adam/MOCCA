@@ -1,6 +1,5 @@
 package com.mocca.app.data.repository
 
-import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.NetworkConfig
@@ -22,23 +21,15 @@ import kotlinx.coroutines.withContext
 /**
  * Repository for managing Server-Sent Events streaming.
  * Includes automatic reconnection, network state awareness, and DB persistence.
+ * Connection lifecycle (HttpClient management) is handled by ConnectionManager.
  */
 class EventStreamRepository(
     private val sseClient: MoccaSseClient,
-    private val httpClientProvider: HttpClientProvider,
     private val networkObserver: NetworkObserver? = null,
     private val localCache: LocalCache? = null,
     private val apiClient: MoccaApiClient? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
-    init {
-        // Automatically reconnect SSE when the HttpClient is recreated
-        httpClientProvider.onClientRecreated = {
-            Napier.i("HttpClient recreated, restarting SSE connection...")
-            reconnect(force = true)
-        }
-    }
     
     private var connectionJob: Job? = null
     private var networkObserverJob: Job? = null
@@ -48,7 +39,7 @@ class EventStreamRepository(
     private var reconnectAttempts = 0
     private val maxReconnectAttempts = NetworkConfig.SSE_MAX_RECONNECT_ATTEMPTS
     
-    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected)
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected())
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
     
     // OPTIMIZED: Increased buffer capacity from 128 to 256 for high-throughput sessions
@@ -187,7 +178,7 @@ class EventStreamRepository(
             reconnectAttempts++
             val delayMs = calculateBackoff(reconnectAttempts)
             Napier.i("Reconnecting in ${delayMs}ms (attempt $reconnectAttempts/$maxReconnectAttempts)")
-            _connectionStatus.value = ConnectionStatus.Reconnecting(reconnectAttempts, delayMs)
+            _connectionStatus.value = ConnectionStatus.Reconnecting(reconnectAttempts, maxReconnectAttempts)
             delay(delayMs)
             
             if (autoReconnect) {
@@ -239,7 +230,7 @@ class EventStreamRepository(
         reconnectAttempts = 0
         activeSessionId = null
         monitoredSessionIds.value = emptySet()
-        _connectionStatus.value = ConnectionStatus.Disconnected
+        _connectionStatus.value = ConnectionStatus.Disconnected()
         _streamingText.value = ""
         _isThinking.value = false
         _thinkingContent.value = ""

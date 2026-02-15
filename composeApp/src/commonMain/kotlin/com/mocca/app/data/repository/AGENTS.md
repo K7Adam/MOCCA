@@ -3,6 +3,28 @@
 ## OVERVIEW
 The Repository layer implements an **offline-first** architecture, mediating between the `MoccaApiClient` (Network) and `LocalCache` (SQLDelight Persistence). Its primary goal is to provide immediate UI updates using cached data while fetching fresh data from the server in the background.
 
+## KEY REPOSITORIES
+
+### ConnectionManager
+Unified connection lifecycle manager. Replaces the old `HttpClientProvider` and `AppConnectionManager`. Implements `ApiExecutor` so consumers never hold `HttpClient` references.
+
+- **Owns**: `HttpClient` lifecycle, HTTP Basic Auth configuration, health checks, reconnection logic
+- **Exposes**: `connectionStatus: StateFlow<ConnectionStatus>` for UI observation
+- **Pattern**: Consumers depend on `ApiExecutor` interface, call `execute {}` to make HTTP requests
+
+### ServerConfigRepository
+Manages server profiles (CRUD). Each profile stores `host`, `port`, `username`, `password`.
+
+### GitRepository
+All Git operations go through OpenCode's built-in endpoints:
+- **Read operations**: `/vcs` endpoint for status, branch info
+- **Write operations**: `executeShell()` for git commands (commit, push, pull, etc.)
+- **Diff**: `/session/:id/diff` for session diffs
+- Write operations require a `sessionId: String` parameter
+
+### SessionRepository
+Constructor takes 2 params: `(apiClient: MoccaApiClient, localCache: LocalCache)`.
+
 ## PATTERNS
 
 ### 1. Offline-First Flow<Resource<T>>
@@ -40,12 +62,23 @@ fun getItems(): Flow<Resource<List<Item>>> = flow {
 }.flowOn(Dispatchers.IO) // ALWAYS use IO dispatcher
 ```
 
-### 2. Exceptions: Suspend Resource
+### 2. ApiExecutor Pattern
+Repositories that need HTTP access depend on `ApiExecutor` (interface), NOT on `HttpClient` directly. `ConnectionManager` implements `ApiExecutor` and manages the underlying `HttpClient` with proper auth headers and lifecycle.
+
+```kotlin
+class MyRepository(private val apiExecutor: ApiExecutor) {
+    suspend fun fetchData() = apiExecutor.execute {
+        get("http://server/endpoint").body<MyResponse>()
+    }
+}
+```
+
+### 3. Exceptions: Suspend Resource
 Some specific lookups return a `suspend Resource<T>` instead of a Flow. These still follow the offline-first logic but execute sequentially without multiple emissions.
 
 *   **SessionRepository.getSession(sessionId: String)**: Returns `Resource<Session>`. It attempts to fetch from the network and updates the cache if found, falling back to the local cache if the network request fails or the item isn't in the network response.
 
-### 3. Threading Guidelines
+### 4. Threading Guidelines
 **NEVER block the main thread.**
 - Repositories must be thread-safe and offload heavy I/O to `Dispatchers.IO`.
 - Use `.flowOn(Dispatchers.IO)` for all `Flow` builders.
@@ -57,3 +90,4 @@ Some specific lookups return a `suspend Resource<T>` instead of a Flow. These st
 - **Stale Cache**: Forgetting to update `LocalCache` after a successful network fetch.
 - **Direct API Leakage**: UI calling `MoccaApiClient` directly, bypassing the repository's caching logic.
 - **In-Memory Only**: Storing critical business state in repository variables instead of persisting to `LocalCache`.
+- **Holding HttpClient**: Consumers must NEVER hold an `HttpClient` reference. Always use `ApiExecutor.execute {}`.

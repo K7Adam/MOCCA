@@ -33,7 +33,7 @@ data class ChatState(
     val error: String? = null,
     val pendingPermission: PermissionRequest? = null,
     val pendingQuestion: QuestionRequest? = null,
-    val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected,
+    val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected(),
     val isSessionIdle: Boolean = true,
     val modelName: String = "CLAUDE",
     val agentName: String = "SISYPHUS",

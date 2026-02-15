@@ -280,7 +280,6 @@ sealed class NetworkError(override val message: String, override val cause: Thro
     class ServerError(val statusCode: Int, message: String) : NetworkError("Server Error $statusCode: $message")
     class ConnectionError(message: String, cause: Throwable? = null) : NetworkError(message, cause)
     class TimeoutError(message: String, cause: Throwable? = null) : NetworkError(message, cause)
-    class GitServerUnavailable(message: String, cause: Throwable? = null) : NetworkError(message, cause)
     class Unknown(message: String, cause: Throwable? = null) : NetworkError(message, cause)
 
     companion object {

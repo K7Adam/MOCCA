@@ -11,7 +11,8 @@ data class DiscoveredServer(
     val name: String,
     val host: String,
     val port: Int,
-    val authToken: String? = null,
+    val username: String = "opencode",
+    val password: String = "",
     val source: DiscoverySource,
     val discoveredAt: Long = System.currentTimeMillis(),
     val useHttps: Boolean = false
@@ -36,23 +37,16 @@ data class DiscoveredServer(
      * Check if this is a Tailscale server based on hostname.
      */
     val isTailscale: Boolean
-        get() = NetworkConfig.ServiceEndpoints.isTailscaleUrl("https://$host")
+        get() = host.contains(".tail") && host.contains(".ts.net")
     
     fun toServerConfig(id: String = name.lowercase().replace(" ", "-")): ServerConfig {
-        val connectionType = when {
-            isTailscale -> ConnectionType.TAILSCALE
-            host == NetworkConfig.EMULATOR_HOST_IP -> ConnectionType.LOCAL
-            host == "127.0.0.1" || host == "localhost" -> ConnectionType.LOCAL
-            else -> ConnectionType.LAN
-        }
-        
         return ServerConfig(
             id = id,
             name = name,
-            baseUrl = baseUrl,
-            connectionType = connectionType,
-            authType = if (authToken != null) AuthType.BASIC else AuthType.NONE,
-            authToken = authToken,
+            host = host,
+            port = port,
+            username = username,
+            password = password,
             isActive = true
         )
     }
@@ -82,7 +76,8 @@ enum class DiscoverySource {
 data class QrConnectionPayload(
     val host: String,
     val port: Int = NetworkConfig.OPENCODE_SERVER_PORT,
-    val token: String? = null,
+    val username: String = "opencode",
+    val password: String = "",
     val version: String = "1.0",
     val name: String = "OpenCode Server",
     val useHttps: Boolean = false
@@ -124,7 +119,7 @@ data class QrConnectionPayload(
                     // Determine port: explicit port > default based on protocol
                     val port = when {
                         portString.isNotEmpty() -> portString.toInt()
-                        isHttps -> NetworkConfig.TailscaleServe.DEFAULT_HTTPS_PORT
+                        isHttps -> 443
                         else -> NetworkConfig.OPENCODE_SERVER_PORT
                     }
                     
@@ -151,7 +146,8 @@ data class QrConnectionPayload(
             name = name,
             host = host,
             port = port,
-            authToken = token,
+            username = username,
+            password = password,
             source = DiscoverySource.QR_CODE,
             useHttps = useHttps
         )

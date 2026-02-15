@@ -60,7 +60,7 @@ class ServerConfigRepository(
                 // clear the config to force reconfiguration via onboarding
                 val defaultHost = getPlatformDefaultHost()
                 val isPhysicalDevice = defaultHost.isEmpty()
-                val isUsingEmulatorIp = config.baseUrl.contains("10.0.2.2")
+                val isUsingEmulatorIp = config.host == "10.0.2.2"
                 
                 if (isPhysicalDevice && isUsingEmulatorIp) {
                     Napier.i("Detected physical device with emulator IP config - clearing to force onboarding")
@@ -79,30 +79,30 @@ class ServerConfigRepository(
     }
     
     /**
-     * Decrypt server config auth token if it's encrypted.
+     * Decrypt server config password if it's encrypted.
      * 
-     * SECURITY: Checks if the auth token was encrypted by this app (has specific prefix)
-     * and decrypts it using SecureTokenStorage. If decryption fails or token is not
-     * app-encrypted, returns original config with token intact.
+     * SECURITY: Checks if the password was encrypted by this app (has specific prefix)
+     * and decrypts it using SecureTokenStorage. If decryption fails or password is not
+     * app-encrypted, returns original config with password intact.
      */
     private fun decryptConfigIfNeeded(config: ServerConfig): ServerConfig {
-        if (secureTokenStorage == null || config.authToken.isNullOrEmpty()) {
+        if (secureTokenStorage == null || config.password.isEmpty()) {
             return config
         }
         
         return try {
-            if (secureTokenStorage.isEncrypted(config.authToken)) {
-                // Try to decrypt - if it fails, the token might be a raw Base64 token from QR code
-                val decryptedToken = secureTokenStorage.decrypt(config.authToken)
-                config.copy(authToken = decryptedToken)
+            if (secureTokenStorage.isEncrypted(config.password)) {
+                // Try to decrypt - if it fails, the password might be plaintext
+                val decryptedPassword = secureTokenStorage.decrypt(config.password)
+                config.copy(password = decryptedPassword)
             } else {
-                // Token is not encrypted (raw token from QR/manual entry), return as-is
+                // Password is not encrypted (plaintext from manual entry), return as-is
                 config
             }
         } catch (e: Exception) {
-            // Decryption failed - token is likely raw Base64 from QR code, not app-encrypted
-            Napier.d("Token for server ${config.id} appears to be raw (not app-encrypted), using as-is")
-            // Return config with original token intact for QR code tokens
+            // Decryption failed - password is likely plaintext, not app-encrypted
+            Napier.d("Password for server ${config.id} appears to be plaintext (not app-encrypted), using as-is")
+            // Return config with original password intact
             config
         }
     }
@@ -124,18 +124,18 @@ class ServerConfigRepository(
     /**
      * Add or update a server configuration.
      * 
-     * SECURITY: If the config has an authToken, it will be encrypted using
+     * SECURITY: If the config has a password, it will be encrypted using
      * SecureTokenStorage before being saved to the database.
      */
     suspend fun saveServer(config: ServerConfig) {
         try {
-            // Encrypt auth token if present and secure storage is available
-            val configToSave = if (secureTokenStorage != null && !config.authToken.isNullOrEmpty()) {
+            // Encrypt password if present and secure storage is available
+            val configToSave = if (secureTokenStorage != null && config.password.isNotEmpty()) {
                 try {
-                    val encryptedToken = secureTokenStorage.encrypt(config.authToken)
-                    config.copy(authToken = encryptedToken)
+                    val encryptedPassword = secureTokenStorage.encrypt(config.password)
+                    config.copy(password = encryptedPassword)
                 } catch (e: Exception) {
-                    Napier.e("Failed to encrypt auth token, saving plaintext", e)
+                    Napier.e("Failed to encrypt password, saving plaintext", e)
                     config
                 }
             } else {
@@ -201,22 +201,17 @@ class ServerConfigRepository(
             ServerConfig(
                 id = "default",
                 name = "Local Server",
-                baseUrl = "http://$defaultHost:${NetworkConfig.OPENCODE_SERVER_PORT}",
-                connectionType = ConnectionType.LOCAL,
-                authType = AuthType.NONE,
-                authToken = null,
+                host = defaultHost,
+                port = NetworkConfig.OPENCODE_SERVER_PORT,
                 isActive = true
             )
         } else {
             // Physical device - return empty config that requires onboarding
-            // Empty baseUrl signals the UI to show onboarding instead of connecting
+            // Empty host signals the UI to show onboarding instead of connecting
             ServerConfig(
                 id = "needs-onboarding",
                 name = "Setup Required",
-                baseUrl = "",  // Empty signals onboarding needed
-                connectionType = ConnectionType.LOCAL,
-                authType = AuthType.NONE,
-                authToken = null,
+                host = "",
                 isActive = true
             )
         }
@@ -226,27 +221,18 @@ class ServerConfigRepository(
      * Create a Tailscale serve configuration.
      * This is used when the OpenCode server is exposed via `tailscale serve`.
      * 
-     * Example setup on server:
-     *   tailscale serve --port 443 / http://localhost:4096
-     *   tailscale serve --port 443 /git http://localhost:4097
-     * 
      * @param tailscaleHostname The Tailscale hostname (e.g., "mydevice.tail1234.ts.net")
-     * @param useHttps Whether to use HTTPS (default true for Tailscale)
      */
     fun createTailscaleServeConfig(
-        tailscaleHostname: String,
-        useHttps: Boolean = true
+        tailscaleHostname: String
     ): ServerConfig {
-        val protocol = if (useHttps) "https" else "http"
         val cleanHostname = tailscaleHostname.removePrefix("https://").removePrefix("http://")
         
         return ServerConfig(
             id = "tailscale-serve-${cleanHostname.hashCode()}",
             name = "Tailscale ($cleanHostname)",
-            baseUrl = "$protocol://$cleanHostname",
-            connectionType = ConnectionType.TAILSCALE,
-            authType = AuthType.NONE,
-            authToken = null,
+            host = cleanHostname,
+            port = 443,
             isActive = false
         )
     }
@@ -263,10 +249,8 @@ class ServerConfigRepository(
         return ServerConfig(
             id = "lan-${lanIp.replace(".", "-")}-$port",
             name = "LAN ($lanIp)",
-            baseUrl = "http://$lanIp:$port",
-            connectionType = ConnectionType.LAN,
-            authType = AuthType.NONE,
-            authToken = null,
+            host = lanIp,
+            port = port,
             isActive = false
         )
     }

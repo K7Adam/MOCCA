@@ -2,9 +2,9 @@ package com.mocca.app.ui.screens.sessions
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.AppConnectionManager
-import com.mocca.app.data.repository.AppConnectionState
+import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.domain.model.Session
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,7 +21,7 @@ data class SessionsState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedSessionId: String? = null,
-    val connectionState: AppConnectionState = AppConnectionState.NotConfigured,
+    val connectionState: ConnectionStatus = ConnectionStatus.NotConfigured,
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION SEARCH (Priority 5.6)
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -44,7 +44,7 @@ data class SessionsState(
 
 class SessionsScreenModel(
     private val sessionRepository: SessionRepository,
-    private val appConnectionManager: AppConnectionManager
+    private val connectionManager: ConnectionManager
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SessionsState())
@@ -55,17 +55,17 @@ class SessionsScreenModel(
     
     init {
         observeConnectionState()
-        appConnectionManager.checkConnection()
+        connectionManager.checkConnection()
     }
     
     private fun observeConnectionState() {
         screenModelScope.launch {
-            appConnectionManager.connectionState.collect { connectionState ->
+            connectionManager.status.collect { connectionState ->
                 val previousState = _state.value.connectionState
                 _state.value = _state.value.copy(connectionState = connectionState)
                 
-                if (connectionState is AppConnectionState.Connected && 
-                    previousState !is AppConnectionState.Connected) {
+                if (connectionState is ConnectionStatus.Connected && 
+                    previousState !is ConnectionStatus.Connected) {
                     loadSessions()
                 }
             }
@@ -73,7 +73,7 @@ class SessionsScreenModel(
     }
     
     fun retryConnection() {
-        appConnectionManager.checkConnection()
+        connectionManager.checkConnection()
     }
     
     fun loadSessions() {
@@ -178,7 +178,7 @@ class SessionsScreenModel(
         if (_state.value.connectionState.isConnected) {
             loadSessions()
         } else {
-            appConnectionManager.checkConnection()
+            connectionManager.checkConnection()
         }
     }
     

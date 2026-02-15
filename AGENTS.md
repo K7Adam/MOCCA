@@ -1,11 +1,11 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-01-18
+**Updated:** 2026-02-15
 **Project:** MOCCA (Mobile OpenCode Companion App)
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
 
 ## OVERVIEW
-Android client for OpenCode AI agent. Features edge-to-edge "Pitch Black" Terminal UI, offline-first architecture, and a unique dual-server connection (AI Agent + Git HTTP Server).
+Android client for OpenCode AI agent. Features edge-to-edge "Pitch Black" Terminal UI, offline-first architecture, and a unified single-server connection to OpenCode with HTTP Basic Auth.
 
 ## STRUCTURE
 ```
@@ -13,7 +13,7 @@ MOCCA/
 ├── androidApp/           # [Platform] Entry (MainActivity), Manifest, Res
 ├── composeApp/           # [Shared] 90% of code. UI, Logic, Data.
 │   └── src/commonMain/kotlin/com/mocca/app/
-│       ├── api/          # Network (Ktor, SSE) + Git Server Logic
+│       ├── api/          # Network (Ktor, SSE, ApiExecutor)
 │       ├── data/         # Repositories (Offline-first) + SQLDelight
 │       ├── domain/       # Contracts, Models (Immutable)
 │       └── ui/           # Voyager Screens, TerminalTheme
@@ -26,9 +26,22 @@ MOCCA/
 |------|----------|-------|
 | **Entry Point** | `androidApp/.../MoccaApp.kt` | Koin init, Napier logging |
 | **Root UI** | `composeApp/.../ui/App.kt` | `AppTheme`, Navigator |
-| **Git Server** | `composeApp/.../api/GitApiClient.kt` | Auto-start logic (Port 4097) |
+| **Connection** | `composeApp/.../data/repository/ConnectionManager.kt` | Unified connection lifecycle, health checks, reconnection |
+| **API Executor** | `composeApp/.../api/ApiExecutor.kt` | Interface so consumers never hold HttpClient references |
+| **API Client** | `composeApp/.../api/MoccaApiClient.kt` | All OpenCode REST endpoints |
+| **Git Operations** | `composeApp/.../data/repository/GitRepository.kt` | Uses OpenCode VCS endpoints + `executeShell()` |
 | **DB Schema** | `composeApp/.../data/db/*.sq` | SQLDelight definitions |
 | **E2E Tests** | `maestro-workspace/flows/` | YAML-based UI tests |
+
+## CONNECTION ARCHITECTURE
+MOCCA connects to a single OpenCode server instance. No secondary servers are needed.
+
+- **Server**: OpenCode (`opencode serve --port 4096`)
+- **Auth**: HTTP Basic Auth (`OPENCODE_SERVER_USERNAME` / `OPENCODE_SERVER_PASSWORD`)
+- **Config**: `ServerConfig` stores `host`, `port`, `username`, `password` per server profile
+- **Connection Flow**: `ConnectionManager` owns the `HttpClient` lifecycle. Consumers call `ApiExecutor.execute {}` — they never hold an `HttpClient` reference.
+- **Git Operations**: Handled via OpenCode's built-in `/vcs` and `/session/:id/diff` endpoints, plus `executeShell()` for write operations. No separate Git server needed.
+- **Connection Status**: `ConnectionStatus` sealed class — `NotConfigured`, `Disconnected(reason)`, `Connecting`, `WaitingForNetwork`, `Reconnecting(attempt, maxAttempts)`, `Connected(serverInfo, latencyMs)`, `Error(message)`.
 
 ## CONVENTIONS
 - **Architecture**: MVI (ScreenModel -> StateFlow -> UI).
@@ -40,13 +53,13 @@ MOCCA/
     - **Buttons**: Pill-shaped (`CircleShape`).
     - **Typography**: Space Grotesk (sans-serif) with variable weights.
     - **Accents**: Mint Green (`#00D9A5`) and White.
-- **Environment**: `serverConfigProvider` auto-detects `10.0.2.2` (Emulator) vs Tailscale/LAN.
 
 ## ANTI-PATTERNS (STRICT)
 - **NEVER** use `RectangleShape` for interactive elements (buttons, inputs, cards). Use `AppShapes.card`, `AppShapes.pill`, etc.
 - **NEVER** use `ToolConfirmation` (Deprecated) -> Use `PermissionRequest`.
 - **NEVER** use relative paths.
 - **NEVER** block main thread (use `sendMessageAsync`).
+- **NEVER** hold `HttpClient` references in consumers — use `ApiExecutor.execute {}`.
 - **DO NOT** add `iosMain` or `desktopMain` (Android-only).
 - **DO NOT** use physical device for `android-mcp` tasks (Emulator required).
 - **DO NOT** ignore Detekt rules (`maxIssues: 0`).
@@ -62,9 +75,3 @@ MOCCA/
 # Logcat Monitoring
 adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 ```
-
-## GIT SERVER INTEGRATION
-MOCCA requires a secondary HTTP server for Git operations.
-- **Port**: 4097 (Target), 4096 (OpenCode).
-- **Auto-Start**: App can trigger `start-git-server.ps1` on host via OpenCode command.
-- **See**: `composeApp/src/commonMain/kotlin/com/mocca/app/api/AGENTS.md` for protocol details.

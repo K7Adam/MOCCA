@@ -14,9 +14,9 @@ The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model
 ## SCREEN LIST
 | Screen | Logic Highlight | Description |
 |--------|-----------------|-------------|
-| `MainScreen` | Panel Management | Host scaffold for the 3-panel UI. Manages global session state. |
-| `GitScreen` | **Start Server Logic** | Comprehensive Git UI. If the Git API (Port 4097) is down, it provides a "Start Server" trigger that runs `start-git-server.ps1` on the host via the OpenCode agent. |
-| `SettingsScreen` | Server Config | Configuration for OpenCode server URLs, connection types, and auth tokens. |
+| `MainScreen` | Panel Management | Host scaffold for the 3-panel UI. Manages global session state and `ConnectionStatus` observation. |
+| `GitScreen` | VCS Operations | Comprehensive Git UI. Uses OpenCode's `/vcs` endpoint for status and `executeShell()` for git commands. `GitDiffScreenModel` uses `getSessionDiffs(sessionId)` + `SessionRepository`. |
+| `SettingsScreen` | Server Config | Configuration for OpenCode server host, port, username, and password. |
 | `McpScreen` | Tool Inspection | UI for managing MCP servers and viewing available tools. |
 | `TerminalScreen` | SSH/WebSocket | Real-time terminal emulator for direct host access. |
 | `FilesScreen` | Explorer | Browsing and basic editing of the project workspace. |

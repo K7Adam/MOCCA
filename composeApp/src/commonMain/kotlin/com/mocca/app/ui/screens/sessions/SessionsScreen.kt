@@ -34,7 +34,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.data.repository.AppConnectionState
+import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.ui.components.terminal.TerminalButton
@@ -141,7 +141,7 @@ class SessionsScreen : Screen {
                     .weight(1f)
             ) {
                 when (val connectionState = state.connectionState) {
-                    is AppConnectionState.NotConfigured -> {
+                    is ConnectionStatus.NotConfigured -> {
                         TerminalNotConnectedContent(
                             title = stringResource(Res.string.no_server_configured),
                             message = stringResource(Res.string.configure_server_hint),
@@ -149,13 +149,13 @@ class SessionsScreen : Screen {
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                    is AppConnectionState.Checking -> {
+                    is ConnectionStatus.Connecting -> {
                         TerminalConnectionProgressContent(
                             message = stringResource(Res.string.checking_connection),
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                    is AppConnectionState.WaitingForNetwork -> {
+                    is ConnectionStatus.WaitingForNetwork -> {
                         TerminalNotConnectedContent(
                             title = stringResource(Res.string.waiting_for_network),
                             message = stringResource(Res.string.network_unavailable_hint),
@@ -165,28 +165,31 @@ class SessionsScreen : Screen {
                             icon = Icons.Default.WifiOff
                         )
                     }
-                    is AppConnectionState.Connecting -> {
-                        TerminalConnectionProgressContent(
-                            message = stringResource(Res.string.connecting_attempt, connectionState.attempt, connectionState.maxAttempts),
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                    }
-                    is AppConnectionState.Reconnecting -> {
+                    is ConnectionStatus.Reconnecting -> {
                         TerminalConnectionProgressContent(
                             message = stringResource(Res.string.reconnecting, connectionState.attempt, connectionState.maxAttempts),
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                    is AppConnectionState.Disconnected -> {
+                    is ConnectionStatus.Disconnected -> {
                         TerminalNotConnectedContent(
                             title = stringResource(Res.string.connection_failed_title),
-                            message = connectionState.error ?: stringResource(Res.string.connection_failed_message),
+                            message = connectionState.reason ?: stringResource(Res.string.connection_failed_message),
                             onConfigureClick = { navigator.push(SettingsScreen()) },
                             onRetryClick = { screenModel.retryConnection() },
                             modifier = Modifier.align(Alignment.Center)
                         )
                     }
-                    is AppConnectionState.Connected -> {
+                    is ConnectionStatus.Error -> {
+                        TerminalNotConnectedContent(
+                            title = stringResource(Res.string.connection_failed_title),
+                            message = connectionState.message,
+                            onConfigureClick = { navigator.push(SettingsScreen()) },
+                            onRetryClick = { screenModel.retryConnection() },
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
+                    is ConnectionStatus.Connected -> {
                         when {
                             state.isLoading && state.sessions.isEmpty() -> {
                                 TerminalProcessingIndicator()

@@ -1,6 +1,5 @@
 package com.mocca.app.data.repository
 
-import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
@@ -25,8 +24,7 @@ import kotlinx.datetime.Clock
  */
 class SessionRepository(
     private val apiClient: MoccaApiClient,
-    private val localCache: LocalCache,
-    private val httpClientProvider: HttpClientProvider? = null
+    private val localCache: LocalCache
 ) {
     // Memory Cache
     private val memoryCache = mutableMapOf<String, List<Message>>()
@@ -75,10 +73,7 @@ class SessionRepository(
      * when multiple consumers request the same session simultaneously.
      */
     suspend fun getSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
-        // Use deduplication if available
-        httpClientProvider?.withDeduplication("getSession:$sessionId") {
-            fetchSessionInternal(sessionId)
-        } ?: fetchSessionInternal(sessionId)
+        fetchSessionInternal(sessionId)
     }
     
     private suspend fun fetchSessionInternal(sessionId: String): Resource<Session> {

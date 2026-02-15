@@ -18,36 +18,16 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * SSE (Server-Sent Events) Client for real-time event streaming.
  * Handles connection to OpenCode's /event endpoint.
+ * Uses [ApiExecutor] to access the current HttpClient managed by ConnectionManager.
  * Note: Retry logic is handled by EventStreamRepository for better network awareness.
  */
 class MoccaSseClient(
-    private var httpClient: HttpClient,
-    private val serverConfigProvider: () -> ServerConfig,
-    private val retryPolicy: RetryPolicy = RetryPolicy.Aggressive,
-    private val httpClientProvider: HttpClientProvider? = null
+    private val api: ApiExecutor
 ) {
-    init {
-        // Subscribe to client recreation events
-        httpClientProvider?.onClientRecreated = {
-            httpClientProvider.let { provider ->
-                httpClient = provider.getClientSync()
-            }
-        }
-    }
-    
-    /**
-     * Get the current HttpClient, ensuring it's up-to-date with server config.
-     */
-    private fun getClient(): HttpClient {
-        return httpClientProvider?.getClientSync() ?: httpClient
-    }
     private val json = Json { 
         ignoreUnknownKeys = true 
         isLenient = true
     }
-
-    private val baseUrl: String
-        get() = serverConfigProvider().baseUrl.trimEnd('/')
 
     /**
      * Subscribe to the event stream from OpenCode server.
@@ -56,13 +36,13 @@ class MoccaSseClient(
      */
     fun subscribeToEvents(): Flow<ServerEvent> = callbackFlow {
         try {
-            val url = "$baseUrl/event"
-            Napier.i(">>> Connecting to SSE at $url")
+            Napier.i(">>> Connecting to SSE at /event")
             
-            getClient().sse(
-                urlString = url,
-                reconnectionTime = 3.seconds
-            ) {
+            api.execute {
+                sse(
+                    urlString = "event",
+                    reconnectionTime = 3.seconds
+                ) {
                 Napier.i(">>> SSE session block entered - connection established")
                 
                 // Emit a synthetic connected event for UI feedback
@@ -101,6 +81,7 @@ class MoccaSseClient(
                 }
                 
                 Napier.w(">>> SSE incoming.collect completed - stream may have ended")
+                }
             }
             
             Napier.w(">>> SSE sse() block completed")
@@ -125,35 +106,36 @@ class MoccaSseClient(
      */
     fun subscribeToGlobalEvents(): Flow<ServerEvent> = callbackFlow {
         try {
-            val url = "$baseUrl/event/global"
-            Napier.i(">>> Connecting to Global SSE at $url")
+            Napier.i(">>> Connecting to Global SSE at /event/global")
             
-            getClient().sse(
-                urlString = url,
-                reconnectionTime = 3.seconds
-            ) {
-                Napier.i(">>> Global SSE session established")
-                
-                send(ServerEvent.Connected(
-                    type = "server.connected",
-                    properties = ConnectedProperties(
-                        status = "connected",
-                        version = "unknown"
-                    )
-                ))
-                
-                this.incoming
-                    .buffer(100)
-                    .collect { sseEvent ->
-                    val data = sseEvent.data
-                    if (data.isNullOrBlank()) return@collect
+            api.execute {
+                sse(
+                    urlString = "event/global",
+                    reconnectionTime = 3.seconds
+                ) {
+                    Napier.i(">>> Global SSE session established")
                     
-                    try {
-                        val event = parseEvent(data)
-                        send(event)
-                    } catch (e: Exception) {
-                        Napier.w(">>> Failed to parse global SSE event: ${data.take(100)}", e)
-                        send(ServerEvent.Unknown(type = "parse_error", rawData = data))
+                    send(ServerEvent.Connected(
+                        type = "server.connected",
+                        properties = ConnectedProperties(
+                            status = "connected",
+                            version = "unknown"
+                        )
+                    ))
+                    
+                    this.incoming
+                        .buffer(100)
+                        .collect { sseEvent ->
+                        val data = sseEvent.data
+                        if (data.isNullOrBlank()) return@collect
+                        
+                        try {
+                            val event = parseEvent(data)
+                            send(event)
+                        } catch (e: Exception) {
+                            Napier.w(">>> Failed to parse global SSE event: ${data.take(100)}", e)
+                            send(ServerEvent.Unknown(type = "parse_error", rawData = data))
+                        }
                     }
                 }
             }

@@ -42,6 +42,6 @@ maestro --device <serial> test maestro-workspace/flows/onboarding/start.yaml
 ## CONVENTIONS
 - **YAML Flows**: All tests must be defined in `.yaml` files using Maestro syntax.
 - **No Unit Tests**: Do not add unit tests here. Use `composeApp/src/commonTest` for logic tests.
-- **Emulator Only**: Do not use physical devices for tests requiring host connectivity (e.g. Git server).
+- **Emulator Only**: Do not use physical devices for tests requiring host connectivity.
 - **Absolute Paths**: When referencing files outside the workspace in scripts, always use absolute paths.
 - **Tags**: Use tags (`@smoke`, `@critical`) in YAML headers to categorize flows for test plans.

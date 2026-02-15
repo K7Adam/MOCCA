@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
@@ -508,9 +507,10 @@ private fun TerminalServerEditDialog(
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf(server.name) }
-    var baseUrl by remember { mutableStateOf(server.baseUrl) }
-    var connectionType by remember { mutableStateOf(server.connectionType) }
-    var authToken by remember { mutableStateOf(server.authToken ?: "") }
+    var host by remember { mutableStateOf(server.host) }
+    var port by remember { mutableStateOf(server.port.toString()) }
+    var username by remember { mutableStateOf(server.username) }
+    var password by remember { mutableStateOf(server.password) }
     
     // Modern dialog using AlertDialog or custom rounded overlay
     AlertDialog(
@@ -538,56 +538,38 @@ private fun TerminalServerEditDialog(
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
                 TerminalInput(
-                    value = baseUrl,
-                    onValueChange = { baseUrl = it },
-                    label = "BASE URL",
-                    placeholder = "http://100.x.x.x:4096",
-                    hint = "Use Tailscale IP (100.x) or LAN IP"
+                    value = host,
+                    onValueChange = { host = it },
+                    label = "HOST",
+                    placeholder = "10.0.2.2 or mydevice.ts.net",
+                    hint = "Tailscale hostname, LAN IP, or localhost"
                 )
-                
-                Spacer(modifier = Modifier.height(AppSpacing.md))
-                
-                // Connection Type Selector
-                Text(
-                    text = "CONNECTION TYPE",
-                    color = AppColors.textSecondary,
-                    style = AppTypography.labelMedium
-                )
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-                    ConnectionType.entries.take(3).forEach { type ->
-                        val isSelected = connectionType == type
-                        Box(
-                            modifier = Modifier
-                                .clip(AppShapes.pill)
-                                .border(
-                                    width = AppSpacing.borderThin,
-                                    color = if (isSelected) AppColors.statusOnline else AppColors.border,
-                                    shape = AppShapes.pill
-                                )
-                                .background(
-                                    if (isSelected) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent,
-                                    AppShapes.pill
-                                )
-                                .clickable { connectionType = type }
-                                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm)
-                        ) {
-                            Text(
-                                text = type.name,
-                                color = if (isSelected) AppColors.statusOnline else AppColors.textSecondary,
-                                style = AppTypography.labelSmall
-                            )
-                        }
-                    }
-                }
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
                 TerminalInput(
-                    value = authToken,
-                    onValueChange = { authToken = it },
-                    label = "AUTH TOKEN",
-                    placeholder = "sk-..."
+                    value = port,
+                    onValueChange = { port = it },
+                    label = "PORT",
+                    placeholder = "4096"
+                )
+                
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                
+                TerminalInput(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = "USERNAME",
+                    placeholder = "opencode"
+                )
+                
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                
+                TerminalInput(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "PASSWORD",
+                    placeholder = "Leave empty if none"
                 )
             }
         },
@@ -598,14 +580,14 @@ private fun TerminalServerEditDialog(
                     onSave(
                         server.copy(
                             name = name,
-                            baseUrl = baseUrl,
-                            connectionType = connectionType,
-                            authType = if (authToken.isNotBlank()) AuthType.BEARER else AuthType.NONE,
-                            authToken = authToken.takeIf { it.isNotBlank() }
+                            host = host,
+                            port = port.toIntOrNull() ?: 4096,
+                            username = username.ifBlank { "opencode" },
+                            password = password
                         )
                     )
                 },
-                enabled = name.isNotBlank() && baseUrl.isNotBlank(),
+                enabled = name.isNotBlank() && host.isNotBlank(),
                 height = AppSpacing.buttonHeightCompact
             )
         },

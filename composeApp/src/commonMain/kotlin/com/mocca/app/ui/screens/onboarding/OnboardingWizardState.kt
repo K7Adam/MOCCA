@@ -53,9 +53,10 @@ data class OnboardingWizardState(
             val savedAsDiscovered = savedServers.map { config ->
                 DiscoveredServer(
                     name = config.name,
-                    host = config.baseUrl.removePrefix("http://").removePrefix("https://").split(":")[0],
-                    port = config.baseUrl.split(":").lastOrNull()?.toIntOrNull() ?: 4096,
-                    authToken = config.authToken,
+                    host = config.host,
+                    port = config.port,
+                    username = config.username,
+                    password = config.password,
                     source = com.mocca.app.domain.model.DiscoverySource.SAVED
                 )
             }

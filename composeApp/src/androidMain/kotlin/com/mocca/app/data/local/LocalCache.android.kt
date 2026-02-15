@@ -250,10 +250,10 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             serverConfigQueries.insertOrReplace(
                 id = config.id,
                 name = config.name,
-                baseUrl = config.baseUrl,
-                connectionType = config.connectionType.name.lowercase(),
-                authType = config.authType.name.lowercase(),
-                authToken = config.authToken,
+                host = config.host,
+                port = config.port.toLong(),
+                username = config.username,
+                password = config.password,
                 isActive = config.isActive
             )
         } catch (e: Exception) {
@@ -667,18 +667,10 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         return ServerConfig(
             id = id,
             name = name,
-            baseUrl = baseUrl,
-            connectionType = try {
-                ConnectionType.valueOf(connectionType.uppercase())
-            } catch (e: Exception) {
-                ConnectionType.LOCAL
-            },
-            authType = try {
-                AuthType.valueOf(authType.uppercase())
-            } catch (e: Exception) {
-                AuthType.NONE
-            },
-            authToken = authToken,
+            host = host,
+            port = port.toInt(),
+            username = username,
+            password = password,
             isActive = isActive
         )
     }

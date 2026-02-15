@@ -22,7 +22,7 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 - `TerminalInput`: Solid black background with white outline and cursor.
 - `TerminalCard`: Rectangular container with `surfaceVariant` background and 0dp corners.
 - `TerminalBadge`: High-contrast "USER" or "AGENT" tags.
-- `ConnectionStatus`: Real-time visualization of OpenCode and Git Server health.
+- `TerminalTopBar`: Top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
 
 ### 2. Common Layouts (`CommonComponents.kt`)
 - `LoadingScreen`: Center-aligned progress with uppercase terminal status text.
@@ -32,6 +32,18 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 ### 3. Specialized Widgets
 - `QuestionDialog.kt`: For interactive `confirm` or `input` requests from the AI agent.
 - `ToolCards.kt`: Specialized rendering for `ToolUse` and `ToolResult` data structures.
+
+## CONNECTION STATUS
+The `ConnectionStatus` sealed class (defined in `Config.kt`) drives the connection indicator in the top bar:
+- `NotConfigured` — No server configured
+- `Disconnected(reason)` — data class, NOT object
+- `Connecting` — Initial connection attempt
+- `WaitingForNetwork` — Network unavailable
+- `Reconnecting(attempt, maxAttempts)` — Auto-reconnection in progress
+- `Connected(serverInfo, latencyMs)` — Active connection with latency info
+- `Error(message)` — Connection error
+
+`ConnectionQuality` (enum: `EXCELLENT`, `GOOD`, `POOR`, `OFFLINE`, `UNKNOWN`) is derived from latency and displayed in the top bar.
 
 ## ANTI-PATTERNS
 - **Material 3 Mixing**: NEVER use `MaterialTheme.colorScheme` or `MaterialTheme.shapes`. Use `AppColors` and `AppShapes`.

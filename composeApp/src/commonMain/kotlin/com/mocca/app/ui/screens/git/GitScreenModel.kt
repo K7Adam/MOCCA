@@ -3,19 +3,20 @@ package com.mocca.app.ui.screens.git
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.GitRepository
+import com.mocca.app.data.repository.SessionRepository
 import com.mocca.app.domain.model.*
-import com.mocca.app.api.GitApiClient.GitServerNotRunningException
-import com.mocca.app.api.NetworkError
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 /**
  * Screen model for Git operations screen.
+ * Uses SessionRepository to obtain a sessionId for shell-based git operations.
+ * All git write/read operations are routed through OpenCode's built-in endpoints.
  */
 class GitScreenModel(
-    private val gitRepository: GitRepository
+    private val gitRepository: GitRepository,
+    private val sessionRepository: SessionRepository
 ) : ScreenModel {
     
     // UI State
@@ -26,9 +27,27 @@ class GitScreenModel(
     private val _selectedTab = MutableStateFlow(GitTab.STATUS)
     val selectedTab: StateFlow<GitTab> = _selectedTab.asStateFlow()
     
+    // Cached session ID for git operations
+    private var _currentSessionId: String? = null
+    
     init {
+        fetchSessionId()
         loadStatus()
         loadStashes()
+    }
+    
+    /**
+     * Fetch first available session ID for git operations.
+     * Continuously observed so it updates when sessions change.
+     */
+    private fun fetchSessionId() {
+        screenModelScope.launch {
+            sessionRepository.getSessions().collect { resource ->
+                if (resource is Resource.Success) {
+                    _currentSessionId = resource.data.firstOrNull()?.id
+                }
+            }
+        }
     }
     
     fun selectTab(tab: GitTab) {
@@ -59,24 +78,11 @@ class GitScreenModel(
                             status = resource.data,
                             error = null
                         )
-                        is Resource.Error -> {
-                            val cause = resource.cause
-                            val isServerNotRunning = cause is GitServerNotRunningException ||
-                                cause is NetworkError.GitServerUnavailable ||
-                                cause?.cause is GitServerNotRunningException ||
-                                resource.message.contains("Git server is not running", ignoreCase = true)
-                            
-                            if (isServerNotRunning) {
-                                val exception = (cause as? GitServerNotRunningException) 
-                                    ?: (cause?.cause as? GitServerNotRunningException)
-                                showServerNotRunningDialog(exception?.isConnectionRefused ?: false, exception?.url)
-                            }
-                            state.copy(
-                                isLoading = false,
-                                status = resource.data ?: state.status,
-                                error = resource.message
-                            )
-                        }
+                        is Resource.Error -> state.copy(
+                            isLoading = false,
+                            status = resource.data ?: state.status,
+                            error = resource.message
+                        )
                     }
                 }
             }
@@ -85,7 +91,7 @@ class GitScreenModel(
     
     fun loadBranches() {
         screenModelScope.launch {
-            gitRepository.getBranches().collect { resource ->
+            gitRepository.getBranches(_currentSessionId).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
@@ -99,7 +105,7 @@ class GitScreenModel(
     
     fun loadLog(branch: String? = null, skip: Int = 0) {
         screenModelScope.launch {
-            gitRepository.getLog(branch, skip = skip).collect { resource ->
+            gitRepository.getLog(_currentSessionId, branch, skip = skip).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
@@ -113,7 +119,7 @@ class GitScreenModel(
     
     fun loadRemotes() {
         screenModelScope.launch {
-            gitRepository.getRemotes().collect { resource ->
+            gitRepository.getRemotes(_currentSessionId).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
@@ -127,7 +133,7 @@ class GitScreenModel(
 
     fun loadTags() {
         screenModelScope.launch {
-            gitRepository.getTags().collect { resource ->
+            gitRepository.getTags(_currentSessionId).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
@@ -141,7 +147,7 @@ class GitScreenModel(
 
     fun loadStashes() {
         screenModelScope.launch {
-            gitRepository.getStashes().collect { resource ->
+            gitRepository.getStashes(_currentSessionId).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state
@@ -153,10 +159,25 @@ class GitScreenModel(
         }
     }
     
+    /**
+     * Helper to run git write operations that require a sessionId.
+     * Shows error if no session is available.
+     */
+    private inline fun withSessionId(crossinline action: suspend (String) -> Unit) {
+        val sessionId = _currentSessionId
+        if (sessionId == null) {
+            _uiState.update { it.copy(isLoading = false, error = "No active session available for Git operations") }
+            return
+        }
+        screenModelScope.launch { action(sessionId) }
+    }
+    
     fun stageFile(path: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.stage(listOf(path)).onSuccess { loadStatus() }.onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            gitRepository.stage(sessionId, listOf(path))
+                .onSuccess { loadStatus() }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
     
@@ -165,183 +186,224 @@ class GitScreenModel(
         val untracked = _uiState.value.status?.untracked ?: emptyList()
         val allFiles = unstaged + untracked
         if (allFiles.isEmpty()) return
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.stage(allFiles).onSuccess { loadStatus() }.onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            gitRepository.stage(sessionId, allFiles)
+                .onSuccess { loadStatus() }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
     
     fun unstageFile(path: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.unstage(listOf(path)).onSuccess { loadStatus() }.onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            gitRepository.unstage(sessionId, listOf(path))
+                .onSuccess { loadStatus() }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
     
     fun unstageAll() {
         val staged = _uiState.value.status?.staged?.map { it.path } ?: return
         if (staged.isEmpty()) return
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.unstage(staged).onSuccess { loadStatus() }.onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            gitRepository.unstage(sessionId, staged)
+                .onSuccess { loadStatus() }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
     
     fun discardFile(path: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.discard(listOf(path)).onSuccess { loadStatus() }.onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
+            gitRepository.discard(sessionId, listOf(path))
+                .onSuccess { loadStatus() }
+                .onFailure { error -> _uiState.update { it.copy(isLoading = false, error = error.message) } }
         }
     }
     
     fun commit(message: String) {
-        if (message.isBlank()) { _uiState.update { it.copy(warningMessage = "Commit message cannot be empty") }; return }
-        screenModelScope.launch {
+        if (message.isBlank()) {
+            _uiState.update { it.copy(warningMessage = "Commit message cannot be empty") }
+            return
+        }
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.commit(message).onSuccess { result ->
+            gitRepository.commit(sessionId, message).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, showCommitDialog = false, commitMessage = "", operationResult = result.message ?: "Commit successful") }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") }
+            }
         }
     }
     
     fun push(force: Boolean = false) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.push(force = force).onSuccess { result ->
+            gitRepository.push(sessionId, force = force).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message ?: "Push successful") }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") }
+            }
         }
     }
     
     fun pull(rebase: Boolean = false) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.pull(rebase = rebase).onSuccess { result ->
+            gitRepository.pull(sessionId, rebase = rebase).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message ?: "Pull successful") }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") }
+            }
         }
     }
     
     fun fetch() {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.fetch().onSuccess { result ->
+            gitRepository.fetch(sessionId).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message ?: "Fetch successful") }
                 loadStatus(); loadBranches()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") }
+            }
         }
     }
     
     fun checkout(ref: String, create: Boolean = false) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.checkout(ref, create).onSuccess { result ->
+            gitRepository.checkout(sessionId, ref, create).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message ?: "Checkout successful") }
                 loadStatus(); loadBranches()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message ?: "Operation failed") }
+            }
         }
     }
 
     fun createStash(message: String?) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.createStash(message).onSuccess { result ->
+            gitRepository.createStash(sessionId, message).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message, showStashDialog = false, stashMessage = "") }
                 loadStatus(); loadStashes()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun popStash(index: Int) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.popStash(index).onSuccess { result ->
+            gitRepository.popStash(sessionId, index).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadStatus(); loadStashes()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun applyStash(index: Int) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.applyStash(index).onSuccess { result ->
+            gitRepository.applyStash(sessionId, index).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun dropStash(index: Int) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.dropStash(index).onSuccess { result ->
+            gitRepository.dropStash(sessionId, index).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadStashes()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun merge(branch: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.merge(branch).onSuccess { result ->
+            gitRepository.merge(sessionId, branch).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun rebase(branch: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.rebase(branch).onSuccess { result ->
+            gitRepository.rebase(sessionId, branch).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadStatus()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun addRemote(name: String, url: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.addRemote(name, url).onSuccess { result ->
+            gitRepository.addRemote(sessionId, name, url).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadRemotes()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun removeRemote(name: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.removeRemote(name).onSuccess { result ->
+            gitRepository.removeRemote(sessionId, name).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadRemotes()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun createTag(name: String, message: String?) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.createTag(name, message).onSuccess { result ->
+            gitRepository.createTag(sessionId, name, message).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadTags()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
 
     fun deleteTag(name: String) {
-        screenModelScope.launch {
+        withSessionId { sessionId ->
             _uiState.update { it.copy(isLoading = true) }
-            gitRepository.deleteTag(name).onSuccess { result ->
+            gitRepository.deleteTag(sessionId, name).onSuccess { result ->
                 _uiState.update { it.copy(isLoading = false, operationResult = result.message) }
                 loadTags()
-            }.onFailure { error -> _uiState.update { it.copy(isLoading = false, warningMessage = error.message) } }
+            }.onFailure { error ->
+                _uiState.update { it.copy(isLoading = false, warningMessage = error.message) }
+            }
         }
     }
     
@@ -358,67 +420,6 @@ class GitScreenModel(
     fun clearError() { _uiState.update { it.copy(error = null) } }
     fun clearOperationResult() { _uiState.update { it.copy(operationResult = null) } }
     fun clearWarning() { _uiState.update { it.copy(warningMessage = null) } }
-
-    fun showServerNotRunningDialog(isConnectionRefused: Boolean = false, url: String? = null) {
-        _uiState.update { it.copy(showServerNotRunningDialog = true, showAdbReverseHelp = isConnectionRefused && (url?.contains("127.0.0.1") == true || url?.contains("localhost") == true)) }
-    }
-
-    fun hideServerNotRunningDialog() { _uiState.update { it.copy(showServerNotRunningDialog = false, showAdbReverseHelp = false) } }
-    fun showServerStartedDialog() { _uiState.update { it.copy(showServerStartedDialog = true) } }
-    fun hideServerStartedDialog() { _uiState.update { it.copy(showServerStartedDialog = false) } }
-
-    fun requestStartGitServer() {
-        screenModelScope.launch {
-            val currentAttempt = _uiState.value.serverStartAttempt + 1
-            val maxAttempts = _uiState.value.maxServerStartAttempts
-            
-            _uiState.update { it.copy(
-                isStartingServer = true, 
-                serverStartProgress = "Sending start command (attempt $currentAttempt/$maxAttempts)...", 
-                showServerNotRunningDialog = true, // Show dialog with progress
-                serverStartAttempt = currentAttempt
-            ) }
-            
-            gitRepository.requestStartGitServerAndWait(maxWaitMs = 15_000L, pollIntervalMs = 500L).onSuccess { serverStarted ->
-                if (serverStarted) {
-                    _uiState.update { it.copy(
-                        isStartingServer = false, 
-                        serverStartProgress = null, 
-                        showServerNotRunningDialog = false,
-                        showServerStartedDialog = true, 
-                        error = null,
-                        serverStartAttempt = 0
-                    )}
-                    delay(500)
-                    loadStatus()
-                } else { 
-                    onGitServerStartFailed("Server did not start", currentAttempt, maxAttempts) 
-                }
-            }.onFailure { e -> 
-                onGitServerStartFailed(e.message ?: "Unknown error", currentAttempt, maxAttempts) 
-            }
-        }
-    }
-
-    private fun onGitServerStartFailed(reason: String, attempt: Int, maxAttempts: Int) {
-        val canRetry = attempt < maxAttempts
-        
-        _uiState.update { it.copy(
-            isStartingServer = canRetry, // Keep loading if we're going to retry
-            serverStartProgress = if (canRetry) "Retrying..." else null,
-            showServerNotRunningDialog = !canRetry, // Show dialog only if exhausted all retries
-            warningMessage = if (!canRetry) "Could not start Git services after $maxAttempts attempts.\n\nError: $reason" else null,
-            serverStartAttempt = if (canRetry) attempt else 0
-        )}
-        
-        // Auto-retry if we haven't exhausted attempts
-        if (canRetry) {
-            screenModelScope.launch {
-                delay(2000) // Wait 2 seconds before retry
-                requestStartGitServer()
-            }
-        }
-    }
 }
 
 data class GitUiState(
@@ -437,14 +438,7 @@ data class GitUiState(
     val showStashDialog: Boolean = false,
     val stashMessage: String = "",
     val showAddRemoteDialog: Boolean = false,
-    val showCreateTagDialog: Boolean = false,
-    val showServerNotRunningDialog: Boolean = false,
-    val showAdbReverseHelp: Boolean = false,
-    val showServerStartedDialog: Boolean = false,
-    val isStartingServer: Boolean = false,
-    val serverStartProgress: String? = null,
-    val serverStartAttempt: Int = 0,
-    val maxServerStartAttempts: Int = 3
+    val showCreateTagDialog: Boolean = false
 ) {
     val hasChanges: Boolean get() = status?.hasChanges == true
     val currentBranch: String get() = status?.branch ?: "unknown"

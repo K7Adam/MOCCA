@@ -2,7 +2,7 @@ package com.mocca.app.ui.screens.onboarding
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.AppConnectionManager
+import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.discovery.DiscoveryResult
 import com.mocca.app.discovery.ServerDiscovery
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
  */
 class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
-    private val appConnectionManager: AppConnectionManager,
+    private val connectionManager: ConnectionManager,
     private val serverDiscovery: ServerDiscovery? = null
 ) : ScreenModel {
     
@@ -182,12 +182,12 @@ class OnboardingWizardModel(
                     serverConfigRepository.setActiveServer(config.id)
                     
                     // Attempt connection
-                    appConnectionManager.checkConnection()
+                    connectionManager.checkConnection()
                     
                     // Wait and check result
                     delay(2000)
                     
-                    val isConnected = appConnectionManager.connectionState.value.isConnected
+                    val isConnected = connectionManager.status.value.isConnected
                     onConnectionResult(isConnected, if (!isConnected) "Connection failed" else null)
                     
                 } catch (e: Exception) {
@@ -202,7 +202,15 @@ class OnboardingWizardModel(
             // Try smart connect with all available servers
             screenModelScope.launch {
                 val candidates = _state.value.allServers.map { it.toServerConfig() }
-                val connected = appConnectionManager.connectWithDiscovery(candidates)
+                var connected = false
+                for (candidate in candidates) {
+                    connectionManager.connect(candidate)
+                    delay(2000)
+                    if (connectionManager.status.value.isConnected) {
+                        connected = true
+                        break
+                    }
+                }
                 
                 if (connected) {
                     onConnectionResult(true, null)
@@ -224,26 +232,29 @@ class OnboardingWizardModel(
         
         screenModelScope.launch {
             try {
+                // Parse host and port from URL
+                val cleanUrl = url.removePrefix("http://").removePrefix("https://")
+                val parts = cleanUrl.split(":")
+                val host = parts.firstOrNull() ?: cleanUrl
+                val port = parts.getOrNull(1)?.toIntOrNull() ?: 4096
+                
                 val config = com.mocca.app.domain.model.ServerConfig(
                     id = "manual-${System.currentTimeMillis()}",
                     name = "Manual Server",
-                    baseUrl = url,
-                    authToken = token.takeIf { it.isNotEmpty() },
-                    authType = if (token.isNotEmpty()) 
-                        com.mocca.app.domain.model.AuthType.BEARER 
-                    else 
-                        com.mocca.app.domain.model.AuthType.NONE,
+                    host = host,
+                    port = port,
+                    password = token,
                     isActive = true
                 )
                 
                 serverConfigRepository.saveServer(config)
                 serverConfigRepository.setActiveServer(config.id)
                 
-                appConnectionManager.checkConnection()
+                connectionManager.checkConnection()
                 
                 delay(2000)
                 
-                val isConnected = appConnectionManager.connectionState.value.isConnected
+                val isConnected = connectionManager.status.value.isConnected
                 onConnectionResult(isConnected, if (!isConnected) "Connection failed" else null)
                 
             } catch (e: Exception) {

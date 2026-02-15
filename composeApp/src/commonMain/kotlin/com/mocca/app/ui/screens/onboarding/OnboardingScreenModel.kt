@@ -2,9 +2,8 @@ package com.mocca.app.ui.screens.onboarding
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.AppConnectionManager
+import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
-import com.mocca.app.data.repository.AppConnectionState
 import com.mocca.app.domain.model.ServerConfig
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,7 +69,7 @@ data class OnboardingState(
  */
 class OnboardingScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
-    private val appConnectionManager: AppConnectionManager
+    private val connectionManager: ConnectionManager
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(OnboardingState())
@@ -91,7 +90,7 @@ class OnboardingScreenModel(
                     savedServers = servers,
                     hasExistingConnection = true,
                     serverAddress = active.baseUrl,
-                    authToken = active.authToken ?: ""
+                    authToken = active.password
                 )
             }
         }
@@ -143,12 +142,12 @@ class OnboardingScreenModel(
             
             // Try to connect with existing config
             try {
-                appConnectionManager.checkConnection()
+                connectionManager.checkConnection()
                 
                 // Wait a bit and check connection status
                 delay(2000)
                 
-                val isConnected = appConnectionManager.connectionState.value.isConnected
+                val isConnected = connectionManager.status.value.isConnected
                 _state.update {
                     it.copy(
                         probeState = if (isConnected) ProbeState.SUCCESS else ProbeState.FAILED,
@@ -187,23 +186,32 @@ class OnboardingScreenModel(
             
             try {
                 // Save or update server config
+                // Parse host and port from the address string
+                val cleanAddress = currentState.serverAddress.trim()
+                    .removePrefix("http://").removePrefix("https://")
+                val addressParts = cleanAddress.split(":")
+                val host = addressParts.firstOrNull() ?: "localhost"
+                val port = addressParts.getOrNull(1)?.toIntOrNull() ?: 4096
+                
                 val config = ServerConfig(
                     id = "default",
                     name = "OpenCode Server",
-                    baseUrl = currentState.serverAddress.trim(),
-                    authToken = currentState.authToken.trim().takeIf { it.isNotEmpty() }
+                    host = host,
+                    port = port,
+                    password = currentState.authToken.trim(),
+                    isActive = true
                 )
                 
                 serverConfigRepository.saveServer(config)
                 serverConfigRepository.setActiveServer(config.id)
                 
                 // Connect
-                appConnectionManager.checkConnection()
+                connectionManager.checkConnection()
                 
                 // Wait for connection
                 delay(2000)
                 
-                val isConnected = appConnectionManager.connectionState.value.isConnected
+                val isConnected = connectionManager.status.value.isConnected
                 _state.update {
                     it.copy(
                         isConnecting = false,

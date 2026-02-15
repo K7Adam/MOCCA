@@ -1,15 +1,15 @@
 # MOCCA
 
 ## 1. Project Overview
-MOCCA is a **Kotlin Multiplatform** Android client for the **OpenCode** AI agent. It delivers a production-ready mobile interface matching the OpenChamber web UI, enabling developers to remotely manage coding sessions, files, and terminal operations via secure HTTP and Server-Sent Events (SSE).
+MOCCA is a **Kotlin Multiplatform** Android client for the **OpenCode** AI agent. It delivers a production-ready mobile interface enabling developers to remotely manage coding sessions, files, and terminal operations via secure HTTP and Server-Sent Events (SSE).
 
 ## 2. Key Features
 - **Full Session Management**: Real-time chat with streaming responses and optimistic UI updates.
-- **File & Git Operations**: Browse, search, and edit files; complete Git version control interface.
-- **Automatic Git Server Management**: Mobile app can start git HTTP server when unavailable via REST API command.
+- **File & Git Operations**: Browse, search, and edit files; complete Git version control interface via OpenCode's built-in VCS endpoints.
 - **Terminal Access**: WebSocket-based terminal emulation for remote command execution.
 - **Offline-First**: SQLDelight-backed caching ensures instant access to sessions and logs.
-- **Secure Control**: Token-based authentication and mobile permission approval for tool execution.
+- **Secure Control**: HTTP Basic Auth authentication and mobile permission approval for tool execution.
+- **Auto-Update**: Checks GitHub Releases for new versions and installs updates automatically.
 
 ## 3. Architecture
 The app follows a clean architecture with unidirectional data flow:
@@ -21,24 +21,29 @@ ScreenModels (Voyager / State Management)
   ↓
 Repositories (Data Layer)
   ├── Local Cache (SQLDelight)
-  └── Remote Data (Ktor Client / SSE)
+  └── Remote Data (ApiExecutor → ConnectionManager → HttpClient)
         ↓
-OpenCode Server (API)
-  └── Git HTTP Server (Port 4097)
+OpenCode Server (single server, HTTP Basic Auth)
 ```
 
-**Git Server Auto-Startup Flow:**
-```
-GitServerNotRunningDialog
-    ↓ sends command
-OpenCode /command endpoint
-    ↓ triggers PowerShell
-Git HTTP Server (Port 4097)
-```
+**Connection Architecture:**
+- `ConnectionManager` owns the `HttpClient` lifecycle, auth, health checks, and reconnection
+- `ApiExecutor` interface: consumers call `execute {}` — they never hold `HttpClient` references
+- `ConnectionStatus` sealed class provides real-time connection state to the UI
+- Git operations use OpenCode's `/vcs` and `/session/:id/diff` endpoints (no separate Git server)
 
 ## 4. Setup Instructions
-1.  **Prerequisites**: JDK 17+, Android SDK (API 36), and OpenCode server running (`opencode --port 4096`).
-2.  **Build Debug APK**:
+1.  **Prerequisites**: JDK 17+, Android SDK (API 36), and OpenCode server running.
+2.  **Start OpenCode Server**:
+    ```bash
+    # Set credentials (optional — defaults to username "opencode" with no password)
+    export OPENCODE_SERVER_USERNAME=opencode
+    export OPENCODE_SERVER_PASSWORD=your_password
+
+    # Start server
+    opencode serve --port 4096
+    ```
+3.  **Build Debug APK**:
     ```bash
     # Windows
     .\gradlew.bat :androidApp:assembleDebug
@@ -46,40 +51,15 @@ Git HTTP Server (Port 4097)
     # macOS/Linux
     ./gradlew :androidApp:assembleDebug
     ```
-3.  **Install**:
+4.  **Install**:
     ```bash
     adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
     ```
-4.  **Connect**:
+5.  **Connect**:
     - **Emulator**: Auto-connects to host via `10.0.2.2:4096`.
-    - **Device**: Configure LAN or Tailscale IP in Settings.
-
-### ⚠️ CRITICAL: Android Emulator Network Setup
-
-**MANDATORY for Emulator Git Operations:**
-
-The Android Emulator cannot reach the Git Server directly due to network limitations. You **MUST** set up ADB reverse port forwarding before launching the app:
-
-```bash
-# 1. Start Emulator
-# 2. Set up ADB reverse for Git Server (port 4097)
-adb reverse tcp:4097 tcp:4097
-
-# 3. Verify setup
-adb reverse --list
-# Expected output should include: tcp:4097 tcp:4097
-```
-
-**Why this is needed:**
-- Android Emulator's `10.0.2.2` mapping doesn't work for all ports
-- Port 4097 (Git Server) is blocked from emulator
-- ADB reverse maps host's port 4097 to emulator's localhost:4097
-- Without this, ALL Git operations will fail with "Git server is not running"
-
-**Troubleshooting:**
-- If Git operations fail, verify: `adb reverse --list` includes `tcp:4097`
-- If not, re-run: `adb reverse tcp:4097 tcp:4097`
-- Restart emulator after setting up ADB reverse if issues persist
+    - **LAN Device**: Enter your machine's LAN IP (e.g., `192.168.1.100`) and port `4096` in Settings.
+    - **Tailscale**: Enter your Tailscale hostname/IP and port `4096` in Settings.
+    - **Credentials**: Enter the same `username` and `password` set via `OPENCODE_SERVER_USERNAME` / `OPENCODE_SERVER_PASSWORD` on the server.
 
 ## 5. Development Workflow
 - **Tech Stack**: Kotlin 2.3.0, Compose 1.9.3, Koin 4.1.1, Voyager 1.1.0-beta03, AGP 9.0.0-rc03.

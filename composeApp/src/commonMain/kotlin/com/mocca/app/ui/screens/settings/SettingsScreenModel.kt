@@ -3,8 +3,7 @@ package com.mocca.app.ui.screens.settings
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.api.getHttpEngine
-import com.mocca.app.data.repository.AppConnectionManager
-import com.mocca.app.data.repository.AppConnectionState
+import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.data.repository.SettingsRepository
@@ -38,7 +37,7 @@ data class SettingsState(
     val isLoading: Boolean = false,
     val message: String? = null,
     val connectionStatuses: Map<String, ServerConnectionStatus> = emptyMap(),
-    val activeConnectionState: AppConnectionState = AppConnectionState.NotConfigured,
+    val activeConnectionState: ConnectionStatus = ConnectionStatus.NotConfigured,
     val githubToken: String = "",
     // Provider Auth
     val providers: List<Provider> = emptyList(),
@@ -52,12 +51,12 @@ data class SettingsState(
     val serverModes: List<Mode> = emptyList()
 ) {
     /** Server version from SSE Connected event, or null if not connected */
-    val serverVersion: String? get() = (activeConnectionState as? AppConnectionState.Connected)?.serverInfo?.version
+    val serverVersion: String? get() = (activeConnectionState as? ConnectionStatus.Connected)?.serverInfo?.version
 }
 
 class SettingsScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
-    private val appConnectionManager: AppConnectionManager,
+    private val connectionManager: ConnectionManager,
     private val updateRepository: UpdateRepository,
     private val settingsRepository: SettingsRepository,
     private val configRepository: ConfigRepository,
@@ -131,7 +130,7 @@ class SettingsScreenModel(
     fun loadRemoteConfig() {
         screenModelScope.launch {
             // Only try if connected
-            if (_state.value.activeConnectionState is AppConnectionState.Connected) {
+            if (_state.value.activeConnectionState is ConnectionStatus.Connected) {
                 // Load providers for auth configuration
                 loadProviders()
             }
@@ -292,19 +291,19 @@ class SettingsScreenModel(
 
     private fun observeActiveConnectionState() {
         screenModelScope.launch {
-            appConnectionManager.connectionState.collect { state ->
+            connectionManager.status.collect { state ->
                 _state.value = _state.value.copy(activeConnectionState = state)
                 
                 val activeId = _state.value.activeServerId
                 if (activeId != null) {
                     val status = when (state) {
-                        is AppConnectionState.NotConfigured -> ServerConnectionStatus.UNKNOWN
-                        is AppConnectionState.Checking -> ServerConnectionStatus.CHECKING
-                        is AppConnectionState.WaitingForNetwork -> ServerConnectionStatus.CHECKING
-                        is AppConnectionState.Connecting -> ServerConnectionStatus.CHECKING
-                        is AppConnectionState.Reconnecting -> ServerConnectionStatus.CHECKING
-                        is AppConnectionState.Connected -> ServerConnectionStatus.CONNECTED
-                        is AppConnectionState.Disconnected -> ServerConnectionStatus.FAILED
+                        is ConnectionStatus.NotConfigured -> ServerConnectionStatus.UNKNOWN
+                        is ConnectionStatus.Connecting -> ServerConnectionStatus.CHECKING
+                        is ConnectionStatus.WaitingForNetwork -> ServerConnectionStatus.CHECKING
+                        is ConnectionStatus.Reconnecting -> ServerConnectionStatus.CHECKING
+                        is ConnectionStatus.Connected -> ServerConnectionStatus.CONNECTED
+                        is ConnectionStatus.Disconnected -> ServerConnectionStatus.FAILED
+                        is ConnectionStatus.Error -> ServerConnectionStatus.FAILED
                     }
                     _state.value = _state.value.copy(
                         connectionStatuses = _state.value.connectionStatuses + (activeId to status)
@@ -340,8 +339,8 @@ class SettingsScreenModel(
         val newServer = ServerConfig(
             id = now.toString(),
             name = "Tailscale Server",
-            baseUrl = "https://omen.tail0b932a.ts.net",
-            connectionType = ConnectionType.TAILSCALE,
+            host = "omen.tail0b932a.ts.net",
+            port = 443,
             isActive = false
         )
         _state.value = _state.value.copy(editingServer = newServer)
@@ -374,7 +373,7 @@ class SettingsScreenModel(
     
     fun checkServerConnection(server: ServerConfig) {
         if (server.id == _state.value.activeServerId) {
-            appConnectionManager.checkConnection()
+            connectionManager.checkConnection()
         } else {
             checkNonActiveServer(server)
         }

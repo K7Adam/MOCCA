@@ -712,37 +712,6 @@ private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
         )
     }
 
-    if (uiState.showServerNotRunningDialog) {
-        com.mocca.app.ui.components.GitServerNotRunningDialog(
-            onDismiss = { screenModel.hideServerNotRunningDialog() },
-            onStartServer = { screenModel.requestStartGitServer() },
-            showAdbHelp = uiState.showAdbReverseHelp,
-            isAttemptingStart = uiState.isStartingServer,
-            attemptCount = uiState.serverStartAttempt,
-            maxAttempts = uiState.maxServerStartAttempts
-        )
-    }
-
-    if (uiState.isStartingServer) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.background.copy(alpha = 0.9f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
-            ) {
-                CircularProgressIndicator(color = AppColors.accentGreen, strokeWidth = 2.dp)
-                Text(text = "STARTING GIT SERVER...", color = AppColors.white, style = AppTypography.titleMedium)
-                uiState.serverStartProgress?.let { progress ->
-                    Text(text = progress.uppercase(), color = AppColors.textSecondary, style = AppTypography.bodySmall)
-                }
-            }
-        }
-    }
-
     toastMessage?.let { message ->
         Box(
             modifier = Modifier

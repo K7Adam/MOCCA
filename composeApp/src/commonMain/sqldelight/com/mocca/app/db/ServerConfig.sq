@@ -1,11 +1,12 @@
 -- Server configuration storage
+-- Uses OpenCode's native HTTP Basic Auth (username + password)
 CREATE TABLE ServerConfigEntity (
     id TEXT PRIMARY KEY NOT NULL,
     name TEXT NOT NULL,
-    baseUrl TEXT NOT NULL DEFAULT 'http://localhost:4096',
-    connectionType TEXT NOT NULL DEFAULT 'local',
-    authType TEXT NOT NULL DEFAULT 'none',
-    authToken TEXT,
+    host TEXT NOT NULL DEFAULT 'localhost',
+    port INTEGER NOT NULL DEFAULT 4096,
+    username TEXT NOT NULL DEFAULT 'opencode',
+    password TEXT NOT NULL DEFAULT '',
     isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
 );
 
@@ -23,7 +24,7 @@ SELECT * FROM ServerConfigEntity WHERE id = ?;
 
 -- Insert or replace server config
 insertOrReplace:
-INSERT OR REPLACE INTO ServerConfigEntity(id, name, baseUrl, connectionType, authType, authToken, isActive)
+INSERT OR REPLACE INTO ServerConfigEntity(id, name, host, port, username, password, isActive)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
 -- Delete server by ID

@@ -5,6 +5,23 @@
 ## OVERVIEW
 Core immutable data structures and sealed class hierarchies that define the MOCCA domain language. These models represent the source of truth for the application state and are used across the UI, Data, and Domain layers to ensure consistency and type safety.
 
+## KEY TYPES
+
+### Config.kt
+- **`ServerConfig`**: Server profile — `id, name, host, port, username, password, isActive`. `baseUrl` is a computed property (`http://$host:$port`). No `connectionType`, `authType`, or `authToken`.
+- **`ConnectionStatus`** (sealed class): `NotConfigured`, `Disconnected(reason: String? = null)` (data class, NOT object), `Connecting`, `WaitingForNetwork`, `Reconnecting(attempt, maxAttempts)`, `Connected(serverInfo: AppInfo, latencyMs)`, `Error(message)`.
+- **`ConnectionQuality`** (enum): `EXCELLENT`, `GOOD`, `POOR`, `OFFLINE`, `UNKNOWN`.
+- **`Resource<T>`** (sealed class): `Success(data)`, `Loading(data?)`, `Error(message, data?)`.
+
+### VcsTypes.kt
+- **`VcsInfo`**: `dirty: Boolean = false`, `ahead: Int = 0`, `behind: Int = 0` — all NON-nullable with defaults. No `?:` elvis needed.
+
+### GitTypes.kt
+- **`GitStatusResponse`**: Constructor params include `branch, upstream, ahead, behind, staged, unstaged, untracked, conflicted, stashes, clean`. `hasChanges` and `totalChanges` are computed properties (not constructor params).
+
+### ServerDiscovery.kt
+- **`DiscoveredServer`**: Has `username` and `password` fields (not `authToken`).
+
 ## CONVENTIONS
 - **Strict Immutability**: All domain models MUST be defined as `data class` using `val` properties. Mutable `var` properties are strictly prohibited to ensure thread safety and predictable state management within the MVI architecture.
 - **Sealed Hierarchies for State**: Use `sealed class` or `sealed interface` to represent mutually exclusive states and resources:
@@ -14,3 +31,4 @@ Core immutable data structures and sealed class hierarchies that define the MOCC
 - **Zero Business Logic**: Domain models must remain pure data containers. Business logic, complex state transitions, and side effects are forbidden. Simple property mappers or non-calculating convenience getters (e.g., `val isConnected: Boolean get() = this is Connected`) are permitted.
 - **Serialization Patterns**: All models intended for network transport or persistence must be annotated with `@Serializable`. Use `@SerialName` to decouple Kotlin property names from API keys.
 - **Defensive Nullability**: Always treat API fields as nullable (`?`) unless the protocol specification explicitly guarantees their presence, preventing runtime crashes from unexpected server responses.
+- **ConnectionStatus.Disconnected**: This is a `data class`, NOT an `object`. Always construct with `Disconnected()` or `Disconnected("reason")`, never bare `Disconnected`.

@@ -2,8 +2,7 @@ package com.mocca.app.ui.screens.main
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.AppConnectionManager
-import com.mocca.app.data.repository.AppConnectionState
+import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.SessionRepository
@@ -16,6 +15,7 @@ import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
 import com.mocca.app.domain.model.SessionRunningState
 import com.mocca.app.domain.model.SessionStatus
+import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.ServerEvent
 import com.mocca.app.domain.model.UpdateInfo
 import io.github.aakira.napier.Napier
@@ -101,7 +101,7 @@ class MainScreenModel(
     private val initialSessionId: String?,
     private val sessionRepository: SessionRepository,
     private val eventStreamRepository: EventStreamRepository,
-    private val appConnectionManager: AppConnectionManager,
+    private val connectionManager: ConnectionManager,
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,
     private val updateNotifier: UpdateNotifier
@@ -247,40 +247,39 @@ class MainScreenModel(
 
     private fun observeAppConnectionState() {
         screenModelScope.launch {
-            appConnectionManager.connectionState.collect { appState ->
-                when (appState) {
-                    is AppConnectionState.Connected -> {
+            connectionManager.status.collect { status ->
+                when (status) {
+                    is ConnectionStatus.Connected -> {
                         connectToEventStream()
                         loadSessions()
                     }
-                    is AppConnectionState.Disconnected -> {
+                    is ConnectionStatus.Disconnected -> {
                         _state.update { it.copy(
                             isConnected = false,
                             isConnecting = false,
-                            connectionError = appState.error,
+                            connectionError = status.reason,
                             mcpStatus = "OFFLINE",
                             isMcpOnline = false
                         )}
                     }
-                    is AppConnectionState.Connecting -> {
+                    is ConnectionStatus.Connecting -> {
                         _state.update { it.copy(
                             isConnected = false,
                             isConnecting = true,
-                            connectionAttempt = appState.attempt,
                             mcpStatus = "CONNECTING",
                             isMcpOnline = false
                         )}
                     }
-                    is AppConnectionState.Reconnecting -> {
+                    is ConnectionStatus.Reconnecting -> {
                         _state.update { it.copy(
                             isConnected = false,
                             isConnecting = true,
-                            connectionAttempt = appState.attempt,
+                            connectionAttempt = status.attempt,
                             mcpStatus = "RECONNECTING",
                             isMcpOnline = false
                         )}
                     }
-                    is AppConnectionState.WaitingForNetwork -> {
+                    is ConnectionStatus.WaitingForNetwork -> {
                         _state.update { it.copy(
                             isConnected = false,
                             isConnecting = false,
@@ -289,19 +288,20 @@ class MainScreenModel(
                             isMcpOnline = false
                         )}
                     }
-                    is AppConnectionState.Checking -> {
-                        _state.update { it.copy(
-                            isConnected = false,
-                            isConnecting = true,
-                            mcpStatus = "CHECKING",
-                            isMcpOnline = false
-                        )}
-                    }
-                    is AppConnectionState.NotConfigured -> {
+                    is ConnectionStatus.NotConfigured -> {
                         _state.update { it.copy(
                             isConnected = false,
                             isConnecting = false,
                             mcpStatus = "NOT_CONFIGURED",
+                            isMcpOnline = false
+                        )}
+                    }
+                    is ConnectionStatus.Error -> {
+                        _state.update { it.copy(
+                            isConnected = false,
+                            isConnecting = false,
+                            connectionError = status.message,
+                            mcpStatus = "ERROR",
                             isMcpOnline = false
                         )}
                     }
@@ -461,6 +461,13 @@ class MainScreenModel(
             eventStreamRepository.connectionStatus.collect { status ->
                 _state.update { current ->
                     when (status) {
+                        is com.mocca.app.domain.model.ConnectionStatus.NotConfigured -> current.copy(
+                            isConnected = false,
+                            isConnecting = false,
+                            isWaitingForNetwork = false,
+                            mcpStatus = "NOT_CONFIGURED",
+                            isMcpOnline = false
+                        )
                         is com.mocca.app.domain.model.ConnectionStatus.Connected -> current.copy(
                             isConnected = true,
                             isConnecting = false,
@@ -779,7 +786,7 @@ class MainScreenModel(
     }
     
     fun retryConnection() {
-        appConnectionManager.checkConnection()
+        connectionManager.checkConnection()
         eventStreamRepository.reconnect()
     }
     

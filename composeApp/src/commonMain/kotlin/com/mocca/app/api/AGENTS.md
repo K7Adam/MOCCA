@@ -1,46 +1,33 @@
 # NETWORK LAYER KNOWLEDGE BASE (api)
 
-**Generated:** 2026-01-18
+**Updated:** 2026-02-15
 **Scope:** `com.mocca.app.api`
 
 ## OVERVIEW
-Ktor-based networking layer providing REST and SSE connectivity. MOCCA uses a dual-server architecture to separate agent logic from heavy file/git operations:
-1. **OpenCode Server (Port 4096)**: Primary agent logic, sessions, and configuration.
-2. **Git HTTP Server (Port 4097)**: Specialized high-performance server for Git operations, powered by `simple-git`.
+Ktor-based networking layer providing REST and SSE connectivity to a single OpenCode server instance. Authentication uses HTTP Basic Auth. The `ApiExecutor` interface ensures consumers never hold `HttpClient` references directly.
 
 ## STRUCTURE
-- **MoccaApiClient.kt**: Primary client for OpenCode REST endpoints (Sessions, Messages, Files).
-- **GitApiClient.kt**: Specialized client for Git operations on port 4097.
+- **ApiExecutor.kt**: Interface with `suspend fun <T> execute(block: suspend HttpClient.() -> T): T`. Consumers call `execute {}` to make HTTP requests — the `ConnectionManager` provides the properly-configured `HttpClient`.
+- **MoccaApiClient.kt**: Primary client for all OpenCode REST endpoints (Sessions, Messages, Files, VCS, Shell commands). Uses `ApiExecutor` for all requests.
 - **MoccaSseClient.kt**: Resilient SSE handler for real-time events and streaming.
-- **HttpClientProvider.kt**: Manages Ktor `HttpClient` lifecycle, auth tokens, and engine configuration.
-- **GitServerChecker.kt**: Utility for fast server availability detection (500ms-1s).
-- **ServerConfigRepository.kt**: Manages environment detection (Emulator `10.0.2.2` vs LAN/Tailscale).
+- **NetworkConfig.kt**: Timeout constants and network configuration.
+- **CircuitBreaker.kt**: Circuit breaker pattern for resilient API calls.
+- **RetryPolicy.kt**: Exponential backoff retry logic for transient failures.
+- **GitHubApiClient.kt**: Client for GitHub Releases API (app auto-update feature).
+- **Platform.kt**: Platform detection utilities.
 
-## GIT PROTOCOL
-MOCCA requires a secondary Git HTTP server for high-performance git operations to avoid blocking the primary agent loop.
-
-- **Port Mapping**:
-    - OpenCode (Agent): `4096`
-    - Git Server (Target): `4097`
-- **Auto-Start Logic**:
-    - **Trigger**: `GitApiClient.requestStartGitServer()`
-    - **Method**: `POST /command`
-    - **Body**: `{"command": "start-git-server"}`
-    - **Host Action**: OpenCode executes `start-git-server.ps1` upon receiving the command.
-- **Connectivity**:
-    - Local connections **MUST** allow cleartext (HTTP) as the local git server does not support TLS.
-    - `GitApiClient` forces `http://` regardless of the primary server's scheme.
-- **Availability Check**:
-    - `ensureServerRunning()` performs a quick port check (500ms-1s) before any Git operation.
-    - Returns `GitServerNotRunningException` immediately if port 4097 is unreachable.
+## DELETED FILES (for reference)
+The following files were removed during the connection architecture refactoring:
+- ~~`GitApiClient.kt`~~ — Replaced by OpenCode's built-in VCS endpoints in `MoccaApiClient`
+- ~~`HttpClientProvider.kt`~~ — Replaced by `ConnectionManager` (in data/repository)
+- ~~`GitServerChecker.kt`~~ — No longer needed (no separate Git server)
 
 ## CONVENTIONS
-- **Timeouts**: Standard timeout is **120s** (`requestTimeout`, `socketTimeout`) to accommodate long-running LLM tasks and heavy git operations.
-- **Environment Detection**:
-    - **Android Emulator**: Automatically detects and uses `10.0.2.2` to reach the host machine.
-    - **Physical Device**: Uses LAN IP or Tailscale hostname.
+- **ApiExecutor Pattern**: All API consumers depend on `ApiExecutor`, never on `HttpClient` directly. The `ConnectionManager` implements `ApiExecutor` and manages the `HttpClient` lifecycle, auth headers, and reconnection.
+- **Timeouts**: Standard timeout is **120s** (`requestTimeout`, `socketTimeout`) to accommodate long-running LLM tasks.
+- **Authentication**: HTTP Basic Auth with credentials from `ServerConfig` (`username`/`password`). Configured by `ConnectionManager` on the `HttpClient`.
 - **Resilience Strategy**:
     - **Read Operations (GET)**: Use `safeCall` with exponential backoff retry.
     - **Write Operations (POST/DELETE)**: Use `safeCallNoRetry` to prevent duplicate side effects on network instability.
-- **Dynamic URL Resolution**: `serverConfigProvider` is invoked per-request, enabling seamless runtime switching between servers without app restart.
 - **JSON Configuration**: `ignoreUnknownKeys = true` and `isLenient = true` are mandatory for forward compatibility with OpenCode server updates.
+- **Git Operations**: All Git operations go through `MoccaApiClient` using OpenCode's `/vcs` endpoint (read) and `executeShell()` (write). No separate Git server or port is involved.

@@ -18,12 +18,12 @@ Schema definitions are located in `composeApp/src/commonMain/sqldelight/com/mocc
 | `FileInfo.sq` | Caches file browser hierarchy to reduce network overhead. |
 | `Message.sq` | Stores chat history, message parts, and execution status. |
 | `RecentModel.sq` | Tracks recently used LLM models and providers. |
-| `ServerConfig.sq` | Manages server profiles (Local, Tailscale, Remote). |
+| `ServerConfig.sq` | Manages server profiles. Schema: `id, name, host, port, username, password, isActive`. |
 | `Session.sq` | Manages conversation sessions, metadata, and sync status. |
 
 ## CONVENTIONS
 - **LocalCache Interface**: Primary abstraction for all persistence. Repositories MUST depend on `LocalCache`, never direct DB drivers.
-- **Migration Logic**: `ServerConfigRepository` automatically migrates physical devices from emulator IPs (`10.0.2.2`) to Tailscale defaults during `init`.
+- **ServerConfig Schema**: Fields are `id`, `name`, `host`, `port`, `username`, `password`, `isActive`. The `baseUrl` is a computed property (`http://$host:$port`) on the domain model, not stored in the DB. There is no `connectionType`, `authType`, or `authToken` field.
 - **Offline-First Flow**:
     1. Emit `Resource.Loading(cached)` immediately.
     2. Fetch from API via `safeCall`.

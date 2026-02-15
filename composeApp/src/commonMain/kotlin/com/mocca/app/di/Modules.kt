@@ -1,8 +1,7 @@
 package com.mocca.app.di
 
+import com.mocca.app.api.ApiExecutor
 import com.mocca.app.api.GitHubApiClient
-import com.mocca.app.api.GitApiClient
-import com.mocca.app.api.HttpClientProvider
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.RetryPolicy
@@ -10,7 +9,6 @@ import com.mocca.app.data.GlobalActivityManager
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.local.LocalCacheFactory
 import com.mocca.app.data.repository.*
-import com.mocca.app.data.repository.AppConnectionManager
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.data.security.NoOpSecureTokenStorage
@@ -33,58 +31,42 @@ import org.koin.dsl.module
 
 /**
  * Common Koin modules shared across all platforms.
+ * Uses ConnectionManager as the single source of truth for connection state and HttpClient lifecycle.
  */
 val commonModule = module {
-    // Dynamic HttpClient Provider - recreates client when server config changes
+    // ConnectionManager — single source of truth for connection + ApiExecutor
     single {
-        HttpClientProvider(
+        ConnectionManager(
             serverConfigRepository = get(),
             networkObserver = getOrNull()
         )
     }
-    
-    // API Clients - use HttpClientProvider for dynamic client access
+
+    // Bind ApiExecutor interface to ConnectionManager
+    single<ApiExecutor> { get<ConnectionManager>() }
+
+    // API Clients — use ApiExecutor (no direct HttpClient references)
     single {
-        val httpClientProvider: HttpClientProvider = get()
-        val serverConfigRepo: ServerConfigRepository = get()
         MoccaApiClient(
-            httpClient = httpClientProvider.getClientSync(),
-            serverConfigProvider = { serverConfigRepo.getActiveServerConfig() },
-            retryPolicy = RetryPolicy.Default,
-            httpClientProvider = httpClientProvider
+            api = get(),
+            retryPolicy = RetryPolicy.Default
         )
     }
     
     single {
-        val httpClientProvider: HttpClientProvider = get()
-        val serverConfigRepo: ServerConfigRepository = get()
         MoccaSseClient(
-            httpClient = httpClientProvider.getClientSync(),
-            serverConfigProvider = { serverConfigRepo.getActiveServerConfig() },
-            retryPolicy = RetryPolicy.Aggressive,
-            httpClientProvider = httpClientProvider
+            api = get()
         )
     }
     
     // Repositories
-    single { SessionRepository(get(), get(), get()) }
+    single { SessionRepository(get(), get()) }
     single { 
         EventStreamRepository(
             sseClient = get(),
-            httpClientProvider = get(),
             networkObserver = getOrNull(),
             localCache = get(),
             apiClient = get()
-        )
-    }
-    
-    // Services
-    single {
-        val httpClientProvider: HttpClientProvider = get()
-        val serverConfigRepo: ServerConfigRepository = get()
-        GitApiClient(
-            httpClientProvider = httpClientProvider,
-            serverConfigProvider = { serverConfigRepo.getActiveServerConfig() }
         )
     }
     
@@ -112,15 +94,6 @@ val commonModule = module {
     singleOf(::LspRepository)
     singleOf(::SearchRepository)
     singleOf(::ProjectRepository)
-    
-    single {
-        AppConnectionManager(
-            serverConfigRepository = get(),
-            sessionRepository = get(),
-            eventStreamRepository = get(),
-            networkObserver = getOrNull()
-        )
-    }
 }
 
 /**
@@ -151,7 +124,7 @@ val screenModelModule = module {
     factory {
         SessionsScreenModel(
             sessionRepository = get(),
-            appConnectionManager = get()
+            connectionManager = get()
         )
     }
     
@@ -173,7 +146,7 @@ val screenModelModule = module {
     factory {
         SettingsScreenModel(
             serverConfigRepository = get(),
-            appConnectionManager = get(),
+            connectionManager = get(),
             updateRepository = get(),
             settingsRepository = get(),
             configRepository = get(),
@@ -185,12 +158,18 @@ val screenModelModule = module {
     factoryOf(::TerminalScreenModel)
     
     // Git screen
-    factoryOf(::GitScreenModel)
+    factory {
+        GitScreenModel(
+            gitRepository = get(),
+            sessionRepository = get()
+        )
+    }
     
     // Git Diff screen
     factory { params ->
         GitDiffScreenModel(
-            gitRepository = get()
+            gitRepository = get(),
+            sessionRepository = get()
         )
     }
     
@@ -207,7 +186,7 @@ val screenModelModule = module {
             initialSessionId = params.getOrNull(),
             sessionRepository = get(),
             eventStreamRepository = get(),
-            appConnectionManager = get(),
+            connectionManager = get(),
             mcpRepository = get(),
             updateRepository = get(),
             updateNotifier = get()
@@ -218,7 +197,7 @@ val screenModelModule = module {
     factory {
         OnboardingScreenModel(
             serverConfigRepository = get(),
-            appConnectionManager = get()
+            connectionManager = get()
         )
     }
     
@@ -226,7 +205,7 @@ val screenModelModule = module {
     factory {
         OnboardingWizardModel(
             serverConfigRepository = get(),
-            appConnectionManager = get(),
+            connectionManager = get(),
             serverDiscovery = getOrNull()
         )
     }

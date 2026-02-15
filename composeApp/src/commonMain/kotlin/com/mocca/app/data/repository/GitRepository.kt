@@ -1,6 +1,6 @@
 package com.mocca.app.data.repository
 
-import com.mocca.app.api.GitApiClient
+import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
@@ -9,24 +9,60 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 
+/**
+ * Repository for Git operations using OpenCode's built-in VCS endpoints.
+ * Replaces the old GitApiClient (port 4097) architecture.
+ *
+ * Read operations use /vcs and /session/:id/diff endpoints.
+ * Write operations use /session/:id/shell to execute git commands on the server.
+ */
 class GitRepository(
-    private val gitApiClient: GitApiClient,
+    private val apiClient: MoccaApiClient,
     private val localCache: LocalCache
 ) {
     companion object {
         private const val TAG = "GitRepository"
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Read Operations (via OpenCode built-in endpoints)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    fun getVcsInfo(): Flow<Resource<VcsInfo>> = flow {
+        emit(Resource.Loading())
+        Napier.d("$TAG: Fetching VCS info via /vcs...")
+        apiClient.getVcsInfo().fold(
+            onSuccess = { vcsInfo ->
+                Napier.d("$TAG: VCS info fetched: branch=${vcsInfo.branch}")
+                emit(Resource.Success(vcsInfo))
+            },
+            onFailure = { e ->
+                Napier.e("$TAG: Failed to get VCS info", e)
+                emit(Resource.Error(e.message ?: "Failed to get VCS info", null, e))
+            }
+        )
+    }.flowOn(Dispatchers.Default)
+
+    /**
+     * Get git status via VCS endpoint.
+     * Converts VcsInfo to GitStatusResponse for backwards compatibility.
+     */
     fun getStatus(): Flow<Resource<GitStatusResponse>> = flow {
         emit(Resource.Loading())
         val cached = localCache.getGitStatus()
         if (cached != null) {
             emit(Resource.Loading(cached))
         }
-        
-        Napier.d("$TAG: Fetching git status via API...")
-        gitApiClient.getStatus().fold(
-            onSuccess = { status ->
+
+        Napier.d("$TAG: Fetching git status via VCS endpoint...")
+        apiClient.getVcsInfo().fold(
+            onSuccess = { vcsInfo ->
+                val status = GitStatusResponse(
+                    branch = vcsInfo.branch ?: "unknown",
+                    clean = !vcsInfo.dirty,
+                    ahead = vcsInfo.ahead,
+                    behind = vcsInfo.behind
+                )
                 localCache.saveGitStatus(status)
                 Napier.d("$TAG: Git status fetched: branch=${status.branch}")
                 emit(Resource.Success(status))
@@ -38,12 +74,132 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    fun getBranches(): Flow<Resource<List<GitBranch>>> = flow {
+    /**
+     * Get session diffs via OpenCode built-in endpoint.
+     */
+    fun getSessionDiffs(sessionId: String): Flow<Resource<List<FileDiff>>> = flow {
         emit(Resource.Loading())
-        Napier.d("$TAG: Fetching branches...")
-        gitApiClient.getBranches().fold(
-            onSuccess = { branches ->
-                Napier.d("$TAG: Found ${branches.size} branches")
+        Napier.d("$TAG: Fetching session diffs for $sessionId...")
+        apiClient.getSessionDiffs(sessionId).fold(
+            onSuccess = { diffs ->
+                Napier.d("$TAG: Fetched ${diffs.size} file diffs")
+                emit(Resource.Success(diffs))
+            },
+            onFailure = { e ->
+                Napier.e("$TAG: Failed to get session diffs", e)
+                emit(Resource.Error(e.message ?: "Failed to get session diffs", null, e))
+            }
+        )
+    }.flowOn(Dispatchers.Default)
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Write Operations (via shell execution)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Execute a git command on the server via shell.
+     * Requires an active session for command execution context.
+     */
+    private suspend fun executeGitCommand(sessionId: String, command: String): Result<GitOperationResult> {
+        return apiClient.executeShell(sessionId, command).fold(
+            onSuccess = { output ->
+                Result.success(GitOperationResult(success = true, message = output))
+            },
+            onFailure = { e ->
+                Result.failure(e)
+            }
+        )
+    }
+
+    suspend fun stage(sessionId: String, files: List<String>): Result<GitOperationResult> {
+        val paths = files.joinToString(" ") { "\"$it\"" }
+        return executeGitCommand(sessionId, "git add $paths")
+    }
+
+    suspend fun unstage(sessionId: String, files: List<String>): Result<GitOperationResult> {
+        val paths = files.joinToString(" ") { "\"$it\"" }
+        return executeGitCommand(sessionId, "git reset HEAD $paths")
+    }
+
+    suspend fun discard(sessionId: String, files: List<String>): Result<GitOperationResult> {
+        val paths = files.joinToString(" ") { "\"$it\"" }
+        return executeGitCommand(sessionId, "git checkout -- $paths")
+    }
+
+    suspend fun commit(sessionId: String, message: String, amend: Boolean = false): Result<GitOperationResult> {
+        val amendFlag = if (amend) " --amend" else ""
+        return executeGitCommand(sessionId, "git commit -m \"$message\"$amendFlag")
+    }
+
+    suspend fun push(sessionId: String, remote: String = "origin", branch: String? = null, force: Boolean = false, setUpstream: Boolean = false): Result<GitOperationResult> {
+        val forceFlag = if (force) " --force" else ""
+        val upstreamFlag = if (setUpstream) " --set-upstream" else ""
+        val branchArg = branch?.let { " $it" } ?: ""
+        return executeGitCommand(sessionId, "git push$forceFlag$upstreamFlag $remote$branchArg")
+    }
+
+    suspend fun pull(sessionId: String, remote: String = "origin", branch: String? = null, rebase: Boolean = false): Result<GitOperationResult> {
+        val rebaseFlag = if (rebase) " --rebase" else ""
+        val branchArg = branch?.let { " $it" } ?: ""
+        return executeGitCommand(sessionId, "git pull$rebaseFlag $remote$branchArg")
+    }
+
+    suspend fun fetch(sessionId: String, remote: String = "origin", prune: Boolean = false, all: Boolean = false): Result<GitOperationResult> {
+        val pruneFlag = if (prune) " --prune" else ""
+        val allFlag = if (all) " --all" else ""
+        return executeGitCommand(sessionId, "git fetch$pruneFlag$allFlag $remote")
+    }
+
+    suspend fun checkout(sessionId: String, ref: String, create: Boolean = false, force: Boolean = false): Result<GitOperationResult> {
+        val createFlag = if (create) " -b" else ""
+        val forceFlag = if (force) " --force" else ""
+        return executeGitCommand(sessionId, "git checkout$createFlag$forceFlag $ref")
+    }
+
+    suspend fun refreshStatus(): Result<VcsInfo> {
+        return apiClient.getVcsInfo().map { vcsInfo ->
+            val status = GitStatusResponse(
+                branch = vcsInfo.branch ?: "unknown",
+                clean = !vcsInfo.dirty,
+                ahead = vcsInfo.ahead,
+                behind = vcsInfo.behind
+            )
+            localCache.saveGitStatus(status)
+            vcsInfo
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Read Operations via Shell (branches, log, remotes, tags, stashes)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    fun getBranches(sessionId: String? = null): Flow<Resource<List<GitBranch>>> = flow {
+        emit(Resource.Loading())
+        if (sessionId == null) {
+            emit(Resource.Error("No active session for Git operations"))
+            return@flow
+        }
+        apiClient.executeShell(sessionId, "git branch -a --format='%(refname:short)|%(HEAD)|%(objectname:short)|%(upstream:short)'").fold(
+            onSuccess = { output ->
+                val branches = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
+                    try {
+                        val parts = line.trim().removePrefix("'").removeSuffix("'").split("|")
+                        val name = parts.getOrElse(0) { return@mapNotNull null }.trim()
+                        if (name.isBlank()) return@mapNotNull null
+                        val isCurrent = parts.getOrElse(1) { "" }.trim() == "*"
+                        val lastCommit = parts.getOrElse(2) { "" }.trim().takeIf { it.isNotBlank() }
+                        val upstream = parts.getOrElse(3) { "" }.trim().takeIf { it.isNotBlank() }
+                        val isRemote = name.startsWith("remotes/") || name.startsWith("origin/")
+                        GitBranch(
+                            name = name.removePrefix("remotes/"),
+                            current = isCurrent,
+                            remote = isRemote,
+                            upstream = upstream,
+                            lastCommit = lastCommit
+                        )
+                    } catch (e: Exception) { null }
+                }
+                Napier.d("$TAG: Parsed ${branches.size} branches")
                 emit(Resource.Success(branches))
             },
             onFailure = { e ->
@@ -53,91 +209,67 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    fun getLog(branch: String? = null, limit: Int = 50, skip: Int = 0): Flow<Resource<GitLog>> = flow {
+    fun getLog(sessionId: String? = null, branch: String? = null, count: Int = 50, skip: Int = 0): Flow<Resource<GitLog>> = flow {
         emit(Resource.Loading())
-        val b = branch ?: "HEAD"
-        Napier.d("$TAG: Fetching log for $b...")
-        gitApiClient.getLog(limit, skip, branch).fold(
-            onSuccess = { log ->
-                Napier.d("$TAG: Found ${log.commits.size} commits")
+        if (sessionId == null) {
+            emit(Resource.Error("No active session for Git operations"))
+            return@flow
+        }
+        val branchArg = branch?.let { " $it" } ?: ""
+        apiClient.executeShell(sessionId, "git log --format='%H|%h|%s|%an|%ae|%at' -n $count --skip $skip$branchArg").fold(
+            onSuccess = { output ->
+                val commits = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
+                    try {
+                        val parts = line.trim().removePrefix("'").removeSuffix("'").split("|", limit = 6)
+                        GitCommit(
+                            hash = parts.getOrElse(0) { return@mapNotNull null },
+                            shortHash = parts.getOrElse(1) { "" },
+                            message = parts.getOrElse(2) { "" },
+                            author = parts.getOrElse(3) { "" },
+                            email = parts.getOrElse(4) { "" }.takeIf { it.isNotBlank() },
+                            date = parts.getOrElse(5) { "0" }.toLongOrNull()?.times(1000) ?: 0L
+                        )
+                    } catch (e: Exception) { null }
+                }
+                val log = GitLog(commits = commits, total = commits.size, hasMore = commits.size >= count)
+                Napier.d("$TAG: Parsed ${commits.size} commits")
                 emit(Resource.Success(log))
             },
             onFailure = { e ->
                 Napier.e("$TAG: Failed to get log", e)
-                emit(Resource.Error(e.message ?: "Failed to get commit log", null, e))
+                emit(Resource.Error(e.message ?: "Failed to get log", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
 
-    fun getDiff(ref: String? = null, cached: Boolean = false): Flow<Resource<GitDiff>> = flow {
+    fun getRemotes(sessionId: String? = null): Flow<Resource<List<GitRemote>>> = flow {
         emit(Resource.Loading())
-        // For full repo diff
-        Napier.d("$TAG: Fetching diff (cached=$cached, ref=$ref)...")
-        gitApiClient.getDiff(null, cached).fold(
-            onSuccess = { diff ->
-                Napier.d("$TAG: Fetched diff with ${diff.files.size} files")
-                emit(Resource.Success(diff))
-            },
-            onFailure = { e ->
-                Napier.e("$TAG: Failed to get diff", e)
-                emit(Resource.Error(e.message ?: "Failed to get diff", null, e))
-            }
-        )
-    }.flowOn(Dispatchers.Default)
-    
-    // Support for single file diff (called by new GitDiffScreenModel)
-    fun getFileDiff(path: String, cached: Boolean = false): Flow<Resource<GitDiff>> = flow {
-        emit(Resource.Loading())
-        Napier.d("$TAG: Fetching diff for file $path...")
-        gitApiClient.getDiff(path, cached).fold(
-            onSuccess = { diff ->
-                emit(Resource.Success(diff))
-            },
-            onFailure = { e ->
-                Napier.e("$TAG: Failed to get diff for $path", e)
-                emit(Resource.Error(e.message ?: "Failed to get file diff", null, e))
-            }
-        )
-    }.flowOn(Dispatchers.Default)
-
-    suspend fun stage(files: List<String>): Result<GitOperationResult> {
-        return gitApiClient.stage(files)
-    }
-
-    suspend fun unstage(files: List<String>): Result<GitOperationResult> {
-        return gitApiClient.unstage(files)
-    }
-
-    suspend fun discard(files: List<String>): Result<GitOperationResult> {
-        return gitApiClient.discard(files)
-    }
-
-    suspend fun commit(message: String, files: List<String>? = null, amend: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.commit(message, files, amend)
-    }
-
-    suspend fun push(remote: String = "origin", branch: String? = null, force: Boolean = false, setUpstream: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.push(remote, branch, force, setUpstream)
-    }
-
-    suspend fun pull(remote: String = "origin", branch: String? = null, rebase: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.pull(remote, branch, rebase)
-    }
-
-    suspend fun fetch(remote: String = "origin", prune: Boolean = false, all: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.fetch(remote, prune, all)
-    }
-
-    suspend fun checkout(ref: String, create: Boolean = false, force: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.checkout(ref, create, force)
-    }
-
-    fun getRemotes(): Flow<Resource<List<GitRemote>>> = flow {
-        emit(Resource.Loading())
-        Napier.d("$TAG: Fetching remotes...")
-        gitApiClient.getRemotes().fold(
-            onSuccess = { remotes ->
-                Napier.d("$TAG: Found ${remotes.size} remotes")
+        if (sessionId == null) {
+            emit(Resource.Error("No active session for Git operations"))
+            return@flow
+        }
+        apiClient.executeShell(sessionId, "git remote -v").fold(
+            onSuccess = { output ->
+                val remotesMap = mutableMapOf<String, Pair<String?, String?>>()
+                output.lines().filter { it.isNotBlank() }.forEach { line ->
+                    try {
+                        val parts = line.trim().split("\\s+".toRegex())
+                        val name = parts.getOrNull(0) ?: return@forEach
+                        val url = parts.getOrNull(1) ?: return@forEach
+                        val type = parts.getOrNull(2)?.removeSurrounding("(", ")") ?: ""
+                        val current = remotesMap.getOrDefault(name, Pair(null, null))
+                        remotesMap[name] = if (type == "fetch") Pair(url, current.second) else Pair(current.first, url)
+                    } catch (e: Exception) { /* skip malformed line */ }
+                }
+                val remotes = remotesMap.map { (name, urls) ->
+                    GitRemote(
+                        name = name,
+                        url = urls.first ?: urls.second ?: "",
+                        fetchUrl = urls.first,
+                        pushUrl = urls.second
+                    )
+                }
+                Napier.d("$TAG: Parsed ${remotes.size} remotes")
                 emit(Resource.Success(remotes))
             },
             onFailure = { e ->
@@ -147,74 +279,16 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    fun getStashes(): Flow<Resource<List<GitStash>>> = flow {
+    fun getTags(sessionId: String? = null): Flow<Resource<List<String>>> = flow {
         emit(Resource.Loading())
-        Napier.d("$TAG: Fetching stashes...")
-        gitApiClient.getStashes().fold(
-            onSuccess = { stashes ->
-                Napier.d("$TAG: Found ${stashes.size} stashes")
-                emit(Resource.Success(stashes))
-            },
-            onFailure = { e ->
-                Napier.e("$TAG: Failed to get stashes", e)
-                emit(Resource.Error(e.message ?: "Failed to get stashes", null, e))
-            }
-        )
-    }.flowOn(Dispatchers.Default)
-
-    // Stash Operations
-    suspend fun createStash(message: String? = null, includeUntracked: Boolean = false): Result<GitOperationResult> {
-        return gitApiClient.createStash(message, includeUntracked)
-    }
-
-    suspend fun popStash(index: Int = 0): Result<GitOperationResult> {
-        return gitApiClient.popStash(index)
-    }
-
-    suspend fun applyStash(index: Int = 0): Result<GitOperationResult> {
-        return gitApiClient.applyStash(index)
-    }
-
-    suspend fun dropStash(index: Int): Result<GitOperationResult> {
-        return gitApiClient.dropStash(index)
-    }
-
-    // Merge Operations
-    suspend fun merge(
-        branch: String, 
-        noFf: Boolean = false, 
-        squash: Boolean = false, 
-        message: String? = null
-    ): Result<GitOperationResult> {
-        return gitApiClient.merge(branch, noFf, squash, message)
-    }
-
-    suspend fun abortMerge(): Result<GitOperationResult> {
-        return gitApiClient.abortMerge()
-    }
-
-    // Rebase Operations
-    suspend fun rebase(onto: String): Result<GitOperationResult> {
-        return gitApiClient.rebase(onto)
-    }
-
-    suspend fun rebaseContinue(): Result<GitOperationResult> {
-        return gitApiClient.rebaseContinue()
-    }
-
-    suspend fun rebaseAbort(): Result<GitOperationResult> {
-        return gitApiClient.rebaseAbort()
-    }
-
-    suspend fun rebaseSkip(): Result<GitOperationResult> {
-        return gitApiClient.rebaseSkip()
-    }
-
-    // Tag Operations
-    fun getTags(): Flow<Resource<List<String>>> = flow {
-        emit(Resource.Loading())
-        gitApiClient.getTags().fold(
-            onSuccess = { tags ->
+        if (sessionId == null) {
+            emit(Resource.Error("No active session for Git operations"))
+            return@flow
+        }
+        apiClient.executeShell(sessionId, "git tag --list").fold(
+            onSuccess = { output ->
+                val tags = output.lines().map { it.trim() }.filter { it.isNotBlank() }
+                Napier.d("$TAG: Parsed ${tags.size} tags")
                 emit(Resource.Success(tags))
             },
             onFailure = { e ->
@@ -224,79 +298,76 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    suspend fun createTag(
-        name: String, 
-        message: String? = null, 
-        ref: String? = null, 
-        annotated: Boolean = false
-    ): Result<GitOperationResult> {
-        return gitApiClient.createTag(name, message, ref, annotated)
-    }
-
-    suspend fun deleteTag(name: String): Result<GitOperationResult> {
-        return gitApiClient.deleteTag(name)
-    }
-
-    // Remote Operations
-    suspend fun addRemote(name: String, url: String): Result<GitOperationResult> {
-        return gitApiClient.addRemote(name, url)
-    }
-
-    suspend fun removeRemote(name: String): Result<GitOperationResult> {
-        return gitApiClient.removeRemote(name)
-    }
-
-    suspend fun setRemoteUrl(name: String, url: String): Result<GitOperationResult> {
-        return gitApiClient.setRemoteUrl(name, url)
-    }
-
-    suspend fun refreshStatus(): Result<GitStatusResponse> {
-        return gitApiClient.getStatus().map { status ->
-            localCache.saveGitStatus(status)
-            status
-        }
-    }
-
-    suspend fun requestStartGitServer(): Result<Unit> {
-        return gitApiClient.requestStartGitServer()
-    }
-
-    /**
-     * Request git server start and wait for it to become available.
-     * Uses polling to verify the server is actually running.
-     */
-    suspend fun requestStartGitServerAndWait(
-        maxWaitMs: Long = 10_000L,
-        pollIntervalMs: Long = 500L
-    ): Result<Boolean> {
-        return gitApiClient.requestStartGitServerAndWait(maxWaitMs, pollIntervalMs)
-    }
-
-    /**
-     * Check if the git server is currently running.
-     */
-    suspend fun isServerRunning(): Boolean {
-        return gitApiClient.isServerRunning()
-    }
-
-    // VcsInfo was used in Dashboard, maybe keep it here or move to another repo?
-    // It's still useful.
-    fun getVcsInfo(): Flow<Resource<VcsInfo>> = flow {
+    fun getStashes(sessionId: String? = null): Flow<Resource<List<GitStash>>> = flow {
         emit(Resource.Loading())
-        gitApiClient.getStatus().fold(
-            onSuccess = { status ->
-                emit(Resource.Success(VcsInfo(
-                    type = "git",
-                    branch = status.branch,
-                    dirty = status.hasChanges,
-                    ahead = status.ahead,
-                    behind = status.behind,
-                    changeCount = status.totalChanges
-                )))
+        if (sessionId == null) {
+            emit(Resource.Error("No active session for Git operations"))
+            return@flow
+        }
+        apiClient.executeShell(sessionId, "git stash list --format='%gd|%gs'").fold(
+            onSuccess = { output ->
+                val stashes = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
+                    try {
+                        val parts = line.trim().removePrefix("'").removeSuffix("'").split("|", limit = 2)
+                        val ref = parts.getOrElse(0) { return@mapNotNull null }
+                        val message = parts.getOrElse(1) { "" }
+                        val index = ref.removePrefix("stash@{").removeSuffix("}").toIntOrNull() ?: return@mapNotNull null
+                        GitStash(index = index, message = message)
+                    } catch (e: Exception) { null }
+                }
+                Napier.d("$TAG: Parsed ${stashes.size} stashes")
+                emit(Resource.Success(stashes))
             },
             onFailure = { e ->
-                emit(Resource.Error(e.message ?: "Failed to get VCS info", null, e))
+                Napier.e("$TAG: Failed to get stashes", e)
+                emit(Resource.Error(e.message ?: "Failed to get stashes", null, e))
             }
         )
     }.flowOn(Dispatchers.Default)
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Additional Write Operations (stash, merge, rebase, remote, tag)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    suspend fun createStash(sessionId: String, message: String?): Result<GitOperationResult> {
+        val cmd = if (message != null) "git stash push -m \"$message\"" else "git stash push"
+        return executeGitCommand(sessionId, cmd)
+    }
+
+    suspend fun popStash(sessionId: String, index: Int): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git stash pop stash@{$index}")
+    }
+
+    suspend fun applyStash(sessionId: String, index: Int): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git stash apply stash@{$index}")
+    }
+
+    suspend fun dropStash(sessionId: String, index: Int): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git stash drop stash@{$index}")
+    }
+
+    suspend fun merge(sessionId: String, branch: String): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git merge $branch")
+    }
+
+    suspend fun rebase(sessionId: String, branch: String): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git rebase $branch")
+    }
+
+    suspend fun addRemote(sessionId: String, name: String, url: String): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git remote add $name $url")
+    }
+
+    suspend fun removeRemote(sessionId: String, name: String): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git remote remove $name")
+    }
+
+    suspend fun createTag(sessionId: String, name: String, message: String?): Result<GitOperationResult> {
+        val cmd = if (message != null) "git tag -a $name -m \"$message\"" else "git tag $name"
+        return executeGitCommand(sessionId, cmd)
+    }
+
+    suspend fun deleteTag(sessionId: String, name: String): Result<GitOperationResult> {
+        return executeGitCommand(sessionId, "git tag -d $name")
+    }
 }

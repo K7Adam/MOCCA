@@ -258,7 +258,7 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
                         name = name,
                         host = host,
                         port = port,
-                        authToken = authToken,
+                        password = authToken ?: "",
                         source = DiscoverySource.MDNS
                     )
                     onResolved(server)
