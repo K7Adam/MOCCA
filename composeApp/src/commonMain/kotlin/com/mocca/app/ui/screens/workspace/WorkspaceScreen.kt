@@ -31,10 +31,15 @@ import com.mocca.app.ui.screens.git.GitScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
 import com.mocca.app.ui.theme.*
 
-// Add missing icons if they don't exist in standard Icons.Default
-// Note: Some icons might be from Material Symbols, using best matches.
-val Icons.Default.Dataset get() = Icons.Default.Storage
-val Icons.Default.DragIndicator get() = Icons.Default.DragHandle
+// Use GridOn as GridView, Terminal as Code
+private val GridView get() = Icons.Filled.GridOn
+private val Code get() = Icons.Filled.Terminal
+
+private data class NavItem(
+    val index: Int,
+    val label: String,
+    val icon: androidx.compose.ui.graphics.vector.ImageVector
+)
 
 data class WorkspaceScreen(val sessionId: String) : Screen {
 
@@ -296,11 +301,11 @@ private fun GodBottomNavBar(
     onItemSelected: (Int) -> Unit
 ) {
     val items = listOf(
-        NavItem(0, "DASH", Icons.Default.GridView),
+        NavItem(0, "DASH", GridView),
         NavItem(1, "CHAT", Icons.AutoMirrored.Filled.Chat),
         NavItem(2, "FILES", Icons.Default.Folder),
         NavItem(3, "TERM", Icons.Default.Terminal),
-        NavItem(4, "GIT", Icons.Default.Code)
+        NavItem(4, "GIT", Code)
     )
     
     Surface(

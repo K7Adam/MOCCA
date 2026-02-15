@@ -51,13 +51,8 @@ class ServerConfigRepository(
                 // If no server configured, create default (only for emulator)
                 if (config == null) {
                     val default = createDefaultConfig()
-                    if (default != null) {
-                        localCache.insertServerConfig(default)
-                        _activeServer.value = default
-                    } else {
-                        // Physical device without config - leave null to trigger onboarding
-                        _activeServer.value = null
-                    }
+                    localCache.insertServerConfig(default)
+                    _activeServer.value = default
                     return@runBlocking
                 }
                 
@@ -76,11 +71,9 @@ class ServerConfigRepository(
                 }
             } catch (e: Exception) {
                 Napier.w("Failed to load active server", e)
-                // Only set default if we're on emulator (createDefaultConfig returns non-null)
+                // Set default config
                 val default = createDefaultConfig()
-                if (default != null) {
-                    _activeServer.value = default
-                }
+                _activeServer.value = default
             }
         }
     }

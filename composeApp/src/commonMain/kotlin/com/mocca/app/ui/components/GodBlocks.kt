@@ -5,7 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -56,9 +56,9 @@ fun GodHeader(
                         .size(40.dp)
                         .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back",
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
                         tint = AppColors.white,
                         modifier = Modifier.size(24.dp)
                     )
@@ -118,9 +118,9 @@ fun GodCard(
         border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            content = content
+            modifier = Modifier.padding(16.dp)
         ) {
+            content()
         }
     }
 }
@@ -135,124 +135,13 @@ fun GodButton(
     modifier: Modifier = Modifier,
     containerColor: Color = AppColors.accentGreen,
     contentColor: Color = AppColors.background,
-    icon: (@Composable () -> Unit)? = null
+    icon: (@Composable () -> Unit)? = null,
+    enabled: Boolean = true
 ) {
     Button(
         onClick = onClick,
         modifier = modifier.height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        ),
-        shape = AppShapes.pill,
-        contentPadding = PaddingValues(horizontal = 24.dp)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = text,
-                style = AppTypography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
-            icon?.invoke()
-        }
-    }
-}
-
-/**
- * A standard list item with a leading icon/avatar and trailing metadata.
- */
-@Composable
-fun GodListItem(
-    title: String,
-    subtitle: String,
-    icon: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    trailing: (@Composable () -> Unit)? = null,
-    onClick: (() -> Unit)? = null
-) {
-    Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-        color = Color.Transparent,
-        shape = AppShapes.large
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(AppColors.surfaceElevated, AppShapes.large),
-                contentAlignment = Alignment.Center
-            ) {
-                icon()
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = AppTypography.titleSmall,
-                    color = AppColors.white,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = subtitle,
-                    style = AppTypography.bodySmall,
-                    color = AppColors.white.copy(alpha = 0.4f)
-                )
-            }
-
-            trailing?.invoke()
-        }
-    }
-}
-
-/**
- * A status badge with a colored background.
- */
-@Composable
-fun GodBadge(
-    text: String,
-    containerColor: Color = AppColors.primary.copy(alpha = 0.2f),
-    contentColor: Color = AppColors.primary
-) {
-    Surface(
-        color = containerColor,
-        shape = AppShapes.small,
-    ) {
-        Text(
-            text = text.uppercase(),
-            style = AppTypography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = contentColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            fontSize = 10.sp,
-            letterSpacing = 1.sp
-        )
-    }
-}
-
-/**
- * A pill-shaped button with high contrast or accent colors.
- */
-@Composable
-fun GodButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    containerColor: Color = AppColors.accentGreen,
-    contentColor: Color = AppColors.background,
-    icon: (@Composable () -> Unit)? = null
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(48.dp),
+        enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
             contentColor = contentColor

@@ -1,5 +1,6 @@
 package com.mocca.app.ui.screens.files
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,11 +26,14 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.FileInfo
+import com.mocca.app.ui.components.GodHeader
+import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.terminal.TerminalHeader
 import com.mocca.app.ui.components.terminal.TerminalIconButton

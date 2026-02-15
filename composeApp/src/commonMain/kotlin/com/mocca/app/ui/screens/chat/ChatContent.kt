@@ -7,7 +7,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.automirrored.filled.List
@@ -26,6 +31,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
@@ -33,6 +39,9 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
+import com.mocca.app.ui.components.GodButton
+import com.mocca.app.ui.components.GodHeader
+import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
@@ -548,7 +557,7 @@ private fun EmptySessionState(onInit: () -> Unit) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Default.RocketLaunch,
+                    imageVector = Icons.Filled.Rocket,
                     contentDescription = null,
                     tint = AppColors.accentGreen,
                     modifier = Modifier.size(32.dp)
@@ -621,7 +630,7 @@ private fun InitSessionDialog(
                         subtitle = providerItem.id,
                         icon = {
                             Icon(
-                                imageVector = if (selectedProvider == providerItem.id) Icons.Default.RadioButtonChecked else Icons.Default.RadioButtonUnchecked,
+                                imageVector = if (selectedProvider == providerItem.id) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
                                 contentDescription = null,
                                 tint = if (selectedProvider == providerItem.id) AppColors.accentGreen else AppColors.white.copy(alpha = 0.2f)
                             )
@@ -650,7 +659,7 @@ private fun InitSessionDialog(
                                 subtitle = "AI Model",
                                 icon = {
                                     Icon(
-                                        imageVector = if (selectedModel == modelId) Icons.Default.CheckCircle else Icons.Default.Circle,
+                                        imageVector = if (selectedModel == modelId) Icons.Filled.CheckCircle else Icons.Filled.Circle,
                                         contentDescription = null,
                                         tint = if (selectedModel == modelId) AppColors.accentGreen else AppColors.white.copy(alpha = 0.1f),
                                         modifier = Modifier.size(16.dp)
