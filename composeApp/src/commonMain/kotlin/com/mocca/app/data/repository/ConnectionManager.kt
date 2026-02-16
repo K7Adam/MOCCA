@@ -245,21 +245,31 @@ class ConnectionManager(
     // ═══════════════════════════════════════════════════════════════════════════════
 
     private suspend fun performHealthCheck(): Result<AppInfo?> {
+        val config = _activeConfig.value
+        Napier.i("[ConnectionManager] Health check starting for: ${config?.baseUrl}")
+        Napier.i("[ConnectionManager] Host: ${config?.host}, Port: ${config?.port}, useHttps: ${config?.useHttps}")
+        
         return try {
+            Napier.i("[ConnectionManager] Executing GET /global/health...")
             val appInfo = execute { get("/global/health").body<AppInfo>() }
+            Napier.i("[ConnectionManager] Health check SUCCESS: ${appInfo.version}")
             Result.success(appInfo)
         } catch (e: ClientRequestException) {
+            Napier.e("[ConnectionManager] Health check HTTP ERROR: ${e.response.status}", e)
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 Result.failure(Exception("Authentication failed (401). Check username/password."))
             } else {
                 Result.failure(Exception("Server returned ${e.response.status}"))
             }
         } catch (e: CancellationException) {
+            Napier.w("[ConnectionManager] Health check CANCELLED")
             throw e
         } catch (e: ConnectionException) {
-            Result.failure(e)
+            Napier.e("[ConnectionManager] Health check CONNECTION ERROR: ${e.message}", e)
+            Result.failure(Exception("Connection failed: ${e.message}"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Napier.e("[ConnectionManager] Health check UNKNOWN ERROR: ${e::class.simpleName} - ${e.message}", e)
+            Result.failure(Exception("${e::class.simpleName}: ${e.message}"))
         }
     }
 
@@ -357,9 +367,14 @@ class ConnectionManager(
     // ═══════════════════════════════════════════════════════════════════════════════
 
     private fun createClient(config: ServerConfig): HttpClient {
+        Napier.i("[ConnectionManager] Creating HttpClient for: ${config.baseUrl}")
+        Napier.i("[ConnectionManager] Config - Host: ${config.host}, Port: ${config.port}, useHttps: ${config.useHttps}")
+        Napier.i("[ConnectionManager] Auth - Username: ${config.username}, HasPassword: ${config.password.isNotBlank()}")
+        
         return HttpClient(getHttpEngine()) {
             defaultRequest {
                 url(config.baseUrl + "/")
+                Napier.d("[ConnectionManager] HttpClient base URL set to: ${config.baseUrl}")
             }
             install(ContentNegotiation) {
                 json(json)

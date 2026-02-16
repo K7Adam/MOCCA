@@ -230,6 +230,8 @@ class OnboardingWizardModel(
     // ═══════════════════════════════════════════════════════════════════════════════
 
     private fun connectManual(host: String, port: Int, username: String, password: String, useHttps: Boolean = false) {
+        Napier.i("[OnboardingWizard] connectManual called - host: $host, port: $port, useHttps: $useHttps")
+        
         if (host.isBlank()) {
             _state.update { it.copy(error = "Host is required") }
             return
@@ -243,6 +245,8 @@ class OnboardingWizardModel(
             !useHttps && port == 443 -> 4096  // User toggled HTTPS off, use 4096
             else -> port
         }
+        
+        Napier.i("[OnboardingWizard] Effective settings - useHttps: $effectiveUseHttps, port: $effectivePort")
 
         val config = ServerConfig(
             id = "manual-${System.currentTimeMillis()}",
@@ -254,6 +258,8 @@ class OnboardingWizardModel(
             isActive = true,
             useHttps = effectiveUseHttps
         )
+        
+        Napier.i("[OnboardingWizard] ServerConfig created - baseUrl: ${config.baseUrl}")
 
         val discovered = DiscoveredServer(
             name = config.name,
@@ -296,6 +302,7 @@ class OnboardingWizardModel(
      * 4. Runs checkConnection() internally
      */
     private fun connectWithConfig(config: ServerConfig) {
+        Napier.i("[OnboardingWizard] connectWithConfig starting for: ${config.baseUrl}")
         screenModelScope.launch {
             try {
                 _state.update {
@@ -303,28 +310,37 @@ class OnboardingWizardModel(
                 }
 
                 // 1. Save to DB first
+                Napier.i("[OnboardingWizard] Saving server config to DB...")
                 serverConfigRepository.saveServer(config)
+                Napier.i("[OnboardingWizard] Server config saved")
 
                 // 2. Connect DIRECTLY — this sets _activeConfig, creates client, runs health check
                 _state.update { it.copy(connectionProgress = "Connecting to ${config.name}...") }
+                Napier.i("[OnboardingWizard] Calling connectionManager.connect()...")
                 connectionManager.connect(config)
+                Napier.i("[OnboardingWizard] connectionManager.connect() returned")
 
                 // 3. Poll connection status with timeout
                 val maxAttempts = 15  // 15 * 500ms = 7.5s timeout
                 var attempts = 0
+                Napier.i("[OnboardingWizard] Starting connection status polling (max $maxAttempts attempts)")
                 while (attempts < maxAttempts) {
                     delay(500)
-                    when (val status = connectionManager.status.value) {
+                    val status = connectionManager.status.value
+                    Napier.d("[OnboardingWizard] Poll attempt $attempts - Status: ${status::class.simpleName}")
+                    when (status) {
                         is ConnectionStatus.Connected -> {
-                            Napier.i("Connected to ${config.name}")
+                            Napier.i("[OnboardingWizard] CONNECTED to ${config.name}")
                             onConnectionResult(true, null)
                             return@launch
                         }
                         is ConnectionStatus.Error -> {
+                            Napier.e("[OnboardingWizard] Connection ERROR: ${status.message}")
                             onConnectionResult(false, status.message)
                             return@launch
                         }
                         is ConnectionStatus.Disconnected -> {
+                            Napier.e("[OnboardingWizard] Connection DISCONNECTED: ${status.reason}")
                             onConnectionResult(
                                 false,
                                 status.reason ?: "Connection failed"
