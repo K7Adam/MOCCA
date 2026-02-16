@@ -1,7 +1,14 @@
 package com.mocca.app.ui.components.terminal
 
-import androidx.compose.animation.core.animate
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,8 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -44,20 +55,27 @@ fun TerminalThinkingIndicator(
     elapsedMs: Long = 0,
     modifier: Modifier = Modifier
 ) {
-    var pulseAlpha by remember { mutableFloatStateOf(0.3f) }
+    val infiniteTransition = rememberInfiniteTransition(label = "thinking")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
     
-    // Pulsing animation for "brain activity"
-    LaunchedEffect(Unit) {
-        while (true) {
-            animate(0.3f, 1f, animationSpec = tween(600)) { value, _ ->
-                pulseAlpha = value
-            }
-            animate(1f, 0.3f, animationSpec = tween(600)) { value, _ ->
-                pulseAlpha = value
-            }
-        }
-    }
-    
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotation"
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -67,34 +85,53 @@ fun TerminalThinkingIndicator(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = AppSpacing.xs, start = AppSpacing.sm)
         ) {
-            // Brain icon with pulse
+            // High-fidelity activity indicator
             Box(
                 modifier = Modifier
-                    .size(16.dp)
-                    .background(
-                        AppColors.statusThinking.copy(alpha = pulseAlpha),
-                        CircleShape
-                    )
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
-            Text(
-                text = "THINKING...",
-                color = AppColors.statusThinking,
-                style = AppTypography.labelSmall,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-            // Elapsed time
-            if (elapsedMs > 0) {
-                Text(
-                    text = formatThinkingDuration(elapsedMs),
-                    color = AppColors.textTertiary,
-                    style = AppTypography.labelSmall
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .border(1.dp, AppColors.statusThinking.copy(alpha = 0.5f), CircleShape)
+                    .drawWithContent {
+                        drawContent()
+                        clipRect(bottom = size.height / 2f) {
+                            drawCircle(
+                                color = AppColors.statusThinking,
+                                radius = size.width / 4f,
+                                center = center,
+                                alpha = pulseAlpha
+                            )
+                        }
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .background(AppColors.statusThinking, CircleShape)
                 )
             }
+            
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            
+            Text(
+                text = "REASONING...",
+                color = AppColors.statusThinking,
+                style = AppTypography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
+            )
+            
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            
+            // Animated duration
+            Text(
+                text = formatThinkingDuration(elapsedMs),
+                color = AppColors.textTertiary,
+                style = AppTypography.monoLabel
+            )
         }
         
-        // Optional: Show thinking content preview (collapsed by default)
+        // Optimized thinking content preview
         if (thinkingContent.isNotEmpty()) {
             ExpandableThinkingPreview(content = thinkingContent)
         }
@@ -105,33 +142,46 @@ fun TerminalThinkingIndicator(
 private fun ExpandableThinkingPreview(content: String) {
     var expanded by remember { mutableStateOf(false) }
     
+    val lines = content.split("\n").filter { it.isNotBlank() }
+    val displayContent = if (expanded) content else lines.firstOrNull() ?: ""
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(start = AppSpacing.xl) // Indent from icon
             .clip(AppShapes.medium)
-            .background(AppColors.background.copy(alpha = 0.5f), AppShapes.medium)
+            .background(AppColors.surfaceVariant.copy(alpha = 0.3f), AppShapes.medium)
             .border(
                 width = AppSpacing.borderThin,
-                color = AppColors.statusThinking.copy(alpha = 0.3f),
+                color = AppColors.statusThinking.copy(alpha = 0.2f),
                 shape = AppShapes.medium
             )
             .clickable { expanded = !expanded }
-            .padding(AppSpacing.sm)
+            .padding(AppSpacing.md)
     ) {
-        Text(
-            text = if (expanded) content else content.take(100) + if (content.length > 100) "..." else "",
-            color = AppColors.textSecondary,
-            style = AppTypography.bodySmall,
-            maxLines = if (expanded) Int.MAX_VALUE else 2
-        )
-        
-        if (content.length > 100) {
-            Spacer(modifier = Modifier.height(AppSpacing.xs))
+        AnimatedContent(
+            targetState = displayContent,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+            },
+            label = "thinkingContent"
+        ) { text ->
             Text(
-                text = if (expanded) "COLLAPSE" else "EXPAND",
-                color = AppColors.statusThinking.copy(alpha = 0.7f),
+                text = text,
+                color = AppColors.textSecondary,
+                style = AppTypography.bodySmall,
+                fontFamily = AppTypography.monoFamily
+            )
+        }
+        
+        if (lines.size > 1) {
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
+            Text(
+                text = if (expanded) "◓ COLLAPSE" else "◒ VIEW_${lines.size}_STEPS",
+                color = AppColors.statusThinking.copy(alpha = 0.8f),
                 style = AppTypography.labelSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.5.sp
             )
         }
     }

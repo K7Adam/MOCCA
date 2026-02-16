@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -59,6 +61,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
     val coroutineScope = rememberCoroutineScope()
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
+    val haptic = LocalHapticFeedback.current
     
     val commands = state.commands
     var showShareDialog by remember { mutableStateOf(false) }
@@ -317,7 +320,10 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 RichChatInput(
                     value = inputText,
                     onValueChange = { screenModel.updateInputText(it) },
-                    onSendClick = { screenModel.sendMessage() },
+                    onSendClick = { 
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        screenModel.sendMessage() 
+                    },
                     enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
                     modelName = state.modelName,
                     agentName = state.agentName,

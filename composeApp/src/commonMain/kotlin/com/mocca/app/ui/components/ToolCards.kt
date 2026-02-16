@@ -28,6 +28,13 @@ import com.mocca.app.domain.model.RichToolState
 import com.mocca.app.domain.model.ToolState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import com.mocca.app.ui.theme.AppSpacing
 import kotlinx.serialization.json.*
 
@@ -868,14 +875,64 @@ private fun CodeBlock(
     language: String = "text",
     maxLines: Int = 50
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    var copied by remember { mutableStateOf(false) }
+
+    LaunchedEffect(copied) {
+        if (copied) {
+            kotlinx.coroutines.delay(2000)
+            copied = false
+        }
+    }
+
     Column {
-        if (!label.isNullOrBlank()) {
-            Text(
-                text = label,
-                style = AppTypography.labelSmall,
-                color = AppColors.grey,
-                modifier = Modifier.padding(bottom = AppSpacing.xs)
-            )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (!label.isNullOrBlank()) {
+                Text(
+                    text = label,
+                    style = AppTypography.labelSmall,
+                    color = AppColors.grey,
+                    modifier = Modifier.padding(bottom = AppSpacing.xs)
+                )
+            } else {
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            Row(
+                modifier = Modifier
+                    .clip(AppShapes.small)
+                    .clickable { 
+                        clipboardManager.setText(AnnotatedString(code))
+                        copied = true
+                    }
+                    .padding(horizontal = AppSpacing.sm, vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                AnimatedContent(
+                    targetState = copied,
+                    transitionSpec = {
+                        fadeIn() togetherWith fadeOut()
+                    },
+                    label = "copyIcon"
+                ) { isCopied ->
+                    Icon(
+                        imageVector = if (isCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                        contentDescription = "Copy",
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isCopied) AppColors.accentGreen else AppColors.textTertiary
+                    )
+                }
+                Text(
+                    text = if (copied) "COPIED" else "COPY",
+                    style = AppTypography.labelExtraSmall,
+                    color = if (copied) AppColors.accentGreen else AppColors.textTertiary
+                )
+            }
         }
         
         Surface(

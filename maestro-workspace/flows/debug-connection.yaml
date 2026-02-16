@@ -1,0 +1,120 @@
+appId: com.mocca.app
+---
+# Robust debug connection flow
+# Screen size: 1344x2992
+
+- launchApp:
+    clearState: true
+    
+- extendedWaitUntil:
+    visible: "Select Server"
+    timeout: 10000
+
+# Tap "Enter server manually"
+- tapOn: "Enter server manually"
+
+# Wait for form to expand
+- extendedWaitUntil:
+    visible: "Host"
+    timeout: 5000
+
+# Take screenshot of empty form
+- takeScreenshot: 01_form_empty
+
+# ═══════════════════════════════════════════════════════════════
+# FILL HOST FIELD - tap, select all, type
+# ═══════════════════════════════════════════════════════════════
+- tapOn: "Host"
+- waitForAnimationToEnd:
+    timeout: 500
+    
+# Select all and replace
+- tapOn: 
+    text: "Host"
+    retryTapIfNoChange: false
+- inputText: "omen.tail0b932a.ts.net"
+- hideKeyboard
+
+# Take screenshot after host
+- takeScreenshot: 02_after_host
+
+# ═══════════════════════════════════════════════════════════════
+# FILL PORT FIELD
+# ═══════════════════════════════════════════════════════════════
+- tapOn: "Port"
+- waitForAnimationToEnd:
+    timeout: 500
+- inputText: "443"
+- hideKeyboard
+
+# Take screenshot after port
+- takeScreenshot: 03_after_port
+
+# ═══════════════════════════════════════════════════════════════
+# FILL USERNAME FIELD
+# ═══════════════════════════════════════════════════════════════
+- tapOn: "Username"
+- waitForAnimationToEnd:
+    timeout: 500
+- inputText: "adamk7"
+- hideKeyboard
+
+# Take screenshot after username
+- takeScreenshot: 04_after_username
+
+# ═══════════════════════════════════════════════════════════════
+# FILL PASSWORD FIELD
+# ═══════════════════════════════════════════════════════════════
+- tapOn: "Password"
+- waitForAnimationToEnd:
+    timeout: 500
+- inputText: "Victory&Bliss4ever"
+- hideKeyboard
+
+# Take screenshot after password
+- takeScreenshot: 05_after_password
+
+# ═══════════════════════════════════════════════════════════════
+# ENABLE HTTPS TOGGLE - tap the switch
+# ═══════════════════════════════════════════════════════════════
+- tapOn:
+    point: "88%,64%"
+- waitForAnimationToEnd:
+    timeout: 500
+
+# Take screenshot after HTTPS toggle
+- takeScreenshot: 06_after_https
+
+# ═══════════════════════════════════════════════════════════════
+# VERIFY URL PREVIEW AND TAP CONNECT
+# ═══════════════════════════════════════════════════════════════
+# Wait for URL preview to update
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot before connect
+- takeScreenshot: 07_before_connect
+
+# Tap CONNECT button
+- tapOn: "Connect"
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot immediately after tap
+- takeScreenshot: 08_after_connect_tap
+
+# ═══════════════════════════════════════════════════════════════
+# WAIT FOR CONNECTION RESULT
+# ═══════════════════════════════════════════════════════════════
+# Wait for connection to complete or fail
+- waitForAnimationToEnd:
+    timeout: 15000
+
+# Take final screenshot
+- takeScreenshot: 09_connection_result
+
+# Check for error message
+- extendedWaitUntil:
+    visible: "Connection failed"
+    optional: true
+    timeout: 3000

@@ -1,6 +1,11 @@
 package com.mocca.app.ui.components.terminal
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -492,6 +497,17 @@ fun TerminalStreamingMessage(
     text: String,
     modifier: Modifier = Modifier
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "cursor")
+    val cursorAlpha by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cursorAlpha"
+    )
+
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -541,11 +557,20 @@ fun TerminalStreamingMessage(
             Column(
                 modifier = Modifier.padding(AppSpacing.cardPadding)
             ) {
-                MarkdownText(
-                    markdown = text + "█", // Cursor effect
-                    style = AppTypography.bodyMedium,
-                    color = AppColors.white
-                )
+                // Render text with a blinking block cursor
+                Row {
+                    MarkdownText(
+                        markdown = text,
+                        style = AppTypography.bodyMedium,
+                        color = AppColors.white
+                    )
+                    Text(
+                        text = "█",
+                        color = AppColors.accentGreen.copy(alpha = cursorAlpha),
+                        style = AppTypography.bodyMedium,
+                        modifier = Modifier.padding(start = 2.dp)
+                    )
+                }
             }
         }
     }

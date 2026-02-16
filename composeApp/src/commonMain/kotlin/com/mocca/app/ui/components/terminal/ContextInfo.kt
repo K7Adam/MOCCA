@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -196,12 +197,26 @@ fun ContextWindowBar(
                 .clip(AppShapes.pill)
                 .background(AppColors.surfaceVariant, AppShapes.pill)
         ) {
+            val progressColor = when {
+                usagePercent > 0.8f -> AppColors.error
+                usagePercent > 0.6f -> AppColors.warning
+                else -> AppColors.accentGreen
+            }
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth(usagePercent)
-                    .fillMaxHeight() // Missing import, fix later or use Modifier.fillMaxHeight()
+                    .fillMaxHeight()
                     .clip(AppShapes.pill)
-                    .background(AppColors.accentGreen, AppShapes.pill)
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                AppColors.accentGreen,
+                                progressColor
+                            )
+                        ),
+                        AppShapes.pill
+                    )
             )
         }
         
