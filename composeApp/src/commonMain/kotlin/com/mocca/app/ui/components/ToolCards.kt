@@ -1000,30 +1000,33 @@ private fun ShowDuration(richState: RichToolState) {
 @Composable
 private fun DiffView(oldText: String, newText: String) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium),
+        verticalArrangement = Arrangement.spacedBy(0.dp) // Seamless
     ) {
         // Removed lines
         if (oldText.isNotBlank()) {
-            Surface(
-                shape = AppShapes.medium,
-                color = AppColors.diffDeletion,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.diffDeletion.copy(alpha = 0.3f))
+                    .padding(AppSpacing.sm)
             ) {
-                Row(modifier = Modifier.padding(AppSpacing.sm)) {
+                Row {
                     Text(
                         text = "-",
-                        style = AppTypography.bodySmall,
+                        style = AppTypography.codeSmall,
                         fontWeight = FontWeight.Bold,
                         color = AppColors.diffDeletionText,
                         modifier = Modifier.width(20.dp)
                     )
-                    // Use LazyColumn logic (simulated with scrollable Column for now as nested lazy layouts are tricky)
-                    // For massive files, we just let the outer container scroll, but we remove the 'take(20)' limit.
                     Text(
-                        text = oldText.lines().joinToString("\n"),
-                        style = AppTypography.bodySmall,
-                        color = AppColors.diffDeletionText.copy(alpha = 0.8f)
+                        text = oldText.trimEnd(),
+                        style = AppTypography.codeSmall,
+                        color = AppColors.diffDeletionText.copy(alpha = 0.9f),
+                        fontFamily = AppTypography.monoFamily
                     )
                 }
             }
@@ -1031,23 +1034,25 @@ private fun DiffView(oldText: String, newText: String) {
         
         // Added lines
         if (newText.isNotBlank()) {
-            Surface(
-                shape = AppShapes.medium,
-                color = AppColors.diffAddition,
-                modifier = Modifier.fillMaxWidth()
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.diffAddition.copy(alpha = 0.3f))
+                    .padding(AppSpacing.sm)
             ) {
-                Row(modifier = Modifier.padding(AppSpacing.sm)) {
+                Row {
                     Text(
                         text = "+",
-                        style = AppTypography.bodySmall,
+                        style = AppTypography.codeSmall,
                         fontWeight = FontWeight.Bold,
                         color = AppColors.diffAdditionText,
                         modifier = Modifier.width(20.dp)
                     )
                     Text(
-                        text = newText.lines().joinToString("\n"),
-                        style = AppTypography.bodySmall,
-                        color = AppColors.diffAdditionText.copy(alpha = 0.9f)
+                        text = newText.trimEnd(),
+                        style = AppTypography.codeSmall,
+                        color = AppColors.diffAdditionText.copy(alpha = 1.0f),
+                        fontFamily = AppTypography.monoFamily
                     )
                 }
             }
