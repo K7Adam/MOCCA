@@ -395,7 +395,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .imePadding() // Handles keyboard padding
+                    .windowInsetsPadding(WindowInsets.ime) // Matches keyboard height exactly (no animation lag)
                     .windowInsetsPadding(WindowInsets.navigationBars) // Ensures input is above nav bar when keyboard closed
             ) {
                 RichChatInput(
