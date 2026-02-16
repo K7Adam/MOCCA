@@ -18,7 +18,16 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
         contentLength: Long?,
         onProgress: suspend (Float) -> Unit
     ): String = withContext(Dispatchers.IO) {
-        val file = File(context.externalCacheDir ?: context.cacheDir, fileName)
+        // Use externalCacheDir if available, otherwise cacheDir.
+        // Ensure this matches 'external-cache-path' or 'cache-path' in provider_paths.xml
+        val cacheDir = context.externalCacheDir ?: context.cacheDir
+        val file = File(cacheDir, "update.apk") // Fixed name to avoid path traversal issues
+        
+        // Delete existing file to ensure clean write
+        if (file.exists()) {
+            file.delete()
+        }
+        
         val output = FileOutputStream(file)
         val buffer = ByteArray(8 * 1024)
         var bytesCopied: Long = 0
