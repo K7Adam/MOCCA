@@ -45,6 +45,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -460,19 +464,20 @@ private fun SelectServerStep(
     onManualConnect: (host: String, port: Int, username: String, password: String, useHttps: Boolean) -> Unit,
     onRetry: () -> Unit
 ) {
-    var showManualEntry by remember { mutableStateOf(false) }
-    var manualHost by remember { mutableStateOf("") }
-    var manualPort by remember { mutableStateOf("4096") }
-    var manualUsername by remember { mutableStateOf("opencode") }
-    var manualPassword by remember { mutableStateOf("") }
-    var useHttps by remember { mutableStateOf(false) }
+    var showManualEntry by remember { mutableStateOf(true) } // Expanded by default for dev
+    // TEMPORARY PREFILLS
+    var manualHost by remember { mutableStateOf("omen.tail0b932a.ts.net") }
+    var manualPort by remember { mutableStateOf("443") }
+    var manualUsername by remember { mutableStateOf("adamk7") }
+    var manualPassword by remember { mutableStateOf("Victory&Bliss4ever") }
+    var useHttps by remember { mutableStateOf(true) }
     
     // Auto-detect Tailscale (.ts.net) and set HTTPS + port 443
     LaunchedEffect(manualHost) {
         val isTailscale = manualHost.trim().endsWith(".ts.net")
         if (isTailscale && !useHttps) {
             useHttps = true
-            manualPort = "443"
+            if (manualPort == "4096") manualPort = "443"
         }
     }
     
@@ -602,7 +607,9 @@ private fun SelectServerStep(
                 value = manualPassword,
                 onValueChange = { manualPassword = it },
                 label = "Password",
-                placeholder = "Leave empty if none"
+                placeholder = "Leave empty if none",
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -877,8 +884,8 @@ private fun CredentialDialog(
     onConfirm: (username: String, password: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var username by remember { mutableStateOf("opencode") }
-    var password by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("adamk7") } // TEMPORARY
+    var password by remember { mutableStateOf("Victory&Bliss4ever") } // TEMPORARY
     
     AlertDialog(
         onDismissRequest = onDismiss,
