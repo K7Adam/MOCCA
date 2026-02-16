@@ -5,14 +5,19 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -26,10 +31,14 @@ fun UpdateDialog(
     isDownloading: Boolean,
     progress: Float,
     error: String? = null,
+    logs: List<String> = emptyList(),
     onUpdate: () -> Unit,
     onDismiss: () -> Unit,
     onRetry: (() -> Unit)? = null
 ) {
+    @Suppress("DEPRECATION")
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    
     BasicAlertDialog(
         onDismissRequest = { if (!isDownloading) onDismiss() }
     ) {
@@ -74,6 +83,72 @@ fun UpdateDialog(
                         style = AppTypography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(AppSpacing.md))
+                }
+
+                // Log Console (Visible during download or error)
+                if (isDownloading || error != null || logs.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(150.dp)
+                            .background(AppColors.black, AppShapes.small)
+                            .border(AppSpacing.borderThin, AppColors.border, AppShapes.small)
+                    ) {
+                        // Log Header
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(AppColors.surfaceVariant)
+                                .padding(horizontal = AppSpacing.sm, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "LOGS",
+                                style = AppTypography.labelSmall,
+                                color = AppColors.grey
+                            )
+                            
+                            IconButton(
+                                onClick = { 
+                                    clipboardManager.setText(AnnotatedString(logs.joinToString("\n")))
+                                },
+                                modifier = Modifier.size(20.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy Logs",
+                                    tint = AppColors.accentGreen,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                        
+                        // Log Content
+                        val logScrollState = rememberScrollState()
+                        // Auto-scroll to bottom when logs change
+                        androidx.compose.runtime.LaunchedEffect(logs.size) {
+                            logScrollState.animateScrollTo(logScrollState.maxValue)
+                        }
+                        
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(AppSpacing.sm)
+                                .verticalScroll(logScrollState)
+                        ) {
+                            logs.forEach { log ->
+                                Text(
+                                    text = "> $log",
+                                    style = AppTypography.codeSmall.copy(fontSize = 10.sp),
+                                    color = if (log.startsWith("ERROR") || log.startsWith("CRITICAL")) AppColors.alertRed else AppColors.textSecondary,
+                                    fontFamily = AppTypography.monoFamily
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Size

@@ -240,7 +240,7 @@ class SettingsScreenModel(
             _state.value = _state.value.copy(isLoading = true, message = "Checking for updates...")
 
             updateRepository.checkForUpdate().fold(
-                onSuccess = { updateInfo ->
+                onSuccess = { updateInfo: com.mocca.app.domain.model.UpdateInfo? ->
                     if (updateInfo != null) {
                         // Notify global update notifier so MainScreen shows the dialog
                         updateNotifier.notifyUpdateAvailable(updateInfo)
@@ -255,7 +255,7 @@ class SettingsScreenModel(
                         )
                     }
                 },
-                onFailure = { e ->
+                onFailure = { e: Throwable ->
                     val errorMsg = e.message ?: "Unknown error"
                     val friendlyMsg = when {
                         errorMsg.contains("401") -> "Authentication failed. Check your GitHub token."

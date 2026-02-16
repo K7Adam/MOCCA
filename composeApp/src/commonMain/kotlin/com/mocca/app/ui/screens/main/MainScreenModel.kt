@@ -16,6 +16,7 @@ import com.mocca.app.domain.model.SessionGroup
 import com.mocca.app.domain.model.SessionRunningState
 import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.domain.model.ConnectionStatus
+import com.mocca.app.domain.model.DownloadStatus
 import com.mocca.app.domain.model.ServerEvent
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
@@ -79,6 +80,7 @@ data class MainScreenState(
     val isDownloadingUpdate: Boolean = false,
     val downloadProgress: Float = 0f,
     val updateError: String? = null,
+    val updateLogs: List<String> = emptyList(),
     
     // Session grouping and real-time status
     val sessionGroups: List<SessionGroup> = emptyList(),
@@ -162,7 +164,7 @@ class MainScreenModel(
                             }
                         }
                     },
-                    onFailure = { e ->
+                    onFailure = { e: Throwable ->
                         Napier.w("Failed to check for updates", e)
                     }
                 )
@@ -180,24 +182,42 @@ class MainScreenModel(
                 it.copy(
                     isDownloadingUpdate = true,
                     downloadProgress = 0f,
-                    updateError = null
+                    updateError = null,
+                    updateLogs = listOf("Initializing download...")
                 )
             }
 
             try {
                 updateRepository.downloadAndInstall(info, "mocca-update.apk")
-                    .collect { progress ->
-                        _state.update { it.copy(downloadProgress = progress) }
+                    .collect { status ->
+                        when (status) {
+                            is DownloadStatus.Progress -> _state.update { it.copy(downloadProgress = status.progress) }
+                            is DownloadStatus.Log -> _state.update { it.copy(updateLogs = it.updateLogs + status.message) }
+                            is DownloadStatus.Error -> _state.update { 
+                                it.copy(
+                                    isDownloadingUpdate = false,
+                                    updateError = status.message,
+                                    updateLogs = it.updateLogs + "ERROR: ${status.message}"
+                                ) 
+                            }
+                            is DownloadStatus.Complete -> {
+                                _state.update { 
+                                    it.copy(
+                                        isDownloadingUpdate = false,
+                                        isUpdateAvailable = false,
+                                        updateLogs = it.updateLogs + "Download complete. Installing..."
+                                    ) 
+                                }
+                            }
+                        }
                     }
-                // Install triggered automatically by repository at end of flow
-                // Dismiss dialog after successful download/install trigger
-                _state.update { it.copy(isUpdateAvailable = false, isDownloadingUpdate = false) }
             } catch (e: Exception) {
                 Napier.e("Update download failed", e, "MainScreenModel")
                 _state.update {
                     it.copy(
                         isDownloadingUpdate = false,
-                        updateError = e.message ?: "Download failed"
+                        updateError = e.message ?: "Download failed",
+                        updateLogs = it.updateLogs + "CRITICAL EXCEPTION: ${e.message}\n${e.stackTraceToString()}"
                     )
                 }
             }
@@ -238,7 +258,7 @@ class MainScreenModel(
                             }
                         }
                     },
-                    onFailure = { e ->
+                    onFailure = { e: Throwable ->
                         Napier.w("Manual update check failed", e)
                     }
                 )

@@ -1,14 +1,24 @@
 package com.mocca.app.data.repository
 
 import com.mocca.app.api.GitHubApiClient
+import com.mocca.app.api.getHttpEngine
 import com.mocca.app.domain.manager.PlatformUpdateManager
+import com.mocca.app.domain.model.DownloadStatus
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.headers
+import io.ktor.client.statement.readBytes
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
+import io.ktor.utils.io.core.readText
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -71,38 +81,97 @@ class UpdateRepository(
         }
     }
 
-    fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<Float> = flow {
-        emit(0f)
-        try {
-            val token = settingsRepository.getGitHubToken()
-            val useApi = !token.isNullOrBlank()
-            val url = if (useApi) updateInfo.apiUrl else updateInfo.downloadUrl
-            
-            Napier.d("Starting download. Use API: $useApi, URL: $url", tag = "UpdateRepository")
+    fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<DownloadStatus> = flow {
+        emit(DownloadStatus.Progress(0f))
+        emit(DownloadStatus.Log("Starting download process..."))
+        
+        val token = settingsRepository.getGitHubToken()
+        val useApi = !token.isNullOrBlank()
+        val initialUrl = if (useApi) updateInfo.apiUrl else updateInfo.downloadUrl
+        
+        emit(DownloadStatus.Log("Auth enabled: $useApi"))
+        emit(DownloadStatus.Log("Initial URL: $initialUrl"))
 
-            gitHubApiClient.getClient().prepareGet(url) {
-                if (useApi) {
-                    header("Authorization", "Bearer $token")
-                    header("Accept", "application/octet-stream")
-                }
-            }.execute { response ->
-                if (!response.status.isSuccess()) {
-                    throw Exception("Download failed with status: ${response.status}")
-                }
-                
-                val length = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
-                val channel = response.bodyAsChannel()
-                
-                val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
-                   emit(progress)
-                }
-                
-                emit(1f) // Ensure 100% is emitted
-                platformUpdateManager.installApk(path)
+        // Use a fresh client to manually handle redirects and headers
+        val client = HttpClient(getHttpEngine()) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = 600_000 // 10 mins
+                connectTimeoutMillis = 30_000
+                socketTimeoutMillis = 600_000
             }
+            followRedirects = false // CRITICAL: Manual redirect handling
+        }
+
+        try {
+            var currentUrl = initialUrl
+            var attempts = 0
+            val maxRedirects = 5
+            var finalResponse: io.ktor.client.statement.HttpResponse? = null
+
+            // 1. Resolve Redirects manually
+            while (attempts < maxRedirects) {
+                emit(DownloadStatus.Log("Requesting: $currentUrl"))
+                
+                val response = client.get(currentUrl) {
+                    // Only add auth headers to GitHub API URLs, NOT S3 URLs
+                    if (useApi && currentUrl.contains("api.github.com")) {
+                        header("Authorization", "Bearer $token")
+                        header("Accept", "application/octet-stream")
+                        emit(DownloadStatus.Log("Added Authorization header"))
+                    } else {
+                        emit(DownloadStatus.Log("Skipped Authorization header (external domain)"))
+                    }
+                }
+
+                val status = response.status
+                emit(DownloadStatus.Log("Response Status: $status"))
+
+                if (status == HttpStatusCode.Found || status == HttpStatusCode.MovedPermanently || status == HttpStatusCode.TemporaryRedirect) {
+                    val location = response.headers["Location"]
+                    if (location != null) {
+                        emit(DownloadStatus.Log("Redirecting to: $location"))
+                        currentUrl = location
+                        attempts++
+                    } else {
+                        throw Exception("Redirect status $status but no Location header found")
+                    }
+                } else if (status.isSuccess()) {
+                    finalResponse = response
+                    break
+                } else {
+                    val errorBody = response.bodyAsChannel().readRemaining().readText()
+                    throw Exception("Request failed: $status. Body: $errorBody")
+                }
+            }
+
+            if (finalResponse == null) {
+                throw Exception("Too many redirects or no success response")
+            }
+
+            // 2. Download File
+            val length = finalResponse.headers["Content-Length"]?.toLongOrNull() ?: -1L
+            emit(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
+            
+            val channel = finalResponse.bodyAsChannel()
+            val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
+                emit(DownloadStatus.Progress(progress))
+            }
+            
+            emit(DownloadStatus.Log("Download saved to: $path"))
+            emit(DownloadStatus.Log("Verifying file..."))
+            
+            // Basic verification logic could go here (e.g. size check)
+            
+            emit(DownloadStatus.Log("Triggering installation..."))
+            emit(DownloadStatus.Complete)
+            platformUpdateManager.installApk(path)
+            
         } catch (e: Exception) {
             Napier.e("Download failed", e, "UpdateRepository")
-            throw e
+            emit(DownloadStatus.Log("ERROR: ${e.message}"))
+            emit(DownloadStatus.Error(e.message ?: "Download failed", e))
+        } finally {
+            client.close()
         }
     }
     
@@ -129,11 +198,6 @@ class UpdateRepository(
             return false
         } else if (remoteParsed.buildNumber != null) {
             // Both have build numbers (since currentParsed.buildNumber != null is implied here)
-             // But wait, the previous `else if` covered `currentParsed.buildNumber != null` when `remote` is null.
-             // If we are here, `remoteParsed.buildNumber` is NOT null.
-             // So `currentParsed.buildNumber` could be null OR not null?
-             // No, the first `if` handled `remote != null && current == null`.
-             // So if we are here, `currentParsed.buildNumber` MUST be NOT null.
             return remoteParsed.buildNumber > (currentParsed.buildNumber ?: 0)
         }
         

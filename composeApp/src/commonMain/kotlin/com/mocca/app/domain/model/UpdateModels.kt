@@ -26,3 +26,10 @@ data class UpdateInfo(
     val apiUrl: String,
     val size: Long
 )
+
+sealed class DownloadStatus {
+    data class Progress(val progress: Float) : DownloadStatus()
+    data class Log(val message: String) : DownloadStatus()
+    data object Complete : DownloadStatus()
+    data class Error(val message: String, val throwable: Throwable? = null) : DownloadStatus()
+}
