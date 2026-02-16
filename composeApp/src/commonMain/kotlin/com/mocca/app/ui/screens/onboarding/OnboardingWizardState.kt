@@ -80,7 +80,8 @@ sealed class OnboardingAction {
         val host: String,
         val port: Int,
         val username: String,
-        val password: String
+        val password: String,
+        val useHttps: Boolean = false
     ) : OnboardingAction()
     data class CredentialsProvided(val username: String, val password: String) : OnboardingAction()
     data object GoToManualEntry : OnboardingAction()

@@ -47,7 +47,8 @@ data class DiscoveredServer(
             port = port,
             username = username,
             password = password,
-            isActive = true
+            isActive = true,
+            useHttps = useHttps
         )
     }
 }

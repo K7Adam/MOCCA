@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -159,9 +160,9 @@ class ProgressiveOnboardingScreen : Screen {
                                 screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
                             })
                         },
-                        onManualConnect = { host, port, username, password ->
+                        onManualConnect = { host, port, username, password, useHttps ->
                             screenModel.onAction(
-                                OnboardingAction.ManualConnect(host, port, username, password)
+                                OnboardingAction.ManualConnect(host, port, username, password, useHttps)
                             )
                         },
                         onRetry = { screenModel.onAction(OnboardingAction.StartDiscovery) }
@@ -456,7 +457,7 @@ private fun SelectServerStep(
     error: String?,
     onServerSelected: (DiscoveredServer) -> Unit,
     onScanQr: () -> Unit,
-    onManualConnect: (host: String, port: Int, username: String, password: String) -> Unit,
+    onManualConnect: (host: String, port: Int, username: String, password: String, useHttps: Boolean) -> Unit,
     onRetry: () -> Unit
 ) {
     var showManualEntry by remember { mutableStateOf(false) }
@@ -464,6 +465,16 @@ private fun SelectServerStep(
     var manualPort by remember { mutableStateOf("4096") }
     var manualUsername by remember { mutableStateOf("opencode") }
     var manualPassword by remember { mutableStateOf("") }
+    var useHttps by remember { mutableStateOf(false) }
+    
+    // Auto-detect Tailscale (.ts.net) and set HTTPS + port 443
+    LaunchedEffect(manualHost) {
+        val isTailscale = manualHost.trim().endsWith(".ts.net")
+        if (isTailscale && !useHttps) {
+            useHttps = true
+            manualPort = "443"
+        }
+    }
     
     Column(
         modifier = Modifier.fillMaxSize()
@@ -596,6 +607,42 @@ private fun SelectServerStep(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
+            // HTTPS toggle (auto-detected for Tailscale)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Use HTTPS",
+                    style = AppTypography.bodyMedium,
+                    color = AppColors.textSecondary,
+                    modifier = Modifier.weight(1f)
+                )
+                Switch(
+                    checked = useHttps,
+                    onCheckedChange = { 
+                        useHttps = it
+                        if (it && manualPort == "4096") {
+                            manualPort = "443"
+                        } else if (!it && manualPort == "443") {
+                            manualPort = "4096"
+                        }
+                    }
+                )
+            }
+            
+            // Show effective URL preview
+            val effectiveProtocol = if (useHttps) "https" else "http"
+            val effectivePort = manualPort.toIntOrNull() ?: 4096
+            Text(
+                text = "$effectiveProtocol://${manualHost.trim()}:$effectivePort",
+                style = AppTypography.bodySmall,
+                color = AppColors.accentGreen,
+                modifier = Modifier.padding(vertical = AppSpacing.sm)
+            )
+            
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+            
             TerminalButton(
                 text = "Connect",
                 onClick = {
@@ -603,7 +650,8 @@ private fun SelectServerStep(
                         manualHost.trim(),
                         manualPort.trim().toIntOrNull() ?: 4096,
                         manualUsername.trim().ifBlank { "opencode" },
-                        manualPassword
+                        manualPassword,
+                        useHttps
                     )
                 },
                 enabled = manualHost.isNotBlank(),

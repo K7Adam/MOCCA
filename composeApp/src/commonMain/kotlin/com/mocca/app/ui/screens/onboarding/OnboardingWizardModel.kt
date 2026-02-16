@@ -64,7 +64,7 @@ class OnboardingWizardModel(
             is OnboardingAction.StartDiscovery -> startDiscovery()
             is OnboardingAction.ServerSelected -> selectServer(action.server)
             is OnboardingAction.ManualConnect -> connectManual(
-                action.host, action.port, action.username, action.password
+                action.host, action.port, action.username, action.password, action.useHttps
             )
             is OnboardingAction.CredentialsProvided -> onCredentialsProvided(
                 action.username, action.password
@@ -229,37 +229,49 @@ class OnboardingWizardModel(
     // Manual Entry
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    private fun connectManual(host: String, port: Int, username: String, password: String) {
+    private fun connectManual(host: String, port: Int, username: String, password: String, useHttps: Boolean = false) {
         if (host.isBlank()) {
             _state.update { it.copy(error = "Host is required") }
             return
+        }
+
+        // Use provided useHttps, or auto-detect Tailscale (.ts.net) if not specified
+        val isTailscale = host.endsWith(".ts.net")
+        val effectiveUseHttps = if (useHttps) true else isTailscale
+        val effectivePort = when {
+            useHttps && port == 4096 -> 443  // User toggled HTTPS on, use 443
+            !useHttps && port == 443 -> 4096  // User toggled HTTPS off, use 4096
+            else -> port
         }
 
         val config = ServerConfig(
             id = "manual-${System.currentTimeMillis()}",
             name = "OpenCode ($host)",
             host = host,
-            port = port,
+            port = effectivePort,
             username = username.ifBlank { "opencode" },
             password = password,
-            isActive = true
+            isActive = true,
+            useHttps = effectiveUseHttps
         )
 
         val discovered = DiscoveredServer(
             name = config.name,
             host = host,
-            port = port,
+            port = effectivePort,
             username = config.username,
             password = password,
-            source = DiscoverySource.MANUAL
+            source = DiscoverySource.MANUAL,
+            useHttps = effectiveUseHttps
         )
 
+        val protocol = if (effectiveUseHttps) "https" else "http"
         _state.update {
             it.copy(
                 selectedServer = discovered,
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
-                connectionProgress = "Connecting to $host:$port...",
+                connectionProgress = "Connecting to $protocol://$host:$effectivePort...",
                 error = null
             )
         }

@@ -18,10 +18,20 @@ data class ServerConfig(
     val port: Int = 4096,
     val username: String = "opencode",
     val password: String = "",
-    val isActive: Boolean = false
+    val isActive: Boolean = false,
+    val useHttps: Boolean = false
 ) {
-    /** Base URL for API requests. */
-    val baseUrl: String get() = "http://$host:$port"
+    /** Base URL for API requests. Supports HTTPS for Tailscale connections. */
+    val baseUrl: String
+        get() {
+            val protocol = if (useHttps) "https" else "http"
+            // For HTTPS on default port 443, omit the port
+            return if (useHttps && port == 443) {
+                "$protocol://$host"
+            } else {
+                "$protocol://$host:$port"
+            }
+        }
 
     /** Whether authentication credentials are configured. */
     val hasCredentials: Boolean get() = password.isNotBlank()
