@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
@@ -82,6 +84,13 @@ fun ChatContent(screenModel: ChatScreenModel) {
         }
     }
     
+    LaunchedEffect(streamingText) {
+        if (streamingText.isNotEmpty()) {
+            // Throttled haptic for streaming
+            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        }
+    }
+
     // Pagination Trigger (Reverse layout: Top is end of list)
     val isAtTop by remember {
         derivedStateOf {
@@ -89,6 +98,28 @@ fun ChatContent(screenModel: ChatScreenModel) {
             val totalItems = layoutInfo.totalItemsCount
             val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
             totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
+        }
+    }
+
+    val showScrollToBottom by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 2
+        }
+    }
+
+    var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
+
+    // Reset new message indicator when at bottom
+    LaunchedEffect(listState.firstVisibleItemIndex) {
+        if (listState.firstVisibleItemIndex <= 2) {
+            hasNewMessagesWhileScrolledUp = false
+        }
+    }
+
+    // Set indicator when new messages arrive while scrolled up
+    LaunchedEffect(messages.size) {
+        if (showScrollToBottom) {
+            hasNewMessagesWhileScrolledUp = true
         }
     }
 
@@ -248,48 +279,75 @@ fun ChatContent(screenModel: ChatScreenModel) {
             } else if (state.messages.isEmpty()) {
                 EmptySessionState()
             } else {
-                LazyColumn(
-                    state = listState,
-                    reverseLayout = true,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = AppSpacing.screenPaddingHorizontal),
-                    contentPadding = PaddingValues(
-                        top = AppSpacing.lg,
-                        bottom = 140.dp // Space for input overlay
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                PullToRefreshBox(
+                    isRefreshing = state.isLoading,
+                    onRefresh = { screenModel.refreshData() },
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
-                        item(contentType = "processing") { TerminalProcessingIndicator() }
-                    }
-                    
-                    if (state.isThinking) {
-                        item(contentType = "thinking") {
-                            TerminalThinkingIndicator(
-                                thinkingContent = state.thinkingContent,
-                                elapsedMs = state.thinkingElapsedMs
+                    LazyColumn(
+                        state = listState,
+                        reverseLayout = true,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+                        contentPadding = PaddingValues(
+                            top = AppSpacing.lg,
+                            bottom = 140.dp // Space for input overlay
+                        ),
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                    ) {
+                        if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
+                            item(contentType = "processing") { TerminalProcessingIndicator() }
+                        }
+                        
+                        if (state.isThinking) {
+                            item(contentType = "thinking") {
+                                TerminalThinkingIndicator(
+                                    thinkingContent = state.thinkingContent,
+                                    elapsedMs = state.thinkingElapsedMs
+                                )
+                            }
+                        }
+                        
+                        if (streamingText.isNotEmpty()) {
+                            item(contentType = "streaming") { TerminalStreamingMessage(text = streamingText) }
+                        }
+                        
+                        val displayMessages = messages.filter { msg ->
+                            msg.role == MessageRole.USER || msg.parts.isNotEmpty()
+                        }
+                        
+                        items(
+                            items = displayMessages.asReversed(),
+                            key = { it.id },
+                            contentType = { "message" }
+                        ) { message ->
+                            val index = displayMessages.indexOf(message)
+                            val nextMessage = if (index < displayMessages.size - 1) displayMessages[index + 1] else null
+                            val prevMessage = if (index > 0) displayMessages[index - 1] else null
+                            
+                            // Grouping logic: Same sender, within 5 minutes
+                            val isFirstInGroup = prevMessage == null || 
+                                prevMessage.role != message.role || 
+                                (message.createdAt - prevMessage.createdAt) > 300_000 // 5 mins
+                            
+                            // Date header logic
+                            val showDateHeader = if (nextMessage == null) {
+                                com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                            } else {
+                                val nextDate = com.mocca.app.util.TimeFormatter.formatDate(nextMessage.createdAt)
+                                val currentDate = com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                                if (nextDate != currentDate) currentDate else null
+                            }
+
+                            TerminalMessage(
+                                message = message,
+                                isFirstInGroup = isFirstInGroup,
+                                dateHeader = showDateHeader,
+                                onFork = { screenModel.forkSession(message) },
+                                onRevert = { screenModel.revertSession(message) }
                             )
                         }
-                    }
-                    
-                    if (streamingText.isNotEmpty()) {
-                        item(contentType = "streaming") { TerminalStreamingMessage(text = streamingText) }
-                    }
-                    
-                    val displayMessages = messages.filter { msg ->
-                        msg.role == MessageRole.USER || msg.parts.isNotEmpty()
-                    }
-                    items(
-                        items = displayMessages.asReversed(),
-                        key = { it.id },
-                        contentType = { "message" }
-                    ) { message ->
-                        TerminalMessage(
-                            message = message,
-                            onFork = { screenModel.forkSession(message) },
-                            onRevert = { screenModel.revertSession(message) }
-                        )
                     }
                 }
             }
@@ -309,6 +367,21 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     onReject = { screenModel.rejectQuestion() }
                 )
             }
+
+            // Scroll to bottom FAB
+            ScrollToBottomButton(
+                isVisible = showScrollToBottom,
+                hasNewMessages = hasNewMessagesWhileScrolledUp,
+                onClick = {
+                    coroutineScope.launch {
+                        listState.animateScrollToItem(0)
+                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    }
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = AppSpacing.lg, bottom = 140.dp) // Adjusted to be above RichChatInput
+            )
             
             // Chat input pinned to bottom, overlaying messages
             Box(
@@ -532,21 +605,10 @@ private fun EmptySessionState() {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 48.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(64.dp)
-                    .background(AppColors.surfaceElevated, AppShapes.circle)
-                    .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.circle),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Rocket,
-                    contentDescription = null,
-                    tint = AppColors.accentGreen.copy(alpha = 0.6f),
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
+            TerminalBootSequence()
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
             Text(
                 text = "START A CONVERSATION",
                 style = AppTypography.labelMedium,
@@ -560,6 +622,36 @@ private fun EmptySessionState() {
                 color = AppColors.white.copy(alpha = 0.3f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+        }
+    }
+}
+
+@Composable
+private fun TerminalBootSequence() {
+    val lines = listOf(
+        "MOCCA_OS [Version 2.4.0]",
+        "(c) 2026 OH_MY_OPENCODE. All rights reserved.",
+        "",
+        "> LOADING_CORES...",
+        "> UPLINK_READY",
+        "> STANDBY_MODE_ACTIVE"
+    )
+    
+    Column(horizontalAlignment = Alignment.Start) {
+        lines.forEachIndexed { index, line ->
+            var visible by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(index * 200L)
+                visible = true
+            }
+            if (visible) {
+                Text(
+                    text = line,
+                    style = AppTypography.codeSmall,
+                    color = if (line.startsWith(">")) AppColors.accentGreen else AppColors.textSecondary,
+                    fontFamily = AppTypography.monoFamily
+                )
+            }
         }
     }
 }

@@ -88,6 +88,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .fillMaxSize()
                 .background(AppColors.background)
         ) {
+            // High-end terminal background effect
+            com.mocca.app.ui.components.terminal.ScanlineOverlay()
+
             SwipePanelLayout(
                 leftPanel = {
                     ContextHistoryPanel(

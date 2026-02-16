@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
@@ -68,6 +69,8 @@ import com.mocca.app.domain.model.SessionStatus
 fun TerminalMessage(
     message: Message,
     modifier: Modifier = Modifier,
+    isFirstInGroup: Boolean = true,
+    dateHeader: String? = null,
     onFork: () -> Unit = {},
     onRevert: () -> Unit = {}
 ) {
@@ -76,52 +79,59 @@ fun TerminalMessage(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = AppSpacing.sm),
+            .padding(top = if (isFirstInGroup) AppSpacing.sm else 2.dp),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
+        if (dateHeader != null) {
+            DateSeparator(dateHeader)
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+        }
+
         // Message Header
-        Row(
-            modifier = Modifier.padding(bottom = AppSpacing.xs, start = if (isUser) 0.dp else AppSpacing.sm, end = if (isUser) AppSpacing.sm else 0.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
-        ) {
-            val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
-            val label = if (isUser) "USER" else "AGENT"
-            val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
-            
-            if (!isUser) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(12.dp)
+        if (isFirstInGroup) {
+            Row(
+                modifier = Modifier.padding(bottom = AppSpacing.xs, start = if (isUser) 0.dp else AppSpacing.sm, end = if (isUser) AppSpacing.sm else 0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+            ) {
+                val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
+                val label = if (isUser) "USER" else "AGENT"
+                val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
+                
+                if (!isUser) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                }
+                
+                Text(
+                    text = label,
+                    color = color,
+                    style = AppTypography.labelSmall,
+                    fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.width(AppSpacing.xs))
-            }
-            
-            Text(
-                text = label,
-                color = color,
-                style = AppTypography.labelSmall,
-                fontWeight = FontWeight.Bold
-            )
-            
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-            
-            Text(
-                text = formatTime(message.createdAt),
-                color = AppColors.textTertiary,
-                style = AppTypography.labelSmall
-            )
-            
-            if (isUser) {
-                Spacer(modifier = Modifier.width(AppSpacing.xs))
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = color,
-                    modifier = Modifier.size(12.dp)
+                
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                
+                Text(
+                    text = formatTime(message.createdAt),
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
                 )
+                
+                if (isUser) {
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
             }
         }
         
@@ -573,6 +583,37 @@ fun TerminalStreamingMessage(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun DateSeparator(date: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = AppSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(AppColors.border.copy(alpha = 0.5f))
+        )
+        Text(
+            text = date.uppercase(),
+            style = AppTypography.labelExtraSmall,
+            color = AppColors.textTertiary,
+            modifier = Modifier.padding(horizontal = AppSpacing.md),
+            letterSpacing = 2.sp
+        )
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(AppColors.border.copy(alpha = 0.5f))
+        )
     }
 }
 
