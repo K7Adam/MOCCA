@@ -296,6 +296,9 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
+                        // Extra spacer to push content above the input field
+                        item { Spacer(modifier = Modifier.height(160.dp)) }
+
                         if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
                             item(contentType = "processing") { TerminalProcessingIndicator() }
                         }
@@ -389,6 +392,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(bottom = AppSpacing.screenPaddingBottom)
+                    .imePadding() // Handle software keyboard
             ) {
                 RichChatInput(
                     value = inputText,

@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.navigationBarsPadding
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -87,6 +88,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .navigationBarsPadding() // Ensure layout respects navigation bars
         ) {
             // High-end terminal background effect
             com.mocca.app.ui.components.terminal.ScanlineOverlay()

@@ -24,6 +24,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -308,28 +312,40 @@ fun RichChatInput(
             Row(
                 modifier = Modifier
                     .clickable(enabled = providerResponse != null) { showModelSelector = true },
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
+                Icon(
+                    imageVector = Icons.Default.SmartToy,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = AppColors.textTertiary
+                )
                 Text(
-                    text = "MODEL: $modelName".uppercase(),
+                    text = modelName.uppercase(),
                     color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                     style = AppTypography.labelSmall
                 )
-                if (providerResponse != null) {
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "▼",
-                        color = AppColors.textTertiary,
-                        style = AppTypography.labelSmall
-                    )
-                }
             }
             
-            Text(
-                text = "MODE: $agentName".uppercase(),
-                color = AppColors.textTertiary,
-                style = AppTypography.labelSmall
-            )
+            // Agent selector (clickable)
+            Row(
+                modifier = Modifier.clickable { /* Toggle Agent Logic */ },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = AppColors.textTertiary
+                )
+                Text(
+                    text = agentName.uppercase(),
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
+                )
+            }
         }
         
         // Divider
@@ -452,30 +468,39 @@ fun RichChatInput(
             )
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             
-            // Mode selector buttons (scrollable to prevent overflow)
-            if (modes.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .weight(1f, fill = false)
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            // Mode selector buttons (Dropdown-like trigger)
+            Box {
+                var showAgentMenu by remember { mutableStateOf(false) }
+                
+                TerminalCompactButton(
+                    text = agentName.uppercase(),
+                    onClick = { showAgentMenu = true },
+                    icon = Icons.Default.Person,
+                    backgroundColor = AppColors.surfaceVariant,
+                    textColor = AppColors.textSecondary
+                )
+
+                DropdownMenu(
+                    expanded = showAgentMenu,
+                    onDismissRequest = { showAgentMenu = false },
+                    modifier = Modifier.background(AppColors.surfaceElevated)
                 ) {
                     modes.forEach { mode ->
-                        val isSelected = mode.id == selectedModeId
-                        TabPillButton(
-                            text = mode.name.uppercase(),
-                            isSelected = isSelected,
-                            onClick = { onModeSelected(if (isSelected) null else mode.id) }
+                        DropdownMenuItem(
+                            text = { 
+                                Text(
+                                    mode.name.uppercase(), 
+                                    style = AppTypography.labelSmall,
+                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                ) 
+                            },
+                            onClick = {
+                                onModeSelected(mode.id)
+                                showAgentMenu = false
+                            }
                         )
                     }
                 }
-            } else {
-                // Fallback static mode button
-                TabPillButton(
-                    text = agentName.uppercase(),
-                    isSelected = true,
-                    onClick = { }
-                )
             }
             
             Spacer(modifier = Modifier.weight(1f))
