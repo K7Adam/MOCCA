@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
 import io.ktor.utils.io.ByteReadChannel
-import io.ktor.utils.io.jvm.javaio.toInputStream
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,26 +20,24 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
     ): String = withContext(Dispatchers.IO) {
         val file = File(context.externalCacheDir ?: context.cacheDir, fileName)
         val output = FileOutputStream(file)
-        val input = data.toInputStream()
         val buffer = ByteArray(8 * 1024)
         var bytesCopied: Long = 0
-        var bytes: Int = input.read(buffer)
-        
         val total = contentLength ?: -1L
 
-        while (bytes >= 0) {
-            output.write(buffer, 0, bytes)
-            bytesCopied += bytes
-            
-            if (total > 0) {
-                onProgress(bytesCopied.toFloat() / total)
+        try {
+            while (!data.isClosedForRead) {
+                val bytesRead = data.readAvailable(buffer, 0, buffer.size)
+                if (bytesRead <= 0) break
+                output.write(buffer, 0, bytesRead)
+                bytesCopied += bytesRead
+                if (total > 0) {
+                    onProgress(bytesCopied.toFloat() / total)
+                }
             }
-            
-            bytes = input.read(buffer)
+            output.flush()
+        } finally {
+            output.close()
         }
-        
-        output.close()
-        input.close()
         
         return@withContext file.absolutePath
     }
@@ -59,6 +57,11 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
         }
 
-        context.startActivity(intent)
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback or notify user
+        }
     }
 }

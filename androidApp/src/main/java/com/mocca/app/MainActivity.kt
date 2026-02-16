@@ -33,11 +33,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             // Surface fills entire screen (edge-to-edge) with theme background
             Surface(modifier = Modifier.fillMaxSize(), color = AppColors.background) {
-                // Box with safeDrawingPadding ensures content doesn't overlap
-                // with status bar, navigation bar, or display cutouts
-                Box(modifier = Modifier.safeDrawingPadding()) {
-                    App()
-                }
+                // Content handles its own insets (status bars, ime, etc.)
+                App()
             }
         }
     }

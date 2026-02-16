@@ -1,6 +1,7 @@
 package com.mocca.app.api
 
 import com.mocca.app.domain.model.GitHubRelease
+import io.ktor.client.plugins.HttpTimeout
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,6 +16,11 @@ import kotlinx.serialization.json.Json
 
 class GitHubApiClient {
     private val client = HttpClient(getHttpEngine()) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 300_000 // 5 minutes for large APK downloads
+            connectTimeoutMillis = 30_000
+            socketTimeoutMillis = 300_000
+        }
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true

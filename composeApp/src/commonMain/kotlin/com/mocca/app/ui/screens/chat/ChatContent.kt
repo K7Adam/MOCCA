@@ -29,7 +29,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.layout.union
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.mikepenz.markdown.m3.Markdown
@@ -391,8 +394,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(bottom = AppSpacing.screenPaddingBottom)
-                    .imePadding() // Handle software keyboard
+                    .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
             ) {
                 RichChatInput(
                     value = inputText,
