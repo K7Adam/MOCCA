@@ -54,7 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
@@ -90,6 +90,7 @@ fun TerminalInput(
     borderColor: Color = AppColors.border,
     borderWidth: Dp = AppSpacing.borderThin,
     shape: Shape = AppShapes.input,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
@@ -135,6 +136,7 @@ fun TerminalInput(
                     textStyle = AppTypography.bodyMedium.copy(
                         color = AppColors.white
                     ),
+                    visualTransformation = visualTransformation,
                     cursorBrush = SolidColor(AppColors.accentGreen),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,

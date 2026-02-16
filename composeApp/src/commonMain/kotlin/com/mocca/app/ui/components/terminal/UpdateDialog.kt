@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -93,7 +94,7 @@ fun UpdateDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(150.dp)
-                            .background(AppColors.black, AppShapes.small)
+                            .background(AppColors.background, AppShapes.small)
                             .border(AppSpacing.borderThin, AppColors.border, AppShapes.small)
                     ) {
                         // Log Header

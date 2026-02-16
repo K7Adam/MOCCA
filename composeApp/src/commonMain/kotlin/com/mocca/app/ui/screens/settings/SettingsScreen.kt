@@ -45,6 +45,14 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalFocusManager
 
 class SettingsScreen : Screen {
     
@@ -506,11 +514,13 @@ private fun TerminalServerEditDialog(
     onSave: (ServerConfig) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var name by remember { mutableStateOf(server.name) }
-    var host by remember { mutableStateOf(server.host) }
-    var port by remember { mutableStateOf(server.port.toString()) }
-    var username by remember { mutableStateOf(server.username) }
-    var password by remember { mutableStateOf(server.password) }
+    var name by remember { mutableStateOf(server.name.ifBlank { "Omen" }) } // TEMPORARY
+    var host by remember { mutableStateOf(server.host.ifBlank { "omen.tail0b932a.ts.net" }) } // TEMPORARY
+    var port by remember { mutableStateOf(if (server.port == 4096) "443" else server.port.toString()) } // TEMPORARY
+    var username by remember { mutableStateOf(server.username.ifBlank { "adamk7" }) } // TEMPORARY
+    var password by remember { mutableStateOf(server.password.ifBlank { "Victory&Bliss4ever" }) } // TEMPORARY
+    
+    val focusManager = LocalFocusManager.current
     
     // Modern dialog using AlertDialog or custom rounded overlay
     AlertDialog(
@@ -532,7 +542,9 @@ private fun TerminalServerEditDialog(
                     value = name,
                     onValueChange = { name = it },
                     label = "SERVER NAME",
-                    placeholder = "My Server"
+                    placeholder = "My Server",
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -542,7 +554,9 @@ private fun TerminalServerEditDialog(
                     onValueChange = { host = it },
                     label = "HOST",
                     placeholder = "10.0.2.2 or mydevice.ts.net",
-                    hint = "Tailscale hostname, LAN IP, or localhost"
+                    hint = "Tailscale hostname, LAN IP, or localhost",
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -551,7 +565,9 @@ private fun TerminalServerEditDialog(
                     value = port,
                     onValueChange = { port = it },
                     label = "PORT",
-                    placeholder = "4096"
+                    placeholder = "4096",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -560,7 +576,9 @@ private fun TerminalServerEditDialog(
                     value = username,
                     onValueChange = { username = it },
                     label = "USERNAME",
-                    placeholder = "opencode"
+                    placeholder = "opencode",
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -569,7 +587,21 @@ private fun TerminalServerEditDialog(
                     value = password,
                     onValueChange = { password = it },
                     label = "PASSWORD",
-                    placeholder = "Leave empty if none"
+                    placeholder = "Leave empty if none",
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    keyboardActions = KeyboardActions(onDone = { 
+                        focusManager.clearFocus()
+                        onSave(
+                            server.copy(
+                                name = name,
+                                host = host,
+                                port = port.toIntOrNull() ?: 4096,
+                                username = username.ifBlank { "opencode" },
+                                password = password
+                            )
+                        )
+                    })
                 )
             }
         },
