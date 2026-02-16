@@ -97,9 +97,9 @@ class UpdateRepository(
                    emit(progress)
                 }
                 
+                emit(1f) // Ensure 100% is emitted
                 platformUpdateManager.installApk(path)
             }
-            emit(1f)
         } catch (e: Exception) {
             Napier.e("Download failed", e, "UpdateRepository")
             throw e

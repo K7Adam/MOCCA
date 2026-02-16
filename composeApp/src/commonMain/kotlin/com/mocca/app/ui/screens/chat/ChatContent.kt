@@ -388,6 +388,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = AppSpacing.lg, bottom = 140.dp) // Adjusted to be above RichChatInput
+                    .zIndex(10f) // Ensure it's above everything else
             )
             
             // Chat input pinned to bottom, overlaying messages
@@ -395,7 +396,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.ime) // Matches keyboard height exactly (no animation lag)
                     .windowInsetsPadding(WindowInsets.navigationBars) // Ensures input is above nav bar when keyboard closed
             ) {
                 RichChatInput(

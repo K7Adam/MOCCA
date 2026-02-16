@@ -27,11 +27,13 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
         try {
             while (!data.isClosedForRead) {
                 val bytesRead = data.readAvailable(buffer, 0, buffer.size)
-                if (bytesRead <= 0) break
-                output.write(buffer, 0, bytesRead)
-                bytesCopied += bytesRead
-                if (total > 0) {
-                    onProgress(bytesCopied.toFloat() / total)
+                if (bytesRead < 0) break // EOF check
+                if (bytesRead > 0) {
+                    output.write(buffer, 0, bytesRead)
+                    bytesCopied += bytesRead
+                    if (total > 0) {
+                        onProgress(bytesCopied.toFloat() / total)
+                    }
                 }
             }
             output.flush()
