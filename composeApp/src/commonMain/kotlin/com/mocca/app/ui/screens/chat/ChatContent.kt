@@ -29,7 +29,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.union
 import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.WindowInsets
@@ -296,7 +297,8 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                         contentPadding = PaddingValues(
                             top = AppSpacing.lg,
-                            bottom = 140.dp // Space for input overlay
+                            // Ensure bottom padding accounts for IME height + input field height (~80dp) + extra spacing
+                            bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 100.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
@@ -387,7 +389,9 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.lg, bottom = 140.dp) // Adjusted to be above RichChatInput
+                    .padding(end = AppSpacing.lg)
+                    // Dynamically position above input field (which moves with IME)
+                    .padding(bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 100.dp)
                     .zIndex(10f) // Ensure it's above everything else
             )
             
@@ -396,6 +400,13 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { 
+                        // Request focus logic would go here if we had access to FocusRequester,
+                        // but generally this container tap ensures touch events aren't swallowed.
+                    }
                     .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
             ) {
                 RichChatInput(
