@@ -7,7 +7,8 @@ CREATE TABLE ServerConfigEntity (
     port INTEGER NOT NULL DEFAULT 4096,
     username TEXT NOT NULL DEFAULT 'opencode',
     password TEXT NOT NULL DEFAULT '',
-    isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
+    isActive INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    useHttps INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
 );
 
 -- Select all servers
@@ -24,8 +25,8 @@ SELECT * FROM ServerConfigEntity WHERE id = ?;
 
 -- Insert or replace server config
 insertOrReplace:
-INSERT OR REPLACE INTO ServerConfigEntity(id, name, host, port, username, password, isActive)
-VALUES (?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO ServerConfigEntity(id, name, host, port, username, password, isActive, useHttps)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Delete server by ID
 deleteById:

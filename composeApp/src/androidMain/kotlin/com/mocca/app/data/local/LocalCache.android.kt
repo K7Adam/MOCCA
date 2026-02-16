@@ -254,7 +254,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 port = config.port.toLong(),
                 username = config.username,
                 password = config.password,
-                isActive = config.isActive
+                isActive = config.isActive,
+                useHttps = config.useHttps
             )
         } catch (e: Exception) {
             Napier.w("Failed to insert server config", e)
@@ -671,7 +672,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             port = port.toInt(),
             username = username,
             password = password,
-            isActive = isActive
+            isActive = isActive,
+            useHttps = useHttps
         )
     }
     
