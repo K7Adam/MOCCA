@@ -21,7 +21,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -238,13 +237,13 @@ private fun formatTokenCount(count: Int): String {
  */
 @Composable
 fun ContextInfoContainer(
-    mcpStatus: String = "ONLINE",
-    isMcpOnline: Boolean = true,
-    model: String = "CLAUDE-3.5",
-    latency: String = "45ms",
-    port: String = ":8080",
-    usedTokens: Int = 4096,
-    maxTokens: Int = 32000,
+    mcpStatus: String = "OFFLINE",
+    isMcpOnline: Boolean = false,
+    model: String = "--",
+    latency: String = "--ms",
+    port: String = "--",
+    usedTokens: Int = 0,
+    maxTokens: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Column(

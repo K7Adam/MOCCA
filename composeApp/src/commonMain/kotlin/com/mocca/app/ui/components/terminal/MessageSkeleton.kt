@@ -22,7 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
@@ -136,7 +136,7 @@ fun ToolCardSkeleton(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceVariant.copy(alpha = 0.2f), RectangleShape)
+            .background(AppColors.surfaceVariant.copy(alpha = 0.2f), AppShapes.small)
             .padding(AppSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
@@ -220,7 +220,7 @@ private fun SkeletonBlock(
             .alpha(alpha)
             .background(
                 color = AppColors.grey,
-                shape = RectangleShape
+                shape = AppShapes.small
             )
     )
 }

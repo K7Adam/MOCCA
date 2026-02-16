@@ -12,7 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
 import com.mocca.app.ui.components.terminal.TerminalButton
@@ -60,7 +60,7 @@ fun PermissionRequestDialog(
                 
                 // Permission type
                 Surface(
-                    shape = RectangleShape,
+                    shape = AppShapes.medium,
                     color = AppColors.surfaceVariant
                 ) {
                     Text(
@@ -82,7 +82,7 @@ fun PermissionRequestDialog(
                     Spacer(modifier = Modifier.height(4.dp))
                     
                     Surface(
-                        shape = RectangleShape,
+                        shape = AppShapes.medium,
                         color = AppColors.surfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -120,7 +120,7 @@ fun PermissionRequestDialog(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Surface(
-                        shape = RectangleShape,
+                        shape = AppShapes.medium,
                         color = AppColors.surfaceVariant,
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -143,7 +143,7 @@ fun PermissionRequestDialog(
                 }
                 Button(
                     onClick = onApprove,
-                    shape = RectangleShape,
+                    shape = AppShapes.pill,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = AppColors.white,
                         contentColor = AppColors.background
@@ -158,7 +158,7 @@ fun PermissionRequestDialog(
         dismissButton = {
             OutlinedButton(
                 onClick = onDeny,
-                shape = RectangleShape,
+                shape = AppShapes.pill,
                 colors = ButtonDefaults.outlinedButtonColors(
                     contentColor = AppColors.grey
                 )

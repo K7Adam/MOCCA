@@ -18,7 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Todo
 import com.mocca.app.domain.model.TodoStatus
@@ -45,7 +45,7 @@ fun TodoListPanel(
                 .border(
                     width = AppSpacing.borderThin,
                     color = AppColors.border,
-                    shape = RectangleShape
+                    shape = AppShapes.medium
                 )
         ) {
             // Header

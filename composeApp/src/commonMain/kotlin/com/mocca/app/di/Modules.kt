@@ -188,7 +188,8 @@ val screenModelModule = module {
             connectionManager = get(),
             mcpRepository = get(),
             updateRepository = get(),
-            updateNotifier = get()
+            updateNotifier = get(),
+            appVersionProvider = get()
         )
     }
     

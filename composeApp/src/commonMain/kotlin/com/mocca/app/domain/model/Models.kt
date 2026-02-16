@@ -324,6 +324,7 @@ data class Message(
     val createdAt: Long,
     val model: String? = null,
     val cost: Double? = null,
+    val tokens: TokenUsage? = null,
     val isRead: Boolean = true,
     val metadata: String? = null
 ) {
@@ -370,6 +371,7 @@ data class Message(
                 createdAt = response.info.time?.created ?: 0L,
                 model = response.info.model?.modelID,
                 cost = response.info.cost,
+                tokens = response.info.tokens,
                 isRead = true,
                 metadata = null
             )

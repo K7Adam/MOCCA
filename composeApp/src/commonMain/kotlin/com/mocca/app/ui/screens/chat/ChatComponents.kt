@@ -12,7 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
@@ -65,7 +65,7 @@ fun MessageBubble(
         }
 
         Surface(
-            shape = RectangleShape,
+            shape = if (isUser) AppShapes.medium else AppShapes.medium,
             color = containerColor,
             contentColor = contentColor,
             modifier = Modifier
@@ -150,9 +150,9 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, AppColors.border, RectangleShape)
+            .border(1.dp, AppColors.border, AppShapes.medium)
             .clickable { expanded = !expanded },
-        shape = RectangleShape,
+        shape = AppShapes.medium,
         color = AppColors.surface
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
@@ -207,7 +207,7 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
             .fillMaxWidth()
             .clickable { expanded = !expanded },
         color = AppColors.surfaceVariant.copy(alpha = 0.5f),
-        shape = RectangleShape
+        shape = AppShapes.medium
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {

@@ -52,6 +52,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val dashboardScreenModel = koinScreenModel<DashboardScreenModel>()
         // Use a stable ChatScreenModel instance and reload content when session changes
         val chatScreenModel = koinScreenModel<ChatScreenModel>()
+        val chatState by chatScreenModel.state.collectAsState()
 
         // Reload chat session when ID changes
         androidx.compose.runtime.LaunchedEffect(state.currentSessionId) {
@@ -95,11 +96,13 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         runningSessionIds = state.runningSessionIds,
                         currentSessionId = state.currentSessionId,
                         mcpStatus = state.mcpStatus,
-                        model = state.modelName,
+                        model = chatState.modelName.takeIf { it != "--" } ?: state.modelName,
                         latency = state.latency,
                         port = state.port,
-                        usedTokens = state.usedTokens,
-                        maxTokens = state.maxTokens,
+                        usedTokens = chatState.totalInputTokens + chatState.totalOutputTokens,
+                        maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
+                        agentName = chatState.agentName.takeIf { it != "--" } ?: state.agentName,
+                        appVersion = state.appVersion,
                         isCreatingSession = state.isCreatingSession,
                         loadingSessionId = state.loadingSessionId,
                         newlyCreatedSessionId = state.newlyCreatedSessionId,

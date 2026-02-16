@@ -173,7 +173,7 @@ private fun DashboardContent(sessionId: String) {
                             color = AppColors.white.copy(alpha = 0.7f),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .background(Color(0xFF222222), AppShapes.small)
+                                .background(AppColors.surfaceContainer, AppShapes.small)
                                 .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.small)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
@@ -227,7 +227,7 @@ private fun GodModuleCard(
 ) {
     Surface(
         modifier = modifier,
-        color = Color(0xFF111111),
+        color = AppColors.surfaceVariant,
         shape = RoundedCornerShape(32.dp),
         border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
     ) {
@@ -252,7 +252,7 @@ private fun GodModuleCard(
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
                                 .background(AppColors.accentGreen, AppShapes.circle)
-                                .border(2.dp, Color(0xFF111111), AppShapes.circle)
+                                .border(2.dp, AppColors.surfaceVariant, AppShapes.circle)
                         )
                     }
                 }

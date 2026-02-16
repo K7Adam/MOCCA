@@ -18,6 +18,7 @@ import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.ServerEvent
 import com.mocca.app.domain.model.UpdateInfo
+import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,12 +51,12 @@ data class MainScreenState(
     // Context info
     val mcpStatus: String = "OFFLINE",
     val isMcpOnline: Boolean = false,
-    val modelName: String = "CLAUDE OPUS 4.5",
-    val agentName: String = "SISYPHUS",
+    val modelName: String = "--",
+    val agentName: String = "--",
     val latency: String = "--ms",
-    val port: String = ":4096",
+    val port: String = "--",
     val usedTokens: Int = 0,
-    val maxTokens: Int = 32000,
+    val maxTokens: Int = 0,
     
     // Loading states
     val isLoading: Boolean = false,
@@ -70,7 +71,7 @@ data class MainScreenState(
     val isMcpLoading: Boolean = false,
     
     // App info
-    val appVersion: String = "V1.0.4",
+    val appVersion: String = "",
     
     // Update info
     val updateInfo: UpdateInfo? = null,
@@ -104,18 +105,20 @@ class MainScreenModel(
     private val connectionManager: ConnectionManager,
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,
-    private val updateNotifier: UpdateNotifier
+    private val updateNotifier: UpdateNotifier,
+    private val appVersionProvider: AppVersionProvider
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
     
     init {
+        _state.update { it.copy(appVersion = "V${appVersionProvider.getVersion()}") }
         observeAppConnectionState()
         observeConnectionState()
         observeMcpServers()
-        observeSessionEvents() // NEW: Observe SSE events for real-time session status
-        observeUpdateNotifications() // NEW: Observe manual update checks from other screens
+        observeSessionEvents()
+        observeUpdateNotifications()
         loadSessions()
         checkForUpdates()
         if (initialSessionId != null) {
@@ -250,6 +253,11 @@ class MainScreenModel(
             connectionManager.status.collect { status ->
                 when (status) {
                     is ConnectionStatus.Connected -> {
+                        val config = connectionManager.activeConfig.value
+                        _state.update { it.copy(
+                            latency = "${status.latencyMs}ms",
+                            port = ":${config?.port ?: "--"}"
+                        )}
                         connectToEventStream()
                         loadSessions()
                     }
@@ -468,14 +476,19 @@ class MainScreenModel(
                             mcpStatus = "NOT_CONFIGURED",
                             isMcpOnline = false
                         )
-                        is com.mocca.app.domain.model.ConnectionStatus.Connected -> current.copy(
-                            isConnected = true,
-                            isConnecting = false,
-                            isWaitingForNetwork = false,
-                            connectionError = null,
-                            mcpStatus = "ONLINE",
-                            isMcpOnline = true
-                        )
+                        is com.mocca.app.domain.model.ConnectionStatus.Connected -> {
+                            val config = connectionManager.activeConfig.value
+                            current.copy(
+                                isConnected = true,
+                                isConnecting = false,
+                                isWaitingForNetwork = false,
+                                connectionError = null,
+                                mcpStatus = "ONLINE",
+                                isMcpOnline = true,
+                                latency = "${status.latencyMs}ms",
+                                port = ":${config?.port ?: "--"}"
+                            )
+                        }
                         is com.mocca.app.domain.model.ConnectionStatus.Connecting -> current.copy(
                             isConnected = false,
                             isConnecting = true,

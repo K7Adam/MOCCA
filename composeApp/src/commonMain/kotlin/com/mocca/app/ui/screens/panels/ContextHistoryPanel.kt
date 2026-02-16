@@ -40,8 +40,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Session
@@ -77,6 +78,8 @@ fun ContextHistoryPanel(
     port: String,
     usedTokens: Int,
     maxTokens: Int,
+    agentName: String = "--",
+    appVersion: String = "",
     modifier: Modifier = Modifier,
     isCreatingSession: Boolean = false,
     loadingSessionId: String? = null,
@@ -96,7 +99,7 @@ fun ContextHistoryPanel(
             .padding(AppSpacing.lg)
     ) {
         // Agent header
-        AgentHeader()
+        AgentHeader(agentName = agentName, appVersion = appVersion)
         
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         
@@ -136,7 +139,10 @@ fun ContextHistoryPanel(
  * Agent header with icon and version.
  */
 @Composable
-private fun AgentHeader() {
+private fun AgentHeader(
+    agentName: String = "--",
+    appVersion: String = ""
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
@@ -160,13 +166,13 @@ private fun AgentHeader() {
         
         Column {
             Text(
-                text = "AGENT_01",
+                text = agentName.uppercase(),
                 color = AppColors.white,
                 style = AppTypography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "v2.4.0-STABLE",
+                text = appVersion.ifEmpty { "--" },
                 color = AppColors.textTertiary,
                 style = AppTypography.bodySmall
             )
@@ -223,24 +229,19 @@ private fun ConversationHistorySection(
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        // New session button with loading state
-        NewSessionButton(
-            onClick = onNewSessionClick,
-            isLoading = isCreatingSession
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.md))
-        
-        // Session list with pull-to-refresh
-        PullToRefreshBox(
-            isRefreshing = isRefreshing,
-            onRefresh = onRefresh,
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
+        // Session list with NEW SESSION button overlaid at top
+        Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            // Session list with pull-to-refresh
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = onRefresh,
+                modifier = Modifier.fillMaxSize()
+            ) {
             if (useGroupedView) {
                 // Grouped session view
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(top = 56.dp),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(
@@ -264,6 +265,7 @@ private fun ConversationHistorySection(
                 // Flat session view (fallback)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(top = 56.dp),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     items(
@@ -349,6 +351,31 @@ private fun ConversationHistorySection(
                         }
                     }
                 }
+            }
+            }
+            
+            // Floating NEW SESSION button with gradient fade at top
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.background,
+                                AppColors.background,
+                                Color.Transparent
+                            ),
+                            startY = 0f,
+                            endY = 160f
+                        )
+                    )
+                    .padding(bottom = AppSpacing.sm)
+            ) {
+                NewSessionButton(
+                    onClick = onNewSessionClick,
+                    isLoading = isCreatingSession
+                )
             }
         }
     }

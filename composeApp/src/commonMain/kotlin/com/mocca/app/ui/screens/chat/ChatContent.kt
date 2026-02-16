@@ -7,18 +7,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.RadioButtonChecked
-import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Rocket
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -39,9 +34,7 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
-import com.mocca.app.ui.components.GodButton
 import com.mocca.app.ui.components.GodHeader
-import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
@@ -54,7 +47,6 @@ import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +62,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
     
     val commands = state.commands
     var showShareDialog by remember { mutableStateOf(false) }
-    var showInitDialog by remember { mutableStateOf(false) }
     
     val filePickerLauncher = rememberFilePickerLauncher(
         type = FilePickerHelper.createFileType(),
@@ -219,6 +210,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
             isVisible = state.showTodoPanel
         )
 
+        // Main content area: messages + input as overlay
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -251,9 +243,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     screenModel.retry()
                 }
             } else if (state.messages.isEmpty()) {
-                EmptySessionState(
-                    onInit = { showInitDialog = true }
-                )
+                EmptySessionState()
             } else {
                 LazyColumn(
                     state = listState,
@@ -263,7 +253,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                     contentPadding = PaddingValues(
                         top = AppSpacing.lg,
-                        bottom = AppSpacing.lg
+                        bottom = 140.dp // Space for input overlay
                     ),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
@@ -301,17 +291,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 }
             }
             
-            if (showInitDialog && state.providerInfo != null) {
-                InitSessionDialog(
-                    providerInfo = state.providerInfo!!,
-                    onInit = { providerId, modelId -> 
-                        screenModel.initSession(providerId, modelId)
-                        showInitDialog = false
-                    },
-                    onDismiss = { showInitDialog = false }
-                )
-            }
-            
             state.pendingPermission?.let { permission ->
                 PermissionRequestDialog(
                     permission = permission,
@@ -327,39 +306,37 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     onReject = { screenModel.rejectQuestion() }
                 )
             }
-        }
-        
-        // Input area with padding
-        Box(
-            modifier = Modifier.padding(
-                start = AppSpacing.screenPaddingHorizontal,
-                end = AppSpacing.screenPaddingHorizontal,
-                bottom = AppSpacing.screenPaddingBottom,
-                top = AppSpacing.md
-            )
-        ) {
-            RichChatInput(
-                value = inputText,
-                onValueChange = { screenModel.updateInputText(it) },
-                onSendClick = { screenModel.sendMessage() },
-                enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
-                modelName = state.modelName,
-                agentName = state.agentName,
-                providerResponse = state.providerInfo,
-                selectedProviderId = state.selectedProviderId,
-                selectedModelId = state.selectedModelId,
-                onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
-                recentModels = state.recentModels,
-                modes = state.modes,
-                selectedModeId = state.selectedModeId,
-                onModeSelected = { screenModel.selectMode(it) },
-                attachedFiles = state.attachedFiles,
-                onRemoveAttachment = { screenModel.removeAttachment(it) },
-                onAttachClick = { filePickerLauncher.launch() },
-                commands = commands,
-                onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
-                onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
-            )
+            
+            // Chat input pinned to bottom, overlaying messages
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(bottom = AppSpacing.screenPaddingBottom)
+            ) {
+                RichChatInput(
+                    value = inputText,
+                    onValueChange = { screenModel.updateInputText(it) },
+                    onSendClick = { screenModel.sendMessage() },
+                    enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
+                    modelName = state.modelName,
+                    agentName = state.agentName,
+                    providerResponse = state.providerInfo,
+                    selectedProviderId = state.selectedProviderId,
+                    selectedModelId = state.selectedModelId,
+                    onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
+                    recentModels = state.recentModels,
+                    modes = state.modes,
+                    selectedModeId = state.selectedModeId,
+                    onModeSelected = { screenModel.selectMode(it) },
+                    attachedFiles = state.attachedFiles,
+                    onRemoveAttachment = { screenModel.removeAttachment(it) },
+                    onAttachClick = { filePickerLauncher.launch() },
+                    commands = commands,
+                    onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
+                    onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
+                )
+            }
         }
     }
 }
@@ -539,7 +516,7 @@ fun MarkdownText(
 }
 
 @Composable
-private fun EmptySessionState(onInit: () -> Unit) {
+private fun EmptySessionState() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -547,11 +524,11 @@ private fun EmptySessionState(onInit: () -> Unit) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 40.dp)
+            modifier = Modifier.padding(horizontal = 48.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(64.dp)
                     .background(AppColors.surfaceElevated, AppShapes.circle)
                     .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.circle),
                 contentAlignment = Alignment.Center
@@ -559,130 +536,26 @@ private fun EmptySessionState(onInit: () -> Unit) {
                 Icon(
                     imageVector = Icons.Filled.Rocket,
                     contentDescription = null,
-                    tint = AppColors.accentGreen,
-                    modifier = Modifier.size(32.dp)
+                    tint = AppColors.accentGreen.copy(alpha = 0.6f),
+                    modifier = Modifier.size(28.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Text(
-                text = "READY TO INITIALIZE",
-                style = AppTypography.headlineSmall,
-                color = AppColors.white,
-                fontWeight = FontWeight.Bold,
+                text = "START A CONVERSATION",
+                style = AppTypography.labelMedium,
+                color = AppColors.white.copy(alpha = 0.6f),
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Select a model to begin the project analysis and generation session.",
-                style = AppTypography.bodyMedium,
-                color = AppColors.white.copy(alpha = 0.4f),
+                text = "Type below to begin. Use the model selector in the input bar to choose your AI provider.",
+                style = AppTypography.bodySmall,
+                color = AppColors.white.copy(alpha = 0.3f),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-            GodButton(
-                text = "INITIALIZE",
-                onClick = onInit,
-                modifier = Modifier.fillMaxWidth()
             )
         }
     }
 }
 
-@Composable
-private fun InitSessionDialog(
-    providerInfo: com.mocca.app.domain.model.ProviderResponse,
-    onInit: (String, String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val defaultProvider = providerInfo.all.firstOrNull()?.id ?: ""
-    val defaultModel = (providerInfo.all.firstOrNull()?.models as? JsonObject)?.keys?.firstOrNull() ?: ""
-    
-    var selectedProvider by remember { mutableStateOf(defaultProvider) }
-    var selectedModel by remember { mutableStateOf(defaultModel) }
-    
-    val provider = providerInfo.all.find { it.id == selectedProvider }
-    val currentModelIds = (provider?.models as? JsonObject)?.keys?.toList() ?: emptyList()
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = Color(0xFF111111),
-        shape = RoundedCornerShape(32.dp),
-        title = { 
-            Text(
-                text = "INITIALIZE", 
-                style = AppTypography.titleLarge, 
-                color = AppColors.white,
-                fontWeight = FontWeight.Bold
-            ) 
-        },
-        text = {
-            Column {
-                Text(
-                    text = "PROVIDER",
-                    style = AppTypography.labelSmall,
-                    color = AppColors.white.copy(alpha = 0.4f),
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                providerInfo.all.forEach { providerItem ->
-                    GodListItem(
-                        title = providerItem.name,
-                        subtitle = providerItem.id,
-                        icon = {
-                            Icon(
-                                imageVector = if (selectedProvider == providerItem.id) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked,
-                                contentDescription = null,
-                                tint = if (selectedProvider == providerItem.id) AppColors.accentGreen else AppColors.white.copy(alpha = 0.2f)
-                            )
-                        },
-                        onClick = { 
-                            selectedProvider = providerItem.id 
-                            selectedModel = (providerItem.models as? JsonObject)?.keys?.firstOrNull() ?: ""
-                        }
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text(
-                    text = "MODEL",
-                    style = AppTypography.labelSmall,
-                    color = AppColors.white.copy(alpha = 0.4f),
-                    letterSpacing = 1.sp
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                Box(modifier = Modifier.height(200.dp)) {
-                    LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        items(currentModelIds) { modelId ->
-                            GodListItem(
-                                title = modelId,
-                                subtitle = "AI Model",
-                                icon = {
-                                    Icon(
-                                        imageVector = if (selectedModel == modelId) Icons.Filled.CheckCircle else Icons.Filled.Circle,
-                                        contentDescription = null,
-                                        tint = if (selectedModel == modelId) AppColors.accentGreen else AppColors.white.copy(alpha = 0.1f),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                },
-                                onClick = { selectedModel = modelId }
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            GodButton(
-                text = "START SESSION",
-                onClick = { onInit(selectedProvider, selectedModel) },
-                enabled = selectedProvider.isNotEmpty() && selectedModel.isNotEmpty()
-            )
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("CANCEL", color = AppColors.white.copy(alpha = 0.4f), style = AppTypography.labelMedium)
-            }
-        }
-    )
-}

@@ -165,7 +165,7 @@ class ServerConfigRepository(
         try {
             localCache.deleteServerConfig(serverId)
             if (_activeServer.value?.id == serverId) {
-                _activeServer.value = localCache.getActiveServerConfig()
+                _activeServer.value = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
             }
         } catch (e: Exception) {
             Napier.e("Failed to delete server", e)
@@ -178,7 +178,7 @@ class ServerConfigRepository(
     suspend fun setActiveServer(serverId: String) {
         try {
             localCache.setActiveServerConfig(serverId)
-            _activeServer.value = localCache.getServerConfig(serverId)
+            _activeServer.value = localCache.getServerConfig(serverId)?.let { decryptConfigIfNeeded(it) }
         } catch (e: Exception) {
             Napier.e("Failed to set active server", e)
         }

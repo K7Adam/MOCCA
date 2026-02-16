@@ -17,7 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -68,8 +68,8 @@ fun SuggestionPopup(
             modifier = Modifier
                 .width(300.dp) // Fixed width for suggestions
                 .heightIn(max = 200.dp)
-                .background(AppColors.background, RectangleShape)
-                .border(AppSpacing.borderStandard, AppColors.border, RectangleShape)
+                .background(AppColors.background, AppShapes.medium)
+                .border(AppSpacing.borderStandard, AppColors.border, AppShapes.medium)
         ) {
             LazyColumn {
                 items(suggestions) { item ->

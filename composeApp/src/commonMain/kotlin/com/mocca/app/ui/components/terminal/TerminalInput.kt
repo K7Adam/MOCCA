@@ -28,6 +28,8 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.HorizontalDivider
@@ -175,8 +177,8 @@ fun RichChatInput(
     onValueChange: (String) -> Unit,
     onSendClick: () -> Unit,
     modifier: Modifier = Modifier,
-    modelName: String = "CLAUDE",
-    agentName: String = "BUILD",
+    modelName: String = "--",
+    agentName: String = "--",
     placeholder: String = "Type a message...",
     enabled: Boolean = true,
     // Model selection
@@ -450,16 +452,22 @@ fun RichChatInput(
             )
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             
-            // Mode selector buttons (as pills)
+            // Mode selector buttons (scrollable to prevent overflow)
             if (modes.isNotEmpty()) {
-                modes.take(3).forEach { mode ->
-                    val isSelected = mode.id == selectedModeId
-                    TabPillButton(
-                        text = mode.name.uppercase(),
-                        isSelected = isSelected,
-                        onClick = { onModeSelected(if (isSelected) null else mode.id) }
-                    )
-                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                Row(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                ) {
+                    modes.forEach { mode ->
+                        val isSelected = mode.id == selectedModeId
+                        TabPillButton(
+                            text = mode.name.uppercase(),
+                            isSelected = isSelected,
+                            onClick = { onModeSelected(if (isSelected) null else mode.id) }
+                        )
+                    }
                 }
             } else {
                 // Fallback static mode button

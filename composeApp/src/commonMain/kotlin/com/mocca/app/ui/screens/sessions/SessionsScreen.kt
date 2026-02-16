@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -421,8 +421,8 @@ private fun TerminalSessionCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(bgColor, RectangleShape)
-            .border(AppSpacing.borderThin, borderColor, RectangleShape)
+            .background(bgColor, AppShapes.medium)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
             .clickable(onClick = onClick)
     ) {
         Row(
@@ -437,7 +437,7 @@ private fun TerminalSessionCard(
                     modifier = Modifier
                         .width(AppSpacing.activeIndicatorWidth)
                         .height(48.dp)
-                        .background(AppColors.statusOnline, RectangleShape)
+                        .background(AppColors.statusOnline, AppShapes.small)
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
             }
@@ -476,7 +476,7 @@ private fun TerminalSessionCard(
                     if (childSessions.isNotEmpty()) {
                         Box(
                             modifier = Modifier
-                                .border(AppSpacing.borderThin, AppColors.greyLight, RectangleShape)
+                                .border(AppSpacing.borderThin, AppColors.greyLight, AppShapes.small)
                                 .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xxs)
                         ) {
                             Text(
@@ -510,8 +510,8 @@ private fun TerminalStatusChip(status: SessionStatus) {
     
     Box(
         modifier = Modifier
-            .background(color.copy(alpha = 0.1f), RectangleShape)
-            .border(AppSpacing.borderThin, color, RectangleShape)
+            .background(color.copy(alpha = 0.1f), AppShapes.small)
+            .border(AppSpacing.borderThin, color, AppShapes.small)
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
     ) {
         Text(
@@ -551,8 +551,8 @@ private fun TerminalSearchBar(
     
     Box(
         modifier = modifier
-            .background(AppColors.surface, RectangleShape)
-            .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
+            .background(AppColors.surface, AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
             .padding(AppSpacing.sm)
     ) {
         Row(

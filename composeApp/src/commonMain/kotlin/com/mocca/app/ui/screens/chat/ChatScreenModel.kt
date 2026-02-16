@@ -18,6 +18,10 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 
 @Immutable
 data class ChatState(
@@ -35,8 +39,8 @@ data class ChatState(
     val pendingQuestion: QuestionRequest? = null,
     val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected(),
     val isSessionIdle: Boolean = true,
-    val modelName: String = "CLAUDE",
-    val agentName: String = "SISYPHUS",
+    val modelName: String = "--",
+    val agentName: String = "--",
     val isThinking: Boolean = false,
     val thinkingContent: String = "",
     val thinkingElapsedMs: Long = 0,
@@ -49,8 +53,24 @@ data class ChatState(
     val commands: List<TerminalCommand> = emptyList(),
     val recentModels: List<RecentModel> = emptyList(),
     val todos: List<Todo> = emptyList(),
-    val showTodoPanel: Boolean = false
-)
+    val showTodoPanel: Boolean = false,
+    val maxTokens: Int = 0
+) {
+    /** Total input tokens consumed across all assistant messages in this session. */
+    val totalInputTokens: Int get() = messages
+        .filter { it.role == MessageRole.ASSISTANT }
+        .sumOf { it.tokens?.input ?: 0 }
+    
+    /** Total output tokens produced across all assistant messages in this session. */
+    val totalOutputTokens: Int get() = messages
+        .filter { it.role == MessageRole.ASSISTANT }
+        .sumOf { it.tokens?.output ?: 0 }
+    
+    /** Last assistant message's input tokens — represents context window usage for the most recent turn. */
+    val lastTurnInputTokens: Int get() = messages
+        .lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }
+        ?.tokens?.input ?: 0
+}
 
 class ChatScreenModel(
     initialSessionId: String?,
@@ -457,7 +477,14 @@ class ChatScreenModel(
                 
                  if (finalModelId.isNotEmpty()) {
                     val modelName = finalModelId.uppercase().replace("-", " ").take(30)
-                    _state.value = _state.value.copy(modelName = modelName)
+                    
+                    // Parse maxTokens from ProviderModel.limit
+                    val contextTokens = parseContextLimit(providerResponse, finalProviderId, finalModelId)
+                    
+                    _state.value = _state.value.copy(
+                        modelName = modelName,
+                        maxTokens = contextTokens
+                    )
                 }
             }
             sessionRepository.getModes().onSuccess { modes ->
@@ -548,10 +575,12 @@ class ChatScreenModel(
 
                             if (provider != null) {
                                 val modelName = lastModelId.uppercase().replace("-", " ").take(30)
+                                val contextTokens = parseContextLimit(resource.data.let { _state.value.providerInfo!! }, provider.id, lastModelId)
                                 updatedState = updatedState.copy(
                                     selectedModelId = lastModelId,
                                     selectedProviderId = provider.id,
-                                    modelName = modelName
+                                    modelName = modelName,
+                                    maxTokens = contextTokens
                                 )
                                 Napier.i("Restored session model: ${provider.id} / $lastModelId")
                             }
@@ -584,7 +613,18 @@ class ChatScreenModel(
     fun selectModel(providerId: String, modelId: String) {
         sessionRepository.setDefaultModel(modelId, providerId)
         val modelName = modelId.uppercase().replace("-", " ").take(30)
-        _state.value = _state.value.copy(selectedProviderId = providerId, selectedModelId = modelId, modelName = modelName)
+        
+        // Parse maxTokens from ProviderModel.limit
+        val contextTokens = _state.value.providerInfo?.let { 
+            parseContextLimit(it, providerId, modelId) 
+        } ?: 0
+        
+        _state.value = _state.value.copy(
+            selectedProviderId = providerId, 
+            selectedModelId = modelId, 
+            modelName = modelName,
+            maxTokens = contextTokens
+        )
         screenModelScope.launch {
             sessionRepository.addRecentModel(providerId, modelId)
             loadRecentModels()
@@ -876,6 +916,20 @@ class ChatScreenModel(
         }
     }
     
+    private fun parseContextLimit(providerResponse: ProviderResponse, providerId: String, modelId: String): Int {
+        val provider = providerResponse.all.find { it.id == providerId } ?: return 0
+        val modelsObj = provider.models as? JsonObject ?: return 0
+        val modelObj = modelsObj[modelId] as? JsonObject ?: return 0
+        
+        // OpenCode ProviderModel has a 'limit' field which is a JsonObject
+        val limit = modelObj["limit"] as? JsonObject ?: return 0
+        
+        return limit["context"]?.let { (it as? JsonPrimitive)?.intOrNull }
+            ?: limit["max_tokens"]?.let { (it as? JsonPrimitive)?.intOrNull }
+            ?: limit["context_length"]?.let { (it as? JsonPrimitive)?.intOrNull }
+            ?: 0
+    }
+
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }

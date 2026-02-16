@@ -3,6 +3,7 @@ package com.mocca.app.ui.screens.panels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,15 +19,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.terminal.GitStatusModule
 import com.mocca.app.ui.components.terminal.McpConfigModule
 import com.mocca.app.ui.components.terminal.McpServerItem
 import com.mocca.app.ui.components.terminal.ModuleCard
 import com.mocca.app.ui.components.terminal.ModuleRowItem
-import com.mocca.app.ui.components.terminal.SkillItem
-import com.mocca.app.ui.components.terminal.SkillsEngineModule
 import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
 import com.mocca.app.ui.components.terminal.TerminalButton
 import com.mocca.app.ui.theme.AppColors
@@ -34,8 +32,7 @@ import com.mocca.app.ui.theme.AppSpacing
 
 /**
  * Right swipe panel: Modular tools dashboard.
- * Matches mockup: mockups_screens/modular_tools_dashboard/screen.png
- * Refactored for modern UI/UX.
+ * Compact design: merged modules to reduce vertical space.
  */
 @Composable
 fun DashboardPanel(
@@ -60,16 +57,28 @@ fun DashboardPanel(
             .background(AppColors.background)
             .padding(AppSpacing.lg)
             .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-        // Project Module
-        ProjectModule(
-            currentProject = state.currentProject,
-            projects = state.projects,
-            onProjectClick = { /* Read only for now */ }
-        )
-
-        // MCP Config Module
+        // ─── Quick Actions (top) ─────────────────────────────────────────
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+        ) {
+            TerminalOutlinedButton(
+                text = "SETTINGS",
+                onClick = onSettingsClick,
+                icon = Icons.Default.Settings,
+                modifier = Modifier.weight(1f)
+            )
+            TerminalButton(
+                text = ">_ TERMINAL",
+                onClick = onTerminalClick,
+                icon = Icons.Default.Terminal,
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        // ─── MCP Servers ─────────────────────────────────────────────────
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),
             onConfigClick = onMcpConfigClick,
@@ -82,68 +91,33 @@ fun DashboardPanel(
             }
         )
         
-        // Git Status Module
+        // ─── Git Status ──────────────────────────────────────────────────
         GitStatusModule(
             branchName = state.gitBranch,
             changedFiles = state.gitChangeCount,
             onExpandClick = onGitClick
         )
         
-        // Agents Module
-        AgentsModule(
-            agents = state.agents,
-            onAgentClick = { /* Could navigate to agent detail */ }
+        // ─── WORKSPACE (Projects + Agents merged) ────────────────────────
+        WorkspaceModule(
+            currentProject = state.currentProject,
+            projects = state.projects,
+            agents = state.agents
         )
         
-        // Tools Module
-        ToolsModule(
-            tools = state.tools
+        // ─── CAPABILITIES (Tools + Commands merged) ──────────────────────
+        CapabilitiesModule(
+            tools = state.tools,
+            commands = state.commands
         )
-        
-        // Commands Module
-        CommandsModule(
-            commands = state.commands,
-            onCommandClick = { /* Could insert command into chat */ }
-        )
-        
-        // Skills Engine Module
-        val skills = state.commands.toSkillItems()
-        if (skills.isNotEmpty()) {
-            SkillsEngineModule(
-                skills = skills,
-                onFilterClick = onSkillsClick,
-                onSkillClick = onSkillClick
-            )
-        }
         
         Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
         
-        // Refresh All Button (Modern rounded button)
+        // ─── Refresh All ─────────────────────────────────────────────────
         TerminalOutlinedButton(
             text = "REFRESH ALL",
             onClick = onRefreshAll,
             icon = Icons.Default.Refresh,
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        // Settings Button
-        TerminalOutlinedButton(
-            text = "SETTINGS",
-            onClick = onSettingsClick,
-            icon = Icons.Default.Settings,
-            modifier = Modifier.fillMaxWidth()
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        // Open Terminal Button
-        TerminalButton(
-            text = ">_ OPEN TERMINAL",
-            onClick = onTerminalClick,
-            icon = Icons.Default.Terminal,
             modifier = Modifier.fillMaxWidth()
         )
         
@@ -152,44 +126,46 @@ fun DashboardPanel(
     }
 }
 
+/**
+ * WORKSPACE module — merged Projects + Agents into a single card.
+ */
 @Composable
-private fun ProjectModule(
+private fun WorkspaceModule(
     currentProject: Resource<com.mocca.app.domain.model.Project>,
     projects: Resource<List<com.mocca.app.domain.model.Project>>,
-    onProjectClick: (String) -> Unit
+    agents: Resource<List<com.mocca.app.domain.model.Agent>>
 ) {
-    ModuleCard(title = "PROJECTS") {
-        val currentId = (currentProject as? Resource.Success)?.data?.id
-        
+    val currentId = (currentProject as? Resource.Success)?.data?.id
+    
+    ModuleCard(title = "WORKSPACE") {
+        // Current project (compact: just the active one)
         when (projects) {
             is Resource.Loading -> {
                 ModuleRowItem(
-                    title = "Loading...",
-                    subtitle = "Fetching projects",
+                    title = "Loading projects...",
+                    subtitle = "",
                     isEnabled = false,
                     showToggle = false
                 )
             }
             is Resource.Success -> {
-                if (projects.data.isEmpty()) {
+                val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
+                if (active != null) {
                     ModuleRowItem(
-                        title = "No projects found",
-                        subtitle = "Server returned empty list",
-                        isEnabled = false,
+                        title = active.displayName,
+                        subtitle = active.path ?: active.directory ?: "Active project",
+                        isEnabled = true,
+                        isConnected = true,
                         showToggle = false
                     )
-                } else {
-                    projects.data.forEach { project ->
-                        val isCurrent = project.id == currentId
-                        ModuleRowItem(
-                            title = project.displayName,
-                            subtitle = project.path ?: project.directory ?: "",
-                            isEnabled = true,
-                            isConnected = isCurrent,
-                            showToggle = false,
-                            onClick = { project.id?.let { onProjectClick(it) } }
-                        )
-                    }
+                }
+                if (projects.data.size > 1) {
+                    ModuleRowItem(
+                        title = "+${projects.data.size - 1} more projects",
+                        subtitle = "",
+                        isEnabled = true,
+                        showToggle = false
+                    )
                 }
             }
             is Resource.Error -> {
@@ -202,54 +178,35 @@ private fun ProjectModule(
                 )
             }
         }
-    }
-}
-
-/**
- * Agents Module - displays available AI agents
- */
-@Composable
-private fun AgentsModule(
-    agents: Resource<List<com.mocca.app.domain.model.Agent>>,
-    onAgentClick: (String) -> Unit = {}
-) {
-    ModuleCard(title = "AGENTS") {
+        
+        // Agents (compact: count + top names)
         when (agents) {
             is Resource.Loading -> {
                 ModuleRowItem(
-                    title = "Loading...",
-                    subtitle = "Fetching agents",
+                    title = "Loading agents...",
+                    subtitle = "",
                     isEnabled = false,
                     showToggle = false
                 )
             }
             is Resource.Success -> {
-                if (agents.data.isEmpty()) {
+                if (agents.data.isNotEmpty()) {
+                    val agentNames = agents.data.take(4).joinToString(", ") { it.name }
+                    val suffix = if (agents.data.size > 4) " +${agents.data.size - 4}" else ""
                     ModuleRowItem(
-                        title = "No agents configured",
-                        subtitle = "Add agents in opencode config",
-                        isEnabled = false,
+                        title = "${agents.data.size} AGENTS",
+                        subtitle = "$agentNames$suffix",
+                        isEnabled = true,
+                        isConnected = true,
                         showToggle = false
                     )
                 } else {
-                    agents.data.take(5).forEach { agent ->
-                        ModuleRowItem(
-                            title = agent.name,
-                            subtitle = agent.description ?: "Agent",
-                            isEnabled = true,
-                            isConnected = true,
-                            showToggle = false,
-                            onClick = { onAgentClick(agent.id) }
-                        )
-                    }
-                    if (agents.data.size > 5) {
-                        ModuleRowItem(
-                            title = "+${agents.data.size - 5} more",
-                            subtitle = "agents available",
-                            isEnabled = true,
-                            showToggle = false
-                        )
-                    }
+                    ModuleRowItem(
+                        title = "No agents",
+                        subtitle = "Configure in opencode",
+                        isEnabled = false,
+                        showToggle = false
+                    )
                 }
             }
             is Resource.Error -> {
@@ -266,26 +223,29 @@ private fun AgentsModule(
 }
 
 /**
- * Tools Module - displays available tools count
+ * CAPABILITIES module — merged Tools + Commands into a single card.
  */
 @Composable
-private fun ToolsModule(
-    tools: Resource<List<String>>
+private fun CapabilitiesModule(
+    tools: Resource<List<String>>,
+    commands: Resource<List<com.mocca.app.domain.model.Command>>
 ) {
-    ModuleCard(title = "TOOLS") {
+    ModuleCard(title = "CAPABILITIES") {
+        // Tools row (compact summary)
         when (tools) {
             is Resource.Loading -> {
                 ModuleRowItem(
-                    title = "Loading...",
-                    subtitle = "Fetching tools",
+                    title = "Loading tools...",
+                    subtitle = "",
                     isEnabled = false,
                     showToggle = false
                 )
             }
             is Resource.Success -> {
+                val preview = tools.data.take(3).joinToString(", ").ifEmpty { "None" }
                 ModuleRowItem(
-                    title = "${tools.data.size} tools available",
-                    subtitle = tools.data.take(3).joinToString(", ").ifEmpty { "No tools" },
+                    title = "${tools.data.size} TOOLS",
+                    subtitle = preview,
                     isEnabled = true,
                     isConnected = true,
                     showToggle = false
@@ -293,7 +253,7 @@ private fun ToolsModule(
             }
             is Resource.Error -> {
                 ModuleRowItem(
-                    title = "Error",
+                    title = "Tools error",
                     subtitle = tools.message,
                     isEnabled = false,
                     isConnected = false,
@@ -301,59 +261,40 @@ private fun ToolsModule(
                 )
             }
         }
-    }
-}
-
-/**
- * Commands Module - displays slash commands
- */
-@Composable
-private fun CommandsModule(
-    commands: Resource<List<com.mocca.app.domain.model.Command>>,
-    onCommandClick: (String) -> Unit = {}
-) {
-    ModuleCard(title = "COMMANDS") {
+        
+        // Commands row (compact summary)
         when (commands) {
             is Resource.Loading -> {
                 ModuleRowItem(
-                    title = "Loading...",
-                    subtitle = "Fetching commands",
+                    title = "Loading commands...",
+                    subtitle = "",
                     isEnabled = false,
                     showToggle = false
                 )
             }
             is Resource.Success -> {
-                if (commands.data.isEmpty()) {
+                if (commands.data.isNotEmpty()) {
+                    val preview = commands.data.take(3).joinToString(", ") { "/${it.name}" }
+                    val suffix = if (commands.data.size > 3) " +${commands.data.size - 3}" else ""
+                    ModuleRowItem(
+                        title = "${commands.data.size} COMMANDS",
+                        subtitle = "$preview$suffix",
+                        isEnabled = true,
+                        isConnected = true,
+                        showToggle = false
+                    )
+                } else {
                     ModuleRowItem(
                         title = "No commands",
                         subtitle = "No slash commands available",
                         isEnabled = false,
                         showToggle = false
                     )
-                } else {
-                    commands.data.take(5).forEach { cmd ->
-                        ModuleRowItem(
-                            title = "/${cmd.name}",
-                            subtitle = cmd.description ?: "",
-                            isEnabled = true,
-                            isConnected = true,
-                            showToggle = false,
-                            onClick = { onCommandClick(cmd.name) }
-                        )
-                    }
-                    if (commands.data.size > 5) {
-                        ModuleRowItem(
-                            title = "+${commands.data.size - 5} more",
-                            subtitle = "commands available",
-                            isEnabled = true,
-                            showToggle = false
-                        )
-                    }
                 }
             }
             is Resource.Error -> {
                 ModuleRowItem(
-                    title = "Error",
+                    title = "Commands error",
                     subtitle = commands.message,
                     isEnabled = false,
                     isConnected = false,
@@ -393,23 +334,6 @@ private fun Resource<Map<String, com.mocca.app.domain.model.McpServerStatus>>.to
                 isTransitioning = status.isTransitioning
             )
         } ?: emptyList()
-        is Resource.Error -> emptyList()
-    }
-}
-
-/**
- * Convert commands to skill items for SkillsEngineModule
- */
-private fun Resource<List<com.mocca.app.domain.model.Command>>.toSkillItems(): List<SkillItem> {
-    return when (this) {
-        is Resource.Success -> data.take(8).map { cmd ->
-            SkillItem(
-                id = cmd.name,
-                name = cmd.name,
-                isActive = true
-            )
-        }
-        is Resource.Loading -> emptyList()
         is Resource.Error -> emptyList()
     }
 }

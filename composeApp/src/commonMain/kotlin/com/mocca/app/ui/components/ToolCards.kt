@@ -18,7 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -94,11 +94,11 @@ private fun BaseToolCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = AppSpacing.xs)
-            .border(AppSpacing.borderThin, borderColor, RectangleShape)
-            .clip(RectangleShape)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
+            .clip(AppShapes.medium)
             .clickable { expanded = !expanded }
             .animateContentSize(),
-        shape = RectangleShape,
+        shape = AppShapes.medium,
         color = backgroundColor
     ) {
         Column(modifier = Modifier.padding(AppSpacing.md)) {
@@ -132,7 +132,7 @@ private fun BaseToolCard(
                                 .offset(x = 2.dp, y = (-2).dp)
                                 .background(
                                     AppColors.statusWaiting.copy(alpha = alpha),
-                                    RectangleShape
+                                    AppShapes.circle
                                 )
                         )
                     }
@@ -408,7 +408,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
             // Show line range if specified
             if (limit != null || offset != null) {
                 Surface(
-                    shape = RectangleShape,
+                    shape = AppShapes.medium,
                     color = AppColors.surfaceVariant
                 ) {
                     Text(
@@ -782,7 +782,7 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
                 Surface(
-                    shape = RectangleShape,
+                    shape = AppShapes.medium,
                     color = AppColors.surfaceVariant
                 ) {
                     Text(
@@ -879,7 +879,7 @@ private fun CodeBlock(
         }
         
         Surface(
-            shape = RectangleShape,
+            shape = AppShapes.medium,
             color = AppColors.surfaceVariant.copy(alpha = 0.5f),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -899,7 +899,7 @@ private fun CodeBlock(
 @Composable
 private fun ErrorBlock(error: String) {
     Surface(
-        shape = RectangleShape,
+        shape = AppShapes.medium,
         color = AppColors.error.copy(alpha = 0.2f),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -949,7 +949,7 @@ private fun DiffView(oldText: String, newText: String) {
         // Removed lines
         if (oldText.isNotBlank()) {
             Surface(
-                shape = RectangleShape,
+                shape = AppShapes.medium,
                 color = AppColors.diffDeletion,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -975,7 +975,7 @@ private fun DiffView(oldText: String, newText: String) {
         // Added lines
         if (newText.isNotBlank()) {
             Surface(
-                shape = RectangleShape,
+                shape = AppShapes.medium,
                 color = AppColors.diffAddition,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -1011,7 +1011,7 @@ private fun FileListView(output: String) {
         )
         
         Surface(
-            shape = RectangleShape,
+            shape = AppShapes.medium,
             color = AppColors.surfaceVariant.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -1032,7 +1032,7 @@ private fun FileListView(output: String) {
                                 .size(4.dp)
                                 .background(
                                     AppColors.white.copy(alpha = 0.6f),
-                                    RectangleShape
+                                    AppShapes.medium
                                 )
                         )
                         Text(
@@ -1069,7 +1069,7 @@ private fun GrepResultsView(output: String) {
         )
         
         Surface(
-            shape = RectangleShape,
+            shape = AppShapes.medium,
             color = AppColors.surfaceVariant.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -1230,7 +1230,7 @@ private fun TodoItemRow(
                         .offset(y = 4.dp)
                         .background(
                             AppColors.statusWaiting.copy(alpha = alpha),
-                            RectangleShape
+                            AppShapes.medium
                         )
                 )
             }
@@ -1247,7 +1247,7 @@ private fun TodoItemRow(
                     modifier = Modifier
                         .size(8.dp)
                         .offset(y = 4.dp)
-                        .border(AppSpacing.borderThin, AppColors.border, RectangleShape)
+                        .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
                 )
             }
         }
@@ -1264,7 +1264,7 @@ private fun TodoItemRow(
         // Priority badge
         if (todo.priority == "high") {
             Surface(
-                shape = RectangleShape,
+                shape = AppShapes.medium,
                 color = AppColors.error.copy(alpha = 0.3f)
             ) {
                 Text(

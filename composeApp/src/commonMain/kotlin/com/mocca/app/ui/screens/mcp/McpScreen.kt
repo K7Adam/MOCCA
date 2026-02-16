@@ -16,7 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -124,7 +124,7 @@ class McpScreen : Screen {
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .border(AppSpacing.borderThin, AppColors.greyDark, RectangleShape),
+                            .border(AppSpacing.borderThin, AppColors.greyDark, AppShapes.medium),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -219,7 +219,7 @@ private fun McpServerCard(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppColors.surfaceVariant.copy(alpha = 0.5f))
-            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), RectangleShape)
+            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), AppShapes.medium)
             .clickable(onClick = onClick)
             .padding(AppSpacing.md)
     ) {
@@ -333,7 +333,7 @@ private fun McpErrorBanner(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppColors.error.copy(alpha = 0.1f))
-            .border(AppSpacing.borderThin, AppColors.error, RectangleShape)
+            .border(AppSpacing.borderThin, AppColors.error, AppShapes.medium)
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -380,7 +380,7 @@ private fun McpServerDetailsDialog(
                 .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.8f)
                 .background(AppColors.background)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
         ) {
             // Header
             Row(
@@ -626,8 +626,8 @@ private fun AddMcpServerDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
-                .background(AppColors.background, RectangleShape)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
+                .background(AppColors.background, AppShapes.medium)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
                 .padding(AppSpacing.lg)
         ) {
             TerminalHeader(text = "ADD_MCP_SERVER", showBrackets = true)

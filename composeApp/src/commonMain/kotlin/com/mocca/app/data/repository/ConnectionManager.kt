@@ -13,9 +13,8 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.BasicAuthCredentials
-import io.ktor.client.plugins.auth.providers.basic
+import io.ktor.client.request.header
+import io.ktor.http.HttpHeaders
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.get
@@ -109,13 +108,33 @@ class ConnectionManager(
     // Connection Lifecycle
     // ═══════════════════════════════════════════════════════════════════════════════
 
+    @Volatile
+    private var isConnecting = false
+
     /**
      * Connect to a server with the given config.
      * Closes any existing connection first.
+     * Guards against duplicate/reentrant calls for the same config.
      */
     fun connect(config: ServerConfig) {
+        // Guard against redundant connection attempts to the same server
+        val current = _activeConfig.value
+        if (isConnecting && current?.id == config.id &&
+            current.host == config.host && current.port == config.port &&
+            current.username == config.username && current.password == config.password
+        ) {
+            Napier.d("[ConnectionManager] Already connecting to ${config.baseUrl}, skipping duplicate connect()")
+            return
+        }
+        isConnecting = true
         scope.launch {
-            disconnect()
+            // Synchronously clean up previous connection
+            cancelAllJobs()
+            clientMutex.withLock {
+                currentClient?.close()
+                currentClient = null
+            }
+            // Set up new connection
             clientMutex.withLock {
                 _activeConfig.value = config
                 _status.value = ConnectionStatus.Connecting
@@ -123,10 +142,23 @@ class ConnectionManager(
             }
             // Persist as active
             serverConfigRepository.setActiveServer(config.id)
-            // Run initial health check
+            // Run initial health check directly (NOT via checkConnection() which guards against Connecting)
             consecutiveFailures = 0
             hasEverConnected = false
-            checkConnection()
+            reconnectJob?.cancel()
+            reconnectJob = scope.launch {
+                try {
+                    val (result, latencyMs) = withContext(Dispatchers.IO) {
+                        val start = Clock.System.now().toEpochMilliseconds()
+                        val r = performHealthCheck()
+                        val elapsed = Clock.System.now().toEpochMilliseconds() - start
+                        Pair(r, elapsed)
+                    }
+                    handleHealthResult(result, latencyMs)
+                } finally {
+                    isConnecting = false
+                }
+            }
         }
     }
 
@@ -135,6 +167,7 @@ class ConnectionManager(
      */
     fun disconnect() {
         cancelAllJobs()
+        isConnecting = false
         scope.launch {
             clientMutex.withLock {
                 currentClient?.close()
@@ -268,8 +301,17 @@ class ConnectionManager(
             Napier.e("[ConnectionManager] Health check CONNECTION ERROR: ${e.message}", e)
             Result.failure(Exception("Connection failed: ${e.message}"))
         } catch (e: Exception) {
-            Napier.e("[ConnectionManager] Health check UNKNOWN ERROR: ${e::class.simpleName} - ${e.message}", e)
-            Result.failure(Exception("${e::class.simpleName}: ${e.message}"))
+            val errorMsg = e.message ?: "Unknown error"
+            val errorType = e::class.simpleName
+            Napier.e("[ConnectionManager] Health check UNKNOWN ERROR: $errorType - $errorMsg", e)
+            // Log full stack trace for SSL errors
+            if (errorMsg.contains("SSL", ignoreCase = true) || 
+                errorMsg.contains("Certificate", ignoreCase = true) ||
+                errorMsg.contains("Trust", ignoreCase = true) ||
+                errorMsg.contains("Handshake", ignoreCase = true)) {
+                Napier.e("[ConnectionManager] SSL/TLS ERROR DETAILS: ${e.stackTraceToString()}")
+            }
+            Result.failure(Exception("$errorType: $errorMsg"))
         }
     }
 
@@ -293,7 +335,8 @@ class ConnectionManager(
                 startPeriodicHealthCheck()
             },
             onFailure = { error ->
-                Napier.w("[ConnectionManager] Health check failed: ${error.message}")
+                val errorMsg = error.message ?: "Unknown error"
+                Napier.e("[ConnectionManager] Health check FAILED: $errorMsg")
                 consecutiveFailures++
                 if (consecutiveFailures < MAX_RECONNECT_ATTEMPTS) {
                     scheduleReconnect()
@@ -372,9 +415,18 @@ class ConnectionManager(
         Napier.i("[ConnectionManager] Auth - Username: ${config.username}, HasPassword: ${config.password.isNotBlank()}")
         
         return HttpClient(getHttpEngine()) {
+            expectSuccess = true
             defaultRequest {
                 url(config.baseUrl + "/")
                 Napier.d("[ConnectionManager] HttpClient base URL set to: ${config.baseUrl}")
+                // Manual Basic Auth header — more reliable than Ktor Auth plugin
+                if (config.hasCredentials) {
+                    val credentials = "${config.username}:${config.password}"
+                    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+                    val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
+                    header(HttpHeaders.Authorization, "Basic $encoded")
+                    Napier.d("[ConnectionManager] Authorization header set for user: ${config.username}")
+                }
             }
             install(ContentNegotiation) {
                 json(json)
@@ -386,21 +438,6 @@ class ConnectionManager(
             }
             install(WebSockets)
             install(io.ktor.client.plugins.sse.SSE)
-
-            // Configure HTTP Basic Auth if credentials are present
-            if (config.hasCredentials) {
-                install(Auth) {
-                    basic {
-                        credentials {
-                            BasicAuthCredentials(
-                                username = config.username,
-                                password = config.password
-                            )
-                        }
-                        sendWithoutRequest { true }
-                    }
-                }
-            }
         }
     }
 

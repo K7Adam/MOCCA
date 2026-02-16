@@ -174,7 +174,7 @@ private fun GitFloatingBar(
 ) {
     Surface(
         modifier = Modifier.padding(bottom = 16.dp),
-        color = Color(0xFF1C1C1E),
+        color = AppColors.surfaceElevated,
         shape = AppShapes.pill,
         border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)),
         shadowElevation = 8.dp

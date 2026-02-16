@@ -13,7 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -43,8 +43,8 @@ fun ModelSelectorDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.8f)
-                .background(AppColors.background, RectangleShape)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, RectangleShape)
+                .background(AppColors.background, AppShapes.medium)
+                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
         ) {
             // Header
             Row(

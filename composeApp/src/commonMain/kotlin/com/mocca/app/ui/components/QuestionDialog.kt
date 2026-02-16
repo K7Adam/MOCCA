@@ -13,7 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,7 +106,7 @@ fun QuestionDialog(
                         // Options or Text Field
                         if (question.options.isNotEmpty()) {
                             Surface(
-                                shape = RectangleShape,
+        shape = AppShapes.dialog,
                                 color = AppColors.surfaceVariant.copy(alpha = 0.3f),
                                 border = BorderStroke(
                                     1.dp, 
@@ -181,7 +181,7 @@ fun QuestionDialog(
                                         style = AppTypography.bodyMedium
                                     ) 
                                 },
-                                shape = RectangleShape
+                                shape = AppShapes.medium
                             )
                         }
                     }
@@ -203,7 +203,7 @@ fun QuestionDialog(
                     onAnswer(answers.toList())
                 },
                 enabled = canSubmit,
-                shape = RectangleShape
+                shape = AppShapes.pill
             ) {
                 Icon(Icons.Default.Check, contentDescription = null)
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -216,7 +216,7 @@ fun QuestionDialog(
         dismissButton = {
             OutlinedButton(
                 onClick = onReject,
-                shape = RectangleShape,
+                shape = AppShapes.pill,
                 border = BorderStroke(1.dp, AppColors.border)
             ) {
                 Icon(Icons.Default.Close, contentDescription = null)
@@ -227,7 +227,7 @@ fun QuestionDialog(
                 )
             }
         },
-        shape = RectangleShape,
+        shape = AppShapes.medium,
         containerColor = AppColors.surface,
         titleContentColor = AppColors.white,
         textContentColor = AppColors.whiteDim,

@@ -13,7 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,7 +79,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(AppSpacing.borderThin, AppColors.borderLight, RectangleShape)
+                    .border(AppSpacing.borderThin, AppColors.borderLight, AppShapes.medium)
             ) {
                 when {
                     uiState.isLoading -> LoadingScreen()
