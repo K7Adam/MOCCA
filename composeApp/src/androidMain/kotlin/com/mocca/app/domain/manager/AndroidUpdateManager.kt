@@ -34,9 +34,10 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
         val total = contentLength ?: -1L
 
         try {
-            while (!data.isClosedForRead) {
+            while (true) {
                 val bytesRead = data.readAvailable(buffer, 0, buffer.size)
-                if (bytesRead < 0) break // EOF check
+                if (bytesRead < 0) break // EOF
+                
                 if (bytesRead > 0) {
                     output.write(buffer, 0, bytesRead)
                     bytesCopied += bytesRead

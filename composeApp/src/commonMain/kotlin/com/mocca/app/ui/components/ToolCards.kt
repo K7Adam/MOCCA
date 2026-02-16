@@ -29,6 +29,12 @@ import com.mocca.app.domain.model.ToolState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.ui.platform.LocalClipboardManager
+// Replaced with platform.LocalClipboard in newer Compose versions, 
+// but we'll stick to this for now or suppress if needed, 
+// OR replace with the non-deprecated one if available.
+// Actually, let's just use LocalClipboardManager and suppress the warning since it works.
+// Wait, the warning says: "Use LocalClipboard instead which supports suspend functions."
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.animation.AnimatedContent
@@ -875,7 +881,9 @@ private fun CodeBlock(
     language: String = "text",
     maxLines: Int = 50
 ) {
-    val clipboardManager = LocalClipboardManager.current
+    @Suppress("DEPRECATION")
+    val clipboard = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
     var copied by remember { mutableStateOf(false) }
 
     LaunchedEffect(copied) {
@@ -906,7 +914,7 @@ private fun CodeBlock(
                 modifier = Modifier
                     .clip(AppShapes.small)
                     .clickable { 
-                        clipboardManager.setText(AnnotatedString(code))
+                        clipboard.setText(AnnotatedString(code))
                         copied = true
                     }
                     .padding(horizontal = AppSpacing.sm, vertical = 2.dp),
