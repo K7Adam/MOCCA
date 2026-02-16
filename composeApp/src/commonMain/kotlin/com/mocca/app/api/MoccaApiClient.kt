@@ -90,7 +90,8 @@ class MoccaApiClient(
         modelId: String,
         providerId: String,
         parts: List<ChatPart>,
-        mode: String? = null
+        mode: String? = null,
+        variant: String? = null
     ): Result<AssistantMessageInfo> = safeCallNoRetry("chat") {
         post("session/$sessionId/message") {
             contentType(ContentType.Application.Json)
@@ -98,7 +99,8 @@ class MoccaApiClient(
                 modelID = modelId,
                 providerID = providerId,
                 parts = parts,
-                mode = mode
+                mode = mode,
+                variant = variant
             ))
         }.body()
     }
@@ -108,7 +110,8 @@ class MoccaApiClient(
         modelId: String,
         providerId: String,
         parts: List<ChatPart>,
-        mode: String? = null
+        mode: String? = null,
+        variant: String? = null
     ): Result<Unit> = safeCallNoRetry("chatAsync") {
         val response = post("session/$sessionId/prompt_async") {
             contentType(ContentType.Application.Json)
@@ -116,7 +119,8 @@ class MoccaApiClient(
                 modelID = modelId,
                 providerID = providerId,
                 parts = parts,
-                mode = mode
+                mode = mode,
+                variant = variant
             ))
         }
         if (response.status.value in 200..299) {

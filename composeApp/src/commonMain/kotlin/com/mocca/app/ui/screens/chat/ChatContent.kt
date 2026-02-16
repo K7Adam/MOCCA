@@ -426,6 +426,10 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     selectedModelId = state.selectedModelId,
                     onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
                     recentModels = state.recentModels,
+                    // Variants
+                    variants = state.availableVariants,
+                    selectedVariantId = state.selectedVariantId,
+                    onVariantSelected = { screenModel.selectVariant(it) },
                     modes = state.modes,
                     selectedModeId = state.selectedModeId,
                     onModeSelected = { screenModel.selectMode(it) },

@@ -240,6 +240,7 @@ class SessionRepository(
         sessionId: String,
         text: String,
         mode: String? = null,
+        variant: String? = null,
         attachments: List<AttachedFile> = emptyList(),
         modelId: String? = null,
         providerId: String? = null
@@ -256,7 +257,8 @@ class SessionRepository(
             modelId = modelId ?: defaultModelId,
             providerId = providerId ?: defaultProviderId,
             parts = parts,
-            mode = mode ?: defaultMode
+            mode = mode ?: defaultMode,
+            variant = variant
         )
     }
 

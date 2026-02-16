@@ -47,6 +47,7 @@ data class ChatState(
     val providerInfo: ProviderResponse? = null,
     val selectedProviderId: String = "",
     val selectedModelId: String = "",
+    val selectedVariantId: String? = null,
     val modes: List<Mode> = emptyList(),
     val selectedModeId: String? = null,
     val attachedFiles: List<AttachedFile> = emptyList(),
@@ -70,6 +71,19 @@ data class ChatState(
     val lastTurnInputTokens: Int get() = messages
         .lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }
         ?.tokens?.input ?: 0
+        
+    /** Available variants for the currently selected model */
+    val availableVariants: List<String> get() {
+        if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return emptyList()
+        
+        val provider = providerInfo.all.find { it.id == selectedProviderId } ?: return emptyList()
+        val modelsObj = provider.models as? JsonObject ?: return emptyList()
+        val modelObj = modelsObj[selectedModelId] as? JsonObject ?: return emptyList()
+        
+        // Variants are stored in the "variants" key of the model object
+        val variantsObj = modelObj["variants"] as? JsonObject ?: return emptyList()
+        return variantsObj.keys.toList().sorted()
+    }
 }
 
 class ChatScreenModel(
@@ -622,6 +636,7 @@ class ChatScreenModel(
         _state.value = _state.value.copy(
             selectedProviderId = providerId, 
             selectedModelId = modelId, 
+            selectedVariantId = null, // Reset variant on model change
             modelName = modelName,
             maxTokens = contextTokens
         )
@@ -629,6 +644,10 @@ class ChatScreenModel(
             sessionRepository.addRecentModel(providerId, modelId)
             loadRecentModels()
         }
+    }
+
+    fun selectVariant(variantId: String?) {
+        _state.value = _state.value.copy(selectedVariantId = variantId)
     }
     
     fun selectMode(modeId: String?) {
@@ -661,6 +680,7 @@ class ChatScreenModel(
         val selectedMode = _state.value.selectedModeId
         val selectedModel = _state.value.selectedModelId
         val selectedProvider = _state.value.selectedProviderId
+        val selectedVariant = _state.value.selectedVariantId
         
         if (text.startsWith("/")) {
             val parts = text.drop(1).split(" ", limit = 2)
@@ -698,6 +718,7 @@ class ChatScreenModel(
                 sessionId = sessionId,
                 text = text,
                 mode = selectedMode,
+                variant = selectedVariant,
                 attachments = attachments,
                 modelId = selectedModel.ifEmpty { null },
                 providerId = selectedProvider.ifEmpty { null }

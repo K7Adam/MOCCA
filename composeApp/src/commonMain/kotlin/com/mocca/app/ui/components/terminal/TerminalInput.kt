@@ -26,6 +26,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.AttachFile
@@ -191,6 +192,10 @@ fun RichChatInput(
     selectedModelId: String = "",
     onModelSelected: (providerId: String, modelId: String) -> Unit = { _, _ -> },
     recentModels: List<com.mocca.app.domain.model.RecentModel> = emptyList(),
+    // Variant selection
+    variants: List<String> = emptyList(),
+    selectedVariantId: String? = null,
+    onVariantSelected: (String) -> Unit = {},
     // Mode selection
     modes: List<com.mocca.app.domain.model.Mode> = emptyList(),
     selectedModeId: String? = null,
@@ -206,6 +211,7 @@ fun RichChatInput(
     onModeSelectedForMention: (com.mocca.app.domain.model.Mode) -> Unit = {}
 ) {
     var showModelSelector by remember { mutableStateOf(false) }
+    var showVariantSelector by remember { mutableStateOf(false) }
     
     // Suggestion state
     var showSuggestions by remember { mutableStateOf(false) }
@@ -326,6 +332,28 @@ fun RichChatInput(
                     color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                     style = AppTypography.labelSmall
                 )
+            }
+            
+            // Variant selector (clickable if variants available)
+            if (variants.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .clickable { showVariantSelector = true },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Tune,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = AppColors.textTertiary
+                    )
+                    Text(
+                        text = (selectedVariantId ?: "DEFAULT").uppercase(),
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
             }
             
             // Agent selector (clickable)
@@ -534,6 +562,16 @@ fun RichChatInput(
             onModelSelected = onModelSelected,
             recentModels = recentModels,
             onDismiss = { showModelSelector = false }
+        )
+    }
+    
+    // Variant selector dialog
+    if (showVariantSelector) {
+        VariantSelectorDialog(
+            variants = variants,
+            selectedVariantId = selectedVariantId,
+            onVariantSelected = onVariantSelected,
+            onDismiss = { showVariantSelector = false }
         )
     }
 }

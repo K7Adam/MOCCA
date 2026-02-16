@@ -221,6 +221,7 @@ data class ChatRequest(
     @SerialName("messageID")
     val messageID: String? = null,
     val mode: String? = null,
+    val variant: String? = null,
     val system: String? = null,
     val tools: Map<String, Boolean>? = null
 )
@@ -559,7 +560,18 @@ data class ProvidersResponse(
 @Serializable
 data class Model(
     val id: String,
-    val name: String
+    val name: String,
+    val variants: Map<String, ModelVariant>? = null // Optional map of variant configurations
+)
+
+@Serializable
+data class ModelVariant(
+    val description: String? = null,
+    // Add other variant fields if needed, but the key (e.g., "high", "low") is the main identifier
+    // For now, variants seem to be defined in config as just keys with options, 
+    // but the API might return them.
+    // The web search indicates variants are configured in opencode.jsonc.
+    // Let's assume for now we just need the IDs (keys of the map).
 )
 
 @Serializable
