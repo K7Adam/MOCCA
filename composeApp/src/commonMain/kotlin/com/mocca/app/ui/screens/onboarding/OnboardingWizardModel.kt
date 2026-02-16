@@ -6,8 +6,11 @@ import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.discovery.DiscoveryResult
 import com.mocca.app.discovery.ServerDiscovery
+import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.DiscoveredServer
+import com.mocca.app.domain.model.DiscoverySource
 import com.mocca.app.domain.model.QrConnectionPayload
+import com.mocca.app.domain.model.ServerConfig
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,24 +20,24 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Enhanced ScreenModel for the progressive onboarding wizard.
- * 
+ * ScreenModel for the progressive onboarding wizard.
+ *
  * Features:
  * - Step-based wizard flow (Welcome → Discovery → Selection → Connection → Ready)
  * - Automatic server discovery via mDNS
  * - QR code scanning for instant pairing
- * - Smart connection with fallback chain
- * - Manual entry as last resort
+ * - Manual entry with Host/Port/Username/Password
+ * - Robust connection via ConnectionManager.connect() (no race conditions)
  */
 class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val connectionManager: ConnectionManager,
     private val serverDiscovery: ServerDiscovery? = null
 ) : ScreenModel {
-    
+
     private val _state = MutableStateFlow(OnboardingWizardState())
     val state: StateFlow<OnboardingWizardState> = _state.asStateFlow()
-    
+
     init {
         loadSavedServers()
         // Auto-start discovery if available
@@ -42,11 +45,12 @@ class OnboardingWizardModel(
             startDiscovery()
         }
     }
-    
+
     private fun loadSavedServers() {
         screenModelScope.launch {
             try {
                 val saved = serverConfigRepository.getAllServers()
+                    .filter { it.host.isNotBlank() } // Filter out invalid configs (BUG 5 safety)
                 _state.update { it.copy(savedServers = saved) }
                 Napier.d("Loaded ${saved.size} saved servers")
             } catch (e: Exception) {
@@ -54,12 +58,18 @@ class OnboardingWizardModel(
             }
         }
     }
-    
+
     fun onAction(action: OnboardingAction) {
         when (action) {
             is OnboardingAction.StartDiscovery -> startDiscovery()
             is OnboardingAction.ServerSelected -> selectServer(action.server)
-            is OnboardingAction.ManualEntryUpdated -> updateManualEntry(action.url, action.token)
+            is OnboardingAction.ManualConnect -> connectManual(
+                action.host, action.port, action.username, action.password
+            )
+            is OnboardingAction.CredentialsProvided -> onCredentialsProvided(
+                action.username, action.password
+            )
+            is OnboardingAction.GoToManualEntry -> goToManualEntry()
             is OnboardingAction.Connect -> connect()
             is OnboardingAction.RetryConnection -> retryConnection()
             is OnboardingAction.Back -> goBack()
@@ -69,16 +79,20 @@ class OnboardingWizardModel(
             is OnboardingAction.ConnectionResult -> onConnectionResult(action.success, action.error)
         }
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Discovery
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     private fun startDiscovery() {
-        _state.update { 
+        _state.update {
             it.copy(
                 currentStep = OnboardingStep.DISCOVERING,
                 isLoading = true,
                 error = null
             )
         }
-        
+
         screenModelScope.launch {
             try {
                 val result = if (serverDiscovery != null) {
@@ -86,7 +100,7 @@ class OnboardingWizardModel(
                 } else {
                     DiscoveryResult(emptyList(), com.mocca.app.discovery.DiscoveryState.STOPPED)
                 }
-                
+
                 onDiscoveryCompleted(result)
             } catch (e: Exception) {
                 Napier.e("Discovery failed", e)
@@ -100,10 +114,10 @@ class OnboardingWizardModel(
             }
         }
     }
-    
+
     private fun onDiscoveryCompleted(result: DiscoveryResult) {
         Napier.i("Discovery completed: ${result.servers.size} servers found")
-        
+
         _state.update {
             it.copy(
                 discoveredServers = result.servers,
@@ -111,23 +125,27 @@ class OnboardingWizardModel(
                 currentStep = OnboardingStep.SELECT_SERVER
             )
         }
-        
-        // Auto-proceed if we have exactly one server
+
+        // Auto-proceed if we have exactly one server with credentials
         if (result.servers.size == 1) {
-            selectServer(result.servers.first())
+            val server = result.servers.first()
+            if (server.password.isNotBlank()) {
+                selectServer(server)
+            }
+            // If no credentials, let user tap to trigger credential prompt
         }
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // QR Code
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     fun onQrCodeScanned(qrContent: String) {
         Napier.d("QR code scanned: $qrContent")
-        
-        // Try to parse as JSON payload
+
         val payload = QrConnectionPayload.fromJson(qrContent)
-            ?: QrConnectionPayload.fromUrl(qrContent)?.let {
-                // Try to parse as URL
-                it
-            }
-        
+            ?: QrConnectionPayload.fromUrl(qrContent)
+
         if (payload != null) {
             val discovered = payload.toDiscoveredServer()
             _state.update {
@@ -136,6 +154,7 @@ class OnboardingWizardModel(
                     selectedServer = discovered
                 )
             }
+            // QR codes include credentials → connect directly
             selectServer(discovered)
         } else {
             _state.update {
@@ -143,127 +162,207 @@ class OnboardingWizardModel(
             }
         }
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Server Selection
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     private fun selectServer(server: DiscoveredServer) {
+        // mDNS-discovered servers don't have credentials — prompt user
+        if (server.source == DiscoverySource.MDNS && server.password.isBlank()) {
+            _state.update {
+                it.copy(
+                    selectedServer = server,
+                    needsCredentials = true,
+                    credentialServer = server,
+                    error = null
+                )
+            }
+            return
+        }
+
+        // Server has credentials (QR, saved, or manual) → connect directly
         _state.update {
             it.copy(
                 selectedServer = server,
+                needsCredentials = false,
+                credentialServer = null,
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
                 connectionProgress = "Connecting to ${server.name}...",
                 error = null
             )
         }
-        
-        // Auto-connect after selection
-        connect()
+
+        connectWithConfig(server.toServerConfig())
     }
-    
-    private fun updateManualEntry(url: String, token: String) {
+
+    private fun onCredentialsProvided(username: String, password: String) {
+        val server = _state.value.credentialServer ?: return
+        val withCreds = server.copy(
+            username = username.ifBlank { "opencode" },
+            password = password
+        )
+
         _state.update {
             it.copy(
-                manualServerUrl = url,
-                manualAuthToken = token
+                selectedServer = withCreds,
+                needsCredentials = false,
+                credentialServer = null,
+                currentStep = OnboardingStep.CONNECTING,
+                isLoading = true,
+                connectionProgress = "Connecting to ${withCreds.name}...",
+                error = null
             )
         }
+
+        connectWithConfig(withCreds.toServerConfig())
     }
-    
-    private fun connect() {
-        val selected = _state.value.selectedServer
-        
-        if (selected != null) {
-            // Connect to selected discovered/saved server
-            val config = selected.toServerConfig()
-            
-            screenModelScope.launch {
-                try {
-                    // Save the server config
-                    serverConfigRepository.saveServer(config)
-                    serverConfigRepository.setActiveServer(config.id)
-                    
-                    // Attempt connection
-                    connectionManager.checkConnection()
-                    
-                    // Wait and check result
-                    delay(2000)
-                    
-                    val isConnected = connectionManager.status.value.isConnected
-                    onConnectionResult(isConnected, if (!isConnected) "Connection failed" else null)
-                    
-                } catch (e: Exception) {
-                    Napier.e("Connection failed", e)
-                    onConnectionResult(false, e.message)
-                }
-            }
-        } else if (_state.value.manualServerUrl.isNotBlank()) {
-            // Manual entry fallback
-            connectManual()
-        } else {
-            // Try smart connect with all available servers
-            screenModelScope.launch {
-                val candidates = _state.value.allServers.map { it.toServerConfig() }
-                var connected = false
-                for (candidate in candidates) {
-                    connectionManager.connect(candidate)
-                    delay(2000)
-                    if (connectionManager.status.value.isConnected) {
-                        connected = true
-                        break
-                    }
-                }
-                
-                if (connected) {
-                    onConnectionResult(true, null)
-                } else {
-                    onConnectionResult(false, "Could not connect to any server")
-                }
-            }
+
+    private fun goToManualEntry() {
+        _state.update {
+            it.copy(currentStep = OnboardingStep.SELECT_SERVER, error = null)
         }
     }
-    
-    private fun connectManual() {
-        val url = _state.value.manualServerUrl.trim()
-        val token = _state.value.manualAuthToken.trim()
-        
-        if (url.isBlank()) {
-            _state.update { it.copy(error = "Server URL is required") }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Manual Entry
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    private fun connectManual(host: String, port: Int, username: String, password: String) {
+        if (host.isBlank()) {
+            _state.update { it.copy(error = "Host is required") }
             return
         }
-        
+
+        val config = ServerConfig(
+            id = "manual-${System.currentTimeMillis()}",
+            name = "OpenCode ($host)",
+            host = host,
+            port = port,
+            username = username.ifBlank { "opencode" },
+            password = password,
+            isActive = true
+        )
+
+        val discovered = DiscoveredServer(
+            name = config.name,
+            host = host,
+            port = port,
+            username = config.username,
+            password = password,
+            source = DiscoverySource.MANUAL
+        )
+
+        _state.update {
+            it.copy(
+                selectedServer = discovered,
+                currentStep = OnboardingStep.CONNECTING,
+                isLoading = true,
+                connectionProgress = "Connecting to $host:$port...",
+                error = null
+            )
+        }
+
+        connectWithConfig(config)
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Connection (Core fix for BUG 2 — no more race condition)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Connect using ConnectionManager.connect() directly.
+     *
+     * This avoids the race condition where checkConnection() reads _activeConfig.value
+     * before the async observeActiveServer() has propagated the new config.
+     *
+     * ConnectionManager.connect(config) directly:
+     * 1. Sets _activeConfig.value = config
+     * 2. Creates a new HttpClient with auth
+     * 3. Calls setActiveServer() to persist
+     * 4. Runs checkConnection() internally
+     */
+    private fun connectWithConfig(config: ServerConfig) {
         screenModelScope.launch {
             try {
-                // Parse host and port from URL
-                val cleanUrl = url.removePrefix("http://").removePrefix("https://")
-                val parts = cleanUrl.split(":")
-                val host = parts.firstOrNull() ?: cleanUrl
-                val port = parts.getOrNull(1)?.toIntOrNull() ?: 4096
-                
-                val config = com.mocca.app.domain.model.ServerConfig(
-                    id = "manual-${System.currentTimeMillis()}",
-                    name = "Manual Server",
-                    host = host,
-                    port = port,
-                    password = token,
-                    isActive = true
-                )
-                
+                _state.update {
+                    it.copy(connectionProgress = "Saving server configuration...")
+                }
+
+                // 1. Save to DB first
                 serverConfigRepository.saveServer(config)
-                serverConfigRepository.setActiveServer(config.id)
-                
-                connectionManager.checkConnection()
-                
-                delay(2000)
-                
-                val isConnected = connectionManager.status.value.isConnected
-                onConnectionResult(isConnected, if (!isConnected) "Connection failed" else null)
-                
+
+                // 2. Connect DIRECTLY — this sets _activeConfig, creates client, runs health check
+                _state.update { it.copy(connectionProgress = "Connecting to ${config.name}...") }
+                connectionManager.connect(config)
+
+                // 3. Poll connection status with timeout
+                val maxAttempts = 15  // 15 * 500ms = 7.5s timeout
+                var attempts = 0
+                while (attempts < maxAttempts) {
+                    delay(500)
+                    when (val status = connectionManager.status.value) {
+                        is ConnectionStatus.Connected -> {
+                            Napier.i("Connected to ${config.name}")
+                            onConnectionResult(true, null)
+                            return@launch
+                        }
+                        is ConnectionStatus.Error -> {
+                            onConnectionResult(false, status.message)
+                            return@launch
+                        }
+                        is ConnectionStatus.Disconnected -> {
+                            onConnectionResult(
+                                false,
+                                status.reason ?: "Connection failed"
+                            )
+                            return@launch
+                        }
+                        else -> {
+                            // Still connecting/reconnecting — keep polling
+                            attempts++
+                            _state.update {
+                                it.copy(
+                                    connectionProgress = "Connecting... (${attempts}s)"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Timeout
+                onConnectionResult(false, "Connection timed out. Is OpenCode running?")
             } catch (e: Exception) {
-                Napier.e("Manual connection failed", e)
-                onConnectionResult(false, e.message)
+                Napier.e("Connection failed", e)
+                val friendlyMessage = when {
+                    e.message?.contains("401") == true ->
+                        "Authentication failed. Check username and password."
+                    e.message?.contains("Connection refused") == true ->
+                        "Server not reachable. Is OpenCode running?"
+                    else -> e.message ?: "Connection failed"
+                }
+                onConnectionResult(false, friendlyMessage)
             }
         }
     }
-    
+
+    /**
+     * Simple connect using currently selected server.
+     */
+    private fun connect() {
+        val selected = _state.value.selectedServer
+        if (selected != null) {
+            connectWithConfig(selected.toServerConfig())
+        } else {
+            _state.update { it.copy(error = "No server selected") }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Connection Result Handling
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     private fun onConnectionResult(success: Boolean, error: String?) {
         if (success) {
             _state.update {
@@ -284,17 +383,18 @@ class OnboardingWizardModel(
             }
         }
     }
-    
+
     private fun retryConnection() {
         _state.update {
-            it.copy(
-                error = null,
-                isLoading = true
-            )
+            it.copy(error = null, isLoading = true)
         }
         connect()
     }
-    
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Navigation
+    // ═══════════════════════════════════════════════════════════════════════════════
+
     private fun goBack() {
         val currentStep = _state.value.currentStep
         val previousStep = when (currentStep) {
@@ -304,18 +404,19 @@ class OnboardingWizardModel(
             OnboardingStep.READY -> OnboardingStep.CONNECTING
             else -> currentStep
         }
-        
+
         _state.update {
             it.copy(
                 currentStep = previousStep,
                 error = null,
-                isLoading = false
+                isLoading = false,
+                needsCredentials = false,
+                credentialServer = null
             )
         }
     }
-    
+
     private fun skipOnboarding() {
-        // For demo/testing: mark as connected and proceed
         _state.update {
             it.copy(
                 isConnected = true,
@@ -323,12 +424,11 @@ class OnboardingWizardModel(
             )
         }
     }
-    
+
     private fun completeOnboarding() {
-        // Called when user confirms they're ready
-        // Navigation to MainScreen is handled by observing isConnected
+        // Navigation to MainScreen is handled by observing isConnected in the UI
     }
-    
+
     fun reset() {
         _state.update { OnboardingWizardState() }
         loadSavedServers()

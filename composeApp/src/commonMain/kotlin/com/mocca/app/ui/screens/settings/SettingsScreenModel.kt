@@ -338,9 +338,9 @@ class SettingsScreenModel(
         val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
         val newServer = ServerConfig(
             id = now.toString(),
-            name = "Tailscale Server",
-            host = "omen.tail0b932a.ts.net",
-            port = 443,
+            name = "New Server",
+            host = "",
+            port = 4096,
             isActive = false
         )
         _state.value = _state.value.copy(editingServer = newServer)

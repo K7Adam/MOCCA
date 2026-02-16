@@ -48,11 +48,16 @@ class ServerConfigRepository(
             try {
                 val config = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
                 
-                // If no server configured, create default (only for emulator)
+                // If no server configured, create default only for emulator (physical devices stay null)
                 if (config == null) {
                     val default = createDefaultConfig()
-                    localCache.insertServerConfig(default)
-                    _activeServer.value = default
+                    if (default != null) {
+                        localCache.insertServerConfig(default)
+                        _activeServer.value = default
+                    } else {
+                        // Physical device — no default config, onboarding required
+                        _activeServer.value = null
+                    }
                     return@runBlocking
                 }
                 
@@ -71,7 +76,7 @@ class ServerConfigRepository(
                 }
             } catch (e: Exception) {
                 Napier.w("Failed to load active server", e)
-                // Set default config
+                // Set default config (null for physical devices)
                 val default = createDefaultConfig()
                 _activeServer.value = default
             }
@@ -181,19 +186,20 @@ class ServerConfigRepository(
 
     /**
      * Get the current active server configuration.
+     * Returns null if no server is configured (physical device without onboarding).
      * 
      * SECURITY: Returns the cached config with decrypted auth token (if applicable).
      */
-    fun getActiveServerConfig(): ServerConfig {
-        return _activeServer.value?.let { decryptConfigIfNeeded(it) } ?: createDefaultConfig()
+    fun getActiveServerConfig(): ServerConfig? {
+        return _activeServer.value?.let { decryptConfigIfNeeded(it) }
     }
 
     /**
      * Create a default server configuration.
      * - Android emulator: Uses 10.0.2.2 to reach host machine's localhost.
-     * - Physical devices: Returns empty config that triggers onboarding.
+     * - Physical devices: Returns null — onboarding must be completed first.
      */
-    fun createDefaultConfig(): ServerConfig {
+    fun createDefaultConfig(): ServerConfig? {
         val defaultHost = getPlatformDefaultHost()
         
         return if (defaultHost.isNotEmpty()) {
@@ -206,14 +212,8 @@ class ServerConfigRepository(
                 isActive = true
             )
         } else {
-            // Physical device - return empty config that requires onboarding
-            // Empty host signals the UI to show onboarding instead of connecting
-            ServerConfig(
-                id = "needs-onboarding",
-                name = "Setup Required",
-                host = "",
-                isActive = true
-            )
+            // Physical device - return null, requires onboarding
+            null
         }
     }
     

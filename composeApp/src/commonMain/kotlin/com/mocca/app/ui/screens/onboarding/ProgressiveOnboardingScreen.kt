@@ -2,8 +2,6 @@ package com.mocca.app.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -15,7 +13,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,10 +31,9 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,7 +45,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,7 +62,6 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 
 /**
@@ -95,6 +89,21 @@ class ProgressiveOnboardingScreen : Screen {
                 delay(500) // Brief delay for visual feedback
                 navigator.replace(MainScreen())
             }
+        }
+        
+        // Credential dialog for mDNS-discovered servers
+        if (state.needsCredentials && state.credentialServer != null) {
+            CredentialDialog(
+                serverName = state.credentialServer!!.name,
+                onConfirm = { username, password ->
+                    screenModel.onAction(
+                        OnboardingAction.CredentialsProvided(username, password)
+                    )
+                },
+                onDismiss = {
+                    screenModel.onAction(OnboardingAction.Back)
+                }
+            )
         }
         
         Column(
@@ -129,7 +138,7 @@ class ProgressiveOnboardingScreen : Screen {
                         },
                         onStartDiscovery = { screenModel.onAction(OnboardingAction.StartDiscovery) },
                         onManualEntry = { 
-                            screenModel.onAction(OnboardingAction.ManualEntryUpdated("", ""))
+                            screenModel.onAction(OnboardingAction.GoToManualEntry)
                         }
                     )
                     
@@ -150,8 +159,10 @@ class ProgressiveOnboardingScreen : Screen {
                                 screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
                             })
                         },
-                        onManualEntry = { url, token ->
-                            screenModel.onAction(OnboardingAction.ManualEntryUpdated(url, token))
+                        onManualConnect = { host, port, username, password ->
+                            screenModel.onAction(
+                                OnboardingAction.ManualConnect(host, port, username, password)
+                            )
                         },
                         onRetry = { screenModel.onAction(OnboardingAction.StartDiscovery) }
                     )
@@ -324,8 +335,8 @@ private fun SetupChecklist() {
         
         ChecklistItem(
             number = "2",
-            text = "Run setup script on your computer",
-            subtext = ".\\mocca-setup.ps1 (generates QR code)"
+            text = "Start the OpenCode server",
+            subtext = "opencode serve --port 4096"
         )
         
         ChecklistItem(
@@ -445,12 +456,14 @@ private fun SelectServerStep(
     error: String?,
     onServerSelected: (DiscoveredServer) -> Unit,
     onScanQr: () -> Unit,
-    onManualEntry: (String, String) -> Unit,
+    onManualConnect: (host: String, port: Int, username: String, password: String) -> Unit,
     onRetry: () -> Unit
 ) {
     var showManualEntry by remember { mutableStateOf(false) }
-    var manualUrl by remember { mutableStateOf("") }
-    var manualToken by remember { mutableStateOf("") }
+    var manualHost by remember { mutableStateOf("") }
+    var manualPort by remember { mutableStateOf("4096") }
+    var manualUsername by remember { mutableStateOf("opencode") }
+    var manualPassword by remember { mutableStateOf("") }
     
     Column(
         modifier = Modifier.fillMaxSize()
@@ -546,29 +559,54 @@ private fun SelectServerStep(
                     .align(Alignment.CenterHorizontally)
             )
         } else {
-            // Manual entry form
+            // Manual entry form — Host / Port / Username / Password
             TerminalInput(
-                value = manualUrl,
-                onValueChange = { manualUrl = it },
-                label = "Server URL",
-                placeholder = "http://192.168.1.42:4096"
+                value = manualHost,
+                onValueChange = { manualHost = it },
+                label = "Host",
+                placeholder = "192.168.1.42 or mydevice.ts.net"
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
             TerminalInput(
-                value = manualToken,
-                onValueChange = { manualToken = it },
-                label = "Auth Token (optional)",
-                placeholder = "Enter API key"
+                value = manualPort,
+                onValueChange = { manualPort = it },
+                label = "Port",
+                placeholder = "4096"
+            )
+            
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+            
+            TerminalInput(
+                value = manualUsername,
+                onValueChange = { manualUsername = it },
+                label = "Username",
+                placeholder = "opencode"
+            )
+            
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+            
+            TerminalInput(
+                value = manualPassword,
+                onValueChange = { manualPassword = it },
+                label = "Password",
+                placeholder = "Leave empty if none"
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
             TerminalButton(
                 text = "Connect",
-                onClick = { onManualEntry(manualUrl, manualToken) },
-                enabled = manualUrl.isNotBlank(),
+                onClick = {
+                    onManualConnect(
+                        manualHost.trim(),
+                        manualPort.trim().toIntOrNull() ?: 4096,
+                        manualUsername.trim().ifBlank { "opencode" },
+                        manualPassword
+                    )
+                },
+                enabled = manualHost.isNotBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -783,4 +821,74 @@ private fun ErrorMessage(
             modifier = Modifier.clickable(onClick = onRetry)
         )
     }
+}
+
+@Composable
+private fun CredentialDialog(
+    serverName: String,
+    onConfirm: (username: String, password: String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var username by remember { mutableStateOf("opencode") }
+    var password by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppColors.surfaceElevated,
+        shape = AppShapes.dialog,
+        title = {
+            Text(
+                text = "SERVER CREDENTIALS",
+                color = AppColors.white,
+                style = AppTypography.headlineSmall
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = "Enter credentials for $serverName",
+                    style = AppTypography.bodyMedium,
+                    color = AppColors.textSecondary
+                )
+                
+                Spacer(modifier = Modifier.height(AppSpacing.lg))
+                
+                TerminalInput(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = "Username",
+                    placeholder = "opencode"
+                )
+                
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                
+                TerminalInput(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = "Password",
+                    placeholder = "Enter server password"
+                )
+            }
+        },
+        confirmButton = {
+            TerminalButton(
+                text = "Connect",
+                onClick = {
+                    onConfirm(
+                        username.trim().ifBlank { "opencode" },
+                        password
+                    )
+                },
+                height = AppSpacing.buttonHeightCompact
+            )
+        },
+        dismissButton = {
+            Text(
+                text = "Cancel",
+                style = AppTypography.bodyMedium,
+                color = AppColors.textSecondary,
+                modifier = Modifier.clickable(onClick = onDismiss)
+            )
+        }
+    )
 }

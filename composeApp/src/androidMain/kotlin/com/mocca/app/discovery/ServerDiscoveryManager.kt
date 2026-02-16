@@ -43,7 +43,8 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
     
     companion object {
         private const val TAG = "ServerDiscoveryManager"
-        private const val SERVICE_TYPE = "_opencode._tcp"
+        private const val SERVICE_TYPE = "_http._tcp"
+        private const val SERVICE_NAME_PREFIX = "opencode-"
         private const val DISCOVERY_TIMEOUT_MS = 5000L
         private const val MAX_DISCOVERED_SERVERS = 10
     }
@@ -92,6 +93,12 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
             
             override fun onServiceFound(serviceInfo: NsdServiceInfo) {
                 Napier.d("$TAG: Service found: ${serviceInfo.serviceName}")
+                
+                // Only resolve OpenCode services (name starts with "opencode-")
+                if (!serviceInfo.serviceName.startsWith(SERVICE_NAME_PREFIX)) {
+                    Napier.d("$TAG: Ignoring non-OpenCode service: ${serviceInfo.serviceName}")
+                    return
+                }
                 
                 // Resolve the service to get IP and port
                 resolveService(serviceInfo) { resolvedServer ->
@@ -251,14 +258,12 @@ class ServerDiscoveryManager(private val context: Context) : ServerDiscovery {
                 if (host != null && port > 0) {
                     Napier.i("$TAG: Resolved $name -> $host:$port")
                     
-                    // Extract auth token from TXT records if available
-                    val authToken = resolvedInfo.attributes["token"]?.toString(Charsets.UTF_8)
-                    
+                    // OpenCode mDNS does NOT publish credentials in TXT records.
+                    // TXT only contains { path: "/" }. Credentials must be entered by user.
                     val server = DiscoveredServer(
                         name = name,
                         host = host,
                         port = port,
-                        password = authToken ?: "",
                         source = DiscoverySource.MDNS
                     )
                     onResolved(server)

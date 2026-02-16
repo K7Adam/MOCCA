@@ -33,8 +33,14 @@ data class OnboardingWizardState(
     val isConnected: Boolean = false,
     
     // Manual entry (fallback)
-    val manualServerUrl: String = "",
-    val manualAuthToken: String = ""
+    val manualHost: String = "",
+    val manualPort: String = "4096",
+    val manualUsername: String = "opencode",
+    val manualPassword: String = "",
+    
+    // Credential prompt (for mDNS-discovered servers without credentials)
+    val needsCredentials: Boolean = false,
+    val credentialServer: DiscoveredServer? = null
 ) {
     val canProceed: Boolean
         get() = when (currentStep) {
@@ -70,7 +76,14 @@ data class OnboardingWizardState(
 sealed class OnboardingAction {
     data object StartDiscovery : OnboardingAction()
     data class ServerSelected(val server: DiscoveredServer) : OnboardingAction()
-    data class ManualEntryUpdated(val url: String, val token: String) : OnboardingAction()
+    data class ManualConnect(
+        val host: String,
+        val port: Int,
+        val username: String,
+        val password: String
+    ) : OnboardingAction()
+    data class CredentialsProvided(val username: String, val password: String) : OnboardingAction()
+    data object GoToManualEntry : OnboardingAction()
     data object Connect : OnboardingAction()
     data object RetryConnection : OnboardingAction()
     data object Back : OnboardingAction()

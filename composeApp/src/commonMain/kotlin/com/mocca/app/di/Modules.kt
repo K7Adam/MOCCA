@@ -18,7 +18,6 @@ import com.mocca.app.ui.screens.git.GitDiffScreenModel
 import com.mocca.app.ui.screens.git.GitScreenModel
 import com.mocca.app.ui.screens.main.MainScreenModel
 import com.mocca.app.ui.screens.mcp.McpScreenModel
-import com.mocca.app.ui.screens.onboarding.OnboardingScreenModel
 import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.sessions.SessionsScreenModel
@@ -193,15 +192,7 @@ val screenModelModule = module {
         )
     }
     
-    // Onboarding screen - legacy
-    factory {
-        OnboardingScreenModel(
-            serverConfigRepository = get(),
-            connectionManager = get()
-        )
-    }
-    
-    // Onboarding wizard - new progressive onboarding
+    // Onboarding wizard - progressive onboarding
     factory {
         OnboardingWizardModel(
             serverConfigRepository = get(),
