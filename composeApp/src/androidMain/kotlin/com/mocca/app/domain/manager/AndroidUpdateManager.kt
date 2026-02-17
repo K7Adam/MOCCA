@@ -2,7 +2,11 @@ package com.mocca.app.domain.manager
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.core.content.FileProvider
+import io.github.aakira.napier.Napier
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.Dispatchers
@@ -56,24 +60,45 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
 
     override fun installApk(path: String) {
         val file = File(path)
-        if (!file.exists()) return
+        if (!file.exists()) {
+            Napier.e("APK file not found at $path", tag = "AndroidUpdateManager")
+            return
+        }
 
-        val uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            file
-        )
-
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "application/vnd.android.package-archive")
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
+        // Check for REQUEST_INSTALL_PACKAGES permission on Android 8.0+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (!context.packageManager.canRequestPackageInstalls()) {
+                Napier.w("REQUEST_INSTALL_PACKAGES permission missing. Prompting user.", tag = "AndroidUpdateManager")
+                try {
+                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                    return // Stop installation attempt until permission granted
+                } catch (e: Exception) {
+                    Napier.e("Failed to launch Manage Unknown App Sources settings", e, "AndroidUpdateManager")
+                }
+            }
         }
 
         try {
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                file
+            )
+
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            Napier.d("Starting installation intent for $uri", tag = "AndroidUpdateManager")
             context.startActivity(intent)
         } catch (e: Exception) {
-            e.printStackTrace()
-            // Fallback or notify user
+            Napier.e("Failed to start installation intent", e, "AndroidUpdateManager")
         }
     }
 }
