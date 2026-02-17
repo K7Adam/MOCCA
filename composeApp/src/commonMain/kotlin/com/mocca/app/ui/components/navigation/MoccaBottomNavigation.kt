@@ -31,18 +31,24 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import kotlin.math.roundToInt
 
 /**
  * Data class representing a bottom navigation item.
@@ -114,10 +120,16 @@ fun MoccaBottomNavigation(
     items: List<BottomNavItem> = defaultBottomNavItems,
     modifier: Modifier = Modifier
 ) {
+    var containerWidthPx by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
+
     Box(
         modifier = modifier
             .widthIn(min = 280.dp, max = 360.dp)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
+            .onGloballyPositioned { coordinates ->
+                containerWidthPx = coordinates.size.width.toFloat()
+            }
             .background(
                 color = AppColors.glassBackground,
                 shape = AppShapes.rounded2xl
@@ -136,9 +148,8 @@ fun MoccaBottomNavigation(
         ) {
             // Navigation items row
             Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
                     // Calculate distance from current progress to this item's target
@@ -148,12 +159,17 @@ fun MoccaBottomNavigation(
                     // Proximity for scale animation (1.0 = exactly at this item)
                     val proximity = 1f - (distanceFromProgress * 2f).coerceIn(0f, 1f)
 
-                    BottomNavItemComponent(
-                        item = item,
-                        isSelected = isSelected,
-                        proximity = proximity,
-                        onClick = { onItemClick(item.panelState) }
-                    )
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        BottomNavItemComponent(
+                            item = item,
+                            isSelected = isSelected,
+                            proximity = proximity,
+                            onClick = { onItemClick(item.panelState) }
+                        )
+                    }
                 }
             }
 
@@ -162,6 +178,7 @@ fun MoccaBottomNavigation(
             // Animated indicator pill that follows drag progress in real-time
             AnimatedIndicatorPill(
                 progress = dragProgress,
+                containerWidthPx = containerWidthPx,
                 modifier = Modifier.padding(horizontal = AppSpacing.md)
             )
         }
@@ -171,61 +188,48 @@ fun MoccaBottomNavigation(
 /**
  * Animated indicator pill that moves smoothly between items based on drag progress.
  *
- * Progress mapping for 3 items:
- * - 0.0 (RIGHT_OPEN/TOOLS) -> indicator at rightmost position
- * - 0.5 (CENTER/CHAT) -> indicator at center position
- * - 1.0 (LEFT_OPEN/SESSIONS) -> indicator at leftmost position
- *
  * @param progress Current drag progress (0.0 to 1.0)
+ * @param containerWidthPx Width of the navigation container for accurate offset calculation
  * @param modifier Modifier for styling
  */
 @Composable
 private fun AnimatedIndicatorPill(
     progress: Float,
+    containerWidthPx: Float,
     modifier: Modifier = Modifier
 ) {
+    val density = LocalDensity.current
+    
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(3.dp)
+            .height(3.dp),
+        contentAlignment = Alignment.Center
     ) {
         // The indicator pill - moves from right (0.0) to left (1.0)
+        // Using lambda offset for performance (60fps updates)
         Box(
             modifier = Modifier
                 .width(24.dp)
                 .height(3.dp)
+                .offset {
+                    // Calculate the max travel distance (from center to edges)
+                    // The items are spaced evenly. For 3 items, the centers are at:
+                    // 1/6, 1/2, 5/6 of the width.
+                    // Distance from center (1/2) to edges is 1/3 of the width.
+                    val maxOffsetPx = containerWidthPx / 3f
+                    
+                    // Map progress 0.0 (right) -> 1.0 (left) to offset +maxOffset -> -maxOffset
+                    val xOffsetPx = maxOffsetPx * (1.0f - 2.0f * progress)
+                    
+                    IntOffset(xOffsetPx.roundToInt(), 0)
+                }
                 .background(
                     color = AppColors.accentGreen,
                     shape = RoundedCornerShape(2.dp)
                 )
-                .align(Alignment.Center)
-                .offset(x = calculateIndicatorOffset(progress))
         )
     }
-}
-
-/**
- * Calculate the horizontal offset for the indicator pill based on progress.
- *
- * The indicator moves from RIGHT to LEFT as progress goes from 0.0 to 1.0:
- * - progress 0.0 (TOOLS) -> offset +80.dp (right side)
- * - progress 0.5 (CHAT) -> offset 0.dp (center)
- * - progress 1.0 (SESSIONS) -> offset -80.dp (left side)
- *
- * @param progress Current drag progress (0.0 to 1.0)
- * @return Offset in dp
- */
-@Composable
-private fun calculateIndicatorOffset(progress: Float): androidx.compose.ui.unit.Dp {
-    // Max offset from center to edge
-    val maxOffset = 80.dp
-
-    // Map progress 0.0 (right) -> 1.0 (left) to offset +maxOffset -> -maxOffset
-    // Formula: offset = maxOffset * (1.0 - 2.0 * progress)
-    // progress 0.0 -> offset = maxOffset * 1.0 = +maxOffset (right)
-    // progress 0.5 -> offset = maxOffset * 0.0 = 0.dp (center)
-    // progress 1.0 -> offset = maxOffset * -1.0 = -maxOffset (left)
-    return maxOffset * (1.0f - 2.0f * progress)
 }
 
 /**
