@@ -67,7 +67,8 @@ val commonModule = module {
             sseClient = get(),
             networkObserver = getOrNull(),
             localCache = get(),
-            apiClient = get()
+            apiClient = get(),
+            appLifecycleObserver = getOrNull()
         )
     }
     

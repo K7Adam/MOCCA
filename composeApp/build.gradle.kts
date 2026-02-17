@@ -112,6 +112,7 @@ kotlin {
             implementation(libs.androidx.core.ktx)
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.lifecycle.runtime)
+            implementation(libs.androidx.lifecycle.process)
             implementation(compose.preview)
             implementation(libs.kotlinx.serialization.json)
             

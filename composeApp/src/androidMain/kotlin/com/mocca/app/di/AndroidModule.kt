@@ -11,6 +11,8 @@ import com.mocca.app.domain.manager.AndroidUpdateManager
 import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.provider.AndroidAppVersionProvider
 import com.mocca.app.domain.provider.AppVersionProvider
+import com.mocca.app.util.AndroidAppLifecycleObserver
+import com.mocca.app.util.AppLifecycleObserver
 import com.mocca.app.util.NetworkObserver
 import com.mocca.app.util.NetworkObserverImpl
 import okio.Path.Companion.toPath
@@ -25,6 +27,11 @@ val androidModule = module {
     single<NetworkObserver> { NetworkObserverImpl(androidContext()) }
     single<PlatformUpdateManager> { AndroidUpdateManager(androidContext()) }
     single<AppVersionProvider> { AndroidAppVersionProvider(androidContext()) }
+    
+    // App lifecycle observer for background/foreground detection
+    single<AppLifecycleObserver> { 
+        AndroidAppLifecycleObserver(androidContext().applicationContext as android.app.Application) 
+    }
     
     // Override with Android Keystore implementation
     single<SecureTokenStorage> { SecureTokenStorageImpl(androidContext()) }
