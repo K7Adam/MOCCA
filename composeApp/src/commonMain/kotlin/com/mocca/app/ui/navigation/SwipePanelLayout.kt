@@ -37,12 +37,13 @@ enum class PanelState {
 /**
  * Custom swipe panel layout with three panels: left, center, right.
  * Optimized for quick, responsive navigation with minimal swipe distance.
- * 
+ *
  * Best Practices Applied:
  * - Low positionalThreshold (20%) - Only need to swipe 20% of screen width
  * - Low velocityThreshold (50dp) - Quick flicks trigger navigation immediately
  * - Fast snap animation (200ms) - Immediate feedback on release
  * - Velocity-based navigation - Fling gestures work naturally
+ * - Real-time progress reporting for external indicator sync
  */
 @Suppress("DEPRECATION")
 @OptIn(ExperimentalFoundationApi::class)
@@ -58,7 +59,8 @@ fun SwipePanelLayout(
     velocityThresholdDp: Dp = 50.dp, // Low velocity = responsive flicks
     animationDurationMs: Int = 200, // Fast snap animation
     panelState: PanelState = PanelState.CENTER,
-    onPanelStateChange: (PanelState) -> Unit = {}
+    onPanelStateChange: (PanelState) -> Unit = {},
+    onDragProgressChange: (Float) -> Unit = {} // Real-time progress callback: 0.0 (right) -> 0.5 (center) -> 1.0 (left)
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -111,6 +113,20 @@ fun SwipePanelLayout(
                 .collect { newState ->
                     if (newState != panelState) {
                         onPanelStateChange(newState)
+                    }
+                }
+        }
+
+        // Real-time drag progress reporting
+        // Progress: 0.0 (RIGHT_OPEN) -> 0.5 (CENTER) -> 1.0 (LEFT_OPEN)
+        LaunchedEffect(state, effectivePanelWidthPx) {
+            snapshotFlow { state.offset }
+                .collect { offset ->
+                    if (!offset.isNaN() && effectivePanelWidthPx > 0) {
+                        // Calculate progress: (offset + width) / (2 * width)
+                        // RIGHT_OPEN (-width) = 0.0, CENTER (0) = 0.5, LEFT_OPEN (+width) = 1.0
+                        val progress = (offset + effectivePanelWidthPx) / (2 * effectivePanelWidthPx)
+                        onDragProgressChange(progress.coerceIn(0f, 1f))
                     }
                 }
         }
