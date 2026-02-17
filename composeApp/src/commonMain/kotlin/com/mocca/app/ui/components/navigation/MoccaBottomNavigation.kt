@@ -50,31 +50,39 @@ import com.mocca.app.ui.theme.AppTypography
  * @property panelState The panel state this item represents
  * @property icon The icon to display
  * @property label The label text
+ * @property targetProgress The progress value (0.0-1.0) this item corresponds to
  */
 data class BottomNavItem(
     val panelState: PanelState,
     val icon: ImageVector,
-    val label: String
+    val label: String,
+    val targetProgress: Float
 )
 
 /**
  * Default bottom navigation items for the 3-panel layout.
+ *
+ * Order: Left to right on screen (SESSIONS, CHAT, TOOLS)
+ * Progress mapping: 0.0 (TOOLS/RIGHT) -> 0.5 (CHAT/CENTER) -> 1.0 (SESSIONS/LEFT)
  */
 val defaultBottomNavItems = listOf(
     BottomNavItem(
         panelState = PanelState.LEFT_OPEN,
         icon = Icons.Default.Computer,
-        label = "SESSIONS"
+        label = "SESSIONS",
+        targetProgress = 1.0f  // LEFT_OPEN is at progress 1.0
     ),
     BottomNavItem(
         panelState = PanelState.CENTER,
         icon = Icons.AutoMirrored.Filled.Chat,
-        label = "CHAT"
+        label = "CHAT",
+        targetProgress = 0.5f  // CENTER is at progress 0.5
     ),
     BottomNavItem(
         panelState = PanelState.RIGHT_OPEN,
         icon = Icons.Default.Dashboard,
-        label = "TOOLS"
+        label = "TOOLS",
+        targetProgress = 0.0f  // RIGHT_OPEN is at progress 0.0
     )
 )
 
@@ -132,15 +140,18 @@ fun MoccaBottomNavigation(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items.forEachIndexed { index, item ->
-                    val itemProgress = index / (items.size - 1).toFloat()
-                    val distanceFromProgress = kotlin.math.abs(dragProgress - itemProgress)
+                items.forEach { item ->
+                    // Calculate distance from current progress to this item's target
+                    val distanceFromProgress = kotlin.math.abs(dragProgress - item.targetProgress)
+                    // Item is selected if we're closest to it (within 0.25 threshold)
                     val isSelected = distanceFromProgress < 0.25f
+                    // Proximity for scale animation (1.0 = exactly at this item)
+                    val proximity = 1f - (distanceFromProgress * 2f).coerceIn(0f, 1f)
 
                     BottomNavItemComponent(
                         item = item,
                         isSelected = isSelected,
-                        proximity = 1f - (distanceFromProgress * 2f).coerceIn(0f, 1f),
+                        proximity = proximity,
                         onClick = { onItemClick(item.panelState) }
                     )
                 }
@@ -151,7 +162,6 @@ fun MoccaBottomNavigation(
             // Animated indicator pill that follows drag progress in real-time
             AnimatedIndicatorPill(
                 progress = dragProgress,
-                itemCount = items.size,
                 modifier = Modifier.padding(horizontal = AppSpacing.md)
             )
         }
@@ -161,24 +171,25 @@ fun MoccaBottomNavigation(
 /**
  * Animated indicator pill that moves smoothly between items based on drag progress.
  *
- * @param progress Current drag progress: 0.0 (right) -> 0.5 (center) -> 1.0 (left)
- * @param itemCount Number of navigation items
+ * Progress mapping for 3 items:
+ * - 0.0 (RIGHT_OPEN/TOOLS) -> indicator at rightmost position
+ * - 0.5 (CENTER/CHAT) -> indicator at center position
+ * - 1.0 (LEFT_OPEN/SESSIONS) -> indicator at leftmost position
+ *
+ * @param progress Current drag progress (0.0 to 1.0)
  * @param modifier Modifier for styling
  */
 @Composable
 private fun AnimatedIndicatorPill(
     progress: Float,
-    itemCount: Int,
     modifier: Modifier = Modifier
 ) {
-    // Calculate the width available for the indicator to move
-    // It should move between the centers of the first and last items
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(3.dp)
     ) {
-        // The indicator pill
+        // The indicator pill - moves from right (0.0) to left (1.0)
         Box(
             modifier = Modifier
                 .width(24.dp)
@@ -188,7 +199,7 @@ private fun AnimatedIndicatorPill(
                     shape = RoundedCornerShape(2.dp)
                 )
                 .align(Alignment.Center)
-                .offset(x = calculateIndicatorOffset(progress, itemCount))
+                .offset(x = calculateIndicatorOffset(progress))
         )
     }
 }
@@ -196,26 +207,25 @@ private fun AnimatedIndicatorPill(
 /**
  * Calculate the horizontal offset for the indicator pill based on progress.
  *
- * Progress mapping for 3 items:
- * - 0.0 (RIGHT_OPEN) -> offset to position above TOOLS
- * - 0.5 (CENTER) -> offset to position above CHAT
- * - 1.0 (LEFT_OPEN) -> offset to position above SESSIONS
+ * The indicator moves from RIGHT to LEFT as progress goes from 0.0 to 1.0:
+ * - progress 0.0 (TOOLS) -> offset +80.dp (right side)
+ * - progress 0.5 (CHAT) -> offset 0.dp (center)
+ * - progress 1.0 (SESSIONS) -> offset -80.dp (left side)
  *
  * @param progress Current drag progress (0.0 to 1.0)
- * @param itemCount Number of items
  * @return Offset in dp
  */
 @Composable
-private fun calculateIndicatorOffset(progress: Float, itemCount: Int): androidx.compose.ui.unit.Dp {
-    // Total travel distance: from rightmost item to leftmost item
-    // Assuming equal spacing, we map progress 0.0..1.0 to offset range
-    // Approximate spacing between item centers: ~80dp for standard bottom nav
+private fun calculateIndicatorOffset(progress: Float): androidx.compose.ui.unit.Dp {
+    // Max offset from center to edge
     val maxOffset = 80.dp
 
     // Map progress 0.0 (right) -> 1.0 (left) to offset +maxOffset -> -maxOffset
-    // Right item (0.0) should be at +offset
-    // Left item (1.0) should be at -offset
-    return maxOffset * (0.5f - progress) * 2f
+    // Formula: offset = maxOffset * (1.0 - 2.0 * progress)
+    // progress 0.0 -> offset = maxOffset * 1.0 = +maxOffset (right)
+    // progress 0.5 -> offset = maxOffset * 0.0 = 0.dp (center)
+    // progress 1.0 -> offset = maxOffset * -1.0 = -maxOffset (left)
+    return maxOffset * (1.0f - 2.0f * progress)
 }
 
 /**
