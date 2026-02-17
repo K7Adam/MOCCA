@@ -90,9 +90,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .navigationBarsPadding() // Ensure layout respects navigation bars
         ) {
-            // High-end terminal background effect
-            com.mocca.app.ui.components.terminal.ScanlineOverlay()
-
             SwipePanelLayout(
                 leftPanel = {
                     ContextHistoryPanel(
