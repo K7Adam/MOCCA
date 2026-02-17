@@ -17,6 +17,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mocca.app.ui.components.navigation.MoccaBottomNavigation
 import com.mocca.app.ui.components.terminal.ConnectionBannerStatus
 import com.mocca.app.ui.components.terminal.ConnectionStatusBanner
 import com.mocca.app.ui.components.terminal.GlobalActivityIndicator
@@ -209,6 +210,13 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 48.dp, end = 16.dp)
+            )
+
+            // Bottom Navigation Bar - ultra modern with real-time sync
+            MoccaBottomNavigation(
+                currentState = panelState.state,
+                onItemClick = { newState -> panelState.state = newState },
+                modifier = Modifier.align(Alignment.BottomCenter)
             )
         }
     }
