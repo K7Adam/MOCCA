@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
@@ -115,8 +116,8 @@ fun DashboardPanel(
             modifier = Modifier.fillMaxWidth()
         )
         
-        // Bottom padding
-        Spacer(modifier = Modifier.height(AppSpacing.screenPaddingBottom))
+        // Bottom padding for floating bottom bar clearance
+        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 

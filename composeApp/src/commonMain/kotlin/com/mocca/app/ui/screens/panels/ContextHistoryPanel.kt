@@ -235,7 +235,7 @@ private fun ConversationHistorySection(
                 // Grouped session view
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp),
+                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(
@@ -259,7 +259,7 @@ private fun ConversationHistorySection(
                 // Flat session view (fallback)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp),
+                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     items(

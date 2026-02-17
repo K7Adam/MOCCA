@@ -215,11 +215,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 )
 
             // Global Activity Indicator overlay - top right corner
-            GlobalActivityIndicator(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 48.dp, end = 16.dp)
-            )
+            // TEMPORARILY DISABLED: Activity tracking not fully implemented
+            // GlobalActivityIndicator(
+            //     modifier = Modifier
+            //         .align(Alignment.TopEnd)
+            //         .padding(top = 48.dp, end = 16.dp)
+            // )
 
             // Unified Floating Bottom Bar - morphs between nav and chat input modes
             val inputText by chatScreenModel.inputText.collectAsState()

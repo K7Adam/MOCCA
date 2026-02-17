@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -39,8 +41,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -186,7 +190,7 @@ private fun CompactNavItem(
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
+            .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs)
             .scale(scale)
     ) {
         Icon(
@@ -196,13 +200,17 @@ private fun CompactNavItem(
             modifier = Modifier.size(22.dp)
         )
 
-        Spacer(modifier = Modifier.height(3.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = item.label,
-            style = AppTypography.labelSmall,
+            style = AppTypography.labelSmall.copy(
+                fontSize = 10.sp,
+                letterSpacing = 0.3.sp
+            ),
             color = textColor,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1
         )
     }
 }

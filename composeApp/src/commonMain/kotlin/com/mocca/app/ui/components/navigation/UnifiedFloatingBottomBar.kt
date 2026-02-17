@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
-import com.mocca.app.ui.components.modern.glassy
+import com.mocca.app.ui.components.modern.glassyPremium
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -152,7 +152,7 @@ fun UnifiedFloatingBottomBar(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
-                .glassy(shape = AppShapes.rounded2xl),
+                .glassyPremium(shape = AppShapes.rounded2xl),
             contentAlignment = Alignment.Center
         ) {
             // Navigation Mode Content

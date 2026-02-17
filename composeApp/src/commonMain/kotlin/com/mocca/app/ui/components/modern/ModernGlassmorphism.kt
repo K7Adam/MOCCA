@@ -61,8 +61,8 @@ fun Modifier.glassy(
 fun Modifier.glassyPremium(
     shape: Shape,
     borderWidth: Dp = 0.75.dp,
-    backgroundColor: Color = Color(0x991A1A1A), // 60% opacity premium dark
-    borderColor: Color = Color(0x33FFFFFF),     // 20% white glow
+    backgroundColor: Color = Color(0xDD1A1A1A), // 87% opacity for better visibility
+    borderColor: Color = Color(0x55FFFFFF),     // Brighter white border for contrast
     glowColor: Color = Color(0x1A00D9A5)        // Subtle mint glow
 ): Modifier = this.then(
     Modifier

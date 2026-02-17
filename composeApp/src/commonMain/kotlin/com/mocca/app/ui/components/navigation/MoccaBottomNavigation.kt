@@ -78,7 +78,7 @@ val defaultBottomNavItems = listOf(
     BottomNavItem(
         panelState = PanelState.LEFT_OPEN,
         icon = Icons.Default.Computer,
-        label = "SESSIONS",
+        label = "SESSION",
         targetProgress = 1.0f  // LEFT_OPEN is at progress 1.0
     ),
     BottomNavItem(
