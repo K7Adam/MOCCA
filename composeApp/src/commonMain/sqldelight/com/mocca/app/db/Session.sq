@@ -23,9 +23,33 @@ CREATE INDEX idx_session_unsynced ON SessionEntity(isSynced) WHERE isSynced = 0;
 -- OPTIMIZED: Index for parent session lookups
 CREATE INDEX idx_session_parent ON SessionEntity(parentId);
 
+-- OPTIMIZED: Index for internal/background session filtering
+CREATE INDEX idx_session_internal_filter ON SessionEntity(title) WHERE 
+    title LIKE 'Background:%' OR 
+    title LIKE 'look_at:%' OR 
+    title LIKE '%subagent%';
+
 -- Select all sessions ordered by most recent
 selectAll:
 SELECT * FROM SessionEntity ORDER BY updatedAt DESC;
+
+-- Select root sessions (no parent and not internal)
+selectRootSessions:
+SELECT * FROM SessionEntity 
+WHERE parentId IS NULL 
+AND title NOT LIKE 'Background:%' 
+AND title NOT LIKE 'look_at:%' 
+AND title NOT LIKE '%subagent%'
+ORDER BY updatedAt DESC;
+
+-- Select child/internal sessions
+selectChildSessions:
+SELECT * FROM SessionEntity 
+WHERE parentId IS NOT NULL 
+OR title LIKE 'Background:%' 
+OR title LIKE 'look_at:%' 
+OR title LIKE '%subagent%'
+ORDER BY updatedAt DESC;
 
 -- Select session by ID
 selectById:

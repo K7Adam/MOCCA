@@ -22,8 +22,11 @@ import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -113,6 +116,10 @@ class MainScreenModel(
     
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
+    
+    // OPTIMIZED: Pre-calculated session groups derived from state.sessions
+    val sessionGroups = _state.asStateFlow().map { it.sessionGroups }
+        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     init {
         _state.update { it.copy(appVersion = "V${appVersionProvider.getVersion()}") }

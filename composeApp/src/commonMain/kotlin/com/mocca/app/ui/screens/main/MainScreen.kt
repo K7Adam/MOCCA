@@ -93,6 +93,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .navigationBarsPadding() // Ensure layout respects navigation bars
         ) {
+            // Subtle terminal effect
+            ScanlineOverlay(modifier = Modifier.fillMaxSize())
+            
             // Content area with bottom padding reserved for bottom navigation
             // Prevents overlap with chat input and other bottom-anchored UI
             Box(

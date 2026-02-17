@@ -148,7 +148,11 @@ fun ChatContent(screenModel: ChatScreenModel) {
     val streamingText by screenModel.streamingText.collectAsState()
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
     
-    val sessionTitle = state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
+    val sessionTitle by remember(state.session) {
+        derivedStateOf {
+            state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
+        }
+    }
     
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -366,6 +370,14 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     onRefresh = { screenModel.refreshData() },
                     modifier = Modifier.fillMaxSize()
                 ) {
+                    val displayMessages by remember(aggregatedMessages) {
+                        derivedStateOf {
+                            aggregatedMessages.filter { msg ->
+                                msg.role == MessageRole.USER || msg.parts.isNotEmpty()
+                            }
+                        }
+                    }
+
                     LazyColumn(
                         state = listState,
                         reverseLayout = true,
@@ -395,10 +407,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         
                         if (streamingText.isNotEmpty()) {
                             item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
-                        }
-                        
-                        val displayMessages = aggregatedMessages.filter { msg ->
-                            msg.role == MessageRole.USER || msg.parts.isNotEmpty()
                         }
                         
                         items(

@@ -220,10 +220,14 @@ class SessionsScreen : Screen {
                             }
                             else -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
+                                    val filteredSessions = state.filteredSessions
+                                    val childrenMap = state.childrenMap
+                                    val selectedSessionId = state.selectedSessionId
+                                    
                                     ModernSessionsList(
-                                        sessions = state.filteredSessions,
-                                        childrenMap = state.childrenMap,
-                                        selectedSessionId = state.selectedSessionId,
+                                        sessions = filteredSessions,
+                                        childrenMap = childrenMap,
+                                        selectedSessionId = selectedSessionId,
                                         onSessionClick = { session ->
                                             screenModel.selectSession(session.id)
                                             navigator.push(WorkspaceScreen(session.id))

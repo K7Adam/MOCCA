@@ -11,6 +11,9 @@ plugins {
 composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
     
+    // Enable Strong Skipping Mode for ultra-responsive UI
+    featureFlags.set(setOf(org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.StrongSkipping))
+    
     // Enable Compose metrics for performance analysis
     metricsDestination = layout.buildDirectory.dir("compose_metrics")
     reportsDestination = layout.buildDirectory.dir("compose_reports")

@@ -29,9 +29,7 @@ fun App() {
         }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars) // Handle status bar globally
+            modifier = Modifier.fillMaxSize()
         ) {
             Navigator(startScreen) { navigator ->
                 SlideTransition(navigator)

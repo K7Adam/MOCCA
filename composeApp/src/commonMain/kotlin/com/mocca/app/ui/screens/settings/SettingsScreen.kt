@@ -57,6 +57,8 @@ class SettingsScreen : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
             // Header
             Row(
