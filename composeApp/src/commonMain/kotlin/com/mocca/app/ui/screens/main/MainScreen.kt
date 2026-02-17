@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -77,12 +80,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         }
         
         val panelState = rememberPanelState()
-        
+
+        // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
+        var dragProgress by remember { mutableFloatStateOf(0.5f) }
+
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
             panelState.closePanel()
         }
-        
+
         // Main content wrapped in Box for GlobalActivityIndicator overlay
         // Use Pitch Black background
         Box(
@@ -91,120 +97,129 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .navigationBarsPadding() // Ensure layout respects navigation bars
         ) {
-            SwipePanelLayout(
-                leftPanel = {
-                    ContextHistoryPanel(
-                        sessions = state.sessions,
-                        sessionGroups = state.sessionGroups,
-                        runningSessionIds = state.runningSessionIds,
-                        currentSessionId = state.currentSessionId,
-                        mcpStatus = state.mcpStatus,
-                        model = chatState.modelName.takeIf { it != "--" } ?: state.modelName,
-                        latency = state.latency,
-                        port = state.port,
-                        usedTokens = chatState.totalInputTokens + chatState.totalOutputTokens,
-                        maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
-                        agentName = chatState.agentName.takeIf { it != "--" } ?: state.agentName,
-                        appVersion = state.appVersion,
-                        isCreatingSession = state.isCreatingSession,
-                        loadingSessionId = state.loadingSessionId,
-                        newlyCreatedSessionId = state.newlyCreatedSessionId,
-                        isRefreshing = state.isLoading,
-                        onSessionClick = { session ->
-                            screenModel.selectSession(session.id) {
-                                panelState.closePanel()
+            // Content area with bottom padding reserved for bottom navigation
+            // Prevents overlap with chat input and other bottom-anchored UI
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 88.dp) // Reserve space for bottom nav (64dp nav + 24dp padding)
+            ) {
+                SwipePanelLayout(
+                    leftPanel = {
+                        ContextHistoryPanel(
+                            sessions = state.sessions,
+                            sessionGroups = state.sessionGroups,
+                            runningSessionIds = state.runningSessionIds,
+                            currentSessionId = state.currentSessionId,
+                            mcpStatus = state.mcpStatus,
+                            model = chatState.modelName.takeIf { it != "--" } ?: state.modelName,
+                            latency = state.latency,
+                            port = state.port,
+                            usedTokens = chatState.totalInputTokens + chatState.totalOutputTokens,
+                            maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
+                            agentName = chatState.agentName.takeIf { it != "--" } ?: state.agentName,
+                            appVersion = state.appVersion,
+                            isCreatingSession = state.isCreatingSession,
+                            loadingSessionId = state.loadingSessionId,
+                            newlyCreatedSessionId = state.newlyCreatedSessionId,
+                            isRefreshing = state.isLoading,
+                            onSessionClick = { session ->
+                                screenModel.selectSession(session.id) {
+                                    panelState.closePanel()
+                                }
+                            },
+                            onNewSessionClick = {
+                                screenModel.createSession {
+                                    panelState.closePanel()
+                                }
+                            },
+                            onRefresh = { screenModel.refreshAll() },
+                            onGroupExpandToggle = { groupId ->
+                                screenModel.toggleGroupExpanded(groupId)
                             }
-                        },
-                        onNewSessionClick = {
-                            screenModel.createSession {
-                                panelState.closePanel()
+                        )
+                    },
+                    centerPanel = {
+                        // Show ChatContent if session is selected (input disabled when not connected)
+                        if (state.currentSessionId != null) {
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                // Connection status banner at top when not connected
+                                if (!state.isConnected) {
+                                    ConnectionStatusBanner(
+                                        status = when {
+                                            state.isConnecting -> ConnectionBannerStatus.Connecting(
+                                                attempt = state.connectionAttempt,
+                                                maxAttempts = state.maxConnectionAttempts
+                                            )
+                                            state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
+                                            state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
+                                            else -> ConnectionBannerStatus.Disconnected()
+                                        },
+                                        onRetryClick = { screenModel.retryConnection() }
+                                    )
+                                }
+
+                                // Chat content (input will be disabled based on connection status)
+                                ChatContent(chatScreenModel)
                             }
-                        },
-                        onRefresh = { screenModel.refreshAll() },
-                        onGroupExpandToggle = { groupId ->
-                            screenModel.toggleGroupExpanded(groupId)
+                        } else {
+                            // Empty state - no session selected
+                            Box(modifier = Modifier.fillMaxSize()) {
+                                if (!state.isConnected) {
+                                    ConnectionStatusBanner(
+                                        status = when {
+                                            state.isConnecting -> ConnectionBannerStatus.Connecting(
+                                                attempt = state.connectionAttempt,
+                                                maxAttempts = state.maxConnectionAttempts
+                                            )
+                                            state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
+                                            state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
+                                            else -> ConnectionBannerStatus.Disconnected()
+                                        },
+                                        onRetryClick = { screenModel.retryConnection() }
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    QuoteRotator(
+                                        versionText = state.appVersion,
+                                        serverText = if (state.isConnected) "LOCAL SERVER" else null,
+                                        isLoading = state.isLoadingSession || state.isCreatingSession,
+                                        loadingText = if (state.isCreatingSession) "CREATING_SESSION..." else "LOADING_SESSION..."
+                                    )
+                                }
+                            }
                         }
-                    )
-                },
-                centerPanel = {
-                    // Show ChatContent if session is selected (input disabled when not connected)
-                    if (state.currentSessionId != null) {
-                        Column(modifier = Modifier.fillMaxSize()) {
-                            // Connection status banner at top when not connected
-                            if (!state.isConnected) {
-                                ConnectionStatusBanner(
-                                    status = when {
-                                        state.isConnecting -> ConnectionBannerStatus.Connecting(
-                                            attempt = state.connectionAttempt,
-                                            maxAttempts = state.maxConnectionAttempts
-                                        )
-                                        state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
-                                        state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
-                                        else -> ConnectionBannerStatus.Disconnected()
-                                    },
-                                    onRetryClick = { screenModel.retryConnection() }
-                                )
+                    },
+                    rightPanel = {
+                        DashboardPanel(
+                            screenModel = dashboardScreenModel,
+                            onMcpConfigClick = { navigator.push(McpScreen()) },
+                            onSettingsClick = { navigator.push(SettingsScreen()) },
+                            onGitClick = { navigator.push(GitScreen()) },
+                            onFilesClick = { navigator.push(FilesScreen()) },
+                            onTerminalClick = { navigator.push(TerminalScreen()) },
+                            onSkillsClick = { },
+                            onSkillClick = { },
+                            onRefreshAll = {
+                                // Trigger global refresh: sessions, messages, config, and SSE reconnection
+                                screenModel.refreshAll()
+                                // Also refresh chat data
+                                chatScreenModel.refreshData()
+                                // Refresh dashboard data
+                                dashboardScreenModel.refresh()
                             }
-                            
-                            // Chat content (input will be disabled based on connection status)
-                            ChatContent(chatScreenModel)
-                        }
-                    } else {
-                        // Empty state - no session selected
-                        Box(modifier = Modifier.fillMaxSize()) {
-                            if (!state.isConnected) {
-                                ConnectionStatusBanner(
-                                    status = when {
-                                        state.isConnecting -> ConnectionBannerStatus.Connecting(
-                                            attempt = state.connectionAttempt,
-                                            maxAttempts = state.maxConnectionAttempts
-                                        )
-                                        state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
-                                        state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
-                                        else -> ConnectionBannerStatus.Disconnected()
-                                    },
-                                    onRetryClick = { screenModel.retryConnection() }
-                                )
-                            }
-                            
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                QuoteRotator(
-                                    versionText = state.appVersion,
-                                    serverText = if (state.isConnected) "LOCAL SERVER" else null,
-                                    isLoading = state.isLoadingSession || state.isCreatingSession,
-                                    loadingText = if (state.isCreatingSession) "CREATING_SESSION..." else "LOADING_SESSION..."
-                                )
-                            }
-                        }
-                    }
-                },
-                rightPanel = {
-                    DashboardPanel(
-                        screenModel = dashboardScreenModel,
-                        onMcpConfigClick = { navigator.push(McpScreen()) },
-                        onSettingsClick = { navigator.push(SettingsScreen()) },
-                        onGitClick = { navigator.push(GitScreen()) },
-                        onFilesClick = { navigator.push(FilesScreen()) },
-                        onTerminalClick = { navigator.push(TerminalScreen()) },
-                        onSkillsClick = { },
-                        onSkillClick = { },
-                        onRefreshAll = {
-                            // Trigger global refresh: sessions, messages, config, and SSE reconnection
-                            screenModel.refreshAll()
-                            // Also refresh chat data
-                            chatScreenModel.refreshData()
-                            // Refresh dashboard data
-                            dashboardScreenModel.refresh()
-                        }
-                    )
-                },
-                panelState = panelState.state,
-                onPanelStateChange = { panelState.state = it }
-            )
-            
+                        )
+                    },
+                    panelState = panelState.state,
+                    onPanelStateChange = { panelState.state = it },
+                    onDragProgressChange = { progress -> dragProgress = progress }
+                )
+            }
+
             // Global Activity Indicator overlay - top right corner
             GlobalActivityIndicator(
                 modifier = Modifier
@@ -213,8 +228,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             )
 
             // Bottom Navigation Bar - ultra modern with real-time sync
+            // Positioned outside content area to avoid overlap
             MoccaBottomNavigation(
                 currentState = panelState.state,
+                dragProgress = dragProgress,
                 onItemClick = { newState -> panelState.state = newState },
                 modifier = Modifier.align(Alignment.BottomCenter)
             )
