@@ -130,7 +130,7 @@ fun UpdateDialog(
                         // Log Content
                         val logScrollState = rememberScrollState()
                         // Auto-scroll to bottom when logs change
-                        androidx.compose.runtime.LaunchedEffect(logs.size) {
+                        androidx.compose.runtime.LaunchedEffect(logs.size, error) {
                             logScrollState.animateScrollTo(logScrollState.maxValue)
                         }
                         
@@ -148,6 +148,17 @@ fun UpdateDialog(
                                     fontFamily = AppTypography.monoFamily
                                 )
                             }
+                            
+                            // Error Message - Displayed inside logs so it gets copied
+                            if (error != null) {
+                                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                Text(
+                                    text = "> ERROR: $error",
+                                    style = AppTypography.codeSmall.copy(fontSize = 10.sp),
+                                    color = AppColors.alertRed,
+                                    fontFamily = AppTypography.monoFamily
+                                )
+                            }
                         }
                     }
                 }
@@ -158,30 +169,6 @@ fun UpdateDialog(
                     color = AppColors.textTertiary,
                     style = AppTypography.labelSmall
                 )
-
-                // Error Message (inside scrollable area if content is long)
-                if (error != null) {
-                    Spacer(modifier = Modifier.height(AppSpacing.md))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(AppColors.alertRedDim, AppShapes.small)
-                            .padding(AppSpacing.md)
-                    ) {
-                        Text(
-                            text = "DOWNLOAD FAILED",
-                            color = AppColors.alertRed,
-                            style = AppTypography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(AppSpacing.xs))
-                        Text(
-                            text = error,
-                            color = AppColors.alertRed,
-                            style = AppTypography.bodySmall
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.lg))
