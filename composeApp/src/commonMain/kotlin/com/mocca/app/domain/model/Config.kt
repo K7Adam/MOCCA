@@ -102,5 +102,5 @@ sealed class ConnectionStatus {
  * Used by UI components to display appropriate connectivity indicators.
  */
 enum class ConnectionQuality {
-    EXCELLENT, GOOD, POOR, OFFLINE, UNKNOWN
+    EXCELLENT, GOOD, DEGRADED, POOR, OFFLINE, UNKNOWN
 }

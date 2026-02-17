@@ -38,8 +38,8 @@ object NetworkConfig {
     // SSE (SERVER-SENT EVENTS) CONFIGURATION
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    /** SharedFlow buffer capacity for SSE events */
-    const val SSE_BUFFER_CAPACITY = 256
+    /** SharedFlow buffer capacity for SSE events (increased for high-throughput sessions) */
+    const val SSE_BUFFER_CAPACITY = 512
     
     /** Maximum SSE reconnection attempts */
     const val SSE_MAX_RECONNECT_ATTEMPTS = 10
@@ -52,6 +52,18 @@ object NetworkConfig {
     
     /** Jitter range for reconnection delay (0-500ms) */
     const val SSE_RECONNECT_JITTER_MS = 500L
+    
+    /** Heartbeat timeout for SSE connection (60 seconds - increased for mobile networks) */
+    const val SSE_HEARTBEAT_TIMEOUT_MS = 60_000L
+    
+    /** Heartbeat check interval (15 seconds) */
+    const val SSE_HEARTBEAT_CHECK_INTERVAL_MS = 15_000L
+    
+    /** Event deduplication TTL (1 minute) */
+    const val EVENT_DEDUP_TTL_MS = 60_000L
+    
+    /** Streaming text buffer max size before forced flush */
+    const val STREAMING_TEXT_MAX_SIZE = 100_000
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONNECTION QUALITY THRESHOLDS
@@ -122,4 +134,45 @@ object NetworkConfig {
     
     /** Recovery timeout for half-open state (5 seconds) */
     const val CIRCUIT_BREAKER_RECOVERY_MS = 5_000L
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // APP LIFECYCLE
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /** Delay before pausing SSE when app goes to background (allows for quick returns) */
+    const val BACKGROUND_PAUSE_DELAY_MS = 5_000L
+    
+    /** Reduced health check interval when backgrounded (30 seconds) */
+    const val BACKGROUND_HEALTH_CHECK_INTERVAL_MS = 30_000L
+    
+    /** Normal health check interval when foregrounded (5 minutes) */
+    const val FOREGROUND_HEALTH_CHECK_INTERVAL_MS = 5 * 60_000L
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CONNECTION QUALITY ADAPTIVE BEHAVIOR
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /** Heartbeat interval for excellent connection quality (60 seconds) */
+    const val HEARTBEAT_EXCELLENT_MS = 60_000L
+    
+    /** Heartbeat interval for good connection quality (45 seconds) */
+    const val HEARTBEAT_GOOD_MS = 45_000L
+    
+    /** Heartbeat interval for degraded connection quality (30 seconds) */
+    const val HEARTBEAT_DEGRADED_MS = 30_000L
+    
+    /** Heartbeat interval for poor connection quality (15 seconds) */
+    const val HEARTBEAT_POOR_MS = 15_000L
+    
+    /** Number of samples to keep for connection quality tracking */
+    const val QUALITY_SAMPLE_SIZE = 20
+    
+    /** Latency threshold for excellent quality (ms) */
+    const val LATENCY_EXCELLENT_THRESHOLD_MS = 500L
+    
+    /** Latency threshold for good quality (ms) */
+    const val LATENCY_GOOD_THRESHOLD_MS = 2_000L
+    
+    /** Latency threshold for degraded quality (ms) */
+    const val LATENCY_DEGRADED_THRESHOLD_MS = 5_000L
 }
