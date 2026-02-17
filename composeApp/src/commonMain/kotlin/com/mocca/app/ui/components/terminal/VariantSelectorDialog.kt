@@ -55,7 +55,7 @@ fun VariantSelectorDialog(
                     color = AppColors.white,
                     fontWeight = FontWeight.Bold
                 )
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
                     iconColor = AppColors.grey

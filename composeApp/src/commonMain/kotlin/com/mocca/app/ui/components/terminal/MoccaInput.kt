@@ -76,7 +76,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Modern design: 32dp rounded corners, dark background, subtle border.
  */
 @Composable
-fun TerminalInput(
+fun MoccaInput(
     value: String,
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -475,7 +475,7 @@ fun RichChatInput(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // @ mention button - inserts @
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Add,
                 onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
                 size = 36.dp,
@@ -483,7 +483,7 @@ fun RichChatInput(
             )
             
             // / command button - inserts /
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "/",
                 onClick = { handleValueChange("/") },
                 textColor = AppColors.textSecondary
@@ -502,7 +502,7 @@ fun RichChatInput(
             Box {
                 var showAgentMenu by remember { mutableStateOf(false) }
                 
-                TerminalCompactButton(
+                MoccaCompactButton(
                     text = agentName.uppercase(),
                     onClick = { showAgentMenu = true },
                     icon = Icons.Default.Person,
@@ -536,7 +536,7 @@ fun RichChatInput(
             Spacer(modifier = Modifier.weight(1f))
             
             // Attachment button
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachClick,
                 size = 36.dp,
@@ -546,7 +546,7 @@ fun RichChatInput(
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             // Send button (pill-shaped)
-            TerminalCompactButton(
+            MoccaCompactButton(
                 text = "SEND",
                 onClick = onSendClick,
                 enabled = enabled && value.isNotBlank(),
@@ -693,7 +693,7 @@ fun CommandLineInput(
                 modifier = Modifier.padding(horizontal = AppSpacing.xs)
             ) {
                 if (onHistoryUp != null) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.KeyboardArrowUp,
                         onClick = onHistoryUp,
                         enabled = enabled,
@@ -703,7 +703,7 @@ fun CommandLineInput(
                     )
                 }
                 if (onHistoryDown != null) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.KeyboardArrowDown,
                         onClick = onHistoryDown,
                         enabled = enabled,
@@ -718,7 +718,7 @@ fun CommandLineInput(
         Spacer(modifier = Modifier.width(AppSpacing.sm))
         
         // Send button (circular FAB style)
-        TerminalFab(
+        MoccaFab(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = 48.dp,

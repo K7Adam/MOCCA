@@ -18,9 +18,9 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 
 ## KEY COMPONENTS
 ### 1. Terminal Primitives (`terminal/`)
-- `TerminalButton`: Blocky button with #D9D9D9 background and black text.
-- `TerminalInput`: Solid black background with white outline and cursor.
-- `TerminalCard`: Rectangular container with `surfaceVariant` background and 0dp corners.
+- `MoccaButton`: Blocky button with #D9D9D9 background and black text.
+- `MoccaInput`: Solid black background with white outline and cursor.
+- `MoccaCard`: Rectangular container with `surfaceVariant` background and 0dp corners.
 - `TerminalBadge`: High-contrast "USER" or "AGENT" tags.
 - `TerminalTopBar`: Top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
 

@@ -37,12 +37,12 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionStatus
-import com.mocca.app.ui.components.terminal.TerminalButton
+import com.mocca.app.ui.components.terminal.MoccaButton
 import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.TerminalIconButton
-import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
+import com.mocca.app.ui.components.terminal.MoccaIconButton
+import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
 import com.mocca.app.ui.components.terminal.TerminalProcessingIndicator
-import com.mocca.app.ui.components.terminal.TerminalSessionCard
+import com.mocca.app.ui.components.terminal.MoccaSessionCard
 import com.mocca.app.ui.screens.workspace.WorkspaceScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.theme.AppColors
@@ -96,18 +96,18 @@ class SessionsScreen : Screen {
                     // ═══════════════════════════════════════════════════════════════════════════════
                     // SESSION SEARCH (Priority 5.6) - Search toggle button
                     // ═══════════════════════════════════════════════════════════════════════════════
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.Search,
                         onClick = { screenModel.toggleSearch() },
                         contentDescription = "Search",
                         iconColor = if (state.isSearchVisible) AppColors.statusOnline else AppColors.grey
                     )
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.Settings,
                         onClick = { navigator.push(SettingsScreen()) },
                         contentDescription = stringResource(Res.string.settings)
                     )
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = { screenModel.refresh() },
                         contentDescription = stringResource(Res.string.refresh)
@@ -245,7 +245,7 @@ class SessionsScreen : Screen {
                                             .fillMaxWidth()
                                             .padding(AppSpacing.lg)
                                     ) {
-                                        TerminalButton(
+                                        MoccaButton(
                                             text = "NEW_SESSION",
                                             onClick = { screenModel.createSession() },
                                             icon = Icons.Default.Add
@@ -306,14 +306,14 @@ private fun TerminalNotConnectedContent(
         Row(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            TerminalButton(
+            MoccaButton(
                 text = "CONFIGURE",
                 onClick = onConfigureClick,
                 icon = Icons.Default.Settings,
                 modifier = Modifier.weight(1f)
             )
             if (onRetryClick != null) {
-                TerminalOutlinedButton(
+                MoccaOutlinedButton(
                     text = "RETRY",
                     onClick = onRetryClick,
                     icon = Icons.Default.Refresh,
@@ -368,7 +368,7 @@ private fun TerminalEmptySessionsContent(
             color = AppColors.greyLight
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
-        TerminalButton(
+        MoccaButton(
             text = "NEW_SESSION",
             onClick = onCreateClick,
             icon = Icons.Default.Add,
@@ -396,7 +396,7 @@ private fun TerminalSessionsList(
             key = { it.id },
             contentType = { "session" }
         ) { session ->
-            TerminalSessionCard(
+            MoccaSessionCard(
                 session = session,
                 childSessions = childrenMap[session.id] ?: emptyList(),
                 isSelected = session.id == selectedSessionId,
@@ -408,7 +408,7 @@ private fun TerminalSessionsList(
 }
 
 @Composable
-private fun TerminalSessionCard(
+private fun MoccaSessionCard(
     session: Session,
     childSessions: List<Session>,
     isSelected: Boolean,
@@ -489,7 +489,7 @@ private fun TerminalSessionCard(
                 }
             }
             
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDeleteClick,
                 iconColor = AppColors.error,
@@ -597,7 +597,7 @@ private fun TerminalSearchBar(
             
             if (query.isNotEmpty()) {
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.Default.Clear,
                     onClick = onClear,
                     iconColor = AppColors.grey,

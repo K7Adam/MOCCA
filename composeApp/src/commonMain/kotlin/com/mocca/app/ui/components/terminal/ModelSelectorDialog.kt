@@ -61,7 +61,7 @@ fun ModelSelectorDialog(
                     color = AppColors.white,
                     fontWeight = FontWeight.Bold
                 )
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
                     iconColor = AppColors.grey
@@ -110,7 +110,7 @@ fun ModelSelectorDialog(
                     }
                 )
                 if (searchQuery.isNotEmpty()) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.Close,
                         onClick = { searchQuery = "" },
                         iconColor = AppColors.grey,

@@ -33,13 +33,13 @@ import com.mocca.app.ui.components.terminal.ModuleCard
 import com.mocca.app.ui.components.terminal.ModuleRowItem
 import com.mocca.app.ui.components.terminal.StatusDot
 import com.mocca.app.ui.components.terminal.StatusSquare
-import com.mocca.app.ui.components.terminal.TerminalButton
-import com.mocca.app.ui.components.terminal.TerminalCompactButton
+import com.mocca.app.ui.components.terminal.MoccaButton
+import com.mocca.app.ui.components.terminal.MoccaCompactButton
 import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.TerminalIconButton
-import com.mocca.app.ui.components.terminal.TerminalInput
-import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
-import com.mocca.app.ui.components.terminal.TerminalTextButton
+import com.mocca.app.ui.components.terminal.MoccaIconButton
+import com.mocca.app.ui.components.terminal.MoccaInput
+import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
+import com.mocca.app.ui.components.terminal.MoccaTextButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -76,7 +76,7 @@ class SettingsScreen : Screen {
                     .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
                     iconColor = AppColors.textSecondary
@@ -119,7 +119,7 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    TerminalButton(
+                    MoccaButton(
                         text = "ADD SERVER",
                         onClick = { screenModel.addNewServer() },
                         modifier = Modifier.fillMaxWidth(),
@@ -181,7 +181,7 @@ class SettingsScreen : Screen {
                                     } else {
                                         // OAuth Button
                                         if (methods?.any { it.type == "oauth" } == true) {
-                                            TerminalButton(
+                                            MoccaButton(
                                                 text = "CONNECT (OAUTH)",
                                                 onClick = { 
                                                     screenModel.startOAuth(providerId) { url ->
@@ -196,14 +196,14 @@ class SettingsScreen : Screen {
                                         }
                                         
                                         // Manual Key Input
-                                        TerminalInput(
+                                        MoccaInput(
                                             value = manualKey,
                                             onValueChange = { manualKey = it },
                                             placeholder = "API KEY",
                                             label = null
                                         )
                                         Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                        TerminalCompactButton(
+                                        MoccaCompactButton(
                                             text = "SAVE KEY",
                                             onClick = { screenModel.setManualKey(providerId, manualKey) },
                                             enabled = manualKey.isNotBlank(),
@@ -334,7 +334,7 @@ class SettingsScreen : Screen {
                         )
                         Spacer(modifier = Modifier.height(AppSpacing.sm))
                         
-                        TerminalInput(
+                        MoccaInput(
                             value = tokenInput,
                             onValueChange = { tokenInput = it },
                             label = "GITHUB PAT",
@@ -347,7 +347,7 @@ class SettingsScreen : Screen {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
                         ) {
-                            TerminalOutlinedButton(
+                            MoccaOutlinedButton(
                                 text = "SAVE TOKEN",
                                 onClick = { screenModel.saveGitHubToken(tokenInput) },
                                 enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken,
@@ -355,7 +355,7 @@ class SettingsScreen : Screen {
                                 height = AppSpacing.buttonHeightCompact
                             )
                             
-                            TerminalButton(
+                            MoccaButton(
                                 text = "CHECK FOR UPDATES",
                                 onClick = { screenModel.checkForUpdates() },
                                 enabled = !state.isLoading,
@@ -493,12 +493,12 @@ private fun TerminalServerCard(
             }
             
             // Edit/Delete
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Edit,
                 onClick = onEdit,
                 iconColor = AppColors.textSecondary
             )
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDelete,
                 iconColor = AppColors.alertRed
@@ -538,7 +538,7 @@ private fun TerminalServerEditDialog(
             Column {
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 
-                TerminalInput(
+                MoccaInput(
                     value = name,
                     onValueChange = { name = it },
                     label = "SERVER NAME",
@@ -549,7 +549,7 @@ private fun TerminalServerEditDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                TerminalInput(
+                MoccaInput(
                     value = host,
                     onValueChange = { host = it },
                     label = "HOST",
@@ -561,7 +561,7 @@ private fun TerminalServerEditDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                TerminalInput(
+                MoccaInput(
                     value = port,
                     onValueChange = { port = it },
                     label = "PORT",
@@ -572,7 +572,7 @@ private fun TerminalServerEditDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                TerminalInput(
+                MoccaInput(
                     value = username,
                     onValueChange = { username = it },
                     label = "USERNAME",
@@ -583,7 +583,7 @@ private fun TerminalServerEditDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                TerminalInput(
+                MoccaInput(
                     value = password,
                     onValueChange = { password = it },
                     label = "PASSWORD",
@@ -606,7 +606,7 @@ private fun TerminalServerEditDialog(
             }
         },
         confirmButton = {
-            TerminalButton(
+            MoccaButton(
                 text = "SAVE",
                 onClick = {
                     onSave(
@@ -624,7 +624,7 @@ private fun TerminalServerEditDialog(
             )
         },
         dismissButton = {
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "CANCEL",
                 onClick = onDismiss
             )

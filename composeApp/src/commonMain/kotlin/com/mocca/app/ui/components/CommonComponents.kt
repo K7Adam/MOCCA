@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
-import com.mocca.app.ui.components.terminal.TerminalButton
+import com.mocca.app.ui.components.terminal.MoccaButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -257,7 +257,7 @@ fun ErrorScreen(
             )
             if (onRetry != null) {
                 Spacer(modifier = Modifier.height(AppSpacing.xl))
-                TerminalButton(
+                MoccaButton(
                     text = stringResource(Res.string.retry).uppercase(),
                     onClick = onRetry
                 )

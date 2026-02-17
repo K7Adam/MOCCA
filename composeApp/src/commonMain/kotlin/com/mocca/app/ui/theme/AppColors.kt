@@ -5,8 +5,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * MOCCA Color Palette - Modern dark theme with accent colors.
- * Based on UI overhaul designs with mint green accents and glassmorphic elements.
+ * MOCCA Color Palette - Modern sleek theme.
+ * Refactored to map to ModernColors system.
  */
 @Immutable
 object AppColors {
@@ -14,314 +14,187 @@ object AppColors {
     // BACKGROUNDS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Pure black background - main app background (OLED-friendly) */
-    val background = Color(0xFF000000)
+    /** Main app background (Deep Navy) */
+    val background = ModernColors.background
 
-    /** Near-black background variant - for slight elevation */
-    val backgroundVariant = Color(0xFF050505)
+    /** Near-black background variant */
+    val backgroundVariant = ModernColors.surface
 
-    /** Slightly elevated surface - for cards and panels */
-    val surface = Color(0xFF0A0A0A)
+    /** Slightly elevated surface */
+    val surface = ModernColors.surface
 
-    /** Surface variant - for nested containers, code blocks */
-    val surfaceVariant = Color(0xFF111111)
+    /** Surface variant */
+    val surfaceVariant = ModernColors.surfaceElevated
 
-    /** Surface container - for input fields, elevated cards */
-    val surfaceContainer = Color(0xFF1A1A1A)
+    /** Surface container */
+    val surfaceContainer = ModernColors.surfaceElevated
 
-    /** Surface elevated - for floating elements, dialogs */
-    val surfaceElevated = Color(0xFF1C1C1E)
+    /** Surface elevated */
+    val surfaceElevated = ModernColors.surfaceHighlight
 
-    /** Card background - for card containers */
-    val cardBackground = Color(0xFF121212)
+    /** Card background */
+    val cardBackground = ModernColors.surface
 
-    /** Card highlight - for active/highlighted cards */
-    val cardHighlight = Color(0xFF1E1E1E)
+    /** Card highlight */
+    val cardHighlight = ModernColors.surfaceElevated
 
     /** Module/tool card background */
-    val moduleBackground = Color(0xFF111111)
+    val moduleBackground = ModernColors.surface
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PRIMARY CONTENT (WHITE SCALE)
+    // PRIMARY CONTENT
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Primary white - main text, borders, active elements */
     val white = Color(0xFFFFFFFF)
-
-    /** Primary text - same as white for consistency */
-    val textPrimary = Color(0xFFFFFFFF)
-
-    /** Slightly dimmed white - secondary text */
-    val whiteDim = Color(0xFFE0E0E0)
-
-    /** Secondary text - for subtitles and descriptions */
-    val textSecondary = Color(0xFF888888)
-
-    /** Muted white - tertiary text, placeholders */
-    val whiteMuted = Color(0xFFB0B0B0)
-
-    /** Tertiary text - for timestamps, meta info */
-    val textTertiary = Color(0xFF666666)
-
-    /** Placeholder text color */
-    val textPlaceholder = Color(0xFF555555)
+    val textPrimary = ModernColors.textPrimary
+    val whiteDim = ModernColors.textSecondary
+    val textSecondary = ModernColors.textSecondary
+    val whiteMuted = ModernColors.textTertiary
+    val textTertiary = ModernColors.textTertiary
+    val textPlaceholder = ModernColors.textDisabled
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // GREY SCALE (SECONDARY/META)
+    // GREY SCALE
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Dark grey - very dim text, meta info */
-    val greyDark = Color(0xFF333333)
-
-    /** Medium grey - disabled text, subtle borders */
-    val grey = Color(0xFF666666)
-
-    /** Light grey - secondary labels, timestamps */
-    val greyLight = Color(0xFF888888)
-
-    /** Extra light grey - for very subtle elements */
-    val greyExtraLight = Color(0xFF9CA3AF)
-
-    /** Border grey - for container outlines */
-    val border = Color(0xFF2A2A2A)
-
-    /** Border light - for prominent outlines */
-    val borderLight = Color(0xFF333333)
-
-    /** Border white - for high-contrast borders */
+    val greyDark = ModernColors.surfaceHighlight
+    val grey = ModernColors.textDisabled
+    val greyLight = ModernColors.textTertiary
+    val greyExtraLight = ModernColors.textSecondary
+    val border = ModernColors.border
+    val borderLight = ModernColors.surfaceHighlight
     val borderWhite = Color(0xFFFFFFFF)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ACCENT COLORS (GREEN - PRIMARY ACCENT)
+    // ACCENT COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Primary accent green - status indicators, success states */
-    val accentGreen = Color(0xFF00D9A5)
+    /** Primary accent - Electric Violet */
+    val accentGreen = ModernColors.primary // Remapped for logic compatibility
+    
+    /** Accent variant */
+    val accentGreenBright = ModernColors.secondary
 
-    /** Accent green variant - for glow effects */
-    val accentGreenBright = Color(0xFF10B981)
+    /** Terminal green - Now Emerald */
+    val accentGreenTerminal = ModernColors.success
 
-    /** Accent green saturated - terminal green */
-    val accentGreenTerminal = Color(0xFF00FF41)
-
-    /** Listening/Active indicator green */
-    val greenIndicator = Color(0xFF22C55E)
-
-    /** Emerald green - for status dots */
-    val emerald = Color(0xFF10B981)
+    /** Indicator */
+    val greenIndicator = ModernColors.success
+    val emerald = ModernColors.success
 
     // ═══════════════════════════════════════════════════════════════════════════
     // BUTTON COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Primary button background - off-white/light grey */
-    val buttonBackground = Color(0xFFF2F2F2)
-
-    /** Primary button text - black on light button */
-    val buttonText = Color(0xFF000000)
-
-    /** Secondary button background */
-    val buttonSecondary = Color(0xFF2A2A2A)
-
-    /** Send button / FAB - solid white */
-    val sendButton = Color(0xFFFFFFFF)
+    val buttonBackground = ModernColors.primary
+    val buttonText = ModernColors.textPrimary
+    val buttonSecondary = ModernColors.surfaceElevated
+    val sendButton = ModernColors.primary
 
     // ═══════════════════════════════════════════════════════════════════════════
     // STATUS COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Online/Connected - mint green */
-    val statusOnline = accentGreen
-
-    /** Offline/Disconnected - red */
-    val statusOffline = Color(0xFFFF453A)
-
-    /** Waiting/Connecting - amber/orange */
-    val statusWaiting = Color(0xFFFFAA00)
-
-    /** Thinking/Reasoning - purple/magenta for AI thinking */
-    val statusThinking = Color(0xFFE879F9)
-
-    /** Processing indicator */
-    val statusProcessing = Color(0xFF00D9A5)
-
-    /** Success - mint green */
-    val success = accentGreen
-
-    /** Error - alert red */
-    val error = Color(0xFFFF453A)
-
-    /** Warning - orange */
-    val warning = Color(0xFFFFAA00)
+    val statusOnline = ModernColors.success
+    val statusOffline = ModernColors.error
+    val statusWaiting = ModernColors.warning
+    val statusThinking = ModernColors.secondary // Deep Indigo for thinking
+    val statusProcessing = ModernColors.primary // Violet for processing
+    val success = ModernColors.success
+    val error = ModernColors.error
+    val warning = ModernColors.warning
 
     // ═══════════════════════════════════════════════════════════════════════════
     // ALERT COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Alert red - for error banners */
-    val alertRed = Color(0xFFFF453A)
-
-    /** Alert red dim - for backgrounds */
-    val alertRedDim = Color(0x1AFF453A)
-
-    /** Alert border gradient start */
-    val alertBorderStart = Color(0xFFFF4444)
-
-    /** Alert border gradient end */
-    val alertBorderEnd = Color(0xFFFF8C00)
+    val alertRed = ModernColors.error
+    val alertRedDim = ModernColors.error.copy(alpha = 0.1f)
+    val alertBorderStart = ModernColors.error
+    val alertBorderEnd = ModernColors.warning
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ACCENT COLORS (BLUE - SECONDARY)
+    // SECONDARY ACCENTS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Primary blue - for Git, active tabs */
-    val primary = Color(0xFF3B82F6)
-
-    /** Primary blue dim - for badges, containers */
-    val primaryDim = Color(0xFF1E3A5F)
-
-    /** React/TSX file color */
+    val primary = ModernColors.secondary // Indigo
+    val primaryDim = ModernColors.surfaceElevated
     val fileTsx = Color(0xFF61DAFB)
-
-    /** CSS file color */
     val fileCss = Color(0xFFBB86FC)
-
-    /** JSON file color */
     val fileJson = Color(0xFFFF5252)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CODE/SYNTAX COLORS
+    // CODE COLORS (Kept consistent but updated backgrounds)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Code addition - green background */
-    val diffAddition = Color(0xFF003300)
-
-    /** Code deletion - red background */
-    val diffDeletion = Color(0xFF330000)
-
-    /** Code addition text */
-    val diffAdditionText = accentGreen
-
-    /** Code deletion text */
-    val diffDeletionText = Color(0xFFFF453A)
-
-    /** Syntax - keywords (purple/magenta) */
+    val diffAddition = ModernColors.success.copy(alpha = 0.1f)
+    val diffDeletion = ModernColors.error.copy(alpha = 0.1f)
+    val diffAdditionText = ModernColors.success
+    val diffDeletionText = ModernColors.error
     val syntaxKeyword = Color(0xFFC586C0)
-
-    /** Syntax - functions (yellow) */
     val syntaxFunction = Color(0xFFDCDCAA)
-
-    /** Syntax - strings (orange/coral) */
     val syntaxString = Color(0xFFCE9178)
-
-    /** Syntax - types (purple) */
     val syntaxType = Color(0xFFBF5AF2)
-
-    /** Syntax - comments (gray) */
     val syntaxComment = Color(0xFF6A9955)
-
-    /** Syntax - punctuation */
     val syntaxPunctuation = Color(0xFFD4D4D4)
-
-    /** Line numbers */
-    val lineNumbers = Color(0xFF636D83)
+    val lineNumbers = ModernColors.textTertiary
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BADGE COLORS
+    // BADGE/GLASS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Badge background - white */
-    val badgeBackground = Color(0xFFFFFFFF)
+    val badgeBackground = ModernColors.surfaceHighlight
+    val badgeText = ModernColors.textPrimary
+    val activeIndicator = ModernColors.primary
 
-    /** Badge text - black */
-    val badgeText = Color(0xFF000000)
-
-    /** Active indicator - left bar on selected items */
-    val activeIndicator = Color(0xFFFFFFFF)
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // GLASSMORPHISM / OVERLAY
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    /** Glass panel background - semi-transparent dark */
-    val glassBackground = Color(0x99141414)
-
-    /** Glass border - subtle white */
-    val glassBorder = Color(0x0DFFFFFF)
-
-    /** Scrim overlay */
+    val glassBackground = ModernColors.surface.copy(alpha = 0.8f)
+    val glassBorder = ModernColors.border.copy(alpha = 0.5f)
     val scrim = Color(0xCC000000)
-
-    /** Input glow focus color */
-    val inputGlow = Color(0x0DFFFFFF)
+    val inputGlow = ModernColors.primary.copy(alpha = 0.2f)
 }
 
 /**
  * Extended app colors accessible via CompositionLocal.
- * Use for colors not covered in the main palette.
  */
 @Immutable
 data class ExtendedAppColors(
-    // Button colors
     val buttonBackground: Color = AppColors.buttonBackground,
     val buttonText: Color = AppColors.buttonText,
     val buttonSecondary: Color = AppColors.buttonSecondary,
-
-    // Status colors
     val statusOnline: Color = AppColors.statusOnline,
     val statusOffline: Color = AppColors.statusOffline,
     val statusWaiting: Color = AppColors.statusWaiting,
     val statusThinking: Color = AppColors.statusThinking,
     val statusProcessing: Color = AppColors.statusProcessing,
-
-    // Diff colors
     val diffAddition: Color = AppColors.diffAddition,
     val diffDeletion: Color = AppColors.diffDeletion,
     val diffAdditionText: Color = AppColors.diffAdditionText,
     val diffDeletionText: Color = AppColors.diffDeletionText,
-
-    // Badge colors
     val badgeBackground: Color = AppColors.badgeBackground,
     val badgeText: Color = AppColors.badgeText,
     val activeIndicator: Color = AppColors.activeIndicator,
-
-    // Border colors
     val border: Color = AppColors.border,
     val borderLight: Color = AppColors.borderLight,
     val borderWhite: Color = AppColors.borderWhite,
-
-    // Grey scale
     val greyDark: Color = AppColors.greyDark,
     val grey: Color = AppColors.grey,
     val greyLight: Color = AppColors.greyLight,
-
-    // Accent colors
     val accentGreen: Color = AppColors.accentGreen,
     val accentGreenBright: Color = AppColors.accentGreenBright,
     val primary: Color = AppColors.primary,
     val primaryDim: Color = AppColors.primaryDim,
-
-    // Alert colors
     val alertRed: Color = AppColors.alertRed,
     val alertRedDim: Color = AppColors.alertRedDim,
-
-    // Card colors
     val cardBackground: Color = AppColors.cardBackground,
     val cardHighlight: Color = AppColors.cardHighlight,
     val moduleBackground: Color = AppColors.moduleBackground,
-
-    // Glass colors
     val glassBackground: Color = AppColors.glassBackground,
     val glassBorder: Color = AppColors.glassBorder,
-
-    // Syntax colors
     val syntaxKeyword: Color = AppColors.syntaxKeyword,
     val syntaxFunction: Color = AppColors.syntaxFunction,
     val syntaxString: Color = AppColors.syntaxString,
     val syntaxType: Color = AppColors.syntaxType,
     val syntaxComment: Color = AppColors.syntaxComment,
-
-    // File type colors
     val fileTsx: Color = AppColors.fileTsx,
     val fileCss: Color = AppColors.fileCss,
     val fileJson: Color = AppColors.fileJson,

@@ -121,7 +121,7 @@ fun ConnectionStatusBanner(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 if (onRetryClick != null) {
-                    TerminalTextButton(
+                    MoccaTextButton(
                         text = "RETRY",
                         onClick = onRetryClick,
                         textColor = AppColors.white

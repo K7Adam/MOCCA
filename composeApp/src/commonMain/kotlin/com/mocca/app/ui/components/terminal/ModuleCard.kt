@@ -341,7 +341,7 @@ fun GitStatusModule(
             onClick = onExpandClick
         ),
         actionButton = {
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.ChevronRight,
                 onClick = onExpandClick,
                 size = 32.dp,
@@ -397,7 +397,7 @@ fun SkillsEngineModule(
         title = "SKILLS ENGINE",
         modifier = modifier,
         actionButton = {
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Settings,
                 onClick = onFilterClick,
                 size = 32.dp,

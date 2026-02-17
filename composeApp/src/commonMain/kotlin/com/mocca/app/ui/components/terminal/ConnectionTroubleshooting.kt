@@ -97,14 +97,14 @@ fun ConnectionTroubleshootingCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            TerminalOutlinedButton(
+            MoccaOutlinedButton(
                 text = "Check Settings",
                 onClick = onOpenSettings,
                 modifier = Modifier.weight(1f),
                 height = AppSpacing.buttonHeightCompact
             )
             
-            TerminalButton(
+            MoccaButton(
                 text = "Retry Connection",
                 onClick = onRetry,
                 modifier = Modifier.weight(1f),
@@ -216,14 +216,14 @@ fun ConnectionHelpInline(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "TROUBLESHOOT",
                 onClick = onTroubleshoot
             )
             
             Spacer(modifier = Modifier.weight(1f))
             
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "RETRY",
                 onClick = onRetry,
                 textColor = AppColors.accentGreen

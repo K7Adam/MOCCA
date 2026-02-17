@@ -23,7 +23,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.terminal.CommandLineInput
 import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.TerminalIconButton
+import com.mocca.app.ui.components.terminal.MoccaIconButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -81,7 +81,7 @@ class TerminalScreen : Screen {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
                         iconColor = AppColors.white
@@ -101,7 +101,7 @@ class TerminalScreen : Screen {
                         color = AppColors.grey
                     )
                     
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.Default.Delete,
                         onClick = { screenModel.clearTerminal() },
                         contentDescription = "CLEAR"

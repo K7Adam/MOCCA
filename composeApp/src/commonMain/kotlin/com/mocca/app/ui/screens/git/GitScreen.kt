@@ -766,7 +766,7 @@ private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout
         },
         confirmButton = {},
         dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
         },
         shape = AppShapes.dialog
     )
@@ -779,7 +779,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
         containerColor = AppColors.surfaceElevated,
         title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
-            TerminalInput(
+            MoccaInput(
                 value = message,
                 onValueChange = onMessageChange,
                 placeholder = "feat: implemented terminal ui",
@@ -790,7 +790,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
             GodButton(text = "COMMIT", onClick = onCommit, enabled = message.isNotBlank())
         },
         dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -803,7 +803,7 @@ private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit
         containerColor = AppColors.surfaceElevated,
         title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
-            TerminalInput(
+            MoccaInput(
                 value = message,
                 onValueChange = onMessageChange,
                 placeholder = "WIP: saving changes...",
@@ -814,7 +814,7 @@ private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit
             GodButton(text = "STASH", onClick = onCreate)
         },
         dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -831,16 +831,16 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
         title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
-                TerminalInput(value = name, onValueChange = { name = it }, label = "REMOTE NAME", placeholder = "origin")
+                MoccaInput(value = name, onValueChange = { name = it }, label = "REMOTE NAME", placeholder = "origin")
                 Spacer(modifier = Modifier.height(AppSpacing.md))
-                TerminalInput(value = url, onValueChange = { url = it }, label = "REMOTE URL", placeholder = "https://github.com/...")
+                MoccaInput(value = url, onValueChange = { url = it }, label = "REMOTE URL", placeholder = "https://github.com/...")
             }
         },
         confirmButton = {
             GodButton(text = "ADD", onClick = { onAdd(name, url) }, enabled = name.isNotBlank() && url.isNotBlank())
         },
         dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -857,16 +857,16 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
         title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
-                TerminalInput(value = name, onValueChange = { name = it }, label = "TAG NAME", placeholder = "v1.0.0")
+                MoccaInput(value = name, onValueChange = { name = it }, label = "TAG NAME", placeholder = "v1.0.0")
                 Spacer(modifier = Modifier.height(AppSpacing.md))
-                TerminalInput(value = msg, onValueChange = { msg = it }, label = "TAG MESSAGE", placeholder = "Release version 1.0.0")
+                MoccaInput(value = msg, onValueChange = { msg = it }, label = "TAG MESSAGE", placeholder = "Release version 1.0.0")
             }
         },
         confirmButton = {
             GodButton(text = "CREATE", onClick = { onAdd(name, msg) }, enabled = name.isNotBlank())
         },
         dismissButton = {
-            TerminalTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )

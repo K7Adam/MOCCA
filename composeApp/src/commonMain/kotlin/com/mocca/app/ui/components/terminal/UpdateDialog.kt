@@ -220,14 +220,14 @@ fun UpdateDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
-                        TerminalOutlinedButton(
+                        MoccaOutlinedButton(
                             text = "Dismiss",
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f),
                             height = AppSpacing.buttonHeightCompact
                         )
                         if (onRetry != null) {
-                            TerminalButton(
+                            MoccaButton(
                                 text = "Retry",
                                 onClick = onRetry,
                                 modifier = Modifier.weight(1f),
@@ -242,13 +242,13 @@ fun UpdateDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
-                        TerminalOutlinedButton(
+                        MoccaOutlinedButton(
                             text = "Later",
                             onClick = onDismiss,
                             modifier = Modifier.weight(1f),
                             height = AppSpacing.buttonHeightCompact
                         )
-                        TerminalButton(
+                        MoccaButton(
                             text = "Download & Install",
                             onClick = onUpdate,
                             modifier = Modifier.weight(1f),

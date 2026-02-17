@@ -35,7 +35,7 @@ import com.mocca.app.ui.theme.AppSpacing
  * Default: 16dp rounded corners, dark surface background.
  */
 @Composable
-fun TerminalCard(
+fun MoccaCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = AppColors.surfaceContainer,
     borderColor: Color = AppColors.border,
@@ -59,7 +59,7 @@ fun TerminalCard(
  * Used for input fields, status monitors, important containers.
  */
 @Composable
-fun TerminalCardElevated(
+fun MoccaCardElevated(
     modifier: Modifier = Modifier,
     backgroundColor: Color = AppColors.cardBackground,
     borderColor: Color = AppColors.borderLight,
@@ -120,7 +120,7 @@ fun StatusMonitorCard(
  * Retains left-border style but with rounded corners on right side.
  */
 @Composable
-fun TerminalSectionCard(
+fun MoccaSectionCard(
     modifier: Modifier = Modifier,
     leftBorderColor: Color = AppColors.accentGreen,
     leftBorderWidth: Dp = AppSpacing.borderStandard,
@@ -154,7 +154,7 @@ fun TerminalSectionCard(
  * Modern design: 24dp rounded corners, subtle border, left accent when active.
  */
 @Composable
-fun TerminalSessionCard(
+fun MoccaSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
     backgroundColor: Color = AppColors.surfaceContainer,

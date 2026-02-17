@@ -59,9 +59,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
-import com.mocca.app.ui.components.terminal.TerminalButton
-import com.mocca.app.ui.components.terminal.TerminalInput
-import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
+import com.mocca.app.ui.components.terminal.MoccaButton
+import com.mocca.app.ui.components.terminal.MoccaInput
+import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -286,7 +286,7 @@ private fun WelcomeStep(
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         
         // Primary action: QR Scan
-        TerminalButton(
+        MoccaButton(
             text = "Scan QR Code",
             onClick = onScanQr,
             icon = Icons.Default.QrCodeScanner,
@@ -297,7 +297,7 @@ private fun WelcomeStep(
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
         // Secondary: Auto-discover
-        TerminalOutlinedButton(
+        MoccaOutlinedButton(
             text = "Find Server Automatically",
             onClick = onStartDiscovery,
             modifier = Modifier.fillMaxWidth(),
@@ -555,7 +555,7 @@ private fun SelectServerStep(
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         
         // QR scan button
-        TerminalButton(
+        MoccaButton(
             text = "Scan QR Code",
             onClick = onScanQr,
             icon = Icons.Default.QrCodeScanner,
@@ -576,7 +576,7 @@ private fun SelectServerStep(
             )
         } else {
             // Manual entry form — Host / Port / Username / Password
-            TerminalInput(
+            MoccaInput(
                 value = manualHost,
                 onValueChange = { manualHost = it },
                 label = "Host",
@@ -585,7 +585,7 @@ private fun SelectServerStep(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = manualPort,
                 onValueChange = { manualPort = it },
                 label = "Port",
@@ -594,7 +594,7 @@ private fun SelectServerStep(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = manualUsername,
                 onValueChange = { manualUsername = it },
                 label = "Username",
@@ -603,7 +603,7 @@ private fun SelectServerStep(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = manualPassword,
                 onValueChange = { manualPassword = it },
                 label = "Password",
@@ -650,7 +650,7 @@ private fun SelectServerStep(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalButton(
+            MoccaButton(
                 text = "Connect",
                 onClick = {
                     onManualConnect(
@@ -826,7 +826,7 @@ private fun ReadyStep(
         
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         
-        TerminalButton(
+        MoccaButton(
             text = "Get Started",
             onClick = onContinue,
             showArrow = true,
@@ -908,7 +908,7 @@ private fun CredentialDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.lg))
                 
-                TerminalInput(
+                MoccaInput(
                     value = username,
                     onValueChange = { username = it },
                     label = "Username",
@@ -917,7 +917,7 @@ private fun CredentialDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                TerminalInput(
+                MoccaInput(
                     value = password,
                     onValueChange = { password = it },
                     label = "Password",
@@ -926,7 +926,7 @@ private fun CredentialDialog(
             }
         },
         confirmButton = {
-            TerminalButton(
+            MoccaButton(
                 text = "Connect",
                 onClick = {
                     onConfirm(

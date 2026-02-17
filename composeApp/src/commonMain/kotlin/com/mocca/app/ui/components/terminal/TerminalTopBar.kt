@@ -73,7 +73,7 @@ fun TerminalTopBar(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 if (navigationIcon != null && onNavigationClick != null) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = navigationIcon,
                         onClick = onNavigationClick,
                         iconColor = AppColors.white

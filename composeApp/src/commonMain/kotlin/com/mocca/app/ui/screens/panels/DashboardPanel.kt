@@ -25,8 +25,8 @@ import com.mocca.app.ui.components.terminal.McpConfigModule
 import com.mocca.app.ui.components.terminal.McpServerItem
 import com.mocca.app.ui.components.terminal.ModuleCard
 import com.mocca.app.ui.components.terminal.ModuleRowItem
-import com.mocca.app.ui.components.terminal.TerminalOutlinedButton
-import com.mocca.app.ui.components.terminal.TerminalButton
+import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
+import com.mocca.app.ui.components.terminal.MoccaButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 
@@ -64,13 +64,13 @@ fun DashboardPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
-            TerminalOutlinedButton(
+            MoccaOutlinedButton(
                 text = "SETTINGS",
                 onClick = onSettingsClick,
                 icon = Icons.Default.Settings,
                 modifier = Modifier.weight(1f)
             )
-            TerminalButton(
+            MoccaButton(
                 text = ">_ TERMINAL",
                 onClick = onTerminalClick,
                 icon = Icons.Default.Terminal,
@@ -114,7 +114,7 @@ fun DashboardPanel(
         Spacer(modifier = Modifier.weight(1f))
         
         // ─── Refresh All ─────────────────────────────────────────────────
-        TerminalOutlinedButton(
+        MoccaOutlinedButton(
             text = "REFRESH ALL",
             onClick = onRefreshAll,
             icon = Icons.Default.Refresh,

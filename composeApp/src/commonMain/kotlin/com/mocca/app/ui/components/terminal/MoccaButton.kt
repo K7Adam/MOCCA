@@ -51,7 +51,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Used for main CTAs like "CONNECT →"
  */
 @Composable
-fun TerminalButton(
+fun MoccaButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -136,7 +136,7 @@ fun TerminalButton(
  * Used for secondary actions.
  */
 @Composable
-fun TerminalOutlinedButton(
+fun MoccaOutlinedButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -213,7 +213,7 @@ fun TerminalOutlinedButton(
  * Compact pill button - smaller height, for action toolbars.
  */
 @Composable
-fun TerminalCompactButton(
+fun MoccaCompactButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -336,7 +336,7 @@ fun TabPillButton(
  * Circular icon button - for FABs and toolbar actions.
  */
 @Composable
-fun TerminalIconButton(
+fun MoccaIconButton(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -402,7 +402,7 @@ fun TerminalIconButton(
  * Floating action button - circular, prominent.
  */
 @Composable
-fun TerminalFab(
+fun MoccaFab(
     icon: ImageVector,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -451,7 +451,7 @@ fun TerminalFab(
  * Text button - for inline actions, link style.
  */
 @Composable
-fun TerminalTextButton(
+fun MoccaTextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

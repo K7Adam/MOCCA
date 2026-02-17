@@ -53,8 +53,8 @@ import com.mocca.app.ui.components.terminal.GroupedSessionCard
 import com.mocca.app.ui.components.terminal.RunningSessionIndicator
 import com.mocca.app.ui.components.terminal.StatusSquare
 import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.TerminalSessionCard
-import com.mocca.app.ui.components.terminal.TerminalTextButton
+import com.mocca.app.ui.components.terminal.MoccaSessionCard
+import com.mocca.app.ui.components.terminal.MoccaTextButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -288,7 +288,7 @@ private fun ConversationHistorySection(
                                 fadeIn(animationSpec = tween(0))
                             }
                         ) {
-                            TerminalSessionCard(
+                            MoccaSessionCard(
                                 isActive = isActive,
                                 modifier = Modifier.clickable { onSessionClick(session) }
                             ) {

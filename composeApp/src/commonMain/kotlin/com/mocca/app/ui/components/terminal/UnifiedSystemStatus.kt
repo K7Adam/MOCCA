@@ -132,14 +132,14 @@ fun SystemStatusCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "TROUBLESHOOT",
                 onClick = onTroubleshoot
             )
             
             Spacer(modifier = Modifier.weight(1f))
             
-            TerminalTextButton(
+            MoccaTextButton(
                 text = "REFRESH",
                 onClick = onRefresh,
                 textColor = AppColors.accentGreen

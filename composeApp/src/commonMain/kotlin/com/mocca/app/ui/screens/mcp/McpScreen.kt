@@ -55,7 +55,7 @@ class McpScreen : Screen {
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TerminalIconButton(
+                    MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
                         iconColor = AppColors.white
@@ -75,12 +75,12 @@ class McpScreen : Screen {
                     }
                     
                     Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-                        TerminalIconButton(
+                        MoccaIconButton(
                             icon = Icons.Default.Refresh,
                             onClick = { screenModel.refresh() },
                             iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.greyLight
                         )
-                        TerminalIconButton(
+                        MoccaIconButton(
                             icon = Icons.Default.Add,
                             onClick = { showAddDialog = true },
                             iconColor = AppColors.statusOnline
@@ -151,7 +151,7 @@ class McpScreen : Screen {
                                 style = AppTypography.bodySmall
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.lg))
-                            TerminalButton(
+                            MoccaButton(
                                 text = "ADD_SERVER",
                                 onClick = { showAddDialog = true }
                             )
@@ -404,7 +404,7 @@ private fun McpServerDetailsDialog(
                     )
                 }
                 
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
                     iconColor = AppColors.greyLight
@@ -580,20 +580,20 @@ private fun McpServerDetailsDialog(
                     .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
-                TerminalOutlinedButton(
+                MoccaOutlinedButton(
                     text = "CLOSE",
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 )
                 
                 if (server.isConnected) {
-                    TerminalButton(
+                    MoccaButton(
                         text = "DISCONNECT",
                         onClick = onDisconnect,
                         modifier = Modifier.weight(1f)
                     )
                 } else {
-                    TerminalButton(
+                    MoccaButton(
                         text = "CONNECT",
                         onClick = onConnect,
                         modifier = Modifier.weight(1f)
@@ -634,7 +634,7 @@ private fun AddMcpServerDialog(
             
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             
-            TerminalInput(
+            MoccaInput(
                 value = name,
                 onValueChange = { name = it },
                 label = "SERVER_NAME",
@@ -643,7 +643,7 @@ private fun AddMcpServerDialog(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = command,
                 onValueChange = { command = it },
                 label = "COMMAND",
@@ -653,7 +653,7 @@ private fun AddMcpServerDialog(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = args,
                 onValueChange = { args = it },
                 label = "ARGUMENTS",
@@ -663,7 +663,7 @@ private fun AddMcpServerDialog(
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            TerminalInput(
+            MoccaInput(
                 value = env,
                 onValueChange = { env = it },
                 label = "ENVIRONMENT",
@@ -674,12 +674,12 @@ private fun AddMcpServerDialog(
             Spacer(modifier = Modifier.height(AppSpacing.xl))
             
             Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
-                TerminalOutlinedButton(
+                MoccaOutlinedButton(
                     text = "CANCEL",
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f)
                 )
-                TerminalButton(
+                MoccaButton(
                     text = "ADD",
                     onClick = {
                         val argsList = args.split(" ").filter { it.isNotBlank() }

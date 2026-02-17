@@ -27,7 +27,7 @@ import com.mocca.app.domain.model.GitDiffFile
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.TerminalIconButton
+import com.mocca.app.ui.components.terminal.MoccaIconButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -55,7 +55,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
                     iconColor = AppColors.white

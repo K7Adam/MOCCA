@@ -196,7 +196,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         if (isShared) {
                             Text("This session is publicly accessible.", color = AppColors.textSecondary, style = AppTypography.bodySmall)
                             Spacer(modifier = Modifier.height(AppSpacing.md))
-                            TerminalInput(
+                            MoccaInput(
                                 value = shareUrl,
                                 onValueChange = {},
                                 showPrompt = false,
@@ -209,7 +209,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 confirmButton = {
                     if (isShared) {
-                        TerminalCompactButton(
+                        MoccaCompactButton(
                             text = "COPY LINK",
                             onClick = { 
                                 clipboardManager.setText(AnnotatedString(shareUrl))
@@ -217,7 +217,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             }
                         )
                     } else {
-                        TerminalCompactButton(
+                        MoccaCompactButton(
                             text = "SHARE PUBLICLY",
                             onClick = { 
                                 screenModel.shareSession()
@@ -227,7 +227,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 dismissButton = {
                     if (isShared) {
-                        TerminalTextButton(
+                        MoccaTextButton(
                             text = "UNSHARE",
                             onClick = { 
                                 screenModel.unshareSession()
@@ -236,7 +236,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             textColor = AppColors.alertRed
                         )
                     } else {
-                        TerminalTextButton(
+                        MoccaTextButton(
                             text = "CANCEL",
                             onClick = { showShareDialog = false }
                         )
@@ -475,7 +475,7 @@ private fun ChatHeader(
         
         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
             // Add Refresh Button
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Refresh,
                 onClick = onRefreshClick,
                 iconColor = if (isRefreshing) AppColors.accentGreen else AppColors.textSecondary,
@@ -483,7 +483,7 @@ private fun ChatHeader(
                 contentDescription = "Refresh"
             )
 
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Description,
                 onClick = onSummarizeClick,
                 iconColor = AppColors.textSecondary,
@@ -491,14 +491,14 @@ private fun ChatHeader(
                 contentDescription = "Summarize"
             )
             
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = Icons.Default.Share,
                 onClick = onShareClick,
                 iconColor = AppColors.textSecondary,
                 size = 36.dp
             )
             
-            TerminalIconButton(
+            MoccaIconButton(
                 icon = if (showTodos) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
                 onClick = onTodoClick,
                 iconColor = if (showTodos) AppColors.accentGreen else AppColors.textSecondary,
@@ -542,7 +542,7 @@ private fun RevertedSessionBanner(onResume: () -> Unit) {
                         color = AppColors.textSecondary
                     )
                 }
-                TerminalTextButton(
+                MoccaTextButton(
                     text = "RESUME LATEST",
                     onClick = onResume,
                     textColor = AppColors.accentGreen
@@ -581,7 +581,7 @@ private fun TerminalErrorOverlay(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                TerminalIconButton(
+                MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
                     iconColor = AppColors.white
