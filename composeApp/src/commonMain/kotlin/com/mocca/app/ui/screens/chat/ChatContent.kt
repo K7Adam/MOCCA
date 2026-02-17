@@ -390,12 +390,8 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.lg)
-                    // Dynamically position above input field (which moves with IME)
-                    // Input field is ~80dp + bottom padding. IME is handled by WindowInsets.
-                    // We need enough padding to clear the input field even when IME is visible.
-                    .padding(bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 120.dp)
-                    .zIndex(10f) // Ensure it's above everything else
+                    .padding(end = AppSpacing.md, bottom = 100.dp)
+                    .zIndex(10f)
             )
             
             // Chat input pinned to bottom, overlaying messages
