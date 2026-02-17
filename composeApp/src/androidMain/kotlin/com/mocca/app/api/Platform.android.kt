@@ -7,7 +7,9 @@ import io.ktor.client.engine.okhttp.*
 actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
     config {
         connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
-        readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+        // 10 minutes to accommodate large APK downloads via auto-update
+        // This must match or exceed Ktor's socketTimeoutMillis for downloads
+        readTimeout(600, java.util.concurrent.TimeUnit.SECONDS)
         writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         retryOnConnectionFailure(true)
         
