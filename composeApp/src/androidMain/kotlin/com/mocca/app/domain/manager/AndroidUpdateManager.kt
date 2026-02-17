@@ -135,7 +135,7 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
                     onError?.invoke(UpdateErrorType.InstallPermissionDenied())
                     return // Stop installation attempt until permission granted
                 } catch (e: Exception) {
-                    Napier.e("Failed to launch Manage Unknown App Sources settings", e, "AndroidUpdateManager")
+                    Napier.e("Failed to launch Manage Unknown App Sources settings", e, tag = "AndroidUpdateManager")
                     onError?.invoke(UpdateErrorType.UnknownError("Failed to open permission settings: ${e.message}"))
                 }
             }
