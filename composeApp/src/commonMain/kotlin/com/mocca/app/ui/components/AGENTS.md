@@ -1,33 +1,33 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
-**Scope:** Shared UI components & Terminal Design System (Design System)
+**Scope:** Shared UI components & Modern Glassmorphic Design System
 
 ## OVERVIEW
-Shared UI library implementing the **Terminal Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast "Pitch Black" terminal aesthetic, designed for developers who prefer a CLI-like experience on mobile.
+Shared UI library implementing the **Modern Glassmorphic Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Pitch Black" aesthetic.
 
 ## THEME RULES
-The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (rounded corners, pastel colors, elevation shadows).
+The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (pastel colors, elevation shadows).
 
 - **Theme Composable**: Use `AppTheme { ... }` as the root of all screens.
 - **Background**: **Pitch Black** (`#000000`) is mandatory for all primary backgrounds.
-- **Corners**: Rounded corners (16dp-32dp) for interactive elements (buttons, inputs, cards).
+- **Corners**: Rounded corners (12dp-32dp) for interactive elements (buttons, inputs, cards).
 - **Typography**: Use `AppTypography` for all text styles.
     - Use `AppTypography.bodyMedium` for standard text.
-    - Use `AppTypography.headlineSmall` for terminal-style ASCII indicators.
-- **Borders**: 1dp or 2dp solid white borders for active elements or containers.
+    - Use `AppTypography.labelSmall` for status indicators.
+- **Borders**: 1dp or 1.5dp solid borders for active elements or containers.
 
 ## KEY COMPONENTS
-### 1. Terminal Primitives (`terminal/`)
-- `MoccaButton`: Blocky button with #D9D9D9 background and black text.
-- `MoccaInput`: Solid black background with white outline and cursor.
-- `MoccaCard`: Rectangular container with `surfaceVariant` background and 0dp corners.
-- `TerminalBadge`: High-contrast "USER" or "AGENT" tags.
-- `TerminalTopBar`: Top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
+### 1. Modern Primitives (`modern/`)
+- `MoccaButton`: Pill-shaped button with `accentGreen` background and black text.
+- `MoccaInput`: Solid black background with rounded corners and subtle border.
+- `MoccaCard`: Rounded container with `surfaceContainer` background and 16dp corners.
+- `ModernBadge`: Glassmorphic "USER" or "AGENT" tags.
+- `ModernTopBar`: Compact top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
 
 ### 2. Common Layouts (`CommonComponents.kt`)
-- `LoadingScreen`: Center-aligned progress with uppercase terminal status text.
-- `ErrorScreen`: High-visibility error display with `[!]` indicator.
-- `PermissionRequestDialog`: **MANDATORY** for tool approval requests. Replaces the legacy `ToolConfirmation` system.
+- `LoadingScreen`: Center-aligned progress with compact status text.
+- `ErrorScreen`: High-visibility error display.
+- `PermissionRequestDialog`: **MANDATORY** for tool approval requests.
 
 ### 3. Specialized Widgets
 - `QuestionDialog.kt`: For interactive `confirm` or `input` requests from the AI agent.
@@ -36,18 +36,16 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 ## CONNECTION STATUS
 The `ConnectionStatus` sealed class (defined in `Config.kt`) drives the connection indicator in the top bar:
 - `NotConfigured` — No server configured
-- `Disconnected(reason)` — data class, NOT object
+- `Disconnected(reason)`
 - `Connecting` — Initial connection attempt
 - `WaitingForNetwork` — Network unavailable
 - `Reconnecting(attempt, maxAttempts)` — Auto-reconnection in progress
 - `Connected(serverInfo, latencyMs)` — Active connection with latency info
 - `Error(message)` — Connection error
 
-`ConnectionQuality` (enum: `EXCELLENT`, `GOOD`, `POOR`, `OFFLINE`, `UNKNOWN`) is derived from latency and displayed in the top bar.
-
 ## ANTI-PATTERNS
 - **Material 3 Mixing**: NEVER use `MaterialTheme.colorScheme` or `MaterialTheme.shapes`. Use `AppColors` and `AppShapes`.
 - **RectangleShape for Interactive Elements**: NEVER use `RectangleShape` for buttons, cards, or inputs. Use `AppShapes.pill`, `AppShapes.card`, or `AppShapes.medium`.
-- **Legacy Components**: **DEPRECATED**: `ToolConfirmationDialog.kt` is removed. Use `PermissionRequestDialog` in `CommonComponents.kt`.
+- **Legacy Components**: Use `PermissionRequestDialog` instead of legacy confirmation systems.
 - **Color Literals**: Avoid `Color(0xFF...)`. Always use `AppColors`.
 - **Main Thread Logic**: Components must remain stateless. Pass click events and state updates up to the `ScreenModel`.

@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,18 +35,18 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
 /**
- * Terminal-styled top bar and divider components.
+ * Modern Glassmorphic Top Bar and Divider components.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TERMINAL TOP BAR
+// MODERN TOP BAR
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Terminal-styled top bar with optional navigation icon and actions.
+ * Modern top bar with optional navigation icon and actions.
  */
 @Composable
-fun TerminalTopBar(
+fun ModernTopBar(
     title: String,
     modifier: Modifier = Modifier,
     navigationIcon: ImageVector? = null,
@@ -81,9 +81,9 @@ fun TerminalTopBar(
                 }
                 
                 Text(
-                    text = "// ${title.uppercase()}",
+                    text = title.uppercase(),
                     color = AppColors.white,
-                    style = AppTypography.headlineMedium,
+                    style = AppTypography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -98,8 +98,8 @@ fun TerminalTopBar(
         if (showDivider) {
             HorizontalDivider(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                thickness = AppSpacing.borderStandard,
-                color = AppColors.white
+                thickness = AppSpacing.borderThin,
+                color = AppColors.border
             )
         }
     }

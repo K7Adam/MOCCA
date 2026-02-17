@@ -48,13 +48,7 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
 import com.mocca.app.domain.model.SessionStatus
-import com.mocca.app.ui.components.terminal.ContextInfoContainer
-import com.mocca.app.ui.components.terminal.GroupedSessionCard
-import com.mocca.app.ui.components.terminal.RunningSessionIndicator
-import com.mocca.app.ui.components.terminal.StatusSquare
-import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.MoccaSessionCard
-import com.mocca.app.ui.components.terminal.MoccaTextButton
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing

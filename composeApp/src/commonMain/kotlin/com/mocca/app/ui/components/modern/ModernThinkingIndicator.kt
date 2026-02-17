@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.RepeatMode
@@ -45,12 +45,10 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
 /**
- * Terminal-style thinking indicator for Claude/o1 extended reasoning.
- * Shows a pulsing "brain activity" animation with optional thinking content preview.
- * Modern design: Rounded, subtle.
+ * Modern thinking indicator for AI reasoning.
  */
 @Composable
-fun TerminalThinkingIndicator(
+fun ModernThinkingIndicator(
     thinkingContent: String = "",
     elapsedMs: Long = 0,
     modifier: Modifier = Modifier
@@ -65,73 +63,48 @@ fun TerminalThinkingIndicator(
         ),
         label = "pulseAlpha"
     )
-    
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation"
-    )
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = AppSpacing.sm)
+            .padding(vertical = AppSpacing.xs)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = AppSpacing.xs, start = AppSpacing.sm)
+            modifier = Modifier.padding(bottom = AppSpacing.xxs, start = AppSpacing.sm)
         ) {
-            // High-fidelity activity indicator
             Box(
                 modifier = Modifier
-                    .size(18.dp)
+                    .size(14.dp)
                     .clip(CircleShape)
-                    .border(1.dp, AppColors.statusThinking.copy(alpha = 0.5f), CircleShape)
-                    .drawWithContent {
-                        drawContent()
-                        clipRect(bottom = size.height / 2f) {
-                            drawCircle(
-                                color = AppColors.statusThinking,
-                                radius = size.width / 4f,
-                                center = center,
-                                alpha = pulseAlpha
-                            )
-                        }
-                    },
+                    .border(1.dp, AppColors.statusThinking.copy(alpha = 0.4f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(8.dp)
-                        .background(AppColors.statusThinking, CircleShape)
+                        .size(6.dp)
+                        .background(AppColors.statusThinking.copy(alpha = pulseAlpha), CircleShape)
                 )
             }
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             Text(
-                text = "REASONING...",
+                text = "THINKING...",
                 color = AppColors.statusThinking,
-                style = AppTypography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                style = AppTypography.labelExtraSmall,
+                fontWeight = FontWeight.Bold
             )
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             
-            // Animated duration
             Text(
                 text = formatThinkingDuration(elapsedMs),
                 color = AppColors.textTertiary,
-                style = AppTypography.monoLabel
+                style = AppTypography.labelExtraSmall
             )
         }
         
-        // Optimized thinking content preview
         if (thinkingContent.isNotEmpty()) {
             ExpandableThinkingPreview(content = thinkingContent)
         }

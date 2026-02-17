@@ -48,7 +48,7 @@ import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
-import com.mocca.app.ui.components.terminal.*
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -307,12 +307,12 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         item { Spacer(modifier = Modifier.height(160.dp)) }
 
                         if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
-                            item(contentType = "processing") { TerminalProcessingIndicator() }
+                            item(contentType = "processing") { ModernProcessingIndicator() }
                         }
                         
                         if (state.isThinking) {
                             item(contentType = "thinking") {
-                                TerminalThinkingIndicator(
+                                ModernThinkingIndicator(
                                     thinkingContent = state.thinkingContent,
                                     elapsedMs = state.thinkingElapsedMs
                                 )
@@ -320,7 +320,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         }
                         
                         if (streamingText.isNotEmpty()) {
-                            item(contentType = "streaming") { TerminalStreamingMessage(text = streamingText) }
+                            item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
                         }
                         
                         val displayMessages = messages.filter { msg ->
@@ -350,7 +350,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                                 if (nextDate != currentDate) currentDate else null
                             }
 
-                            TerminalMessage(
+                            MessageBubble(
                                 message = message,
                                 isFirstInGroup = isFirstInGroup,
                                 dateHeader = showDateHeader,
@@ -598,14 +598,14 @@ fun MarkdownText(
         colors = markdownColor(
             text = color,
             codeText = AppColors.accentGreen,
-            codeBackground = AppColors.surfaceVariant,
+            codeBackground = AppColors.surfaceVariant.copy(alpha = 0.5f),
             inlineCodeText = AppColors.accentGreen,
-            inlineCodeBackground = AppColors.surfaceVariant,
+            inlineCodeBackground = AppColors.surfaceVariant.copy(alpha = 0.5f),
             linkText = AppColors.primary
         ),
         typography = markdownTypography(
             text = style,
-            code = AppTypography.bodySmall.copy(color = AppColors.accentGreen),
+            code = AppTypography.codeSmall.copy(fontSize = 11.sp, color = AppColors.accentGreen),
             h1 = AppTypography.headlineMedium.copy(color = color),
             h2 = AppTypography.headlineSmall.copy(color = color),
             h3 = AppTypography.titleLarge.copy(color = color),
@@ -627,51 +627,51 @@ private fun EmptySessionState() {
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(horizontal = 48.dp)
         ) {
-            TerminalBootSequence()
+            ModernBootSequence()
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             
             Text(
-                text = "START A CONVERSATION",
-                style = AppTypography.labelMedium,
-                color = AppColors.white.copy(alpha = 0.6f),
-                letterSpacing = 1.sp
+                text = "MOCCA AI",
+                style = AppTypography.headlineSmall,
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 2.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Type below to begin. Use the model selector in the input bar to choose your AI provider.",
-                style = AppTypography.bodySmall,
-                color = AppColors.white.copy(alpha = 0.3f),
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                text = "SELECT MODEL TO START",
+                style = AppTypography.labelExtraSmall,
+                color = AppColors.textSecondary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                letterSpacing = 1.sp
             )
         }
     }
 }
 
 @Composable
-private fun TerminalBootSequence() {
+private fun ModernBootSequence() {
     val lines = listOf(
-        "MOCCA_OS [Version 2.4.0]",
-        "(c) 2026 OH_MY_OPENCODE. All rights reserved.",
-        "",
-        "> LOADING_CORES...",
-        "> UPLINK_READY",
-        "> STANDBY_MODE_ACTIVE"
+        "MOCCA_OS",
+        "CONNECTING_UPLINK",
+        "RESOURCES_OPTIMIZED"
     )
     
-    Column(horizontalAlignment = Alignment.Start) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         lines.forEachIndexed { index, line ->
             var visible by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(index * 200L)
+                kotlinx.coroutines.delay(index * 150L)
                 visible = true
             }
             if (visible) {
                 Text(
                     text = line,
-                    style = AppTypography.codeSmall,
-                    color = if (line.startsWith(">")) AppColors.accentGreen else AppColors.textSecondary,
-                    fontFamily = AppTypography.monoFamily
+                    style = AppTypography.labelExtraSmall,
+                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textSecondary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
                 )
             }
         }

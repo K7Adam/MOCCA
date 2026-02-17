@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -44,7 +44,7 @@ import androidx.compose.runtime.getValue
  * Used for message sender labels: USER, AGENT.
  */
 @Composable
-fun TerminalRoleBadge(
+fun RoleBadge(
     role: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = AppColors.badgeBackground,
@@ -73,7 +73,7 @@ fun TerminalRoleBadge(
  * Used for secondary labels.
  */
 @Composable
-fun TerminalOutlinedBadge(
+fun OutlinedBadge(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Transparent,
@@ -108,17 +108,17 @@ fun TerminalOutlinedBadge(
  * Used for connection status, session status, etc.
  */
 @Composable
-fun TerminalStatusBadge(
+fun StatusBadge(
     text: String,
-    status: TerminalStatus,
+    status: ModernStatus,
     modifier: Modifier = Modifier,
     showDot: Boolean = true
 ) {
     val (dotColor, textColor) = when (status) {
-        TerminalStatus.ONLINE -> AppColors.accentGreen to AppColors.accentGreen
-        TerminalStatus.OFFLINE -> AppColors.statusOffline to AppColors.statusOffline
-        TerminalStatus.WAITING -> AppColors.statusWaiting to AppColors.statusWaiting
-        TerminalStatus.IDLE -> AppColors.textTertiary to AppColors.textTertiary
+        ModernStatus.ONLINE -> AppColors.accentGreen to AppColors.accentGreen
+        ModernStatus.OFFLINE -> AppColors.statusOffline to AppColors.statusOffline
+        ModernStatus.WAITING -> AppColors.statusWaiting to AppColors.statusWaiting
+        ModernStatus.IDLE -> AppColors.textTertiary to AppColors.textTertiary
     }
     
     Row(
@@ -141,12 +141,13 @@ fun TerminalStatusBadge(
     }
 }
 
-enum class TerminalStatus {
+enum class ModernStatus {
     ONLINE,
     OFFLINE,
     WAITING,
     IDLE
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // STATUS DOT

@@ -1,4 +1,4 @@
-package com.mocca.app.ui.screens.terminal
+package com.mocca.app.ui.screens.console
 
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.launch
 
-data class TerminalState(
+data class ConsoleState(
     val output: String = "",
     val isConnected: Boolean = false,
     val error: String? = null,
@@ -24,9 +24,9 @@ data class TerminalState(
 )
 
 @OptIn(FlowPreview::class)
-class TerminalScreenModel(
+class ConsoleScreenModel(
     private val repository: TerminalRepository
-) : StateScreenModel<TerminalState>(TerminalState()) {
+) : StateScreenModel<ConsoleState>(ConsoleState()) {
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // TERMINAL RESIZE (Priority 5.1)

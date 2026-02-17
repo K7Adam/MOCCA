@@ -26,8 +26,8 @@ import com.mocca.app.domain.model.GitDiff
 import com.mocca.app.domain.model.GitDiffFile
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.LoadingScreen
-import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.MoccaIconButton
+import com.mocca.app.ui.components.modern.ModernHeader
+import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -62,7 +62,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
-                    TerminalHeader(text = "DIFF_VIEW: $path", showBrackets = true)
+                    ModernHeader(text = "DIFF: $path")
                     Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                         if (staged) {
                             Text("STAGED", color = AppColors.statusOnline, style = AppTypography.labelSmall)

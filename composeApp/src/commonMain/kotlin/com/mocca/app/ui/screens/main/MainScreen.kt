@@ -38,7 +38,7 @@ import com.mocca.app.ui.screens.panels.ContextHistoryPanel
 import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
-import com.mocca.app.ui.screens.terminal.TerminalScreen
+import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.AppColors
 import org.koin.core.parameter.parametersOf
 
@@ -201,7 +201,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             onSettingsClick = { navigator.push(SettingsScreen()) },
                             onGitClick = { navigator.push(GitScreen()) },
                             onFilesClick = { navigator.push(FilesScreen()) },
-                            onTerminalClick = { navigator.push(TerminalScreen()) },
+                            onTerminalClick = { navigator.push(ConsoleScreen()) },
                             onSkillsClick = { },
                             onSkillClick = { },
                             onRefreshAll = {

@@ -5,7 +5,7 @@
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
 
 ## OVERVIEW
-Android client for OpenCode AI agent. Features edge-to-edge "Pitch Black" Terminal UI, offline-first architecture, and a unified single-server connection to OpenCode with HTTP Basic Auth.
+Android client for OpenCode AI agent. Features edge-to-edge "Pitch Black" Modern UI, offline-first architecture, and a unified single-server connection to OpenCode with HTTP Basic Auth.
 
 ## STRUCTURE
 ```
@@ -47,12 +47,13 @@ MOCCA connects to a single OpenCode server instance. No secondary servers are ne
 - **Architecture**: MVI (ScreenModel -> StateFlow -> UI).
 - **Offline-First**: Repositories return `Flow<Resource<T>>` (Cache -> Loading -> Network -> Cache).
 - **Paths**: **ALWAYS** use absolute paths for file operations.
-- **Theme**: "Glassmorphic Terminal" aesthetic.
+- **Theme**: "Compact Modern Glassmorphic" aesthetic.
     - **Background**: Pitch Black (`#000000`) for OLED power saving.
-    - **Corners**: Rounded corners (16dp-32dp) for interactive elements.
+    - **Corners**: Rounded corners (12dp-32dp) for interactive elements.
     - **Buttons**: Pill-shaped (`CircleShape`).
     - **Typography**: Space Grotesk (sans-serif) with variable weights.
     - **Accents**: Mint Green (`#00D9A5`) and White.
+    - **Compactness**: Reduced paddings and font sizes for high information density.
 
 ## ANTI-PATTERNS (STRICT)
 - **NEVER** use `RectangleShape` for interactive elements (buttons, inputs, cards). Use `AppShapes.card`, `AppShapes.pill`, etc.

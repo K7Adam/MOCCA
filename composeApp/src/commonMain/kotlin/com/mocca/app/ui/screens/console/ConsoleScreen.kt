@@ -1,4 +1,4 @@
-package com.mocca.app.ui.screens.terminal
+package com.mocca.app.ui.screens.console
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,19 +21,19 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.ui.components.terminal.CommandLineInput
-import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.MoccaIconButton
+import com.mocca.app.ui.components.modern.ModernHeader
+import com.mocca.app.ui.components.modern.MoccaIconButton
+import com.mocca.app.ui.components.modern.CommandLineInput
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.util.parseAnsi
 
-class TerminalScreen : Screen {
+class ConsoleScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = koinScreenModel<TerminalScreenModel>()
+        val screenModel = koinScreenModel<ConsoleScreenModel>()
         val state by screenModel.state.collectAsState()
         val scrollState = rememberScrollState()
         val density = LocalDensity.current
@@ -87,7 +87,7 @@ class TerminalScreen : Screen {
                         iconColor = AppColors.white
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.md))
-                    TerminalHeader(text = "REMOTE_TERMINAL", showBrackets = true)
+                    ModernHeader(text = "REMOTE CONSOLE")
                 }
                 
                 // Show current terminal size

@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -26,26 +26,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 
 /**
- * Terminal-styled text components with optional typewriter animation.
+ * Modern Glassmorphic text components.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BASIC TERMINAL TEXT
+// BASIC MODERN TEXT
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Basic terminal text with monospace font.
+ * Basic modern text using system fonts.
  */
 @Composable
-fun TerminalText(
+fun ModernText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = AppColors.white,
-    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    style: TextStyle = AppTypography.bodyMedium,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
     uppercase: Boolean = false
@@ -61,23 +62,21 @@ fun TerminalText(
 }
 
 /**
- * Terminal header text - bold, uppercase, with optional prefix.
- * Used for section headers like "[ CONTEXT_INFO ]"
- * Redesigned for God Mode with decorative line and better contrast.
+ * Modern header text - bold, uppercase, with subtle prefix.
  */
 @Composable
-fun TerminalHeader(
+fun ModernHeader(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = AppColors.white,
-    prefix: String = "[",
-    suffix: String = "]",
-    showBrackets: Boolean = true
+    prefix: String = "//",
+    suffix: String = "",
+    showBrackets: Boolean = false
 ) {
     val displayText = if (showBrackets) {
-        "$prefix $text $suffix"
+        "[$text]"
     } else {
-        text
+        "$prefix $text $suffix"
     }
     
     Column(modifier = modifier) {
@@ -85,24 +84,24 @@ fun TerminalHeader(
             // High-contrast accent indicator
             Box(
                 modifier = Modifier
-                    .size(width = 4.dp, height = 24.dp)
+                    .size(width = 3.dp, height = 18.dp)
                     .background(AppColors.accentGreen)
             )
             
-            Spacer(modifier = Modifier.width(AppSpacing.md))
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
             
             Text(
                 text = displayText.uppercase(),
                 color = color,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp
+                style = AppTypography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
             )
         }
         
-        Spacer(modifier = Modifier.height(AppSpacing.xs))
+        Spacer(modifier = Modifier.height(AppSpacing.xxs))
         
-        // Decorative terminal line
+        // Decorative line
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,7 +109,7 @@ fun TerminalHeader(
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
-                            AppColors.accentGreen,
+                            AppColors.accentGreen.copy(alpha = 0.5f),
                             AppColors.accentGreen.copy(alpha = 0.1f),
                             Color.Transparent
                         )

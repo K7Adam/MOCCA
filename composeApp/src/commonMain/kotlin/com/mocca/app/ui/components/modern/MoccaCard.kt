@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -169,24 +169,11 @@ fun MoccaSessionCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(backgroundColor, shape)
-            .then(
-                if (isActive) {
-                    Modifier.drawBehind {
-                        drawRect(
-                            color = activeIndicatorColor,
-                            topLeft = Offset(0f, 0f),
-                            size = androidx.compose.ui.geometry.Size(
-                                activeIndicatorWidth.toPx(),
-                                size.height
-                            )
-                        )
-                    }
-                } else {
-                    Modifier
-                }
+            .background(
+                if (isActive) backgroundColor.copy(alpha = 0.5f) else backgroundColor, 
+                shape
             )
-            .border(AppSpacing.borderThin, borderColor, shape)
+            .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
             .padding(contentPadding),
         content = content
     )

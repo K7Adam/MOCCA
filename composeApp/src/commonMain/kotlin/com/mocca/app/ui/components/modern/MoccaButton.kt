@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

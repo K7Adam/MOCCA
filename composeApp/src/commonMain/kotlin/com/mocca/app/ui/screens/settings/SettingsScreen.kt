@@ -35,7 +35,7 @@ import com.mocca.app.ui.components.terminal.StatusDot
 import com.mocca.app.ui.components.terminal.StatusSquare
 import com.mocca.app.ui.components.terminal.MoccaButton
 import com.mocca.app.ui.components.terminal.MoccaCompactButton
-import com.mocca.app.ui.components.terminal.TerminalHeader
+import com.mocca.app.ui.components.modern.ModernHeader
 import com.mocca.app.ui.components.terminal.MoccaIconButton
 import com.mocca.app.ui.components.terminal.MoccaInput
 import com.mocca.app.ui.components.terminal.MoccaOutlinedButton

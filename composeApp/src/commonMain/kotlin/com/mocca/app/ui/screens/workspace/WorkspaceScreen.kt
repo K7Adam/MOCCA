@@ -28,7 +28,7 @@ import com.mocca.app.ui.components.*
 import com.mocca.app.ui.screens.chat.ChatScreen
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
-import com.mocca.app.ui.screens.terminal.TerminalScreen
+import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.*
 
 // Use GridOn as GridView, Terminal as Code
@@ -78,7 +78,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
                     0 -> DashboardContent(sessionId)
                     1 -> ChatScreen(sessionId).Content()
                     2 -> FilesScreen().Content()
-                    3 -> TerminalScreen().Content()
+                    3 -> ConsoleScreen().Content()
                     4 -> GitScreen().Content()
                 }
             }
@@ -89,7 +89,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
         0 -> "Dashboard"
         1 -> "Chat"
         2 -> "Explorer"
-        3 -> "Terminal"
+        3 -> "Console"
         4 -> "Git"
         else -> "Workspace"
     }
@@ -300,11 +300,11 @@ private fun GodBottomNavBar(
     selectedIndex: Int,
     onItemSelected: (Int) -> Unit
 ) {
-    val items = listOf(
+        val items = listOf(
         NavItem(0, "DASH", GridView),
         NavItem(1, "CHAT", Icons.AutoMirrored.Filled.Chat),
         NavItem(2, "FILES", Icons.Default.Folder),
-        NavItem(3, "TERM", Icons.Default.Terminal),
+        NavItem(3, "CONSOLE", Icons.Default.Terminal),
         NavItem(4, "GIT", Code)
     )
     

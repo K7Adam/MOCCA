@@ -22,7 +22,7 @@ import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.sessions.SessionsScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
-import com.mocca.app.ui.screens.terminal.TerminalScreenModel
+import com.mocca.app.ui.screens.console.ConsoleScreenModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -153,8 +153,8 @@ val screenModelModule = module {
         )
     }
     
-    // Terminal screen
-    factoryOf(::TerminalScreenModel)
+    // Console screen
+    factoryOf(::ConsoleScreenModel)
     
     // Git screen
     factory {

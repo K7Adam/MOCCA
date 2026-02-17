@@ -37,12 +37,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionStatus
-import com.mocca.app.ui.components.terminal.MoccaButton
-import com.mocca.app.ui.components.terminal.TerminalHeader
-import com.mocca.app.ui.components.terminal.MoccaIconButton
-import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
-import com.mocca.app.ui.components.terminal.TerminalProcessingIndicator
-import com.mocca.app.ui.components.terminal.MoccaSessionCard
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.screens.workspace.WorkspaceScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.theme.AppColors
@@ -80,13 +75,12 @@ class SessionsScreen : Screen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(AppSpacing.lg),
+                    .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                TerminalHeader(
+                ModernHeader(
                     text = "SESSIONS", 
-                    showBrackets = true,
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -119,13 +113,13 @@ class SessionsScreen : Screen {
             // SESSION SEARCH (Priority 5.6) - Search bar
             // ═══════════════════════════════════════════════════════════════════════════════
             if (state.isSearchVisible) {
-                TerminalSearchBar(
+                ModernSearchBar(
                     query = state.searchQuery,
                     onQueryChange = { screenModel.updateSearchQuery(it) },
                     onClear = { screenModel.clearSearch() },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
+                        .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
                 )
             }
             
@@ -150,7 +144,7 @@ class SessionsScreen : Screen {
                         )
                     }
                     is ConnectionStatus.Connecting -> {
-                        TerminalConnectionProgressContent(
+                        ModernConnectionProgressContent(
                             message = stringResource(Res.string.checking_connection),
                             modifier = Modifier.align(Alignment.Center)
                         )
@@ -166,7 +160,7 @@ class SessionsScreen : Screen {
                         )
                     }
                     is ConnectionStatus.Reconnecting -> {
-                        TerminalConnectionProgressContent(
+                        ModernConnectionProgressContent(
                             message = stringResource(Res.string.reconnecting, connectionState.attempt, connectionState.maxAttempts),
                             modifier = Modifier.align(Alignment.Center)
                         )
@@ -192,10 +186,10 @@ class SessionsScreen : Screen {
                     is ConnectionStatus.Connected -> {
                         when {
                             state.isLoading && state.sessions.isEmpty() -> {
-                                TerminalProcessingIndicator()
+                                ModernProcessingIndicator()
                             }
                             state.sessions.isEmpty() -> {
-                                TerminalEmptySessionsContent(
+                                ModernEmptySessionsContent(
                                     onCreateClick = { screenModel.createSession() },
                                     modifier = Modifier.align(Alignment.Center)
                                 )
@@ -225,7 +219,7 @@ class SessionsScreen : Screen {
                             }
                             else -> {
                                 Column(modifier = Modifier.fillMaxSize()) {
-                                    TerminalSessionsList(
+                                    ModernSessionsList(
                                         sessions = state.filteredSessions,
                                         childrenMap = state.childrenMap,
                                         selectedSessionId = state.selectedSessionId,
@@ -243,10 +237,10 @@ class SessionsScreen : Screen {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .padding(AppSpacing.lg)
+                                            .padding(AppSpacing.md)
                                     ) {
                                         MoccaButton(
-                                            text = "NEW_SESSION",
+                                            text = "NEW SESSION",
                                             onClick = { screenModel.createSession() },
                                             icon = Icons.Default.Add
                                         )
@@ -325,7 +319,7 @@ private fun TerminalNotConnectedContent(
 }
 
 @Composable
-private fun TerminalConnectionProgressContent(
+private fun ModernConnectionProgressContent(
     message: String,
     modifier: Modifier = Modifier
 ) {
@@ -335,20 +329,20 @@ private fun TerminalConnectionProgressContent(
     ) {
         CircularProgressIndicator(
             color = AppColors.statusWaiting,
-            strokeWidth = 2.dp,
-            modifier = Modifier.size(24.dp)
+            strokeWidth = 1.5.dp,
+            modifier = Modifier.size(20.dp)
         )
-        Spacer(modifier = Modifier.height(AppSpacing.lg))
+        Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
             text = message.uppercase(),
-            style = AppTypography.bodyMedium,
+            style = AppTypography.labelSmall,
             color = AppColors.greyLight
         )
     }
 }
 
 @Composable
-private fun TerminalEmptySessionsContent(
+private fun ModernEmptySessionsContent(
     onCreateClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -361,24 +355,25 @@ private fun TerminalEmptySessionsContent(
             style = AppTypography.headlineSmall,
             color = AppColors.white
         )
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = stringResource(Res.string.no_sessions_hint),
-            style = AppTypography.bodyMedium,
-            color = AppColors.greyLight
+            style = AppTypography.bodySmall,
+            color = AppColors.greyLight,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
         MoccaButton(
-            text = "NEW_SESSION",
+            text = "NEW SESSION",
             onClick = onCreateClick,
             icon = Icons.Default.Add,
-            modifier = Modifier.fillMaxWidth(0.6f)
+            modifier = Modifier.fillMaxWidth(0.7f)
         )
     }
 }
 
 @Composable
-private fun TerminalSessionsList(
+private fun ModernSessionsList(
     sessions: List<Session>,
     childrenMap: Map<String, List<Session>>,
     selectedSessionId: String?,
@@ -388,8 +383,8 @@ private fun TerminalSessionsList(
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(AppSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+        contentPadding = PaddingValues(AppSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         items(
             items = sessions,
@@ -416,11 +411,12 @@ private fun MoccaSessionCard(
     onDeleteClick: () -> Unit
 ) {
     val borderColor = if (isSelected) AppColors.statusOnline else AppColors.border
-    val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent
+    val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.05f) else Color.Transparent
     
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(AppShapes.medium)
             .background(bgColor, AppShapes.medium)
             .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
             .clickable(onClick = onClick)
@@ -428,18 +424,13 @@ private fun MoccaSessionCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(AppSpacing.md),
+                .padding(AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Active indicator bar
+            // Active indicator dot
             if (isSelected) {
-                Box(
-                    modifier = Modifier
-                        .width(AppSpacing.activeIndicatorWidth)
-                        .height(48.dp)
-                        .background(AppColors.statusOnline, AppShapes.small)
-                )
-                Spacer(modifier = Modifier.width(AppSpacing.md))
+                StatusDot(color = AppColors.statusOnline, size = 6.dp)
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
             }
             
             Column(
@@ -447,41 +438,28 @@ private fun MoccaSessionCard(
             ) {
                 Text(
                     text = (session.title ?: stringResource(Res.string.untitled_session)).uppercase(),
-                    style = AppTypography.titleMedium,
+                    style = AppTypography.labelMedium,
                     color = if (isSelected) AppColors.statusOnline else AppColors.white,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
-                    TerminalStatusChip(status = session.status)
+                    ModernStatusChip(status = session.status)
                     Text(
                         text = formatTime(session.updatedAt),
-                        style = AppTypography.labelSmall,
+                        style = AppTypography.labelExtraSmall,
                         color = AppColors.grey
                     )
                     session.summary?.let { summary ->
                         if (summary.files > 0) {
                             Text(
-                                text = stringResource(Res.string.files_count_suffix, summary.files),
-                                style = AppTypography.labelSmall,
-                                color = AppColors.greyLight
-                            )
-                        }
-                    }
-                    if (childSessions.isNotEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .border(AppSpacing.borderThin, AppColors.greyLight, AppShapes.small)
-                                .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xxs)
-                        ) {
-                            Text(
-                                text = stringResource(Res.string.tasks_count_suffix, childSessions.size),
-                                style = AppTypography.labelSmall,
+                                text = "• ${summary.files}F",
+                                style = AppTypography.labelExtraSmall,
                                 color = AppColors.greyLight
                             )
                         }
@@ -492,7 +470,8 @@ private fun MoccaSessionCard(
             MoccaIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDeleteClick,
-                iconColor = AppColors.error,
+                iconColor = AppColors.error.copy(alpha = 0.6f),
+                size = 32.dp,
                 contentDescription = stringResource(Res.string.delete_session)
             )
         }
@@ -500,7 +479,7 @@ private fun MoccaSessionCard(
 }
 
 @Composable
-private fun TerminalStatusChip(status: SessionStatus) {
+private fun ModernStatusChip(status: SessionStatus) {
     val (color, textRes) = when (status) {
         SessionStatus.IDLE -> AppColors.grey to Res.string.session_idle
         SessionStatus.RUNNING -> AppColors.statusOnline to Res.string.session_running
@@ -511,16 +490,16 @@ private fun TerminalStatusChip(status: SessionStatus) {
     Box(
         modifier = Modifier
             .background(color.copy(alpha = 0.1f), AppShapes.small)
-            .border(AppSpacing.borderThin, color, AppShapes.small)
-            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
+            .padding(horizontal = AppSpacing.xs, vertical = 1.dp)
     ) {
         Text(
             text = stringResource(textRes).uppercase(),
-            style = AppTypography.labelSmall,
+            style = AppTypography.labelExtraSmall,
             color = color
         )
     }
 }
+
 
 private fun formatTime(timestamp: Long): String {
     return try {
@@ -537,7 +516,7 @@ private fun formatTime(timestamp: Long): String {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
-private fun TerminalSearchBar(
+private fun ModernSearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
     onClear: () -> Unit,
@@ -548,6 +527,119 @@ private fun TerminalSearchBar(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+    
+    Box(
+        modifier = modifier
+            .background(AppColors.surface.copy(alpha = 0.8f), AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+            .padding(AppSpacing.xs)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = AppColors.grey
+            )
+            
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester),
+                textStyle = AppTypography.labelSmall.copy(
+                    color = AppColors.white
+                ),
+                cursorBrush = SolidColor(AppColors.accentGreen),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = "SEARCH...",
+                                style = AppTypography.labelSmall,
+                                color = AppColors.grey
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+            
+            if (query.isNotEmpty()) {
+                MoccaIconButton(
+                    icon = Icons.Default.Clear,
+                    onClick = onClear,
+                    iconColor = AppColors.grey,
+                    size = 28.dp,
+                    contentDescription = "Clear"
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TerminalNotConnectedContent(
+    title: String,
+    message: String,
+    onConfigureClick: () -> Unit,
+    onRetryClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.CloudOff
+) {
+    Column(
+        modifier = modifier.padding(AppSpacing.xxl),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(48.dp),
+            tint = AppColors.grey
+        )
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+        Text(
+            text = title.uppercase(),
+            style = AppTypography.headlineSmall,
+            color = AppColors.white
+        )
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
+        Text(
+            text = message,
+            style = AppTypography.bodySmall,
+            color = AppColors.greyLight,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(AppSpacing.lg))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+        ) {
+            MoccaButton(
+                text = "CONFIGURE",
+                onClick = onConfigureClick,
+                icon = Icons.Default.Settings,
+                modifier = Modifier.weight(1f)
+            )
+            if (onRetryClick != null) {
+                MoccaOutlinedButton(
+                    text = "RETRY",
+                    onClick = onRetryClick,
+                    icon = Icons.Default.Refresh,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
     
     Box(
         modifier = modifier

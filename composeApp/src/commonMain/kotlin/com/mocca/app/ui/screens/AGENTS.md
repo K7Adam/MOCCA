@@ -1,7 +1,7 @@
 # UI & SCREENS KNOWLEDGE BASE
 
 ## OVERVIEW
-The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a "Terminal" aesthetic with high-contrast, monospace layouts.
+The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a **Compact Modern Glassmorphic** aesthetic.
 
 ## NAVIGATION
 - **Voyager Stack**: The app uses `Navigator` for screen transitions. Access it via `LocalNavigator.currentOrThrow`.
@@ -18,7 +18,7 @@ The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model
 | `GitScreen` | VCS Operations | Comprehensive Git UI. Uses OpenCode's `/vcs` endpoint for status and `executeShell()` for git commands. `GitDiffScreenModel` uses `getSessionDiffs(sessionId)` + `SessionRepository`. |
 | `SettingsScreen` | Server Config | Configuration for OpenCode server host, port, username, and password. |
 | `McpScreen` | Tool Inspection | UI for managing MCP servers and viewing available tools. |
-| `TerminalScreen` | SSH/WebSocket | Real-time terminal emulator for direct host access. |
+| `ConsoleScreen` | SSH/WebSocket | Real-time terminal emulator for direct host access. |
 | `FilesScreen` | Explorer | Browsing and basic editing of the project workspace. |
 
 ## MVI ARCHITECTURE (STRICT)
