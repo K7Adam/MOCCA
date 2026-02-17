@@ -45,28 +45,3 @@ fun ModernProcessingIndicator() {
         )
     }
 }
-
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = AppSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = frames[frameIndex],
-            color = AppColors.accentGreen,
-            style = AppTypography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(24.dp)
-        )
-        
-        Text(
-            text = "PROCESSING REQUEST...",
-            color = AppColors.accentGreen,
-            style = AppTypography.labelSmall,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}

@@ -30,7 +30,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.*
-import com.mocca.app.ui.components.terminal.*
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier

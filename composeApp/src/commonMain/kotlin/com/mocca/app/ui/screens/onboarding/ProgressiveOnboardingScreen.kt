@@ -59,9 +59,9 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
-import com.mocca.app.ui.components.terminal.MoccaButton
-import com.mocca.app.ui.components.terminal.MoccaInput
-import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
+import com.mocca.app.ui.components.modern.MoccaButton
+import com.mocca.app.ui.components.modern.MoccaInput
+import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes

@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background

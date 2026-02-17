@@ -26,7 +26,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.McpConnectionStatus
 import com.mocca.app.domain.model.McpServerInfo
-import com.mocca.app.ui.components.terminal.*
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -64,7 +64,7 @@ class McpScreen : Screen {
                     Spacer(modifier = Modifier.width(AppSpacing.md))
                     
                     Column(modifier = Modifier.weight(1f)) {
-                        TerminalHeader(text = "MCP_JSON_CONFIG", showBrackets = true)
+                        ModernHeader(text = "MCP_JSON_CONFIG")
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
                             text = "${state.connectedCount}/${state.totalCount} SERVERS_ACTIVE",
@@ -258,7 +258,7 @@ private fun McpServerCard(
                     strokeWidth = 2.dp
                 )
             } else {
-                TerminalToggle(
+                ModernToggle(
                     checked = server.isConnected,
                     onCheckedChange = onToggle
                 )
@@ -630,7 +630,7 @@ private fun AddMcpServerDialog(
                 .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
                 .padding(AppSpacing.lg)
         ) {
-            TerminalHeader(text = "ADD_MCP_SERVER", showBrackets = true)
+            ModernHeader(text = "ADD_MCP_SERVER")
             
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             

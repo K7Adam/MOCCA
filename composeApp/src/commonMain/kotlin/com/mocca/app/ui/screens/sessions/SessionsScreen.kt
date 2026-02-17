@@ -21,6 +21,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
@@ -260,59 +261,6 @@ class SessionsScreen : Screen {
                         }
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TerminalNotConnectedContent(
-    title: String,
-    message: String,
-    onConfigureClick: () -> Unit,
-    onRetryClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
-    icon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Default.CloudOff
-) {
-    Column(
-        modifier = modifier.padding(AppSpacing.xxl),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Icon(
-            icon,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            tint = AppColors.grey
-        )
-        Spacer(modifier = Modifier.height(AppSpacing.lg))
-        Text(
-            text = title.uppercase(),
-            style = AppTypography.headlineSmall,
-            color = AppColors.white
-        )
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        Text(
-            text = message,
-            style = AppTypography.bodyMedium,
-            color = AppColors.greyLight
-        )
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
-        ) {
-            MoccaButton(
-                text = "CONFIGURE",
-                onClick = onConfigureClick,
-                icon = Icons.Default.Settings,
-                modifier = Modifier.weight(1f)
-            )
-            if (onRetryClick != null) {
-                MoccaOutlinedButton(
-                    text = "RETRY",
-                    onClick = onRetryClick,
-                    icon = Icons.Default.Refresh,
-                    modifier = Modifier.weight(1f)
-                )
             }
         }
     }
@@ -635,65 +583,6 @@ private fun TerminalNotConnectedContent(
                     onClick = onRetryClick,
                     icon = Icons.Default.Refresh,
                     modifier = Modifier.weight(1f)
-                )
-            }
-        }
-    }
-}
-    
-    Box(
-        modifier = modifier
-            .background(AppColors.surface, AppShapes.medium)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
-            .padding(AppSpacing.sm)
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Icon(
-                Icons.Default.Search,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = AppColors.grey
-            )
-            
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-            
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(focusRequester),
-                textStyle = AppTypography.bodyMedium.copy(
-                    color = AppColors.white
-                ),
-                cursorBrush = SolidColor(AppColors.statusOnline),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (query.isEmpty()) {
-                            Text(
-                                text = "SEARCH_SESSIONS...",
-                                style = AppTypography.bodyMedium,
-                                color = AppColors.grey
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-            
-            if (query.isNotEmpty()) {
-                Spacer(modifier = Modifier.width(AppSpacing.sm))
-                MoccaIconButton(
-                    icon = Icons.Default.Clear,
-                    onClick = onClear,
-                    iconColor = AppColors.grey,
-                    contentDescription = "Clear"
                 )
             }
         }

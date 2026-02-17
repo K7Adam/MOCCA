@@ -2,5 +2,4 @@
 <resources>
     <!-- App Icon Colors -->
     <color name="ic_launcher_background">#000000</color>
-    <color name="ic_launcher_foreground">#FFFFFF</color>
 </resources>

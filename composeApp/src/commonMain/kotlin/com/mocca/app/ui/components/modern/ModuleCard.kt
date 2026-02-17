@@ -1,4 +1,4 @@
-package com.mocca.app.ui.components.terminal
+package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -196,7 +196,7 @@ fun ModuleRowItem(
         // Toggle switch
         if (showToggle && onToggle != null) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
-            TerminalToggle(
+            ModernToggle(
                 checked = isEnabled,
                 onCheckedChange = onToggle,
                 enabled = !isTransitioning
@@ -213,7 +213,7 @@ fun ModuleRowItem(
  * Modern toggle switch.
  */
 @Composable
-fun TerminalToggle(
+fun ModernToggle(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,

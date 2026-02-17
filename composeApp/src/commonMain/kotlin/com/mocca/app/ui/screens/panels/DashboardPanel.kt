@@ -20,13 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.mocca.app.domain.model.Resource
-import com.mocca.app.ui.components.terminal.GitStatusModule
-import com.mocca.app.ui.components.terminal.McpConfigModule
-import com.mocca.app.ui.components.terminal.McpServerItem
-import com.mocca.app.ui.components.terminal.ModuleCard
-import com.mocca.app.ui.components.terminal.ModuleRowItem
-import com.mocca.app.ui.components.terminal.MoccaOutlinedButton
-import com.mocca.app.ui.components.terminal.MoccaButton
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 

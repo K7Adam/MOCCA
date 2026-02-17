@@ -122,22 +122,20 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             return
         }
 
-        // Check for REQUEST_INSTALL_PACKAGES permission on Android 8.0+
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!context.packageManager.canRequestPackageInstalls()) {
-                Napier.w("REQUEST_INSTALL_PACKAGES permission missing. Prompting user.", tag = "AndroidUpdateManager")
-                try {
-                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    context.startActivity(intent)
-                    onError?.invoke(UpdateErrorType.InstallPermissionDenied())
-                    return // Stop installation attempt until permission granted
-                } catch (e: Exception) {
-                    Napier.e("Failed to launch Manage Unknown App Sources settings", e, tag = "AndroidUpdateManager")
-                    onError?.invoke(UpdateErrorType.UnknownError("Failed to open permission settings: ${e.message}"))
+        // Check for REQUEST_INSTALL_PACKAGES permission
+        if (!context.packageManager.canRequestPackageInstalls()) {
+            Napier.w("REQUEST_INSTALL_PACKAGES permission missing. Prompting user.", tag = "AndroidUpdateManager")
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                    data = Uri.parse("package:${context.packageName}")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
+                context.startActivity(intent)
+                onError?.invoke(UpdateErrorType.InstallPermissionDenied())
+                return // Stop installation attempt until permission granted
+            } catch (e: Exception) {
+                Napier.e("Failed to launch Manage Unknown App Sources settings", e, tag = "AndroidUpdateManager")
+                onError?.invoke(UpdateErrorType.UnknownError("Failed to open permission settings: ${e.message}"))
             }
         }
 
@@ -195,12 +193,7 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             val pm = context.packageManager
             
             // Get the package info from the APK file
-            val newPackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                pm.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES)
-            } else {
-                @Suppress("DEPRECATION")
-                pm.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_SIGNATURES)
-            }
+            val newPackageInfo = pm.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES)
             
             if (newPackageInfo == null) {
                 return ApkValidationResult.Invalid(
@@ -221,27 +214,12 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             }
             
             // Get signatures from the new APK
-            val newSignatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                newPackageInfo.signingInfo?.apkContentsSigners
-            } else {
-                @Suppress("DEPRECATION")
-                newPackageInfo.signatures
-            }
+            val newSignatures = newPackageInfo.signingInfo?.apkContentsSigners
             
             // Get signatures from the currently installed app
-            val currentPackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                pm.getPackageInfo(currentPackageName, PackageManager.GET_SIGNING_CERTIFICATES)
-            } else {
-                @Suppress("DEPRECATION")
-                pm.getPackageInfo(currentPackageName, PackageManager.GET_SIGNATURES)
-            }
+            val currentPackageInfo = pm.getPackageInfo(currentPackageName, PackageManager.GET_SIGNING_CERTIFICATES)
             
-            val currentSignatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                currentPackageInfo.signingInfo?.apkContentsSigners
-            } else {
-                @Suppress("DEPRECATION")
-                currentPackageInfo.signatures
-            }
+            val currentSignatures = currentPackageInfo.signingInfo?.apkContentsSigners
             
             if (newSignatures.isNullOrEmpty() || currentSignatures.isNullOrEmpty()) {
                 Napier.w("Could not compare signatures - one or both signature lists are empty", tag = "AndroidUpdateManager")

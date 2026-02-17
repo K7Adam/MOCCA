@@ -20,7 +20,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
 import com.mocca.app.domain.model.QrConnectionPayload
-import com.mocca.app.ui.components.terminal.MoccaIconButton
+import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography

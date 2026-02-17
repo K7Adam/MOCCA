@@ -21,11 +21,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.MoccaBottomNavigation
-import com.mocca.app.ui.components.terminal.ConnectionBannerStatus
-import com.mocca.app.ui.components.terminal.ConnectionStatusBanner
-import com.mocca.app.ui.components.terminal.GlobalActivityIndicator
-import com.mocca.app.ui.components.terminal.QuoteRotator
-import com.mocca.app.ui.components.terminal.UpdateDialog
+import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
