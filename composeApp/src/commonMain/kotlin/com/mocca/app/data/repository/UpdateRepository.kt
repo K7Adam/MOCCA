@@ -16,8 +16,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.utils.io.core.readText
 import io.ktor.utils.io.readRemaining
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.channelFlow
 
 class UpdateRepository(
     private val gitHubApiClient: GitHubApiClient,
@@ -78,16 +80,16 @@ class UpdateRepository(
         }
     }
 
-    fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<DownloadStatus> = flow {
-        emit(DownloadStatus.Progress(0f))
-        emit(DownloadStatus.Log("Starting download process..."))
-        
+    fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<DownloadStatus> = channelFlow {
+        send(DownloadStatus.Progress(0f))
+        send(DownloadStatus.Log("Starting download process..."))
+
         val token = settingsRepository.getGitHubToken()
         val useApi = !token.isNullOrBlank()
         val initialUrl = if (useApi) updateInfo.apiUrl else updateInfo.downloadUrl
-        
-        emit(DownloadStatus.Log("Auth enabled: $useApi"))
-        emit(DownloadStatus.Log("Initial URL: $initialUrl"))
+
+        send(DownloadStatus.Log("Auth enabled: $useApi"))
+        send(DownloadStatus.Log("Initial URL: $initialUrl"))
 
         // Use a fresh client to manually handle redirects and headers
         val client = HttpClient(getHttpEngine()) {
@@ -106,26 +108,26 @@ class UpdateRepository(
             var downloadSuccess = false
 
             while (attempts < maxRedirects && !downloadSuccess) {
-                emit(DownloadStatus.Log("Requesting: $currentUrl"))
-                
+                send(DownloadStatus.Log("Requesting: $currentUrl"))
+
                 // Use prepareGet to STREAM the response instead of buffering it
                 client.prepareGet(currentUrl) {
                     // Only add auth headers to GitHub API URLs, NOT S3 URLs
                     if (useApi && currentUrl.contains("api.github.com")) {
                         header("Authorization", "Bearer $token")
                         header("Accept", "application/octet-stream")
-                        emit(DownloadStatus.Log("Added Authorization header"))
+                        send(DownloadStatus.Log("Added Authorization header"))
                     } else {
-                        emit(DownloadStatus.Log("Skipped Authorization header (external domain)"))
+                        send(DownloadStatus.Log("Skipped Authorization header (external domain)"))
                     }
                 }.execute { response ->
                     val status = response.status
-                    emit(DownloadStatus.Log("Response Status: $status"))
+                    send(DownloadStatus.Log("Response Status: $status"))
 
                     if (status == HttpStatusCode.Found || status == HttpStatusCode.MovedPermanently || status == HttpStatusCode.TemporaryRedirect) {
                         val location = response.headers["Location"]
                         if (location != null) {
-                            emit(DownloadStatus.Log("Redirecting to: $location"))
+                            send(DownloadStatus.Log("Redirecting to: $location"))
                             currentUrl = location
                             attempts++
                         } else {
@@ -134,17 +136,20 @@ class UpdateRepository(
                     } else if (status.isSuccess()) {
                         // 2. Download File via Streaming
                         val length = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
-                        emit(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
-                        
-                        val channel = response.bodyAsChannel()
-                        val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
-                            emit(DownloadStatus.Progress(progress))
+                        send(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
+
+                        val responseChannel = response.bodyAsChannel()
+
+                        val path = platformUpdateManager.saveApk(fileName, responseChannel, length) { progress ->
+                            // channelFlow allows send() from any coroutine context
+                            // The flowOn(Dispatchers.IO) ensures we're already on IO dispatcher
+                            send(DownloadStatus.Progress(progress))
                         }
-                        
-                        emit(DownloadStatus.Log("Download saved to: $path"))
-                        emit(DownloadStatus.Log("Verifying file..."))
-                        emit(DownloadStatus.Log("Triggering installation..."))
-                        emit(DownloadStatus.Complete)
+
+                        send(DownloadStatus.Log("Download saved to: $path"))
+                        send(DownloadStatus.Log("Verifying file..."))
+                        send(DownloadStatus.Log("Triggering installation..."))
+                        send(DownloadStatus.Complete)
                         platformUpdateManager.installApk(path)
                         downloadSuccess = true
                     } else {
@@ -157,15 +162,15 @@ class UpdateRepository(
             if (!downloadSuccess) {
                 throw Exception("Download failed after $attempts redirects or no success response")
             }
-            
+
         } catch (e: Exception) {
             Napier.e("Download failed", e, "UpdateRepository")
-            emit(DownloadStatus.Log("ERROR: ${e.message}"))
-            emit(DownloadStatus.Error(e.message ?: "Download failed", e))
+            send(DownloadStatus.Log("ERROR: ${e.message}"))
+            send(DownloadStatus.Error(e.message ?: "Download failed", e))
         } finally {
             client.close()
         }
-    }
+    }.flowOn(Dispatchers.IO)
     
     // Helper to compare versions (handles X.Y.Z and X.Y.Z-build.N formats)
     private fun isNewer(remote: String, current: String): Boolean {
