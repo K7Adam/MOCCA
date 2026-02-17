@@ -2,6 +2,7 @@ package com.mocca.app.domain.manager
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
@@ -13,6 +14,48 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
+import java.security.MessageDigest
+
+/**
+ * Result of APK validation before installation attempt.
+ */
+sealed class ApkValidationResult {
+    data object Valid : ApkValidationResult()
+    data class Invalid(val reason: String, val userMessage: String) : ApkValidationResult()
+}
+
+/**
+ * Update error types for user-friendly error reporting.
+ */
+sealed class UpdateErrorType {
+    abstract val userMessage: String
+    
+    data class SignatureMismatch(
+        override val userMessage: String = 
+            "The downloaded update has a different signature than the installed app.\n\n" +
+            "This usually happens when:\n" +
+            "• Updating from a different build source (CI vs local build)\n" +
+            "• The app was previously installed with a different signing key\n\n" +
+            "To fix this:\n" +
+            "1. Uninstall the current app version\n" +
+            "2. Install the new version from the downloaded APK\n" +
+            "3. Future updates from the same source will work normally"
+    ) : UpdateErrorType()
+    
+    data class InstallPermissionDenied(
+        override val userMessage: String = 
+            "Permission required to install updates. Please enable 'Install unknown apps' permission for MOCCA in settings."
+    ) : UpdateErrorType()
+    
+    data class FileNotFound(
+        override val userMessage: String = "Update file not found. Please try downloading again."
+    ) : UpdateErrorType()
+    
+    data class UnknownError(
+        val error: String,
+        override val userMessage: String = "Installation failed: $error"
+    ) : UpdateErrorType()
+}
 
 class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager {
 
@@ -59,9 +102,23 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
     }
 
     override fun installApk(path: String) {
+        installApkWithResult(path)
+    }
+    
+    /**
+     * Install APK with detailed result callback.
+     * 
+     * @param path Path to the APK file
+     * @param onError Callback for error handling with user-friendly messages
+     */
+    fun installApkWithResult(
+        path: String, 
+        onError: ((UpdateErrorType) -> Unit)? = null
+    ) {
         val file = File(path)
         if (!file.exists()) {
             Napier.e("APK file not found at $path", tag = "AndroidUpdateManager")
+            onError?.invoke(UpdateErrorType.FileNotFound())
             return
         }
 
@@ -75,11 +132,29 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(intent)
+                    onError?.invoke(UpdateErrorType.InstallPermissionDenied())
                     return // Stop installation attempt until permission granted
                 } catch (e: Exception) {
                     Napier.e("Failed to launch Manage Unknown App Sources settings", e, "AndroidUpdateManager")
+                    onError?.invoke(UpdateErrorType.UnknownError("Failed to open permission settings: ${e.message}"))
                 }
             }
+        }
+
+        // Validate APK signature before attempting installation
+        val validationResult = validateApkSignature(file)
+        if (validationResult is ApkValidationResult.Invalid) {
+            Napier.e("APK validation failed: ${validationResult.reason}", tag = "AndroidUpdateManager")
+            
+            if (validationResult.reason.contains("signature", ignoreCase = true)) {
+                val error = UpdateErrorType.SignatureMismatch()
+                onError?.invoke(error)
+                // Also throw so it can be caught by the caller
+                throw ApkInstallException(error.userMessage)
+            } else {
+                onError?.invoke(UpdateErrorType.UnknownError(validationResult.reason))
+            }
+            return
         }
 
         try {
@@ -99,6 +174,115 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             context.startActivity(intent)
         } catch (e: Exception) {
             Napier.e("Failed to start installation intent", e, "AndroidUpdateManager")
+            onError?.invoke(UpdateErrorType.UnknownError(e.message ?: "Unknown error"))
         }
+    }
+    
+    /**
+     * Exception thrown when APK installation fails with a user-friendly message.
+     */
+    class ApkInstallException(message: String) : Exception(message)
+    
+    /**
+     * Validates that the APK file has a compatible signature with the currently installed app.
+     * This helps detect signature mismatches before attempting installation.
+     * 
+     * @param apkFile The APK file to validate
+     * @return ApkValidationResult indicating if the APK is valid for installation
+     */
+    private fun validateApkSignature(apkFile: File): ApkValidationResult {
+        return try {
+            val pm = context.packageManager
+            
+            // Get the package info from the APK file
+            val newPackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pm.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_SIGNING_CERTIFICATES)
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_SIGNATURES)
+            }
+            
+            if (newPackageInfo == null) {
+                return ApkValidationResult.Invalid(
+                    reason = "Could not read package info from APK",
+                    userMessage = "The downloaded file is not a valid APK."
+                )
+            }
+            
+            // Check package name matches
+            val newPackageName = newPackageInfo.packageName
+            val currentPackageName = context.packageName
+            
+            if (newPackageName != currentPackageName) {
+                return ApkValidationResult.Invalid(
+                    reason = "Package name mismatch: APK is $newPackageName, expected $currentPackageName",
+                    userMessage = "The APK package name does not match the installed app."
+                )
+            }
+            
+            // Get signatures from the new APK
+            val newSignatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                newPackageInfo.signingInfo?.apkContentsSigners
+            } else {
+                @Suppress("DEPRECATION")
+                newPackageInfo.signatures
+            }
+            
+            // Get signatures from the currently installed app
+            val currentPackageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pm.getPackageInfo(currentPackageName, PackageManager.GET_SIGNING_CERTIFICATES)
+            } else {
+                @Suppress("DEPRECATION")
+                pm.getPackageInfo(currentPackageName, PackageManager.GET_SIGNATURES)
+            }
+            
+            val currentSignatures = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                currentPackageInfo.signingInfo?.apkContentsSigners
+            } else {
+                @Suppress("DEPRECATION")
+                currentPackageInfo.signatures
+            }
+            
+            if (newSignatures.isNullOrEmpty() || currentSignatures.isNullOrEmpty()) {
+                Napier.w("Could not compare signatures - one or both signature lists are empty", tag = "AndroidUpdateManager")
+                // Allow installation attempt if we can't validate - OS will handle it
+                return ApkValidationResult.Valid
+            }
+            
+            // Compare certificate fingerprints
+            val newFingerprints = newSignatures.map { getCertificateFingerprint(it.toByteArray()) }
+            val currentFingerprints = currentSignatures.map { getCertificateFingerprint(it.toByteArray()) }
+            
+            val hasMatchingSignature = newFingerprints.any { it in currentFingerprints }
+            
+            if (!hasMatchingSignature) {
+                Napier.e("APK signature mismatch detected!", tag = "AndroidUpdateManager")
+                Napier.d("New APK fingerprints: $newFingerprints", tag = "AndroidUpdateManager")
+                Napier.d("Current app fingerprints: $currentFingerprints", tag = "AndroidUpdateManager")
+                
+                return ApkValidationResult.Invalid(
+                    reason = "APK signature does not match installed app signature",
+                    userMessage = "Signature mismatch - different signing certificate"
+                )
+            }
+            
+            Napier.d("APK signature validation passed", tag = "AndroidUpdateManager")
+            ApkValidationResult.Valid
+            
+        } catch (e: Exception) {
+            Napier.w("Could not validate APK signature: ${e.message}", e, "AndroidUpdateManager")
+            // If validation fails due to an error, allow the installation attempt
+            // The OS will handle any actual signature mismatch
+            ApkValidationResult.Valid
+        }
+    }
+    
+    /**
+     * Computes SHA-256 fingerprint of a certificate for comparison.
+     */
+    private fun getCertificateFingerprint(certBytes: ByteArray): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        val hash = digest.digest(certBytes)
+        return hash.joinToString(":") { "%02X".format(it) }
     }
 }

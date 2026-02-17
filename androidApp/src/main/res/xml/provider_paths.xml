@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <external-path name="external_files" path="." />
+    <!-- External cache directory for downloaded APK files -->
     <external-cache-path name="external_cache_files" path="." />
+    <!-- Internal cache directory fallback -->
     <cache-path name="cache_files" path="." />
-    <files-path name="files" path="." />
 </paths>

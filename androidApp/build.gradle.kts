@@ -36,6 +36,15 @@ android {
         }
     }
 
+    signingConfigs {
+        create("sharedDebug") {
+            storeFile = file("keystores/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -43,6 +52,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("sharedDebug")
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("sharedDebug")
         }
     }
     

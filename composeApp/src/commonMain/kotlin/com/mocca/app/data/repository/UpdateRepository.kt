@@ -149,9 +149,19 @@ class UpdateRepository(
                         send(DownloadStatus.Log("Download saved to: $path"))
                         send(DownloadStatus.Log("Verifying file..."))
                         send(DownloadStatus.Log("Triggering installation..."))
-                        send(DownloadStatus.Complete)
-                        platformUpdateManager.installApk(path)
-                        downloadSuccess = true
+                        
+                        // Attempt to install the APK
+                        try {
+                            platformUpdateManager.installApk(path)
+                            downloadSuccess = true
+                            send(DownloadStatus.Complete)
+                        } catch (e: Exception) {
+                            // Check if it's a signature mismatch or other install error
+                            val errorMessage = e.message ?: "Installation failed"
+                            Napier.e("APK installation failed: $errorMessage", e, "UpdateRepository")
+                            send(DownloadStatus.Error(errorMessage, e))
+                            downloadSuccess = false
+                        }
                     } else {
                         val errorBody = response.bodyAsChannel().readRemaining().readText()
                         throw Exception("Request failed: $status. Body: $errorBody")
