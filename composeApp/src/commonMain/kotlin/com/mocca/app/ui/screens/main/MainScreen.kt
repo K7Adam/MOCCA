@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -91,6 +92,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .statusBarsPadding()
         ) {
             // Subtle terminal effect
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
@@ -100,6 +102,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .padding(bottom = 100.dp)
             ) {
                 SwipePanelLayout(
                     leftPanel = {

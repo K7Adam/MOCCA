@@ -34,7 +34,6 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
-import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
@@ -231,38 +230,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
             .fillMaxSize()
             .background(AppColors.background)
     ) {
-            GodHeader(
-                title = sessionTitle,
-                subtitle = "mobile-agent-v2",
-                subtitleIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Rocket,
-                        contentDescription = null,
-                        tint = AppColors.white.copy(alpha = 0.4f),
-                        modifier = Modifier.size(16.dp)
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { screenModel.refreshData() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
-                        )
-                    }
-                    IconButton(onClick = { showShareDialog = true }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
-                    }
-                    IconButton(onClick = { screenModel.toggleTodoPanel() }) {
-                        Icon(
-                            imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
-                            contentDescription = "Todos",
-                            tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
-                        )
-                    }
-                },
-                modifier = Modifier.zIndex(10f)
-            )
         
         if (showShareDialog) {
             val isShared = state.session?.shareID != null
