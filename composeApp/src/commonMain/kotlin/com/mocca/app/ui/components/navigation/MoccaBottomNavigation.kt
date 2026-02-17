@@ -120,16 +120,15 @@ fun MoccaBottomNavigation(
     items: List<BottomNavItem> = defaultBottomNavItems,
     modifier: Modifier = Modifier
 ) {
-    var containerWidthPx by remember { mutableFloatStateOf(0f) }
-    val density = LocalDensity.current
+    // track travel distance between first and last item
+    var travelDistancePx by remember { mutableFloatStateOf(0f) }
+    var firstItemCenterPx by remember { mutableFloatStateOf(0f) }
+    var lastItemCenterPx by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = modifier
             .widthIn(min = 280.dp, max = 360.dp)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
-            .onGloballyPositioned { coordinates ->
-                containerWidthPx = coordinates.size.width.toFloat()
-            }
             .background(
                 color = AppColors.glassBackground,
                 shape = AppShapes.rounded2xl
@@ -151,16 +150,27 @@ fun MoccaBottomNavigation(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items.forEach { item ->
-                    // Calculate distance from current progress to this item's target
+                items.forEachIndexed { index, item ->
                     val distanceFromProgress = kotlin.math.abs(dragProgress - item.targetProgress)
-                    // Item is selected if we're closest to it (within 0.25 threshold)
                     val isSelected = distanceFromProgress < 0.25f
-                    // Proximity for scale animation (1.0 = exactly at this item)
                     val proximity = 1f - (distanceFromProgress * 2f).coerceIn(0f, 1f)
 
                     Box(
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier
+                            .weight(1f)
+                            .onGloballyPositioned { coords ->
+                                // Calculate the center of this item relative to the parent Row
+                                // parentLayoutCoordinates gives us Row's position
+                                val center = coords.size.width / 2f
+                                val rowPosition = coords.localToWindow(androidx.compose.ui.geometry.Offset.Zero).x
+                                // We'll just track first/last/distance within the Row context
+                                if (index == 0) firstItemCenterPx = coords.localToRoot(androidx.compose.ui.geometry.Offset(center, 0f)).x
+                                if (index == items.size - 1) lastItemCenterPx = coords.localToRoot(androidx.compose.ui.geometry.Offset(center, 0f)).x
+                                
+                                if (firstItemCenterPx != 0f && lastItemCenterPx != 0f) {
+                                    travelDistancePx = lastItemCenterPx - firstItemCenterPx
+                                }
+                            },
                         contentAlignment = Alignment.Center
                     ) {
                         BottomNavItemComponent(
@@ -175,60 +185,31 @@ fun MoccaBottomNavigation(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Animated indicator pill that follows drag progress in real-time
-            AnimatedIndicatorPill(
-                progress = dragProgress,
-                containerWidthPx = containerWidthPx,
-                modifier = Modifier.padding(horizontal = AppSpacing.md)
-            )
-        }
-    }
-}
-
-/**
- * Animated indicator pill that moves smoothly between items based on drag progress.
- *
- * @param progress Current drag progress (0.0 to 1.0)
- * @param containerWidthPx Width of the navigation container for accurate offset calculation
- * @param modifier Modifier for styling
- */
-@Composable
-private fun AnimatedIndicatorPill(
-    progress: Float,
-    containerWidthPx: Float,
-    modifier: Modifier = Modifier
-) {
-    val density = LocalDensity.current
-    
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(3.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        // The indicator pill - moves from right (0.0) to left (1.0)
-        // Using lambda offset for performance (60fps updates)
-        Box(
-            modifier = Modifier
-                .width(24.dp)
-                .height(3.dp)
-                .offset {
-                    // Calculate the max travel distance (from center to edges)
-                    // The items are spaced evenly. For 3 items, the centers are at:
-                    // 1/6, 1/2, 5/6 of the width.
-                    // Distance from center (1/2) to edges is 1/3 of the width.
-                    val maxOffsetPx = containerWidthPx / 3f
-                    
-                    // Map progress 0.0 (right) -> 1.0 (left) to offset +maxOffset -> -maxOffset
-                    val xOffsetPx = maxOffsetPx * (1.0f - 2.0f * progress)
-                    
-                    IntOffset(xOffsetPx.roundToInt(), 0)
-                }
-                .background(
-                    color = AppColors.accentGreen,
-                    shape = RoundedCornerShape(2.dp)
+            // Indicator that moves between firstItemCenterPx and lastItemCenterPx
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(24.dp)
+                        .height(3.dp)
+                        .offset {
+                            // travelDistancePx is the total width between item centers
+                            // The indicator should be at +distance/2 at progress 0.0 (Right)
+                            // and -distance/2 at progress 1.0 (Left)
+                            val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
+                            IntOffset(xOffsetPx.roundToInt(), 0)
+                        }
+                        .background(
+                            color = AppColors.accentGreen,
+                            shape = RoundedCornerShape(2.dp)
+                        )
                 )
-        )
+            }
+        }
     }
 }
 
@@ -263,7 +244,6 @@ private fun BottomNavItemComponent(
     )
 
     // Scale based on proximity to current drag position
-    // Items closer to the drag position appear slightly larger
     val targetScale = 1.0f + (proximity * 0.15f)
     val scale by animateFloatAsState(
         targetValue = targetScale,
