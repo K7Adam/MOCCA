@@ -3,34 +3,24 @@ package com.mocca.app.ui.screens.chat
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.EventStreamRepository
-import com.mocca.app.data.repository.SessionRepository
-import com.mocca.app.data.repository.CommandRepository
-import com.mocca.app.data.repository.AgentRepository
+import com.mocca.app.data.repository.*
 import com.mocca.app.domain.model.*
+import com.mocca.app.ui.screens.chat.delegates.*
 import com.mocca.app.util.TerminalCommand
 import io.github.aakira.napier.Napier
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.Job
+import kotlinx.collections.immutable.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.*
 
 @Immutable
 data class ChatState(
     val sessionId: String = "",
     val session: Session? = null,
-    val messages: List<Message> = emptyList(),
-    val childSessions: Map<String, Session> = emptyMap(),
-    val childMessages: Map<String, List<Message>> = emptyMap(),
-    val childStreamingText: Map<String, String> = emptyMap(),
+    val messages: ImmutableList<Message> = persistentListOf(),
+    val childSessions: ImmutableMap<String, Session> = persistentMapOf(),
+    val childMessages: ImmutableMap<String, ImmutableList<Message>> = persistentMapOf(),
+    val childStreamingText: ImmutableMap<String, String> = persistentMapOf(),
     val streamingText: String = "",
     val isLoading: Boolean = false,
     val isSending: Boolean = false,
@@ -48,40 +38,25 @@ data class ChatState(
     val selectedProviderId: String = "",
     val selectedModelId: String = "",
     val selectedVariantId: String? = null,
-    val modes: List<Mode> = emptyList(),
+    val modes: ImmutableList<Mode> = persistentListOf(),
     val selectedModeId: String? = null,
-    val attachedFiles: List<AttachedFile> = emptyList(),
-    val commands: List<TerminalCommand> = emptyList(),
-    val recentModels: List<RecentModel> = emptyList(),
-    val todos: List<Todo> = emptyList(),
+    val attachedFiles: ImmutableList<AttachedFile> = persistentListOf(),
+    val commands: ImmutableList<TerminalCommand> = persistentListOf(),
+    val recentModels: ImmutableList<RecentModel> = persistentListOf(),
+    val todos: ImmutableList<Todo> = persistentListOf(),
     val showTodoPanel: Boolean = false,
     val maxTokens: Int = 0
 ) {
-    /** Total input tokens consumed across all assistant messages in this session. */
-    val totalInputTokens: Int get() = messages
-        .filter { it.role == MessageRole.ASSISTANT }
-        .sumOf { it.tokens?.input ?: 0 }
-    
-    /** Total output tokens produced across all assistant messages in this session. */
-    val totalOutputTokens: Int get() = messages
-        .filter { it.role == MessageRole.ASSISTANT }
-        .sumOf { it.tokens?.output ?: 0 }
-    
-    /** Last assistant message's input tokens — represents context window usage for the most recent turn. */
-    val lastTurnInputTokens: Int get() = messages
-        .lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }
-        ?.tokens?.input ?: 0
+    val totalInputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.input ?: 0 } }
+    val totalOutputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.output ?: 0 } }
+    val lastTurnInputTokens: Int by lazy { messages.lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }?.tokens?.input ?: 0 }
         
-    /** Available variants for the currently selected model */
     val availableVariants: List<String> get() {
         if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return emptyList()
-        
         val provider = providerInfo.all.find { it.id == selectedProviderId } ?: return emptyList()
-        val modelsObj = provider.models as? JsonObject ?: return emptyList()
-        val modelObj = modelsObj[selectedModelId] as? JsonObject ?: return emptyList()
-        
-        // Variants are stored in the "variants" key of the model object
-        val variantsObj = modelObj["variants"] as? JsonObject ?: return emptyList()
+        val modelsObj = provider.models as? kotlinx.serialization.json.JsonObject ?: return emptyList()
+        val modelObj = modelsObj[selectedModelId] as? kotlinx.serialization.json.JsonObject ?: return emptyList()
+        val variantsObj = modelObj["variants"] as? kotlinx.serialization.json.JsonObject ?: return emptyList()
         return variantsObj.keys.toList().sorted()
     }
 }
@@ -94,6 +69,17 @@ class ChatScreenModel(
     private val agentRepository: AgentRepository
 ) : ScreenModel {
     
+    // Delegate construction using Lazy and screenModelScope
+    private val messageDelegate: ChatMessageDelegate by lazy { 
+        ChatMessageDelegateImpl(sessionRepository, screenModelScope) 
+    }
+    private val configDelegate: ChatConfigDelegate by lazy { 
+        ChatConfigDelegateImpl(sessionRepository, agentRepository, screenModelScope) 
+    }
+    private val eventDelegate: ChatEventDelegate by lazy { 
+        ChatEventDelegateImpl(eventStreamRepository, screenModelScope) 
+    }
+
     private val _state = MutableStateFlow(ChatState(sessionId = initialSessionId ?: ""))
     val state: StateFlow<ChatState> = _state.asStateFlow()
     
@@ -102,585 +88,121 @@ class ChatScreenModel(
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText.asStateFlow()
 
-    private val _streamingText = MutableStateFlow("")
-    val streamingText: StateFlow<String> = _streamingText.asStateFlow()
-    
-    private val _childStreamingText = MutableStateFlow<Map<String, String>>(emptyMap())
-    val childStreamingText: StateFlow<Map<String, String>> = _childStreamingText.asStateFlow()
-
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent: SharedFlow<String> = _navigationEvent.asSharedFlow()
 
-    private var messagesJob: Job? = null
-    private var currentLimit = 50L
+    val aggregatedMessages: StateFlow<ImmutableList<Message>> by lazy { messageDelegate.aggregatedMessages }
+    val streamingText by lazy { eventDelegate.streamingText }
 
-    val aggregatedMessages: StateFlow<ImmutableList<Message>> = _state
-        .map { s -> s.messages to s.childSessions }
-        .distinctUntilChanged()
-        .map { (messages, childSessions) ->
-            val rootMessages = messages.toMutableList()
-            val syntheticMessages = childSessions.values.map { child ->
-                Message(
-                    id = "child-${child.id}",
-                    sessionId = _state.value.sessionId,
-                    role = MessageRole.ASSISTANT,
-                    parts = listOf(MessagePart.SubTask(
-                        sessionId = child.id,
-                        title = child.title ?: "Sub-task",
-                        status = child.status,
-                        messages = _state.value.childMessages[child.id] ?: emptyList(),
-                        streamingText = ""
-                    )),
-                    createdAt = child.createdAt
-                )
-            }
-            (rootMessages + syntheticMessages).sortedBy { it.createdAt }.toImmutableList()
-        }
-        .flowOn(Dispatchers.Default)
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), persistentListOf())
-    
     init {
-        loadConfig()
-        loadRecentModels()
-        loadCommands()
-        if (initialSessionId != null) {
-            connectToEventStream()
-            loadSession(initialSessionId)
+        syncDelegates()
+        // Wait for lazy init
+        screenModelScope.launch {
+            configDelegate.loadConfig()
+            configDelegate.loadRecentModels()
+            if (initialSessionId != null) {
+                loadSession(initialSessionId)
+            }
         }
     }
-    
-    private fun loadRecentModels() {
+
+    private fun syncDelegates() {
         screenModelScope.launch {
-            val recent = sessionRepository.getRecentModels()
-            _state.value = _state.value.copy(recentModels = recent)
+            combine(
+                messageDelegate.messages,
+                messageDelegate.childSessions,
+                messageDelegate.childMessages,
+                eventDelegate.childStreamingText,
+                eventDelegate.isThinking,
+                eventDelegate.thinkingContent,
+                eventDelegate.thinkingElapsedMs,
+                eventDelegate.pendingPermission,
+                eventDelegate.pendingQuestion,
+                eventDelegate.connectionStatus,
+                configDelegate.providerInfo,
+                configDelegate.selectedProviderId,
+                configDelegate.selectedModelId,
+                configDelegate.selectedVariantId,
+                configDelegate.modes,
+                configDelegate.selectedModeId,
+                configDelegate.modelName,
+                configDelegate.agentName,
+                configDelegate.maxTokens,
+                configDelegate.recentModels
+            ) { args ->
+                @Suppress("UNCHECKED_CAST")
+                _state.value.copy(
+                    messages = args[0] as ImmutableList<Message>,
+                    childSessions = args[1] as ImmutableMap<String, Session>,
+                    childMessages = args[2] as ImmutableMap<String, ImmutableList<Message>>,
+                    childStreamingText = args[3] as ImmutableMap<String, String>,
+                    isThinking = args[4] as Boolean,
+                    thinkingContent = args[5] as String,
+                    thinkingElapsedMs = args[6] as Long,
+                    pendingPermission = args[7] as PermissionRequest?,
+                    pendingQuestion = args[8] as QuestionRequest?,
+                    connectionStatus = args[9] as ConnectionStatus,
+                    providerInfo = args[10] as ProviderResponse?,
+                    selectedProviderId = args[11] as String,
+                    selectedModelId = args[12] as String,
+                    selectedVariantId = args[13] as String?,
+                    modes = args[14] as ImmutableList<Mode>,
+                    selectedModeId = args[15] as String?,
+                    modelName = args[16] as String,
+                    agentName = args[17] as String,
+                    maxTokens = args[18] as Int,
+                    recentModels = args[19] as ImmutableList<RecentModel>
+                )
+            }.collect { newState ->
+                _state.update { newState }
+            }
         }
     }
 
     fun loadSession(newSessionId: String) {
         if (_state.value.sessionId == newSessionId && _state.value.messages.isNotEmpty()) return
-
-        Napier.i("ChatScreenModel switching to session: $newSessionId")
-        
-        // Preserve provider/model state across session switches to keep the model selector functional.
-        // These are global configuration values that don't change per-session.
-        val currentState = _state.value
-        _state.value = ChatState(
-            sessionId = newSessionId,
-            isLoading = true,
-            connectionStatus = eventStreamRepository.connectionStatus.value,
-            // Preserve display names
-            modelName = currentState.modelName,
-            agentName = currentState.agentName,
-            // CRITICAL: Preserve provider info so model selector remains clickable
-            providerInfo = currentState.providerInfo,
-            selectedProviderId = currentState.selectedProviderId,
-            selectedModelId = currentState.selectedModelId,
-            // Preserve modes and recent models (global config, not session-specific)
-            modes = currentState.modes,
-            selectedModeId = currentState.selectedModeId,
-            recentModels = currentState.recentModels,
-            // Preserve commands (global, not session-specific)
-            commands = currentState.commands
-        )
+        _state.update { it.copy(sessionId = newSessionId, isLoading = true) }
         _inputText.value = ""
-        _streamingText.value = ""
-        _childStreamingText.value = emptyMap()
-
-        connectToEventStream()
-        loadMessages()
-        loadChildren()
+        eventDelegate.connectToEventStream(newSessionId)
+        eventDelegate.observeEvents(newSessionId, { loadMessages() }, { id -> messageDelegate.loadChildMessages(id) })
+        messageDelegate.loadMessages(newSessionId, 50)
+        messageDelegate.loadChildren(newSessionId)
         loadTodos()
     }
-    
-    private fun loadTodos() {
-        val currentSessionId = _state.value.sessionId
-        if (currentSessionId.isEmpty()) return
-        
-        screenModelScope.launch {
-            sessionRepository.getSessionTodos(currentSessionId).collect { resource ->
-                if (resource is Resource.Success) {
-                    _state.value = _state.value.copy(todos = resource.data)
-                }
-            }
-        }
-    }
-    
-    fun toggleTodoPanel() {
-        _state.value = _state.value.copy(showTodoPanel = !_state.value.showTodoPanel)
-        if (_state.value.showTodoPanel) {
-            loadTodos()
-        }
-    }
 
-    fun shareSession() {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            when (val result = sessionRepository.shareSession(sessionId)) {
-                is Resource.Success -> {
-                    _state.value = _state.value.copy(isLoading = false, session = result.data)
-                }
-                is Resource.Error -> {
-                    _state.value = _state.value.copy(isLoading = false, error = result.message)
-                }
-                else -> {}
-            }
-        }
-    }
-
-    fun unshareSession() {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            when (val result = sessionRepository.unshareSession(sessionId)) {
-                is Resource.Success -> {
-                    _state.value = _state.value.copy(isLoading = false, session = result.data)
-                }
-                is Resource.Error -> {
-                    _state.value = _state.value.copy(isLoading = false, error = result.message)
-                }
-                else -> {}
-            }
-        }
-    }
-
-    fun summarizeSession() {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            when (val result = sessionRepository.summarizeSession(sessionId)) {
-                is Resource.Success -> {
-                    _state.value = _state.value.copy(isLoading = false, session = result.data)
-                }
-                is Resource.Error -> {
-                    _state.value = _state.value.copy(isLoading = false, error = result.message)
-                }
-                else -> {}
-            }
-        }
-    }
-
-    fun initSession(providerId: String, modelId: String) {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val initMsg = "Initialize Project"
-            
-            val sendResult = sessionRepository.sendMessage(sessionId, initMsg)
-            if (sendResult.isSuccess) {
-                val message = sendResult.getOrThrow()
-                when (val result = sessionRepository.initializeProject(
-                    sessionId = sessionId,
-                    messageId = message.id,
-                    providerId = providerId,
-                    modelId = modelId
-                )) {
-                    is Resource.Success -> {
-                        _state.value = _state.value.copy(isLoading = false)
-                        loadMessages()
-                    }
-                    is Resource.Error -> {
-                        _state.value = _state.value.copy(isLoading = false, error = result.message)
-                    }
-                    else -> {}
-                }
-            } else {
-                 val error = sendResult.exceptionOrNull()
-                 _state.value = _state.value.copy(isLoading = false, error = error?.message)
-            }
-        }
-    }
-    
-    private fun loadChildren() {
-        val currentSessionId = _state.value.sessionId
-        if (currentSessionId.isEmpty()) return
-        
-        screenModelScope.launch {
-            sessionRepository.getChildren(currentSessionId).onSuccess { children ->
-                val childMap = children.associateBy { it.id }
-                _state.value = _state.value.copy(childSessions = childMap)
-                children.forEach { child ->
-                    eventStreamRepository.monitorSession(child.id)
-                    loadChildMessages(child.id)
-                }
-            }
-        }
-    }
-
-    private fun loadChildMessages(childId: String) {
-        screenModelScope.launch {
-            sessionRepository.getMessages(childId).collect { resource ->
-                if (resource is Resource.Success) {
-                    val currentMessages = _state.value.childMessages.toMutableMap()
-                    currentMessages[childId] = resource.data
-                    _state.value = _state.value.copy(childMessages = currentMessages)
-                }
-            }
-        }
-    }
-
-    private fun observeEvents() {
-        screenModelScope.launch {
-            eventStreamRepository.connectionStatus.collect { status ->
-                _state.value = _state.value.copy(connectionStatus = status)
-            }
-        }
-        
-        screenModelScope.launch {
-            @OptIn(FlowPreview::class)
-            eventStreamRepository.streamingText
-                .sample(50)
-                .collect { text -> _streamingText.value = text }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.isThinking.collect { isThinking ->
-                _state.value = _state.value.copy(isThinking = isThinking)
-            }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.thinkingContent.collect { content ->
-                _state.value = _state.value.copy(thinkingContent = content)
-            }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.thinkingStartTime.collect { startTime ->
-                if (startTime != null) {
-                    while (eventStreamRepository.isThinking.value) {
-                        val elapsed = System.currentTimeMillis() - startTime
-                        _state.value = _state.value.copy(thinkingElapsedMs = elapsed)
-                        kotlinx.coroutines.delay(100)
-                    }
-                } else {
-                    _state.value = _state.value.copy(thinkingElapsedMs = 0)
-                }
-            }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.pendingPermission.collect { permission ->
-                _state.value = _state.value.copy(pendingPermission = permission)
-            }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.pendingQuestion.collect { question ->
-                _state.value = _state.value.copy(pendingQuestion = question)
-            }
-        }
-        
-        screenModelScope.launch {
-            eventStreamRepository.eventsForMonitoredSessions().collect { event ->
-                Napier.d("ChatScreenModel received: ${event.type}")
-                when (event) {
-                    is ServerEvent.MessageUpdated -> {
-                        if (event.properties.info.sessionID == sessionId) {
-                            Napier.i("Message complete, reloading")
-                            _state.value = _state.value.copy(isSending = false, isSessionIdle = true)
-                            loadMessages()
-                        } else if (_state.value.childSessions.containsKey(event.properties.info.sessionID)) {
-                            loadChildMessages(event.properties.info.sessionID)
-                        }
-                    }
-                    is ServerEvent.MessagePartUpdated -> {
-                        val part = event.properties.part
-                        val delta = event.properties.delta
-                        
-                        if (part.sessionID != sessionId && _state.value.childSessions.containsKey(part.sessionID)) {
-                            if (part.type == "text") {
-                                 val currentText = _childStreamingText.value.toMutableMap()
-                                 val existing = currentText[part.sessionID] ?: ""
-                                 
-                                 if (existing.isEmpty() && !part.text.isNullOrEmpty()) {
-                                     currentText[part.sessionID] = part.text
-                                 } else if (delta != null) {
-                                     currentText[part.sessionID] = existing + delta
-                                 } else if (!part.text.isNullOrEmpty()) {
-                                     currentText[part.sessionID] = part.text
-                                 }
-                                 
-                                 _childStreamingText.value = currentText
-                            }
-                        }
-                    }
-                    is ServerEvent.SessionIdle -> {
-                        if (event.properties.sessionID == sessionId) {
-                            _state.value = _state.value.copy(isSessionIdle = true, isSending = false)
-                            loadMessages()
-                        } else if (_state.value.childSessions.containsKey(event.properties.sessionID)) {
-                             val currentText = _childStreamingText.value.toMutableMap()
-                             currentText.remove(event.properties.sessionID)
-                             _childStreamingText.value = currentText
-                             loadChildMessages(event.properties.sessionID)
-                        }
-                    }
-                    is ServerEvent.SessionUpdated -> {
-                        val session = event.properties.info
-                        if (session.id == sessionId) {
-                            _state.value = _state.value.copy(session = session, isSessionIdle = session.status == SessionStatus.IDLE)
-                        } else if (session.parentID == sessionId) {
-                            val currentChildren = _state.value.childSessions.toMutableMap()
-                            val isNew = !currentChildren.containsKey(session.id)
-                            currentChildren[session.id] = session
-                            _state.value = _state.value.copy(childSessions = currentChildren)
-                            if (isNew) {
-                                eventStreamRepository.monitorSession(session.id)
-                                loadChildMessages(session.id)
-                            }
-                        }
-                    }
-                    is ServerEvent.SessionError -> {
-                        if (event.properties.sessionID == sessionId) {
-                            _state.value = _state.value.copy(
-                                error = event.properties.error?.message ?: "Session error",
-                                isSending = false,
-                                isSessionIdle = true
-                            )
-                        }
-                    }
-                    else -> {}
-                }
-            }
-        }
-    }
-    
-    private fun loadConfig() {
-        screenModelScope.launch(Dispatchers.IO) {
-            sessionRepository.loadDefaultConfig()
-            sessionRepository.getProviderInfo().onSuccess { providerResponse ->
-                val (defaultModelId, defaultProviderId) = sessionRepository.getDefaultModelProvider()
-                
-                // Try to restore session model from history now that we have provider info
-                // (This handles the case where DB loaded messages before network loaded providers)
-                var restoredProviderId = ""
-                var restoredModelId = ""
-                
-                val lastModelId = _state.value.messages.findLast { 
-                    (it.role == MessageRole.ASSISTANT || it.role == MessageRole.USER) && !it.model.isNullOrBlank() 
-                }?.model
-                
-                if (!lastModelId.isNullOrBlank()) {
-                     val provider = providerResponse.all.find { it.models.toString().contains(lastModelId) }
-                     if (provider != null) {
-                         restoredProviderId = provider.id
-                         restoredModelId = lastModelId
-                         Napier.i("ChatScreenModel: Restored model from history in loadConfig: $restoredProviderId/$restoredModelId")
-                     }
-                }
-                
-                // If we already have a selection (from user or previous restore), keep it. 
-                // Otherwise use restored. Otherwise use default.
-                val currentProviderId = _state.value.selectedProviderId
-                val currentModelId = _state.value.selectedModelId
-                
-                val finalProviderId = when {
-                    currentProviderId.isNotEmpty() -> currentProviderId
-                    restoredProviderId.isNotEmpty() -> restoredProviderId
-                    else -> defaultProviderId
-                }
-                
-                val finalModelId = when {
-                    currentModelId.isNotEmpty() -> currentModelId
-                    restoredModelId.isNotEmpty() -> restoredModelId
-                    else -> defaultModelId
-                }
-                
-                _state.value = _state.value.copy(
-                    providerInfo = providerResponse,
-                    selectedProviderId = finalProviderId,
-                    selectedModelId = finalModelId
-                )
-                
-                 if (finalModelId.isNotEmpty()) {
-                    val modelName = finalModelId.uppercase().replace("-", " ").take(30)
-                    
-                    // Parse maxTokens from ProviderModel.limit
-                    val contextTokens = parseContextLimit(providerResponse, finalProviderId, finalModelId)
-                    
-                    _state.value = _state.value.copy(
-                        modelName = modelName,
-                        maxTokens = contextTokens
-                    )
-                }
-            }
-            sessionRepository.getModes().onSuccess { modes ->
-                // Legacy mode fetch - keep as fallback or remove if unused
-            }
-            
-            // Fetch real agents (Sisyphus, etc.) and map to modes
-            agentRepository.getAgents().collect { resource ->
-                if (resource is Resource.Success) {
-                    val agents = resource.data
-                    val modes = agents.filter { !it.hidden }.map { agent ->
-                        Mode(
-                            id = agent.name,
-                            name = agent.name,
-                            description = agent.description
-                        )
-                    }
-                    
-                    val defaultMode = sessionRepository.getDefaultMode()
-                    // If current selection is invalid, reset to default or first available
-                    val currentSelection = _state.value.selectedModeId
-                    val newSelection = if (modes.any { it.id == currentSelection }) {
-                        currentSelection
-                    } else {
-                        defaultMode
-                    }
-                    
-                    _state.value = _state.value.copy(modes = modes, selectedModeId = newSelection)
-                    
-                    // Update agent name display
-                    if (newSelection != null) {
-                        val modeName = modes.find { it.id == newSelection }?.name ?: newSelection.uppercase()
-                        _state.value = _state.value.copy(agentName = modeName.uppercase())
-                    }
-                }
-            }
-
-            sessionRepository.getCurrentModelInfo()?.let { (modelName, agentName) ->
-                _state.value = _state.value.copy(modelName = modelName, agentName = agentName)
-            }
-            loadCommands()
-        }
-    }
-    
-    private fun loadCommands() {
-        screenModelScope.launch {
-            commandRepository.getCommands().collect { resource ->
-                if (resource is Resource.Success) {
-                    val remoteCommands = resource.data.map { cmd ->
-                        TerminalCommand(
-                            trigger = cmd.name,
-                            description = cmd.description ?: "",
-                            action = { 
-                                updateInputText("/${cmd.name}")
-                                sendMessage() 
-                            }
-                        )
-                    }
-                    _state.value = _state.value.copy(commands = remoteCommands)
-                }
-            }
-        }
-    }
-    
     private fun loadMessages() {
-        messagesJob?.cancel()
-        messagesJob = screenModelScope.launch {
-            sessionRepository.getMessages(sessionId, currentLimit).collect { resource ->
-                when (resource) {
-                    is Resource.Loading -> {
-                        _state.value = _state.value.copy(isLoading = true, messages = resource.data ?: _state.value.messages)
-                    }
-                    is Resource.Success -> {
-                        val messages = resource.data
-                        var updatedState = _state.value.copy(isLoading = false, messages = messages, error = null)
+        messageDelegate.loadMessages(sessionId, 50)
+        _state.update { it.copy(isSending = false, isSessionIdle = true) }
+    }
 
-                        // Restore session model from history if we haven't manually selected one yet (or just switched session)
-                        // logic: Find last assistant message with a modelID
-                        val lastModelId = messages.findLast { it.role == MessageRole.ASSISTANT && !it.model.isNullOrBlank() }?.model
-                        
-                        if (!lastModelId.isNullOrBlank()) {
-                            // We have a model ID (e.g. "claude-sonnet-4-5") but need the provider ID
-                            // Look it up in our loaded provider info
-                            val providers = _state.value.providerInfo?.all ?: emptyList()
-                            val provider = providers.find { provider -> 
-                                provider.models.toString().contains(lastModelId) 
-                            }
+    fun loadMoreMessages() = messageDelegate.loadMoreMessages(sessionId)
 
-                            if (provider != null) {
-                                val modelName = lastModelId.uppercase().replace("-", " ").take(30)
-                                val contextTokens = parseContextLimit(resource.data.let { _state.value.providerInfo!! }, provider.id, lastModelId)
-                                updatedState = updatedState.copy(
-                                    selectedModelId = lastModelId,
-                                    selectedProviderId = provider.id,
-                                    modelName = modelName,
-                                    maxTokens = contextTokens
-                                )
-                                Napier.i("Restored session model: ${provider.id} / $lastModelId")
-                            }
-                        }
-                        
-                        _state.value = updatedState
-                    }
-                    is Resource.Error -> {
-                        _state.value = _state.value.copy(isLoading = false, error = resource.message, messages = resource.data ?: _state.value.messages)
-                    }
+    private fun loadTodos() {
+        screenModelScope.launch {
+            sessionRepository.getSessionTodos(sessionId).collect { resource ->
+                if (resource is Resource.Success) {
+                    _state.update { it.copy(todos = resource.data.toImmutableList()) }
                 }
             }
         }
     }
 
-    fun loadMoreMessages() {
-        if (_state.value.isLoading) return
-        currentLimit += 50
-        loadMessages()
-    }
-    
-    private fun connectToEventStream() {
-        eventStreamRepository.connect(screenModelScope, sessionId)
-    }
-    
-    fun updateInputText(text: String) {
-        _inputText.value = text
-    }
-    
-    fun selectModel(providerId: String, modelId: String) {
-        sessionRepository.setDefaultModel(modelId, providerId)
-        val modelName = modelId.uppercase().replace("-", " ").take(30)
-        
-        // Parse maxTokens from ProviderModel.limit
-        val contextTokens = _state.value.providerInfo?.let { 
-            parseContextLimit(it, providerId, modelId) 
-        } ?: 0
-        
-        _state.value = _state.value.copy(
-            selectedProviderId = providerId, 
-            selectedModelId = modelId, 
-            selectedVariantId = null, // Reset variant on model change
-            modelName = modelName,
-            maxTokens = contextTokens
-        )
-        screenModelScope.launch {
-            sessionRepository.addRecentModel(providerId, modelId)
-            loadRecentModels()
-        }
+    fun toggleTodoPanel() {
+        _state.update { it.copy(showTodoPanel = !it.showTodoPanel) }
+        if (_state.value.showTodoPanel) loadTodos()
     }
 
-    fun selectVariant(variantId: String?) {
-        _state.value = _state.value.copy(selectedVariantId = variantId)
-    }
-    
-    fun selectMode(modeId: String?) {
-        val newModeId = modeId ?: "build"
-        sessionRepository.setDefaultMode(newModeId)
-        val modeName = _state.value.modes.find { it.id == newModeId }?.name ?: newModeId.uppercase()
-        _state.value = _state.value.copy(selectedModeId = newModeId, agentName = modeName.uppercase())
-    }
-    
-    fun addAttachment(file: AttachedFile) {
-        val current = _state.value.attachedFiles
-        if (current.none { it.id == file.id }) {
-            _state.value = _state.value.copy(attachedFiles = current + file)
-        }
-    }
-    
-    fun removeAttachment(file: AttachedFile) {
-        _state.value = _state.value.copy(attachedFiles = _state.value.attachedFiles.filter { it.id != file.id })
-    }
-    
-    fun clearAttachments() {
-        _state.value = _state.value.copy(attachedFiles = emptyList())
-    }
-    
+    fun updateInputText(text: String) { _inputText.value = text }
+    fun selectModel(p: String, m: String) = configDelegate.selectModel(p, m)
+    fun selectVariant(v: String?) = configDelegate.selectVariant(v)
+    fun selectMode(m: String?) = configDelegate.selectMode(m)
+    fun addAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = (it.attachedFiles + f).toImmutableList()) }
+    fun removeAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = it.attachedFiles.filter { a -> a.id != f.id }.toImmutableList()) }
+    fun clearAttachments() = _state.update { it.copy(attachedFiles = persistentListOf()) }
+
     fun sendMessage() {
         val text = _inputText.value.trim()
         if (text.isEmpty()) return
-        
-        val attachments = _state.value.attachedFiles
-        val selectedMode = _state.value.selectedModeId
-        val selectedModel = _state.value.selectedModelId
-        val selectedProvider = _state.value.selectedProviderId
-        val selectedVariant = _state.value.selectedVariantId
         
         if (text.startsWith("/")) {
             val parts = text.drop(1).split(" ", limit = 2)
@@ -689,273 +211,146 @@ class ChatScreenModel(
             
             if (command.isNotBlank()) {
                 screenModelScope.launch {
-                    val userMessage = sessionRepository.createLocalUserMessage(sessionId, text)
+                    val userMessage = messageDelegate.createLocalUserMessage(sessionId, text)
                     _inputText.value = ""
-                    _state.value = _state.value.copy(isSending = true, isSessionIdle = false, messages = _state.value.messages + userMessage)
-                    
-                    when (val result = sessionRepository.executeCommand(sessionId, command, args)) {
-                        is Resource.Success -> { /* OK */ }
-                        is Resource.Error -> {
-                            _state.value = _state.value.copy(isSending = false, isSessionIdle = true, error = "Command failed: ${result.message}")
-                        }
-                        else -> {}
+                    _state.update { it.copy(isSending = true, isSessionIdle = false) }
+                    if (sessionRepository.executeCommand(sessionId, command, args) is Resource.Error) {
+                        _state.update { it.copy(isSending = false, isSessionIdle = true, error = "Command failed") }
                     }
                 }
                 return
             }
         }
         
-        eventStreamRepository.connect(screenModelScope, sessionId)
-        eventStreamRepository.monitorSession(sessionId)
-        
         screenModelScope.launch {
-            val userMessage = sessionRepository.createLocalUserMessage(sessionId, text)
+            messageDelegate.createLocalUserMessage(sessionId, text)
             _inputText.value = ""
             clearAttachments()
-            _state.value = _state.value.copy(isSending = true, isSessionIdle = false, messages = _state.value.messages + userMessage)
+            _state.update { it.copy(isSending = true, isSessionIdle = false) }
             
             val result = sessionRepository.sendMessageAsync(
                 sessionId = sessionId,
                 text = text,
-                mode = selectedMode,
-                variant = selectedVariant,
-                attachments = attachments,
-                modelId = selectedModel.ifEmpty { null },
-                providerId = selectedProvider.ifEmpty { null }
+                mode = _state.value.selectedModeId,
+                variant = _state.value.selectedVariantId,
+                attachments = _state.value.attachedFiles,
+                modelId = _state.value.selectedModelId.ifEmpty { null },
+                providerId = _state.value.selectedProviderId.ifEmpty { null }
             )
             
-            if (result.isSuccess) {
-                screenModelScope.launch {
-                    kotlinx.coroutines.delay(120_000)
-                    val currentStreaming = _streamingText.value
-                    if (_state.value.isSending && currentStreaming.isEmpty()) {
-                        sessionRepository.getMessages(sessionId).collect { resource ->
-                            if (resource is Resource.Success) {
-                                val messages = resource.data
-                                val lastMessage = messages.lastOrNull()
-                                if (lastMessage != null && lastMessage.role == MessageRole.ASSISTANT) {
-                                    _state.value = _state.value.copy(isSending = false, isSessionIdle = true, messages = messages)
-                                }
-                            }
-                        }
-                    }
-                }
-            } else {
-                val error = result.exceptionOrNull()
+            if (!result.isSuccess) {
                 _inputText.value = text
-                _state.value = _state.value.copy(isSending = false, isSessionIdle = true, error = error?.message)
-            }
-        }
-    }
-    
-    fun abortSession() {
-        screenModelScope.launch {
-            val result = sessionRepository.abortSession(sessionId)
-            if (result.isSuccess) {
-                _state.value = _state.value.copy(isSending = false, isSessionIdle = true)
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(error = error?.message)
-            }
-        }
-    }
-    
-    fun approvePermission() {
-        val permission = _state.value.pendingPermission ?: return
-        screenModelScope.launch {
-            val result = sessionRepository.respondToPermission(
-                sessionId = permission.sessionId,
-                permissionId = permission.id,
-                allow = true,
-                remember = false
-            )
-            if (result.isSuccess) {
-                eventStreamRepository.dismissPermission()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(error = error?.message)
-            }
-        }
-    }
-    
-    fun denyPermission() {
-        val permission = _state.value.pendingPermission ?: return
-        screenModelScope.launch {
-            val result = sessionRepository.respondToPermission(
-                sessionId = permission.sessionId,
-                permissionId = permission.id,
-                allow = false,
-                remember = false
-            )
-            if (result.isSuccess) {
-                eventStreamRepository.dismissPermission()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(error = error?.message)
-            }
-        }
-    }
-    
-    fun dismissPermission() {
-        eventStreamRepository.dismissPermission()
-    }
-    
-    fun answerQuestion(answers: List<List<String>>) {
-        val question = _state.value.pendingQuestion ?: return
-        screenModelScope.launch {
-            val result = sessionRepository.replyToQuestion(
-                requestId = question.id,
-                answers = answers
-            )
-            if (result.isSuccess) {
-                eventStreamRepository.dismissQuestion()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(error = error?.message)
-            }
-        }
-    }
-    
-    fun rejectQuestion() {
-        val question = _state.value.pendingQuestion ?: return
-        screenModelScope.launch {
-            val result = sessionRepository.rejectQuestion(requestId = question.id)
-            if (result.isSuccess) {
-                eventStreamRepository.dismissQuestion()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(error = error?.message)
-            }
-        }
-    }
-    
-    fun forkSession(message: Message) {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val result = sessionRepository.forkFromMessage(sessionId, message.id)
-            if (result.isSuccess) {
-                val newSession = result.getOrThrow()
-                _state.value = _state.value.copy(isLoading = false)
-                _navigationEvent.emit(newSession.id)
-            } else {
-                 val error = result.exceptionOrNull()
-                 _state.value = _state.value.copy(isLoading = false, error = error?.message)
-            }
-        }
-    }
-    
-    fun executeCommand(command: String) {
-        when (command) {
-            "clear" -> clearHistory()
-            "reset" -> resetSession()
-            "settings" -> screenModelScope.launch { /* Navigate to settings */ }
-            else -> Napier.w("Unknown command: $command")
-        }
-    }
-    
-    private fun clearHistory() {
-        screenModelScope.launch {
-             _state.value = _state.value.copy(isLoading = true)
-            val delResult = sessionRepository.deleteAllSessions()
-            if (delResult.isSuccess) {
-                val createResult = sessionRepository.createSession()
-                if (createResult.isSuccess) {
-                     val session = createResult.getOrThrow()
-                     _state.value = _state.value.copy(isLoading = false)
-                    _navigationEvent.emit(session.id)
-                }
-            } else {
-                val error = delResult.exceptionOrNull()
-                _state.value = _state.value.copy(isLoading = false, error = error?.message)
-            }
-        }
-    }
-    
-    private fun resetSession() {
-        screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val result = sessionRepository.createSession()
-            if (result.isSuccess) {
-                 val session = result.getOrThrow()
-                 _state.value = _state.value.copy(isLoading = false)
-                _navigationEvent.emit(session.id)
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(isLoading = false, error = error?.message)
+                _state.update { it.copy(isSending = false, isSessionIdle = true, error = result.exceptionOrNull()?.message) }
             }
         }
     }
 
-    fun revertSession(message: Message) {
+    fun abortSession() {
         screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val result = sessionRepository.revertToMessage(sessionId, message.id)
-            if (result.isSuccess) {
-                _state.value = _state.value.copy(isLoading = false)
+            if (sessionRepository.abortSession(sessionId).isSuccess) {
+                _state.update { it.copy(isSending = false, isSessionIdle = true) }
+            }
+        }
+    }
+
+    fun approvePermission() {
+        val p = _state.value.pendingPermission ?: return
+        screenModelScope.launch {
+            if (sessionRepository.respondToPermission(p.sessionId, p.id, true).isSuccess) eventStreamRepository.dismissPermission()
+        }
+    }
+
+    fun denyPermission() {
+        val p = _state.value.pendingPermission ?: return
+        screenModelScope.launch {
+            if (sessionRepository.respondToPermission(p.sessionId, p.id, false).isSuccess) eventStreamRepository.dismissPermission()
+        }
+    }
+
+    fun dismissPermission() = eventStreamRepository.dismissPermission()
+
+    fun answerQuestion(a: List<List<String>>) {
+        val q = _state.value.pendingQuestion ?: return
+        screenModelScope.launch {
+            if (sessionRepository.replyToQuestion(q.id, a).isSuccess) eventStreamRepository.dismissQuestion()
+        }
+    }
+
+    fun rejectQuestion() {
+        val q = _state.value.pendingQuestion ?: return
+        screenModelScope.launch {
+            if (sessionRepository.rejectQuestion(q.id).isSuccess) eventStreamRepository.dismissQuestion()
+        }
+    }
+
+    fun forkSession(m: Message) {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            sessionRepository.forkFromMessage(sessionId, m.id).onSuccess {
+                _state.update { s -> s.copy(isLoading = false) }
+                _navigationEvent.emit(it.id)
+            }
+        }
+    }
+
+    fun revertSession(m: Message) {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            if (sessionRepository.revertToMessage(sessionId, m.id).isSuccess) {
+                _state.update { it.copy(isLoading = false) }
                 loadMessages()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(isLoading = false, error = error?.message)
             }
         }
     }
 
     fun unrevertSession() {
         screenModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            val result = sessionRepository.unrevertSession(sessionId)
-            if (result.isSuccess) {
-                _state.value = _state.value.copy(isLoading = false)
+            _state.update { it.copy(isLoading = true) }
+            if (sessionRepository.unrevertSession(sessionId).isSuccess) {
+                _state.update { it.copy(isLoading = false) }
                 loadMessages()
-            } else {
-                val error = result.exceptionOrNull()
-                _state.value = _state.value.copy(isLoading = false, error = error?.message)
             }
+        }
+    }
+
+    fun shareSession() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            sessionRepository.shareSession(sessionId).let { res ->
+                if (res is Resource.Success) _state.update { it.copy(isLoading = false, session = res.data) }
+            }
+        }
+    }
+
+    fun unshareSession() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            sessionRepository.unshareSession(sessionId).let { res ->
+                if (res is Resource.Success) _state.update { it.copy(isLoading = false, session = res.data) }
+            }
+        }
+    }
+
+    fun refreshData() {
+        screenModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            loadMessages()
+            configDelegate.loadConfig()
+            configDelegate.loadRecentModels()
+            loadTodos()
         }
     }
 
     fun retry() {
         loadMessages()
-        connectToEventStream()
-    }
-    
-    fun refreshData() {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            try {
-                loadMessages()
-                loadConfig()
-                loadCommands()
-                loadRecentModels()
-                loadTodos()
-                connectToEventStream()
-                Napier.i("ChatScreenModel refresh completed")
-            } catch (e: Exception) {
-                Napier.e("Failed to refresh chat data", e)
-                _state.update { it.copy(error = e.message, isLoading = false) }
-            }
-        }
-    }
-    
-    private fun parseContextLimit(providerResponse: ProviderResponse, providerId: String, modelId: String): Int {
-        val provider = providerResponse.all.find { it.id == providerId } ?: return 0
-        val modelsObj = provider.models as? JsonObject ?: return 0
-        val modelObj = modelsObj[modelId] as? JsonObject ?: return 0
-        
-        // OpenCode ProviderModel has a 'limit' field which is a JsonObject
-        val limit = modelObj["limit"] as? JsonObject ?: return 0
-        
-        return limit["context"]?.let { (it as? JsonPrimitive)?.intOrNull }
-            ?: limit["max_tokens"]?.let { (it as? JsonPrimitive)?.intOrNull }
-            ?: limit["context_length"]?.let { (it as? JsonPrimitive)?.intOrNull }
-            ?: 0
+        eventDelegate.connectToEventStream(sessionId)
     }
 
-    fun clearError() {
-        _state.value = _state.value.copy(error = null)
-    }
+    fun clearError() { _state.update { it.copy(error = null) } }
     
     override fun onDispose() {
         eventStreamRepository.disconnect()
+        // No need to cancel scope if it's screenModelScope, but here we used a custom one in DI
+        // We should really use screenModelScope if possible
     }
 }

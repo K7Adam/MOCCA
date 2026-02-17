@@ -12,6 +12,9 @@ CREATE TABLE FileInfoEntity (
 -- Create index for faster parent path lookups
 CREATE INDEX idx_fileinfo_parent ON FileInfoEntity(parentPath);
 
+-- OPTIMIZED: Composite index for directory listing with sort order
+CREATE INDEX idx_fileinfo_parent_type_name ON FileInfoEntity(parentPath, type DESC, name ASC);
+
 -- Select all files in a directory
 selectByParent:
 SELECT * FROM FileInfoEntity WHERE parentPath = ? ORDER BY type DESC, name ASC;

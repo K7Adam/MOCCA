@@ -1,20 +1,15 @@
 package com.mocca.app.ui.screens.chat
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.Rocket
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,22 +17,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.union
 import androidx.compose.ui.zIndex
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
@@ -49,14 +39,106 @@ import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.*
 import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
+
+@Composable
+fun MarkdownText(
+    markdown: String,
+    style: TextStyle,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    val mdColor = markdownColor(
+        text = color,
+        codeText = AppColors.accentGreen,
+        codeBackground = AppColors.backgroundVariant,
+        inlineCodeText = AppColors.accentGreen,
+        inlineCodeBackground = AppColors.backgroundVariant,
+        linkText = AppColors.accentGreen
+    )
+    
+    val mdTypography = markdownTypography(
+        text = style,
+        code = style.copy(fontSize = 12.sp, color = AppColors.accentGreen, fontFamily = FontFamily.Monospace),
+        h1 = AppTypography.headlineMedium.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+        h2 = AppTypography.headlineSmall.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+        h3 = AppTypography.titleLarge.copy(color = color, fontWeight = FontWeight.Bold),
+        h4 = AppTypography.titleMedium.copy(color = color, fontWeight = FontWeight.Bold),
+        h5 = AppTypography.titleSmall.copy(color = color, fontWeight = FontWeight.Bold),
+        h6 = AppTypography.labelLarge.copy(color = color, fontWeight = FontWeight.Bold)
+    )
+
+    Markdown(
+        content = markdown,
+        colors = mdColor,
+        typography = mdTypography,
+        modifier = modifier
+    )
+}
+
+@Composable
+private fun EmptySessionState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 48.dp)
+        ) {
+            ModernBootSequence()
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "MOCCA_AI_v2",
+                style = AppTypography.headlineMedium,
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 4.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "SYSTEM READY // SELECT_MODEL",
+                style = AppTypography.labelExtraSmall,
+                color = AppColors.textTertiary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModernBootSequence() {
+    val lines = listOf(
+        "MOCCA_OS_BOOT",
+        "NETWORK_UPLINK_SECURED",
+        "RESOURCES_MAXIMIZED"
+    )
+    
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        lines.forEachIndexed { index, line ->
+            var visible by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(index * 120L)
+                visible = true
+            }
+            if (visible) {
+                Text(
+                    text = line,
+                    style = AppTypography.labelExtraSmall,
+                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textTertiary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,11 +146,14 @@ fun ChatContent(screenModel: ChatScreenModel) {
     val state by screenModel.state.collectAsState()
     val inputText by screenModel.inputText.collectAsState()
     val streamingText by screenModel.streamingText.collectAsState()
-    val messages by screenModel.aggregatedMessages.collectAsState()
+    val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
+    
+    val sessionTitle = state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
+    
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     @Suppress("DEPRECATION")
-    val clipboardManager = LocalClipboardManager.current
+    val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
     
     val commands = state.commands
@@ -92,13 +177,11 @@ fun ChatContent(screenModel: ChatScreenModel) {
     
     LaunchedEffect(streamingText) {
         if (streamingText.isNotEmpty()) {
-            // Throttled haptic for streaming
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
     }
 
-    // Pagination Trigger (Reverse layout: Top is end of list)
-    val isAtTop by remember {
+    val isAtTop by remember(listState) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
             val totalItems = layoutInfo.totalItemsCount
@@ -107,7 +190,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
         }
     }
 
-    val showScrollToBottom by remember {
+    val showScrollToBottom by remember(listState) {
         derivedStateOf {
             listState.firstVisibleItemIndex > 2
         }
@@ -115,15 +198,13 @@ fun ChatContent(screenModel: ChatScreenModel) {
 
     var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
 
-    // Reset new message indicator when at bottom
     LaunchedEffect(listState.firstVisibleItemIndex) {
         if (listState.firstVisibleItemIndex <= 2) {
             hasNewMessagesWhileScrolledUp = false
         }
     }
 
-    // Set indicator when new messages arrive while scrolled up
-    LaunchedEffect(messages.size) {
+    LaunchedEffect(aggregatedMessages.size) {
         if (showScrollToBottom) {
             hasNewMessagesWhileScrolledUp = true
         }
@@ -133,10 +214,8 @@ fun ChatContent(screenModel: ChatScreenModel) {
         if (isAtTop) screenModel.loadMoreMessages()
     }
     
-    // Auto-scroll to bottom on new messages
-    LaunchedEffect(messages.size, streamingText) {
-        if (messages.isNotEmpty() || streamingText.isNotEmpty()) {
-            // Only auto-scroll if user is already at the bottom
+    LaunchedEffect(aggregatedMessages.size, streamingText) {
+        if (aggregatedMessages.isNotEmpty() || streamingText.isNotEmpty()) {
             if (listState.firstVisibleItemIndex <= 1) {
                  listState.animateScrollToItem(0)
             }
@@ -148,39 +227,37 @@ fun ChatContent(screenModel: ChatScreenModel) {
             .fillMaxSize()
             .background(AppColors.background)
     ) {
-        state.session?.let { session ->
-            GodHeader(
-                title = session.title ?: "SESSION_${session.id.take(8)}",
-                subtitle = "mobile-agent-v2",
-                subtitleIcon = {
+        GodHeader(
+            title = sessionTitle,
+            subtitle = "mobile-agent-v2",
+            subtitleIcon = {
+                Icon(
+                    imageVector = Icons.Default.Rocket,
+                    contentDescription = null,
+                    tint = AppColors.white.copy(alpha = 0.4f),
+                    modifier = Modifier.size(16.dp)
+                )
+            },
+            actions = {
+                IconButton(onClick = { screenModel.refreshData() }) {
                     Icon(
-                        imageVector = Icons.Default.Rocket,
-                        contentDescription = null,
-                        tint = AppColors.white.copy(alpha = 0.4f),
-                        modifier = Modifier.size(16.dp)
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
                     )
-                },
-                actions = {
-                    IconButton(onClick = { screenModel.refreshData() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
-                        )
-                    }
-                    IconButton(onClick = { showShareDialog = true }) {
-                        Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
-                    }
-                    IconButton(onClick = { screenModel.toggleTodoPanel() }) {
-                        Icon(
-                            imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
-                            contentDescription = "Todos",
-                            tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
-                        )
-                    }
                 }
-            )
-        }
+                IconButton(onClick = { showShareDialog = true }) {
+                    Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
+                }
+                IconButton(onClick = { screenModel.toggleTodoPanel() }) {
+                    Icon(
+                        imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
+                        contentDescription = "Todos",
+                        tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
+                    )
+                }
+            }
+        )
         
         if (showShareDialog) {
             val isShared = state.session?.shareID != null
@@ -212,7 +289,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         MoccaCompactButton(
                             text = "COPY LINK",
                             onClick = { 
-                                clipboardManager.setText(AnnotatedString(shareUrl))
+                                clipboard.setText(AnnotatedString(shareUrl))
                                 showShareDialog = false
                             }
                         )
@@ -250,7 +327,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
             isVisible = state.showTodoPanel
         )
 
-        // Main content area: messages + input as overlay
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -269,7 +345,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 )
             }
             
-            if (state.isLoading && state.messages.isEmpty()) {
+            if (state.isLoading && aggregatedMessages.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -278,11 +354,11 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 ) {
                     repeat(3) { MessageSkeleton() }
                 }
-            } else if (state.error != null && state.messages.isEmpty()) {
+            } else if (state.error != null && aggregatedMessages.isEmpty()) {
                 ErrorScreen(message = state.error ?: "UNKNOWN_ERROR") {
                     screenModel.retry()
                 }
-            } else if (state.messages.isEmpty()) {
+            } else if (aggregatedMessages.isEmpty()) {
                 EmptySessionState()
             } else {
                 PullToRefreshBox(
@@ -298,12 +374,10 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                         contentPadding = PaddingValues(
                             top = AppSpacing.lg,
-                            // Ensure bottom padding accounts for IME height + input field height (~80dp) + extra spacing
                             bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 100.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
-                        // Extra spacer to push content above the input field
                         item { Spacer(modifier = Modifier.height(160.dp)) }
 
                         if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
@@ -323,7 +397,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
                         }
                         
-                        val displayMessages = messages.filter { msg ->
+                        val displayMessages = aggregatedMessages.filter { msg ->
                             msg.role == MessageRole.USER || msg.parts.isNotEmpty()
                         }
                         
@@ -336,12 +410,10 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             val nextMessage = if (index < displayMessages.size - 1) displayMessages[index + 1] else null
                             val prevMessage = if (index > 0) displayMessages[index - 1] else null
                             
-                            // Grouping logic: Same sender, within 5 minutes
                             val isFirstInGroup = prevMessage == null || 
                                 prevMessage.role != message.role || 
-                                (message.createdAt - prevMessage.createdAt) > 300_000 // 5 mins
+                                (message.createdAt - prevMessage.createdAt) > 300_000
                             
-                            // Date header logic
                             val showDateHeader = if (nextMessage == null) {
                                 com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
                             } else {
@@ -378,14 +450,13 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 )
             }
 
-            // Scroll to bottom FAB
             ScrollToBottomButton(
                 isVisible = showScrollToBottom,
                 hasNewMessages = hasNewMessagesWhileScrolledUp,
                 onClick = {
                     coroutineScope.launch {
                         listState.animateScrollToItem(0)
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 },
                 modifier = Modifier
@@ -394,7 +465,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     .zIndex(10f)
             )
             
-            // Chat input pinned to bottom, overlaying messages
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -402,10 +472,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { 
-                        // Request focus logic would go here if we had access to FocusRequester,
-                        // but generally this container tap ensures touch events aren't swallowed.
-                    }
+                    ) { }
                     .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
             ) {
                 RichChatInput(
@@ -423,7 +490,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     selectedModelId = state.selectedModelId,
                     onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
                     recentModels = state.recentModels,
-                    // Variants
                     variants = state.availableVariants,
                     selectedVariantId = state.selectedVariantId,
                     onVariantSelected = { screenModel.selectVariant(it) },
@@ -438,68 +504,6 @@ fun ChatContent(screenModel: ChatScreenModel) {
                     onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ChatHeader(
-    title: String,
-    showTodos: Boolean,
-    onTodoClick: () -> Unit,
-    onShareClick: () -> Unit,
-    onSummarizeClick: () -> Unit,
-    onRefreshClick: () -> Unit,
-    isRefreshing: Boolean
-) {
-    // Modern header with transparent/blurred background
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = title.uppercase(),
-            style = AppTypography.labelMedium,
-            color = AppColors.white,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            modifier = Modifier.weight(1f)
-        )
-        
-        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
-            // Add Refresh Button
-            MoccaIconButton(
-                icon = Icons.Default.Refresh,
-                onClick = onRefreshClick,
-                iconColor = if (isRefreshing) AppColors.accentGreen else AppColors.textSecondary,
-                size = 36.dp,
-                contentDescription = "Refresh"
-            )
-
-            MoccaIconButton(
-                icon = Icons.Default.Description,
-                onClick = onSummarizeClick,
-                iconColor = AppColors.textSecondary,
-                size = 36.dp,
-                contentDescription = "Summarize"
-            )
-            
-            MoccaIconButton(
-                icon = Icons.Default.Share,
-                onClick = onShareClick,
-                iconColor = AppColors.textSecondary,
-                size = 36.dp
-            )
-            
-            MoccaIconButton(
-                icon = if (showTodos) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
-                onClick = onTodoClick,
-                iconColor = if (showTodos) AppColors.accentGreen else AppColors.textSecondary,
-                size = 36.dp
-            )
         }
     }
 }
@@ -577,105 +581,10 @@ private fun TerminalErrorOverlay(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                MoccaIconButton(
-                    icon = Icons.Default.Close,
-                    onClick = onDismiss,
-                    iconColor = AppColors.white
-                )
+                IconButton(onClick = onDismiss) {
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.white)
+                }
             }
         }
     }
 }
-
-@Composable
-fun MarkdownText(
-    markdown: String,
-    style: TextStyle,
-    color: Color
-) {
-    Markdown(
-        content = markdown,
-        colors = markdownColor(
-            text = color,
-            codeText = AppColors.accentGreen,
-            codeBackground = AppColors.surfaceVariant.copy(alpha = 0.5f),
-            inlineCodeText = AppColors.accentGreen,
-            inlineCodeBackground = AppColors.surfaceVariant.copy(alpha = 0.5f),
-            linkText = AppColors.primary
-        ),
-        typography = markdownTypography(
-            text = style,
-            code = AppTypography.codeSmall.copy(fontSize = 11.sp, color = AppColors.accentGreen),
-            h1 = AppTypography.headlineMedium.copy(color = color),
-            h2 = AppTypography.headlineSmall.copy(color = color),
-            h3 = AppTypography.titleLarge.copy(color = color),
-            h4 = AppTypography.titleMedium.copy(color = color),
-            h5 = AppTypography.titleSmall.copy(color = color),
-            h6 = AppTypography.labelLarge.copy(color = color)
-        )
-    )
-}
-
-@Composable
-private fun EmptySessionState() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 48.dp)
-        ) {
-            ModernBootSequence()
-            
-            Spacer(modifier = Modifier.height(20.dp))
-            
-            Text(
-                text = "MOCCA AI",
-                style = AppTypography.headlineSmall,
-                color = AppColors.white,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 2.sp
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = "SELECT MODEL TO START",
-                style = AppTypography.labelExtraSmall,
-                color = AppColors.textSecondary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                letterSpacing = 1.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun ModernBootSequence() {
-    val lines = listOf(
-        "MOCCA_OS",
-        "CONNECTING_UPLINK",
-        "RESOURCES_OPTIMIZED"
-    )
-    
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        lines.forEachIndexed { index, line ->
-            var visible by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) {
-                kotlinx.coroutines.delay(index * 150L)
-                visible = true
-            }
-            if (visible) {
-                Text(
-                    text = line,
-                    style = AppTypography.labelExtraSmall,
-                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textSecondary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
-                )
-            }
-        }
-    }
-}
-
-

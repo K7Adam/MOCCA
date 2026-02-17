@@ -251,6 +251,15 @@ object AppTypography {
         letterSpacing = 0.sp
     )
 
+    /** Code extra small - For tiny boot sequences */
+    val codeExtraSmall = TextStyle(
+        fontFamily = monoFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 9.sp,
+        lineHeight = 12.sp,
+        letterSpacing = 1.sp
+    )
+
     /** Footer text - Very small, muted */
     val footer = TextStyle(
         fontFamily = monoFamily,

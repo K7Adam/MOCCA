@@ -399,7 +399,7 @@ class ConnectionManager(
 
     private fun calculateBackoff(attempt: Int): Long {
         val baseDelay = 1000L
-        val maxDelay = 30000L
+        val maxDelay = if (networkObserver?.isCurrentlyOnline() == true) 10000L else 30000L
         val exponentialDelay = baseDelay * (1L shl min(attempt - 1, 5))
         val jitter = (0..500).random().toLong()
         return min(exponentialDelay, maxDelay) + jitter

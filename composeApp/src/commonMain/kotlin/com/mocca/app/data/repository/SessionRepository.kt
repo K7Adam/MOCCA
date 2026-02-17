@@ -4,16 +4,11 @@ import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
 /**
@@ -40,6 +35,9 @@ class SessionRepository(
      * Get all sessions with offline-first strategy.
      * Returns cached data immediately, then refreshes from network.
      */
+    private val sessionsRefreshMutex = Mutex()
+    private var activeSessionsRefresh: kotlinx.coroutines.Deferred<Result<List<Session>>>? = null
+
     fun getSessions(): Flow<Resource<List<Session>>> = flow {
         emit(Resource.Loading())
 
@@ -49,14 +47,32 @@ class SessionRepository(
             emit(Resource.Loading(cached))
         }
 
-        // 2. Fetch fresh data from network
-        val result = apiClient.listSessions()
+        // 2. Fetch fresh data from network (deduplicated)
+        val result = coroutineScope {
+            sessionsRefreshMutex.withLock {
+                val current = activeSessionsRefresh
+                if (current != null) {
+                    current
+                } else {
+                    val deferred = async(Dispatchers.IO) {
+                        try {
+                            apiClient.listSessions().also { res ->
+                                res.onSuccess { sessions ->
+                                    sessions.forEach { localCache.insertSession(it) }
+                                }
+                            }
+                        } finally {
+                            sessionsRefreshMutex.withLock { activeSessionsRefresh = null }
+                        }
+                    }
+                    activeSessionsRefresh = deferred
+                    deferred
+                }
+            }.await()
+        }
+
         result.fold(
             onSuccess = { sessions ->
-                // Cache the fresh data
-                sessions.forEach { session ->
-                    localCache.insertSession(session)
-                }
                 emit(Resource.Success(sessions))
             },
             onFailure = { error ->
@@ -72,8 +88,22 @@ class SessionRepository(
      * PERFORMANCE: Uses request deduplication to prevent duplicate API calls
      * when multiple consumers request the same session simultaneously.
      */
+    private val sessionRequestMutex = Mutex()
+    private val activeSessionRequests = mutableMapOf<String, kotlinx.coroutines.Deferred<Resource<Session>>>()
+
     suspend fun getSession(sessionId: String): Resource<Session> = withContext(Dispatchers.IO) {
-        fetchSessionInternal(sessionId)
+        val deferred = coroutineScope {
+            sessionRequestMutex.withLock {
+                activeSessionRequests[sessionId] ?: async {
+                    try {
+                        fetchSessionInternal(sessionId)
+                    } finally {
+                        sessionRequestMutex.withLock { activeSessionRequests.remove(sessionId) }
+                    }
+                }.also { activeSessionRequests[sessionId] = it }
+            }
+        }
+        deferred.await()
     }
     
     private suspend fun fetchSessionInternal(sessionId: String): Resource<Session> {

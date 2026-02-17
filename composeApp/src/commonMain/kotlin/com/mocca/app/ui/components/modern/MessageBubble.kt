@@ -87,15 +87,16 @@ fun MessageBubble(
 
         // Message Header
         if (isFirstInGroup) {
+            val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
+            val label = if (isUser) "USER" else "AGENT"
+            val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
+            val timeText = remember(message.createdAt) { formatTime(message.createdAt) }
+
             Row(
                 modifier = Modifier.padding(bottom = AppSpacing.xxs, start = if (isUser) 0.dp else AppSpacing.sm, end = if (isUser) AppSpacing.sm else 0.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
             ) {
-                val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
-                val label = if (isUser) "USER" else "AGENT"
-                val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
-                
                 if (!isUser) {
                     Icon(
                         imageVector = icon,
@@ -116,7 +117,7 @@ fun MessageBubble(
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
                 
                 Text(
-                    text = formatTime(message.createdAt),
+                    text = timeText,
                     color = AppColors.textTertiary,
                     style = AppTypography.labelExtraSmall
                 )
@@ -150,17 +151,21 @@ fun MessageBubble(
             )
         }
 
+        val bubbleColor = remember(isUser) {
+            if (isUser) AppColors.surfaceVariant.copy(alpha = 0.8f) else AppColors.surfaceContainer.copy(alpha = 0.9f)
+        }
+        val borderColor = remember(isUser) {
+            if (isUser) AppColors.border else AppColors.borderLight
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth(if (isUser) 0.85f else 1f)
                 .clip(shape)
-                .background(
-                    if (isUser) AppColors.surfaceVariant.copy(alpha = 0.8f) else AppColors.surfaceContainer.copy(alpha = 0.9f),
-                    shape
-                )
+                .background(bubbleColor, shape)
                 .border(
                     width = AppSpacing.borderThin,
-                    color = if (isUser) AppColors.border else AppColors.borderLight,
+                    color = borderColor,
                     shape = shape
                 )
         ) {

@@ -20,6 +20,9 @@ CREATE INDEX idx_session_status_updated ON SessionEntity(status, updatedAt DESC)
 -- OPTIMIZED: Index for unsynced sessions query
 CREATE INDEX idx_session_unsynced ON SessionEntity(isSynced) WHERE isSynced = 0;
 
+-- OPTIMIZED: Index for parent session lookups
+CREATE INDEX idx_session_parent ON SessionEntity(parentId);
+
 -- Select all sessions ordered by most recent
 selectAll:
 SELECT * FROM SessionEntity ORDER BY updatedAt DESC;

@@ -12,7 +12,7 @@ import com.mocca.app.data.repository.*
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.data.security.NoOpSecureTokenStorage
-import com.mocca.app.ui.screens.chat.ChatScreenModel
+import com.mocca.app.ui.screens.chat.delegates.*
 import com.mocca.app.ui.screens.files.FilesScreenModel
 import com.mocca.app.ui.screens.git.GitDiffScreenModel
 import com.mocca.app.ui.screens.git.GitScreenModel
@@ -27,12 +27,14 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import cafe.adriel.voyager.core.model.screenModelScope
 
 /**
  * Common Koin modules shared across all platforms.
  * Uses ConnectionManager as the single source of truth for connection state and HttpClient lifecycle.
  */
 val commonModule = module {
+    // ... rest of file
     // ConnectionManager — single source of truth for connection + ApiExecutor
     single {
         ConnectionManager(
@@ -129,8 +131,9 @@ val screenModelModule = module {
     
     // Chat screen - accepts optional initialSessionId parameter
     factory { params ->
-        ChatScreenModel(
-            initialSessionId = params.getOrNull(),
+        val initialSessionId: String? = params.getOrNull()
+        com.mocca.app.ui.screens.chat.ChatScreenModel(
+            initialSessionId = initialSessionId,
             sessionRepository = get(),
             eventStreamRepository = get(),
             commandRepository = get(),

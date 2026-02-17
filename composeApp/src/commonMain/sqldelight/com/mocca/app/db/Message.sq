@@ -27,6 +27,9 @@ CREATE INDEX idx_message_session_created ON MessageEntity(sessionId, createdAt D
 -- OPTIMIZED: Covering index for unread messages query
 CREATE INDEX idx_message_unread_covering ON MessageEntity(sessionId, isRead, id, createdAt) WHERE isRead = 0;
 
+-- OPTIMIZED: Index for model-specific queries
+CREATE INDEX idx_message_model ON MessageEntity(model) WHERE model IS NOT NULL;
+
 -- Select messages by session, ordered chronologically
 selectBySession:
 SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt ASC;

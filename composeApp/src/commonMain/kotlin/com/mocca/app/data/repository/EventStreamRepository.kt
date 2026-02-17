@@ -133,11 +133,17 @@ class EventStreamRepository(
     /**
      * Start the SSE connection.
      */
+    private var lastEventTime = 0L
+    private var heartbeatJob: Job? = null
+
     private fun startConnection() {
         connectionJob?.cancel()
+        heartbeatJob?.cancel()
+        
         connectionJob = repositoryScope.launch {
             try {
                 sseClient.subscribeToEvents()
+                    .onEach { lastEventTime = System.currentTimeMillis() }
                     .catch { error ->
                         if (error is CancellationException) throw error
                         Napier.e("SSE error", error)
@@ -154,6 +160,20 @@ class EventStreamRepository(
                 Napier.e("SSE connection failed", e)
                 _connectionStatus.value = ConnectionStatus.Error(e.message ?: "Connection failed")
                 scheduleReconnect()
+            }
+        }
+
+        // Heartbeat monitor: If no events for 45s, reconnect
+        heartbeatJob = repositoryScope.launch {
+            while (true) {
+                delay(15000)
+                if (!coroutineContext[Job]!!.isActive) break
+                val idleTime = System.currentTimeMillis() - lastEventTime
+                val isConnected = _connectionStatus.value is ConnectionStatus.Connected
+                if (idleTime > 45000 && isConnected) {
+                    Napier.w("SSE heartbeat timeout, reconnecting...")
+                    reconnect(force = true)
+                }
             }
         }
     }
@@ -223,8 +243,10 @@ class EventStreamRepository(
     fun disconnect() {
         autoReconnect = false
         connectionJob?.cancel()
+        heartbeatJob?.cancel()
         networkObserverJob?.cancel()
         connectionJob = null
+        heartbeatJob = null
         networkObserverJob = null
         // Do NOT cancel repositoryScope, it persists for the app lifecycle
         reconnectAttempts = 0
