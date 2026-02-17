@@ -354,7 +354,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                         contentPadding = PaddingValues(
                             top = 80.dp,
-                            bottom = 180.dp
+                            bottom = 160.dp // Space for unified floating bottom bar
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
@@ -437,51 +437,11 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.md, bottom = 180.dp)
+                    .padding(end = AppSpacing.md, bottom = 160.dp) // Space for unified bottom bar
                     .zIndex(10f)
             )
             
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { }
-                    .padding(bottom = 16.dp)
-                    .navigationBarsPadding()
-                    .imePadding()
-            ) {
-                RichChatInput(
-                    value = inputText,
-                    onValueChange = { screenModel.updateInputText(it) },
-                    onSendClick = { 
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        screenModel.sendMessage() 
-                    },
-                    enabled = state.connectionStatus is ConnectionStatus.Connected && state.isSessionIdle,
-                    modelName = state.modelName,
-                    agentName = state.agentName,
-                    providerResponse = state.providerInfo,
-                    selectedProviderId = state.selectedProviderId,
-                    selectedModelId = state.selectedModelId,
-                    onModelSelected = { providerId, modelId -> screenModel.selectModel(providerId, modelId) },
-                    recentModels = state.recentModels,
-                    variants = state.availableVariants,
-                    selectedVariantId = state.selectedVariantId,
-                    onVariantSelected = { screenModel.selectVariant(it) },
-                    modes = state.modes,
-                    selectedModeId = state.selectedModeId,
-                    onModeSelected = { screenModel.selectMode(it) },
-                    attachedFiles = state.attachedFiles,
-                    onRemoveAttachment = { screenModel.removeAttachment(it) },
-                    onAttachClick = { filePickerLauncher.launch() },
-                    commands = commands,
-                    onCommandSelected = { cmd -> coroutineScope.launch { cmd.action() } },
-                    onModeSelectedForMention = { mode -> screenModel.selectMode(mode.id) }
-                )
-            }
+            // RichChatInput removed - now handled by UnifiedFloatingBottomBar in MainScreen
         }
     }
 }

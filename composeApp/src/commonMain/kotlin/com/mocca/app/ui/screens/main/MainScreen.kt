@@ -21,7 +21,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.ui.components.navigation.MoccaBottomNavigation
+import com.mocca.app.ui.components.navigation.BottomBarMode
+import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
@@ -97,14 +98,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Subtle terminal effect
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
-            // Content area
-            // ChatContent will handle its own internal padding for TopBar and BottomNav
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = 100.dp)
-            ) {
-                SwipePanelLayout(
+            // Content area - full screen, unified bottom bar floats above
+            SwipePanelLayout(
                     leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
@@ -218,7 +213,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onPanelStateChange = { panelState.state = it },
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
-            }
 
             // Global Activity Indicator overlay - top right corner
             GlobalActivityIndicator(
@@ -227,12 +221,42 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     .padding(top = 48.dp, end = 16.dp)
             )
 
-            // Bottom Navigation Bar - ultra modern with real-time sync
-            // Positioned outside content area to avoid overlap
-            MoccaBottomNavigation(
-                currentState = panelState.state,
+            // Unified Floating Bottom Bar - morphs between nav and chat input modes
+            val inputText by chatScreenModel.inputText.collectAsState()
+            
+            UnifiedFloatingBottomBar(
+                mode = when (panelState.state) {
+                    PanelState.CENTER -> BottomBarMode.ChatInput
+                    else -> BottomBarMode.Navigation
+                },
                 dragProgress = dragProgress,
                 onItemClick = { newState -> panelState.state = newState },
+                // Chat input parameters
+                inputText = inputText,
+                onInputTextChange = { chatScreenModel.updateInputText(it) },
+                onSendClick = { chatScreenModel.sendMessage() },
+                inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
+                modelName = chatState.modelName,
+                agentName = chatState.agentName,
+                providerResponse = chatState.providerInfo,
+                selectedProviderId = chatState.selectedProviderId,
+                selectedModelId = chatState.selectedModelId,
+                onModelSelected = { providerId, modelId -> chatScreenModel.selectModel(providerId, modelId) },
+                variants = chatState.availableVariants,
+                selectedVariantId = chatState.selectedVariantId,
+                onVariantSelected = { chatScreenModel.selectVariant(it) },
+                modes = chatState.modes,
+                selectedModeId = chatState.selectedModeId,
+                onModeSelected = { chatScreenModel.selectMode(it) },
+                attachedFiles = chatState.attachedFiles,
+                onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
+                onAttachClick = { /* File picker handled in ChatContent */ },
+                commands = chatState.commands,
+                onCommandSelected = { cmd -> 
+                    // Commands are handled in ChatContent via coroutines
+                    // This is a placeholder - actual command execution happens there
+                },
+                onModeSelectedForMention = { mode -> chatScreenModel.selectMode(mode.id) },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()

@@ -151,6 +151,19 @@ object AppColors {
     val glassBorder = Color(0x33FFFFFF)     // Subtle white border
     val scrim = Color(0xCC000000)
     val inputGlow = Color(0x4000D9A5)
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PREMIUM GLASS (for unified floating bottom bar)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** Premium glass background - 60% opacity dark */
+    val glassPremium = Color(0x991A1A1A)
+
+    /** Premium glass border - subtle white glow */
+    val glassBorderPremium = Color(0x33FFFFFF)
+
+    /** Premium glass mint glow - for focused state */
+    val glassGlowMint = Color(0x1A00D9A5)
 }
 
 /**

@@ -306,4 +306,20 @@ object AppSpacing {
 
     /** Pill corner radius */
     val cornerRadiusPill: Dp = 32.dp
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // UNIFIED BOTTOM BAR DIMENSIONS
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** Navigation mode height (compact) */
+    val bottomBarCompactHeight: Dp = 56.dp
+
+    /** Chat input mode minimum height (expanded) */
+    val bottomBarExpandedMinHeight: Dp = 140.dp
+
+    /** Chat input mode maximum height (with multi-line) */
+    val bottomBarExpandedMaxHeight: Dp = 200.dp
+
+    /** Bottom bar horizontal margin */
+    val bottomBarMarginHorizontal: Dp = 16.dp
 }
