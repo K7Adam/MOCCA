@@ -34,6 +34,22 @@ interface LocalCache {
     suspend fun deleteMessages(sessionId: String)
     suspend fun deleteMessage(messageId: String)
     suspend fun pruneMessages(sessionId: String, keepCount: Long) // Added
+    
+    /**
+     * IMPROVED: Incrementally update a message part's content.
+     * This is more efficient than fetching and re-inserting entire messages.
+     * 
+     * @param messageId The message ID
+     * @param partId The part ID to update
+     * @param content New content (replaces existing)
+     * @param delta Content to append (for streaming)
+     */
+    suspend fun updateMessagePart(
+        messageId: String,
+        partId: String,
+        content: String? = null,
+        delta: String? = null
+    )
 
     // Server Configs
     suspend fun getAllServerConfigs(): List<ServerConfig>

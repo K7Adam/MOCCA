@@ -1,10 +1,13 @@
 package com.mocca.app.data.repository
 
+import com.mocca.app.api.ConnectionQualityTracker
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.NetworkConfig
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
+import com.mocca.app.util.AppLifecycleObserver
+import com.mocca.app.util.AppLifecycleState
 import com.mocca.app.util.NetworkObserver
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CancellationException
@@ -14,44 +17,65 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Repository for managing Server-Sent Events streaming.
  * Includes automatic reconnection, network state awareness, and DB persistence.
  * Connection lifecycle (HttpClient management) is handled by ConnectionManager.
+ * 
+ * IMPROVEMENTS:
+ * - Background/foreground lifecycle awareness
+ * - Adaptive heartbeat based on connection quality
+ * - Thread-safe streaming text with Mutex
+ * - Event deduplication with TTL
+ * - Pause/resume for background optimization
  */
 class EventStreamRepository(
     private val sseClient: MoccaSseClient,
     private val networkObserver: NetworkObserver? = null,
     private val localCache: LocalCache? = null,
-    private val apiClient: MoccaApiClient? = null
+    private val apiClient: MoccaApiClient? = null,
+    private val appLifecycleObserver: AppLifecycleObserver? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
     private var connectionJob: Job? = null
     private var networkObserverJob: Job? = null
+    private var lifecycleObserverJob: Job? = null
+    private var backgroundPauseJob: Job? = null
     
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
     private var reconnectAttempts = 0
     private val maxReconnectAttempts = NetworkConfig.SSE_MAX_RECONNECT_ATTEMPTS
     
+    // Connection quality tracker for adaptive behavior
+    private val qualityTracker = ConnectionQualityTracker()
+    
+    // Pause state for background optimization
+    private var isPaused = false
+    private var wasConnectedBeforePause = false
+    
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected())
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
     
-    // OPTIMIZED: Increased buffer capacity from 128 to 256 for high-throughput sessions
+    // IMPROVED: Increased buffer capacity, changed overflow strategy to SUSPEND
     // REPLAY=1 is CRITICAL: Ensures the last event (like SessionIdle) is not missed if collector reconnects
-    // Uses DROP_OLDEST to prevent blocking when buffer is full (better than SUSPEND for real-time events)
     private val _events = MutableSharedFlow<ServerEvent>(
         replay = 1,
-        extraBufferCapacity = 256,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+        extraBufferCapacity = NetworkConfig.SSE_BUFFER_CAPACITY,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.SUSPEND
     )
     val events: SharedFlow<ServerEvent> = _events.asSharedFlow()
     
+    // IMPROVED: Thread-safe streaming text with Mutex
+    private val streamingTextMutex = Mutex()
     private val _streamingText = MutableStateFlow("")
     val streamingText: StateFlow<String> = _streamingText.asStateFlow()
     
@@ -85,6 +109,10 @@ class EventStreamRepository(
     // Track active sessions for filtering
     private var activeSessionId: String? = null
     private val monitoredSessionIds = MutableStateFlow<Set<String>>(emptySet())
+    
+    // IMPROVED: Event deduplication with TTL
+    private val processedEventIds = ConcurrentHashMap<String, Long>()
+    private val eventIdMutex = Mutex()
 
     /**
      * Connect to the SSE event stream.
@@ -107,12 +135,14 @@ class EventStreamRepository(
         }
         autoReconnect = true
         reconnectAttempts = 0
+        isPaused = false
         
         // Only start a new connection if one isn't active
         if (connectionJob?.isActive != true) {
             _connectionStatus.value = ConnectionStatus.Connecting
             startConnection()
             startNetworkObserver()
+            startLifecycleObserver()
         }
     }
 
@@ -131,6 +161,64 @@ class EventStreamRepository(
     }
     
     /**
+     * IMPROVED: Pause SSE streaming when app goes to background.
+     * Keeps connection alive but stops processing events to save resources.
+     */
+    fun pause() {
+        if (isPaused) return
+        isPaused = true
+        wasConnectedBeforePause = _connectionStatus.value.isConnected
+        Napier.i("[EventStream] Paused - wasConnected: $wasConnectedBeforePause")
+        
+        // Don't disconnect - just pause heartbeat monitoring
+        heartbeatJob?.cancel()
+    }
+    
+    /**
+     * IMPROVED: Resume SSE streaming when app returns to foreground.
+     */
+    fun resume() {
+        if (!isPaused) return
+        isPaused = false
+        Napier.i("[EventStream] Resumed - wasConnected: $wasConnectedBeforePause")
+        
+        // Resume heartbeat monitoring
+        if (_connectionStatus.value.isConnected) {
+            startHeartbeatMonitor()
+        } else if (wasConnectedBeforePause) {
+            // Was connected before pause, try to reconnect
+            reconnect(force = true)
+        }
+    }
+    
+    /**
+     * Start observing app lifecycle for background/foreground detection.
+     */
+    private fun startLifecycleObserver() {
+        if (appLifecycleObserver == null) return
+        
+        lifecycleObserverJob?.cancel()
+        lifecycleObserverJob = repositoryScope.launch {
+            appLifecycleObserver.lifecycleState.collect { state ->
+                when (state) {
+                    AppLifecycleState.FOREGROUND -> {
+                        Napier.i("[EventStream] App foregrounded")
+                        resume()
+                    }
+                    AppLifecycleState.BACKGROUND -> {
+                        Napier.i("[EventStream] App backgrounded")
+                        // Delay pause to allow for quick returns
+                        delay(NetworkConfig.BACKGROUND_PAUSE_DELAY_MS)
+                        if (appLifecycleObserver.lifecycleState.value == AppLifecycleState.BACKGROUND) {
+                            pause()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
      * Start the SSE connection.
      */
     private var lastEventTime = 0L
@@ -143,15 +231,27 @@ class EventStreamRepository(
         connectionJob = repositoryScope.launch {
             try {
                 sseClient.subscribeToEvents()
-                    .onEach { lastEventTime = System.currentTimeMillis() }
+                    .onEach { 
+                        lastEventTime = System.currentTimeMillis()
+                        // Record successful event for quality tracking
+                        qualityTracker.recordResult(true)
+                    }
                     .catch { error ->
                         if (error is CancellationException) throw error
                         Napier.e("SSE error", error)
                         _connectionStatus.value = ConnectionStatus.Error(error.message ?: "Connection error")
+                        qualityTracker.recordResult(false)
                         scheduleReconnect()
                     }
                     .collect { event ->
                         reconnectAttempts = 0 // Reset on successful event
+                        
+                        // IMPROVED: Event deduplication
+                        if (isDuplicateEvent(event)) {
+                            Napier.v("[EventStream] Skipping duplicate event: ${event.type}")
+                            return@collect
+                        }
+                        
                         handleEvent(event)
                     }
             } catch (e: CancellationException) {
@@ -159,19 +259,35 @@ class EventStreamRepository(
             } catch (e: Exception) {
                 Napier.e("SSE connection failed", e)
                 _connectionStatus.value = ConnectionStatus.Error(e.message ?: "Connection failed")
+                qualityTracker.recordResult(false)
                 scheduleReconnect()
             }
         }
 
-        // Heartbeat monitor: If no events for 45s, reconnect
+        // IMPROVED: Start heartbeat monitor with adaptive interval
+        startHeartbeatMonitor()
+    }
+    
+    /**
+     * IMPROVED: Heartbeat monitor with adaptive interval based on connection quality.
+     */
+    private fun startHeartbeatMonitor() {
+        heartbeatJob?.cancel()
         heartbeatJob = repositoryScope.launch {
             while (true) {
-                delay(15000)
+                delay(NetworkConfig.SSE_HEARTBEAT_CHECK_INTERVAL_MS)
                 if (!coroutineContext[Job]!!.isActive) break
+                if (isPaused) continue // Skip check when paused
+                
                 val idleTime = System.currentTimeMillis() - lastEventTime
                 val isConnected = _connectionStatus.value is ConnectionStatus.Connected
-                if (idleTime > 45000 && isConnected) {
-                    Napier.w("SSE heartbeat timeout, reconnecting...")
+                
+                // IMPROVED: Use adaptive heartbeat timeout based on connection quality
+                val heartbeatTimeout = qualityTracker.getRecommendedHeartbeatInterval()
+                
+                if (idleTime > heartbeatTimeout && isConnected) {
+                    Napier.w("[EventStream] Heartbeat timeout (${idleTime}ms > ${heartbeatTimeout}ms), reconnecting...")
+                    qualityTracker.recordLatency(idleTime)
                     reconnect(force = true)
                 }
             }
@@ -179,11 +295,59 @@ class EventStreamRepository(
     }
     
     /**
+     * IMPROVED: Check if event is a duplicate using TTL-based deduplication.
+     */
+    private suspend fun isDuplicateEvent(event: ServerEvent): Boolean {
+        val eventId = extractEventId(event) ?: return false
+        val now = System.currentTimeMillis()
+        
+        return eventIdMutex.withLock {
+            // Clean old entries
+            val iterator = processedEventIds.entries.iterator()
+            while (iterator.hasNext()) {
+                val entry = iterator.next()
+                if (now - entry.value > NetworkConfig.EVENT_DEDUP_TTL_MS) {
+                    iterator.remove()
+                }
+            }
+            
+            // Check if already processed
+            val existing = processedEventIds[eventId]
+            if (existing != null) {
+                true
+            } else {
+                processedEventIds[eventId] = now
+                false
+            }
+        }
+    }
+    
+    /**
+     * Extract a unique ID from an event for deduplication.
+     */
+    private fun extractEventId(event: ServerEvent): String? {
+        return when (event) {
+            is ServerEvent.MessageUpdated -> "msg-${event.properties.info.id}"
+            is ServerEvent.MessagePartUpdated -> "part-${event.properties.part.id}-${event.properties.part.text?.hashCode()}"
+            is ServerEvent.SessionUpdated -> "session-${event.properties.info.id}"
+            is ServerEvent.PermissionAsked -> "perm-${event.properties.id}"
+            is ServerEvent.QuestionAsked -> "question-${event.properties.id}"
+            else -> null // Don't deduplicate connection events, heartbeats, etc.
+        }
+    }
+    
+    /**
      * Schedule a reconnection attempt with backoff.
+     * IMPROVED: Uses connection quality for adaptive delay.
      */
     private fun scheduleReconnect() {
         if (!autoReconnect || reconnectAttempts >= maxReconnectAttempts) {
             Napier.w("Not reconnecting: autoReconnect=$autoReconnect, attempts=$reconnectAttempts/$maxReconnectAttempts")
+            return
+        }
+        
+        if (isPaused) {
+            Napier.i("[EventStream] Not reconnecting while paused")
             return
         }
         
@@ -196,12 +360,16 @@ class EventStreamRepository(
         
         repositoryScope.launch {
             reconnectAttempts++
-            val delayMs = calculateBackoff(reconnectAttempts)
-            Napier.i("Reconnecting in ${delayMs}ms (attempt $reconnectAttempts/$maxReconnectAttempts)")
+            val baseDelay = calculateBackoff(reconnectAttempts)
+            // IMPROVED: Apply quality-based multiplier
+            val qualityMultiplier = qualityTracker.getReconnectDelayMultiplier()
+            val delayMs = (baseDelay * qualityMultiplier).toLong()
+            
+            Napier.i("Reconnecting in ${delayMs}ms (attempt $reconnectAttempts/$maxReconnectAttempts, quality multiplier: ${qualityMultiplier}x)")
             _connectionStatus.value = ConnectionStatus.Reconnecting(reconnectAttempts, maxReconnectAttempts)
             delay(delayMs)
             
-            if (autoReconnect) {
+            if (autoReconnect && !isPaused) {
                 _connectionStatus.value = ConnectionStatus.Connecting
                 startConnection()
             }
@@ -242,12 +410,17 @@ class EventStreamRepository(
      */
     fun disconnect() {
         autoReconnect = false
+        isPaused = false
         connectionJob?.cancel()
         heartbeatJob?.cancel()
         networkObserverJob?.cancel()
+        lifecycleObserverJob?.cancel()
+        backgroundPauseJob?.cancel()
         connectionJob = null
         heartbeatJob = null
         networkObserverJob = null
+        lifecycleObserverJob = null
+        backgroundPauseJob = null
         // Do NOT cancel repositoryScope, it persists for the app lifecycle
         reconnectAttempts = 0
         activeSessionId = null
@@ -259,6 +432,7 @@ class EventStreamRepository(
         _thinkingStartTime.value = null
         _pendingPermissions.value = emptyList()
         _pendingQuestions.value = emptyList()
+        processedEventIds.clear()
         Napier.i("SSE disconnected")
     }
     
@@ -289,9 +463,12 @@ class EventStreamRepository(
 
     /**
      * Clear the current streaming text buffer.
+     * IMPROVED: Thread-safe with mutex.
      */
-    fun clearStreamingText() {
-        _streamingText.value = ""
+    suspend fun clearStreamingText() {
+        streamingTextMutex.withLock {
+            _streamingText.value = ""
+        }
     }
     
     /**
@@ -374,7 +551,10 @@ class EventStreamRepository(
             is ServerEvent.SessionIdle -> {
                 val sessionId = event.properties.sessionID
                 if (sessionId == activeSessionId) {
-                    _streamingText.value = ""
+                    // IMPROVED: Thread-safe streaming text clear
+                    streamingTextMutex.withLock {
+                        _streamingText.value = ""
+                    }
                     // Clear thinking state on session idle
                     _isThinking.value = false
                     _thinkingContent.value = ""
@@ -404,6 +584,9 @@ class EventStreamRepository(
                 val part = event.properties.part
                 val delta = event.properties.delta
                 
+                // Record latency for quality tracking
+                qualityTracker.recordLatency(System.currentTimeMillis() - lastEventTime)
+                
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
                 Napier.i(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
                 
@@ -413,13 +596,16 @@ class EventStreamRepository(
                         if (part.sessionID == activeSessionId) {
                             _isThinking.value = true
                             
-                            // Initialize thinking content if empty, or append delta
-                            if (_thinkingContent.value.isEmpty() && !part.text.isNullOrEmpty()) {
-                                _thinkingContent.value = part.text
-                            } else if (delta != null) {
-                                _thinkingContent.value += delta
-                            } else if (!part.text.isNullOrEmpty()) {
-                                _thinkingContent.value = part.text
+                            // IMPROVED: Thread-safe thinking content update
+                            streamingTextMutex.withLock {
+                                // Initialize thinking content if empty, or append delta
+                                if (_thinkingContent.value.isEmpty() && !part.text.isNullOrEmpty()) {
+                                    _thinkingContent.value = part.text
+                                } else if (delta != null) {
+                                    _thinkingContent.value += delta
+                                } else if (!part.text.isNullOrEmpty()) {
+                                    _thinkingContent.value = part.text
+                                }
                             }
                             
                             if (_thinkingStartTime.value == null) {
@@ -430,7 +616,7 @@ class EventStreamRepository(
                     }
                 }
                 
-                // Handle streaming text
+                // IMPROVED: Thread-safe streaming text handling
                 if (part.type == "text") {
                     // Text part received means thinking is complete
                     if (_isThinking.value) {
@@ -441,13 +627,22 @@ class EventStreamRepository(
                     
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
                         if (part.sessionID == activeSessionId) {
-                            // Initialize streaming text if empty, or append delta
-                            if (_streamingText.value.isEmpty() && !part.text.isNullOrEmpty()) {
-                                _streamingText.value = part.text
-                            } else if (delta != null) {
-                                _streamingText.value += delta
-                            } else if (!part.text.isNullOrEmpty()) {
-                                _streamingText.value = part.text
+                            // IMPROVED: Thread-safe streaming text update
+                            streamingTextMutex.withLock {
+                                // Initialize streaming text if empty, or append delta
+                                if (_streamingText.value.isEmpty() && !part.text.isNullOrEmpty()) {
+                                    _streamingText.value = part.text
+                                } else if (delta != null) {
+                                    _streamingText.value += delta
+                                } else if (!part.text.isNullOrEmpty()) {
+                                    _streamingText.value = part.text
+                                }
+                                
+                                // Limit streaming text size to prevent memory issues
+                                if (_streamingText.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
+                                    Napier.w("[EventStream] Streaming text exceeded max size, truncating")
+                                    _streamingText.value = _streamingText.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                                }
                             }
                             
                             Napier.i(">>> Streaming text updated: ...${_streamingText.value.takeLast(50)}")
@@ -462,13 +657,30 @@ class EventStreamRepository(
                 if (part.type == "tool" && part.state != null) {
                     Napier.d("Tool ${part.tool}: ${part.state.status}")
                 }
+                
+                // IMPROVED: Incrementally update message part in cache
+                // This avoids fetching all messages on every update
+                if (localCache != null && part.messageID != null && part.id != null) {
+                    try {
+                        localCache.updateMessagePart(
+                            messageId = part.messageID,
+                            partId = part.id,
+                            content = part.text,
+                            delta = delta
+                        )
+                    } catch (e: Exception) {
+                        Napier.w("[EventStream] Failed to incrementally update message part", e)
+                    }
+                }
             }
             
             is ServerEvent.MessageUpdated -> {
                 val messageInfo = event.properties.info
                 if (messageInfo.sessionID == activeSessionId) {
                     // Message complete - clear streaming text and thinking state
-                    _streamingText.value = ""
+                    streamingTextMutex.withLock {
+                        _streamingText.value = ""
+                    }
                     _isThinking.value = false
                     _thinkingContent.value = ""
                     _thinkingStartTime.value = null
@@ -477,23 +689,27 @@ class EventStreamRepository(
                 try {
                     localCache?.updateSessionStatus(messageInfo.sessionID, "running")
                     
-                    // CRITICAL FIX: Persist the updated message immediately
-                    // Use apiClient to fetch the session messages (since getMessage might not exist)
-                    if (apiClient != null && localCache != null) {
-                        Napier.i("Refreshing messages for session: ${messageInfo.sessionID}")
+                    // IMPROVED: Only fetch messages if we don't have incremental updates
+                    // Check if we already have this message in cache
+                    val existingMessage = localCache?.getMessage(messageInfo.id)
+                    if (existingMessage == null && apiClient != null && localCache != null) {
+                        // Message not in cache, fetch it
+                        Napier.i("[EventStream] Fetching new message: ${messageInfo.id}")
                         val result = apiClient.getMessages(messageInfo.sessionID)
                         result.onSuccess { responses ->
                             val messages = responses.map { Message.fromResponse(it) }
                             localCache.insertMessages(messages)
-                            Napier.i("Messages persisted to DB for session: ${messageInfo.sessionID}")
+                            Napier.i("[EventStream] Messages persisted for session: ${messageInfo.sessionID}")
                         }.onFailure { e ->
-                            Napier.w("Failed to fetch/persist messages", e)
+                            Napier.w("[EventStream] Failed to fetch messages", e)
                         }
+                    } else {
+                        Napier.v("[EventStream] Message already in cache, skipping full fetch")
                     }
                 } catch (e: Exception) {
-                    Napier.w("Failed to update session status", e)
+                    Napier.w("[EventStream] Failed to update session status", e)
                 }
-                Napier.d("Message updated: ${messageInfo.id}")
+                Napier.d("[EventStream] Message updated: ${messageInfo.id}")
             }
             
             is ServerEvent.MessageRemoved -> {

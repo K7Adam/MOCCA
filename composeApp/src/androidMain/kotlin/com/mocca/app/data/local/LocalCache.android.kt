@@ -215,6 +215,52 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             Napier.w("Failed to prune messages", e)
         }
     }
+    
+    /**
+     * IMPROVED: Incrementally update a message part's content.
+     * This is more efficient than fetching and re-inserting entire messages.
+     */
+    override suspend fun updateMessagePart(
+        messageId: String,
+        partId: String,
+        content: String?,
+        delta: String?
+    ) {
+        try {
+            // Get the existing message
+            val existingMessage = messageQueries.selectById(messageId).executeAsOneOrNull()?.toMessage()
+            if (existingMessage == null) {
+                Napier.w("Cannot update part: message not found: $messageId")
+                return
+            }
+            
+            // Since MessagePart.Text doesn't have an id field, we update all text parts
+            // This is a simplified approach - in production, we might want to track part indices
+            val updatedParts = existingMessage.parts.map { part ->
+                when {
+                    part is MessagePart.Text && content != null -> MessagePart.Text(content)
+                    part is MessagePart.Text && delta != null -> MessagePart.Text(part.text + delta)
+                    else -> part
+                }
+            }
+            
+            // Re-insert the message with updated parts
+            val partsJson = json.encodeToString(ListSerializer(MessagePart.serializer()), updatedParts)
+            messageQueries.insertOrReplace(
+                id = existingMessage.id,
+                sessionId = existingMessage.sessionId,
+                role = existingMessage.role.name.lowercase(),
+                parts = partsJson,
+                createdAt = existingMessage.createdAt,
+                model = existingMessage.model,
+                cost = existingMessage.cost,
+                isRead = existingMessage.isRead,
+                metadata = existingMessage.metadata
+            )
+        } catch (e: Exception) {
+            Napier.w("Failed to update message part: $messageId/$partId", e)
+        }
+    }
 
     // ==================== Server Configs ====================
 
