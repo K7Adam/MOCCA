@@ -231,37 +231,38 @@ fun ChatContent(screenModel: ChatScreenModel) {
             .fillMaxSize()
             .background(AppColors.background)
     ) {
-        GodHeader(
-            title = sessionTitle,
-            subtitle = "mobile-agent-v2",
-            subtitleIcon = {
-                Icon(
-                    imageVector = Icons.Default.Rocket,
-                    contentDescription = null,
-                    tint = AppColors.white.copy(alpha = 0.4f),
-                    modifier = Modifier.size(16.dp)
-                )
-            },
-            actions = {
-                IconButton(onClick = { screenModel.refreshData() }) {
+            GodHeader(
+                title = sessionTitle,
+                subtitle = "mobile-agent-v2",
+                subtitleIcon = {
                     Icon(
-                        imageVector = Icons.Default.Refresh,
-                        contentDescription = "Refresh",
-                        tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
+                        imageVector = Icons.Default.Rocket,
+                        contentDescription = null,
+                        tint = AppColors.white.copy(alpha = 0.4f),
+                        modifier = Modifier.size(16.dp)
                     )
-                }
-                IconButton(onClick = { showShareDialog = true }) {
-                    Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
-                }
-                IconButton(onClick = { screenModel.toggleTodoPanel() }) {
-                    Icon(
-                        imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
-                        contentDescription = "Todos",
-                        tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
-                    )
-                }
-            }
-        )
+                },
+                actions = {
+                    IconButton(onClick = { screenModel.refreshData() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh",
+                            tint = if (state.isLoading) AppColors.accentGreen else AppColors.white
+                        )
+                    }
+                    IconButton(onClick = { showShareDialog = true }) {
+                        Icon(Icons.Default.Share, contentDescription = "Share", tint = AppColors.white)
+                    }
+                    IconButton(onClick = { screenModel.toggleTodoPanel() }) {
+                        Icon(
+                            imageVector = if (state.showTodoPanel) Icons.Default.Close else Icons.AutoMirrored.Filled.List,
+                            contentDescription = "Todos",
+                            tint = if (state.showTodoPanel) AppColors.accentGreen else AppColors.white
+                        )
+                    }
+                },
+                modifier = Modifier.zIndex(10f)
+            )
         
         if (showShareDialog) {
             val isShared = state.session?.shareID != null
@@ -385,12 +386,12 @@ fun ChatContent(screenModel: ChatScreenModel) {
                             .fillMaxSize()
                             .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                         contentPadding = PaddingValues(
-                            top = AppSpacing.lg,
-                            bottom = WindowInsets.ime.asPaddingValues().calculateBottomPadding() + 100.dp
+                            top = 80.dp,
+                            bottom = 180.dp
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                     ) {
-                        item { Spacer(modifier = Modifier.height(160.dp)) }
+                        item { Spacer(modifier = Modifier.height(32.dp)) }
 
                         if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
                             item(contentType = "processing") { ModernProcessingIndicator() }
@@ -469,7 +470,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                 },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.md, bottom = 100.dp)
+                    .padding(end = AppSpacing.md, bottom = 180.dp)
                     .zIndex(10f)
             )
             
@@ -481,7 +482,9 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) { }
-                    .windowInsetsPadding(WindowInsets.ime.union(WindowInsets.navigationBars))
+                    .padding(bottom = 16.dp)
+                    .navigationBarsPadding()
+                    .imePadding()
             ) {
                 RichChatInput(
                     value = inputText,

@@ -29,6 +29,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.ui.components.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
@@ -73,6 +75,7 @@ class GitScreen : Screen {
                 GodHeader(
                     title = selectedTab.title,
                     onBackClick = { navigator.pop() },
+                    modifier = Modifier.glassy(shape = RectangleShape),
                     subtitle = "mobile-agent-v2",
                     subtitleIcon = {
                         Icon(
@@ -100,9 +103,13 @@ class GitScreen : Screen {
             floatingActionButtonPosition = FabPosition.Center
         ) { padding ->
             Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    // Tabs Navigation
-                    GitTabsNavigation(selectedTab, onTabSelected = { screenModel.selectTab(it) })
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Tabs Navigation
+            GitTabsNavigation(
+                selectedTab, 
+                onTabSelected = { screenModel.selectTab(it) },
+                modifier = Modifier.glassy(shape = RectangleShape)
+            )
                     
                     // Main Content
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -136,11 +143,15 @@ class GitScreen : Screen {
 }
 
 @Composable
-private fun GitTabsNavigation(selectedTab: GitTab, onTabSelected: (GitTab) -> Unit) {
+private fun GitTabsNavigation(
+    selectedTab: GitTab, 
+    onTabSelected: (GitTab) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Surface(
-        color = AppColors.background,
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+        color = Color.Transparent,
+        modifier = modifier.fillMaxWidth(),
+        border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier

@@ -21,6 +21,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.ui.components.modern.ModernHeader
 import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.components.modern.CommandLineInput
@@ -72,11 +74,15 @@ class ConsoleScreen : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
                 .padding(AppSpacing.lg)
         ) {
             // Header
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .glassy(shape = RectangleShape),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {

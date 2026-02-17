@@ -303,9 +303,7 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceContainer, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .glassy(AppShapes.card)
     ) {
         // Status bar (MODEL + MODE) - clickable to open selectors
         Row(

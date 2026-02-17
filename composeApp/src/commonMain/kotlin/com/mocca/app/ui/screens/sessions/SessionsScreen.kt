@@ -25,8 +25,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.components.modern.glassy
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -71,11 +73,14 @@ class SessionsScreen : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
             // Terminal Header Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .glassy(shape = RectangleShape)
                     .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically

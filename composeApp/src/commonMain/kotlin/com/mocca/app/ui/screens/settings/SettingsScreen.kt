@@ -28,6 +28,8 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
@@ -64,7 +66,7 @@ class SettingsScreen : Screen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(AppColors.surface)
+                    .glassy(shape = RectangleShape)
                     .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {

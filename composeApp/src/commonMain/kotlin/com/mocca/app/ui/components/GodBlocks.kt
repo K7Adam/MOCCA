@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.ui.theme.AppTypography
 
 /**
@@ -43,34 +44,13 @@ fun GodHeader(
     onBackClick: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
     subtitle: String? = null,
-    subtitleIcon: @Composable (() -> Unit)? = null
+    subtitleIcon: @Composable (() -> Unit)? = null,
+    modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "scanline")
-    val scanlineY by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(4000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "scanlineY"
-    )
-
-    Surface(
-        color = AppColors.background.copy(alpha = 0.8f),
-        modifier = Modifier
+    Box(
+        modifier = modifier
             .fillMaxWidth()
-            .drawBehind {
-                // Extremely subtle scanline
-                val y = size.height * scanlineY
-                drawLine(
-                    color = AppColors.white.copy(alpha = 0.03f),
-                    start = Offset(0f, y),
-                    end = Offset(size.width, y),
-                    strokeWidth = 1.dp.toPx()
-                )
-            },
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+            .glassy(shape = androidx.compose.ui.graphics.RectangleShape)
     ) {
         Row(
             modifier = Modifier

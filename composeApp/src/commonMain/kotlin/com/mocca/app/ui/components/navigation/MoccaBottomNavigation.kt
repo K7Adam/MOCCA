@@ -50,6 +50,9 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.roundToInt
 
+import com.mocca.app.ui.components.modern.glassy
+import androidx.compose.foundation.layout.navigationBarsPadding
+
 /**
  * Data class representing a bottom navigation item.
  *
@@ -129,15 +132,8 @@ fun MoccaBottomNavigation(
         modifier = modifier
             .widthIn(min = 280.dp, max = 360.dp)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
-            .background(
-                color = AppColors.glassBackground,
-                shape = AppShapes.rounded2xl
-            )
-            .border(
-                width = AppSpacing.borderThin,
-                color = AppColors.glassBorder,
-                shape = AppShapes.rounded2xl
-            )
+            .navigationBarsPadding()
+            .glassy(shape = AppShapes.rounded2xl)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm),
         contentAlignment = Alignment.Center
     ) {

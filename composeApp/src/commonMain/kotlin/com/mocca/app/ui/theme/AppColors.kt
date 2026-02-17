@@ -147,8 +147,8 @@ object AppColors {
     val badgeText = Color(0xFFFFFFFF)
     val activeIndicator = Color(0xFF00D9A5)
 
-    val glassBackground = Color(0xCC1A1A1A)
-    val glassBorder = Color(0x80444444)
+    val glassBackground = Color(0x4D1A1A1A) // 30% Opacity for true glass look
+    val glassBorder = Color(0x33FFFFFF)     // Subtle white border
     val scrim = Color(0xCC000000)
     val inputGlow = Color(0x4000D9A5)
 }

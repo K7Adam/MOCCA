@@ -91,17 +91,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
-                .navigationBarsPadding() // Ensure layout respects navigation bars
         ) {
             // Subtle terminal effect
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
-            // Content area with bottom padding reserved for bottom navigation
-            // Prevents overlap with chat input and other bottom-anchored UI
+            // Content area
+            // ChatContent will handle its own internal padding for TopBar and BottomNav
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(bottom = 88.dp) // Reserve space for bottom nav (64dp nav + 24dp padding)
             ) {
                 SwipePanelLayout(
                     leftPanel = {
@@ -232,7 +230,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 currentState = panelState.state,
                 dragProgress = dragProgress,
                 onItemClick = { newState -> panelState.state = newState },
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
             )
         }
     }

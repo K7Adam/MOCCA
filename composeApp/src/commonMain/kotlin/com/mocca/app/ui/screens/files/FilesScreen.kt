@@ -34,8 +34,8 @@ import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
-import com.mocca.app.ui.components.modern.ModernHeader
-import com.mocca.app.ui.components.modern.MoccaIconButton
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -57,6 +57,7 @@ class FilesScreen : Screen {
                 GodHeader(
                     title = "Files",
                     onBackClick = { navigator.pop() },
+                    modifier = Modifier.glassy(shape = RectangleShape),
                     subtitle = "mobile-agent-v2",
                     subtitleIcon = {
                         Icon(
@@ -81,11 +82,12 @@ class FilesScreen : Screen {
                     .padding(padding)
             ) {
                 // Breadcrumb navigation
-                GodBreadcrumbBar(
-                    pathHistory = state.pathHistory,
-                    canNavigateUp = state.pathHistory.size > 1,
-                    onNavigateUp = { screenModel.navigateUp() }
-                )
+        GodBreadcrumbBar(
+            pathHistory = state.pathHistory,
+            canNavigateUp = state.pathHistory.size > 1,
+            onNavigateUp = { screenModel.navigateUp() },
+            modifier = Modifier.glassy(shape = RectangleShape)
+        )
                 
                 // Content
                 Box(
@@ -120,12 +122,13 @@ class FilesScreen : Screen {
 private fun GodBreadcrumbBar(
     pathHistory: List<String>,
     canNavigateUp: Boolean,
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Surface(
-        color = AppColors.background,
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+        color = Color.Transparent,
+        modifier = modifier.fillMaxWidth(),
+        border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.05f))
     ) {
         Row(
             modifier = Modifier

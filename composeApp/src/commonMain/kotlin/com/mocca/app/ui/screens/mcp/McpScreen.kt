@@ -16,6 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.RectangleShape
+import com.mocca.app.ui.components.modern.glassy
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -48,11 +51,15 @@ class McpScreen : Screen {
                 modifier = Modifier
                     .fillMaxSize()
                     .background(AppColors.background)
+                    .statusBarsPadding()
+                    .navigationBarsPadding()
                     .padding(AppSpacing.lg)
             ) {
                 // Header with Back Button
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassy(shape = RectangleShape),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     MoccaIconButton(
@@ -218,8 +225,9 @@ private fun McpServerCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceVariant.copy(alpha = 0.5f))
-            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), AppShapes.medium)
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant.copy(alpha = 0.5f), AppShapes.card)
+            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), AppShapes.card)
             .clickable(onClick = onClick)
             .padding(AppSpacing.md)
     ) {
