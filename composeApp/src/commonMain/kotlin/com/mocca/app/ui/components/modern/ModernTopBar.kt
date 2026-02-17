@@ -284,6 +284,11 @@ fun ConnectionQualityIndicator(
             AppColors.success,
             "GOOD"
         )
+        ConnectionQuality.DEGRADED -> Triple(
+            Icons.Filled.NetworkWifi2Bar,
+            AppColors.warning,
+            "DEGRADED"
+        )
         ConnectionQuality.POOR -> Triple(
             Icons.Filled.NetworkWifi2Bar,
             AppColors.warning,
