@@ -9,8 +9,8 @@ import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
@@ -103,13 +103,13 @@ class UpdateRepository(
             var currentUrl = initialUrl
             var attempts = 0
             val maxRedirects = 5
-            var finalResponse: io.ktor.client.statement.HttpResponse? = null
+            var downloadSuccess = false
 
-            // 1. Resolve Redirects manually
-            while (attempts < maxRedirects) {
+            while (attempts < maxRedirects && !downloadSuccess) {
                 emit(DownloadStatus.Log("Requesting: $currentUrl"))
                 
-                val response = client.get(currentUrl) {
+                // Use prepareGet to STREAM the response instead of buffering it
+                client.prepareGet(currentUrl) {
                     // Only add auth headers to GitHub API URLs, NOT S3 URLs
                     if (useApi && currentUrl.contains("api.github.com")) {
                         header("Authorization", "Bearer $token")
@@ -118,50 +118,45 @@ class UpdateRepository(
                     } else {
                         emit(DownloadStatus.Log("Skipped Authorization header (external domain)"))
                     }
-                }
+                }.execute { response ->
+                    val status = response.status
+                    emit(DownloadStatus.Log("Response Status: $status"))
 
-                val status = response.status
-                emit(DownloadStatus.Log("Response Status: $status"))
-
-                if (status == HttpStatusCode.Found || status == HttpStatusCode.MovedPermanently || status == HttpStatusCode.TemporaryRedirect) {
-                    val location = response.headers["Location"]
-                    if (location != null) {
-                        emit(DownloadStatus.Log("Redirecting to: $location"))
-                        currentUrl = location
-                        attempts++
+                    if (status == HttpStatusCode.Found || status == HttpStatusCode.MovedPermanently || status == HttpStatusCode.TemporaryRedirect) {
+                        val location = response.headers["Location"]
+                        if (location != null) {
+                            emit(DownloadStatus.Log("Redirecting to: $location"))
+                            currentUrl = location
+                            attempts++
+                        } else {
+                            throw Exception("Redirect status $status but no Location header found")
+                        }
+                    } else if (status.isSuccess()) {
+                        // 2. Download File via Streaming
+                        val length = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
+                        emit(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
+                        
+                        val channel = response.bodyAsChannel()
+                        val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
+                            emit(DownloadStatus.Progress(progress))
+                        }
+                        
+                        emit(DownloadStatus.Log("Download saved to: $path"))
+                        emit(DownloadStatus.Log("Verifying file..."))
+                        emit(DownloadStatus.Log("Triggering installation..."))
+                        emit(DownloadStatus.Complete)
+                        platformUpdateManager.installApk(path)
+                        downloadSuccess = true
                     } else {
-                        throw Exception("Redirect status $status but no Location header found")
+                        val errorBody = response.bodyAsChannel().readRemaining().readText()
+                        throw Exception("Request failed: $status. Body: $errorBody")
                     }
-                } else if (status.isSuccess()) {
-                    finalResponse = response
-                    break
-                } else {
-                    val errorBody = response.bodyAsChannel().readRemaining().readText()
-                    throw Exception("Request failed: $status. Body: $errorBody")
                 }
             }
 
-            if (finalResponse == null) {
-                throw Exception("Too many redirects or no success response")
+            if (!downloadSuccess) {
+                throw Exception("Download failed after $attempts redirects or no success response")
             }
-
-            // 2. Download File
-            val length = finalResponse.headers["Content-Length"]?.toLongOrNull() ?: -1L
-            emit(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
-            
-            val channel = finalResponse.bodyAsChannel()
-            val path = platformUpdateManager.saveApk(fileName, channel, length) { progress ->
-                emit(DownloadStatus.Progress(progress))
-            }
-            
-            emit(DownloadStatus.Log("Download saved to: $path"))
-            emit(DownloadStatus.Log("Verifying file..."))
-            
-            // Basic verification logic could go here (e.g. size check)
-            
-            emit(DownloadStatus.Log("Triggering installation..."))
-            emit(DownloadStatus.Complete)
-            platformUpdateManager.installApk(path)
             
         } catch (e: Exception) {
             Napier.e("Download failed", e, "UpdateRepository")
