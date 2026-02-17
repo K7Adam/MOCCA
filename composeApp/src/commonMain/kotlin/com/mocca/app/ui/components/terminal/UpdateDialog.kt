@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
@@ -38,7 +39,7 @@ fun UpdateDialog(
     onRetry: (() -> Unit)? = null
 ) {
     @Suppress("DEPRECATION")
-    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    val clipboardManager = LocalClipboardManager.current
     
     BasicAlertDialog(
         onDismissRequest = { if (!isDownloading) onDismiss() }
@@ -113,8 +114,17 @@ fun UpdateDialog(
                             )
                             
                             IconButton(
-                                onClick = { 
-                                    clipboardManager.setText(AnnotatedString(logs.joinToString("\n")))
+                                onClick = {
+                                    // Build text to copy including logs and error
+                                    val textToCopy = buildString {
+                                        logs.forEach { log ->
+                                            appendLine("> $log")
+                                        }
+                                        if (error != null) {
+                                            appendLine("> ERROR: $error")
+                                        }
+                                    }
+                                    clipboardManager.setText(AnnotatedString(textToCopy))
                                 },
                                 modifier = Modifier.size(20.dp)
                             ) {
