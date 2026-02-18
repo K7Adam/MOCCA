@@ -32,6 +32,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 /**
  * Common Koin modules shared across all platforms.
  * Uses ConnectionManager as the single source of truth for connection state and HttpClient lifecycle.
+ * Uses StateCoordinator as the single source of truth for event dispatch and state synchronization.
  */
 val commonModule = module {
     // ... rest of file
@@ -97,18 +98,31 @@ val commonModule = module {
     singleOf(::ProjectRepository)
     
     // ═══════════════════════════════════════════════════════════════════════════════
+    // STATE COORDINATOR - Central hub for all event handling and state sync
+    // NOTE: This MUST come after EventStreamRepository and ConnectionManager
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    single { 
+        StateCoordinator(
+            eventStreamRepository = get(),
+            connectionManager = get(),
+            localCache = get(),
+            sessionRepository = get(),
+            appLifecycleObserver = getOrNull(),
+            networkObserver = getOrNull()
+        )
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
     // CENTRALIZED STATE STORES - Single source of truth for all app state
-    // NOTE: These MUST come after all their dependencies are registered
+    // NOTE: These MUST come after StateCoordinator and all their dependencies
     // ═══════════════════════════════════════════════════════════════════════════════
     
     single { 
         AppStateStore(
             localCache = get(),
-            eventStreamRepository = get(),
+            stateCoordinator = get(),
             sessionRepository = get(),
-            connectionManager = get(),
-            appLifecycleObserver = getOrNull(),
-            networkObserver = getOrNull(),
             mcpRepository = get(),
             configRepository = get(),
             agentRepository = get()
@@ -118,9 +132,8 @@ val commonModule = module {
     single { 
         ChatStateStore(
             localCache = get(),
-            eventStreamRepository = get(),
-            sessionRepository = get(),
-            appLifecycleObserver = getOrNull()
+            stateCoordinator = get(),
+            sessionRepository = get()
         )
     }
 }

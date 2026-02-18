@@ -2,9 +2,6 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
-import com.mocca.app.util.AppLifecycleObserver
-import com.mocca.app.util.AppLifecycleState
-import com.mocca.app.util.NetworkObserver
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -15,26 +12,23 @@ import kotlinx.datetime.Clock
  * 
  * This is the single source of truth for UI state, providing:
  * - Reactive state updates via StateFlow
- * - Automatic synchronization with server via SSE events
+ * - Automatic synchronization with server via StateCoordinator
  * - Lifecycle-aware state management (foreground/background)
  * - Network-aware reconnection and sync
  * 
  * Architecture:
  * ```
- * Server (SSE) → EventStreamRepository → AppStateStore → UI (StateFlow)
- *                     ↓                        ↑
- *                LocalCache ←─────────────────┘
+ * Server (SSE) → EventStreamRepository → StateCoordinator → AppStateStore → UI (StateFlow)
+ *                     ↓                        ↓                  ↑
+ *                LocalCache ←────────────────────────────────────┘
  * ```
  * 
  * Consumers should observe the StateFlows, never call refresh directly.
  */
 class AppStateStore(
     private val localCache: LocalCache,
-    private val eventStreamRepository: EventStreamRepository,
+    private val stateCoordinator: StateCoordinator,
     private val sessionRepository: SessionRepository,
-    private val connectionManager: ConnectionManager,
-    private val appLifecycleObserver: AppLifecycleObserver?,
-    private val networkObserver: NetworkObserver?,
     private val mcpRepository: McpRepository,
     private val configRepository: ConfigRepository,
     private val agentRepository: AgentRepository
@@ -42,24 +36,23 @@ class AppStateStore(
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SESSION STATE - Reactive from DB + SSE updates
+    // SESSION STATE - Reactive from DB + StateCoordinator updates
     // ═══════════════════════════════════════════════════════════════════════════════
     
     private val _sessions = MutableStateFlow<List<Session>>(emptyList())
     val sessions: StateFlow<List<Session>> = _sessions.asStateFlow()
     
-    private val _runningSessionIds = MutableStateFlow<Set<String>>(emptySet())
-    val runningSessionIds: StateFlow<Set<String>> = _runningSessionIds.asStateFlow()
+    // Running sessions - delegated to StateCoordinator
+    val runningSessionIds: StateFlow<Set<String>> = stateCoordinator.runningSessionIds
     
     // Current active session (for chat screen)
-    private val _currentSessionId = MutableStateFlow<String?>(null)
-    val currentSessionId: StateFlow<String?> = _currentSessionId.asStateFlow()
+    val currentSessionId: StateFlow<String?> = stateCoordinator.activeSessionId
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // CONNECTION STATE - From ConnectionManager
+    // CONNECTION STATE - From StateCoordinator
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    val connectionStatus: StateFlow<ConnectionStatus> = connectionManager.status
+    val connectionStatus: StateFlow<ConnectionStatus> = stateCoordinator.connectionStatus
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONFIG STATE - Models, providers, agents
@@ -97,36 +90,31 @@ class AppStateStore(
     val isMcpLoading: Flow<Boolean> = mcpRepository.isLoading
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SYNC STATE
+    // SYNC STATE - From StateCoordinator
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    private val _isSyncing = MutableStateFlow(false)
-    val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
+    val isSyncing: StateFlow<Boolean> = stateCoordinator.isSyncing
+    val lastSyncTime: StateFlow<Long?> = stateCoordinator.lastSyncTime
     
-    private val _lastSyncTime = MutableStateFlow<Long?>(null)
-    val lastSyncTime: StateFlow<Long?> = _lastSyncTime.asStateFlow()
+    /**
+     * Trigger a full sync from server.
+     * Delegates to StateCoordinator.
+     */
+    fun syncFromServer() {
+        stateCoordinator.syncFromServer()
+    }
     
     private var isInitialized = false
-    private var syncJob: Job? = null
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
     // ═══════════════════════════════════════════════════════════════════════════════
     
     init {
-        Napier.i("[AppStateStore] Initializing...")
-        
-        // Wire up callbacks for lifecycle and connection events
-        eventStreamRepository.onAppResume = { syncFromServer() }
-        connectionManager.onConnectionEstablished = suspend { 
-            start()
-            syncFromServer()
-        }
+        Napier.i("[AppStateStore] Initializing with StateCoordinator...")
         
         observeLocalCache()
-        observeSseEvents()
-        observeLifecycle()
-        observeConnectionState()
+        observeBroadcastEvents()
     }
     
     /**
@@ -144,7 +132,7 @@ class AppStateStore(
         
         // Sync from server if connected
         if (connectionStatus.value.isConnected) {
-            syncFromServer()
+            stateCoordinator.syncFromServer()
         }
     }
     
@@ -170,49 +158,13 @@ class AppStateStore(
     }
     
     /**
-     * Observe SSE events for real-time updates.
+     * Observe broadcast events from StateCoordinator.
      * This is the primary driver of state changes.
      */
-    private fun observeSseEvents() {
+    private fun observeBroadcastEvents() {
         storeScope.launch {
-            eventStreamRepository.events.collect { event ->
-                handleSseEvent(event)
-            }
-        }
-    }
-    
-    /**
-     * Observe app lifecycle for foreground/background handling.
-     */
-    private fun observeLifecycle() {
-        appLifecycleObserver?.let { observer ->
-            storeScope.launch {
-                observer.lifecycleState.collect { state ->
-                    when (state) {
-                        AppLifecycleState.FOREGROUND -> {
-                            Napier.i("[AppStateStore] App foregrounded - syncing state")
-                            onForeground()
-                        }
-                        AppLifecycleState.BACKGROUND -> {
-                            Napier.i("[AppStateStore] App backgrounded")
-                            // State is maintained, SSE continues if session is active
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Observe connection state for reconnection sync.
-     */
-    private fun observeConnectionState() {
-        storeScope.launch {
-            connectionManager.status.collect { status ->
-                if (status.isConnected && !_isSyncing.value) {
-                    Napier.i("[AppStateStore] Connection established - syncing state")
-                    syncFromServer()
-                }
+            stateCoordinator.broadcastEvents.collect { event ->
+                handleBroadcastEvent(event)
             }
         }
     }
@@ -221,37 +173,37 @@ class AppStateStore(
     // EVENT HANDLING
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    private fun handleSseEvent(event: ServerEvent) {
+    private fun handleBroadcastEvent(event: BroadcastEvent) {
+        when (event) {
+            is BroadcastEvent.ServerEvent -> handleServerEvent(event.event)
+            is BroadcastEvent.SyncCompleted -> {
+                Napier.v("[AppStateStore] Sync completed - loading config")
+                loadConfig()
+                loadAgents()
+            }
+            is BroadcastEvent.SyncFailed -> {
+                Napier.w("[AppStateStore] Sync failed: ${event.error}")
+            }
+            is BroadcastEvent.ConnectionStateChanged -> {
+                Napier.v("[AppStateStore] Connection state: ${event.status}")
+            }
+            is BroadcastEvent.ActiveSessionChanged -> {
+                Napier.v("[AppStateStore] Active session changed: ${event.sessionId}")
+            }
+        }
+    }
+    
+    private fun handleServerEvent(event: ServerEvent) {
         when (event) {
             is ServerEvent.SessionUpdated -> {
-                val session = event.properties.info
-                val isRunning = session.status == SessionStatus.RUNNING
-                
-                _runningSessionIds.update { current ->
-                    if (isRunning) current + session.id else current - session.id
-                }
-                
                 // Session is already persisted by EventStreamRepository
                 // DB observer will pick up the change
-                Napier.v("[AppStateStore] Session updated: ${session.id}, running: $isRunning")
-            }
-            
-            is ServerEvent.SessionIdle -> {
-                val sessionId = event.properties.sessionID
-                _runningSessionIds.update { it - sessionId }
-                Napier.v("[AppStateStore] Session idle: $sessionId")
-            }
-            
-            is ServerEvent.SessionError -> {
-                event.properties.sessionID?.let { sessionId ->
-                    _runningSessionIds.update { it - sessionId }
-                }
+                Napier.v("[AppStateStore] Session updated: ${event.properties.info.id}")
             }
             
             is ServerEvent.SessionDeleted -> {
-                val sessionId = event.properties.info.id
-                _runningSessionIds.update { it - sessionId }
                 // DB observer will pick up the deletion
+                Napier.v("[AppStateStore] Session deleted: ${event.properties.info.id}")
             }
             
             else -> { /* Other events handled by specialized stores */ }
@@ -261,26 +213,6 @@ class AppStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     // SYNC OPERATIONS
     // ═══════════════════════════════════════════════════════════════════════════════
-    
-    /**
-     * Called when app comes to foreground.
-     * Syncs any state that may have changed while backgrounded.
-     */
-    private fun onForeground() {
-        storeScope.launch {
-            // Check if we need to sync (if more than 30 seconds since last sync)
-            val now = Clock.System.now().toEpochMilliseconds()
-            val lastSync = _lastSyncTime.value
-            val needsSync = lastSync == null || (now - lastSync) > 30_000L
-            
-            if (needsSync && connectionStatus.value.isConnected) {
-                syncFromServer()
-            }
-            
-            // Always refresh session status on foreground
-            refreshSessionStatus()
-        }
-    }
     
     /**
      * Load initial state from local cache.
@@ -303,103 +235,52 @@ class AppStateStore(
     }
     
     /**
-     * Sync all state from server.
-     * This is called on connection, foreground, and can be triggered manually.
-     */
-    fun syncFromServer() {
-        syncJob?.cancel()
-        syncJob = storeScope.launch {
-            _isSyncing.value = true
-            
-            try {
-                // Sync sessions
-                sessionRepository.refreshSessions()
-                
-                // Sync config
-                loadConfig()
-                
-                // Sync agents
-                loadAgents()
-                
-                // Refresh MCP
-                mcpRepository.refresh()
-                
-                // Refresh session status
-                refreshSessionStatus()
-                
-                _lastSyncTime.value = Clock.System.now().toEpochMilliseconds()
-                Napier.i("[AppStateStore] Sync completed successfully")
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Napier.e("[AppStateStore] Sync failed", e)
-            } finally {
-                _isSyncing.value = false
-            }
-        }
-    }
-    
-    /**
-     * Refresh real-time session status (idle/busy).
-     */
-    private suspend fun refreshSessionStatus() {
-        sessionRepository.getSessionStatus().fold(
-            onSuccess = { statusMap ->
-                val runningIds = statusMap.filter { (_, status) ->
-                    status.isBusy || status.isRetrying
-                }.keys
-                _runningSessionIds.value = runningIds
-                Napier.v("[AppStateStore] Refreshed session status: ${runningIds.size} running")
-            },
-            onFailure = { error ->
-                Napier.w("[AppStateStore] Failed to refresh session status: ${error.message}")
-            }
-        )
-    }
-    
-    /**
      * Load config from server (providers, models, modes).
      */
-    private suspend fun loadConfig() {
-        // Load provider info
-        sessionRepository.getProviderInfo().fold(
-            onSuccess = { info ->
-                _providerInfo.value = info
-                
-                // Set default model if not already set
-                if (_selectedModelId.value.isEmpty()) {
-                    sessionRepository.getDefaultModelProvider().let { (modelId, providerId) ->
-                        if (modelId.isNotEmpty()) {
-                            _selectedModelId.value = modelId
-                            _selectedProviderId.value = providerId
+    private fun loadConfig() {
+        storeScope.launch {
+            // Load provider info
+            sessionRepository.getProviderInfo().fold(
+                onSuccess = { info ->
+                    _providerInfo.value = info
+                    
+                    // Set default model if not already set
+                    if (_selectedModelId.value.isEmpty()) {
+                        sessionRepository.getDefaultModelProvider().let { (modelId, providerId) ->
+                            if (modelId.isNotEmpty()) {
+                                _selectedModelId.value = modelId
+                                _selectedProviderId.value = providerId
+                            }
                         }
                     }
-                }
-            },
-            onFailure = { Napier.w("[AppStateStore] Failed to load provider info") }
-        )
-        
-        // Load modes
-        sessionRepository.getModes().fold(
-            onSuccess = { modes ->
-                _modes.value = modes
-                if (_selectedModeId.value == null && modes.isNotEmpty()) {
-                    _selectedModeId.value = modes.first().id
-                }
-            },
-            onFailure = { Napier.w("[AppStateStore] Failed to load modes") }
-        )
+                },
+                onFailure = { Napier.w("[AppStateStore] Failed to load provider info") }
+            )
+            
+            // Load modes
+            sessionRepository.getModes().fold(
+                onSuccess = { modes ->
+                    _modes.value = modes
+                    if (_selectedModeId.value == null && modes.isNotEmpty()) {
+                        _selectedModeId.value = modes.first().id
+                    }
+                },
+                onFailure = { Napier.w("[AppStateStore] Failed to load modes") }
+            )
+        }
     }
     
     /**
      * Load agents from server.
      */
-    private suspend fun loadAgents() {
-        agentRepository.getAgents().collect { resource ->
-            when (resource) {
-                is Resource.Success -> _agents.value = resource.data
-                is Resource.Error -> Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
-                else -> {}
+    private fun loadAgents() {
+        storeScope.launch {
+            agentRepository.getAgents().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> _agents.value = resource.data
+                    is Resource.Error -> Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
+                    else -> {}
+                }
             }
         }
     }
@@ -411,8 +292,8 @@ class AppStateStore(
     /**
      * Set the current active session.
      */
-    fun setCurrentSession(sessionId: String?) {
-        _currentSessionId.value = sessionId
+    suspend fun setCurrentSession(sessionId: String?) {
+        stateCoordinator.setActiveSession(sessionId)
     }
     
     /**
@@ -451,14 +332,14 @@ class AppStateStore(
     /**
      * Get session groups (parent-child hierarchy).
      */
-    val sessionGroups: StateFlow<List<SessionGroup>> = combine(_sessions, _runningSessionIds) { sessions, runningIds ->
+    val sessionGroups: StateFlow<List<SessionGroup>> = combine(_sessions, runningSessionIds) { sessions, runningIds ->
         buildSessionGroups(sessions, runningIds)
     }.stateIn(storeScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     /**
      * Whether any session is currently running.
      */
-    val hasAnyRunningSession: StateFlow<Boolean> = _runningSessionIds.map { it.isNotEmpty() }
+    val hasAnyRunningSession: StateFlow<Boolean> = runningSessionIds.map { it.isNotEmpty() }
         .stateIn(storeScope, SharingStarted.WhileSubscribed(5000), false)
     
     /**

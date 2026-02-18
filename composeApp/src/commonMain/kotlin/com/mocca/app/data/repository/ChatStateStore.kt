@@ -2,8 +2,6 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
-import com.mocca.app.util.AppLifecycleObserver
-import com.mocca.app.util.AppLifecycleState
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -14,22 +12,21 @@ import kotlinx.datetime.Clock
  * 
  * Provides reactive chat state with:
  * - Message observation from local cache
- * - SSE-driven streaming updates
+ * - StateCoordinator-driven streaming updates
  * - Pending permission/question management
  * - Thinking state for extended reasoning models
  * 
  * Architecture:
  * ```
- * SSE Events → EventStreamRepository → ChatStateStore → UI
- *                    ↓                        ↑
- *              LocalCache ←─────────────────┘
+ * SSE Events → EventStreamRepository → StateCoordinator → ChatStateStore → UI
+ *                    ↓                        ↓                  ↑
+ *              LocalCache ←────────────────────────────────────┘
  * ```
  */
 class ChatStateStore(
     private val localCache: LocalCache,
-    private val eventStreamRepository: EventStreamRepository,
-    private val sessionRepository: SessionRepository,
-    private val appLifecycleObserver: AppLifecycleObserver?
+    private val stateCoordinator: StateCoordinator,
+    private val sessionRepository: SessionRepository
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -63,19 +60,19 @@ class ChatStateStore(
     val error: StateFlow<String?> = _error.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // STREAMING STATE - From SSE
+    // STREAMING STATE - From StateCoordinator
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    val streamingText: StateFlow<String> = eventStreamRepository.streamingText
-    val isThinking: StateFlow<Boolean> = eventStreamRepository.isThinking
-    val thinkingContent: StateFlow<String> = eventStreamRepository.thinkingContent
+    val streamingText: StateFlow<String> = stateCoordinator.streamingText
+    val isThinking: StateFlow<Boolean> = stateCoordinator.isThinking
+    val thinkingContent: StateFlow<String> = stateCoordinator.thinkingContent
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // PERMISSION/QUESTION STATE - From SSE
+    // PERMISSION/QUESTION STATE - From StateCoordinator
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    val pendingPermission: StateFlow<PermissionRequest?> = eventStreamRepository.pendingPermission
-    val pendingQuestion: StateFlow<QuestionRequest?> = eventStreamRepository.pendingQuestion
+    val pendingPermission: StateFlow<PermissionRequest?> = stateCoordinator.pendingPermission
+    val pendingQuestion: StateFlow<QuestionRequest?> = stateCoordinator.pendingQuestion
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // TODO STATE
@@ -102,7 +99,7 @@ class ChatStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     private var messageObserverJob: Job? = null
-    private var sseObserverJob: Job? = null
+    private var broadcastObserverJob: Job? = null
     private var todoObserverJob: Job? = null
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -110,16 +107,15 @@ class ChatStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     init {
-        Napier.i("[ChatStateStore] Initialized")
-        observeSseEvents()
-        observeLifecycle()
+        Napier.i("[ChatStateStore] Initialized with StateCoordinator")
+        observeBroadcastEvents()
     }
     
     /**
      * Load a session for chat.
-     * This sets up message observation and SSE connection.
+     * This sets up message observation and SSE connection via StateCoordinator.
      */
-    fun loadSession(sessionId: String) {
+    suspend fun loadSession(sessionId: String) {
         if (_currentSessionId.value == sessionId && _messages.value.isNotEmpty()) {
             Napier.v("[ChatStateStore] Session $sessionId already loaded")
             return
@@ -129,6 +125,9 @@ class ChatStateStore(
         _currentSessionId.value = sessionId
         _isLoading.value = true
         _error.value = null
+        
+        // Set active session via StateCoordinator (this also connects SSE)
+        stateCoordinator.setActiveSession(sessionId)
         
         // Cancel previous observations
         messageObserverJob?.cancel()
@@ -148,10 +147,6 @@ class ChatStateStore(
         
         // Load todos
         loadTodos(sessionId)
-        
-        // Connect SSE for this session
-        eventStreamRepository.connect(storeScope, sessionId)
-        eventStreamRepository.monitorSession(sessionId)
     }
     
     /**
@@ -161,7 +156,7 @@ class ChatStateStore(
         val sessionId = _currentSessionId.value ?: return
         
         Napier.i("[ChatStateStore] Unloading session: $sessionId")
-        eventStreamRepository.stopMonitoringSession(sessionId)
+        stateCoordinator.stopMonitoringSession(sessionId)
         
         messageObserverJob?.cancel()
         messageObserverJob = null
@@ -177,18 +172,34 @@ class ChatStateStore(
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SSE EVENT HANDLING
+    // BROADCAST EVENT HANDLING
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    private fun observeSseEvents() {
-        sseObserverJob = storeScope.launch {
-            eventStreamRepository.events.collect { event ->
-                handleSseEvent(event)
+    private fun observeBroadcastEvents() {
+        broadcastObserverJob = storeScope.launch {
+            stateCoordinator.broadcastEvents.collect { event ->
+                handleBroadcastEvent(event)
             }
         }
     }
     
-    private fun handleSseEvent(event: ServerEvent) {
+    private fun handleBroadcastEvent(event: BroadcastEvent) {
+        when (event) {
+            is BroadcastEvent.ServerEvent -> handleServerEvent(event.event)
+            is BroadcastEvent.ActiveSessionChanged -> {
+                Napier.v("[ChatStateStore] Active session changed to: ${event.sessionId}")
+            }
+            is BroadcastEvent.SyncCompleted -> {
+                // Reload messages on sync complete if we have a session
+                _currentSessionId.value?.let { sessionId ->
+                    reloadMessages(sessionId)
+                }
+            }
+            else -> {}
+        }
+    }
+    
+    private fun handleServerEvent(event: ServerEvent) {
         val currentId = _currentSessionId.value ?: return
         
         when (event) {
@@ -209,11 +220,6 @@ class ChatStateStore(
                 if (event.properties.sessionID == currentId) {
                     _isSessionIdle.value = true
                     _isSending.value = false
-                    // Clear streaming in background
-                    storeScope.launch {
-                        eventStreamRepository.clearStreamingText()
-                    }
-                    eventStreamRepository.clearThinkingState()
                     
                     // Reload messages on idle (message complete)
                     reloadMessages(currentId)
@@ -233,7 +239,7 @@ class ChatStateStore(
             }
             
             is ServerEvent.MessagePartUpdated -> {
-                // Streaming is handled by EventStreamRepository
+                // Streaming is handled by StateCoordinator -> EventStreamRepository
                 // We just need to track child session streaming
                 val part = event.properties.part
                 if (_childSessions.value.containsKey(part.sessionID)) {
@@ -246,31 +252,6 @@ class ChatStateStore(
             }
             
             else -> { /* Other events handled elsewhere */ }
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // LIFECYCLE HANDLING
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    private fun observeLifecycle() {
-        appLifecycleObserver?.let { observer ->
-            storeScope.launch {
-                observer.lifecycleState.collect { state ->
-                    when (state) {
-                        AppLifecycleState.FOREGROUND -> {
-                            Napier.i("[ChatStateStore] Foreground - syncing state")
-                            _currentSessionId.value?.let { sessionId ->
-                                reloadMessages(sessionId)
-                                loadTodos(sessionId)
-                            }
-                        }
-                        AppLifecycleState.BACKGROUND -> {
-                            // SSE continues via foreground service
-                        }
-                    }
-                }
-            }
         }
     }
     
@@ -319,6 +300,8 @@ class ChatStateStore(
                     _childSessions.value = children.associateBy { it.id }
                     children.forEach { child ->
                         loadChildMessages(child.id)
+                        // Monitor child sessions for updates
+                        stateCoordinator.monitorSession(child.id)
                     }
                 },
                 onFailure = { Napier.w("[ChatStateStore] Failed to load child sessions") }
@@ -414,30 +397,30 @@ class ChatStateStore(
     suspend fun approvePermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
         return sessionRepository.respondToPermission(permission.sessionId, permission.id, true).also {
-            if (it.isSuccess) eventStreamRepository.dismissPermission()
+            if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }
     
     suspend fun denyPermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
         return sessionRepository.respondToPermission(permission.sessionId, permission.id, false).also {
-            if (it.isSuccess) eventStreamRepository.dismissPermission()
+            if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }
     
-    fun dismissPermission() = eventStreamRepository.dismissPermission()
+    fun dismissPermission() = stateCoordinator.dismissPermission()
     
     suspend fun answerQuestion(answers: List<List<String>>): Result<Boolean> {
         val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
         return sessionRepository.replyToQuestion(question.id, answers).also {
-            if (it.isSuccess) eventStreamRepository.dismissQuestion()
+            if (it.isSuccess) stateCoordinator.dismissQuestion()
         }
     }
     
     suspend fun rejectQuestion(): Result<Boolean> {
         val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
         return sessionRepository.rejectQuestion(question.id).also {
-            if (it.isSuccess) eventStreamRepository.dismissQuestion()
+            if (it.isSuccess) stateCoordinator.dismissQuestion()
         }
     }
     
@@ -480,7 +463,7 @@ class ChatStateStore(
     
     fun dispose() {
         messageObserverJob?.cancel()
-        sseObserverJob?.cancel()
+        broadcastObserverJob?.cancel()
         todoObserverJob?.cancel()
         storeScope.cancel()
         Napier.i("[ChatStateStore] Disposed")
