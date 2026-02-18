@@ -293,17 +293,22 @@ fun Modifier.glassy(
 /**
  * iOS 26-style Pure Liquid Glass Card modifier.
  * Creates a pure glass effect with transparent background and edge highlights.
+ * 
+ * @param shape The shape of the glass card
+ * @param tint Optional tint color to overlay on the glass background
+ * @param highlightIntensity Intensity of the top edge highlight (0.0 to 1.0)
  */
 @Composable
 fun Modifier.liquidGlassCard(
     shape: Shape = AppShapes.card,
+    tint: Color = Color(0x99000000), // Default: 60% dark, transparent
     highlightIntensity: Float = 0.18f
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Pure liquid-glass: semi-transparent dark background
-            drawRect(Color(0x99000000))
+            // Pure liquid-glass: semi-transparent background with optional tint
+            drawRect(tint)
             
             // Top edge specular highlight
             val highlightHeight = 1.5.dp.toPx()

@@ -2,23 +2,14 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.shape.RoundedCornerShape
 import com.mocca.app.ui.theme.AppShapes
 import io.github.fletchmckee.liquid.LiquidState
 import io.github.fletchmckee.liquid.liquid
@@ -28,7 +19,6 @@ import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
 import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -184,305 +174,12 @@ object LiquidGlassDefaults {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LEGACY GLASS MODIFIERS (Non-liquid fallbacks)
+// SIMPLIFIED GLASS MODIFIER (Performance fallback)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Simple glassy modifier without blur or refraction.
- * Use only as fallback when liquid glass is not available.
- * 
- * @deprecated Use Modifier.glass() from com.mocca.app.ui.components.glass package
- *             for a first-principles implementation with proper shader support.
- */
-@Deprecated(
-    message = "Use Modifier.glass() from com.mocca.app.ui.components.glass package",
-    replaceWith = ReplaceWith(
-        "glass(shape, GlassDefaults.tokens(), GlassShaderParams.fromTokens(GlassDefaults.tokens()))",
-        "com.mocca.app.ui.components.glass.glass",
-        "com.mocca.app.ui.components.glass.GlassDefaults",
-        "com.mocca.app.ui.components.glass.GlassShaderParams"
-    ),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun Modifier.glassy(
-    shape: Shape,
-    borderWidth: Dp = 0.5.dp,
-    backgroundColor: Color = Color(0x80000000),
-    borderColor: Color = Color(0x40FFFFFF)
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .background(backgroundColor)
-        .border(borderWidth, borderColor.copy(alpha = 0.3f), shape)
-)
-
-/**
- * Premium glassy modifier with gradient border.
- * Fallback when liquid glass is unavailable.
- * 
- * @deprecated Use Modifier.glassFloating() from com.mocca.app.ui.components.glass package
- *             for a first-principles implementation with proper shader support.
- */
-@Deprecated(
-    message = "Use Modifier.glassFloating() from com.mocca.app.ui.components.glass package",
-    replaceWith = ReplaceWith(
-        "glassFloating(shape, GlassDefaults.tokens())",
-        "com.mocca.app.ui.components.glass.glassFloating",
-        "com.mocca.app.ui.components.glass.GlassDefaults"
-    ),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun Modifier.glassyPremium(
-    shape: Shape,
-    borderWidth: Dp = 1.dp,
-    backgroundColor: Color = Color(0x99000000),
-    borderColor: Color = Color(0x40FFFFFF),
-    glowColor: Color = Color(0x2000D9A5)
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            // Background gradient
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        backgroundColor.copy(alpha = backgroundColor.alpha * 1.1f),
-                        backgroundColor,
-                        backgroundColor.copy(alpha = backgroundColor.alpha * 0.9f)
-                    )
-                )
-            )
-            // Top glow
-            drawRect(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(
-                        glowColor.copy(alpha = 0f),
-                        glowColor,
-                        glowColor.copy(alpha = 0f)
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, 2.dp.toPx())
-            )
-        }
-        .border(
-            width = borderWidth,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    borderColor.copy(alpha = 0.5f),
-                    borderColor.copy(alpha = 0.15f),
-                    borderColor.copy(alpha = 0.05f)
-                )
-            ),
-            shape = shape
-        )
-)
-
-/**
- * iOS 26-style Pure Liquid Glass Card modifier.
- * Creates a pure glass effect with:
- * - Transparent/translucent background (no color tint)
- * - Top edge highlight (specular) - the key liquid-glass visual
- * - Gradient border with light top and darker bottom
- * - No blur, no color - just light refraction simulation
- * 
- * Use this for settings screens, cards, and elevated surfaces.
- * 
- * @deprecated Use Modifier.liquidGlassCard() from com.mocca.app.ui.components.glass package
- *             for a first-principles implementation.
- */
-@Deprecated(
-    message = "Use Modifier.liquidGlassCard() from com.mocca.app.ui.components.glass package",
-    replaceWith = ReplaceWith(
-        "liquidGlassCard(shape, highlightIntensity)",
-        "com.mocca.app.ui.components.glass.liquidGlassCard"
-    ),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun Modifier.liquidGlassCard(
-    shape: Shape = AppShapes.card,
-    tint: Color = Color.Transparent, // No tint by default - pure glass
-    highlightIntensity: Float = 0.18f
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            // Pure liquid-glass: semi-transparent dark background (no color)
-            drawRect(
-                color = Color(0x99000000) // 60% black, transparent
-            )
-            
-            // Top edge specular highlight - the signature liquid-glass effect
-            val highlightHeight = 1.5.dp.toPx()
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = highlightIntensity),
-                        Color.White.copy(alpha = 0f)
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, highlightHeight * 3)
-            )
-            
-            // Subtle inner glow from top edge
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.04f),
-                        Color.Transparent
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, size.height * 0.3f)
-            )
-        }
-        .border(
-            width = 1.dp,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.35f), // Bright top edge
-                    Color.White.copy(alpha = 0.1f),  // Fading middle
-                    Color.White.copy(alpha = 0.03f)  // Nearly invisible bottom
-                )
-            ),
-            shape = shape
-        )
-)
-
-/**
- * iOS 26-style Pure Liquid Glass Header modifier.
- * Optimized for header bars with prominent edge highlights.
- * No color, no blur - just pure liquid-glass light effects.
- * 
- * @deprecated Use Modifier.liquidGlassHeader() from com.mocca.app.ui.components.glass package
- *             for a first-principles implementation.
- */
-@Deprecated(
-    message = "Use Modifier.liquidGlassHeader() from com.mocca.app.ui.components.glass package",
-    replaceWith = ReplaceWith(
-        "liquidGlassHeader(shape)",
-        "com.mocca.app.ui.components.glass.liquidGlassHeader"
-    ),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun Modifier.liquidGlassHeader(
-    shape: Shape = AppShapes.medium
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            // Semi-transparent dark background (no color)
-            drawRect(
-                color = Color(0xAA000000) // 67% black
-            )
-            
-            // Strong top highlight for headers
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.2f),
-                        Color.Transparent
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, 2.dp.toPx() * 2)
-            )
-            
-            // Inner glow
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.03f),
-                        Color.Transparent
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, size.height * 0.5f)
-            )
-        }
-        .border(
-            width = 0.5.dp,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.4f),
-                    Color.White.copy(alpha = 0.08f)
-                )
-            ),
-            shape = shape
-        )
-)
-
-/**
- * iOS 26-style Pure Liquid Glass Button modifier.
- * For small controls like scroll-to-bottom, FABs, etc.
- * No blur, no color - just transparent glass with edge highlights.
- * 
- * @deprecated Use Modifier.liquidGlassButton() from com.mocca.app.ui.components.glass package
- *             for a first-principles implementation.
- */
-@Deprecated(
-    message = "Use Modifier.liquidGlassButton() from com.mocca.app.ui.components.glass package",
-    replaceWith = ReplaceWith(
-        "liquidGlassButton(shape)",
-        "com.mocca.app.ui.components.glass.liquidGlassButton"
-    ),
-    level = DeprecationLevel.WARNING
-)
-@Composable
-fun Modifier.pureLiquidGlassButton(
-    shape: Shape = AppShapes.circle
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            // Semi-transparent dark background
-            drawRect(
-                color = Color(0x88000000) // 53% black
-            )
-            
-            // Strong edge highlight for buttons
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.25f),
-                        Color.Transparent
-                    )
-                ),
-                topLeft = Offset(0f, 0f),
-                size = Size(size.width, 3.dp.toPx())
-            )
-            
-            // Inner glow
-            drawRect(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        Color.White.copy(alpha = 0.05f),
-                        Color.Transparent
-                    ),
-                    center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
-                    radius = size.minDimension / 2f
-                )
-            )
-        }
-        .border(
-            width = 1.dp,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    Color.White.copy(alpha = 0.5f),
-                    Color.White.copy(alpha = 0.15f)
-                )
-            ),
-            shape = shape
-        )
-)
-
-/**
  * Simplified glassy modifier for performance.
+ * For first-principles glass implementation, use com.mocca.app.ui.components.glass package.
  */
 @Composable
 fun Modifier.glassySimple(

@@ -33,7 +33,6 @@ import com.mocca.app.ui.components.glass.GlassShaderParams
 import com.mocca.app.ui.components.glass.GlassThemeTokens
 import com.mocca.app.ui.components.glass.glassFloating
 import com.mocca.app.ui.components.modern.LiquidGlassDefaults
-import com.mocca.app.ui.components.modern.glassyPremium
 import com.mocca.app.ui.components.modern.liquidGlassFloating
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppShapes

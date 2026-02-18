@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.components.glass.liquidGlassButton
 import io.github.fletchmckee.liquid.LiquidState
 
 /**
@@ -46,7 +47,7 @@ fun ScrollToBottomButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .pureLiquidGlassButton(shape = AppShapes.circle)
+                .liquidGlassButton(shape = AppShapes.circle)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {

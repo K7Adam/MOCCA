@@ -51,7 +51,7 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.roundToInt
 
-import com.mocca.app.ui.components.modern.glassy
+import com.mocca.app.ui.components.glass.glassy
 import androidx.compose.foundation.layout.navigationBarsPadding
 
 /**

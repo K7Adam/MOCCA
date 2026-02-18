@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.components.modern.glassy
+import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppTypography
 
 /**

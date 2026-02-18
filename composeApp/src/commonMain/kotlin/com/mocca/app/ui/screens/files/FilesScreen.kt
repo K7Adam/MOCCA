@@ -35,7 +35,7 @@ import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
 import androidx.compose.ui.graphics.RectangleShape
-import com.mocca.app.ui.components.modern.glassy
+import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing

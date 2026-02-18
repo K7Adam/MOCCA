@@ -61,6 +61,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.components.glass.glassy
 
 /**
  * Modern MOCCA input components with pill-shaped design.

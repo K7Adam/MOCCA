@@ -29,9 +29,9 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import androidx.compose.ui.graphics.RectangleShape
-import com.mocca.app.ui.components.modern.glassy
-import com.mocca.app.ui.components.modern.liquidGlassHeader
-import com.mocca.app.ui.components.modern.liquidGlassCard
+import com.mocca.app.ui.components.glass.glassy
+import com.mocca.app.ui.components.glass.liquidGlassHeader
+import com.mocca.app.ui.components.glass.liquidGlassCard
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
