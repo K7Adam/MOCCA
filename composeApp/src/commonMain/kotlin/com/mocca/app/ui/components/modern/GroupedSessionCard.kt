@@ -157,17 +157,17 @@ private fun StackedChildPreview(
                     .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen.copy(alpha = 0.2f)
+                            LiquidGlassDefaults.refractionAccent
                         } else {
-                            AppColors.surfaceContainer
+                            LiquidGlassDefaults.tintSecondary
                         }
                     )
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen.copy(alpha = 0.5f)
+                            LiquidGlassDefaults.refractionAccent
                         } else {
-                            AppColors.border
+                            LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
                         },
                         shape = AppShapes.small
                     )
@@ -220,7 +220,7 @@ fun GroupedSessionCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(AppShapes.sessionCard)
-                    .background(AppColors.surfaceContainer, AppShapes.sessionCard)
+                    .background(LiquidGlassDefaults.tintSecondary, AppShapes.sessionCard)
                     .then(
                         if (isActive) {
                             Modifier.drawBehind {
@@ -239,13 +239,13 @@ fun GroupedSessionCard(
                         if (isRunning) {
                             Modifier.border(
                                 width = 1.dp,
-                                color = AppColors.accentGreen.copy(alpha = 0.5f),
+                                color = LiquidGlassDefaults.refractionAccent,
                                 shape = AppShapes.sessionCard
                             )
                         } else {
                             Modifier.border(
                                 width = AppSpacing.borderThin,
-                                color = AppColors.border,
+                                color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
                                 shape = AppShapes.sessionCard
                             )
                         }

@@ -157,8 +157,8 @@ fun MoccaSectionCard(
 fun MoccaSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.border,
+    backgroundColor: Color = LiquidGlassDefaults.tintSecondary,
+    borderColor: Color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
     activeIndicatorColor: Color = AppColors.accentGreen,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
@@ -170,7 +170,7 @@ fun MoccaSessionCard(
             .fillMaxWidth()
             .clip(shape)
             .background(
-                if (isActive) backgroundColor.copy(alpha = 0.5f) else backgroundColor, 
+                if (isActive) LiquidGlassDefaults.tintLight else backgroundColor, 
                 shape
             )
             .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)

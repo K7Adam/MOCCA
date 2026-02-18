@@ -153,17 +153,51 @@ object AppColors {
     val inputGlow = Color(0x4000D9A5)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PREMIUM GLASS (for unified floating bottom bar)
+    // LIQUID GLASS (iOS 26 inspired - 2024/2025 design)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Premium glass background - 60% opacity dark */
-    val glassPremium = Color(0x991A1A1A)
+    // Primary glass tints - higher opacity for text contrast
+    /** Liquid glass primary tint - 75% opacity dark for legibility */
+    val liquidGlassTint = Color(0xBF1A1A1A)
+
+    /** Liquid glass secondary tint - 65% opacity for layered effects */
+    val liquidGlassTintSecondary = Color(0xA61E1E1E)
+
+    /** Liquid glass light tint - for elevated elements */
+    val liquidGlassTintLight = Color(0x8C252525)
+
+    // Specular highlights - simulate light reflection
+    /** Top edge specular highlight - bright white */
+    val liquidGlassSpecular = Color(0x40FFFFFF)
+
+    /** Inner specular glow - subtle white */
+    val liquidGlassSpecularInner = Color(0x1AFFFFFF)
+
+    /** Refraction accent - mint green glow */
+    val liquidGlassRefraction = Color(0x3300D9A5)
+
+    // Border colors - gradient edges for depth
+    /** Primary border - white with 25% opacity */
+    val liquidGlassBorder = Color(0x40FFFFFF)
+
+    /** Border highlight - top edge brighter */
+    val liquidGlassBorderHighlight = Color(0x66FFFFFF)
+
+    /** Border shadow - bottom edge darker */
+    val liquidGlassBorderShadow = Color(0x1AFFFFFF)
+
+    // Legacy support - updated values
+    /** Premium glass background - 75% opacity dark */
+    val glassPremium = Color(0xBF1A1A1A)
 
     /** Premium glass border - subtle white glow */
-    val glassBorderPremium = Color(0x33FFFFFF)
+    val glassBorderPremium = Color(0x40FFFFFF)
 
     /** Premium glass mint glow - for focused state */
-    val glassGlowMint = Color(0x1A00D9A5)
+    val glassGlowMint = Color(0x3300D9A5)
+
+    // Noise texture alpha (for glass grain effect)
+    const val liquidGlassNoiseFactor = 0.12f
 }
 
 /**
@@ -203,6 +237,12 @@ data class ExtendedAppColors(
     val moduleBackground: Color = AppColors.moduleBackground,
     val glassBackground: Color = AppColors.glassBackground,
     val glassBorder: Color = AppColors.glassBorder,
+    // Liquid Glass colors
+    val liquidGlassTint: Color = AppColors.liquidGlassTint,
+    val liquidGlassTintSecondary: Color = AppColors.liquidGlassTintSecondary,
+    val liquidGlassSpecular: Color = AppColors.liquidGlassSpecular,
+    val liquidGlassRefraction: Color = AppColors.liquidGlassRefraction,
+    val liquidGlassBorder: Color = AppColors.liquidGlassBorder,
     val syntaxKeyword: Color = AppColors.syntaxKeyword,
     val syntaxFunction: Color = AppColors.syntaxFunction,
     val syntaxString: Color = AppColors.syntaxString,

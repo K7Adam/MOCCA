@@ -154,7 +154,8 @@ fun UnifiedFloatingBottomBar(
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
     ) {
-        // Glassy container with animated height - use liquid glass if hazeState provided
+        // Liquid Glass container with animated height - authentic iOS 26 style
+        // Uses true blur when hazeState is available, otherwise falls back to premium gradients
         val containerModifier = if (hazeState != null) {
             Modifier
                 .fillMaxWidth()
@@ -162,17 +163,29 @@ fun UnifiedFloatingBottomBar(
                 .liquidGlass(
                     hazeState = hazeState,
                     shape = AppShapes.rounded2xl,
-                    style = LiquidGlassDefaults.hazeStyle(
-                        backgroundColor = androidx.compose.ui.graphics.Color(0x771A1A1A),
-                        blurRadius = 30.dp,
-                        noiseFactor = 0.1f
-                    )
+                    style = LiquidGlassDefaults.primary(
+                        blurRadius = 25.dp,
+                        noiseFactor = LiquidGlassDefaults.noiseFactor
+                    ),
+                    borderWidth = 1.dp,
+                    borderColor = LiquidGlassDefaults.borderPrimary,
+                    specularColor = LiquidGlassDefaults.specularTop,
+                    refractionColor = LiquidGlassDefaults.refractionAccent,
+                    showSpecular = true,
+                    showRefraction = true
                 )
         } else {
             Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
-                .glassyPremium(shape = AppShapes.rounded2xl)
+                .glassyPremium(
+                    shape = AppShapes.rounded2xl,
+                    borderWidth = 1.dp,
+                    backgroundColor = LiquidGlassDefaults.tintPrimary,
+                    borderColor = LiquidGlassDefaults.borderPrimary,
+                    specularColor = LiquidGlassDefaults.specularTop,
+                    refractionColor = LiquidGlassDefaults.refractionAccent
+                )
         }
         
         Box(

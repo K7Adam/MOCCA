@@ -152,10 +152,12 @@ fun MessageBubble(
         }
 
         val bubbleColor = remember(isUser) {
-            if (isUser) AppColors.surfaceVariant.copy(alpha = 0.8f) else AppColors.surfaceContainer.copy(alpha = 0.9f)
+            // Use LiquidGlass tints for consistent glass effect with good contrast
+            if (isUser) LiquidGlassDefaults.tintSecondary else LiquidGlassDefaults.tintPrimary
         }
         val borderColor = remember(isUser) {
-            if (isUser) AppColors.border else AppColors.borderLight
+            // Use LiquidGlass borders for consistent edge styling
+            if (isUser) LiquidGlassDefaults.borderPrimary.copy(alpha = 0.4f) else LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
         }
 
         Box(
