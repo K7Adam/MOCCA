@@ -1,12 +1,17 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -14,9 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -46,11 +48,24 @@ sealed class BottomBarMode {
 /**
  * Premium unified floating bottom bar that morphs between navigation and chat input modes.
  * 
+ * ARCHITECTURE:
+ * The nav buttons are ALWAYS the same size and position - this is critical for UX.
+ * Only the content ABOVE the nav buttons changes between modes.
+ * 
+ * Structure:
+ * ```
+ * LiquidGlassContainer
+ * ├── MorphingContentAboveNav (cross-fades based on mode)
+ * │   ├── [Nav Mode: Spacer]
+ * │   └── [Chat Mode: ChatInputContent]
+ * └── PersistentNavRow (ALWAYS SAME SIZE AND POSITION)
+ * ```
+ *
  * Features:
  * - Fluid spring-based animations for mode transitions
  * - Single glassy container for cohesive premium look
+ * - Nav buttons NEVER change size or position
  * - Integrated navigation indicator visible in both modes
- * - Maximizes screen real estate with compact design
  * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
  *
  * @param mode Current mode (Navigation or ChatInput)
@@ -122,31 +137,21 @@ fun UnifiedFloatingBottomBar(
 ) {
     // Animated height based on mode
     val targetHeight = when (mode) {
-        is BottomBarMode.Navigation -> NavigationModeHeight
-        is BottomBarMode.ChatInput -> ChatInputModeMinHeight
+        is BottomBarMode.Navigation -> NavConstants.NavigationModeHeight
+        is BottomBarMode.ChatInput -> NavConstants.ChatInputModeMinHeight
     }
     
     val animatedHeight by animateDpAsState(
         targetValue = targetHeight,
         animationSpec = spring(
-            dampingRatio = 0.8f,
-            stiffness = 300f
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
         ),
         label = "bottomBarHeight"
     )
     
-    // Animated alpha for mode content transitions
-    val navModeAlpha by animateFloatAsState(
-        targetValue = if (mode is BottomBarMode.Navigation) 1f else 0f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
-        label = "navModeAlpha"
-    )
-    
-    val chatModeAlpha by animateFloatAsState(
-        targetValue = if (mode is BottomBarMode.ChatInput) 1f else 0f,
-        animationSpec = tween(200, easing = FastOutSlowInEasing),
-        label = "chatModeAlpha"
-    )
+    // Determine if we should show labels (only in Navigation mode)
+    val showLabels = mode is BottomBarMode.Navigation
     
     Box(
         modifier = modifier
@@ -177,56 +182,78 @@ fun UnifiedFloatingBottomBar(
                 )
         }
         
-        Box(
+        Column(
             modifier = containerModifier,
-            contentAlignment = Alignment.Center
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Navigation Mode Content
-            if (navModeAlpha > 0.01f) {
-                CompactNavBar(
-                    dragProgress = dragProgress,
-                    onItemClick = onItemClick,
-                    modifier = Modifier.fillMaxWidth(),
-                    alpha = navModeAlpha
-                )
+            // ═══════════════ MORPHING CONTENT ABOVE NAV ═══════════════
+            // This content cross-fades between modes
+            // The nav row below NEVER changes size or position
+            AnimatedContent(
+                targetState = mode,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) togetherWith
+                        fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                },
+                label = "modeContentTransition"
+            ) { targetMode ->
+                when (targetMode) {
+                    is BottomBarMode.Navigation -> {
+                        // In navigation mode, content above nav is just padding
+                        // The nav row will show icons + labels
+                        Spacer(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                        )
+                    }
+                    is BottomBarMode.ChatInput -> {
+                        // In chat input mode, show the input content above nav
+                        // The nav row will show only icons (no labels) but SAME POSITION
+                        ChatInputContent(
+                            inputText = inputText,
+                            onInputTextChange = onInputTextChange,
+                            onSendClick = onSendClick,
+                            inputEnabled = inputEnabled,
+                            placeholder = placeholder,
+                            modelName = modelName,
+                            agentName = agentName,
+                            providerResponse = providerResponse,
+                            selectedProviderId = selectedProviderId,
+                            selectedModelId = selectedModelId,
+                            onModelSelected = onModelSelected,
+                            variants = variants,
+                            selectedVariantId = selectedVariantId,
+                            onVariantSelected = onVariantSelected,
+                            modes = modes,
+                            selectedModeId = selectedModeId,
+                            onModeSelected = onModeSelected,
+                            attachedFiles = attachedFiles,
+                            onRemoveAttachment = onRemoveAttachment,
+                            onAttachClick = onAttachClick,
+                            commands = commands,
+                            onCommandSelected = onCommandSelected,
+                            onModeSelectedForMention = onModeSelectedForMention,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f, fill = false)
+                        )
+                    }
+                }
             }
             
-            // Chat Input Mode Content
-            if (chatModeAlpha > 0.01f) {
-                ChatInputBar(
-                    inputText = inputText,
-                    onInputTextChange = onInputTextChange,
-                    onSendClick = onSendClick,
-                    inputEnabled = inputEnabled,
-                    placeholder = placeholder,
-                    dragProgress = dragProgress,
-                    onItemClick = onItemClick,
-                    modelName = modelName,
-                    agentName = agentName,
-                    providerResponse = providerResponse,
-                    selectedProviderId = selectedProviderId,
-                    selectedModelId = selectedModelId,
-                    onModelSelected = onModelSelected,
-                    variants = variants,
-                    selectedVariantId = selectedVariantId,
-                    onVariantSelected = onVariantSelected,
-                    modes = modes,
-                    selectedModeId = selectedModeId,
-                    onModeSelected = onModeSelected,
-                    attachedFiles = attachedFiles,
-                    onRemoveAttachment = onRemoveAttachment,
-                    onAttachClick = onAttachClick,
-                    commands = commands,
-                    onCommandSelected = onCommandSelected,
-                    onModeSelectedForMention = onModeSelectedForMention,
-                    modifier = Modifier.fillMaxWidth(),
-                    alpha = chatModeAlpha
-                )
-            }
+            // ═══════════════ PERSISTENT NAV ROW ═══════════════
+            // This nav row is ALWAYS visible with SAME SIZE and SAME POSITION
+            // Icons are always 22dp, touch targets always 48dp
+            // Only the labels show/hide based on mode
+            PersistentNavRow(
+                dragProgress = dragProgress,
+                onItemClick = onItemClick,
+                showLabels = showLabels,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
+            )
         }
     }
 }
-
-// Height constants - increased for proper icon + label display
-private val NavigationModeHeight = 68.dp
-private val ChatInputModeMinHeight = 164.dp // Increased to accommodate nav icons
