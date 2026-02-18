@@ -190,7 +190,20 @@ object LiquidGlassDefaults {
 /**
  * Simple glassy modifier without blur or refraction.
  * Use only as fallback when liquid glass is not available.
+ * 
+ * @deprecated Use Modifier.glass() from com.mocca.app.ui.components.glass package
+ *             for a first-principles implementation with proper shader support.
  */
+@Deprecated(
+    message = "Use Modifier.glass() from com.mocca.app.ui.components.glass package",
+    replaceWith = ReplaceWith(
+        "glass(shape, GlassDefaults.tokens(), GlassShaderParams.fromTokens(GlassDefaults.tokens()))",
+        "com.mocca.app.ui.components.glass.glass",
+        "com.mocca.app.ui.components.glass.GlassDefaults",
+        "com.mocca.app.ui.components.glass.GlassShaderParams"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun Modifier.glassy(
     shape: Shape,
@@ -207,7 +220,19 @@ fun Modifier.glassy(
 /**
  * Premium glassy modifier with gradient border.
  * Fallback when liquid glass is unavailable.
+ * 
+ * @deprecated Use Modifier.glassFloating() from com.mocca.app.ui.components.glass package
+ *             for a first-principles implementation with proper shader support.
  */
+@Deprecated(
+    message = "Use Modifier.glassFloating() from com.mocca.app.ui.components.glass package",
+    replaceWith = ReplaceWith(
+        "glassFloating(shape, GlassDefaults.tokens())",
+        "com.mocca.app.ui.components.glass.glassFloating",
+        "com.mocca.app.ui.components.glass.GlassDefaults"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun Modifier.glassyPremium(
     shape: Shape,
@@ -264,7 +289,18 @@ fun Modifier.glassyPremium(
  * - No blur, no color - just light refraction simulation
  * 
  * Use this for settings screens, cards, and elevated surfaces.
+ * 
+ * @deprecated Use Modifier.liquidGlassCard() from com.mocca.app.ui.components.glass package
+ *             for a first-principles implementation.
  */
+@Deprecated(
+    message = "Use Modifier.liquidGlassCard() from com.mocca.app.ui.components.glass package",
+    replaceWith = ReplaceWith(
+        "liquidGlassCard(shape, highlightIntensity)",
+        "com.mocca.app.ui.components.glass.liquidGlassCard"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun Modifier.liquidGlassCard(
     shape: Shape = AppShapes.card,
@@ -321,7 +357,18 @@ fun Modifier.liquidGlassCard(
  * iOS 26-style Pure Liquid Glass Header modifier.
  * Optimized for header bars with prominent edge highlights.
  * No color, no blur - just pure liquid-glass light effects.
+ * 
+ * @deprecated Use Modifier.liquidGlassHeader() from com.mocca.app.ui.components.glass package
+ *             for a first-principles implementation.
  */
+@Deprecated(
+    message = "Use Modifier.liquidGlassHeader() from com.mocca.app.ui.components.glass package",
+    replaceWith = ReplaceWith(
+        "liquidGlassHeader(shape)",
+        "com.mocca.app.ui.components.glass.liquidGlassHeader"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun Modifier.liquidGlassHeader(
     shape: Shape = AppShapes.medium
@@ -374,7 +421,18 @@ fun Modifier.liquidGlassHeader(
  * iOS 26-style Pure Liquid Glass Button modifier.
  * For small controls like scroll-to-bottom, FABs, etc.
  * No blur, no color - just transparent glass with edge highlights.
+ * 
+ * @deprecated Use Modifier.liquidGlassButton() from com.mocca.app.ui.components.glass package
+ *             for a first-principles implementation.
  */
+@Deprecated(
+    message = "Use Modifier.liquidGlassButton() from com.mocca.app.ui.components.glass package",
+    replaceWith = ReplaceWith(
+        "liquidGlassButton(shape)",
+        "com.mocca.app.ui.components.glass.liquidGlassButton"
+    ),
+    level = DeprecationLevel.WARNING
+)
 @Composable
 fun Modifier.pureLiquidGlassButton(
     shape: Shape = AppShapes.circle

@@ -28,6 +28,10 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
+import com.mocca.app.ui.components.glass.GlassDefaults
+import com.mocca.app.ui.components.glass.GlassShaderParams
+import com.mocca.app.ui.components.glass.GlassThemeTokens
+import com.mocca.app.ui.components.glass.glassFloating
 import com.mocca.app.ui.components.modern.LiquidGlassDefaults
 import com.mocca.app.ui.components.modern.glassyPremium
 import com.mocca.app.ui.components.modern.liquidGlassFloating
@@ -105,8 +109,11 @@ fun UnifiedFloatingBottomBar(
     mode: BottomBarMode,
     dragProgress: Float,
     onItemClick: (PanelState) -> Unit,
-    // TRUE Liquid Glass integration
+    // TRUE Liquid Glass integration (legacy - prefer glassTokens parameter)
+    // Note: liquidState is deprecated. Use glassTokens parameter instead.
     liquidState: LiquidState? = null,
+    // New Glass system tokens
+    glassTokens: GlassThemeTokens = GlassDefaults.tokens(),
     // Chat input parameters
     inputText: String = "",
     onInputTextChange: (String) -> Unit = {},
@@ -165,7 +172,10 @@ fun UnifiedFloatingBottomBar(
     ) {
         // TRUE Liquid Glass container with animated height - authentic iOS 26 style
         // Uses lens refraction, chromatic aberration, and saturation boost
+        // Priority: 1) Legacy liquid library 2) New first-principles Glass system
+        @Suppress("DEPRECATION")
         val containerModifier = if (liquidState != null) {
+            // Legacy path - use liquid library for backward compatibility
             Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
@@ -175,14 +185,14 @@ fun UnifiedFloatingBottomBar(
                     tint = LiquidGlassDefaults.tintSemiDark
                 )
         } else {
+            // NEW: First-principles Glass system
             Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
-                .glassyPremium(
+                .glassFloating(
                     shape = AppShapes.rounded2xl,
-                    borderWidth = 1.dp,
-                    backgroundColor = LiquidGlassDefaults.tintSemiDark,
-                    borderColor = LiquidGlassDefaults.borderPrimary
+                    tokens = glassTokens,
+                    reducedTransparency = false
                 )
         }
         

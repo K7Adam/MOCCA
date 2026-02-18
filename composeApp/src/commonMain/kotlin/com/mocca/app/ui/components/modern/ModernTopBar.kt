@@ -33,6 +33,9 @@ import com.mocca.app.domain.model.ConnectionQuality
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.components.glass.GlassAppBar
+import com.mocca.app.ui.components.glass.GlassDefaults
+import com.mocca.app.ui.components.glass.GlassThemeTokens
 
 /**
  * Modern Glassmorphic Top Bar and Divider components.
@@ -103,6 +106,54 @@ fun ModernTopBar(
             )
         }
     }
+}
+
+/**
+ * Glass-styled top bar using the new Liquid Glass design system.
+ * 
+ * Features:
+ * - Glass material background with refraction and blur effects
+ * - Optimized for framing UI (not dense scrollable content)
+ * - API 33+ full AGSL shader, API 31-32 blur fallback
+ * 
+ * @param title Title text to display
+ * @param modifier Modifier for the top bar
+ * @param navigationIcon Optional navigation icon
+ * @param onNavigationClick Callback for navigation icon click
+ * @param tokens Glass theme tokens for customization
+ * @param actions Additional action buttons
+ */
+@Composable
+fun ModernTopBarGlass(
+    title: String,
+    modifier: Modifier = Modifier,
+    navigationIcon: ImageVector? = null,
+    onNavigationClick: (() -> Unit)? = null,
+    tokens: GlassThemeTokens = GlassDefaults.tokens(),
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    GlassAppBar(
+        title = {
+            Text(
+                text = title.uppercase(),
+                color = AppColors.white,
+                style = AppTypography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        modifier = modifier,
+        navigationIcon = {
+            if (navigationIcon != null && onNavigationClick != null) {
+                MoccaIconButton(
+                    icon = navigationIcon,
+                    onClick = onNavigationClick,
+                    iconColor = AppColors.white
+                )
+            }
+        },
+        actions = actions,
+        tokens = tokens
+    )
 }
 
 /**

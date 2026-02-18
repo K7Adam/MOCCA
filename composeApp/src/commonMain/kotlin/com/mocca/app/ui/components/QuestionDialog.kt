@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +22,8 @@ import com.mocca.app.domain.model.QuestionRequest
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.components.glass.GlassDefaults
+import com.mocca.app.ui.components.glass.GlassThemeTokens
 
 /**
  * Dialog for handling interactive questions from OpenCode.
@@ -107,10 +110,11 @@ fun QuestionDialog(
                         if (question.options.isNotEmpty()) {
                             Surface(
         shape = AppShapes.dialog,
-                                color = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                                // Glass-like translucent background
+                                color = Color(0x30000000), // 19% black, translucent
                                 border = BorderStroke(
                                     1.dp, 
-                                    AppColors.border
+                                    Color(0x40FFFFFF) // Glass border - white 25%
                                 )
                             ) {
                                 Column {
@@ -228,7 +232,8 @@ fun QuestionDialog(
             }
         },
         shape = AppShapes.medium,
-        containerColor = AppColors.surface,
+        // Glass-like translucent container
+        containerColor = Color(0xE6171717), // 90% dark for glass effect
         titleContentColor = AppColors.white,
         textContentColor = AppColors.whiteDim,
         iconContentColor = AppColors.white
