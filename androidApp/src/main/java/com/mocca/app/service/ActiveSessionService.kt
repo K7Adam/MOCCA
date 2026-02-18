@@ -119,6 +119,7 @@ class ActiveSessionService : Service() {
         
         /**
          * Show a permission request notification with Approve/Deny actions.
+         * Uses BroadcastReceiver for handling actions to enable proper permission handling.
          */
         fun showPermissionNotification(
             context: Context,
@@ -132,26 +133,26 @@ class ActiveSessionService : Service() {
             
             val notificationManager = context.getSystemService(NotificationManager::class.java)
             
-            // Approve action
-            val approveIntent = Intent(context, ActiveSessionService::class.java).apply {
-                action = ACTION_PERMISSION_APPROVE
-                putExtra(EXTRA_SESSION_ID, sessionId)
-                putExtra(EXTRA_PERMISSION_ID, permissionId)
+            // Approve action - uses BroadcastReceiver
+            val approveIntent = Intent(context, PermissionActionReceiver::class.java).apply {
+                action = PermissionActionReceiver.ACTION_PERMISSION_APPROVE
+                putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
+                putExtra(PermissionActionReceiver.EXTRA_PERMISSION_ID, permissionId)
             }
-            val approvePendingIntent = PendingIntent.getService(
+            val approvePendingIntent = PendingIntent.getBroadcast(
                 context,
                 (NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode()),
                 approveIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             
-            // Deny action
-            val denyIntent = Intent(context, ActiveSessionService::class.java).apply {
-                action = ACTION_PERMISSION_DENY
-                putExtra(EXTRA_SESSION_ID, sessionId)
-                putExtra(EXTRA_PERMISSION_ID, permissionId)
+            // Deny action - uses BroadcastReceiver
+            val denyIntent = Intent(context, PermissionActionReceiver::class.java).apply {
+                action = PermissionActionReceiver.ACTION_PERMISSION_DENY
+                putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
+                putExtra(PermissionActionReceiver.EXTRA_PERMISSION_ID, permissionId)
             }
-            val denyPendingIntent = PendingIntent.getService(
+            val denyPendingIntent = PendingIntent.getBroadcast(
                 context,
                 (NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode() + 1),
                 denyIntent,

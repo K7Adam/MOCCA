@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -31,6 +32,7 @@ import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
 import com.mocca.app.ui.screens.chat.ChatContent
 import com.mocca.app.ui.screens.chat.ChatScreenModel
+import com.mocca.app.ui.screens.chat.ScrollDirection
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
 import com.mocca.app.ui.screens.mcp.McpScreen
@@ -86,6 +88,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
+        
+        // Track scroll direction for dock auto-hide
+        var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
+        val isDockVisible = scrollDirection != ScrollDirection.UP
 
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
@@ -162,7 +168,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 }
 
                                 // Chat content (input will be disabled based on connection status)
-                                ChatContent(chatScreenModel, liquidState = liquidState)
+                                ChatContent(
+                                    screenModel = chatScreenModel, 
+                                    liquidState = liquidState,
+                                    onScrollDirectionChange = { direction -> scrollDirection = direction }
+                                )
                             }
                         } else {
                             // Empty state - no session selected
@@ -216,6 +226,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
             // Unified Floating Bottom Bar - morphs between nav and chat input modes
             // Uses TRUE Liquid Glass with lens refraction for authentic iOS 26 aesthetic
+            // Auto-hides when scrolling up to read older messages
             val inputText by chatScreenModel.inputText.collectAsState()
             
             UnifiedFloatingBottomBar(
@@ -224,6 +235,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     else -> BottomBarMode.Navigation
                 },
                 dragProgress = dragProgress,
+                isVisible = isDockVisible && panelState.state == PanelState.CENTER,
                 onItemClick = { newState -> panelState.state = newState },
                 // TRUE Liquid Glass with lens refraction
                 liquidState = liquidState,

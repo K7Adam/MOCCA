@@ -7,6 +7,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.List
@@ -35,6 +38,7 @@ import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
+import com.mocca.app.ui.components.chat.PermissionBanner
 import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
@@ -138,11 +142,21 @@ private fun ModernBootSequence() {
     }
 }
 
+/**
+ * Scroll direction state for dock auto-hide functionality.
+ */
+enum class ScrollDirection {
+    UP,      // Scrolling up (reading older messages) - hide dock
+    DOWN,    // Scrolling down (reading newer messages) - show dock
+    IDLE     // Not scrolling - show dock
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
-    liquidState: io.github.fletchmckee.liquid.LiquidState? = null
+    liquidState: io.github.fletchmckee.liquid.LiquidState? = null,
+    onScrollDirectionChange: (ScrollDirection) -> Unit = {}
 ) {
     val state by screenModel.state.collectAsState()
     val inputText by screenModel.inputText.collectAsState()
@@ -178,6 +192,31 @@ fun ChatContent(
                 }
             }
         }
+    }
+    
+    // Track scroll direction for dock auto-hide
+    var previousScrollIndex by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val currentIndex = listState.firstVisibleItemIndex
+        val currentOffset = listState.firstVisibleItemScrollOffset
+        
+        // Determine scroll direction based on position changes
+        val direction = when {
+            currentIndex > previousScrollIndex -> ScrollDirection.UP
+            currentIndex < previousScrollIndex -> ScrollDirection.DOWN
+            currentOffset > previousScrollOffset + 10 -> ScrollDirection.UP
+            currentOffset < previousScrollOffset - 10 -> ScrollDirection.DOWN
+            else -> ScrollDirection.IDLE
+        }
+        
+        if (direction != ScrollDirection.IDLE) {
+            onScrollDirectionChange(direction)
+        }
+        
+        previousScrollIndex = currentIndex
+        previousScrollOffset = currentOffset
     }
     
     LaunchedEffect(streamingText) {
@@ -296,16 +335,34 @@ fun ChatContent(
             )
         }
         
-        TodoListPanel(
-            todos = state.todos,
-            isVisible = state.showTodoPanel
-        )
-
+        // Main content area with sticky overlays
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
         ) {
+            // Sticky Todo Panel at top (zIndex ensures it stays above messages)
+            TodoListPanel(
+                todos = state.todos,
+                isVisible = state.showTodoPanel,
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .zIndex(10f)
+            )
+            
+            // Sticky Permission Banner below todo panel
+            state.pendingPermission?.let { permission ->
+                PermissionBanner(
+                    permission = permission,
+                    onApprove = { screenModel.approvePermission() },
+                    onDeny = { screenModel.denyPermission() },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = if (state.showTodoPanel && state.todos.isNotEmpty()) 56.dp else 0.dp)
+                        .zIndex(11f)
+                )
+            }
+            
             if (state.session?.isReverted == true) {
                 RevertedSessionBanner(
                     onResume = { screenModel.unrevertSession() }
@@ -407,13 +464,7 @@ fun ChatContent(
                 }
             }
             
-            state.pendingPermission?.let { permission ->
-                PermissionRequestDialog(
-                    permission = permission,
-                    onApprove = { screenModel.approvePermission() },
-                    onDeny = { screenModel.denyPermission() }
-                )
-            }
+            // Permission banner is now handled by sticky PermissionBanner above
             
             state.pendingQuestion?.let { question ->
                 QuestionDialog(

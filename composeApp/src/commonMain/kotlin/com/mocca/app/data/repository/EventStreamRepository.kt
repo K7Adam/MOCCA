@@ -49,6 +49,7 @@ class EventStreamRepository(
     private var networkObserverJob: Job? = null
     private var lifecycleObserverJob: Job? = null
     private var backgroundPauseJob: Job? = null
+    private var permissionActionJob: Job? = null
     
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
@@ -149,6 +150,7 @@ class EventStreamRepository(
             startConnection()
             startNetworkObserver()
             startLifecycleObserver()
+            startPermissionActionObserver()
         }
     }
 
@@ -164,6 +166,41 @@ class EventStreamRepository(
      */
     fun stopMonitoringSession(sessionId: String) {
         monitoredSessionIds.value = monitoredSessionIds.value - sessionId
+    }
+    
+    /**
+     * Start observing permission actions from notification interactions.
+     * Handles APPROVE/DENY actions from the notification system.
+     */
+    private fun startPermissionActionObserver() {
+        if (permissionActionJob?.isActive == true) return
+        
+        permissionActionJob = repositoryScope.launch {
+            PermissionActionBus.actions.collect { action ->
+                Napier.i("[EventStream] Received permission action from notification: ${action.permissionId}, approved=${action.isApproved}")
+                
+                // Call the API to respond to the permission
+                apiClient?.let { client ->
+                    val result = client.respondToPermission(
+                        sessionId = action.sessionId,
+                        permissionId = action.permissionId,
+                        allow = action.isApproved,
+                        remember = false
+                    )
+                    
+                    result.fold(
+                        onSuccess = {
+                            Napier.i("[EventStream] Permission ${action.permissionId} ${if (action.isApproved) "approved" else "denied"} successfully")
+                            // Dismiss the pending permission from our state
+                            dismissPermission(action.permissionId)
+                        },
+                        onFailure = { error ->
+                            Napier.e("[EventStream] Failed to respond to permission ${action.permissionId}", error)
+                        }
+                    )
+                }
+            }
+        }
     }
     
     /**
@@ -498,6 +535,15 @@ class EventStreamRepository(
         if (current.isNotEmpty()) {
             _pendingPermissions.value = current.drop(1)
         }
+    }
+    
+    /**
+     * Dismiss a specific permission request by ID.
+     * Used when handling permission actions from notifications.
+     */
+    fun dismissPermission(permissionId: String) {
+        val current = _pendingPermissions.value
+        _pendingPermissions.value = current.filter { it.id != permissionId }
     }
     
     /**

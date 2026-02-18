@@ -54,6 +54,17 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- BroadcastReceiver for permission actions from notifications -->
+        <receiver
+            android:name="com.mocca.app.service.PermissionActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mocca.app.action.PERMISSION_APPROVE" />
+                <action android:name="com.mocca.app.action.PERMISSION_DENY" />
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

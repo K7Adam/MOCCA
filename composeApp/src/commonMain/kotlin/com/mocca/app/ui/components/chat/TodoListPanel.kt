@@ -1,87 +1,185 @@
 package com.mocca.app.ui.components.chat
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Pending
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.mocca.app.ui.theme.AppShapes
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.domain.model.Todo
 import com.mocca.app.domain.model.TodoStatus
+import com.mocca.app.ui.components.glass.glassFloating
+import com.mocca.app.ui.components.glass.GlassDefaults
 import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+/**
+ * Glass-morphic todo strip that is sticky at the top of the chat content.
+ * 
+ * Features:
+ * - Collapsible with compact/expanded modes
+ * - Glass-morphic styling with subtle blur effect
+ * - Shows progress count when collapsed
+ * - Smooth spring animations for expand/collapse
+ *
+ * @param todos List of todos to display
+ * @param isVisible Whether the panel is visible
+ * @param modifier Modifier for styling
+ */
 @Composable
 fun TodoListPanel(
     todos: List<Todo>,
     isVisible: Boolean,
     modifier: Modifier = Modifier
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    
+    val completedCount = todos.count { it.status == TodoStatus.COMPLETED }
+    val inProgressCount = todos.count { it.status == TodoStatus.IN_PROGRESS }
+    val totalCount = todos.size
+    
+    // Animated corner radius for glass effect
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isExpanded) 16.dp else 12.dp,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "cornerRadius"
+    )
+    
     AnimatedVisibility(
-        visible = isVisible,
-        enter = expandVertically(),
-        exit = shrinkVertically(),
+        visible = isVisible && todos.isNotEmpty(),
+        enter = expandVertically(
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        ),
+        exit = shrinkVertically(
+            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+        ),
         modifier = modifier
     ) {
-        Column(
+        // Glass-morphic container
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(AppColors.surface)
-                .border(
-                    width = AppSpacing.borderThin,
-                    color = AppColors.border,
-                    shape = AppShapes.medium
+                .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.xs)
+                .glassFloating(
+                    shape = AppShapes.medium,
+                    tokens = GlassDefaults.tokens(),
+                    reducedTransparency = true
                 )
+                .clip(AppShapes.medium)
         ) {
-            // Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(AppColors.surfaceVariant)
-                    .padding(AppSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "// SESSION_PLAN [${todos.count { it.status == TodoStatus.COMPLETED }}/${todos.size}]",
-                    style = AppTypography.labelSmall,
-                    color = AppColors.grey
-                )
-            }
-            
-            if (todos.isEmpty()) {
-                Box(
+                // ═══════════════ HEADER (Always visible, clickable to expand/collapse) ═══════════════
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(AppSpacing.md),
-                    contentAlignment = Alignment.Center
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { isExpanded = !isExpanded }
+                        .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(
-                        text = "NO_PLAN_DETECTED",
-                        style = AppTypography.bodySmall,
-                        color = AppColors.greyDark
+                    // Left: Progress indicator
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    ) {
+                        // Completion progress ring
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clip(CircleShape)
+                                .background(AppColors.surfaceVariant.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            // Progress text
+                            Text(
+                                text = "$completedCount",
+                                style = AppTypography.labelExtraSmall,
+                                color = AppColors.accentGreen,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        
+                        // Status text
+                        Text(
+                            text = when {
+                                inProgressCount > 0 -> "// ACTIVE [$inProgressCount]"
+                                completedCount == totalCount && totalCount > 0 -> "// COMPLETE"
+                                else -> "// PLAN [$totalCount]"
+                            },
+                            style = AppTypography.labelExtraSmall,
+                            color = when {
+                                inProgressCount > 0 -> AppColors.accentGreen
+                                completedCount == totalCount && totalCount > 0 -> AppColors.accentGreen
+                                else -> AppColors.textTertiary
+                            },
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    
+                    // Right: Expand/collapse icon
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = AppColors.textTertiary,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
-            } else {
-                Column(
-                    modifier = Modifier.padding(AppSpacing.sm)
+                
+                // ═══════════════ EXPANDED CONTENT (Todo items) ═══════════════
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = expandVertically(
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                    ),
+                    exit = shrinkVertically(
+                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                    )
                 ) {
-                    todos.forEach { todo ->
-                        TodoItem(todo)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = AppSpacing.sm)
+                            .padding(bottom = AppSpacing.sm)
+                    ) {
+                        // Subtle divider
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(AppColors.border.copy(alpha = 0.3f))
+                        )
+                        
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                        
+                        // Todo items
+                        todos.forEach { todo ->
+                            TodoItem(todo)
+                        }
                     }
                 }
             }
@@ -91,34 +189,57 @@ fun TodoListPanel(
 
 @Composable
 private fun TodoItem(todo: Todo) {
+    // Animated color for status
+    val statusColor by animateColorAsState(
+        targetValue = when (todo.status) {
+            TodoStatus.PENDING -> AppColors.grey
+            TodoStatus.IN_PROGRESS -> AppColors.accentGreen
+            TodoStatus.COMPLETED -> AppColors.accentGreen
+            TodoStatus.CANCELLED -> AppColors.greyDark
+        },
+        label = "statusColor"
+    )
+    
+    // Animated alpha for completed items
+    val textAlpha by animateColorAsState(
+        targetValue = if (todo.status == TodoStatus.COMPLETED || todo.status == TodoStatus.CANCELLED) {
+            AppColors.grey.copy(alpha = 0.6f)
+        } else {
+            AppColors.white
+        },
+        label = "textAlpha"
+    )
+    
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 2.dp),
         verticalAlignment = Alignment.Top
     ) {
         // Status Icon
-        val (icon, color) = when (todo.status) {
-            TodoStatus.PENDING -> Icons.Default.Pending to AppColors.grey
-            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow to AppColors.accentGreen
-            TodoStatus.COMPLETED -> Icons.Default.CheckCircle to AppColors.accentGreen
-            TodoStatus.CANCELLED -> Icons.Default.Close to AppColors.greyDark
+        val icon = when (todo.status) {
+            TodoStatus.PENDING -> Icons.Default.RadioButtonUnchecked
+            TodoStatus.IN_PROGRESS -> Icons.Default.PlayArrow
+            TodoStatus.COMPLETED -> Icons.Default.CheckCircle
+            TodoStatus.CANCELLED -> Icons.Default.Close
         }
         
         Icon(
             imageVector = icon,
             contentDescription = todo.status.name,
-            tint = color,
-            modifier = Modifier.size(16.dp).padding(top = 2.dp)
+            tint = statusColor,
+            modifier = Modifier
+                .size(14.dp)
+                .padding(top = 1.dp)
         )
         
-        Spacer(modifier = Modifier.width(AppSpacing.sm))
+        Spacer(modifier = Modifier.width(AppSpacing.xs))
         
         Text(
             text = todo.content,
-            style = AppTypography.bodySmall,
-            color = if (todo.status == TodoStatus.COMPLETED || todo.status == TodoStatus.CANCELLED) 
-                AppColors.grey else AppColors.white
+            style = AppTypography.labelSmall,
+            color = textAlpha,
+            maxLines = 2
         )
     }
 }

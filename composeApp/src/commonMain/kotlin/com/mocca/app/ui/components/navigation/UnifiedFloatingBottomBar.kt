@@ -5,6 +5,7 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -73,9 +75,11 @@ sealed class BottomBarMode {
  * - Nav buttons NEVER change size or position
  * - Integrated navigation indicator visible in both modes
  * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
+ * - Auto-hide on scroll with spring physics
  *
  * @param mode Current mode (Navigation or ChatInput)
  * @param dragProgress Real-time drag progress from SwipePanelLayout (0.0 = right, 0.5 = center, 1.0 = left)
+ * @param isVisible Whether the dock is visible (auto-hide support)
  * @param onItemClick Callback when a navigation item is clicked
  * @param liquidState Optional LiquidState for TRUE liquid glass effect. Pass null to use fallback glassyPremium.
  * @param inputText Current input text (ChatInput mode only)
@@ -107,6 +111,7 @@ sealed class BottomBarMode {
 fun UnifiedFloatingBottomBar(
     mode: BottomBarMode,
     dragProgress: Float,
+    isVisible: Boolean = true,
     onItemClick: (PanelState) -> Unit,
     // TRUE Liquid Glass integration (legacy - prefer glassTokens parameter)
     // Note: liquidState is deprecated. Use glassTokens parameter instead.
@@ -163,6 +168,17 @@ fun UnifiedFloatingBottomBar(
         label = "bottomBarHeight"
     )
     
+    // Auto-hide animation - slide down when not visible
+    // Use int offset for smooth pixel-perfect animation
+    val animatedOffsetY by animateIntAsState(
+        targetValue = if (isVisible) 0 else (targetHeight.value.toInt() + 100), // 100 extra for nav bars
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "bottomBarOffset"
+    )
+    
     // Determine if we should show labels (only in Navigation mode)
     val showLabels = mode is BottomBarMode.Navigation
     
@@ -171,6 +187,7 @@ fun UnifiedFloatingBottomBar(
             .widthIn(min = 320.dp, max = 440.dp)
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
+            .offset(y = animatedOffsetY.dp)
     ) {
         // TRUE Liquid Glass container with animated height - authentic iOS 26 style
         // Uses lens refraction, chromatic aberration, and saturation boost
