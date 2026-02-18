@@ -11,8 +11,8 @@ plugins {
 composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
     
-    // Enable Strong Skipping Mode for ultra-responsive UI
-    featureFlags.set(setOf(org.jetbrains.kotlin.compose.compiler.gradle.ComposeFeatureFlag.StrongSkipping))
+    // Strong Skipping Mode is enabled by default in Kotlin 2.0+
+    // No need to specify featureFlags explicitly
     
     // Enable Compose metrics for performance analysis
     metricsDestination = layout.buildDirectory.dir("compose_metrics")

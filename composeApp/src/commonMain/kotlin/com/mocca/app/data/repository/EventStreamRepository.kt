@@ -716,17 +716,16 @@ class EventStreamRepository(
                 
                 // IMPROVED: Incrementally update message part in cache
                 // This avoids fetching all messages on every update
-                if (localCache != null && part.messageID != null && part.id != null) {
-                    try {
-                        localCache.updateMessagePart(
-                            messageId = part.messageID,
-                            partId = part.id,
-                            content = part.text,
-                            delta = delta
-                        )
-                    } catch (e: Exception) {
-                        Napier.w("[EventStream] Failed to incrementally update message part", e)
-                    }
+                // Note: part.id and part.messageID are non-null String in MessagePartInfo
+                try {
+                    localCache?.updateMessagePart(
+                        messageId = part.messageID,
+                        partId = part.id,
+                        content = part.text,
+                        delta = delta
+                    )
+                } catch (e: Exception) {
+                    Napier.w("[EventStream] Failed to incrementally update message part", e)
                 }
             }
             
