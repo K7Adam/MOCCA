@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.layout.requiredWidthIn
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
@@ -119,19 +120,30 @@ fun CompactNavBar(
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Animated indicator
+        // Animated indicator with track background
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(3.dp),
+                .height(4.dp),
             contentAlignment = Alignment.Center
         ) {
+            // Subtle track background for visibility
             Box(
                 modifier = Modifier
-                    .width(24.dp)
-                    .height(3.dp)
+                    .fillMaxWidth(0.8f)
+                    .height(1.dp)
+                    .background(
+                        color = AppColors.border.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(1.dp)
+                    )
+            )
+            // Active indicator
+            Box(
+                modifier = Modifier
+                    .width(28.dp)
+                    .height(4.dp)
                     .offset {
                         val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
                         IntOffset(xOffsetPx.roundToInt(), 0)
@@ -185,12 +197,13 @@ private fun CompactNavItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
             )
-            .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs)
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
             .scale(scale)
     ) {
         Icon(
@@ -200,17 +213,19 @@ private fun CompactNavItem(
             modifier = Modifier.size(22.dp)
         )
 
-        Spacer(modifier = Modifier.height(2.dp))
+        Spacer(modifier = Modifier.height(3.dp))
 
         Text(
             text = item.label,
             style = AppTypography.labelSmall.copy(
                 fontSize = 10.sp,
-                letterSpacing = 0.3.sp
+                letterSpacing = 0.3.sp,
+                lineHeight = 12.sp
             ),
             color = textColor,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

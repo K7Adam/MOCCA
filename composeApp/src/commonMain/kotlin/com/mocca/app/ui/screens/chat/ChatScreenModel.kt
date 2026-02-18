@@ -217,6 +217,14 @@ class ChatScreenModel(
                     if (sessionRepository.executeCommand(sessionId, command, args) is Resource.Error) {
                         _state.update { it.copy(isSending = false, isSessionIdle = true, error = "Command failed") }
                     }
+                    // Safety timeout for command execution
+                    screenModelScope.launch {
+                        delay(30_000) // 30 second timeout for commands
+                        if (_state.value.isSending && !_state.value.isThinking) {
+                            Napier.w("Command isSending stuck for 30s, auto-resetting")
+                            _state.update { it.copy(isSending = false, isSessionIdle = true) }
+                        }
+                    }
                 }
                 return
             }
@@ -241,6 +249,16 @@ class ChatScreenModel(
             if (!result.isSuccess) {
                 _inputText.value = text
                 _state.update { it.copy(isSending = false, isSessionIdle = true, error = result.exceptionOrNull()?.message) }
+            }
+            
+            // Safety timeout: reset isSending after 60 seconds if still stuck
+            // This prevents permanent loading indicator if SSE events are missed
+            screenModelScope.launch {
+                delay(60_000) // 60 second timeout
+                if (_state.value.isSending && !_state.value.isThinking) {
+                    Napier.w("isSending stuck for 60s, auto-resetting")
+                    _state.update { it.copy(isSending = false, isSessionIdle = true) }
+                }
             }
         }
     }

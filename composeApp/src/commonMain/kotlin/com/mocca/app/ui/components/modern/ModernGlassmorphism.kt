@@ -256,6 +256,125 @@ fun Modifier.glassyPremium(
 )
 
 /**
+ * iOS 26-style Liquid Glass Card modifier.
+ * Creates a premium glass effect with:
+ * - Multi-layer gradient background for depth
+ * - Top edge highlight (specular)
+ * - Subtle inner glow
+ * - Gradient border with light top and darker bottom
+ * - Slight color tint for contrast
+ * 
+ * Use this for settings screens, cards, and elevated surfaces.
+ */
+@Composable
+fun Modifier.liquidGlassCard(
+    shape: Shape = AppShapes.card,
+    tint: Color = Color(0x40000000), // 25% dark tint
+    highlightIntensity: Float = 0.15f
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .drawBehind {
+            // Layer 1: Base dark background with subtle vertical gradient
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xE6000000), // Slightly lighter at top
+                        Color(0xF2000000), // Main dark
+                        Color(0xFF000000)  // Pure black at bottom
+                    )
+                )
+            )
+            
+            // Layer 2: Tint overlay for depth
+            drawRect(
+                color = tint
+            )
+            
+            // Layer 3: Top edge specular highlight (iOS 26 characteristic)
+            val highlightHeight = 1.5.dp.toPx()
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = highlightIntensity),
+                        Color.White.copy(alpha = 0f)
+                    )
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, highlightHeight * 3)
+            )
+            
+            // Layer 4: Inner glow from top
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.03f),
+                        Color.Transparent
+                    )
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, size.height * 0.4f)
+            )
+        }
+        .border(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.25f), // Bright top edge
+                    Color.White.copy(alpha = 0.08f), // Fading middle
+                    Color.White.copy(alpha = 0.02f)  // Nearly invisible bottom
+                )
+            ),
+            shape = shape
+        )
+)
+
+/**
+ * iOS 26-style Liquid Glass Header modifier.
+ * Optimized for header bars with more prominent highlights.
+ */
+@Composable
+fun Modifier.liquidGlassHeader(
+    shape: Shape = AppShapes.medium
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .drawBehind {
+            // Base gradient
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xE8000000),
+                        Color(0xF5000000)
+                    )
+                )
+            )
+            
+            // Strong top highlight for headers
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.12f),
+                        Color.Transparent
+                    )
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, 2.dp.toPx() * 2)
+            )
+        }
+        .border(
+            width = 0.5.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.3f),
+                    Color.White.copy(alpha = 0.05f)
+                )
+            ),
+            shape = shape
+        )
+)
+
+/**
  * Simplified glassy modifier for performance.
  */
 @Composable

@@ -437,6 +437,7 @@ fun ChatInputBar(
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .height(24.dp) // Minimum touch target height
                             .onGloballyPositioned { coords ->
                                 val center = coords.size.width / 2f
                                 if (index == 0) firstItemCenterPx = coords.localToRoot(
@@ -453,8 +454,7 @@ fun ChatInputBar(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
                                 onClick = { onItemClick(item.panelState) }
-                            )
-                            .padding(vertical = AppSpacing.xs),
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         // Subtle indicator dot
@@ -470,18 +470,18 @@ fun ChatInputBar(
                 }
             }
 
-            // Sliding indicator line
+            // Sliding indicator line - more visible
             Box(
                 modifier = Modifier
-                    .width(32.dp)
-                    .height(2.dp)
+                    .width(28.dp)
+                    .height(3.dp)
                     .offset {
                         val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
                         IntOffset(xOffsetPx.roundToInt(), 0)
                     }
                     .background(
-                        color = AppColors.accentGreen.copy(alpha = 0.6f),
-                        shape = RoundedCornerShape(1.dp)
+                        color = AppColors.accentGreen,
+                        shape = RoundedCornerShape(2.dp)
                     )
             )
         }

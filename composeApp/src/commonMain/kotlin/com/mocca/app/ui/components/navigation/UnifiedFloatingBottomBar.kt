@@ -150,7 +150,7 @@ fun UnifiedFloatingBottomBar(
     
     Box(
         modifier = modifier
-            .widthIn(min = 280.dp, max = 400.dp)
+            .widthIn(min = 320.dp, max = 440.dp)
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
     ) {
@@ -227,6 +227,6 @@ fun UnifiedFloatingBottomBar(
     }
 }
 
-// Height constants
-private val NavigationModeHeight = 56.dp
-private val ChatInputModeMinHeight = 140.dp
+// Height constants - increased for proper icon + label display
+private val NavigationModeHeight = 68.dp
+private val ChatInputModeMinHeight = 148.dp

@@ -30,6 +30,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import androidx.compose.ui.graphics.RectangleShape
 import com.mocca.app.ui.components.modern.glassy
+import com.mocca.app.ui.components.modern.liquidGlassHeader
+import com.mocca.app.ui.components.modern.liquidGlassCard
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
@@ -62,11 +64,11 @@ class SettingsScreen : Screen {
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Header
+            // Header with iOS 26 liquid glass effect
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassy(shape = RectangleShape)
+                    .liquidGlassHeader(shape = RectangleShape)
                     .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -396,14 +398,20 @@ private fun TerminalServerCard(
     onDelete: () -> Unit,
     onCheckConnection: () -> Unit
 ) {
-    val borderColor = if (isActive) AppColors.statusOnline else AppColors.border
+    val borderColor = if (isActive) AppColors.statusOnline else null
     
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceContainer, AppShapes.card)
-            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
+            .liquidGlassCard(
+                shape = AppShapes.card,
+                tint = if (isActive) Color(0x1500D9A5) else Color(0x40000000)
+            )
+            .then(
+                if (borderColor != null) {
+                    Modifier.border(AppSpacing.borderThin, borderColor, AppShapes.card)
+                } else Modifier
+            )
     ) {
         // Header
         Row(

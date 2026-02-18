@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -78,7 +79,7 @@ val defaultBottomNavItems = listOf(
     BottomNavItem(
         panelState = PanelState.LEFT_OPEN,
         icon = Icons.Default.Computer,
-        label = "SESSION",
+        label = "SESSIONS",
         targetProgress = 1.0f  // LEFT_OPEN is at progress 1.0
     ),
     BottomNavItem(
@@ -179,19 +180,31 @@ fun MoccaBottomNavigation(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // Indicator that moves between firstItemCenterPx and lastItemCenterPx
+            // Always visible with track background
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(3.dp),
+                    .height(4.dp),
                 contentAlignment = Alignment.Center
             ) {
+                // Subtle track background for visibility
                 Box(
                     modifier = Modifier
-                        .width(24.dp)
-                        .height(3.dp)
+                        .fillMaxWidth(0.8f)
+                        .height(1.dp)
+                        .background(
+                            color = AppColors.border.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(1.dp)
+                        )
+                )
+                // Active indicator pill
+                Box(
+                    modifier = Modifier
+                        .width(28.dp)
+                        .height(4.dp)
                         .offset {
                             // travelDistancePx is the total width between item centers
                             // The indicator should be at +distance/2 at progress 0.0 (Right)
@@ -254,12 +267,13 @@ private fun BottomNavItemComponent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
+            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
             .clickable(
                 interactionSource = interactionSource,
                 indication = null, // No ripple for cleaner look
                 onClick = onClick
             )
-            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
             .scale(scale)
     ) {
         // Icon
@@ -277,7 +291,8 @@ private fun BottomNavItemComponent(
             text = item.label,
             style = AppTypography.labelSmall,
             color = textColor,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1
         )
     }
 }

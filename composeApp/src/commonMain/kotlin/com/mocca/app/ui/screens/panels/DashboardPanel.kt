@@ -55,31 +55,6 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-        // ─── Quick Actions (compact toolbar) ───────────────────────────────
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm, Alignment.End)
-        ) {
-            MoccaIconButton(
-                icon = Icons.Default.Settings,
-                onClick = onSettingsClick,
-                contentDescription = "Settings",
-                iconColor = AppColors.white
-            )
-            MoccaIconButton(
-                icon = Icons.Default.Terminal,
-                onClick = onTerminalClick,
-                contentDescription = "Terminal",
-                iconColor = AppColors.accentGreen
-            )
-            MoccaIconButton(
-                icon = Icons.Default.Refresh,
-                onClick = onRefreshAll,
-                contentDescription = "Refresh",
-                iconColor = AppColors.white
-            )
-        }
-        
         // ─── MCP Servers ─────────────────────────────────────────────────
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),
@@ -112,6 +87,33 @@ fun DashboardPanel(
             tools = state.tools,
             commands = state.commands
         )
+        
+        // ─── Quick Actions (centered at bottom) ───────────────────────────────
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+        
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg, Alignment.CenterHorizontally)
+        ) {
+            MoccaIconButton(
+                icon = Icons.Default.Settings,
+                onClick = onSettingsClick,
+                contentDescription = "Settings",
+                iconColor = AppColors.white
+            )
+            MoccaIconButton(
+                icon = Icons.Default.Terminal,
+                onClick = onTerminalClick,
+                contentDescription = "Terminal",
+                iconColor = AppColors.accentGreen
+            )
+            MoccaIconButton(
+                icon = Icons.Default.Refresh,
+                onClick = onRefreshAll,
+                contentDescription = "Refresh",
+                iconColor = AppColors.white
+            )
+        }
         
         Spacer(modifier = Modifier.weight(1f))
         
