@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Resource
@@ -54,22 +55,28 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-        // ─── Quick Actions (top) ─────────────────────────────────────────
+        // ─── Quick Actions (compact toolbar) ───────────────────────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm, Alignment.End)
         ) {
-            MoccaOutlinedButton(
-                text = "SETTINGS",
-                onClick = onSettingsClick,
+            MoccaIconButton(
                 icon = Icons.Default.Settings,
-                modifier = Modifier.weight(1f)
+                onClick = onSettingsClick,
+                contentDescription = "Settings",
+                iconColor = AppColors.white
             )
-            MoccaButton(
-                text = ">_ TERMINAL",
-                onClick = onTerminalClick,
+            MoccaIconButton(
                 icon = Icons.Default.Terminal,
-                modifier = Modifier.weight(1f)
+                onClick = onTerminalClick,
+                contentDescription = "Terminal",
+                iconColor = AppColors.accentGreen
+            )
+            MoccaIconButton(
+                icon = Icons.Default.Refresh,
+                onClick = onRefreshAll,
+                contentDescription = "Refresh",
+                iconColor = AppColors.white
             )
         }
         
@@ -107,14 +114,6 @@ fun DashboardPanel(
         )
         
         Spacer(modifier = Modifier.weight(1f))
-        
-        // ─── Refresh All ─────────────────────────────────────────────────
-        MoccaOutlinedButton(
-            text = "REFRESH ALL",
-            onClick = onRefreshAll,
-            icon = Icons.Default.Refresh,
-            modifier = Modifier.fillMaxWidth()
-        )
         
         // Bottom padding for floating bottom bar clearance
         Spacer(modifier = Modifier.height(80.dp))
