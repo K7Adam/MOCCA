@@ -256,42 +256,30 @@ fun Modifier.glassyPremium(
 )
 
 /**
- * iOS 26-style Liquid Glass Card modifier.
- * Creates a premium glass effect with:
- * - Multi-layer gradient background for depth
- * - Top edge highlight (specular)
- * - Subtle inner glow
+ * iOS 26-style Pure Liquid Glass Card modifier.
+ * Creates a pure glass effect with:
+ * - Transparent/translucent background (no color tint)
+ * - Top edge highlight (specular) - the key liquid-glass visual
  * - Gradient border with light top and darker bottom
- * - Slight color tint for contrast
+ * - No blur, no color - just light refraction simulation
  * 
  * Use this for settings screens, cards, and elevated surfaces.
  */
 @Composable
 fun Modifier.liquidGlassCard(
     shape: Shape = AppShapes.card,
-    tint: Color = Color(0x40000000), // 25% dark tint
-    highlightIntensity: Float = 0.15f
+    tint: Color = Color.Transparent, // No tint by default - pure glass
+    highlightIntensity: Float = 0.18f
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Layer 1: Base dark background with subtle vertical gradient
+            // Pure liquid-glass: semi-transparent dark background (no color)
             drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xE6000000), // Slightly lighter at top
-                        Color(0xF2000000), // Main dark
-                        Color(0xFF000000)  // Pure black at bottom
-                    )
-                )
+                color = Color(0x99000000) // 60% black, transparent
             )
             
-            // Layer 2: Tint overlay for depth
-            drawRect(
-                color = tint
-            )
-            
-            // Layer 3: Top edge specular highlight (iOS 26 characteristic)
+            // Top edge specular highlight - the signature liquid-glass effect
             val highlightHeight = 1.5.dp.toPx()
             drawRect(
                 brush = Brush.verticalGradient(
@@ -304,25 +292,25 @@ fun Modifier.liquidGlassCard(
                 size = Size(size.width, highlightHeight * 3)
             )
             
-            // Layer 4: Inner glow from top
+            // Subtle inner glow from top edge
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.03f),
+                        Color.White.copy(alpha = 0.04f),
                         Color.Transparent
                     )
                 ),
                 topLeft = Offset(0f, 0f),
-                size = Size(size.width, size.height * 0.4f)
+                size = Size(size.width, size.height * 0.3f)
             )
         }
         .border(
             width = 1.dp,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.25f), // Bright top edge
-                    Color.White.copy(alpha = 0.08f), // Fading middle
-                    Color.White.copy(alpha = 0.02f)  // Nearly invisible bottom
+                    Color.White.copy(alpha = 0.35f), // Bright top edge
+                    Color.White.copy(alpha = 0.1f),  // Fading middle
+                    Color.White.copy(alpha = 0.03f)  // Nearly invisible bottom
                 )
             ),
             shape = shape
@@ -330,8 +318,9 @@ fun Modifier.liquidGlassCard(
 )
 
 /**
- * iOS 26-style Liquid Glass Header modifier.
- * Optimized for header bars with more prominent highlights.
+ * iOS 26-style Pure Liquid Glass Header modifier.
+ * Optimized for header bars with prominent edge highlights.
+ * No color, no blur - just pure liquid-glass light effects.
  */
 @Composable
 fun Modifier.liquidGlassHeader(
@@ -340,34 +329,94 @@ fun Modifier.liquidGlassHeader(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Base gradient
+            // Semi-transparent dark background (no color)
             drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xE8000000),
-                        Color(0xF5000000)
-                    )
-                )
+                color = Color(0xAA000000) // 67% black
             )
             
             // Strong top highlight for headers
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.12f),
+                        Color.White.copy(alpha = 0.2f),
                         Color.Transparent
                     )
                 ),
                 topLeft = Offset(0f, 0f),
                 size = Size(size.width, 2.dp.toPx() * 2)
             )
+            
+            // Inner glow
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.03f),
+                        Color.Transparent
+                    )
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, size.height * 0.5f)
+            )
         }
         .border(
             width = 0.5.dp,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    Color.White.copy(alpha = 0.3f),
-                    Color.White.copy(alpha = 0.05f)
+                    Color.White.copy(alpha = 0.4f),
+                    Color.White.copy(alpha = 0.08f)
+                )
+            ),
+            shape = shape
+        )
+)
+
+/**
+ * iOS 26-style Pure Liquid Glass Button modifier.
+ * For small controls like scroll-to-bottom, FABs, etc.
+ * No blur, no color - just transparent glass with edge highlights.
+ */
+@Composable
+fun Modifier.pureLiquidGlassButton(
+    shape: Shape = AppShapes.circle
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .drawBehind {
+            // Semi-transparent dark background
+            drawRect(
+                color = Color(0x88000000) // 53% black
+            )
+            
+            // Strong edge highlight for buttons
+            drawRect(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.25f),
+                        Color.Transparent
+                    )
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, 3.dp.toPx())
+            )
+            
+            // Inner glow
+            drawRect(
+                brush = Brush.radialGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.05f),
+                        Color.Transparent
+                    ),
+                    center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f),
+                    radius = size.minDimension / 2f
+                )
+            )
+        }
+        .border(
+            width = 1.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.5f),
+                    Color.White.copy(alpha = 0.15f)
                 )
             ),
             shape = shape

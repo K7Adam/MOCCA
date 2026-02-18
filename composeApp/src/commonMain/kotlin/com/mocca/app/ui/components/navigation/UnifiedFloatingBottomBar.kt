@@ -229,4 +229,4 @@ fun UnifiedFloatingBottomBar(
 
 // Height constants - increased for proper icon + label display
 private val NavigationModeHeight = 68.dp
-private val ChatInputModeMinHeight = 148.dp
+private val ChatInputModeMinHeight = 164.dp // Increased to accommodate nav icons

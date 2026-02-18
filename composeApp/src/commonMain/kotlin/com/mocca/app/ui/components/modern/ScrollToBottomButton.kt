@@ -11,7 +11,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
@@ -20,14 +19,14 @@ import com.mocca.app.ui.theme.AppShapes
 import io.github.fletchmckee.liquid.LiquidState
 
 /**
- * A TRUE liquid glass floating button to scroll to the bottom of the chat.
- * Features lens refraction and chromatic aberration for authentic iOS 26 look.
+ * A pure liquid glass floating button to scroll to the bottom of the chat.
+ * No blur, no color - just transparent glass with edge highlights.
  * Includes a new message indicator dot.
  *
  * @param isVisible Whether the button should be visible
  * @param hasNewMessages Whether there are new messages
  * @param onClick Callback when button is clicked
- * @param liquidState Optional LiquidState for TRUE liquid glass effect
+ * @param liquidState Optional LiquidState (unused - kept for API compatibility)
  * @param modifier Modifier for styling
  */
 @Composable
@@ -47,27 +46,7 @@ fun ScrollToBottomButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .then(
-                    if (liquidState != null) {
-                        // TRUE Liquid Glass with lens refraction
-                        Modifier.liquidGlassButton(
-                            liquidState = liquidState,
-                            shape = AppShapes.circle,
-                            tint = LiquidGlassDefaults.tintDark
-                        )
-                    } else {
-                        // Fallback glass effect
-                        Modifier
-                            .shadow(
-                                elevation = 12.dp,
-                                shape = AppShapes.circle,
-                                ambientColor = AppColors.accentGreen.copy(alpha = 0.5f)
-                            )
-                            .clip(AppShapes.circle)
-                            .background(AppColors.glassBackground)
-                            .border(1.dp, AppColors.glassBorder, AppShapes.circle)
-                    }
-                )
+                .pureLiquidGlassButton(shape = AppShapes.circle)
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {

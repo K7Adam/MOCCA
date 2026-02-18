@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
@@ -419,7 +420,7 @@ fun ChatInputBar(
             )
         }
 
-        // ═══════════════ NAV INDICATOR ═══════════════
+        // ═══════════════ NAV INDICATOR WITH ICONS ═══════════════
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -434,10 +435,10 @@ fun ChatInputBar(
                     val distanceFromProgress = abs(dragProgress - item.targetProgress)
                     val isSelected = distanceFromProgress < 0.25f
 
-                    Box(
+                    Column(
                         modifier = Modifier
                             .weight(1f)
-                            .height(24.dp) // Minimum touch target height
+                            .defaultMinSize(minHeight = 32.dp)
                             .onGloballyPositioned { coords ->
                                 val center = coords.size.width / 2f
                                 if (index == 0) firstItemCenterPx = coords.localToRoot(
@@ -455,14 +456,25 @@ fun ChatInputBar(
                                 indication = null,
                                 onClick = { onItemClick(item.panelState) }
                             ),
-                        contentAlignment = Alignment.Center
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        // Subtle indicator dot
+                        // Nav icon
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        
+                        Spacer(modifier = Modifier.height(2.dp))
+                        
+                        // Indicator dot
                         Box(
                             modifier = Modifier
-                                .size(if (isSelected) 6.dp else 4.dp)
+                                .size(if (isSelected) 4.dp else 3.dp)
                                 .background(
-                                    color = if (isSelected) AppColors.accentGreen else AppColors.textTertiary.copy(alpha = 0.5f),
+                                    color = if (isSelected) AppColors.accentGreen else AppColors.textTertiary.copy(alpha = 0.4f),
                                     shape = RoundedCornerShape(50)
                                 )
                         )
@@ -470,18 +482,18 @@ fun ChatInputBar(
                 }
             }
 
-            // Sliding indicator line - more visible
+            // Sliding indicator line
             Box(
                 modifier = Modifier
-                    .width(28.dp)
-                    .height(3.dp)
+                    .width(24.dp)
+                    .height(2.dp)
                     .offset {
                         val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
                         IntOffset(xOffsetPx.roundToInt(), 0)
                     }
                     .background(
-                        color = AppColors.accentGreen,
-                        shape = RoundedCornerShape(2.dp)
+                        color = AppColors.accentGreen.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(1.dp)
                     )
             )
         }
@@ -515,4 +527,4 @@ private val StatusBarHeight = 28.dp
 private val InputMinHeight = 32.dp
 private val InputMaxHeight = 80.dp
 private val ActionToolbarHeight = 36.dp
-private val NavIndicatorHeight = 16.dp
+private val NavIndicatorHeight = 32.dp // Increased to fit icons + dots
