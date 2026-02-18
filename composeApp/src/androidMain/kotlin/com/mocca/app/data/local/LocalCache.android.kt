@@ -101,6 +101,13 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
 
+    override fun observeAllSessions(): kotlinx.coroutines.flow.Flow<List<Session>> {
+        return sessionQueries.selectAll()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { list -> list.map { it.toSession() } }
+    }
+
     // ==================== Messages ====================
 
     override suspend fun getMessages(sessionId: String): List<Message> {

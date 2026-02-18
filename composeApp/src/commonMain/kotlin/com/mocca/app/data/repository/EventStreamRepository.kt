@@ -62,6 +62,12 @@ class EventStreamRepository(
     private var isPaused = false
     private var wasConnectedBeforePause = false
     
+    /**
+     * Callback invoked when app resumes from background.
+     * Used by AppStateStore to trigger state sync.
+     */
+    var onAppResume: (() -> Unit)? = null
+    
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected())
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
     
@@ -176,6 +182,7 @@ class EventStreamRepository(
     
     /**
      * IMPROVED: Resume SSE streaming when app returns to foreground.
+     * Triggers onAppResume callback for state sync.
      */
     fun resume() {
         if (!isPaused) return
@@ -189,6 +196,9 @@ class EventStreamRepository(
             // Was connected before pause, try to reconnect
             reconnect(force = true)
         }
+        
+        // Trigger sync callback for state recovery
+        onAppResume?.invoke()
     }
     
     /**

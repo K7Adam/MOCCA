@@ -72,6 +72,51 @@ val commonModule = module {
         )
     }
     
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CENTRALIZED STATE STORES - Single source of truth for all app state
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    single { 
+        AppStateStore(
+            localCache = get(),
+            eventStreamRepository = get(),
+            sessionRepository = get(),
+            connectionManager = get(),
+            appLifecycleObserver = getOrNull(),
+            networkObserver = getOrNull(),
+            mcpRepository = get(),
+            configRepository = get(),
+            agentRepository = get()
+        )
+    }
+    
+    single { 
+        ChatStateStore(
+            localCache = get(),
+            eventStreamRepository = get(),
+            sessionRepository = get(),
+            appLifecycleObserver = getOrNull()
+        )
+    }
+    
+    // Wire up callbacks for lifecycle and connection events
+    // This ensures state is synced when app resumes from background
+    single {
+        get<EventStreamRepository>().apply {
+            onAppResume = { get<AppStateStore>().syncFromServer() }
+        }
+    }
+    
+    // Wire up ConnectionManager to start AppStateStore on connection
+    single {
+        get<ConnectionManager>().apply {
+            onConnectionEstablished = suspend { 
+                get<AppStateStore>().start()
+                get<AppStateStore>().syncFromServer()
+            }
+        }
+    }
+    
     singleOf(::FileRepository)
     singleOf(::TerminalRepository)
     single { GitRepository(get(), get()) }
@@ -187,6 +232,7 @@ val screenModelModule = module {
     factory { params ->
         MainScreenModel(
             initialSessionId = params.getOrNull(),
+            appStateStore = get(),
             sessionRepository = get(),
             eventStreamRepository = get(),
             connectionManager = get(),

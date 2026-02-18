@@ -21,6 +21,7 @@ interface LocalCache {
     suspend fun updateSessionStatus(id: String, status: String)
     suspend fun deleteSession(id: String)
     suspend fun deleteAllSessions()
+    fun observeAllSessions(): kotlinx.coroutines.flow.Flow<List<Session>>
 
     // Messages
     suspend fun getMessages(sessionId: String): List<Message>

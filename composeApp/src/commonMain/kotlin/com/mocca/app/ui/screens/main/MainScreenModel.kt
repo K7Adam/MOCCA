@@ -2,6 +2,8 @@ package com.mocca.app.ui.screens.main
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.data.repository.AppStateStore
+import com.mocca.app.data.repository.ChatStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.McpRepository
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -102,9 +105,11 @@ data class MainScreenState(
 
 /**
  * ScreenModel for the main screen.
+ * Observes centralized state from AppStateStore for reactive updates.
  */
 class MainScreenModel(
     private val initialSessionId: String?,
+    private val appStateStore: AppStateStore,
     private val sessionRepository: SessionRepository,
     private val eventStreamRepository: EventStreamRepository,
     private val connectionManager: ConnectionManager,
@@ -117,22 +122,116 @@ class MainScreenModel(
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
     
-    // OPTIMIZED: Pre-calculated session groups derived from state.sessions
-    val sessionGroups = _state.asStateFlow().map { it.sessionGroups }
+    // Session groups from centralized store (reactive)
+    val sessionGroups = appStateStore.sessionGroups
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     init {
         _state.update { it.copy(appVersion = "V${appVersionProvider.getVersion()}") }
-        observeAppConnectionState()
+        
+        // Observe centralized state from AppStateStore
+        observeAppStateStore()
         observeConnectionState()
         observeMcpServers()
-        observeSessionEvents()
         observeUpdateNotifications()
-        loadSessions()
         checkForUpdates()
+        
+        // Sync initial state
+        appStateStore.start()
+        
         if (initialSessionId != null) {
             loadMessages(initialSessionId)
         }
+    }
+    
+    /**
+     * Observe centralized state from AppStateStore.
+     * This replaces manual session loading and SSE event observation.
+     */
+    private fun observeAppStateStore() {
+        // Observe sessions
+        screenModelScope.launch {
+            appStateStore.sessions.collect { sessions ->
+                _state.update { current ->
+                    current.copy(
+                        sessions = sessions,
+                        sessionGroups = buildSessionGroups(sessions, current.runningSessionIds, current.expandedGroupIds)
+                    )
+                }
+            }
+        }
+        
+        // Observe running sessions
+        screenModelScope.launch {
+            appStateStore.runningSessionIds.collect { runningIds ->
+                _state.update { current ->
+                    current.copy(
+                        runningSessionIds = runningIds,
+                        sessionGroups = buildSessionGroups(current.sessions, runningIds, current.expandedGroupIds)
+                    )
+                }
+            }
+        }
+        
+        // Observe model/mode info
+        screenModelScope.launch {
+            appStateStore.modelName.collect { modelName ->
+                _state.update { it.copy(modelName = modelName) }
+            }
+        }
+        
+        screenModelScope.launch {
+            appStateStore.modeName.collect { modeName ->
+                _state.update { it.copy(agentName = modeName) }
+            }
+        }
+        
+        // Observe sync state
+        screenModelScope.launch {
+            appStateStore.isSyncing.collect { isSyncing ->
+                _state.update { it.copy(isLoading = isSyncing) }
+            }
+        }
+    }
+    
+    /**
+     * Build session groups from flat session list with UI state.
+     */
+    private fun buildSessionGroups(
+        sessions: List<Session>,
+        runningIds: Set<String>,
+        expandedIds: Set<String>
+    ): List<SessionGroup> {
+        // Separate root sessions (no parent) from child sessions
+        val rootSessions = sessions.filter { session ->
+            val hasParent = !session.effectiveParentID.isNullOrBlank()
+            val isInternal = session.title.orEmpty().let { title ->
+                title.startsWith("Background:") || 
+                title.startsWith("look_at:") ||
+                title.contains("subagent", ignoreCase = true)
+            }
+            !hasParent && !isInternal
+        }
+        
+        // Group children by parent ID
+        val childrenByParent = sessions.filter { session ->
+            val hasParent = !session.effectiveParentID.isNullOrBlank()
+            val isInternal = session.title.orEmpty().let { title ->
+                title.startsWith("Background:") || 
+                title.startsWith("look_at:") ||
+                title.contains("subagent", ignoreCase = true)
+            }
+            hasParent || isInternal
+        }.groupBy { it.effectiveParentID ?: "internal" }
+        
+        return rootSessions.map { parent ->
+            val children = childrenByParent[parent.id] ?: emptyList()
+            SessionGroup(
+                parent = parent,
+                children = children.sortedByDescending { it.updatedAt },
+                isExpanded = expandedIds.contains(parent.id)
+            )
+        }.sortedByDescending { it.lastActivityTime }
     }
 
     /**
@@ -274,19 +373,24 @@ class MainScreenModel(
             }
         }
     }
-
-    private fun observeAppConnectionState() {
+    
+    private fun observeConnectionState() {
+        // Observe from ConnectionManager for latency/port updates
         screenModelScope.launch {
             connectionManager.status.collect { status ->
                 when (status) {
                     is ConnectionStatus.Connected -> {
                         val config = connectionManager.activeConfig.value
                         _state.update { it.copy(
+                            isConnected = true,
+                            isConnecting = false,
+                            isWaitingForNetwork = false,
+                            connectionError = null,
                             latency = "${status.latencyMs}ms",
-                            port = ":${config?.port ?: "--"}"
+                            port = ":${config?.port ?: "--"}",
+                            mcpStatus = "ONLINE",
+                            isMcpOnline = true
                         )}
-                        connectToEventStream()
-                        loadSessions()
                     }
                     is ConnectionStatus.Disconnected -> {
                         _state.update { it.copy(
@@ -345,10 +449,6 @@ class MainScreenModel(
         }
     }
     
-    private fun connectToEventStream() {
-        eventStreamRepository.connect(screenModelScope, _state.value.currentSessionId)
-    }
-    
     private fun observeMcpServers() {
         screenModelScope.launch {
             mcpRepository.mcpServers.collect { serversMap ->
@@ -365,120 +465,6 @@ class MainScreenModel(
         }
     }
     
-    /**
-     * Observe SSE events for real-time session status updates.
-     * Updates runningSessionIds based on session.updated, session.idle, and session.error events.
-     */
-    private fun observeSessionEvents() {
-        screenModelScope.launch {
-            eventStreamRepository.events.collect { event ->
-                when (event) {
-                    is ServerEvent.SessionUpdated -> {
-                        val session = event.properties.info
-                        val isRunning = session.status == SessionStatus.RUNNING
-                        
-                        _state.update { current ->
-                            val newRunningIds = if (isRunning) {
-                                current.runningSessionIds + session.id
-                            } else {
-                                current.runningSessionIds - session.id
-                            }
-                            
-                            // Update session in the list and groups
-                            val updatedSessions = current.sessions.map { 
-                                if (it.id == session.id) session else it 
-                            }
-                            val updatedGroups = buildSessionGroups(updatedSessions)
-                            
-                            current.copy(
-                                sessions = updatedSessions,
-                                sessionGroups = updatedGroups,
-                                runningSessionIds = newRunningIds
-                            )
-                        }
-                        Napier.d("Session ${session.id} status: ${session.status}, running: $isRunning")
-                    }
-                    
-                    is ServerEvent.SessionIdle -> {
-                        val sessionId = event.properties.sessionID
-                        _state.update { current ->
-                            current.copy(
-                                runningSessionIds = current.runningSessionIds - sessionId
-                            )
-                        }
-                        Napier.d("Session $sessionId is now idle")
-                    }
-                    
-                    is ServerEvent.SessionError -> {
-                        val sessionId = event.properties.sessionID
-                        if (sessionId != null) {
-                            _state.update { current ->
-                                current.copy(
-                                    runningSessionIds = current.runningSessionIds - sessionId
-                                )
-                            }
-                            Napier.w("Session $sessionId encountered error")
-                        }
-                    }
-                    
-                    is ServerEvent.SessionDeleted -> {
-                        val sessionId = event.properties.info.id
-                        _state.update { current ->
-                            val updatedSessions = current.sessions.filter { it.id != sessionId }
-                            val updatedGroups = buildSessionGroups(updatedSessions)
-                            current.copy(
-                                sessions = updatedSessions,
-                                sessionGroups = updatedGroups,
-                                runningSessionIds = current.runningSessionIds - sessionId
-                            )
-                        }
-                        Napier.d("Session $sessionId deleted")
-                    }
-                    
-                    else -> { /* Ignore other events */ }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Build session groups from flat session list (used by observeSessionEvents).
-     */
-    private fun buildSessionGroups(sessions: List<Session>): List<SessionGroup> {
-        // Separate root sessions (no parent) from child sessions
-        val rootSessions = sessions.filter { session ->
-            val hasParent = !session.effectiveParentID.isNullOrBlank()
-            val isInternal = session.title.orEmpty().let { title ->
-                title.startsWith("Background:") || 
-                title.startsWith("look_at:") ||
-                title.contains("subagent", ignoreCase = true)
-            }
-            !hasParent && !isInternal
-        }
-        
-        // Group children by parent ID
-        val childrenByParent = sessions.filter { session ->
-            val hasParent = !session.effectiveParentID.isNullOrBlank()
-            val isInternal = session.title.orEmpty().let { title ->
-                title.startsWith("Background:") || 
-                title.startsWith("look_at:") ||
-                title.contains("subagent", ignoreCase = true)
-            }
-            hasParent || isInternal
-        }.groupBy { it.effectiveParentID ?: "internal" }
-        
-        // Build groups
-        return rootSessions.map { parent ->
-            val children = childrenByParent[parent.id] ?: emptyList()
-            val isExpanded = _state.value.expandedGroupIds.contains(parent.id)
-            SessionGroup(
-                parent = parent,
-                children = children.sortedByDescending { it.updatedAt },
-                isExpanded = isExpanded
-            )
-        }.sortedByDescending { it.lastActivityTime }
-    }
-    
     fun refreshMcpServers() {
         screenModelScope.launch {
             mcpRepository.refresh()
@@ -488,147 +474,6 @@ class MainScreenModel(
     fun toggleMcpServer(serverName: String, connect: Boolean) {
         screenModelScope.launch {
             mcpRepository.toggleConnection(serverName, connect)
-        }
-    }
-    
-    private fun observeConnectionState() {
-        screenModelScope.launch {
-            eventStreamRepository.connectionStatus.collect { status ->
-                _state.update { current ->
-                    when (status) {
-                        is com.mocca.app.domain.model.ConnectionStatus.NotConfigured -> current.copy(
-                            isConnected = false,
-                            isConnecting = false,
-                            isWaitingForNetwork = false,
-                            mcpStatus = "NOT_CONFIGURED",
-                            isMcpOnline = false
-                        )
-                        is com.mocca.app.domain.model.ConnectionStatus.Connected -> {
-                            val config = connectionManager.activeConfig.value
-                            current.copy(
-                                isConnected = true,
-                                isConnecting = false,
-                                isWaitingForNetwork = false,
-                                connectionError = null,
-                                mcpStatus = "ONLINE",
-                                isMcpOnline = true,
-                                latency = "${status.latencyMs}ms",
-                                port = ":${config?.port ?: "--"}"
-                            )
-                        }
-                        is com.mocca.app.domain.model.ConnectionStatus.Connecting -> current.copy(
-                            isConnected = false,
-                            isConnecting = true,
-                            isWaitingForNetwork = false,
-                            connectionAttempt = 1,
-                            mcpStatus = "CONNECTING",
-                            isMcpOnline = false
-                        )
-                        is com.mocca.app.domain.model.ConnectionStatus.WaitingForNetwork -> current.copy(
-                            isConnected = false,
-                            isConnecting = false,
-                            isWaitingForNetwork = true,
-                            mcpStatus = "WAITING",
-                            isMcpOnline = false
-                        )
-                        is com.mocca.app.domain.model.ConnectionStatus.Reconnecting -> current.copy(
-                            isConnected = false,
-                            isConnecting = true,
-                            isWaitingForNetwork = false,
-                            connectionAttempt = status.attempt,
-                            mcpStatus = "RECONNECTING",
-                            isMcpOnline = false
-                        )
-                        is com.mocca.app.domain.model.ConnectionStatus.Disconnected -> current.copy(
-                            isConnected = false,
-                            isConnecting = false,
-                            isWaitingForNetwork = false,
-                            mcpStatus = "OFFLINE",
-                            isMcpOnline = false
-                        )
-                        is com.mocca.app.domain.model.ConnectionStatus.Error -> current.copy(
-                            isConnected = false,
-                            isConnecting = false,
-                            isWaitingForNetwork = false,
-                            connectionError = status.message,
-                            mcpStatus = "ERROR",
-                            isMcpOnline = false
-                        )
-                    }
-                }
-            }
-        }
-    }
-    
-    private fun loadSessions() {
-        screenModelScope.launch {
-            sessionRepository.getSessions().collect { resource ->
-                when (resource) {
-                    is Resource.Loading<*> -> _state.update { it.copy(isLoading = true) }
-                    is Resource.Success<*> -> {
-                        @Suppress("UNCHECKED_CAST")
-                        val sessions = (resource.data as? List<Session>) ?: emptyList()
-                        // Sort sessions by update time here to avoid expensive sorting in UI recomposition
-                        val sortedSessions = sessions.sortedByDescending { it.updatedAt }
-                        
-                        // Build session groups with parent-child hierarchy
-                        val sessionGroups = buildSessionGroups(sortedSessions)
-                        
-                        _state.update { current ->
-                            val newState = current.copy(
-                                isLoading = false,
-                                sessions = sortedSessions,
-                                sessionGroups = sessionGroups
-                            )
-                            // Auto-select first session if none selected and sessions exist
-                            if (current.currentSessionId == null && sessions.isNotEmpty()) {
-                                val firstSession = sessions.maxByOrNull { it.updatedAt }
-                                if (firstSession != null) {
-                                    loadMessages(firstSession.id)
-                                    newState.copy(currentSessionId = firstSession.id)
-                                } else {
-                                    newState
-                                }
-                            } else {
-                                newState
-                            }
-                        }
-                        
-                        // Fetch real-time session status after loading sessions
-                        fetchSessionStatus()
-                    }
-                    is Resource.Error<*> -> _state.update { 
-                        it.copy(
-                            isLoading = false,
-                            error = resource.message
-                        )
-                    }
-                }
-            }
-        }
-    }
-    
-    /**
-     * Fetch real-time session status from API.
-     */
-    private fun fetchSessionStatus() {
-        screenModelScope.launch {
-            try {
-                sessionRepository.getSessionStatus().fold(
-                    onSuccess = { statusMap ->
-                        val runningIds = statusMap.filter { (_, status) ->
-                            status.isBusy || status.isRetrying
-                        }.keys
-                        _state.update { it.copy(runningSessionIds = runningIds) }
-                        Napier.d("Session status updated: ${runningIds.size} running sessions")
-                    },
-                    onFailure = { error ->
-                        Napier.w("Failed to fetch session status: ${error.message}")
-                    }
-                )
-            } catch (e: Exception) {
-                Napier.e("Error fetching session status", e)
-            }
         }
     }
     
@@ -643,13 +488,7 @@ class MainScreenModel(
                 current.expandedGroupIds + parentSessionId
             }
             // Rebuild groups with new expanded state
-            val updatedGroups = current.sessionGroups.map { group ->
-                if (group.parent.id == parentSessionId) {
-                    group.copy(isExpanded = newExpandedIds.contains(parentSessionId))
-                } else {
-                    group
-                }
-            }
+            val updatedGroups = buildSessionGroups(current.sessions, current.runningSessionIds, newExpandedIds)
             current.copy(
                 expandedGroupIds = newExpandedIds,
                 sessionGroups = updatedGroups
@@ -827,45 +666,23 @@ class MainScreenModel(
     
     fun retryConnection() {
         connectionManager.checkConnection()
-        eventStreamRepository.reconnect()
+        appStateStore.syncFromServer()
     }
     
     /**
-     * Refresh all data - sessions, messages, config, and reconnection.
+     * Refresh all data - uses centralized AppStateStore sync.
      * Called from DashboardPanel refresh button.
      */
     fun refreshAll() {
-        screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
-            
-            try {
-                // 1. Refresh sessions from server
-                sessionRepository.refreshSessions()
-                
-                // 2. Force SSE reconnection to get fresh event stream
-                eventStreamRepository.disconnect()
-                kotlinx.coroutines.delay(500) // Brief delay before reconnecting
-                _state.value.currentSessionId?.let { sessionId ->
-                    eventStreamRepository.connect(screenModelScope, sessionId)
-                }
-                
-                // 3. Reload sessions to update UI
-                loadSessions()
-                
-                // 4. Reload messages for current session
-                _state.value.currentSessionId?.let { sessionId ->
-                    loadMessages(sessionId)
-                }
-                
-                Napier.i("Global refresh completed")
-            } catch (e: Exception) {
-                Napier.e("Failed to refresh all data", e)
-                _state.update { it.copy(error = e.message, isLoading = false) }
-            }
+        appStateStore.syncFromServer()
+        
+        // Also reload messages for current session if any
+        _state.value.currentSessionId?.let { sessionId ->
+            loadMessages(sessionId)
         }
     }
     
     override fun onDispose() {
-        eventStreamRepository.disconnect()
+        // State is maintained in AppStateStore, no need to disconnect
     }
 }
