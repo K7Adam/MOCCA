@@ -12,15 +12,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.LocalExtendedColors
+import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mocca.app.ui.theme.AppShapes
+import io.github.fletchmckee.liquid.LiquidState
+import io.github.fletchmckee.liquid.liquid
+import io.github.fletchmckee.liquid.rememberLiquidState
+import io.github.fletchmckee.liquid.liquefiable
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
@@ -29,48 +32,135 @@ import dev.chrisbanes.haze.hazeSource
 import dev.chrisbanes.haze.rememberHazeState
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LIQUID GLASS - 2024/2025 iOS 26 Inspired Glassmorphism
+// LIQUID GLASS - iOS 26 Inspired True Glass Effect
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Default values for Liquid Glass effects.
- * Optimized for authentic iOS 26-style glassmorphism with:
- * - Proper blur radius for depth perception
- * - Tint colors that maintain text contrast
- * - Noise texture for tactile premium feel
+ * Default values for Liquid Glass effects using the `liquid` library.
+ * 
+ * TRUE Liquid Glass requires:
+ * - **Frost**: Blur effect (creates the frosted appearance)
+ * - **Refraction**: Lens distortion (objects behind appear bent)
+ * - **Curve**: Spherical lens effect
+ * - **Edge**: Rim lighting around the edge
+ * - **Saturation**: Color vibrancy boost (iOS increases saturation)
+ * - **Dispersion**: Chromatic aberration (prism effect at edges)
+ * - **Tint**: Optional color overlay for contrast
  */
 object LiquidGlassDefaults {
     // ═════════════════════════════════════════════════════════════════════════
-    // BLUR PARAMETERS
+    // FROST (Blur)
     // ═════════════════════════════════════════════════════════════════════════
 
-    /** Default blur radius - 25dp for smooth, readable blur */
-    val blurRadius: Dp = 25.dp
+    /** Default frost blur - 12dp for smooth frosted appearance */
+    val frostDefault: Dp = 12.dp
 
-    /** Thick blur for floating elements */
-    val blurRadiusThick: Dp = 35.dp
+    /** Light frost - 8dp for subtle effect */
+    val frostLight: Dp = 8.dp
 
-    /** Thin blur for subtle effects */
-    val blurRadiusThin: Dp = 15.dp
+    /** Heavy frost - 18dp for prominent glass */
+    val frostHeavy: Dp = 18.dp
 
     // ═════════════════════════════════════════════════════════════════════════
-    // TINT COLORS - High opacity for text contrast
+    // REFRACTION (Lens Distortion)
     // ═════════════════════════════════════════════════════════════════════════
 
+    /** Default refraction - moderate lens distortion */
+    const val refractionDefault: Float = 0.35f
+
+    /** Subtle refraction - minimal distortion */
+    const val refractionSubtle: Float = 0.2f
+
+    /** Strong refraction - pronounced lens effect */
+    const val refractionStrong: Float = 0.5f
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // CURVE (Spherical Lens)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /** Default curve - balanced spherical effect */
+    const val curveDefault: Float = 0.35f
+
+    /** Subtle curve - gentle curvature */
+    const val curveSubtle: Float = 0.2f
+
+    /** Strong curve - pronounced spherical lens */
+    const val curveStrong: Float = 0.5f
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // EDGE (Rim Lighting)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /** Default edge - subtle rim light */
+    const val edgeDefault: Float = 0.12f
+
+    /** Prominent edge - noticeable rim lighting */
+    const val edgeProminent: Float = 0.2f
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // SATURATION (Color Vibrancy)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /** Default saturation - iOS-like vibrancy boost */
+    const val saturationDefault: Float = 1.3f
+
+    /** High saturation - vivid colors through glass */
+    const val saturationHigh: Float = 1.5f
+
+    /** No saturation change */
+    const val saturationNone: Float = 1f
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // DISPERSION (Chromatic Aberration)
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /** Default dispersion - subtle prism effect */
+    const val dispersionDefault: Float = 0.15f
+
+    /** Strong dispersion - noticeable color separation */
+    const val dispersionStrong: Float = 0.3f
+
+    /** No dispersion */
+    const val dispersionNone: Float = 0f
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // TINT COLORS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    /** Dark tint for contrast - most common for UI */
+    val tintDark: Color = Color(0x40000000) // 25% black
+
+    /** Semi-dark tint */
+    val tintSemiDark: Color = Color(0x30000000) // 19% black
+
+    /** Light tint for bright backgrounds */
+    val tintLight: Color = Color(0x20FFFFFF) // 12% white
+
+    /** Mint accent tint */
+    val tintMint: Color = Color(0x1000D9A5) // 6% mint
+
+    // Legacy aliases for backward compatibility
     /** Primary tint - 75% opacity dark for excellent legibility */
     val tintPrimary: Color = Color(0xBF1A1A1A)
 
     /** Secondary tint - 65% opacity for layered elements */
     val tintSecondary: Color = Color(0xA61E1E1E)
 
-    /** Light tint - 55% opacity for elevated surfaces */
-    val tintLight: Color = Color(0x8C252525)
+    // ═════════════════════════════════════════════════════════════════════════
+    // BORDER COLORS
+    // ═════════════════════════════════════════════════════════════════════════
 
-    /** Ultra-thin tint - 45% opacity for overlays */
-    val tintUltraThin: Color = Color(0x73333333)
+    /** Primary border - white with 25% opacity */
+    val borderPrimary: Color = Color(0x40FFFFFF)
+
+    /** Border highlight - top edge brighter */
+    val borderHighlight: Color = Color(0x66FFFFFF)
+
+    /** Border shadow - bottom edge darker */
+    val borderShadow: Color = Color(0x1AFFFFFF)
 
     // ═════════════════════════════════════════════════════════════════════════
-    // SPECULAR HIGHLIGHTS - Simulates light reflection
+    // SPECULAR HIGHLIGHTS
     // ═════════════════════════════════════════════════════════════════════════
 
     /** Top edge specular - bright white highlight */
@@ -83,151 +173,53 @@ object LiquidGlassDefaults {
     val refractionAccent: Color = Color(0x3300D9A5)
 
     // ═════════════════════════════════════════════════════════════════════════
-    // BORDER STYLING
+    // CONTRAST
     // ═════════════════════════════════════════════════════════════════════════
 
-    /** Primary border - white with 25% opacity */
-    val borderPrimary: Color = Color(0x40FFFFFF)
+    /** Default contrast */
+    const val contrastDefault: Float = 1.1f
 
-    /** Border highlight - top edge brighter */
-    val borderHighlight: Color = Color(0x66FFFFFF)
-
-    /** Border shadow - bottom edge darker */
-    val borderShadow: Color = Color(0x1AFFFFFF)
-
-    /** Default border width */
-    val borderWidth: Dp = 1.dp
-
-    /** Thin border for subtle effects */
-    val borderWidthThin: Dp = 0.5.dp
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // NOISE TEXTURE
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /** Default noise factor - 12% for premium tactile feel */
-    const val noiseFactor: Float = 0.12f
-
-    /** Subtle noise - 8% */
-    const val noiseFactorSubtle: Float = 0.08f
-
-    /** Pronounced noise - 18% */
-    const val noiseFactorPronounced: Float = 0.18f
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // PRESET STYLES
-    // ═════════════════════════════════════════════════════════════════════════
-
-    /**
-     * Primary liquid glass style - for main floating elements.
-     * High tint opacity ensures excellent text/icon contrast.
-     */
-    @Composable
-    fun primary(
-        blurRadius: Dp = this.blurRadius,
-        noiseFactor: Float = this.noiseFactor
-    ): HazeStyle = HazeStyle(
-        backgroundColor = Color.Transparent,
-        tints = listOf(
-            HazeTint(color = tintPrimary)
-        ),
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor
-    )
-
-    /**
-     * Secondary liquid glass style - for layered elements.
-     * Slightly more transparent for depth hierarchy.
-     */
-    @Composable
-    fun secondary(
-        blurRadius: Dp = blurRadiusThin,
-        noiseFactor: Float = noiseFactorSubtle
-    ): HazeStyle = HazeStyle(
-        backgroundColor = Color.Transparent,
-        tints = listOf(
-            HazeTint(color = tintSecondary)
-        ),
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor
-    )
-
-    /**
-     * Thick liquid glass style - for prominent floating elements.
-     * Maximum blur for dramatic depth effect.
-     */
-    @Composable
-    fun thick(
-        blurRadius: Dp = blurRadiusThick,
-        noiseFactor: Float = noiseFactorPronounced
-    ): HazeStyle = HazeStyle(
-        backgroundColor = Color.Transparent,
-        tints = listOf(
-            HazeTint(color = tintPrimary)
-        ),
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor
-    )
-
-    /**
-     * Ultra-thin liquid glass style - for overlays and modals.
-     * Light tint for subtle presence.
-     */
-    @Composable
-    fun ultraThin(
-        blurRadius: Dp = blurRadiusThin,
-        noiseFactor: Float = noiseFactorSubtle
-    ): HazeStyle = HazeStyle(
-        backgroundColor = Color.Transparent,
-        tints = listOf(
-            HazeTint(color = tintUltraThin)
-        ),
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor
-    )
-
-    /**
-     * Creates a custom HazeStyle with liquid glass styling.
-     *
-     * @param backgroundColor Background tint color (recommend 65-80% opacity for contrast)
-     * @param blurRadius Blur radius in Dp (15-35dp recommended)
-     * @param noiseFactor Noise texture factor (0f-0.2f recommended)
-     */
-    @Composable
-    fun hazeStyle(
-        backgroundColor: Color = tintPrimary,
-        blurRadius: Dp = this.blurRadius,
-        noiseFactor: Float = this.noiseFactor
-    ): HazeStyle = HazeStyle(
-        backgroundColor = Color.Transparent,
-        tints = listOf(
-            HazeTint(color = backgroundColor)
-        ),
-        blurRadius = blurRadius,
-        noiseFactor = noiseFactor
-    )
+    /** High contrast */
+    const val contrastHigh: Float = 1.2f
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LEGACY GLASS MODIFIERS (Non-blur fallbacks)
+// LEGACY GLASS MODIFIERS (Non-liquid fallbacks)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * A reusable modifier that applies a premium glassmorphic effect without blurring content.
- * Uses gradients and layered borders to simulate depth and translucency.
- * Use this when Haze blur is not available or for performance-critical areas.
+ * Simple glassy modifier without blur or refraction.
+ * Use only as fallback when liquid glass is not available.
  */
 @Composable
 fun Modifier.glassy(
     shape: Shape,
-    borderWidth: Dp = LiquidGlassDefaults.borderWidthThin,
-    backgroundColor: Color = LiquidGlassDefaults.tintPrimary,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary
+    borderWidth: Dp = 0.5.dp,
+    backgroundColor: Color = Color(0x80000000),
+    borderColor: Color = Color(0x40FFFFFF)
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .background(backgroundColor)
+        .border(borderWidth, borderColor.copy(alpha = 0.3f), shape)
+)
+
+/**
+ * Premium glassy modifier with gradient border.
+ * Fallback when liquid glass is unavailable.
+ */
+@Composable
+fun Modifier.glassyPremium(
+    shape: Shape,
+    borderWidth: Dp = 1.dp,
+    backgroundColor: Color = Color(0x99000000),
+    borderColor: Color = Color(0x40FFFFFF),
+    glowColor: Color = Color(0x2000D9A5)
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Vertical gradient for depth simulation
+            // Background gradient
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -237,75 +229,26 @@ fun Modifier.glassy(
                     )
                 )
             )
-
-            // Subtle top specular highlight
-            drawSpecularHighlight(
-                width = size.width,
-                height = size.height,
-                specularColor = LiquidGlassDefaults.specularInner
-            )
-        }
-        .border(
-            width = borderWidth,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    borderColor.copy(alpha = 0.5f), // Brighter top
-                    borderColor.copy(alpha = 0.2f), // Mid fade
-                    borderColor.copy(alpha = 0.08f) // Subtle bottom
-                )
-            ),
-            shape = shape
-        )
-)
-
-/**
- * Premium glassmorphic effect with specular highlights and refined depth.
- * Enhanced version with top-edge glow for floating components.
- */
-@Composable
-fun Modifier.glassyPremium(
-    shape: Shape,
-    borderWidth: Dp = LiquidGlassDefaults.borderWidth,
-    backgroundColor: Color = LiquidGlassDefaults.tintPrimary,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary,
-    specularColor: Color = LiquidGlassDefaults.specularTop,
-    refractionColor: Color = LiquidGlassDefaults.refractionAccent
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            // Multi-layer background for depth
-            // Layer 1: Primary gradient
+            // Top glow
             drawRect(
-                brush = Brush.verticalGradient(
+                brush = Brush.horizontalGradient(
                     colors = listOf(
-                        backgroundColor.copy(alpha = backgroundColor.alpha * 1.08f),
-                        backgroundColor,
-                        backgroundColor.copy(alpha = backgroundColor.alpha * 0.92f)
+                        glowColor.copy(alpha = 0f),
+                        glowColor,
+                        glowColor.copy(alpha = 0f)
                     )
-                )
-            )
-
-            // Layer 2: Top specular highlight (simulates light reflection)
-            drawSpecularHighlight(
-                width = size.width,
-                height = size.height,
-                specularColor = specularColor
-            )
-
-            // Layer 3: Refraction accent (subtle color shift)
-            drawRefractionGlow(
-                width = size.width,
-                refractionColor = refractionColor
+                ),
+                topLeft = Offset(0f, 0f),
+                size = Size(size.width, 2.dp.toPx())
             )
         }
         .border(
             width = borderWidth,
             brush = Brush.verticalGradient(
                 colors = listOf(
-                    borderColor.copy(alpha = 0.6f),  // Bright top edge
-                    borderColor.copy(alpha = 0.25f), // Mid fade
-                    borderColor.copy(alpha = 0.1f)   // Subtle bottom
+                    borderColor.copy(alpha = 0.5f),
+                    borderColor.copy(alpha = 0.15f),
+                    borderColor.copy(alpha = 0.05f)
                 )
             ),
             shape = shape
@@ -313,193 +256,171 @@ fun Modifier.glassyPremium(
 )
 
 /**
- * Simplified version of glassy modifier for performance-critical areas.
+ * Simplified glassy modifier for performance.
  */
 @Composable
 fun Modifier.glassySimple(
     shape: Shape,
-    borderWidth: Dp = LiquidGlassDefaults.borderWidthThin,
-    backgroundColor: Color = LiquidGlassDefaults.tintSecondary,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary
+    borderWidth: Dp = 0.5.dp,
+    backgroundColor: Color = Color(0x80000000),
+    borderColor: Color = Color(0x30FFFFFF)
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .background(backgroundColor)
-        .border(
-            width = borderWidth,
-            color = borderColor.copy(alpha = 0.3f),
-            shape = shape
-        )
+        .border(borderWidth, borderColor, shape)
 )
 
 // ═══════════════════════════════════════════════════════════════════════════
-// LIQUID GLASS - True Blur with Haze
+// TRUE LIQUID GLASS - Using the `liquid` library
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Premium Liquid Glass modifier using Haze for true background blur.
- * This is the 2024/2025 state-of-the-art glassmorphism implementation.
- *
- * Features:
- * - Real background blur using Haze library
- * - Specular highlights for light reflection simulation
- * - Refraction glow for color depth
- * - Layered gradient borders for edge definition
- * - Noise texture for premium tactile feel
- *
- * IMPORTANT: Requires parent content to have `hazeSource(hazeState)` modifier
- * and this component must be overlaid on top of the blurred content.
- *
- * Usage:
- * ```
- * val hazeState = rememberHazeState()
- * Box {
- *     // Content to blur
- *     LazyColumn(Modifier.hazeSource(hazeState)) { ... }
- *
- *     // Liquid glass overlay
- *     Box(
- *         modifier = Modifier
- *             .liquidGlass(hazeState, shape = RoundedCornerShape(32.dp))
- *     ) { ... }
- * }
- * ```
- *
- * @param hazeState The HazeState shared with the content to blur
- * @param shape The shape of the glass container
- * @param style Custom HazeStyle (defaults to LiquidGlassDefaults.primary())
- * @param borderWidth Width of the gradient border
- * @param borderColor Border gradient colors
- * @param specularColor Top-edge specular highlight color
- * @param refractionColor Refraction accent color
- * @param showSpecular Whether to show specular highlights
- * @param showRefraction Whether to show refraction glow
+ * Creates a LiquidState for use with true liquid glass effects.
+ * Remember this at the screen level and pass to both source and effect components.
+ * 
+ * IMPORTANT: The component with `Modifier.liquid()` must NOT have ancestors
+ * with `Modifier.liquefiable()` using the same LiquidState.
+ */
+@Composable
+fun rememberLiquidGlassState(): LiquidState = rememberLiquidState()
+
+/**
+ * TRUE Liquid Glass modifier using the `liquid` library.
+ * This creates authentic iOS 26-style glass with:
+ * - Lens refraction (objects behind appear distorted)
+ * - Chromatic aberration (color separation at edges)
+ * - Frosted blur
+ * - Rim lighting
+ * - Saturation boost
+ * 
+ * IMPORTANT: Requires parent content to have `Modifier.liquefiable(liquidState)`.
+ * 
+ * @param liquidState The LiquidState shared with the content to sample
+ * @param shape The shape of the glass (rounded corners recommended)
+ * @param frost Blur amount (default: 12dp)
+ * @param refraction Lens distortion strength (0-1, default: 0.35)
+ * @param curve Spherical lens effect (0-1, default: 0.35)
+ * @param edge Rim lighting width (0-1, default: 0.12)
+ * @param saturation Color vibrancy multiplier (default: 1.3)
+ * @param dispersion Chromatic aberration strength (0-1, default: 0.15)
+ * @param contrast Contrast adjustment (default: 1.1)
+ * @param tint Color overlay for contrast (optional)
  */
 @Composable
 fun Modifier.liquidGlass(
+    liquidState: LiquidState,
+    shape: Shape = AppShapes.rounded2xl,
+    frost: Dp = LiquidGlassDefaults.frostDefault,
+    refraction: Float = LiquidGlassDefaults.refractionDefault,
+    curve: Float = LiquidGlassDefaults.curveDefault,
+    edge: Float = LiquidGlassDefaults.edgeDefault,
+    saturation: Float = LiquidGlassDefaults.saturationDefault,
+    dispersion: Float = LiquidGlassDefaults.dispersionDefault,
+    contrast: Float = LiquidGlassDefaults.contrastDefault,
+    tint: Color = LiquidGlassDefaults.tintSemiDark
+): Modifier = this.then(
+    Modifier.liquid(liquidState) {
+        this.frost = frost
+        this.shape = shape
+        this.refraction = refraction
+        this.curve = curve
+        this.edge = edge
+        this.saturation = saturation
+        this.dispersion = dispersion
+        this.contrast = contrast
+        this.tint = tint
+    }
+)
+
+/**
+ * Liquid Glass variant optimized for floating bottom bars.
+ * Uses heavier frost and stronger refraction for prominent floating effect.
+ */
+@Composable
+fun Modifier.liquidGlassFloating(
+    liquidState: LiquidState,
+    shape: Shape = AppShapes.rounded2xl,
+    tint: Color = LiquidGlassDefaults.tintSemiDark
+): Modifier = this.then(
+    Modifier.liquid(liquidState) {
+        this.frost = LiquidGlassDefaults.frostHeavy
+        this.shape = shape
+        this.refraction = LiquidGlassDefaults.refractionStrong
+        this.curve = LiquidGlassDefaults.curveStrong
+        this.edge = LiquidGlassDefaults.edgeProminent
+        this.saturation = LiquidGlassDefaults.saturationHigh
+        this.dispersion = LiquidGlassDefaults.dispersionDefault
+        this.contrast = LiquidGlassDefaults.contrastHigh
+        this.tint = tint
+    }
+)
+
+/**
+ * Liquid Glass variant for buttons and small controls.
+ * Uses lighter effects suitable for smaller elements.
+ */
+@Composable
+fun Modifier.liquidGlassButton(
+    liquidState: LiquidState,
+    shape: Shape = AppShapes.circle,
+    tint: Color = LiquidGlassDefaults.tintDark
+): Modifier = this.then(
+    Modifier.liquid(liquidState) {
+        this.frost = LiquidGlassDefaults.frostLight
+        this.shape = shape
+        this.refraction = LiquidGlassDefaults.refractionSubtle
+        this.curve = LiquidGlassDefaults.curveSubtle
+        this.edge = LiquidGlassDefaults.edgeDefault
+        this.saturation = LiquidGlassDefaults.saturationDefault
+        this.dispersion = LiquidGlassDefaults.dispersionDefault
+        this.contrast = LiquidGlassDefaults.contrastDefault
+        this.tint = tint
+    }
+)
+
+/**
+ * Marks content as the source for liquid glass effects.
+ * Apply this to the background content that should show through glass.
+ */
+@Composable
+fun Modifier.liquidGlassSource(
+    liquidState: LiquidState
+): Modifier = this.then(
+    Modifier.liquefiable(liquidState)
+)
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HAZE-BASED BLUR (Alternative when liquid refraction is not needed)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Haze-based blur glass modifier.
+ * Use this when you need blur but not lens refraction.
+ * Simpler and more performant than full liquid glass.
+ */
+@Composable
+fun Modifier.hazeGlass(
     hazeState: HazeState,
-    shape: Shape,
-    style: HazeStyle = LiquidGlassDefaults.primary(),
-    borderWidth: Dp = LiquidGlassDefaults.borderWidth,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary,
-    specularColor: Color = LiquidGlassDefaults.specularTop,
-    refractionColor: Color = LiquidGlassDefaults.refractionAccent,
-    showSpecular: Boolean = true,
-    showRefraction: Boolean = true
+    shape: Shape = AppShapes.rounded2xl,
+    blurRadius: Dp = 20.dp,
+    backgroundColor: Color = Color(0x80000000),
+    noiseFactor: Float = 0.1f
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .hazeEffect(hazeState) {
-            this@hazeEffect.style = style
+            style = HazeStyle(
+                backgroundColor = Color.Transparent,
+                tints = listOf(HazeTint(color = backgroundColor)),
+                blurRadius = blurRadius,
+                noiseFactor = noiseFactor
+            )
         }
-        .drawBehind {
-            // Specular highlight for premium liquid effect
-            if (showSpecular) {
-                drawSpecularHighlight(
-                    width = size.width,
-                    height = size.height,
-                    specularColor = specularColor
-                )
-            }
-
-            // Refraction glow for color depth
-            if (showRefraction) {
-                drawRefractionGlow(
-                    width = size.width,
-                    refractionColor = refractionColor
-                )
-            }
-        }
-        .border(
-            width = borderWidth,
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    borderColor.copy(alpha = 0.6f),  // Bright top edge
-                    borderColor.copy(alpha = 0.25f), // Mid fade
-                    borderColor.copy(alpha = 0.1f)   // Subtle bottom
-                )
-            ),
-            shape = shape
-        )
 )
 
 /**
- * Creates a HazeState for use with liquid glass components.
- * Remember this at the screen level and pass to both content and glass overlay.
+ * Creates a HazeState for blur-based glass effects.
  */
 @Composable
-fun rememberLiquidGlassState(): HazeState = rememberHazeState()
-
-// ═══════════════════════════════════════════════════════════════════════════
-// INTERNAL DRAW HELPERS
-// ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Draws a specular highlight at the top of the component.
- * Simulates light reflection for authentic glass appearance.
- */
-private fun DrawScope.drawSpecularHighlight(
-    width: Float,
-    height: Float,
-    specularColor: Color
-) {
-    val highlightHeight = 1.5.dp.toPx()
-    val gradientWidth = width * 0.7f
-    val startX = (width - gradientWidth) / 2f
-
-    drawRect(
-        brush = Brush.horizontalGradient(
-            colors = listOf(
-                specularColor.copy(alpha = 0f),
-                specularColor,
-                specularColor,
-                specularColor.copy(alpha = 0f)
-            ),
-            startX = startX,
-            endX = startX + gradientWidth
-        ),
-        topLeft = Offset(startX, 0f),
-        size = Size(gradientWidth, highlightHeight)
-    )
-
-    // Secondary inner glow
-    val innerGlowHeight = 4.dp.toPx()
-    drawRect(
-        brush = Brush.verticalGradient(
-            colors = listOf(
-                specularColor.copy(alpha = specularColor.alpha * 0.5f),
-                specularColor.copy(alpha = 0f)
-            )
-        ),
-        topLeft = Offset(0f, highlightHeight),
-        size = Size(width, innerGlowHeight)
-    )
-}
-
-/**
- * Draws a refraction glow at the top edge.
- * Simulates color shift from light passing through glass.
- */
-private fun DrawScope.drawRefractionGlow(
-    width: Float,
-    refractionColor: Color
-) {
-    val glowHeight = 2.dp.toPx()
-    val gradientWidth = width * 0.8f
-    val startX = (width - gradientWidth) / 2f
-
-    drawRect(
-        brush = Brush.horizontalGradient(
-            colors = listOf(
-                refractionColor.copy(alpha = 0f),
-                refractionColor.copy(alpha = 0.6f),
-                refractionColor.copy(alpha = 0.6f),
-                refractionColor.copy(alpha = 0f)
-            ),
-            startX = startX,
-            endX = startX + gradientWidth
-        ),
-        topLeft = Offset(startX, 0f),
-        size = Size(gradientWidth, glowHeight)
-    )
-}
+fun rememberHazeGlassState(): HazeState = rememberHazeState()

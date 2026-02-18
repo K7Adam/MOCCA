@@ -8,28 +8,34 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.Composable
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import io.github.fletchmckee.liquid.LiquidState
 
 /**
- * A compact, glassmorphic floating button to scroll to the bottom of the chat.
+ * A TRUE liquid glass floating button to scroll to the bottom of the chat.
+ * Features lens refraction and chromatic aberration for authentic iOS 26 look.
  * Includes a new message indicator dot.
+ *
+ * @param isVisible Whether the button should be visible
+ * @param hasNewMessages Whether there are new messages
+ * @param onClick Callback when button is clicked
+ * @param liquidState Optional LiquidState for TRUE liquid glass effect
+ * @param modifier Modifier for styling
  */
 @Composable
 fun ScrollToBottomButton(
     isVisible: Boolean,
     hasNewMessages: Boolean,
     onClick: () -> Unit,
+    liquidState: LiquidState? = null,
     modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
@@ -41,10 +47,27 @@ fun ScrollToBottomButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .shadow(elevation = 12.dp, shape = AppShapes.circle, ambientColor = AppColors.accentGreen.copy(alpha = 0.5f))
-                .clip(AppShapes.circle)
-                .background(AppColors.glassBackground)
-                .border(1.dp, AppColors.glassBorder, AppShapes.circle)
+                .then(
+                    if (liquidState != null) {
+                        // TRUE Liquid Glass with lens refraction
+                        Modifier.liquidGlassButton(
+                            liquidState = liquidState,
+                            shape = AppShapes.circle,
+                            tint = LiquidGlassDefaults.tintDark
+                        )
+                    } else {
+                        // Fallback glass effect
+                        Modifier
+                            .shadow(
+                                elevation = 12.dp,
+                                shape = AppShapes.circle,
+                                ambientColor = AppColors.accentGreen.copy(alpha = 0.5f)
+                            )
+                            .clip(AppShapes.circle)
+                            .background(AppColors.glassBackground)
+                            .border(1.dp, AppColors.glassBorder, AppShapes.circle)
+                    }
+                )
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {

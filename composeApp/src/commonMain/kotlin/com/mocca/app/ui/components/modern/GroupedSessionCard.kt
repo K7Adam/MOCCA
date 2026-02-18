@@ -216,11 +216,27 @@ fun GroupedSessionCard(
             }
             
             // Parent session card
+            val parentModifier = Modifier
+                .fillMaxWidth()
+                .clip(AppShapes.sessionCard)
+                .background(LiquidGlassDefaults.tintSecondary, AppShapes.sessionCard)
+            
+            val borderModifier = if (isRunning) {
+                parentModifier.border(
+                    width = 1.dp,
+                    color = LiquidGlassDefaults.refractionAccent,
+                    shape = AppShapes.sessionCard
+                )
+            } else {
+                parentModifier.border(
+                    width = AppSpacing.borderThin,
+                    color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
+                    shape = AppShapes.sessionCard
+                )
+            }
+            
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(AppShapes.sessionCard)
-                    .background(LiquidGlassDefaults.tintSecondary, AppShapes.sessionCard)
+                modifier = borderModifier
                     .then(
                         if (isActive) {
                             Modifier.drawBehind {
@@ -234,21 +250,6 @@ fun GroupedSessionCard(
                                 )
                             }
                         } else Modifier
-                    )
-                    .then(
-                        if (isRunning) {
-                            Modifier.border(
-                                width = 1.dp,
-                                color = LiquidGlassDefaults.refractionAccent,
-                                shape = AppShapes.sessionCard
-                            )
-                        } else {
-                            Modifier.border(
-                                width = AppSpacing.borderThin,
-                                color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
-                                shape = AppShapes.sessionCard
-                            )
-                        }
                     )
                     .clickable { onSessionClick(group.parent) }
                     .padding(AppSpacing.cardPadding)

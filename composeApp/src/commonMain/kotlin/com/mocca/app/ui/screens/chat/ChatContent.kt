@@ -141,7 +141,10 @@ private fun ModernBootSequence() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ChatContent(screenModel: ChatScreenModel) {
+fun ChatContent(
+    screenModel: ChatScreenModel,
+    liquidState: io.github.fletchmckee.liquid.LiquidState? = null
+) {
     val state by screenModel.state.collectAsState()
     val inputText by screenModel.inputText.collectAsState()
     val streamingText by screenModel.streamingText.collectAsState()
@@ -435,6 +438,7 @@ fun ChatContent(screenModel: ChatScreenModel) {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 },
+                liquidState = liquidState,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = AppSpacing.md, bottom = 160.dp) // Space for unified bottom bar

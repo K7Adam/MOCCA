@@ -103,6 +103,9 @@ kotlin {
 
             // Haze - Blur effects for liquid glass UI
             implementation(libs.haze)
+            
+            // Liquid - True liquid glass with lens refraction
+            implementation(libs.liquid)
         }
 
         androidMain.dependencies {

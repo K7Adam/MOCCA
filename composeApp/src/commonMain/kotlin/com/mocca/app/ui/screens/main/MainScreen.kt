@@ -25,6 +25,7 @@ import com.mocca.app.ui.components.navigation.BottomBarMode
 import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.components.modern.rememberLiquidGlassState
+import com.mocca.app.ui.components.modern.liquidGlassSource
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
@@ -39,13 +40,12 @@ import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.AppColors
-import dev.chrisbanes.haze.hazeSource
 import org.koin.core.parameter.parametersOf
 
 /**
  * Main screen with swipe panel navigation.
  * Shows chat content in center, context/history on left, dashboard on right.
- * Refactored for modern UI/UX.
+ * Features TRUE Liquid Glass effect with lens refraction.
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
@@ -81,8 +81,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         
         val panelState = rememberPanelState()
         
-        // Liquid Glass state for blur effect on bottom bar
-        val hazeState = rememberLiquidGlassState()
+        // TRUE Liquid Glass state - enables lens refraction, chromatic aberration, etc.
+        val liquidState = rememberLiquidGlassState()
 
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
@@ -104,9 +104,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
             // Content area - full screen, unified bottom bar floats above
-            // Apply hazeSource for liquid glass blur effect on bottom bar
+            // Apply liquidGlassSource for TRUE liquid glass effect on bottom bar
             SwipePanelLayout(
-                    modifier = Modifier.hazeSource(hazeState),
+                    modifier = Modifier.liquidGlassSource(liquidState),
                     leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
@@ -162,7 +162,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 }
 
                                 // Chat content (input will be disabled based on connection status)
-                                ChatContent(chatScreenModel)
+                                ChatContent(chatScreenModel, liquidState = liquidState)
                             }
                         } else {
                             // Empty state - no session selected
@@ -221,16 +221,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
 
-            // Global Activity Indicator overlay - top right corner
-            // TEMPORARILY DISABLED: Activity tracking not fully implemented
-            // GlobalActivityIndicator(
-            //     modifier = Modifier
-            //         .align(Alignment.TopEnd)
-            //         .padding(top = 48.dp, end = 16.dp)
-            // )
-
             // Unified Floating Bottom Bar - morphs between nav and chat input modes
-            // Uses liquid glass effect with blur for modern 2024/2025 aesthetic
+            // Uses TRUE Liquid Glass with lens refraction for authentic iOS 26 aesthetic
             val inputText by chatScreenModel.inputText.collectAsState()
             
             UnifiedFloatingBottomBar(
@@ -240,8 +232,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 },
                 dragProgress = dragProgress,
                 onItemClick = { newState -> panelState.state = newState },
-                // Liquid Glass blur integration
-                hazeState = hazeState,
+                // TRUE Liquid Glass with lens refraction
+                liquidState = liquidState,
                 // Chat input parameters
                 inputText = inputText,
                 onInputTextChange = { chatScreenModel.updateInputText(it) },

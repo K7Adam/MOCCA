@@ -25,12 +25,12 @@ import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.components.modern.LiquidGlassDefaults
 import com.mocca.app.ui.components.modern.glassyPremium
-import com.mocca.app.ui.components.modern.liquidGlass
+import com.mocca.app.ui.components.modern.liquidGlassFloating
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.util.TerminalCommand
-import dev.chrisbanes.haze.HazeState
+import io.github.fletchmckee.liquid.LiquidState
 
 /**
  * Sealed class representing the current mode of the unified bottom bar.
@@ -51,12 +51,12 @@ sealed class BottomBarMode {
  * - Single glassy container for cohesive premium look
  * - Integrated navigation indicator visible in both modes
  * - Maximizes screen real estate with compact design
- * - Liquid Glass effect with true blur (when hazeState provided)
+ * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
  *
  * @param mode Current mode (Navigation or ChatInput)
  * @param dragProgress Real-time drag progress from SwipePanelLayout (0.0 = right, 0.5 = center, 1.0 = left)
  * @param onItemClick Callback when a navigation item is clicked
- * @param hazeState Optional HazeState for liquid glass blur effect. Pass null to use fallback glassyPremium.
+ * @param liquidState Optional LiquidState for TRUE liquid glass effect. Pass null to use fallback glassyPremium.
  * @param inputText Current input text (ChatInput mode only)
  * @param onInputTextChange Callback when input text changes
  * @param onSendClick Callback when send button is clicked
@@ -87,8 +87,8 @@ fun UnifiedFloatingBottomBar(
     mode: BottomBarMode,
     dragProgress: Float,
     onItemClick: (PanelState) -> Unit,
-    // Liquid Glass integration
-    hazeState: HazeState? = null,
+    // TRUE Liquid Glass integration
+    liquidState: LiquidState? = null,
     // Chat input parameters
     inputText: String = "",
     onInputTextChange: (String) -> Unit = {},
@@ -154,25 +154,16 @@ fun UnifiedFloatingBottomBar(
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
     ) {
-        // Liquid Glass container with animated height - authentic iOS 26 style
-        // Uses true blur when hazeState is available, otherwise falls back to premium gradients
-        val containerModifier = if (hazeState != null) {
+        // TRUE Liquid Glass container with animated height - authentic iOS 26 style
+        // Uses lens refraction, chromatic aberration, and saturation boost
+        val containerModifier = if (liquidState != null) {
             Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
-                .liquidGlass(
-                    hazeState = hazeState,
+                .liquidGlassFloating(
+                    liquidState = liquidState,
                     shape = AppShapes.rounded2xl,
-                    style = LiquidGlassDefaults.primary(
-                        blurRadius = 25.dp,
-                        noiseFactor = LiquidGlassDefaults.noiseFactor
-                    ),
-                    borderWidth = 1.dp,
-                    borderColor = LiquidGlassDefaults.borderPrimary,
-                    specularColor = LiquidGlassDefaults.specularTop,
-                    refractionColor = LiquidGlassDefaults.refractionAccent,
-                    showSpecular = true,
-                    showRefraction = true
+                    tint = LiquidGlassDefaults.tintSemiDark
                 )
         } else {
             Modifier
@@ -181,10 +172,8 @@ fun UnifiedFloatingBottomBar(
                 .glassyPremium(
                     shape = AppShapes.rounded2xl,
                     borderWidth = 1.dp,
-                    backgroundColor = LiquidGlassDefaults.tintPrimary,
-                    borderColor = LiquidGlassDefaults.borderPrimary,
-                    specularColor = LiquidGlassDefaults.specularTop,
-                    refractionColor = LiquidGlassDefaults.refractionAccent
+                    backgroundColor = LiquidGlassDefaults.tintSemiDark,
+                    borderColor = LiquidGlassDefaults.borderPrimary
                 )
         }
         
