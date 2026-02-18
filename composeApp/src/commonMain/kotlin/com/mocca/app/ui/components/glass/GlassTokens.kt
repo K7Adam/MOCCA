@@ -39,48 +39,48 @@ object GlassTokens {
     val blurRadiusHeavy: Dp = 32.dp
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // TINT COLORS
+    // TINT COLORS - COLORLESS GLASS
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Surface tint - dark mode (subtle white overlay for contrast) */
-    val tintColorDark: Color = Color(0x1FFFFFFF) // White 12% alpha
+    /** Surface tint - TRANSPARENT for colorless glass */
+    val tintColorDark: Color = Color.Transparent
     
     /** Surface tint - light mode */
-    val tintColorLight: Color = Color(0x66FFFFFF) // White 40% alpha
+    val tintColorLight: Color = Color.Transparent
     
-    /** Dark overlay for depth - dark mode */
-    val tintDarkOverlayDark: Color = Color(0x4D000000) // Black 30% alpha
+    /** Dark overlay - TRANSPARENT (depth from geometry, not color) */
+    val tintDarkOverlayDark: Color = Color.Transparent
     
-    /** Dark overlay for depth - light mode */
-    val tintDarkOverlayLight: Color = Color(0x26000000) // Black 15% alpha
+    /** Dark overlay - light mode */
+    val tintDarkOverlayLight: Color = Color.Transparent
     
     /** Mint accent tint - subtle brand color */
     val tintMintAccent: Color = Color(0x1A00D9A5) // Mint 10% alpha
     
-    /** Primary tint - standard glass background */
-    val tintPrimary: Color = Color(0xBF1A1A1A) // 75% dark
+    /** Primary tint - very subtle dark for text contrast on glass */
+    val tintPrimary: Color = Color(0x40000000) // 25% dark for text legibility
     
     /** Secondary tint - for layered elements */
-    val tintSecondary: Color = Color(0xA61E1E1E) // 65% dark
+    val tintSecondary: Color = Color(0x33000000) // 20% dark
     
     /** Light tint - for active/highlighted surfaces */
-    val tintLight: Color = Color(0x8C252525) // 55% dark
+    val tintLight: Color = Color(0x26000000) // 15% dark
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // SPECULAR HIGHLIGHTS
+    // SPECULAR HIGHLIGHTS - GEOMETRY-BASED DEPTH
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Top edge specular highlight - dark mode */
-    val highlightTopDark: Color = Color(0x40FFFFFF) // White 25% alpha
+    /** Top edge specular highlight - pure white for light source */
+    val highlightTopDark: Color = Color(0x33FFFFFF) // White 20% alpha
     
     /** Top edge specular highlight - light mode */
-    val highlightTopLight: Color = Color(0x8CFFFFFF) // White 55% alpha
+    val highlightTopLight: Color = Color(0x4DFFFFFF) // White 30% alpha
     
-    /** Inner specular glow - dark mode */
-    val specularInnerDark: Color = Color(0x1AFFFFFF) // White 10% alpha
+    /** Inner specular glow - subtle white */
+    val specularInnerDark: Color = Color(0x14FFFFFF) // White 8% alpha
     
     /** Inner specular glow - light mode */
-    val specularInnerLight: Color = Color(0x33FFFFFF) // White 20% alpha
+    val specularInnerLight: Color = Color(0x1AFFFFFF) // White 10% alpha
     
     /** Refraction accent - mint green glow */
     val refractionAccent: Color = Color(0x3300D9A5) // Mint 20% alpha
@@ -108,14 +108,14 @@ object GlassTokens {
     val strokeWidthProminent: Dp = 1.5.dp
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // INNER SHADOW
+    // INNER SHADOW - SUBTLE DEPTH
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Inner shadow color - dark mode */
-    val shadowColorDark: Color = Color(0x4D000000) // Black 30% alpha
+    /** Inner shadow color - very subtle for depth cue */
+    val shadowColorDark: Color = Color(0x1A000000) // Black 10% alpha
     
     /** Inner shadow color - light mode */
-    val shadowColorLight: Color = Color(0x26000000) // Black 15% alpha
+    val shadowColorLight: Color = Color(0x14000000) // Black 8% alpha
     
     /** Inner shadow blur radius */
     val shadowBlur: Dp = 8.dp

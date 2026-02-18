@@ -27,7 +27,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
@@ -336,79 +335,74 @@ fun ChatContent(
             } else if (aggregatedMessages.isEmpty()) {
                 EmptySessionState()
             } else {
-                PullToRefreshBox(
-                    isRefreshing = state.isLoading,
-                    onRefresh = { screenModel.refreshData() },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    val displayMessages by remember(aggregatedMessages) {
-                        derivedStateOf {
-                            aggregatedMessages.filter { msg ->
-                                msg.role == MessageRole.USER || msg.parts.isNotEmpty()
-                            }
+                // SSE-driven content - no manual refresh needed
+                val displayMessages by remember(aggregatedMessages) {
+                    derivedStateOf {
+                        aggregatedMessages.filter { msg ->
+                            msg.role == MessageRole.USER || msg.parts.isNotEmpty()
                         }
                     }
+                }
 
-                    LazyColumn(
-                        state = listState,
-                        reverseLayout = true,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = AppSpacing.screenPaddingHorizontal),
-                        contentPadding = PaddingValues(
-                            top = 80.dp,
-                            bottom = 160.dp // Space for unified floating bottom bar
-                        ),
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
-                    ) {
-                        item { Spacer(modifier = Modifier.height(32.dp)) }
+                LazyColumn(
+                    state = listState,
+                    reverseLayout = true,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+                    contentPadding = PaddingValues(
+                        top = 80.dp,
+                        bottom = 160.dp // Space for unified floating bottom bar
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                ) {
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
 
-                        if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
-                            item(contentType = "processing") { ModernProcessingIndicator() }
-                        }
-                        
-                        if (state.isThinking) {
-                            item(contentType = "thinking") {
-                                ModernThinkingIndicator(
-                                    thinkingContent = state.thinkingContent,
-                                    elapsedMs = state.thinkingElapsedMs
-                                )
-                            }
-                        }
-                        
-                        if (streamingText.isNotEmpty()) {
-                            item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
-                        }
-                        
-                        items(
-                            items = displayMessages.asReversed(),
-                            key = { it.id },
-                            contentType = { "message" }
-                        ) { message ->
-                            val index = displayMessages.indexOf(message)
-                            val nextMessage = if (index < displayMessages.size - 1) displayMessages[index + 1] else null
-                            val prevMessage = if (index > 0) displayMessages[index - 1] else null
-                            
-                            val isFirstInGroup = prevMessage == null || 
-                                prevMessage.role != message.role || 
-                                (message.createdAt - prevMessage.createdAt) > 300_000
-                            
-                            val showDateHeader = if (nextMessage == null) {
-                                com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
-                            } else {
-                                val nextDate = com.mocca.app.util.TimeFormatter.formatDate(nextMessage.createdAt)
-                                val currentDate = com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
-                                if (nextDate != currentDate) currentDate else null
-                            }
-
-                            MessageBubble(
-                                message = message,
-                                isFirstInGroup = isFirstInGroup,
-                                dateHeader = showDateHeader,
-                                onFork = { screenModel.forkSession(message) },
-                                onRevert = { screenModel.revertSession(message) }
+                    if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
+                        item(contentType = "processing") { ModernProcessingIndicator() }
+                    }
+                    
+                    if (state.isThinking) {
+                        item(contentType = "thinking") {
+                            ModernThinkingIndicator(
+                                thinkingContent = state.thinkingContent,
+                                elapsedMs = state.thinkingElapsedMs
                             )
                         }
+                    }
+                    
+                    if (streamingText.isNotEmpty()) {
+                        item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
+                    }
+                    
+                    items(
+                        items = displayMessages.asReversed(),
+                        key = { it.id },
+                        contentType = { "message" }
+                    ) { message ->
+                        val index = displayMessages.indexOf(message)
+                        val nextMessage = if (index < displayMessages.size - 1) displayMessages[index + 1] else null
+                        val prevMessage = if (index > 0) displayMessages[index - 1] else null
+                        
+                        val isFirstInGroup = prevMessage == null || 
+                            prevMessage.role != message.role || 
+                            (message.createdAt - prevMessage.createdAt) > 300_000
+                        
+                        val showDateHeader = if (nextMessage == null) {
+                            com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                        } else {
+                            val nextDate = com.mocca.app.util.TimeFormatter.formatDate(nextMessage.createdAt)
+                            val currentDate = com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                            if (nextDate != currentDate) currentDate else null
+                        }
+
+                        MessageBubble(
+                            message = message,
+                            isFirstInGroup = isFirstInGroup,
+                            dateHeader = showDateHeader,
+                            onFork = { screenModel.forkSession(message) },
+                            onRevert = { screenModel.revertSession(message) }
+                        )
                     }
                 }
             }

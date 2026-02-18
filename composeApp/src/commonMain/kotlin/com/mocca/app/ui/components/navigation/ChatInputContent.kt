@@ -18,12 +18,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.ui.draw.alpha
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -98,6 +106,9 @@ fun ChatInputContent(
     onSendClick: () -> Unit,
     inputEnabled: Boolean,
     placeholder: String,
+    // Agent state
+    isSessionIdle: Boolean = true,
+    onAbortClick: () -> Unit = {},
     // Model/Agent selection
     modelName: String,
     agentName: String,
@@ -490,41 +501,84 @@ fun ChatInputContent(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // RIGHT: Send button (prominent)
-            val canSend = inputEnabled && inputText.isNotBlank()
-            Box(
-                modifier = Modifier
-                    .height(NavConstants.SendButtonHeight)
-                    .then(
-                        if (canSend) {
-                            Modifier.background(AppColors.accentGreen, AppShapes.pill)
-                        } else {
-                            Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
-                        }
-                    )
-                    .clickable(
-                        enabled = canSend,
-                        onClick = onSendClick
-                    )
-                    .padding(horizontal = AppSpacing.md),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            // RIGHT: Send/Abort button (transforms based on agent state)
+            if (isSessionIdle) {
+                // SEND button - normal state
+                val canSend = inputEnabled && inputText.isNotBlank()
+                Box(
+                    modifier = Modifier
+                        .height(NavConstants.SendButtonHeight)
+                        .then(
+                            if (canSend) {
+                                Modifier.background(AppColors.accentGreen, AppShapes.pill)
+                            } else {
+                                Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
+                            }
+                        )
+                        .clickable(
+                            enabled = canSend,
+                            onClick = onSendClick
+                        )
+                        .padding(horizontal = AppSpacing.md),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
-                        contentDescription = null,
-                        tint = if (canSend) AppColors.background else AppColors.grey,
-                        modifier = Modifier.size(NavConstants.SendIconSize)
-                    )
-                    Text(
-                        text = "SEND",
-                        color = if (canSend) AppColors.background else AppColors.grey,
-                        style = AppTypography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = null,
+                            tint = if (canSend) AppColors.background else AppColors.grey,
+                            modifier = Modifier.size(NavConstants.SendIconSize)
+                        )
+                        Text(
+                            text = "SEND",
+                            color = if (canSend) AppColors.background else AppColors.grey,
+                            style = AppTypography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            } else {
+                // ABORT button - agent running state
+                // Pulsing animation to indicate active agent
+                val infiniteTransition = rememberInfiniteTransition(label = "abortPulse")
+                val pulseAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.7f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(600, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "alpha"
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .height(NavConstants.SendButtonHeight)
+                        .background(AppColors.error.copy(alpha = pulseAlpha), AppShapes.pill)
+                        .clickable(onClick = onAbortClick)
+                        .padding(horizontal = AppSpacing.md),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = null,
+                            tint = AppColors.white,
+                            modifier = Modifier.size(NavConstants.SendIconSize)
+                        )
+                        Text(
+                            text = "ABORT",
+                            color = AppColors.white,
+                            style = AppTypography.labelSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

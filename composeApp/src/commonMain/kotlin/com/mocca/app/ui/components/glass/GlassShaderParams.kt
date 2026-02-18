@@ -34,30 +34,30 @@ data class GlassShaderParams(
     val contrast: Float = 1.1f,
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // TINT & OVERLAY
+    // TINT & OVERLAY - COLORLESS GLASS
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Tint color overlay for the glass surface */
-    val tintColor: Color = Color(0x1FFFFFFF),
+    /** Tint color overlay - TRANSPARENT for colorless glass */
+    val tintColor: Color = Color.Transparent,
     
-    /** Dark overlay for depth and contrast */
-    val darkOverlayColor: Color = Color(0x4D000000),
+    /** Dark overlay - TRANSPARENT for colorless glass (depth from geometry only) */
+    val darkOverlayColor: Color = Color.Transparent,
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // EDGE EFFECTS
+    // EDGE EFFECTS - GEOMETRY-BASED DEPTH
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Top edge specular highlight color */
-    val highlightTopColor: Color = Color(0x40FFFFFF),
+    /** Top edge specular highlight - pure white for light source simulation */
+    val highlightTopColor: Color = Color(0x33FFFFFF), // White 20% alpha
     
-    /** Inner specular glow color */
-    val specularInnerColor: Color = Color(0x1AFFFFFF),
+    /** Inner specular glow - subtle white */
+    val specularInnerColor: Color = Color(0x14FFFFFF), // White 8% alpha
     
-    /** Border/stroke color */
-    val strokeColor: Color = Color(0x26FFFFFF),
+    /** Border/stroke color - translucent white */
+    val strokeColor: Color = Color(0x26FFFFFF), // White 15% alpha
     
-    /** Inner shadow color for depth */
-    val shadowColor: Color = Color(0x4D000000),
+    /** Inner shadow for depth - very subtle */
+    val shadowColor: Color = Color(0x1A000000), // Black 10% alpha
     
     // ═══════════════════════════════════════════════════════════════════════════
     // SHAPE & GEOMETRY

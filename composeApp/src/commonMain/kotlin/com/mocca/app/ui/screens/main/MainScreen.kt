@@ -205,15 +205,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             onFilesClick = { navigator.push(FilesScreen()) },
                             onTerminalClick = { navigator.push(ConsoleScreen()) },
                             onSkillsClick = { },
-                            onSkillClick = { },
-                            onRefreshAll = {
-                                // Trigger global refresh: sessions, messages, config, and SSE reconnection
-                                screenModel.refreshAll()
-                                // Also refresh chat data
-                                chatScreenModel.refreshData()
-                                // Refresh dashboard data
-                                dashboardScreenModel.refresh()
-                            }
+                            onSkillClick = { }
+                            // NOTE: No onRefreshAll - SSE drives all live state
                         )
                     },
                     panelState = panelState.state,
@@ -239,6 +232,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 onInputTextChange = { chatScreenModel.updateInputText(it) },
                 onSendClick = { chatScreenModel.sendMessage() },
                 inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
+                // Agent state - transforms SEND to ABORT when running
+                isSessionIdle = chatState.isSessionIdle,
+                onAbortClick = { chatScreenModel.abortSession() },
                 modelName = chatState.modelName,
                 agentName = chatState.agentName,
                 providerResponse = chatState.providerInfo,

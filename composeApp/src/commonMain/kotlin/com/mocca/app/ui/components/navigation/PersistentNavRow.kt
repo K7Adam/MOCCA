@@ -2,8 +2,13 @@ package com.mocca.app.ui.components.navigation
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -17,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,6 +67,7 @@ import kotlin.math.abs
  * @param dragProgress Real-time drag progress (0.0 = right/TOOLS, 0.5 = center/CHAT, 1.0 = left/SESSIONS)
  * @param onItemClick Callback when a navigation item is clicked
  * @param showLabels Whether to show text labels (true for nav mode, false for chat input mode)
+ * @param isAgentRunning Whether an agent is currently running (shows indicator on CHAT tab)
  * @param modifier Modifier for styling
  */
 @Composable
@@ -68,6 +75,7 @@ fun PersistentNavRow(
     dragProgress: Float,
     onItemClick: (PanelState) -> Unit,
     showLabels: Boolean = true,
+    isAgentRunning: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val items = defaultBottomNavItems
@@ -113,7 +121,8 @@ fun PersistentNavRow(
                         isSelected = isSelected,
                         proximity = proximity,
                         showLabel = showLabels,
-                        onClick = { onItemClick(item.panelState) }
+                        onClick = { onItemClick(item.panelState) },
+                        isAgentRunning = isAgentRunning && item.targetProgress == 0.5f // Show indicator only on CHAT tab
                     )
                 }
             }
@@ -140,6 +149,7 @@ fun PersistentNavRow(
  * @param proximity How close the current drag is to this item (0.0 to 1.0)
  * @param showLabel Whether to show the text label
  * @param onClick Callback when clicked
+ * @param isAgentRunning Whether to show the agent running indicator (pulsing dot)
  */
 @Composable
 private fun PersistentNavItem(
@@ -147,7 +157,8 @@ private fun PersistentNavItem(
     isSelected: Boolean,
     proximity: Float,
     showLabel: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isAgentRunning: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -195,13 +206,51 @@ private fun PersistentNavItem(
             )
             .scale(scale)
     ) {
-        // Icon - ALWAYS same size (22dp)
-        Icon(
-            imageVector = item.icon,
-            contentDescription = item.label,
-            tint = iconColor,
-            modifier = Modifier.size(NavConstants.NavIconSize)
-        )
+        // Icon with optional running indicator
+        Box {
+            // Icon - ALWAYS same size (22dp)
+            Icon(
+                imageVector = item.icon,
+                contentDescription = item.label,
+                tint = iconColor,
+                modifier = Modifier.size(NavConstants.NavIconSize)
+            )
+            
+            // Agent running indicator - pulsing dot on top-right of icon
+            if (isAgentRunning) {
+                val infiniteTransition = rememberInfiniteTransition(label = "agentPulse")
+                val pulseScale by infiniteTransition.animateFloat(
+                    initialValue = 0.8f,
+                    targetValue = 1.2f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseScale"
+                )
+                val pulseAlpha by infiniteTransition.animateFloat(
+                    initialValue = 0.6f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "pulseAlpha"
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .offset(x = 2.dp, y = (-2).dp)
+                        .size(6.dp)
+                        .scale(pulseScale)
+                        .background(
+                            color = AppColors.accentGreen.copy(alpha = pulseAlpha),
+                            shape = RoundedCornerShape(50)
+                        )
+                )
+            }
+        }
 
         // Label or spacer - maintains consistent layout height
         // When showLabel is false, we use a fixed-height spacer to prevent layout shift

@@ -293,24 +293,25 @@ fun Modifier.glassy(
 /**
  * iOS 26-style Pure Liquid Glass Card modifier.
  * Creates a pure glass effect with transparent background and edge highlights.
+ * COLORLESS GLASS - depth from geometry, not color fills.
  * 
  * @param shape The shape of the glass card
- * @param tint Optional tint color to overlay on the glass background
+ * @param tint Optional very subtle tint for text contrast (default: 25% dark)
  * @param highlightIntensity Intensity of the top edge highlight (0.0 to 1.0)
  */
 @Composable
 fun Modifier.liquidGlassCard(
     shape: Shape = AppShapes.card,
-    tint: Color = Color(0x99000000), // Default: 60% dark, transparent
-    highlightIntensity: Float = 0.18f
+    tint: Color = Color(0x40000000), // 25% dark for text legibility only
+    highlightIntensity: Float = 0.2f
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Pure liquid-glass: semi-transparent background with optional tint
+            // Pure liquid-glass: very subtle tint for text contrast
             drawRect(tint)
             
-            // Top edge specular highlight
+            // Top edge specular highlight - simulates light source
             val highlightHeight = 1.5.dp.toPx()
             drawRect(
                 brush = Brush.verticalGradient(
@@ -323,11 +324,11 @@ fun Modifier.liquidGlassCard(
                 size = Size(size.width, highlightHeight * 3)
             )
             
-            // Subtle inner glow
+            // Subtle inner glow for depth
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.04f),
+                        Color.White.copy(alpha = 0.05f),
                         Color.Transparent
                     )
                 ),
@@ -351,6 +352,7 @@ fun Modifier.liquidGlassCard(
 /**
  * iOS 26-style Pure Liquid Glass Header modifier.
  * Optimized for header bars with prominent edge highlights.
+ * COLORLESS GLASS - depth from geometry.
  */
 @Composable
 fun Modifier.liquidGlassHeader(
@@ -359,14 +361,14 @@ fun Modifier.liquidGlassHeader(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Semi-transparent dark background
-            drawRect(Color(0xAA000000))
+            // Very subtle dark for text legibility
+            drawRect(Color(0x40000000)) // 25% dark
             
-            // Strong top highlight
+            // Strong top highlight - light source simulation
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.2f),
+                        Color.White.copy(alpha = 0.25f),
                         Color.Transparent
                     )
                 ),
@@ -378,7 +380,7 @@ fun Modifier.liquidGlassHeader(
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color.White.copy(alpha = 0.03f),
+                        Color.White.copy(alpha = 0.04f),
                         Color.Transparent
                     )
                 ),
@@ -401,6 +403,7 @@ fun Modifier.liquidGlassHeader(
 /**
  * iOS 26-style Pure Liquid Glass Button modifier.
  * For small controls like scroll-to-bottom, FABs, etc.
+ * COLORLESS GLASS - depth from geometry.
  */
 @Composable
 fun Modifier.liquidGlassButton(
@@ -409,8 +412,8 @@ fun Modifier.liquidGlassButton(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Semi-transparent dark background
-            drawRect(Color(0x88000000))
+            // Very subtle dark for icon visibility
+            drawRect(Color(0x40000000)) // 25% dark
             
             // Strong edge highlight
             drawRect(

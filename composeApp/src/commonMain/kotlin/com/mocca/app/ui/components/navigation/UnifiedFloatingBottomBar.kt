@@ -119,6 +119,9 @@ fun UnifiedFloatingBottomBar(
     onSendClick: () -> Unit = {},
     inputEnabled: Boolean = true,
     placeholder: String = "Type a message...",
+    // Agent state
+    isSessionIdle: Boolean = true,
+    onAbortClick: () -> Unit = {},
     // Model/Agent selection
     modelName: String = "--",
     agentName: String = "--",
@@ -248,6 +251,8 @@ fun UnifiedFloatingBottomBar(
                             onSendClick = onSendClick,
                             inputEnabled = inputEnabled,
                             placeholder = placeholder,
+                            isSessionIdle = isSessionIdle,
+                            onAbortClick = onAbortClick,
                             modelName = modelName,
                             agentName = agentName,
                             providerResponse = providerResponse,
@@ -282,6 +287,7 @@ fun UnifiedFloatingBottomBar(
                 dragProgress = dragProgress,
                 onItemClick = onItemClick,
                 showLabels = showLabels,
+                isAgentRunning = !isSessionIdle, // Show indicator when agent is running
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)

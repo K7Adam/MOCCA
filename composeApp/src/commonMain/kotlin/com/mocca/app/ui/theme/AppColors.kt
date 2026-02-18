@@ -154,44 +154,45 @@ object AppColors {
 
     // ═══════════════════════════════════════════════════════════════════════════
     // LIQUID GLASS (iOS 26 inspired - 2024/2025 design)
+    // COLORLESS GLASS - depth from geometry, not color fills
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Primary glass tints - higher opacity for text contrast
-    /** Liquid glass primary tint - 75% opacity dark for legibility */
-    val liquidGlassTint = Color(0xBF1A1A1A)
+    // Primary glass tints - very subtle for text contrast only
+    /** Liquid glass primary tint - 25% dark for text legibility */
+    val liquidGlassTint = Color(0x40000000)
 
-    /** Liquid glass secondary tint - 65% opacity for layered effects */
-    val liquidGlassTintSecondary = Color(0xA61E1E1E)
+    /** Liquid glass secondary tint - for layered effects */
+    val liquidGlassTintSecondary = Color(0x33000000)
 
     /** Liquid glass light tint - for elevated elements */
-    val liquidGlassTintLight = Color(0x8C252525)
+    val liquidGlassTintLight = Color(0x26000000)
 
-    // Specular highlights - simulate light reflection
-    /** Top edge specular highlight - bright white */
-    val liquidGlassSpecular = Color(0x40FFFFFF)
+    // Specular highlights - simulate light source (pure white)
+    /** Top edge specular highlight - pure white */
+    val liquidGlassSpecular = Color(0x33FFFFFF)
 
     /** Inner specular glow - subtle white */
-    val liquidGlassSpecularInner = Color(0x1AFFFFFF)
+    val liquidGlassSpecularInner = Color(0x14FFFFFF)
 
     /** Refraction accent - mint green glow */
     val liquidGlassRefraction = Color(0x3300D9A5)
 
-    // Border colors - gradient edges for depth
-    /** Primary border - white with 25% opacity */
-    val liquidGlassBorder = Color(0x40FFFFFF)
+    // Border colors - gradient edges for depth (white-based)
+    /** Primary border - white with 20% opacity */
+    val liquidGlassBorder = Color(0x33FFFFFF)
 
     /** Border highlight - top edge brighter */
-    val liquidGlassBorderHighlight = Color(0x66FFFFFF)
+    val liquidGlassBorderHighlight = Color(0x4DFFFFFF)
 
     /** Border shadow - bottom edge darker */
     val liquidGlassBorderShadow = Color(0x1AFFFFFF)
 
-    // Legacy support - updated values
-    /** Premium glass background - 75% opacity dark */
-    val glassPremium = Color(0xBF1A1A1A)
+    // Legacy support - updated values for colorless glass
+    /** Premium glass background - 25% dark for text contrast */
+    val glassPremium = Color(0x40000000)
 
     /** Premium glass border - subtle white glow */
-    val glassBorderPremium = Color(0x40FFFFFF)
+    val glassBorderPremium = Color(0x33FFFFFF)
 
     /** Premium glass mint glow - for focused state */
     val glassGlowMint = Color(0x3300D9A5)

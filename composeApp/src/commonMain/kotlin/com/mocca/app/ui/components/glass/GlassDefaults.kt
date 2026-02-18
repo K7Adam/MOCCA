@@ -94,11 +94,11 @@ object GlassDefaults {
     fun shapeDialog(): Shape = AppShapes.dialog
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // TINT COLOR FACTORIES
+    // TINT COLOR FACTORIES - COLORLESS GLASS
     // ═══════════════════════════════════════════════════════════════════════════
     
     /**
-     * Primary tint color - standard dark overlay.
+     * Primary tint color - very subtle dark for text contrast.
      */
     fun tintPrimary(): Color = GlassTokens.tintPrimary
     
@@ -113,9 +113,9 @@ object GlassDefaults {
     fun tintLight(): Color = GlassTokens.tintLight
     
     /**
-     * Dark tint color - for prominent surfaces.
+     * Dark tint color - transparent (colorless glass).
      */
-    fun tintDark(): Color = GlassTokens.tintDarkOverlayDark
+    fun tintDark(): Color = Color.Transparent
     
     /**
      * Mint accent tint - brand color overlay.
