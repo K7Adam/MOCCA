@@ -1,6 +1,7 @@
 package com.mocca.app.ui.components.navigation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -19,7 +20,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
@@ -38,19 +38,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
-import com.mocca.app.ui.components.modern.MoccaCompactButton
-import com.mocca.app.ui.components.modern.MoccaIconButton
-import com.mocca.app.ui.components.modern.MoccaTextButton
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
 import com.mocca.app.ui.components.modern.SuggestionItem
 import com.mocca.app.ui.components.modern.SuggestionPopup
 import com.mocca.app.ui.components.modern.SuggestionType
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.util.TerminalCommand
@@ -196,82 +195,140 @@ fun ChatInputContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ═══════════════ STATUS BAR ═══════════════
+        // ═══════════════ STATUS BAR (Premium Pill Chips) ═══════════════
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(NavConstants.StatusBarHeight),
+                .height(NavConstants.StatusBarHeight)
+                .padding(horizontal = AppSpacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
-            // Model selector
-            Row(
-                modifier = Modifier.clickable(enabled = providerResponse != null) { showModelSelector = true },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            // Model selector - styled as pill chip
+            Box(
+                modifier = Modifier
+                    .height(NavConstants.StatusBarChipHeight)
+                    .background(
+                        color = AppColors.surface.copy(alpha = 0.5f),
+                        shape = AppShapes.pill
+                    )
+                    .border(
+                        width = 0.5.dp,
+                        color = AppColors.border.copy(alpha = 0.3f),
+                        shape = AppShapes.pill
+                    )
+                    .clickable(enabled = providerResponse != null) { showModelSelector = true }
+                    .padding(horizontal = AppSpacing.sm),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.SmartToy,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = AppColors.textTertiary
-                )
-                Text(
-                    text = modelName.take(12).uppercase(),
-                    color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
-                    style = AppTypography.labelSmall
-                )
-            }
-
-            // Variant selector (if available)
-            if (variants.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.clickable { showVariantSelector = true },
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Tune,
+                        imageVector = Icons.Default.SmartToy,
                         contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = AppColors.textTertiary
+                        modifier = Modifier.size(NavConstants.StatusBarIconSize),
+                        tint = AppColors.textSecondary
                     )
                     Text(
-                        text = (selectedVariantId ?: "DEF").take(6).uppercase(),
-                        color = AppColors.textSecondary,
-                        style = AppTypography.labelSmall
+                        text = modelName.take(10).uppercase(),
+                        color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
+                        style = AppTypography.labelSmall,
+                        maxLines = 1
                     )
                 }
             }
 
-            // Agent selector
+            // Variant selector (if available) - pill chip
+            if (variants.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .height(NavConstants.StatusBarChipHeight)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.5f),
+                            shape = AppShapes.pill
+                        )
+                        .border(
+                            width = 0.5.dp,
+                            color = AppColors.border.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable { showVariantSelector = true }
+                        .padding(horizontal = AppSpacing.sm),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = null,
+                            modifier = Modifier.size(NavConstants.StatusBarIconSize),
+                            tint = AppColors.textTertiary
+                        )
+                        Text(
+                            text = (selectedVariantId ?: "DEF").take(5).uppercase(),
+                            color = AppColors.textSecondary,
+                            style = AppTypography.labelSmall,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            // Spacer to push agent selector to the right
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Agent selector - pill chip with dropdown
             Box {
                 var showAgentMenu by remember { mutableStateOf(false) }
-                Row(
-                    modifier = Modifier.clickable { showAgentMenu = true },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                Box(
+                    modifier = Modifier
+                        .height(NavConstants.StatusBarChipHeight)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.5f),
+                            shape = AppShapes.pill
+                        )
+                        .border(
+                            width = 0.5.dp,
+                            color = AppColors.border.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable { showAgentMenu = true }
+                        .padding(horizontal = AppSpacing.sm),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = AppColors.textTertiary
-                    )
-                    Text(
-                        text = agentName.take(10).uppercase(),
-                        color = AppColors.textTertiary,
-                        style = AppTypography.labelSmall
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Person,
+                            contentDescription = null,
+                            modifier = Modifier.size(NavConstants.StatusBarIconSize),
+                            tint = AppColors.textTertiary
+                        )
+                        Text(
+                            text = agentName.take(8).uppercase(),
+                            color = AppColors.textTertiary,
+                            style = AppTypography.labelSmall,
+                            maxLines = 1
+                        )
+                    }
                 }
                 
+                // Themed dropdown menu
                 DropdownMenu(
                     expanded = showAgentMenu,
                     onDismissRequest = { showAgentMenu = false },
-                    modifier = Modifier.background(AppColors.surfaceElevated)
+                    modifier = Modifier
+                        .background(AppColors.surfaceElevated, AppShapes.medium)
+                        .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
                 ) {
                     modes.forEach { mode ->
                         DropdownMenuItem(
@@ -291,11 +348,6 @@ fun ChatInputContent(
                 }
             }
         }
-
-        HorizontalDivider(
-            thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
-        )
 
         // ═══════════════ INPUT AREA ═══════════════
         Box(
@@ -339,65 +391,148 @@ fun ChatInputContent(
             }
         }
 
-        // ═══════════════ ACTION TOOLBAR ═══════════════
+        // ═══════════════ ACTION TOOLBAR (Cleaner, Grouped) ═══════════════
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
+            color = AppColors.border.copy(alpha = 0.3f)
         )
 
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(NavConstants.ActionToolbarHeight)
-                .padding(horizontal = AppSpacing.sm),
+                .padding(horizontal = AppSpacing.xs),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // @ mention button
-            MoccaIconButton(
-                icon = Icons.Default.Add,
-                onClick = { handleValueChange(if (inputText.isEmpty()) "@" else "$inputText @") },
-                size = 32.dp,
-                iconColor = AppColors.textSecondary
-            )
+            // LEFT GROUP: Quick actions (@ and /)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
+            ) {
+                // @ mention button - styled as subtle chip
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { handleValueChange(if (inputText.isEmpty()) "@" else "$inputText @") }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "@",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
-            // / command button
-            MoccaTextButton(
-                text = "/",
-                onClick = { handleValueChange("/") },
-                textColor = AppColors.textSecondary
-            )
+                // / command button - styled as subtle chip
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = { handleValueChange("/") }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "/",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
+            // Subtle separator
             VerticalDivider(
-                modifier = Modifier.height(14.dp),
+                modifier = Modifier
+                    .height(16.dp)
+                    .padding(horizontal = AppSpacing.xs),
                 thickness = AppSpacing.borderThin,
-                color = AppColors.border
+                color = AppColors.border.copy(alpha = 0.5f)
             )
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
 
-            // Attachment button
-            MoccaIconButton(
-                icon = Icons.Default.AttachFile,
-                onClick = onAttachClick,
-                size = 32.dp,
-                iconColor = AppColors.textSecondary
-            )
+            // CENTER: Attachment button
+            Box(
+                modifier = Modifier
+                    .size(NavConstants.ActionButtonSize)
+                    .background(
+                        color = AppColors.surface.copy(alpha = 0.3f),
+                        shape = AppShapes.pill
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onAttachClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AttachFile,
+                    contentDescription = "Attach file",
+                    tint = AppColors.textSecondary,
+                    modifier = Modifier.size(NavConstants.ActionIconSize)
+                )
+            }
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Send button
-            MoccaCompactButton(
-                text = "SEND",
-                onClick = onSendClick,
-                enabled = inputEnabled && inputText.isNotBlank(),
-                icon = Icons.AutoMirrored.Filled.Send
-            )
+            // RIGHT: Send button (prominent)
+            val canSend = inputEnabled && inputText.isNotBlank()
+            Box(
+                modifier = Modifier
+                    .height(NavConstants.SendButtonHeight)
+                    .then(
+                        if (canSend) {
+                            Modifier.background(AppColors.accentGreen, AppShapes.pill)
+                        } else {
+                            Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
+                        }
+                    )
+                    .clickable(
+                        enabled = canSend,
+                        onClick = onSendClick
+                    )
+                    .padding(horizontal = AppSpacing.md),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = null,
+                        tint = if (canSend) AppColors.background else AppColors.grey,
+                        modifier = Modifier.size(NavConstants.SendIconSize)
+                    )
+                    Text(
+                        text = "SEND",
+                        color = if (canSend) AppColors.background else AppColors.grey,
+                        style = AppTypography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
 
-        // Divider before nav row (nav row is added by parent container)
+        // Subtle divider before nav row
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
+            color = AppColors.border.copy(alpha = 0.3f)
         )
     }
 

@@ -1,6 +1,7 @@
 package com.mocca.app.ui.components.navigation
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -8,6 +9,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -141,11 +144,12 @@ fun UnifiedFloatingBottomBar(
         is BottomBarMode.ChatInput -> NavConstants.ChatInputModeMinHeight
     }
     
+    // Premium smooth height animation with low bouncy spring
     val animatedHeight by animateDpAsState(
         targetValue = targetHeight,
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
         ),
         label = "bottomBarHeight"
     )
@@ -187,13 +191,32 @@ fun UnifiedFloatingBottomBar(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // ═══════════════ MORPHING CONTENT ABOVE NAV ═══════════════
-            // This content cross-fades between modes
+            // Premium slide + fade transition for smooth morphing effect
             // The nav row below NEVER changes size or position
             AnimatedContent(
                 targetState = mode,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) togetherWith
-                        fadeOut(animationSpec = tween(200, easing = FastOutSlowInEasing))
+                    // ChatInput slides up and fades in (entering)
+                    // Navigation slides up slightly and fades out (exiting)
+                    (slideInVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        ),
+                        initialOffsetY = { it / 3 }  // Slide from bottom third
+                    ) + fadeIn(
+                        animationSpec = tween(220, easing = FastOutSlowInEasing)
+                    )).togetherWith(
+                        slideOutVertically(
+                            animationSpec = tween(180, easing = FastOutSlowInEasing),
+                            targetOffsetY = { -it / 4 }  // Slide up and out
+                        ) + fadeOut(
+                            animationSpec = tween(150, easing = FastOutSlowInEasing)
+                        )
+                    ).using(
+                        // Clip during transition to prevent overflow
+                        SizeTransform(clip = true)
+                    )
                 },
                 label = "modeContentTransition"
             ) { targetMode ->

@@ -115,4 +115,29 @@ object NavConstants {
     
     /** Nav item internal padding vertical */
     val NavItemPaddingVertical = 4.dp
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CHAT INPUT REFINED SIZING (Premium Polish)
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    /** Status bar chip height */
+    val StatusBarChipHeight = 24.dp
+    
+    /** Status bar icon size (increased for visibility) */
+    val StatusBarIconSize = 14.dp
+    
+    /** Action toolbar button size (visual) */
+    val ActionButtonSize = 36.dp
+    
+    /** Send button height */
+    val SendButtonHeight = 32.dp
+    
+    /** Send button icon size */
+    val SendIconSize = 16.dp
+    
+    /** Action toolbar icon size */
+    val ActionIconSize = 18.dp
+    
+    /** Minimum popup item height for touch targets */
+    val PopupItemMinHeight = 48.dp
 }
