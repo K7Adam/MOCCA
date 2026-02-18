@@ -2,7 +2,11 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -14,6 +18,12 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.LocalExtendedColors
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.HazeStyle
+import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
 
 /**
  * A reusable modifier that applies a premium glassmorphic effect without blurring content.
@@ -128,3 +138,141 @@ fun Modifier.glassySimple(
             shape = shape
         )
 )
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LIQUID GLASS - 2024/2025 SOTA Glassmorphism with True Blur
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Default values for Liquid Glass effects.
+ * Provides optimized blur and styling configurations for modern glassmorphism.
+ */
+object LiquidGlassDefaults {
+    /** Default blur radius for liquid glass effect (30dp for smooth, premium feel) */
+    val blurRadius: Dp = 30.dp
+    
+    /** Default background tint color with 40% opacity */
+    val backgroundColor: Color = Color(0x661A1A1A)
+    
+    /** Default border color with subtle white */
+    val borderColor: Color = Color(0x40FFFFFF)
+    
+    /** Default mint accent glow color */
+    val glowColor: Color = Color(0x3000D9A5)
+    
+    /** Default border width */
+    val borderWidth: Dp = 0.75.dp
+    
+    /**
+     * Creates a HazeStyle with liquid glass styling.
+     * 
+     * @param backgroundColor Background tint color
+     * @param blurRadius Blur radius in Dp
+     * @param noiseFactor Noise texture factor (0f-1f) for premium feel
+     */
+    @Composable
+    fun hazeStyle(
+        backgroundColor: Color = this.backgroundColor,
+        blurRadius: Dp = this.blurRadius,
+        noiseFactor: Float = 0.15f
+    ): HazeStyle = HazeStyle(
+        backgroundColor = Color.Transparent,
+        tints = listOf(
+            HazeTint(color = backgroundColor)
+        ),
+        blurRadius = blurRadius,
+        noiseFactor = noiseFactor
+    )
+}
+
+/**
+ * Premium Liquid Glass modifier using Haze for true background blur.
+ * This is the 2024/2025 state-of-the-art glassmorphism implementation.
+ * 
+ * Features:
+ * - Real background blur using Haze library
+ * - Layered gradient borders for depth
+ * - Top-edge accent glow
+ * - Optional noise texture for premium feel
+ * 
+ * IMPORTANT: Requires parent content to have `hazeSource(hazeState)` modifier
+ * and this component must be overlaid on top of the blurred content.
+ * 
+ * Usage:
+ * ```
+ * val hazeState = rememberHazeState()
+ * Box {
+ *     // Content to blur
+ *     LazyColumn(Modifier.hazeSource(hazeState)) { ... }
+ *     
+ *     // Liquid glass overlay
+ *     Box(
+ *         modifier = Modifier
+ *             .liquidGlass(hazeState, shape = RoundedCornerShape(32.dp))
+ *     ) { ... }
+ * }
+ * ```
+ *
+ * @param hazeState The HazeState shared with the content to blur
+ * @param shape The shape of the glass container
+ * @param style Custom HazeStyle (defaults to LiquidGlassDefaults.hazeStyle())
+ * @param borderWidth Width of the gradient border
+ * @param borderColor Border gradient colors (uses gradient if single color provided)
+ * @param glowColor Top-edge glow color
+ * @param showGlow Whether to show the top-edge glow effect
+ */
+@Composable
+fun Modifier.liquidGlass(
+    hazeState: HazeState,
+    shape: Shape,
+    style: HazeStyle = LiquidGlassDefaults.hazeStyle(),
+    borderWidth: Dp = LiquidGlassDefaults.borderWidth,
+    borderColor: Color = LiquidGlassDefaults.borderColor,
+    glowColor: Color = LiquidGlassDefaults.glowColor,
+    showGlow: Boolean = true
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .hazeEffect(hazeState) {
+            // Apply style properties
+            this@hazeEffect.style = style
+        }
+        .drawBehind {
+            // Top-edge glow for premium liquid effect
+            if (showGlow) {
+                val glowHeight = 2.dp.toPx()
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            glowColor.copy(alpha = 0f),
+                            glowColor.copy(alpha = 0.6f),
+                            glowColor.copy(alpha = 0.6f),
+                            glowColor.copy(alpha = 0f)
+                        ),
+                        startX = 0f,
+                        endX = size.width
+                    ),
+                    topLeft = Offset(0f, 0f),
+                    size = Size(size.width, glowHeight)
+                )
+            }
+        }
+        .border(
+            width = borderWidth,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    borderColor.copy(alpha = 0.6f),  // Bright top edge
+                    borderColor.copy(alpha = 0.2f),  // Mid fade
+                    borderColor.copy(alpha = 0.1f)   // Subtle bottom
+                )
+            ),
+            shape = shape
+        )
+)
+
+/**
+ * Creates a HazeState for use with liquid glass components.
+ * Remember this at the screen level and pass to both content and glass overlay.
+ */
+@Composable
+fun rememberLiquidGlassState(): HazeState = rememberHazeState()

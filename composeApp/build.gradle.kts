@@ -100,6 +100,9 @@ kotlin {
             // Paging 3
             implementation(libs.paging.common)
             implementation(libs.paging.compose)
+
+            // Haze - Blur effects for liquid glass UI
+            implementation(libs.haze)
         }
 
         androidMain.dependencies {

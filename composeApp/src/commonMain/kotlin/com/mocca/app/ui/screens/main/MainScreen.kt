@@ -24,6 +24,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.BottomBarMode
 import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
 import com.mocca.app.ui.components.modern.*
+import com.mocca.app.ui.components.modern.rememberLiquidGlassState
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
@@ -38,6 +39,7 @@ import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.AppColors
+import dev.chrisbanes.haze.hazeSource
 import org.koin.core.parameter.parametersOf
 
 /**
@@ -78,6 +80,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         }
         
         val panelState = rememberPanelState()
+        
+        // Liquid Glass state for blur effect on bottom bar
+        val hazeState = rememberLiquidGlassState()
 
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
@@ -99,7 +104,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
             // Content area - full screen, unified bottom bar floats above
+            // Apply hazeSource for liquid glass blur effect on bottom bar
             SwipePanelLayout(
+                    modifier = Modifier.hazeSource(hazeState),
                     leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
@@ -223,6 +230,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // )
 
             // Unified Floating Bottom Bar - morphs between nav and chat input modes
+            // Uses liquid glass effect with blur for modern 2024/2025 aesthetic
             val inputText by chatScreenModel.inputText.collectAsState()
             
             UnifiedFloatingBottomBar(
@@ -232,6 +240,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 },
                 dragProgress = dragProgress,
                 onItemClick = { newState -> panelState.state = newState },
+                // Liquid Glass blur integration
+                hazeState = hazeState,
                 // Chat input parameters
                 inputText = inputText,
                 onInputTextChange = { chatScreenModel.updateInputText(it) },

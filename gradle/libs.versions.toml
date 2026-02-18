@@ -23,6 +23,7 @@ paging = "3.3.0"
 paging-compose = "3.3.0"
 slf4j = "2.0.16"
 filekit = "0.12.0"
+haze = "1.7.2"
 
 [libraries]
 paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
@@ -71,6 +72,9 @@ napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }
 filekit-compose = { module = "io.github.vinceglb:filekit-dialogs-compose", version.ref = "filekit" }
+
+# Haze - Blur effects for Compose (multiplatform)
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.0" }

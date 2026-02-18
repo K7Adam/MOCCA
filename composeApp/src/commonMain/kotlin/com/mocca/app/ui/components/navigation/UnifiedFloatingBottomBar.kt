@@ -23,11 +23,14 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
+import com.mocca.app.ui.components.modern.LiquidGlassDefaults
 import com.mocca.app.ui.components.modern.glassyPremium
+import com.mocca.app.ui.components.modern.liquidGlass
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.util.TerminalCommand
+import dev.chrisbanes.haze.HazeState
 
 /**
  * Sealed class representing the current mode of the unified bottom bar.
@@ -48,10 +51,12 @@ sealed class BottomBarMode {
  * - Single glassy container for cohesive premium look
  * - Integrated navigation indicator visible in both modes
  * - Maximizes screen real estate with compact design
+ * - Liquid Glass effect with true blur (when hazeState provided)
  *
  * @param mode Current mode (Navigation or ChatInput)
  * @param dragProgress Real-time drag progress from SwipePanelLayout (0.0 = right, 0.5 = center, 1.0 = left)
  * @param onItemClick Callback when a navigation item is clicked
+ * @param hazeState Optional HazeState for liquid glass blur effect. Pass null to use fallback glassyPremium.
  * @param inputText Current input text (ChatInput mode only)
  * @param onInputTextChange Callback when input text changes
  * @param onSendClick Callback when send button is clicked
@@ -82,6 +87,8 @@ fun UnifiedFloatingBottomBar(
     mode: BottomBarMode,
     dragProgress: Float,
     onItemClick: (PanelState) -> Unit,
+    // Liquid Glass integration
+    hazeState: HazeState? = null,
     // Chat input parameters
     inputText: String = "",
     onInputTextChange: (String) -> Unit = {},
@@ -147,12 +154,29 @@ fun UnifiedFloatingBottomBar(
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
     ) {
-        // Glassy container with animated height
-        Box(
-            modifier = Modifier
+        // Glassy container with animated height - use liquid glass if hazeState provided
+        val containerModifier = if (hazeState != null) {
+            Modifier
                 .fillMaxWidth()
                 .height(animatedHeight)
-                .glassyPremium(shape = AppShapes.rounded2xl),
+                .liquidGlass(
+                    hazeState = hazeState,
+                    shape = AppShapes.rounded2xl,
+                    style = LiquidGlassDefaults.hazeStyle(
+                        backgroundColor = androidx.compose.ui.graphics.Color(0x771A1A1A),
+                        blurRadius = 30.dp,
+                        noiseFactor = 0.1f
+                    )
+                )
+        } else {
+            Modifier
+                .fillMaxWidth()
+                .height(animatedHeight)
+                .glassyPremium(shape = AppShapes.rounded2xl)
+        }
+        
+        Box(
+            modifier = containerModifier,
             contentAlignment = Alignment.Center
         ) {
             // Navigation Mode Content
