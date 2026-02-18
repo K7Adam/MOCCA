@@ -115,6 +115,14 @@ class AppStateStore(
     
     init {
         Napier.i("[AppStateStore] Initializing...")
+        
+        // Wire up callbacks for lifecycle and connection events
+        eventStreamRepository.onAppResume = { syncFromServer() }
+        connectionManager.onConnectionEstablished = suspend { 
+            start()
+            syncFromServer()
+        }
+        
         observeLocalCache()
         observeSseEvents()
         observeLifecycle()

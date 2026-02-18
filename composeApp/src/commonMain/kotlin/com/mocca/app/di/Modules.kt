@@ -71,9 +71,34 @@ val commonModule = module {
             appLifecycleObserver = getOrNull()
         )
     }
+    singleOf(::FileRepository)
+    singleOf(::TerminalRepository)
+    single { GitRepository(get(), get()) }
+    single { McpRepository(get()) }
+    singleOf(::SettingsRepository)
+    single { ConfigRepository(get()) }
+    singleOf(::UpdateRepository)
+    singleOf(::GitHubApiClient)
+    
+    // Global update notifier - allows any screen to trigger update dialog
+    singleOf(::UpdateNotifier)
+
+    // Global Activity Manager - singleton for tracking background activity
+    single { GlobalActivityManager() }
+    
+    // New repositories for OpenCode features
+    singleOf(::ProviderRepository)
+    singleOf(::AgentRepository)
+    singleOf(::ToolRepository)
+    singleOf(::CommandRepository)
+    singleOf(::FormatterRepository)
+    singleOf(::LspRepository)
+    singleOf(::SearchRepository)
+    singleOf(::ProjectRepository)
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CENTRALIZED STATE STORES - Single source of truth for all app state
+    // NOTE: These MUST come after all their dependencies are registered
     // ═══════════════════════════════════════════════════════════════════════════════
     
     single { 
@@ -98,49 +123,6 @@ val commonModule = module {
             appLifecycleObserver = getOrNull()
         )
     }
-    
-    // Wire up callbacks for lifecycle and connection events
-    // This ensures state is synced when app resumes from background
-    single {
-        get<EventStreamRepository>().apply {
-            onAppResume = { get<AppStateStore>().syncFromServer() }
-        }
-    }
-    
-    // Wire up ConnectionManager to start AppStateStore on connection
-    single {
-        get<ConnectionManager>().apply {
-            onConnectionEstablished = suspend { 
-                get<AppStateStore>().start()
-                get<AppStateStore>().syncFromServer()
-            }
-        }
-    }
-    
-    singleOf(::FileRepository)
-    singleOf(::TerminalRepository)
-    single { GitRepository(get(), get()) }
-    single { McpRepository(get()) }
-    singleOf(::SettingsRepository)
-    single { ConfigRepository(get()) }
-    singleOf(::UpdateRepository)
-    singleOf(::GitHubApiClient)
-
-    // Global update notifier - allows any screen to trigger update dialog
-    singleOf(::UpdateNotifier)
-
-    // Global Activity Manager - singleton for tracking background activity
-    single { GlobalActivityManager() }
-    
-    // New repositories for OpenCode features
-    singleOf(::ProviderRepository)
-    singleOf(::AgentRepository)
-    singleOf(::ToolRepository)
-    singleOf(::CommandRepository)
-    singleOf(::FormatterRepository)
-    singleOf(::LspRepository)
-    singleOf(::SearchRepository)
-    singleOf(::ProjectRepository)
 }
 
 /**
