@@ -89,9 +89,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
         
-        // Track scroll direction for dock auto-hide
+        // Track scroll direction for chat input auto-hide
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
-        val isDockVisible = scrollDirection != ScrollDirection.UP
 
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
@@ -226,8 +225,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
             // Unified Floating Bottom Bar - morphs between nav and chat input modes
             // Uses TRUE Liquid Glass with lens refraction for authentic iOS 26 aesthetic
-            // Auto-hides when scrolling up to read older messages
+            // IMPORTANT: Nav row is ALWAYS visible; only chat input auto-hides on scroll
             val inputText by chatScreenModel.inputText.collectAsState()
+            
+            // Chat input auto-hides when scrolling up (reading older messages)
+            // Nav row stays visible at all times on all screens
+            val isChatInputVisible = scrollDirection != ScrollDirection.UP
             
             UnifiedFloatingBottomBar(
                 mode = when (panelState.state) {
@@ -235,7 +238,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     else -> BottomBarMode.Navigation
                 },
                 dragProgress = dragProgress,
-                isVisible = isDockVisible && panelState.state == PanelState.CENTER,
+                isChatInputVisible = isChatInputVisible,
                 onItemClick = { newState -> panelState.state = newState },
                 // TRUE Liquid Glass with lens refraction
                 liquidState = liquidState,

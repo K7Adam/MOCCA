@@ -1,24 +1,19 @@
 package com.mocca.app.ui.components.navigation
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -31,7 +26,6 @@ import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassShaderParams
 import com.mocca.app.ui.components.glass.GlassThemeTokens
 import com.mocca.app.ui.components.glass.glassFloating
 import com.mocca.app.ui.components.modern.LiquidGlassDefaults
@@ -63,23 +57,22 @@ sealed class BottomBarMode {
  * Structure:
  * ```
  * LiquidGlassContainer
- * ├── MorphingContentAboveNav (cross-fades based on mode)
- * │   ├── [Nav Mode: Spacer]
- * │   └── [Chat Mode: ChatInputContent]
- * └── PersistentNavRow (ALWAYS SAME SIZE AND POSITION)
+ * ├── AnimatedVisibility (ChatInputContent - controlled by isChatInputVisible)
+ * └── PersistentNavRow (ALWAYS VISIBLE - NEVER HIDDEN)
  * ```
  *
  * Features:
  * - Fluid spring-based animations for mode transitions
  * - Single glassy container for cohesive premium look
  * - Nav buttons NEVER change size or position
+ * - Nav row is ALWAYS visible across all screens
  * - Integrated navigation indicator visible in both modes
  * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
- * - Auto-hide on scroll with spring physics
+ * - Auto-hide only affects chat input field, not navigation
  *
  * @param mode Current mode (Navigation or ChatInput)
  * @param dragProgress Real-time drag progress from SwipePanelLayout (0.0 = right, 0.5 = center, 1.0 = left)
- * @param isVisible Whether the dock is visible (auto-hide support)
+ * @param isChatInputVisible Whether the chat input is visible (auto-hide support) - ONLY affects chat input, nav row stays visible
  * @param onItemClick Callback when a navigation item is clicked
  * @param liquidState Optional LiquidState for TRUE liquid glass effect. Pass null to use fallback glassyPremium.
  * @param inputText Current input text (ChatInput mode only)
@@ -111,7 +104,7 @@ sealed class BottomBarMode {
 fun UnifiedFloatingBottomBar(
     mode: BottomBarMode,
     dragProgress: Float,
-    isVisible: Boolean = true,
+    isChatInputVisible: Boolean = true,
     onItemClick: (PanelState) -> Unit,
     // TRUE Liquid Glass integration (legacy - prefer glassTokens parameter)
     // Note: liquidState is deprecated. Use glassTokens parameter instead.
@@ -152,10 +145,17 @@ fun UnifiedFloatingBottomBar(
     onModeSelectedForMention: (Mode) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    // Animated height based on mode
-    val targetHeight = when (mode) {
-        is BottomBarMode.Navigation -> NavConstants.NavigationModeHeight
-        is BottomBarMode.ChatInput -> NavConstants.ChatInputModeMinHeight
+    // Determine if chat input should be shown:
+    // 1. Must be in ChatInput mode
+    // 2. AND isChatInputVisible must be true (auto-hide check)
+    val showChatInput = mode is BottomBarMode.ChatInput && isChatInputVisible
+    
+    // Calculate target height based on what's visible
+    // Nav row is ALWAYS visible, chat input can be hidden
+    val targetHeight = if (showChatInput) {
+        NavConstants.ChatInputModeMinHeight
+    } else {
+        NavConstants.NavigationModeHeight
     }
     
     // Premium smooth height animation with low bouncy spring
@@ -168,26 +168,17 @@ fun UnifiedFloatingBottomBar(
         label = "bottomBarHeight"
     )
     
-    // Auto-hide animation - slide down when not visible
-    // Use int offset for smooth pixel-perfect animation
-    val animatedOffsetY by animateIntAsState(
-        targetValue = if (isVisible) 0 else (targetHeight.value.toInt() + 100), // 100 extra for nav bars
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
-        label = "bottomBarOffset"
-    )
-    
     // Determine if we should show labels (only in Navigation mode)
     val showLabels = mode is BottomBarMode.Navigation
+    
+    // IMPORTANT: No offset animation here - nav row must ALWAYS be visible!
+    // The entire dock stays in place; only chat input content animates in/out
     
     Box(
         modifier = modifier
             .widthIn(min = 320.dp, max = 440.dp)
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
-            .offset(y = animatedOffsetY.dp)
     ) {
         // TRUE Liquid Glass container with animated height - authentic iOS 26 style
         // Uses lens refraction, chromatic aberration, and saturation boost
@@ -219,85 +210,61 @@ fun UnifiedFloatingBottomBar(
             modifier = containerModifier,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // ═══════════════ MORPHING CONTENT ABOVE NAV ═══════════════
-            // Premium slide + fade transition for smooth morphing effect
-            // The nav row below NEVER changes size or position
-            AnimatedContent(
-                targetState = mode,
-                transitionSpec = {
-                    // ChatInput slides up and fades in (entering)
-                    // Navigation slides up slightly and fades out (exiting)
-                    (slideInVertically(
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        ),
-                        initialOffsetY = { it / 3 }  // Slide from bottom third
-                    ) + fadeIn(
-                        animationSpec = tween(220, easing = FastOutSlowInEasing)
-                    )).togetherWith(
-                        slideOutVertically(
-                            animationSpec = tween(180, easing = FastOutSlowInEasing),
-                            targetOffsetY = { -it / 4 }  // Slide up and out
-                        ) + fadeOut(
-                            animationSpec = tween(150, easing = FastOutSlowInEasing)
-                        )
-                    ).using(
-                        // Clip during transition to prevent overflow
-                        SizeTransform(clip = true)
+            // ═══════════════ CHAT INPUT CONTENT (Can auto-hide) ═══════════════
+            // AnimatedVisibility allows the chat input to hide while nav row stays visible
+            // This is the KEY fix: nav row is ALWAYS rendered below this
+            AnimatedVisibility(
+                visible = showChatInput,
+                enter = expandVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                },
-                label = "modeContentTransition"
-            ) { targetMode ->
-                when (targetMode) {
-                    is BottomBarMode.Navigation -> {
-                        // In navigation mode, content above nav is just padding
-                        // The nav row will show icons + labels
-                        Spacer(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f, fill = false)
-                        )
-                    }
-                    is BottomBarMode.ChatInput -> {
-                        // In chat input mode, show the input content above nav
-                        // The nav row will show only icons (no labels) but SAME POSITION
-                        ChatInputContent(
-                            inputText = inputText,
-                            onInputTextChange = onInputTextChange,
-                            onSendClick = onSendClick,
-                            inputEnabled = inputEnabled,
-                            placeholder = placeholder,
-                            isSessionIdle = isSessionIdle,
-                            onAbortClick = onAbortClick,
-                            modelName = modelName,
-                            agentName = agentName,
-                            providerResponse = providerResponse,
-                            selectedProviderId = selectedProviderId,
-                            selectedModelId = selectedModelId,
-                            onModelSelected = onModelSelected,
-                            variants = variants,
-                            selectedVariantId = selectedVariantId,
-                            onVariantSelected = onVariantSelected,
-                            modes = modes,
-                            selectedModeId = selectedModeId,
-                            onModeSelected = onModeSelected,
-                            attachedFiles = attachedFiles,
-                            onRemoveAttachment = onRemoveAttachment,
-                            onAttachClick = onAttachClick,
-                            commands = commands,
-                            onCommandSelected = onCommandSelected,
-                            onModeSelectedForMention = onModeSelectedForMention,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f, fill = false)
-                        )
-                    }
-                }
+                ) + fadeIn(
+                    animationSpec = tween(220, easing = FastOutSlowInEasing)
+                ),
+                exit = shrinkVertically(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(150, easing = FastOutSlowInEasing)
+                )
+            ) {
+                ChatInputContent(
+                    inputText = inputText,
+                    onInputTextChange = onInputTextChange,
+                    onSendClick = onSendClick,
+                    inputEnabled = inputEnabled,
+                    placeholder = placeholder,
+                    isSessionIdle = isSessionIdle,
+                    onAbortClick = onAbortClick,
+                    modelName = modelName,
+                    agentName = agentName,
+                    providerResponse = providerResponse,
+                    selectedProviderId = selectedProviderId,
+                    selectedModelId = selectedModelId,
+                    onModelSelected = onModelSelected,
+                    variants = variants,
+                    selectedVariantId = selectedVariantId,
+                    onVariantSelected = onVariantSelected,
+                    modes = modes,
+                    selectedModeId = selectedModeId,
+                    onModeSelected = onModeSelected,
+                    attachedFiles = attachedFiles,
+                    onRemoveAttachment = onRemoveAttachment,
+                    onAttachClick = onAttachClick,
+                    commands = commands,
+                    onCommandSelected = onCommandSelected,
+                    onModeSelectedForMention = onModeSelectedForMention,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
             
-            // ═══════════════ PERSISTENT NAV ROW ═══════════════
+            // ═══════════════ PERSISTENT NAV ROW (ALWAYS VISIBLE!) ═══════════════
             // This nav row is ALWAYS visible with SAME SIZE and SAME POSITION
+            // It NEVER hides - only the chat input above it can hide
             // Icons are always 22dp, touch targets always 48dp
             // Only the labels show/hide based on mode
             PersistentNavRow(
