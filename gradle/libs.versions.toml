@@ -25,6 +25,7 @@ slf4j = "2.0.16"
 filekit = "0.12.0"
 haze = "1.7.2"
 liquid = "1.1.1"
+backdrop = "1.0.6"
 
 [libraries]
 paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
@@ -79,6 +80,9 @@ haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 
 # Liquid - True Liquid Glass effect with lens refraction (multiplatform)
 liquid = { module = "io.github.fletchmckee.liquid:liquid", version.ref = "liquid" }
+
+# Backdrop - Kyant0's Liquid Glass library (used by SimpMusic)
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
 
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.0" }

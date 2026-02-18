@@ -18,12 +18,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.BottomBarMode
 import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
+import com.mocca.app.ui.components.glass.rememberLiquidBackdrop
+import com.mocca.app.ui.components.glass.rememberLuminanceAnimation
+import com.mocca.app.ui.components.glass.liquidBackdropSource
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.components.modern.rememberLiquidGlassState
 import com.mocca.app.ui.components.modern.liquidGlassSource
@@ -47,7 +51,12 @@ import org.koin.core.parameter.parametersOf
 /**
  * Main screen with swipe panel navigation.
  * Shows chat content in center, context/history on left, dashboard on right.
- * Features TRUE Liquid Glass effect with lens refraction.
+ * 
+ * GLASS EFFECT: Uses Kyant0/backdrop library for TRUE Liquid Glass with:
+ * - Lens refraction (optical distortion)
+ * - Blur (frosted glass)
+ * - Vibrancy (saturation boost)
+ * - Luminance adaptation (dynamic brightness/contrast based on background)
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
@@ -83,8 +92,22 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         
         val panelState = rememberPanelState()
         
-        // TRUE Liquid Glass state - enables lens refraction, chromatic aberration, etc.
-        val liquidState = rememberLiquidGlassState()
+        // ═══════════════════════════════════════════════════════════════════════
+        // TRUE LIQUID GLASS - SimpMusic Style (Kyant0/backdrop)
+        // ═══════════════════════════════════════════════════════════════════════
+        
+        // Create backdrop that captures background content
+        val backdrop = rememberLiquidBackdrop(backgroundColor = AppColors.background)
+        
+        // Graphics layer for luminance sampling
+        val graphicsLayer = rememberGraphicsLayer()
+        
+        // Luminance detection with dynamic adaptation
+        val luminanceAnimation = rememberLuminanceAnimation(graphicsLayer)
+        
+        // Legacy: Keep for backward compatibility with ChatContent
+        @Suppress("DEPRECATION")
+        val legacyLiquidState = rememberLiquidGlassState()
 
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
@@ -108,10 +131,13 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Subtle terminal effect
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
+            // ═══════════════════════════════════════════════════════════════════
             // Content area - full screen, unified bottom bar floats above
-            // Apply liquidGlassSource for TRUE liquid glass effect on bottom bar
+            // Apply liquidBackdropSource for TRUE liquid glass effect on bottom bar
+            // ═══════════════════════════════════════════════════════════════════
             SwipePanelLayout(
-                    modifier = Modifier.liquidGlassSource(liquidState),
+                    // NEW: Use backdrop-based source for SimpMusic-style liquid glass
+                    modifier = Modifier.liquidBackdropSource(backdrop),
                     leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
@@ -169,7 +195,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 // Chat content (input will be disabled based on connection status)
                                 ChatContent(
                                     screenModel = chatScreenModel, 
-                                    liquidState = liquidState,
+                                    liquidState = legacyLiquidState, // Legacy for now
                                     onScrollDirectionChange = { direction -> scrollDirection = direction }
                                 )
                             }
@@ -223,9 +249,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
 
-            // Unified Floating Bottom Bar - morphs between nav and chat input modes
-            // Uses TRUE Liquid Glass with lens refraction for authentic iOS 26 aesthetic
-            // IMPORTANT: Nav row is ALWAYS visible; only chat input auto-hides on scroll
+            // ═══════════════════════════════════════════════════════════════════════
+            // UNIFIED FLOATING BOTTOM BAR - SimpMusic Style Liquid Glass
+            // ═══════════════════════════════════════════════════════════════════════
+            // Uses backdrop + luminance for TRUE liquid glass with dynamic adaptation
+            // Nav row is ALWAYS visible; only chat input auto-hides on scroll
             val inputText by chatScreenModel.inputText.collectAsState()
             
             // Chat input auto-hides when scrolling up (reading older messages)
@@ -240,8 +268,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 dragProgress = dragProgress,
                 isChatInputVisible = isChatInputVisible,
                 onItemClick = { newState -> panelState.state = newState },
-                // TRUE Liquid Glass with lens refraction
-                liquidState = liquidState,
+                // NEW: SimpMusic-style liquid glass with luminance adaptation
+                backdrop = backdrop,
+                graphicsLayer = graphicsLayer,
+                luminance = luminanceAnimation.value,
                 // Chat input parameters
                 inputText = inputText,
                 onInputTextChange = { chatScreenModel.updateInputText(it) },

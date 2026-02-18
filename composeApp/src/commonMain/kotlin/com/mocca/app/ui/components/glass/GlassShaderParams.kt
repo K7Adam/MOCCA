@@ -1,108 +1,53 @@
 package com.mocca.app.ui.components.glass
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
- * Parameters for configuring the liquid glass shader effect.
+ * Glass Shader Parameters - LEGACY COMPATIBILITY SHIM
  * 
- * These parameters control all aspects of the glass simulation:
- * - Refraction (lens distortion)
- * - Chromatic aberration (color separation)
- * - Blur (frosted appearance)
- * - Specular highlights (edge lighting)
- * - Inner shadow (depth)
- * - Edge stroke (border)
+ * This class is deprecated. Use the new backdrop-based system instead:
+ * - `rememberLiquidBackdrop()` for creating backdrops
+ * - `Modifier.drawLiquidGlass()` for applying effects
+ * - `rememberLuminanceAnimation()` for luminance detection
+ * 
+ * Kept for backward compatibility with existing glass components.
+ * 
+ * @deprecated Use backdrop-based liquid glass system
  */
+@Deprecated(
+    message = "Use backdrop-based liquid glass system. See LiquidBackdrop.kt and GlassModifier.kt",
+    level = DeprecationLevel.WARNING
+)
 data class GlassShaderParams(
-    // ═══════════════════════════════════════════════════════════════════════════
-    // CORE EFFECTS
-    // ═══════════════════════════════════════════════════════════════════════════
-    
-    /** Blur radius in pixels for the frosted glass effect */
     val blurRadius: Float = 24f,
-    
-    /** Refraction strength (0.0 = none, 1.0 = maximum lens distortion) */
     val refractionStrength: Float = 0.35f,
-    
-    /** Chromatic aberration intensity for prism effect at edges */
     val chromaticAberration: Float = 0.008f,
-    
-    /** Saturation multiplier for color vibrancy (1.0 = no change) */
     val saturation: Float = 1.3f,
-    
-    /** Contrast adjustment (1.0 = no change) */
     val contrast: Float = 1.1f,
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // TINT & OVERLAY - COLORLESS GLASS
-    // ═══════════════════════════════════════════════════════════════════════════
-    
-    /** Tint color overlay - TRANSPARENT for colorless glass */
     val tintColor: Color = Color.Transparent,
-    
-    /** Dark overlay - TRANSPARENT for colorless glass (depth from geometry only) */
     val darkOverlayColor: Color = Color.Transparent,
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // EDGE EFFECTS - GEOMETRY-BASED DEPTH
-    // ═══════════════════════════════════════════════════════════════════════════
-    
-    /** Top edge specular highlight - pure white for light source simulation */
-    val highlightTopColor: Color = Color(0x33FFFFFF), // White 20% alpha
-    
-    /** Inner specular glow - subtle white */
-    val specularInnerColor: Color = Color(0x14FFFFFF), // White 8% alpha
-    
-    /** Border/stroke color - translucent white */
-    val strokeColor: Color = Color(0x26FFFFFF), // White 15% alpha
-    
-    /** Inner shadow for depth - very subtle */
-    val shadowColor: Color = Color(0x1A000000), // Black 10% alpha
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // SHAPE & GEOMETRY
-    // ═══════════════════════════════════════════════════════════════════════════
-    
-    /** Corner radius in pixels */
+    val highlightTopColor: Color = Color(0x33FFFFFF),
+    val specularInnerColor: Color = Color(0x14FFFFFF),
+    val strokeColor: Color = Color(0x26FFFFFF),
+    val shadowColor: Color = Color(0x1A000000),
     val cornerRadius: Float = 32f,
-    
-    /** Width of the glass element in pixels */
     val width: Float = 0f,
-    
-    /** Height of the glass element in pixels */
     val height: Float = 0f,
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // BEHAVIOR
-    // ═══════════════════════════════════════════════════════════════════════════
-    
-    /** Number of blur samples (higher = better quality, lower performance) */
     val blurSamples: Int = 4,
-    
-    /** Whether to apply refraction effect */
     val enableRefraction: Boolean = true,
-    
-    /** Whether to apply chromatic aberration */
     val enableChromaticAberration: Boolean = true,
-    
-    /** Whether to apply specular highlights */
     val enableSpecular: Boolean = true,
-    
-    /** Whether transparency is reduced (accessibility mode) */
     val reducedTransparency: Boolean = false,
-    
-    /** Whether motion is reduced (accessibility mode) */
     val reducedMotion: Boolean = false
 ) {
+    @Deprecated("Use backdrop-based system", level = DeprecationLevel.WARNING)
     companion object {
-        /**
-         * Default glass parameters for standard surfaces.
-         */
+        @Deprecated("Use backdrop-based system", level = DeprecationLevel.WARNING)
         val Default = GlassShaderParams()
         
-        /**
-         * Glass parameters optimized for floating elements (bottom bars, FABs).
-         */
+        @Deprecated("Use liquidGlassNavBar()", level = DeprecationLevel.WARNING)
         val Floating = GlassShaderParams(
             blurRadius = 32f,
             refractionStrength = 0.5f,
@@ -111,30 +56,24 @@ data class GlassShaderParams(
             contrast = 1.15f
         )
         
-        /**
-         * Glass parameters for buttons and small controls.
-         */
+        @Deprecated("Use glassButton()", level = DeprecationLevel.WARNING)
         val Button = GlassShaderParams(
             blurRadius = 12f,
             refractionStrength = 0.2f,
             chromaticAberration = 0.005f,
             saturation = 1.2f,
-            cornerRadius = 9999f // Pill shape
+            cornerRadius = 9999f
         )
         
-        /**
-         * Glass parameters for app bars (top bars).
-         */
+        @Deprecated("Use glassAppBar() or glassy()", level = DeprecationLevel.WARNING)
         val AppBar = GlassShaderParams(
             blurRadius = 20f,
             refractionStrength = 0.25f,
             chromaticAberration = 0.006f,
-            cornerRadius = 0f // Full-width, no corner rounding
+            cornerRadius = 0f
         )
         
-        /**
-         * Glass parameters for bottom sheets.
-         */
+        @Deprecated("Use glassy() with bottomSheet shape", level = DeprecationLevel.WARNING)
         val Sheet = GlassShaderParams(
             blurRadius = 28f,
             refractionStrength = 0.4f,
@@ -142,9 +81,7 @@ data class GlassShaderParams(
             cornerRadius = 24f
         )
         
-        /**
-         * Glass parameters for dialogs.
-         */
+        @Deprecated("Use glassy()", level = DeprecationLevel.WARNING)
         val Dialog = GlassShaderParams(
             blurRadius = 24f,
             refractionStrength = 0.35f,
@@ -152,9 +89,7 @@ data class GlassShaderParams(
             cornerRadius = 24f
         )
         
-        /**
-         * Fallback parameters when full glass effect is not available.
-         */
+        @Deprecated("Use glassFallback()", level = DeprecationLevel.WARNING)
         val Fallback = GlassShaderParams(
             blurRadius = 0f,
             refractionStrength = 0f,
@@ -163,9 +98,7 @@ data class GlassShaderParams(
             enableChromaticAberration = false
         )
         
-        /**
-         * Accessibility-friendly parameters with solid backgrounds.
-         */
+        @Deprecated("Use solid backgrounds for accessibility", level = DeprecationLevel.WARNING)
         val Accessible = GlassShaderParams(
             blurRadius = 0f,
             refractionStrength = 0f,
@@ -174,31 +107,29 @@ data class GlassShaderParams(
             enableChromaticAberration = false,
             reducedTransparency = true
         )
+        
+        @Deprecated("Use backdrop-based system", level = DeprecationLevel.WARNING)
+        fun fromTokens(
+            tokens: GlassThemeTokens,
+            width: Float = 0f,
+            height: Float = 0f,
+            cornerRadius: Float = tokens.blurRadius.value
+        ): GlassShaderParams = GlassShaderParams(
+            blurRadius = tokens.blurRadius.value,
+            refractionStrength = GlassTokens.refractionStrength,
+            chromaticAberration = tokens.chromaticAberration,
+            saturation = tokens.saturation,
+            contrast = tokens.contrast,
+            tintColor = tokens.tintColor,
+            darkOverlayColor = tokens.darkOverlay,
+            highlightTopColor = tokens.highlightTop,
+            specularInnerColor = tokens.specularInner,
+            strokeColor = tokens.strokeColor,
+            shadowColor = tokens.shadowColor,
+            cornerRadius = cornerRadius,
+            width = width,
+            height = height,
+            blurSamples = tokens.blurSamples
+        )
     }
 }
-
-/**
- * Creates GlassShaderParams from GlassThemeTokens.
- */
-fun GlassShaderParams.Companion.fromTokens(
-    tokens: GlassThemeTokens,
-    width: Float = 0f,
-    height: Float = 0f,
-    cornerRadius: Float = tokens.blurRadius.value
-): GlassShaderParams = GlassShaderParams(
-    blurRadius = tokens.blurRadius.value,
-    refractionStrength = GlassTokens.refractionStrength,
-    chromaticAberration = tokens.chromaticAberration,
-    saturation = tokens.saturation,
-    contrast = tokens.contrast,
-    tintColor = tokens.tintColor,
-    darkOverlayColor = tokens.darkOverlay,
-    highlightTopColor = tokens.highlightTop,
-    specularInnerColor = tokens.specularInner,
-    strokeColor = tokens.strokeColor,
-    shadowColor = tokens.shadowColor,
-    cornerRadius = cornerRadius,
-    width = width,
-    height = height,
-    blurSamples = tokens.blurSamples
-)

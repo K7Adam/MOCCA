@@ -21,13 +21,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.components.glass.GlassDefaults
 import com.mocca.app.ui.components.glass.GlassThemeTokens
-import com.mocca.app.ui.components.glass.glassFloating
+import com.mocca.app.ui.components.glass.LiquidBackdrop
+import com.mocca.app.ui.components.glass.glassy
+import com.mocca.app.ui.components.glass.liquidGlassNavBar
+import com.mocca.app.ui.components.glass.rememberLuminanceTextColor
 import com.mocca.app.ui.components.modern.LiquidGlassDefaults
 import com.mocca.app.ui.components.modern.liquidGlassFloating
 import com.mocca.app.ui.navigation.PanelState
@@ -61,6 +66,11 @@ sealed class BottomBarMode {
  * └── PersistentNavRow (ALWAYS VISIBLE - NEVER HIDDEN)
  * ```
  *
+ * GLASS EFFECT PRIORITY:
+ * 1. **Backdrop + Luminance** (NEW - SimpMusic style): True liquid glass with dynamic adaptation
+ * 2. **LiquidState** (Legacy): io.github.fletchmckee.liquid library
+ * 3. **Glassy** (Fallback): Simple gradient-based glass
+ *
  * Features:
  * - Fluid spring-based animations for mode transitions
  * - Single glassy container for cohesive premium look
@@ -68,13 +78,21 @@ sealed class BottomBarMode {
  * - Nav row is ALWAYS visible across all screens
  * - Integrated navigation indicator visible in both modes
  * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
+ * - Luminance adaptation for dynamic brightness/contrast (when using backdrop)
  * - Auto-hide only affects chat input field, not navigation
  *
  * @param mode Current mode (Navigation or ChatInput)
  * @param dragProgress Real-time drag progress from SwipePanelLayout (0.0 = right, 0.5 = center, 1.0 = left)
  * @param isChatInputVisible Whether the chat input is visible (auto-hide support) - ONLY affects chat input, nav row stays visible
  * @param onItemClick Callback when a navigation item is clicked
- * @param liquidState Optional LiquidState for TRUE liquid glass effect. Pass null to use fallback glassyPremium.
+ * 
+ * GLASS EFFECT PARAMETERS (use ONE of these):
+ * @param backdrop LiquidBackdrop for new SimpMusic-style liquid glass (recommended)
+ * @param graphicsLayer GraphicsLayer for luminance sampling (required with backdrop)
+ * @param luminance Current luminance value 0f-1f (required with backdrop)
+ * @param liquidState Legacy LiquidState for io.github.fletchmckee.liquid library
+ * @param glassTokens Theme tokens for fallback glassy effect
+ * 
  * @param inputText Current input text (ChatInput mode only)
  * @param onInputTextChange Callback when input text changes
  * @param onSendClick Callback when send button is clicked
@@ -106,10 +124,13 @@ fun UnifiedFloatingBottomBar(
     dragProgress: Float,
     isChatInputVisible: Boolean = true,
     onItemClick: (PanelState) -> Unit,
-    // TRUE Liquid Glass integration (legacy - prefer glassTokens parameter)
-    // Note: liquidState is deprecated. Use glassTokens parameter instead.
+    // NEW: SimpMusic-style liquid glass with luminance adaptation
+    backdrop: LiquidBackdrop? = null,
+    graphicsLayer: GraphicsLayer? = null,
+    luminance: Float = 0f,
+    // Legacy: io.github.fletchmckee.liquid library
     liquidState: LiquidState? = null,
-    // New Glass system tokens
+    // Fallback: Simple glass tokens
     glassTokens: GlassThemeTokens = GlassDefaults.tokens(),
     // Chat input parameters
     inputText: String = "",
@@ -171,8 +192,12 @@ fun UnifiedFloatingBottomBar(
     // Determine if we should show labels (only in Navigation mode)
     val showLabels = mode is BottomBarMode.Navigation
     
-    // IMPORTANT: No offset animation here - nav row must ALWAYS be visible!
-    // The entire dock stays in place; only chat input content animates in/out
+    // Determine text color based on luminance (for backdrop mode)
+    val textColor = if (backdrop != null && graphicsLayer != null) {
+        rememberLuminanceTextColor(luminance)
+    } else {
+        Color.White
+    }
     
     Box(
         modifier = modifier
@@ -180,30 +205,40 @@ fun UnifiedFloatingBottomBar(
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
     ) {
-        // TRUE Liquid Glass container with animated height - authentic iOS 26 style
-        // Uses lens refraction, chromatic aberration, and saturation boost
-        // Priority: 1) Legacy liquid library 2) New first-principles Glass system
+        // Determine which glass effect to use (priority order)
         @Suppress("DEPRECATION")
-        val containerModifier = if (liquidState != null) {
-            // Legacy path - use liquid library for backward compatibility
-            Modifier
-                .fillMaxWidth()
-                .height(animatedHeight)
-                .liquidGlassFloating(
-                    liquidState = liquidState,
-                    shape = AppShapes.rounded2xl,
-                    tint = LiquidGlassDefaults.tintSemiDark
-                )
-        } else {
-            // NEW: First-principles Glass system
-            Modifier
-                .fillMaxWidth()
-                .height(animatedHeight)
-                .glassFloating(
-                    shape = AppShapes.rounded2xl,
-                    tokens = glassTokens,
-                    reducedTransparency = false
-                )
+        val containerModifier = when {
+            // PRIORITY 1: SimpMusic-style backdrop with luminance adaptation
+            backdrop != null && graphicsLayer != null -> {
+                Modifier
+                    .fillMaxWidth()
+                    .height(animatedHeight)
+                    .liquidGlassNavBar(
+                        backdrop = backdrop,
+                        layer = graphicsLayer,
+                        luminance = luminance
+                    )
+            }
+            
+            // PRIORITY 2: Legacy liquid library
+            liquidState != null -> {
+                Modifier
+                    .fillMaxWidth()
+                    .height(animatedHeight)
+                    .liquidGlassFloating(
+                        liquidState = liquidState,
+                        shape = AppShapes.rounded2xl,
+                        tint = LiquidGlassDefaults.tintSemiDark
+                    )
+            }
+            
+            // PRIORITY 3: Simple gradient-based glass
+            else -> {
+                Modifier
+                    .fillMaxWidth()
+                    .height(animatedHeight)
+                    .glassy(shape = AppShapes.rounded2xl)
+            }
         }
         
         Column(

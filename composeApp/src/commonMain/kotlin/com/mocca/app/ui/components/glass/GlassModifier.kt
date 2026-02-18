@@ -1,6 +1,5 @@
 package com.mocca.app.ui.components.glass
 
-import android.os.Build
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -12,152 +11,168 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppShapes
 
 /**
- * Modifier extension for applying liquid glass effect to existing components.
+ * Liquid Glass Modifier Extensions
  * 
- * This allows applying glass effects to any composable without wrapping in GlassSurface.
+ * Provides two types of glass effects:
  * 
- * Usage:
+ * 1. **True Liquid Glass** (Backdrop-based) - Uses Kyant0/backdrop library
+ *    - Real backdrop sampling with blur and lens refraction
+ *    - Luminance adaptation for dynamic effects
+ *    - Requires setting up a LiquidBackdrop at parent level
+ * 
+ * 2. **Gradient Glass** (Fallback) - Pure Compose gradients
+ *    - No backdrop sampling required
+ *    - Simpler visual effect with specular highlights
+ *    - Good for static elements or when backdrop is unavailable
+ * 
+ * Usage (True Liquid Glass):
  * ```kotlin
- * Box(
- *     modifier = Modifier
- *         .fillMaxWidth()
- *         .height(56.dp)
- *         .glass(shape = RoundedCornerShape(16.dp))
- * ) {
- *     // Content
+ * val backdrop = rememberLiquidBackdrop()
+ * val layer = rememberGraphicsLayer()
+ * val luminance = rememberLuminanceAnimation(layer)
+ * 
+ * Box {
+ *     Content(Modifier.liquidBackdropSource(backdrop))
+ *     GlassBar(Modifier.drawLiquidGlass(backdrop, layer, luminance.value, shape))
  * }
  * ```
  * 
- * @param shape Shape of the glass (rounded corners recommended)
- * @param tokens Theme-aware glass tokens
- * @param params Shader parameters for customization
- * @param reducedTransparency Accessibility mode - use solid background
+ * Usage (Gradient Glass):
+ * ```kotlin
+ * Box(Modifier.glassy(shape = AppShapes.card)) {
+ *     // Content
+ * }
+ * ```
  */
-@Composable
-fun Modifier.glass(
-    shape: Shape = AppShapes.large,
-    tokens: GlassThemeTokens = GlassDefaults.tokens(),
-    params: GlassShaderParams = GlassShaderParams.fromTokens(tokens),
-    reducedTransparency: Boolean = false
-): Modifier {
-    return when {
-        reducedTransparency -> {
-            this
-                .clip(shape)
-                .glassFallback(
-                    backgroundColor = tokens.fallbackBackground,
-                    borderColor = tokens.strokeColor,
-                    highlightColor = tokens.highlightTop,
-                    shadowColor = tokens.shadowColor
-                )
-        }
-        
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-            this
-                .clip(shape)
-                .glassPremium(
-                    backgroundColor = params.tintColor,
-                    borderColor = params.strokeColor,
-                    highlightColor = params.highlightTopColor,
-                    shadowColor = params.shadowColor,
-                    borderWidth = GlassTokens.strokeWidth
-                )
-        }
-        
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            this
-                .clip(shape)
-                .glassPremium(
-                    backgroundColor = tokens.tintColor,
-                    borderColor = tokens.strokeColor,
-                    highlightColor = tokens.highlightTop,
-                    shadowColor = tokens.shadowColor,
-                    borderWidth = GlassTokens.strokeWidth
-                )
-        }
-        
-        else -> {
-            this
-                .clip(shape)
-                .glassFallback(
-                    backgroundColor = tokens.tintColor,
-                    borderColor = tokens.strokeColor,
-                    highlightColor = tokens.highlightTop,
-                    shadowColor = tokens.shadowColor
-                )
-        }
-    }
-}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TRUE LIQUID GLASS MODIFIERS (Backdrop-based)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Modifier extension for floating glass effect.
- * Uses heavier blur and stronger effects for prominent floating appearance.
+ * Draws true liquid glass with backdrop sampling and luminance adaptation.
+ * 
+ * This is the recommended modifier for bottom bars, FABs, and floating elements.
+ * Requires a LiquidBackdrop to be set up at the parent level.
+ * 
+ * @param backdrop The backdrop created with rememberLiquidBackdrop()
+ * @param layer GraphicsLayer for luminance sampling
+ * @param luminance Current luminance value (0f-1f)
+ * @param shape Shape of the glass surface
+ * @param surfaceAlpha Alpha for the dark surface overlay
+ */
+@Composable
+fun Modifier.liquidGlassSurface(
+    backdrop: LiquidBackdrop,
+    layer: GraphicsLayer,
+    luminance: Float,
+    shape: Shape = AppShapes.rounded2xl,
+    surfaceAlpha: Float = 0.1f
+): Modifier = this
+    .clip(shape)
+    .drawLiquidGlass(backdrop, layer, luminance, shape, surfaceAlpha)
+
+/**
+ * Draws liquid glass optimized for bottom navigation bars.
+ */
+@Composable
+fun Modifier.liquidGlassNavBar(
+    backdrop: LiquidBackdrop,
+    layer: GraphicsLayer,
+    luminance: Float
+): Modifier = liquidGlassSurface(
+    backdrop = backdrop,
+    layer = layer,
+    luminance = luminance,
+    shape = AppShapes.rounded2xl,
+    surfaceAlpha = 0.1f
+)
+
+/**
+ * Draws liquid glass optimized for FABs and small controls.
+ */
+@Composable
+fun Modifier.liquidGlassFab(
+    backdrop: LiquidBackdrop,
+    layer: GraphicsLayer,
+    luminance: Float
+): Modifier = liquidGlassSurface(
+    backdrop = backdrop,
+    layer = layer,
+    luminance = luminance,
+    shape = AppShapes.circle,
+    surfaceAlpha = 0.15f
+)
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GRADIENT GLASS MODIFIERS (Fallback, no backdrop required)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Simple glassy modifier with gradient overlays.
+ * Use when backdrop sampling is not available or needed.
+ * 
+ * @param shape Shape of the glass
+ * @param borderWidth Width of the border (default: 0.5dp)
+ * @param backgroundColor Background color (default: 50% black)
+ * @param borderColor Border color (default: 25% white)
+ */
+@Composable
+fun Modifier.glassy(
+    shape: Shape,
+    borderWidth: Dp = 0.5.dp,
+    backgroundColor: Color = Color(0x80000000),
+    borderColor: Color = Color(0x40FFFFFF)
+): Modifier = this.then(
+    Modifier
+        .clip(shape)
+        .drawBehind {
+            drawRect(backgroundColor)
+        }
+        .border(borderWidth, borderColor.copy(alpha = 0.3f), shape)
+)
+
+/**
+ * Floating glass modifier for prominent elements like bottom bars.
+ * Uses rounded corners and enhanced specular highlights.
  */
 @Composable
 fun Modifier.glassFloating(
     shape: Shape = AppShapes.rounded2xl,
     tokens: GlassThemeTokens = GlassDefaults.tokens(),
     reducedTransparency: Boolean = false
-): Modifier = glass(
+): Modifier = glassy(
     shape = shape,
-    tokens = tokens,
-    params = GlassShaderParams.Floating,
-    reducedTransparency = reducedTransparency
+    borderWidth = 0.75.dp,
+    backgroundColor = Color(0x40000000), // 25% dark
+    borderColor = Color(0x40FFFFFF)
 )
 
 /**
- * Modifier extension for button glass effect.
- * Uses lighter effects suitable for touch targets.
+ * Button glass modifier for small controls.
+ * Uses pill shape and subtle effects.
  */
 @Composable
 fun Modifier.glassButton(
     shape: Shape = AppShapes.pill,
     tokens: GlassThemeTokens = GlassDefaults.tokens(),
     reducedTransparency: Boolean = false
-): Modifier = glass(
+): Modifier = glassy(
     shape = shape,
-    tokens = tokens,
-    params = GlassShaderParams.Button,
-    reducedTransparency = reducedTransparency
+    borderWidth = 1.dp,
+    backgroundColor = Color(0x40000000),
+    borderColor = Color(0x50FFFFFF)
 )
 
 /**
- * Modifier extension for app bar glass effect.
- * Optimized for full-width header bars.
- */
-@Composable
-fun Modifier.glassAppBar(
-    tokens: GlassThemeTokens = GlassDefaults.tokens(),
-    reducedTransparency: Boolean = false
-): Modifier = glass(
-    shape = RoundedCornerShape(0.dp),
-    tokens = tokens,
-    params = GlassShaderParams.AppBar,
-    reducedTransparency = reducedTransparency
-)
-
-/**
- * Modifier extension for sheet glass effect.
- * Optimized for bottom sheets.
- */
-@Composable
-fun Modifier.glassSheet(
-    tokens: GlassThemeTokens = GlassDefaults.tokens(),
-    reducedTransparency: Boolean = false
-): Modifier = glass(
-    shape = AppShapes.bottomSheet,
-    tokens = tokens,
-    params = GlassShaderParams.Sheet,
-    reducedTransparency = reducedTransparency
-)
-
-/**
- * Premium glass modifier with full visual effects.
+ * Premium glass modifier with specular highlights and depth effects.
+ * Creates a more sophisticated glass appearance without backdrop sampling.
  */
 @Composable
 fun Modifier.glassPremium(
@@ -169,7 +184,7 @@ fun Modifier.glassPremium(
 ): Modifier = this.then(
     Modifier
         .drawBehind {
-            // Base glass background
+            // Base glass background with subtle gradient
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -194,7 +209,7 @@ fun Modifier.glassPremium(
                 size = Size(size.width, highlightHeight * 4)
             )
             
-            // Inner glow
+            // Inner glow from top
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -206,7 +221,7 @@ fun Modifier.glassPremium(
                 size = Size(size.width, size.height * 0.3f)
             )
             
-            // Bottom inner shadow
+            // Bottom inner shadow for depth
             val shadowHeight = size.height * 0.15f
             drawRect(
                 brush = Brush.verticalGradient(
@@ -233,7 +248,7 @@ fun Modifier.glassPremium(
 )
 
 /**
- * Fallback glass modifier without advanced effects.
+ * Fallback glass modifier for accessibility mode or older devices.
  */
 @Composable
 fun Modifier.glassFallback(
@@ -271,47 +286,32 @@ fun Modifier.glassFallback(
         )
 )
 
-/**
- * Simple glassy modifier without blur or refraction.
- * Use only as fallback when full glass effect is not available.
- */
-@Composable
-fun Modifier.glassy(
-    shape: Shape,
-    borderWidth: Dp = 0.5.dp,
-    backgroundColor: Color = Color(0x80000000),
-    borderColor: Color = Color(0x40FFFFFF)
-): Modifier = this.then(
-    Modifier
-        .clip(shape)
-        .drawBehind {
-            drawRect(backgroundColor)
-        }
-        .border(borderWidth, borderColor.copy(alpha = 0.3f), shape)
-)
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEPRECATED LEGACY MODIFIERS (kept for backward compatibility)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * iOS 26-style Pure Liquid Glass Card modifier.
  * Creates a pure glass effect with transparent background and edge highlights.
- * COLORLESS GLASS - depth from geometry, not color fills.
  * 
- * @param shape The shape of the glass card
- * @param tint Optional very subtle tint for text contrast (default: 25% dark)
- * @param highlightIntensity Intensity of the top edge highlight (0.0 to 1.0)
+ * @deprecated Use liquidGlassSurface() with backdrop for true liquid glass,
+ *             or glassy() for simpler gradient-based effects.
  */
 @Composable
+@Deprecated(
+    message = "Use liquidGlassSurface() with backdrop for true liquid glass, or glassy() for simpler effects",
+    replaceWith = ReplaceWith("liquidGlassSurface(backdrop, layer, luminance, shape)")
+)
 fun Modifier.liquidGlassCard(
     shape: Shape = AppShapes.card,
-    tint: Color = Color(0x40000000), // 25% dark for text legibility only
+    tint: Color = Color(0x40000000),
     highlightIntensity: Float = 0.2f
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Pure liquid-glass: very subtle tint for text contrast
             drawRect(tint)
             
-            // Top edge specular highlight - simulates light source
             val highlightHeight = 1.5.dp.toPx()
             drawRect(
                 brush = Brush.verticalGradient(
@@ -324,7 +324,6 @@ fun Modifier.liquidGlassCard(
                 size = Size(size.width, highlightHeight * 3)
             )
             
-            // Subtle inner glow for depth
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -351,20 +350,22 @@ fun Modifier.liquidGlassCard(
 
 /**
  * iOS 26-style Pure Liquid Glass Header modifier.
- * Optimized for header bars with prominent edge highlights.
- * COLORLESS GLASS - depth from geometry.
+ * 
+ * @deprecated Use liquidGlassSurface() with backdrop for true liquid glass.
  */
 @Composable
+@Deprecated(
+    message = "Use liquidGlassSurface() with backdrop for true liquid glass",
+    replaceWith = ReplaceWith("liquidGlassSurface(backdrop, layer, luminance, shape)")
+)
 fun Modifier.liquidGlassHeader(
     shape: Shape = AppShapes.medium
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Very subtle dark for text legibility
-            drawRect(Color(0x40000000)) // 25% dark
+            drawRect(Color(0x40000000))
             
-            // Strong top highlight - light source simulation
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -376,7 +377,6 @@ fun Modifier.liquidGlassHeader(
                 size = Size(size.width, 4.dp.toPx())
             )
             
-            // Inner glow
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -402,20 +402,22 @@ fun Modifier.liquidGlassHeader(
 
 /**
  * iOS 26-style Pure Liquid Glass Button modifier.
- * For small controls like scroll-to-bottom, FABs, etc.
- * COLORLESS GLASS - depth from geometry.
+ * 
+ * @deprecated Use liquidGlassFab() for FABs with backdrop.
  */
 @Composable
+@Deprecated(
+    message = "Use liquidGlassFab() for FABs with backdrop",
+    replaceWith = ReplaceWith("liquidGlassFab(backdrop, layer, luminance)")
+)
 fun Modifier.liquidGlassButton(
     shape: Shape = AppShapes.circle
 ): Modifier = this.then(
     Modifier
         .clip(shape)
         .drawBehind {
-            // Very subtle dark for icon visibility
-            drawRect(Color(0x40000000)) // 25% dark
+            drawRect(Color(0x40000000))
             
-            // Strong edge highlight
             drawRect(
                 brush = Brush.verticalGradient(
                     colors = listOf(
@@ -427,7 +429,6 @@ fun Modifier.liquidGlassButton(
                 size = Size(size.width, 3.dp.toPx())
             )
             
-            // Inner glow
             drawRect(
                 brush = Brush.radialGradient(
                     colors = listOf(
