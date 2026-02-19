@@ -189,8 +189,9 @@ fun UnifiedFloatingBottomBar(
         label = "bottomBarHeight"
     )
     
-    // Determine if we should show labels (only in Navigation mode)
-    val showLabels = mode is BottomBarMode.Navigation
+    // Determine if we should show labels - ALWAYS show labels for better UX
+    // Labels help users understand navigation options in all modes
+    val showLabels = true
     
     // Determine text color based on luminance (for backdrop mode)
     val textColor = if (backdrop != null && graphicsLayer != null) {

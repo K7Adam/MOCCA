@@ -55,8 +55,8 @@ object NavConstants {
     /** Navigation-only mode height (compact) */
     val NavigationModeHeight = 68.dp
     
-    /** Chat input mode minimum height (expanded) - includes nav row */
-    val ChatInputModeMinHeight = 164.dp
+    /** Chat input mode minimum height (expanded) - includes nav row, adjusted for touch-optimized sizes */
+    val ChatInputModeMinHeight = 176.dp
     
     // ═══════════════════════════════════════════════════════════════════════════
     // NAV ROW HEIGHTS
@@ -75,8 +75,8 @@ object NavConstants {
     // CHAT INPUT COMPONENT HEIGHTS
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Status bar height (model/agent selectors) */
-    val StatusBarHeight = 28.dp
+    /** Status bar height (model/agent selectors) - optimized for touch targets */
+    val StatusBarHeight = 32.dp
     
     /** Input field minimum height */
     val InputFieldMinHeight = 32.dp
@@ -84,8 +84,8 @@ object NavConstants {
     /** Input field maximum height */
     val InputFieldMaxHeight = 80.dp
     
-    /** Action toolbar height */
-    val ActionToolbarHeight = 36.dp
+    /** Action toolbar height - optimized for touch targets */
+    val ActionToolbarHeight = 44.dp
     
     // ═══════════════════════════════════════════════════════════════════════════
     // TYPOGRAPHY
@@ -117,23 +117,23 @@ object NavConstants {
     val NavItemPaddingVertical = 4.dp
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // CHAT INPUT REFINED SIZING (Premium Polish)
+    // CHAT INPUT REFINED SIZING (Premium Polish - Optimized for Touch Targets)
     // ═══════════════════════════════════════════════════════════════════════════
     
-    /** Status bar chip height */
-    val StatusBarChipHeight = 24.dp
+    /** Status bar chip height - optimized for touch targets */
+    val StatusBarChipHeight = 28.dp
     
     /** Status bar icon size (increased for visibility) */
     val StatusBarIconSize = 14.dp
     
-    /** Action toolbar button size (visual) */
-    val ActionButtonSize = 36.dp
+    /** Action toolbar button size (visual) - optimized for touch targets */
+    val ActionButtonSize = 44.dp
     
-    /** Send button height */
-    val SendButtonHeight = 32.dp
+    /** Send button height - optimized for touch targets */
+    val SendButtonHeight = 36.dp
     
-    /** Send button icon size */
-    val SendIconSize = 16.dp
+    /** Send button icon size - slightly larger for better visibility */
+    val SendIconSize = 18.dp
     
     /** Action toolbar icon size */
     val ActionIconSize = 18.dp
