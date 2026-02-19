@@ -2,8 +2,10 @@ package com.mocca.app.ui.screens.panels
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.BroadcastEvent
-import com.mocca.app.data.repository.*
+import com.mocca.app.data.repository.McpRepository
+import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,36 +15,35 @@ import kotlinx.coroutines.launch
 
 /**
  * ScreenModel for DashboardPanel.
- * Aggregates data from all OpenCode feature endpoints.
+ * 
+ * IMPORTANT: This now observes AppStateStore for ALL data.
+ * NO manual refresh calls are needed - all updates are automatic via:
+ * - StateCoordinator (SSE events for sessions, messages)
+ * - RealtimeSyncService (periodic polling for MCP, providers, tools, git)
+ * 
+ * The dashboard will ALWAYS show fresh data without any user action.
  */
 class DashboardScreenModel(
-    private val providerRepository: ProviderRepository,
-    private val agentRepository: AgentRepository,
-    private val toolRepository: ToolRepository,
-    private val commandRepository: CommandRepository,
-    private val formatterRepository: FormatterRepository,
-    private val lspRepository: LspRepository,
-    private val gitRepository: GitRepository,
-    private val mcpRepository: McpRepository,
+    private val appStateStore: AppStateStore,
     private val stateCoordinator: StateCoordinator,
-    private val projectRepository: ProjectRepository
+    private val mcpRepository: McpRepository
 ) : ScreenModel {
     
     data class State(
-        // Provider data
+        // Provider data (from AppStateStore - auto-updated)
         val providers: Resource<ProviderResponse> = Resource.Loading(),
         
-        // Projects
+        // Projects (from AppStateStore - auto-updated)
         val projects: Resource<List<Project>> = Resource.Loading(),
         val currentProject: Resource<Project> = Resource.Loading(),
         
-        // Agents
+        // Agents (from AppStateStore - auto-updated)
         val agents: Resource<List<Agent>> = Resource.Loading(),
         
-        // Tools
+        // Tools (from AppStateStore - auto-updated)
         val tools: Resource<List<String>> = Resource.Loading(),
         
-        // Slash commands
+        // Slash commands (from AppStateStore - auto-updated)
         val commands: Resource<List<Command>> = Resource.Loading(),
         
         // Formatters
@@ -51,21 +52,22 @@ class DashboardScreenModel(
         // LSP status
         val lspStatus: Resource<List<LspStatus>> = Resource.Loading(),
         
-        // VCS/Git info
+        // VCS/Git info (from AppStateStore - auto-updated)
         val vcsInfo: Resource<VcsInfo> = Resource.Loading(),
         
-        // MCP servers
-        val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading()
+        // MCP servers (from AppStateStore - auto-updated)
+        val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading(),
+        
+        // Sync state
+        val isSyncing: Boolean = false
     ) {
         // Derived properties for UI convenience
         val connectedProviders: List<ProviderInfo>
             get() = (providers as? Resource.Success)?.data?.all?.filter { it.connected } ?: emptyList()
         
-        // Get provider count from the connected list
         val providerCount: Int
             get() = (providers as? Resource.Success)?.data?.connected?.size ?: 0
         
-        // Get first default provider/model pair for display
         val defaultProviderName: String?
             get() = (providers as? Resource.Success)?.data?.default?.keys?.firstOrNull()
         
@@ -105,7 +107,7 @@ class DashboardScreenModel(
                 ?.map { it.key to it.value } ?: emptyList()
         
         val isLoading: Boolean
-            get() = listOf(providers, agents, tools, commands, formatters, lspStatus, vcsInfo, mcpServers)
+            get() = isSyncing || listOf(providers, agents, tools, commands, formatters, lspStatus, vcsInfo, mcpServers)
                 .any { it is Resource.Loading }
         
         val hasErrors: Boolean
@@ -117,166 +119,125 @@ class DashboardScreenModel(
     val state: StateFlow<State> = _state.asStateFlow()
     
     init {
+        // Start observing centralized state from AppStateStore
+        observeAppStateStore()
         observeEvents()
-        loadAllData()
+        
+        // Start the sync service (if not already started)
+        appStateStore.start()
+    }
+    
+    /**
+     * Observe centralized state from AppStateStore.
+     * All data updates automatically - NO manual refresh needed.
+     */
+    private fun observeAppStateStore() {
+        // Observe providers
+        screenModelScope.launch {
+            appStateStore.providers.collect { providers ->
+                _state.update { it.copy(providers = providers) }
+            }
+        }
+        
+        // Observe agents
+        screenModelScope.launch {
+            appStateStore.agents.collect { agents ->
+                _state.update { it.copy(agents = Resource.Success(agents)) }
+            }
+        }
+        
+        // Observe tools
+        screenModelScope.launch {
+            appStateStore.tools.collect { tools ->
+                _state.update { it.copy(tools = tools) }
+            }
+        }
+        
+        // Observe commands
+        screenModelScope.launch {
+            appStateStore.commands.collect { commands ->
+                _state.update { it.copy(commands = commands) }
+            }
+        }
+        
+        // Observe VCS/Git info
+        screenModelScope.launch {
+            appStateStore.vcsInfo.collect { vcsInfo ->
+                _state.update { it.copy(vcsInfo = vcsInfo) }
+            }
+        }
+        
+        // Observe MCP servers
+        screenModelScope.launch {
+            appStateStore.mcpServers.collect { servers ->
+                _state.update { state ->
+                    state.copy(
+                        mcpServers = Resource.Success(servers.mapValues { it.value.status })
+                    )
+                }
+            }
+        }
+        
+        // Observe sync state
+        screenModelScope.launch {
+            appStateStore.isSyncing.collect { isSyncing ->
+                _state.update { it.copy(isSyncing = isSyncing) }
+            }
+        }
     }
     
     private fun observeEvents() {
+        // Observe file events for Git refresh
         screenModelScope.launch {
             stateCoordinator.broadcastEvents.collect { broadcastEvent ->
                 when (broadcastEvent) {
                     is BroadcastEvent.ServerEvent -> {
                         val event = broadcastEvent.event
                         if (event is ServerEvent.FileEdited || event is ServerEvent.FileWatcherUpdated) {
-                            loadVcsInfo()
+                            // Git status will be refreshed by RealtimeSyncService
+                            // No manual action needed
                         }
                     }
                     else -> {}
                 }
             }
         }
-        
-        screenModelScope.launch {
-            gitRepository.getVcsInfo().collect { resource ->
-                _state.update { it.copy(vcsInfo = resource) }
-            }
-        }
-        
-        screenModelScope.launch {
-            mcpRepository.mcpServers.collect { servers ->
-                _state.update { state ->
-                    state.copy(
-                        mcpServers = Resource.Success(servers.values.associateBy({ it.name }, { it.status }))
-                    )
-                }
-            }
-        }
     }
     
     /**
-     * Load all initial data.
+     * Trigger an immediate sync.
+     * This is optional - data syncs automatically.
      */
-    fun loadAllData() {
-        screenModelScope.launch {
-            loadProviders()
-        }
-        screenModelScope.launch {
-            loadAgents()
-        }
-        screenModelScope.launch {
-            loadTools()
-        }
-        screenModelScope.launch {
-            loadCommands()
-        }
-        screenModelScope.launch {
-            loadFormatters()
-        }
-        screenModelScope.launch {
-            loadLspStatus()
-        }
-        screenModelScope.launch {
-            loadVcsInfo()
-        }
-        screenModelScope.launch {
-            loadMcpServers()
-        }
-        screenModelScope.launch {
-            loadProjects()
-        }
-        screenModelScope.launch {
-            loadCurrentProject()
-        }
-    }
-    
-    private suspend fun loadProviders() {
-        providerRepository.getProviders().collect { resource ->
-            _state.update { it.copy(providers = resource) }
-        }
-    }
-    
-    private suspend fun loadProjects() {
-        projectRepository.getProjects().collect { resource ->
-            _state.update { it.copy(projects = resource) }
-        }
-    }
-
-    private suspend fun loadCurrentProject() {
-        projectRepository.getCurrentProject().collect { resource ->
-            _state.update { it.copy(currentProject = resource) }
-        }
-    }
-    
-    private suspend fun loadAgents() {
-        agentRepository.getAgents().collect { resource ->
-            _state.update { it.copy(agents = resource) }
-        }
-    }
-    
-    private suspend fun loadTools() {
-        toolRepository.getToolIds().collect { resource ->
-            _state.update { it.copy(tools = resource) }
-        }
-    }
-    
-    private suspend fun loadCommands() {
-        commandRepository.getCommands().collect { resource ->
-            _state.update { it.copy(commands = resource) }
-        }
-    }
-    
-    private suspend fun loadFormatters() {
-        formatterRepository.getFormatters().collect { resource ->
-            _state.update { it.copy(formatters = resource) }
-        }
-    }
-    
-    private suspend fun loadLspStatus() {
-        lspRepository.getLspStatus().collect { resource ->
-            _state.update { it.copy(lspStatus = resource) }
-        }
-    }
-    
-    private suspend fun loadVcsInfo() {
-        gitRepository.getVcsInfo().collect { resource ->
-            _state.update { it.copy(vcsInfo = resource) }
-        }
-    }
-    
-    private suspend fun loadMcpServers() {
-        val resource = mcpRepository.refresh()
-        val mcpResource: Resource<Map<String, McpServerStatus>> = when (resource) {
-            is Resource.Success -> Resource.Success(resource.data.mapValues { it.value.status })
-            is Resource.Loading -> Resource.Loading(resource.data?.mapValues { it.value.status })
-            is Resource.Error -> Resource.Error(resource.message, resource.data?.mapValues { it.value.status })
-        }
-        _state.update { it.copy(mcpServers = mcpResource) }
+    fun syncNow() {
+        appStateStore.syncFromServer()
     }
     
     /**
-     * Refresh all data.
+     * Called when app comes to foreground.
      */
-    fun refresh() {
-        loadAllData()
+    fun onForeground() {
+        appStateStore.onForeground()
     }
     
     /**
      * Connect to an MCP server.
+     * Delegates to McpRepository which will update AppStateStore via StateFlow.
      */
     fun connectMcpServer(name: String) {
         screenModelScope.launch {
             mcpRepository.connect(name)
-            loadMcpServers()
+            // MCP servers StateFlow will update automatically
         }
     }
     
     /**
      * Disconnect from an MCP server.
+     * Delegates to McpRepository which will update AppStateStore via StateFlow.
      */
     fun disconnectMcpServer(name: String) {
         screenModelScope.launch {
             mcpRepository.disconnect(name)
-            loadMcpServers()
+            // MCP servers StateFlow will update automatically
         }
     }
 }

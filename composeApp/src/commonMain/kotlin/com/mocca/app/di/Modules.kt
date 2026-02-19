@@ -114,8 +114,22 @@ val commonModule = module {
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
+    // REALTIME SYNC SERVICE - Periodic polling for data without SSE events
+    // Handles: MCP servers, Providers, Git status, Tools, Commands
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    single {
+        RealtimeSyncService(
+            stateCoordinator = get(),
+            connectionManager = get(),
+            mcpRepository = get(),
+            gitRepository = get()
+        )
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
     // CENTRALIZED STATE STORES - Single source of truth for all app state
-    // NOTE: These MUST come after StateCoordinator and all their dependencies
+    // NOTE: These MUST come after StateCoordinator, RealtimeSyncService and all dependencies
     // ═══════════════════════════════════════════════════════════════════════════════
     
     single { 
@@ -125,7 +139,12 @@ val commonModule = module {
             sessionRepository = get(),
             mcpRepository = get(),
             configRepository = get(),
-            agentRepository = get()
+            agentRepository = get(),
+            providerRepository = get(),
+            toolRepository = get(),
+            commandRepository = get(),
+            gitRepository = get(),
+            realtimeSyncService = get()
         )
     }
     
@@ -224,12 +243,12 @@ val screenModelModule = module {
     }
     
     // Main screen - requires optional sessionId parameter
+    // NOTE: No longer uses EventStreamRepository - all state from AppStateStore
     factory { params ->
         MainScreenModel(
             initialSessionId = params.getOrNull(),
             appStateStore = get(),
             sessionRepository = get(),
-            eventStreamRepository = get(),
             connectionManager = get(),
             mcpRepository = get(),
             updateRepository = get(),
@@ -247,19 +266,12 @@ val screenModelModule = module {
         )
     }
     
-    // Dashboard screen
+    // Dashboard screen - uses AppStateStore for data + McpRepository for actions
     factory {
         DashboardScreenModel(
-            providerRepository = get(),
-            agentRepository = get(),
-            toolRepository = get(),
-            commandRepository = get(),
-            formatterRepository = get(),
-            lspRepository = get(),
-            gitRepository = get(),
-            mcpRepository = get(),
+            appStateStore = get(),
             stateCoordinator = get(),
-            projectRepository = get()
+            mcpRepository = get()
         )
     }
 }

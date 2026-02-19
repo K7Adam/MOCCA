@@ -5,7 +5,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.ChatStateStore
 import com.mocca.app.data.repository.ConnectionManager
-import com.mocca.app.data.repository.EventStreamRepository
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.SessionRepository
 import com.mocca.app.data.repository.UpdateNotifier
@@ -106,12 +105,17 @@ data class MainScreenState(
 /**
  * ScreenModel for the main screen.
  * Observes centralized state from AppStateStore for reactive updates.
+ * 
+ * IMPORTANT: All state is now automatically synced via:
+ * - StateCoordinator (SSE events)
+ * - RealtimeSyncService (periodic polling)
+ * 
+ * NO manual refresh is needed.
  */
 class MainScreenModel(
     private val initialSessionId: String?,
     private val appStateStore: AppStateStore,
     private val sessionRepository: SessionRepository,
-    private val eventStreamRepository: EventStreamRepository,
     private val connectionManager: ConnectionManager,
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,

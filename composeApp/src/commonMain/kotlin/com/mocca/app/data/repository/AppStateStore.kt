@@ -8,22 +8,33 @@ import kotlinx.coroutines.flow.*
 import kotlinx.datetime.Clock
 
 /**
- * Centralized app state store that maintains all application state.
+ * Centralized app state store that maintains ALL application state.
  * 
- * This is the single source of truth for UI state, providing:
+ * This is the SINGLE SOURCE OF TRUTH for ALL UI state, providing:
  * - Reactive state updates via StateFlow
- * - Automatic synchronization with server via StateCoordinator
+ * - Automatic synchronization with server via StateCoordinator + RealtimeSyncService
  * - Lifecycle-aware state management (foreground/background)
  * - Network-aware reconnection and sync
+ * - Periodic polling for data without SSE events
  * 
  * Architecture:
  * ```
  * Server (SSE) → EventStreamRepository → StateCoordinator → AppStateStore → UI (StateFlow)
  *                     ↓                        ↓                  ↑
  *                LocalCache ←────────────────────────────────────┘
+ *                     
+ * RealtimeSyncService (periodic polling)
+ *     ├── MCP Server Status
+ *     ├── Git/VCS Status
+ *     └── Other non-SSE data
+ *           ↓
+ *     AppStateStore.StateFlows update
+ *           ↓
+ *     UI updates automatically (NO manual refresh needed)
  * ```
  * 
- * Consumers should observe the StateFlows, never call refresh directly.
+ * IMPORTANT: Consumers should ONLY observe StateFlows.
+ * NEVER call refresh manually - all updates are automatic.
  */
 class AppStateStore(
     private val localCache: LocalCache,
@@ -31,7 +42,12 @@ class AppStateStore(
     private val sessionRepository: SessionRepository,
     private val mcpRepository: McpRepository,
     private val configRepository: ConfigRepository,
-    private val agentRepository: AgentRepository
+    private val agentRepository: AgentRepository,
+    private val providerRepository: ProviderRepository,
+    private val toolRepository: ToolRepository,
+    private val commandRepository: CommandRepository,
+    private val gitRepository: GitRepository,
+    private val realtimeSyncService: RealtimeSyncService
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -83,18 +99,53 @@ class AppStateStore(
     val recentModels: StateFlow<List<RecentModel>> = _recentModels.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // MCP STATE
+    // MCP STATE - Reactive from McpRepository (updated by RealtimeSyncService)
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    val mcpServers: Flow<Map<String, McpServerInfo>> = mcpRepository.mcpServers
-    val isMcpLoading: Flow<Boolean> = mcpRepository.isLoading
+    private val _mcpServers = MutableStateFlow<Map<String, McpServerInfo>>(emptyMap())
+    val mcpServers: StateFlow<Map<String, McpServerInfo>> = _mcpServers.asStateFlow()
+    
+    private val _isMcpLoading = MutableStateFlow(false)
+    val isMcpLoading: StateFlow<Boolean> = _isMcpLoading.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SYNC STATE - From StateCoordinator
+    // PROVIDER STATE - Reactive from ProviderRepository (updated by RealtimeSyncService)
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    val isSyncing: StateFlow<Boolean> = stateCoordinator.isSyncing
-    val lastSyncTime: StateFlow<Long?> = stateCoordinator.lastSyncTime
+    private val _providers = MutableStateFlow<Resource<ProviderResponse>>(Resource.Loading())
+    val providers: StateFlow<Resource<ProviderResponse>> = _providers.asStateFlow()
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TOOL STATE - Reactive from ToolRepository (updated by RealtimeSyncService)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    private val _tools = MutableStateFlow<Resource<List<String>>>(Resource.Loading())
+    val tools: StateFlow<Resource<List<String>>> = _tools.asStateFlow()
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // COMMAND STATE - Reactive from CommandRepository (updated by RealtimeSyncService)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    private val _commands = MutableStateFlow<Resource<List<Command>>>(Resource.Loading())
+    val commands: StateFlow<Resource<List<Command>>> = _commands.asStateFlow()
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GIT/VCS STATE - Reactive from GitRepository (updated by RealtimeSyncService)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    private val _vcsInfo = MutableStateFlow<Resource<VcsInfo>>(Resource.Loading())
+    val vcsInfo: StateFlow<Resource<VcsInfo>> = _vcsInfo.asStateFlow()
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SYNC STATE - From StateCoordinator + RealtimeSyncService
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    val isSyncing: StateFlow<Boolean> = combine(
+        stateCoordinator.isSyncing,
+        realtimeSyncService.isSyncing
+    ) { a, b -> a || b }.stateIn(storeScope, SharingStarted.Eagerly, false)
+    
+    val lastSyncTime: StateFlow<Long?> = realtimeSyncService.lastSyncTime
     
     /**
      * Trigger a full sync from server.
@@ -111,10 +162,11 @@ class AppStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     init {
-        Napier.i("[AppStateStore] Initializing with StateCoordinator...")
+        Napier.i("[AppStateStore] Initializing with StateCoordinator + RealtimeSyncService...")
         
         observeLocalCache()
         observeBroadcastEvents()
+        observeRepositoryFlows()
     }
     
     /**
@@ -125,15 +177,24 @@ class AppStateStore(
         if (isInitialized) return
         isInitialized = true
         
-        Napier.i("[AppStateStore] Starting state observation")
+        Napier.i("[AppStateStore] Starting state observation and realtime sync")
         
         // Load initial state from cache
         loadFromCache()
         
-        // Sync from server if connected
-        if (connectionStatus.value.isConnected) {
-            stateCoordinator.syncFromServer()
-        }
+        // Start realtime sync service (handles periodic polling + connection sync)
+        realtimeSyncService.start()
+        
+        // Load all data initially
+        loadAllData()
+    }
+    
+    /**
+     * Called when app comes to foreground.
+     * Triggers sync via RealtimeSyncService.
+     */
+    fun onForeground() {
+        realtimeSyncService.onAppForeground()
     }
     
     /**
@@ -153,6 +214,86 @@ class AppStateStore(
         storeScope.launch {
             localCache.getRecentModels().let { models ->
                 _recentModels.value = models
+            }
+        }
+    }
+    
+    /**
+     * Observe repository StateFlows for reactive updates.
+     * These are updated by RealtimeSyncService periodically.
+     */
+    private fun observeRepositoryFlows() {
+        // Observe MCP servers
+        storeScope.launch {
+            mcpRepository.mcpServers.collect { servers ->
+                _mcpServers.value = servers
+            }
+        }
+        
+        storeScope.launch {
+            mcpRepository.isLoading.collect { loading ->
+                _isMcpLoading.value = loading
+            }
+        }
+        
+        // Observe Git/VCS info
+        storeScope.launch {
+            gitRepository.getVcsInfo().collect { resource ->
+                _vcsInfo.value = resource
+            }
+        }
+    }
+    
+    /**
+     * Load all data from server.
+     * Called on start and triggered by RealtimeSyncService.
+     */
+    private fun loadAllData() {
+        loadConfig()
+        loadAgents()
+        loadProviders()
+        loadTools()
+        loadCommands()
+    }
+    
+    /**
+     * Load providers from server.
+     */
+    private fun loadProviders() {
+        storeScope.launch {
+            providerRepository.getProviders().collect { resource ->
+                _providers.value = resource
+                if (resource is Resource.Success) {
+                    Napier.v("[AppStateStore] Providers loaded: ${resource.data.all?.size ?: 0}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Load tools from server.
+     */
+    private fun loadTools() {
+        storeScope.launch {
+            toolRepository.getToolIds().collect { resource ->
+                _tools.value = resource
+                if (resource is Resource.Success) {
+                    Napier.v("[AppStateStore] Tools loaded: ${resource.data.size}")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Load commands from server.
+     */
+    private fun loadCommands() {
+        storeScope.launch {
+            commandRepository.getCommands().collect { resource ->
+                _commands.value = resource
+                if (resource is Resource.Success) {
+                    Napier.v("[AppStateStore] Commands loaded: ${resource.data.size}")
+                }
             }
         }
     }
@@ -399,6 +540,7 @@ class AppStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     fun dispose() {
+        realtimeSyncService.stop()
         storeScope.cancel()
         Napier.i("[AppStateStore] Disposed")
     }
