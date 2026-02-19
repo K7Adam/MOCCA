@@ -190,6 +190,7 @@ val screenModelModule = module {
     }
     
     // Chat screen - accepts optional initialSessionId parameter
+    // NOTE: Now includes appStateStore for single source of truth state management
     factory { params ->
         val initialSessionId: String? = params.getOrNull()
         com.mocca.app.ui.screens.chat.ChatScreenModel(
@@ -197,7 +198,8 @@ val screenModelModule = module {
             sessionRepository = get(),
             stateCoordinator = get(),
             commandRepository = get(),
-            agentRepository = get()
+            agentRepository = get(),
+            appStateStore = get()
         )
     }
     

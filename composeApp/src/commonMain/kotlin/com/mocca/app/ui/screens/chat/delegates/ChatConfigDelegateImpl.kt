@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.chat.delegates
 
 import com.mocca.app.data.repository.AgentRepository
+import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.SessionRepository
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
@@ -12,115 +13,149 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 import kotlinx.datetime.Clock
 
+/**
+ * Implementation of ChatConfigDelegate that observes AppStateStore as the single source of truth.
+ * 
+ * IMPORTANT: This delegate NO LONGER makes its own API calls. It observes AppStateStore
+ * for all config state (providers, models, modes, agents). Selection changes are delegated
+ * back to AppStateStore.
+ * 
+ * Architecture:
+ * ```
+ * AppStateStore (Single Source of Truth)
+ *     ↓ (observed by)
+ * ChatConfigDelegateImpl
+ *     ↓ (exposed to)
+ * ChatScreenModel → UI
+ * ```
+ */
 class ChatConfigDelegateImpl(
+    private val appStateStore: AppStateStore,
     private val sessionRepository: SessionRepository,
     private val agentRepository: AgentRepository,
     private val scope: CoroutineScope
 ) : ChatConfigDelegate {
     
-    private val _providerInfo = MutableStateFlow<ProviderResponse?>(null)
-    override val providerInfo = _providerInfo.asStateFlow()
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // OBSERVE APP STATE STORE - Single Source of Truth
+    // All state flows are derived from AppStateStore, not stored locally
+    // ═══════════════════════════════════════════════════════════════════════════════
     
-    private val _selectedProviderId = MutableStateFlow("")
-    override val selectedProviderId = _selectedProviderId.asStateFlow()
+    override val providerInfo: StateFlow<ProviderResponse?> = appStateStore.providerInfo
+    override val selectedProviderId: StateFlow<String> = appStateStore.selectedProviderId
+    override val selectedModelId: StateFlow<String> = appStateStore.selectedModelId
+    override val selectedVariantId: StateFlow<String?> = appStateStore.selectedVariantId
+    override val modes: StateFlow<ImmutableList<Mode>> = appStateStore.modes
+        .map { it.toImmutableList() }
+        .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
+    override val selectedModeId: StateFlow<String?> = appStateStore.selectedModeId
+    override val modelName: StateFlow<String> = appStateStore.modelName
+    override val recentModels: StateFlow<ImmutableList<RecentModel>> = appStateStore.recentModels
+        .map { it.toImmutableList() }
+        .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
     
-    private val _selectedModelId = MutableStateFlow("")
-    override val selectedModelId = _selectedModelId.asStateFlow()
+    // Agent name is derived from selected mode
+    override val agentName: StateFlow<String> = combine(
+        appStateStore.selectedModeId,
+        appStateStore.modes,
+        appStateStore.agents
+    ) { modeId, modes, agents ->
+        when {
+            modeId != null -> {
+                // First try to find mode name
+                val modeName = modes.find { it.id == modeId }?.description
+                    ?: modes.find { it.id == modeId }?.name
+                if (modeName != null) {
+                    modeName.uppercase()
+                } else {
+                    // Try to find agent name
+                    val agent = agents.find { it.name == modeId }
+                    agent?.name?.uppercase() ?: modeId.uppercase()
+                }
+            }
+            agents.isNotEmpty() -> {
+                // Default to first non-hidden agent
+                agents.filter { !it.hidden }.firstOrNull()?.name?.uppercase() ?: "BUILD"
+            }
+            else -> "--"
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, "--")
     
-    private val _selectedVariantId = MutableStateFlow<String?>(null)
-    override val selectedVariantId = _selectedVariantId.asStateFlow()
-    
-    private val _modes = MutableStateFlow<ImmutableList<Mode>>(persistentListOf())
-    override val modes = _modes.asStateFlow()
-    
-    private val _selectedModeId = MutableStateFlow<String?>(null)
-    override val selectedModeId = _selectedModeId.asStateFlow()
-    
-    private val _modelName = MutableStateFlow("--")
-    override val modelName = _modelName.asStateFlow()
-    
-    private val _agentName = MutableStateFlow("--")
-    override val agentName = _agentName.asStateFlow()
-    
-    private val _maxTokens = MutableStateFlow(0)
-    override val maxTokens = _maxTokens.asStateFlow()
-    
-    private val _recentModels = MutableStateFlow<ImmutableList<RecentModel>>(persistentListOf())
-    override val recentModels = _recentModels.asStateFlow()
+    // Max tokens derived from provider info and selected model
+    override val maxTokens: StateFlow<Int> = combine(
+        appStateStore.providerInfo,
+        appStateStore.selectedProviderId,
+        appStateStore.selectedModelId
+    ) { providerInfo, providerId, modelId ->
+        if (providerInfo == null || providerId.isEmpty() || modelId.isEmpty()) {
+            0
+        } else {
+            parseContextLimit(providerInfo, providerId, modelId)
+        }
+    }.stateIn(scope, SharingStarted.Eagerly, 0)
 
+    /**
+     * Load config - triggers AppStateStore to load data.
+     * This is called when the chat screen initializes.
+     */
     override fun loadConfig() {
-        scope.launch(Dispatchers.IO) {
-            sessionRepository.loadDefaultConfig()
-            sessionRepository.getProviderInfo().onSuccess { providerResponse ->
-                val (defaultModelId, defaultProviderId) = sessionRepository.getDefaultModelProvider()
-                
-                val finalProviderId = if (_selectedProviderId.value.isEmpty()) defaultProviderId else _selectedProviderId.value
-                val finalModelId = if (_selectedModelId.value.isEmpty()) defaultModelId else _selectedModelId.value
-                
-                _providerInfo.value = providerResponse
-                _selectedProviderId.value = finalProviderId
-                _selectedModelId.value = finalModelId
-                
-                if (finalModelId.isNotEmpty()) {
-                    _modelName.value = finalModelId.uppercase().replace("-", " ").take(30)
-                    _maxTokens.value = parseContextLimit(providerResponse, finalProviderId, finalModelId)
-                }
-            }
-            
-            agentRepository.getAgents().collect { resource ->
-                if (resource is Resource.Success) {
-                    val agents = resource.data
-                    val newModes = agents.filter { !it.hidden }.map { agent ->
-                        Mode(id = agent.name, name = agent.name, description = agent.description)
-                    }.toImmutableList()
-                    
-                    val defaultMode = sessionRepository.getDefaultMode()
-                    val currentSelection = _selectedModeId.value
-                    val newSelection = if (newModes.any { it.id == currentSelection }) currentSelection else defaultMode
-                    
-                    _modes.value = newModes
-                    _selectedModeId.value = newSelection
-                    
-                    if (newSelection != null) {
-                        val modeName = newModes.find { it.id == newSelection }?.name ?: newSelection.uppercase()
-                        _agentName.value = modeName.uppercase()
-                    }
-                }
-            }
-        }
-    }
-
-    override fun loadRecentModels() {
-        scope.launch {
-            val recent = sessionRepository.getRecentModels()
-            _recentModels.value = recent.toImmutableList()
-        }
-    }
-
-    override fun selectModel(providerId: String, modelId: String) {
-        sessionRepository.setDefaultModel(modelId, providerId)
-        _selectedProviderId.value = providerId
-        _selectedModelId.value = modelId
-        _selectedVariantId.value = null
-        _modelName.value = modelId.uppercase().replace("-", " ").take(30)
-        _providerInfo.value?.let { _maxTokens.value = parseContextLimit(it, providerId, modelId) }
+        // AppStateStore.loadConfig() is called on connection via RealtimeSyncService
+        // But we also trigger it here to ensure config is loaded when chat opens
+        Napier.i("[ChatConfigDelegate] loadConfig() called - triggering AppStateStore sync")
         
+        scope.launch(Dispatchers.IO) {
+            // Ensure default config is loaded in session repository
+            sessionRepository.loadDefaultConfig()
+        }
+    }
+
+    /**
+     * Load recent models from AppStateStore.
+     */
+    override fun loadRecentModels() {
+        // Recent models are already observed from AppStateStore
+        // This method exists for backward compatibility
+        Napier.v("[ChatConfigDelegate] loadRecentModels() - state observed from AppStateStore")
+    }
+
+    /**
+     * Select a model - delegates to AppStateStore.
+     */
+    override fun selectModel(providerId: String, modelId: String) {
+        Napier.i("[ChatConfigDelegate] selectModel: $providerId / $modelId")
+        
+        // Update AppStateStore (single source of truth)
+        appStateStore.selectModel(providerId, modelId)
+        
+        // Also update session repository for persistence
+        sessionRepository.setDefaultModel(modelId, providerId)
+        
+        // Add to recent models
         scope.launch {
             sessionRepository.addRecentModel(providerId, modelId)
-            loadRecentModels()
         }
     }
 
+    /**
+     * Select a variant - delegates to AppStateStore.
+     */
     override fun selectVariant(variantId: String?) {
-        _selectedVariantId.value = variantId
+        Napier.v("[ChatConfigDelegate] selectVariant: $variantId")
+        appStateStore.selectVariant(variantId)
     }
 
+    /**
+     * Select a mode - delegates to AppStateStore.
+     */
     override fun selectMode(modeId: String?) {
         val newModeId = modeId ?: "build"
+        Napier.i("[ChatConfigDelegate] selectMode: $newModeId")
+        
+        // Update AppStateStore (single source of truth)
+        appStateStore.selectMode(newModeId)
+        
+        // Also update session repository for persistence
         sessionRepository.setDefaultMode(newModeId)
-        _selectedModeId.value = newModeId
-        val modeName = _modes.value.find { it.id == newModeId }?.name ?: newModeId.uppercase()
-        _agentName.value = modeName.uppercase()
     }
 
     private fun parseContextLimit(providerResponse: ProviderResponse, providerId: String, modelId: String): Int {

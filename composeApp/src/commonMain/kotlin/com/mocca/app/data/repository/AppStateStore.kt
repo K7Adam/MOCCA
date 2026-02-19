@@ -377,48 +377,104 @@ class AppStateStore(
     
     /**
      * Load config from server (providers, models, modes).
+     * Also loads default model/provider from server config.
      */
     private fun loadConfig() {
         storeScope.launch {
+            // First, load default config from server (sets default model/provider)
+            try {
+                sessionRepository.loadDefaultConfig()
+                Napier.i("[AppStateStore] Default config loaded from server")
+            } catch (e: Exception) {
+                Napier.w("[AppStateStore] Failed to load default config: ${e.message}")
+            }
+            
             // Load provider info
             sessionRepository.getProviderInfo().fold(
                 onSuccess = { info ->
                     _providerInfo.value = info
+                    Napier.i("[AppStateStore] Provider info loaded: ${info.all.size} providers")
                     
                     // Set default model if not already set
                     if (_selectedModelId.value.isEmpty()) {
-                        sessionRepository.getDefaultModelProvider().let { (modelId, providerId) ->
-                            if (modelId.isNotEmpty()) {
-                                _selectedModelId.value = modelId
-                                _selectedProviderId.value = providerId
+                        val (modelId, providerId) = sessionRepository.getDefaultModelProvider()
+                        if (modelId.isNotEmpty()) {
+                            _selectedModelId.value = modelId
+                            _selectedProviderId.value = providerId
+                            Napier.i("[AppStateStore] Default model set: $providerId / $modelId")
+                        } else {
+                            // Fallback: try to find first available model
+                            info.all.firstOrNull { provider ->
+                                (provider.models as? Map<*, *>)?.isNotEmpty() == true
+                            }?.let { provider ->
+                                val modelsMap = provider.models as? Map<*, *> ?: return@let
+                                val firstModelId = modelsMap.keys.firstOrNull()?.toString()
+                                if (firstModelId != null) {
+                                    _selectedProviderId.value = provider.id
+                                    _selectedModelId.value = firstModelId
+                                    Napier.i("[AppStateStore] Fallback model set: ${provider.id} / $firstModelId")
+                                }
                             }
                         }
                     }
                 },
-                onFailure = { Napier.w("[AppStateStore] Failed to load provider info") }
+                onFailure = { Napier.w("[AppStateStore] Failed to load provider info: ${it.message}") }
             )
             
-            // Load modes
+            // Load modes from server
             sessionRepository.getModes().fold(
                 onSuccess = { modes ->
                     _modes.value = modes
+                    Napier.i("[AppStateStore] Modes loaded: ${modes.size} modes")
                     if (_selectedModeId.value == null && modes.isNotEmpty()) {
                         _selectedModeId.value = modes.first().id
+                        Napier.i("[AppStateStore] Default mode set: ${modes.first().id}")
                     }
                 },
-                onFailure = { Napier.w("[AppStateStore] Failed to load modes") }
+                onFailure = { Napier.w("[AppStateStore] Failed to load modes: ${it.message}") }
             )
         }
     }
     
     /**
      * Load agents from server.
+     * Also derives modes from agents if modes endpoint hasn't provided any.
      */
     private fun loadAgents() {
         storeScope.launch {
             agentRepository.getAgents().collect { resource ->
                 when (resource) {
-                    is Resource.Success -> _agents.value = resource.data
+                    is Resource.Success -> {
+                        val agents = resource.data
+                        _agents.value = agents
+                        Napier.i("[AppStateStore] Agents loaded: ${agents.size} agents")
+                        
+                        // If we don't have modes yet, derive them from agents
+                        if (_modes.value.isEmpty() && agents.isNotEmpty()) {
+                            val derivedModes = agents
+                                .filter { !it.hidden }
+                                .map { agent ->
+                                    Mode(
+                                        id = agent.name,
+                                        name = agent.name,
+                                        description = agent.description
+                                    )
+                                }
+                            _modes.value = derivedModes
+                            Napier.i("[AppStateStore] Derived ${derivedModes.size} modes from agents")
+                            
+                            // Set default mode if not set
+                            if (_selectedModeId.value == null && derivedModes.isNotEmpty()) {
+                                val defaultMode = sessionRepository.getDefaultMode()
+                                _selectedModeId.value = if (derivedModes.any { it.id == defaultMode }) {
+                                    defaultMode
+                                } else {
+                                    derivedModes.first().id
+                                }
+                                Napier.i("[AppStateStore] Default mode set from agents: ${_selectedModeId.value}")
+                            }
+                        }
+                    }
                     is Resource.Error -> Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
                     else -> {}
                 }

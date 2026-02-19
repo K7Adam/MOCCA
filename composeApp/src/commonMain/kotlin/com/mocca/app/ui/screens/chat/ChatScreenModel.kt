@@ -66,15 +66,17 @@ class ChatScreenModel(
     private val sessionRepository: SessionRepository,
     private val stateCoordinator: StateCoordinator,
     private val commandRepository: CommandRepository,
-    private val agentRepository: AgentRepository
+    private val agentRepository: AgentRepository,
+    private val appStateStore: AppStateStore
 ) : ScreenModel {
     
     // Delegate construction using Lazy and screenModelScope
+    // IMPORTANT: Now passes appStateStore for single source of truth
     private val messageDelegate: ChatMessageDelegate by lazy { 
         ChatMessageDelegateImpl(sessionRepository, screenModelScope) 
     }
     private val configDelegate: ChatConfigDelegate by lazy { 
-        ChatConfigDelegateImpl(sessionRepository, agentRepository, screenModelScope) 
+        ChatConfigDelegateImpl(appStateStore, sessionRepository, agentRepository, screenModelScope) 
     }
     private val eventDelegate: ChatEventDelegate by lazy { 
         ChatEventDelegateImpl(stateCoordinator, screenModelScope) 
