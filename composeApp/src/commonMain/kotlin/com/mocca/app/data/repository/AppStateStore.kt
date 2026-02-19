@@ -264,7 +264,7 @@ class AppStateStore(
             providerRepository.getProviders().collect { resource ->
                 _providers.value = resource
                 if (resource is Resource.Success) {
-                    Napier.v("[AppStateStore] Providers loaded: ${resource.data.all?.size ?: 0}")
+                    Napier.v("[AppStateStore] Providers loaded: ${resource.data.all.size}")
                 }
             }
         }

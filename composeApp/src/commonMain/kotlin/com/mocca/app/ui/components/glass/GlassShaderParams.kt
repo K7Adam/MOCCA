@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.mocca.app.ui.components.glass
 
 import androidx.compose.ui.graphics.Color

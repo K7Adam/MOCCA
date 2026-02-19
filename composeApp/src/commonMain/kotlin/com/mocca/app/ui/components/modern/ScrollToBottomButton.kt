@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.*

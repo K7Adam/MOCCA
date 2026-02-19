@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.mocca.app.ui.screens.settings
 
 import androidx.compose.foundation.background
