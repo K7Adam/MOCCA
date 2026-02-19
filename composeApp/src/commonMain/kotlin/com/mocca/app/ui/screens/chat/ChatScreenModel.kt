@@ -67,20 +67,37 @@ class ChatScreenModel(
     private val stateCoordinator: StateCoordinator,
     private val commandRepository: CommandRepository,
     private val agentRepository: AgentRepository,
-    private val appStateStore: AppStateStore
+    private val appStateStore: AppStateStore,
+    private val chatStateStore: ChatStateStore
 ) : ScreenModel {
     
-    // Delegate construction using Lazy and screenModelScope
-    // IMPORTANT: Now passes appStateStore for single source of truth
-    private val messageDelegate: ChatMessageDelegate by lazy { 
-        ChatMessageDelegateImpl(sessionRepository, screenModelScope) 
-    }
     private val configDelegate: ChatConfigDelegate by lazy { 
         ChatConfigDelegateImpl(appStateStore, sessionRepository, agentRepository, screenModelScope) 
     }
-    private val eventDelegate: ChatEventDelegate by lazy { 
-        ChatEventDelegateImpl(stateCoordinator, screenModelScope) 
-    }
+    
+    val aggregatedMessages: StateFlow<ImmutableList<Message>> = combine(
+        chatStateStore.messages,
+        chatStateStore.childSessions,
+        chatStateStore.childMessages
+    ) { msgs, children, childMsgs ->
+        val rootMessages = msgs.toMutableList()
+        val syntheticMessages = children.values.map { child ->
+            Message(
+                id = "child-${child.id}",
+                sessionId = child.parentID ?: "",
+                role = MessageRole.ASSISTANT,
+                parts = listOf(MessagePart.SubTask(
+                    sessionId = child.id,
+                    title = child.title ?: "Sub-task",
+                    status = child.status,
+                    messages = childMsgs[child.id] ?: emptyList(),
+                    streamingText = ""
+                )),
+                createdAt = child.createdAt
+            )
+        }
+        (rootMessages + syntheticMessages).sortedBy { it.createdAt }.toImmutableList()
+    }.stateIn(screenModelScope, SharingStarted.Eagerly, persistentListOf())
 
     private val _state = MutableStateFlow(ChatState(sessionId = initialSessionId ?: ""))
     val state: StateFlow<ChatState> = _state.asStateFlow()
@@ -93,8 +110,7 @@ class ChatScreenModel(
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent: SharedFlow<String> = _navigationEvent.asSharedFlow()
 
-    val aggregatedMessages: StateFlow<ImmutableList<Message>> by lazy { messageDelegate.aggregatedMessages }
-    val streamingText by lazy { eventDelegate.streamingText }
+    val streamingText = chatStateStore.streamingText
 
     init {
         syncDelegates()
@@ -111,16 +127,16 @@ class ChatScreenModel(
     private fun syncDelegates() {
         screenModelScope.launch {
             combine(
-                messageDelegate.messages,
-                messageDelegate.childSessions,
-                messageDelegate.childMessages,
-                eventDelegate.childStreamingText,
-                eventDelegate.isThinking,
-                eventDelegate.thinkingContent,
-                eventDelegate.thinkingElapsedMs,
-                eventDelegate.pendingPermission,
-                eventDelegate.pendingQuestion,
-                eventDelegate.connectionStatus,
+                chatStateStore.messages,
+                chatStateStore.childSessions,
+                chatStateStore.childMessages,
+                chatStateStore.childStreamingText,
+                chatStateStore.isThinking,
+                chatStateStore.thinkingContent,
+                chatStateStore.thinkingElapsedMs,
+                chatStateStore.pendingPermission,
+                chatStateStore.pendingQuestion,
+                stateCoordinator.connectionStatus,
                 configDelegate.providerInfo,
                 configDelegate.selectedProviderId,
                 configDelegate.selectedModelId,
@@ -130,14 +146,15 @@ class ChatScreenModel(
                 configDelegate.modelName,
                 configDelegate.agentName,
                 configDelegate.maxTokens,
-                configDelegate.recentModels
+                configDelegate.recentModels,
+                chatStateStore.todos
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 _state.value.copy(
-                    messages = args[0] as ImmutableList<Message>,
-                    childSessions = args[1] as ImmutableMap<String, Session>,
-                    childMessages = args[2] as ImmutableMap<String, ImmutableList<Message>>,
-                    childStreamingText = args[3] as ImmutableMap<String, String>,
+                    messages = (args[0] as List<Message>).toImmutableList(),
+                    childSessions = (args[1] as Map<String, Session>).toImmutableMap(),
+                    childMessages = (args[2] as Map<String, List<Message>>).mapValues { it.value.toImmutableList() }.toImmutableMap(),
+                    childStreamingText = (args[3] as Map<String, String>).toImmutableMap(),
                     isThinking = args[4] as Boolean,
                     thinkingContent = args[5] as String,
                     thinkingElapsedMs = args[6] as Long,
@@ -153,7 +170,8 @@ class ChatScreenModel(
                     modelName = args[16] as String,
                     agentName = args[17] as String,
                     maxTokens = args[18] as Int,
-                    recentModels = args[19] as ImmutableList<RecentModel>
+                    recentModels = args[19] as ImmutableList<RecentModel>,
+                    todos = (args[20] as List<Todo>).toImmutableList()
                 )
             }.collect { newState ->
                 _state.update { newState }
@@ -165,28 +183,18 @@ class ChatScreenModel(
         if (_state.value.sessionId == newSessionId && _state.value.messages.isNotEmpty()) return
         _state.update { it.copy(sessionId = newSessionId, isLoading = true) }
         _inputText.value = ""
-        eventDelegate.connectToEventStream(newSessionId)
-        eventDelegate.observeEvents(newSessionId, { loadMessages() }, { id -> messageDelegate.loadChildMessages(id) })
-        messageDelegate.loadMessages(newSessionId, 50)
-        messageDelegate.loadChildren(newSessionId)
-        loadTodos()
+        screenModelScope.launch { chatStateStore.loadSession(newSessionId) }
     }
 
     private fun loadMessages() {
-        messageDelegate.loadMessages(sessionId, 50)
-        _state.update { it.copy(isSending = false, isSessionIdle = true) }
+        chatStateStore.loadMoreMessages()
+        _state.update { it.copy(isSending = false, isSessionIdle = chatStateStore.isSessionIdle.value) }
     }
 
-    fun loadMoreMessages() = messageDelegate.loadMoreMessages(sessionId)
+    fun loadMoreMessages() = chatStateStore.loadMoreMessages()
 
     private fun loadTodos() {
-        screenModelScope.launch {
-            sessionRepository.getSessionTodos(sessionId).collect { resource ->
-                if (resource is Resource.Success) {
-                    _state.update { it.copy(todos = resource.data.toImmutableList()) }
-                }
-            }
-        }
+        chatStateStore.refreshTodos()
     }
 
     fun toggleTodoPanel() {
@@ -213,19 +221,11 @@ class ChatScreenModel(
             
             if (command.isNotBlank()) {
                 screenModelScope.launch {
-                    val userMessage = messageDelegate.createLocalUserMessage(sessionId, text)
+                    val userMessage = sessionRepository.createLocalUserMessage(sessionId, text)
                     _inputText.value = ""
                     _state.update { it.copy(isSending = true, isSessionIdle = false) }
                     if (sessionRepository.executeCommand(sessionId, command, args) is Resource.Error) {
                         _state.update { it.copy(isSending = false, isSessionIdle = true, error = "Command failed") }
-                    }
-                    // Safety timeout for command execution
-                    screenModelScope.launch {
-                        delay(30_000) // 30 second timeout for commands
-                        if (_state.value.isSending && !_state.value.isThinking) {
-                            Napier.w("Command isSending stuck for 30s, auto-resetting")
-                            _state.update { it.copy(isSending = false, isSessionIdle = true) }
-                        }
                     }
                 }
                 return
@@ -233,74 +233,45 @@ class ChatScreenModel(
         }
         
         screenModelScope.launch {
-            messageDelegate.createLocalUserMessage(sessionId, text)
             _inputText.value = ""
+            val currentAttachments = _state.value.attachedFiles
             clearAttachments()
-            _state.update { it.copy(isSending = true, isSessionIdle = false) }
             
-            val result = sessionRepository.sendMessageAsync(
-                sessionId = sessionId,
+            val result = chatStateStore.sendMessage(
                 text = text,
                 mode = _state.value.selectedModeId,
                 variant = _state.value.selectedVariantId,
-                attachments = _state.value.attachedFiles,
+                attachments = currentAttachments,
                 modelId = _state.value.selectedModelId.ifEmpty { null },
                 providerId = _state.value.selectedProviderId.ifEmpty { null }
             )
             
-            if (!result.isSuccess) {
-                _inputText.value = text
-                _state.update { it.copy(isSending = false, isSessionIdle = true, error = result.exceptionOrNull()?.message) }
-            }
-            
-            // Safety timeout: reset isSending after 60 seconds if still stuck
-            // This prevents permanent loading indicator if SSE events are missed
-            screenModelScope.launch {
-                delay(60_000) // 60 second timeout
-                if (_state.value.isSending && !_state.value.isThinking) {
-                    Napier.w("isSending stuck for 60s, auto-resetting")
-                    _state.update { it.copy(isSending = false, isSessionIdle = true) }
-                }
+            if (result.isFailure) {
+                _inputText.value = text // Restore text on failure
             }
         }
     }
 
     fun abortSession() {
-        screenModelScope.launch {
-            if (sessionRepository.abortSession(sessionId).isSuccess) {
-                _state.update { it.copy(isSending = false, isSessionIdle = true) }
-            }
-        }
+        screenModelScope.launch { chatStateStore.abortSession() }
     }
 
     fun approvePermission() {
-        val p = _state.value.pendingPermission ?: return
-        screenModelScope.launch {
-            if (sessionRepository.respondToPermission(p.sessionId, p.id, true).isSuccess) stateCoordinator.dismissPermission()
-        }
+        screenModelScope.launch { chatStateStore.approvePermission() }
     }
 
     fun denyPermission() {
-        val p = _state.value.pendingPermission ?: return
-        screenModelScope.launch {
-            if (sessionRepository.respondToPermission(p.sessionId, p.id, false).isSuccess) stateCoordinator.dismissPermission()
-        }
+        screenModelScope.launch { chatStateStore.denyPermission() }
     }
 
-    fun dismissPermission() = stateCoordinator.dismissPermission()
+    fun dismissPermission() = chatStateStore.dismissPermission()
 
     fun answerQuestion(a: List<List<String>>) {
-        val q = _state.value.pendingQuestion ?: return
-        screenModelScope.launch {
-            if (sessionRepository.replyToQuestion(q.id, a).isSuccess) stateCoordinator.dismissQuestion()
-        }
+        screenModelScope.launch { chatStateStore.answerQuestion(a) }
     }
 
     fun rejectQuestion() {
-        val q = _state.value.pendingQuestion ?: return
-        screenModelScope.launch {
-            if (sessionRepository.rejectQuestion(q.id).isSuccess) stateCoordinator.dismissQuestion()
-        }
+        screenModelScope.launch { chatStateStore.rejectQuestion() }
     }
 
     fun forkSession(m: Message) {
@@ -362,8 +333,8 @@ class ChatScreenModel(
     }
 
     fun retry() {
-        loadMessages()
-        eventDelegate.connectToEventStream(sessionId)
+        clearError()
+        screenModelScope.launch { chatStateStore.loadSession(sessionId) }
     }
 
     fun clearError() { _state.update { it.copy(error = null) } }

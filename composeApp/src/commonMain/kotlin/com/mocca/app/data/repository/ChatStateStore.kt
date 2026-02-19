@@ -45,7 +45,25 @@ class ChatStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
+    private val _optimisticUserMessage = MutableStateFlow<Message?>(null)
+    
+    val messages: StateFlow<List<Message>> = combine(_messages, _optimisticUserMessage) { dbMsgs, optMsg ->
+        if (optMsg == null) {
+            dbMsgs
+        } else {
+            val optText = (optMsg.parts.firstOrNull() as? MessagePart.Text)?.text ?: ""
+            val alreadyInDb = dbMsgs.takeLast(5).any { 
+                it.role == MessageRole.USER && 
+                it.parts.filterIsInstance<MessagePart.Text>().any { part -> part.text == optText }
+            }
+            if (alreadyInDb) {
+                storeScope.launch { _optimisticUserMessage.value = null }
+                dbMsgs
+            } else {
+                dbMsgs + optMsg
+            }
+        }
+    }.stateIn(storeScope, SharingStarted.Eagerly, emptyList())
     
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -66,6 +84,9 @@ class ChatStateStore(
     val streamingText: StateFlow<String> = stateCoordinator.streamingText
     val isThinking: StateFlow<Boolean> = stateCoordinator.isThinking
     val thinkingContent: StateFlow<String> = stateCoordinator.thinkingContent
+    
+    private val _thinkingElapsedMs = MutableStateFlow(0L)
+    val thinkingElapsedMs: StateFlow<Long> = _thinkingElapsedMs.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // PERMISSION/QUESTION STATE - From StateCoordinator
@@ -181,6 +202,20 @@ class ChatStateStore(
                 handleBroadcastEvent(event)
             }
         }
+        
+        // Observe thinking time
+        storeScope.launch {
+            stateCoordinator.thinkingStartTime.collect { startTime ->
+                if (startTime != null) {
+                    while (stateCoordinator.isThinking.value) {
+                        _thinkingElapsedMs.value = Clock.System.now().toEpochMilliseconds() - startTime
+                        delay(100)
+                    }
+                } else {
+                    _thinkingElapsedMs.value = 0
+                }
+            }
+        }
     }
     
     private fun handleBroadcastEvent(event: BroadcastEvent) {
@@ -223,6 +258,7 @@ class ChatStateStore(
                     
                     // Reload messages on idle (message complete)
                     reloadMessages(currentId)
+                    refreshTodos()
                 }
                 // Child session idle
                 if (_childSessions.value.containsKey(event.properties.sessionID)) {
@@ -355,6 +391,16 @@ class ChatStateStore(
     ): Result<Unit> {
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
         
+        // Optimistic UI update
+        val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        _optimisticUserMessage.value = Message(
+            id = "local-$now",
+            sessionId = sessionId,
+            role = MessageRole.USER,
+            parts = listOf(MessagePart.Text(text)),
+            createdAt = now
+        )
+        
         _isSending.value = true
         _isSessionIdle.value = false
         _error.value = null
@@ -372,6 +418,7 @@ class ChatStateStore(
                 _isSending.value = false
                 _isSessionIdle.value = true
                 _error.value = result.exceptionOrNull()?.message
+                _optimisticUserMessage.value = null
             }
         }
     }

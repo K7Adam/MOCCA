@@ -199,7 +199,8 @@ val screenModelModule = module {
             stateCoordinator = get(),
             commandRepository = get(),
             agentRepository = get(),
-            appStateStore = get()
+            appStateStore = get(),
+            chatStateStore = get()
         )
     }
     
