@@ -42,7 +42,7 @@ class ChatMessageDelegateImpl(
             )
         }
         (rootMessages + syntheticMessages).sortedBy { it.createdAt }.toImmutableList()
-    }.stateIn(scope, SharingStarted.WhileSubscribed(5000), persistentListOf())
+    }.stateIn(scope, SharingStarted.Eagerly, persistentListOf())
 
     override fun loadMessages(sessionId: String, limit: Long) {
         currentLimit = limit

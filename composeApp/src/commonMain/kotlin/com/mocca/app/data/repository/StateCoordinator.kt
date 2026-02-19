@@ -57,6 +57,18 @@ class StateCoordinator(
     private val _monitoredSessionIds = MutableStateFlow<Set<String>>(emptySet())
     val monitoredSessionIds: StateFlow<Set<String>> = _monitoredSessionIds.asStateFlow()
     
+    /**
+     * Callback invoked when app resumes from background.
+     * Used to trigger state sync.
+     */
+    var onAppResume: (() -> Unit)? = null
+    
+    /**
+     * Callback invoked when a session becomes idle (message complete).
+     * Used to trigger message refresh in state stores.
+     */
+    var onSessionIdle: ((sessionId: String) -> Unit)? = null
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONNECTION STATE - Unified from ConnectionManager
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -89,6 +101,57 @@ class StateCoordinator(
         onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.SUSPEND
     )
     val broadcastEvents: SharedFlow<BroadcastEvent> = _broadcastEvents.asSharedFlow()
+    
+    /**
+     * Get events filtered for monitored sessions.
+     * This replaces direct observation of eventStreamRepository.eventsForMonitoredSessions().
+     */
+    fun eventsForMonitoredSessions(): Flow<ServerEvent> = broadcastEvents
+        .filter { it is BroadcastEvent.ServerEvent }
+        .map { (it as BroadcastEvent.ServerEvent).event }
+        .filter { event ->
+            val sessionId = when (event) {
+                is ServerEvent.SessionUpdated -> event.properties.info.id
+                is ServerEvent.SessionDeleted -> event.properties.info.id
+                is ServerEvent.SessionIdle -> event.properties.sessionID
+                is ServerEvent.SessionError -> event.properties.sessionID
+                is ServerEvent.MessageUpdated -> event.properties.info.sessionID
+                is ServerEvent.MessageRemoved -> event.properties.sessionID
+                is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID
+                is ServerEvent.PermissionUpdated -> event.properties.sessionID
+                is ServerEvent.PermissionAsked -> event.properties.sessionID
+                is ServerEvent.PermissionReplied -> event.properties.sessionID
+                is ServerEvent.QuestionAsked -> event.properties.sessionID
+                is ServerEvent.QuestionReplied -> event.properties.sessionID
+                else -> null
+            }
+            sessionId == null || _monitoredSessionIds.value.contains(sessionId)
+        }
+    
+    /**
+     * Get events filtered for a specific session.
+     */
+    fun eventsForSession(sessionId: String): Flow<ServerEvent> = broadcastEvents
+        .filter { it is BroadcastEvent.ServerEvent }
+        .map { (it as BroadcastEvent.ServerEvent).event }
+        .filter { event ->
+            when (event) {
+                is ServerEvent.SessionUpdated -> event.properties.info.id == sessionId
+                is ServerEvent.SessionDeleted -> event.properties.info.id == sessionId
+                is ServerEvent.SessionIdle -> event.properties.sessionID == sessionId
+                is ServerEvent.SessionError -> event.properties.sessionID == sessionId
+                is ServerEvent.MessageUpdated -> event.properties.info.sessionID == sessionId
+                is ServerEvent.MessageRemoved -> event.properties.sessionID == sessionId
+                is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID == sessionId
+                is ServerEvent.MessagePartRemoved -> true
+                is ServerEvent.PermissionUpdated -> event.properties.sessionID == sessionId
+                is ServerEvent.PermissionAsked -> event.properties.sessionID == sessionId
+                is ServerEvent.PermissionReplied -> event.properties.sessionID == sessionId
+                is ServerEvent.QuestionAsked -> event.properties.sessionID == sessionId
+                is ServerEvent.QuestionReplied -> event.properties.sessionID == sessionId
+                else -> true
+            }
+        }
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION RUNNING STATE
@@ -278,6 +341,8 @@ class StateCoordinator(
             }
             is ServerEvent.SessionIdle -> {
                 _runningSessionIds.update { it - event.properties.sessionID }
+                // Trigger callback for message refresh
+                onSessionIdle?.invoke(event.properties.sessionID)
             }
             is ServerEvent.SessionError -> {
                 event.properties.sessionID?.let { 
@@ -311,6 +376,9 @@ class StateCoordinator(
      * Called when app comes to foreground.
      */
     private fun onForeground() {
+        // Trigger app resume callback
+        onAppResume?.invoke()
+        
         coordinatorScope.launch {
             val now = Clock.System.now().toEpochMilliseconds()
             val lastSync = _lastSyncTime.value

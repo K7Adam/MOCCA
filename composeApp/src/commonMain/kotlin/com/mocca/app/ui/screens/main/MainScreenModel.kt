@@ -124,7 +124,7 @@ class MainScreenModel(
     
     // Session groups from centralized store (reactive)
     val sessionGroups = appStateStore.sessionGroups
-        .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        .stateIn(screenModelScope, SharingStarted.Eagerly, emptyList())
     
     init {
         _state.update { it.copy(appVersion = "V${appVersionProvider.getVersion()}") }

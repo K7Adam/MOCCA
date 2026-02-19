@@ -176,7 +176,7 @@ val screenModelModule = module {
         com.mocca.app.ui.screens.chat.ChatScreenModel(
             initialSessionId = initialSessionId,
             sessionRepository = get(),
-            eventStreamRepository = get(),
+            stateCoordinator = get(),
             commandRepository = get(),
             agentRepository = get()
         )
@@ -258,7 +258,7 @@ val screenModelModule = module {
             lspRepository = get(),
             gitRepository = get(),
             mcpRepository = get(),
-            eventStreamRepository = get(),
+            stateCoordinator = get(),
             projectRepository = get()
         )
     }

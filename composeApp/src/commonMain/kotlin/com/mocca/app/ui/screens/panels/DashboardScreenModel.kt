@@ -2,6 +2,7 @@ package com.mocca.app.ui.screens.panels
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.data.repository.BroadcastEvent
 import com.mocca.app.data.repository.*
 import com.mocca.app.domain.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +24,7 @@ class DashboardScreenModel(
     private val lspRepository: LspRepository,
     private val gitRepository: GitRepository,
     private val mcpRepository: McpRepository,
-    private val eventStreamRepository: EventStreamRepository,
+    private val stateCoordinator: StateCoordinator,
     private val projectRepository: ProjectRepository
 ) : ScreenModel {
     
@@ -122,9 +123,15 @@ class DashboardScreenModel(
     
     private fun observeEvents() {
         screenModelScope.launch {
-            eventStreamRepository.events.collect { event ->
-                if (event is ServerEvent.FileEdited || event is ServerEvent.FileWatcherUpdated) {
-                    loadVcsInfo()
+            stateCoordinator.broadcastEvents.collect { broadcastEvent ->
+                when (broadcastEvent) {
+                    is BroadcastEvent.ServerEvent -> {
+                        val event = broadcastEvent.event
+                        if (event is ServerEvent.FileEdited || event is ServerEvent.FileWatcherUpdated) {
+                            loadVcsInfo()
+                        }
+                    }
+                    else -> {}
                 }
             }
         }

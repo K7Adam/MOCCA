@@ -64,7 +64,7 @@ data class ChatState(
 class ChatScreenModel(
     initialSessionId: String?,
     private val sessionRepository: SessionRepository,
-    private val eventStreamRepository: EventStreamRepository,
+    private val stateCoordinator: StateCoordinator,
     private val commandRepository: CommandRepository,
     private val agentRepository: AgentRepository
 ) : ScreenModel {
@@ -77,7 +77,7 @@ class ChatScreenModel(
         ChatConfigDelegateImpl(sessionRepository, agentRepository, screenModelScope) 
     }
     private val eventDelegate: ChatEventDelegate by lazy { 
-        ChatEventDelegateImpl(eventStreamRepository, screenModelScope) 
+        ChatEventDelegateImpl(stateCoordinator, screenModelScope) 
     }
 
     private val _state = MutableStateFlow(ChatState(sessionId = initialSessionId ?: ""))
@@ -274,30 +274,30 @@ class ChatScreenModel(
     fun approvePermission() {
         val p = _state.value.pendingPermission ?: return
         screenModelScope.launch {
-            if (sessionRepository.respondToPermission(p.sessionId, p.id, true).isSuccess) eventStreamRepository.dismissPermission()
+            if (sessionRepository.respondToPermission(p.sessionId, p.id, true).isSuccess) stateCoordinator.dismissPermission()
         }
     }
 
     fun denyPermission() {
         val p = _state.value.pendingPermission ?: return
         screenModelScope.launch {
-            if (sessionRepository.respondToPermission(p.sessionId, p.id, false).isSuccess) eventStreamRepository.dismissPermission()
+            if (sessionRepository.respondToPermission(p.sessionId, p.id, false).isSuccess) stateCoordinator.dismissPermission()
         }
     }
 
-    fun dismissPermission() = eventStreamRepository.dismissPermission()
+    fun dismissPermission() = stateCoordinator.dismissPermission()
 
     fun answerQuestion(a: List<List<String>>) {
         val q = _state.value.pendingQuestion ?: return
         screenModelScope.launch {
-            if (sessionRepository.replyToQuestion(q.id, a).isSuccess) eventStreamRepository.dismissQuestion()
+            if (sessionRepository.replyToQuestion(q.id, a).isSuccess) stateCoordinator.dismissQuestion()
         }
     }
 
     fun rejectQuestion() {
         val q = _state.value.pendingQuestion ?: return
         screenModelScope.launch {
-            if (sessionRepository.rejectQuestion(q.id).isSuccess) eventStreamRepository.dismissQuestion()
+            if (sessionRepository.rejectQuestion(q.id).isSuccess) stateCoordinator.dismissQuestion()
         }
     }
 
@@ -367,8 +367,7 @@ class ChatScreenModel(
     fun clearError() { _state.update { it.copy(error = null) } }
     
     override fun onDispose() {
-        eventStreamRepository.disconnect()
-        // No need to cancel scope if it's screenModelScope, but here we used a custom one in DI
-        // We should really use screenModelScope if possible
+        // StateCoordinator manages SSE lifecycle, no need to disconnect here
+        // The session will remain monitored for notifications
     }
 }

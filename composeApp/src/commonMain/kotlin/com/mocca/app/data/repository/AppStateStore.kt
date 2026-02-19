@@ -334,20 +334,20 @@ class AppStateStore(
      */
     val sessionGroups: StateFlow<List<SessionGroup>> = combine(_sessions, runningSessionIds) { sessions, runningIds ->
         buildSessionGroups(sessions, runningIds)
-    }.stateIn(storeScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.stateIn(storeScope, SharingStarted.Eagerly, emptyList())
     
     /**
      * Whether any session is currently running.
      */
     val hasAnyRunningSession: StateFlow<Boolean> = runningSessionIds.map { it.isNotEmpty() }
-        .stateIn(storeScope, SharingStarted.WhileSubscribed(5000), false)
+        .stateIn(storeScope, SharingStarted.Eagerly, false)
     
     /**
      * Model display name for UI.
      */
     val modelName: StateFlow<String> = _selectedModelId.map { modelId ->
         modelId.ifEmpty { "--" }.uppercase().replace("-", " ").take(30)
-    }.stateIn(storeScope, SharingStarted.WhileSubscribed(5000), "--")
+    }.stateIn(storeScope, SharingStarted.Eagerly, "--")
     
     /**
      * Mode display name for UI.
@@ -356,7 +356,7 @@ class AppStateStore(
         modeId?.let { id ->
             modes.find { it.id == id }?.description ?: id.uppercase()
         } ?: "--"
-    }.stateIn(storeScope, SharingStarted.WhileSubscribed(5000), "--")
+    }.stateIn(storeScope, SharingStarted.Eagerly, "--")
     
     /**
      * Build session groups from flat session list.
