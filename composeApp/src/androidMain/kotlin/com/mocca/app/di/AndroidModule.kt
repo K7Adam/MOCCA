@@ -27,6 +27,7 @@ val androidModule = module {
     single<NetworkObserver> { NetworkObserverImpl(androidContext()) }
     single<PlatformUpdateManager> { AndroidUpdateManager(androidContext()) }
     single<AppVersionProvider> { AndroidAppVersionProvider(androidContext()) }
+
     
     // App lifecycle observer for background/foreground detection
     single<AppLifecycleObserver> { 

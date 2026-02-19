@@ -6,6 +6,7 @@ import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.NetworkConfig
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
+import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.util.AppLifecycleObserver
 import com.mocca.app.util.AppLifecycleState
 import com.mocca.app.util.NetworkObserver
@@ -41,7 +42,8 @@ class EventStreamRepository(
     private val networkObserver: NetworkObserver? = null,
     private val localCache: LocalCache? = null,
     private val apiClient: MoccaApiClient? = null,
-    private val appLifecycleObserver: AppLifecycleObserver? = null
+    private val appLifecycleObserver: AppLifecycleObserver? = null,
+    private val notificationTracker: NotificationTracker? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -632,6 +634,12 @@ class EventStreamRepository(
                     } catch (e: Exception) {
                         Napier.w("Failed to update session error status", e)
                     }
+                    if (monitoredSessionIds.value.contains(sessionId)) {
+                        notificationTracker?.showAgentErrorNotification(
+                            sessionId = sessionId,
+                            errorMessage = event.properties.error?.message ?: "Unknown error"
+                        )
+                    }
                 }
                 Napier.e("Session error: ${event.properties.error?.message}")
             }
@@ -787,6 +795,12 @@ class EventStreamRepository(
                 if (monitoredSessionIds.value.contains(permission.sessionId)) {
                     addPendingPermission(permission)
                     Napier.i("Permission requested (legacy): ${event.properties.title}")
+                    notificationTracker?.showPermissionNotification(
+                        sessionId = permission.sessionId,
+                        permissionId = permission.id,
+                        title = "Permission Requested",
+                        description = event.properties.title
+                    )
                 }
             }
             
@@ -795,12 +809,19 @@ class EventStreamRepository(
                 if (monitoredSessionIds.value.contains(permission.sessionId)) {
                     addPendingPermission(permission)
                     Napier.i("Permission requested: ${permission.permission} for ${permission.patterns}")
+                    notificationTracker?.showPermissionNotification(
+                        sessionId = permission.sessionId,
+                        permissionId = permission.id,
+                        title = "Agent Permission Required",
+                        description = "Tool access requested: ${permission.permission}"
+                    )
                 }
             }
             
             is ServerEvent.PermissionReplied -> {
                 removePendingPermission(event.properties.requestID)
                 Napier.i("Permission replied: ${event.properties.reply}")
+                notificationTracker?.dismissPermissionNotification(event.properties.requestID)
             }
             
             is ServerEvent.QuestionAsked -> {
@@ -808,12 +829,18 @@ class EventStreamRepository(
                 if (monitoredSessionIds.value.contains(question.sessionId)) {
                     addPendingQuestion(question)
                     Napier.i("Question requested: ${question.questions.size} questions")
+                    notificationTracker?.showQuestionNotification(
+                        sessionId = question.sessionId,
+                        questionId = question.id,
+                        question = question.questions.firstOrNull()?.question ?: "Agent has a question"
+                    )
                 }
             }
             
             is ServerEvent.QuestionReplied -> {
                 removePendingQuestion(event.properties.requestID)
                 Napier.i("Question replied: ${event.properties.answers.size} answers")
+                notificationTracker?.dismissQuestionNotification(event.properties.requestID)
             }
             
             is ServerEvent.FileEdited -> {
@@ -847,6 +874,21 @@ class EventStreamRepository(
                 val status = event.properties.status
                 val agentName = event.properties.agentName
                 Napier.i("Agent $agentName: $status${event.properties.message?.let { " - $it" } ?: ""}")
+                
+                // Show completion/error notifications for monitored sessions
+                if (monitoredSessionIds.value.contains(event.properties.sessionID)) {
+                    if (status == "completed") {
+                        notificationTracker?.showAgentFinishedNotification(
+                            sessionId = event.properties.sessionID,
+                            sessionTitle = "Agent $agentName task completed"
+                        )
+                    } else if (status == "error") {
+                        notificationTracker?.showAgentErrorNotification(
+                            sessionId = event.properties.sessionID,
+                            errorMessage = event.properties.message ?: "Agent $agentName encountered an error"
+                        )
+                    }
+                }
             }
             
             is ServerEvent.Heartbeat -> {

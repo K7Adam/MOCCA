@@ -4,6 +4,7 @@ import android.content.Context
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToList
+import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.mocca.app.db.AppDatabase
 import com.mocca.app.db.MessageEntity
 import com.mocca.app.db.ServerConfigEntity
@@ -30,6 +31,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     private val serverConfigQueries get() = database.serverConfigQueries
     private val recentModelQueries get() = database.recentModelQueries
     private val appSettingsQueries get() = database.appSettingsQueries
+    private val sessionTodoQueries get() = database.sessionTodoQueries
     
     private val json = Json { ignoreUnknownKeys = true }
     
@@ -267,6 +269,44 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         } catch (e: Exception) {
             Napier.w("Failed to update message part: $messageId/$partId", e)
         }
+    }
+
+    // ==================== Todos ====================
+
+    override suspend fun getSessionTodos(sessionId: String): List<Todo> {
+        return try {
+            val jsonStr = sessionTodoQueries.selectBySessionId(sessionId).executeAsOneOrNull()
+            if (jsonStr != null) {
+                json.decodeFromString(ListSerializer(Todo.serializer()), jsonStr)
+            } else emptyList()
+        } catch (e: Exception) {
+            Napier.w("Failed to get cached todos", e)
+            emptyList()
+        }
+    }
+
+    override suspend fun insertSessionTodos(sessionId: String, todos: List<Todo>) {
+        try {
+            val todosJson = json.encodeToString(ListSerializer(Todo.serializer()), todos)
+            sessionTodoQueries.insertOrReplace(sessionId, todosJson)
+        } catch (e: Exception) {
+            Napier.w("Failed to cache todos", e)
+        }
+    }
+
+    override fun observeSessionTodos(sessionId: String): kotlinx.coroutines.flow.Flow<List<Todo>> {
+        return sessionTodoQueries.selectBySessionId(sessionId)
+            .asFlow()
+            .mapToOneOrNull(Dispatchers.IO)
+            .map { jsonStr -> 
+                if (jsonStr != null) {
+                    try {
+                        json.decodeFromString(ListSerializer(Todo.serializer()), jsonStr)
+                    } catch (e: Exception) {
+                        emptyList()
+                    }
+                } else emptyList()
+            }
     }
 
     // ==================== Server Configs ====================

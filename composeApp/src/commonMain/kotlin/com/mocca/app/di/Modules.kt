@@ -69,7 +69,8 @@ val commonModule = module {
             networkObserver = getOrNull(),
             localCache = get(),
             apiClient = get(),
-            appLifecycleObserver = getOrNull()
+            appLifecycleObserver = getOrNull(),
+            notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>()
         )
     }
     singleOf(::FileRepository)

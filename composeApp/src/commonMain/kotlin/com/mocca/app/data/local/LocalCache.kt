@@ -36,6 +36,11 @@ interface LocalCache {
     suspend fun deleteMessage(messageId: String)
     suspend fun pruneMessages(sessionId: String, keepCount: Long) // Added
     
+    // Todos
+    suspend fun getSessionTodos(sessionId: String): List<com.mocca.app.domain.model.Todo>
+    suspend fun insertSessionTodos(sessionId: String, todos: List<com.mocca.app.domain.model.Todo>)
+    fun observeSessionTodos(sessionId: String): kotlinx.coroutines.flow.Flow<List<com.mocca.app.domain.model.Todo>>
+    
     /**
      * IMPROVED: Incrementally update a message part's content.
      * This is more efficient than fetching and re-inserting entire messages.

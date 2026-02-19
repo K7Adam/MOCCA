@@ -21,9 +21,9 @@ class SessionRepository(
     private val apiClient: MoccaApiClient,
     private val localCache: LocalCache
 ) {
-    // Memory Cache
     private val memoryCache = mutableMapOf<String, List<Message>>()
     private val cacheMutex = Mutex()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Default model/provider - should be configurable from settings
     // These will be populated from /config/providers
@@ -607,19 +607,24 @@ class SessionRepository(
     // ═══════════════════════════════════════════════════════════════════════
 
     /**
-     * Get todos for a session.
+     * Get todos for a session, observing local cache and refreshing from network.
      */
     fun getSessionTodos(sessionId: String): Flow<Resource<List<Todo>>> = flow {
-        emit(Resource.Loading())
-        apiClient.getSessionTodos(sessionId).fold(
-            onSuccess = { todos ->
-                emit(Resource.Success(todos))
-            },
-            onFailure = { error ->
-                Napier.e("Failed to fetch todos for session $sessionId", error)
-                emit(Resource.Error(error.message ?: "Failed to fetch todos"))
+        // Observe local cache
+        emitAll(localCache.observeSessionTodos(sessionId).map { localTodos ->
+            
+            // Trigger background refresh if we haven't already just fetched them
+            // In a real app we might debounce this or check a 'lastFetchedAt' timestamp
+            repositoryScope.launch {
+                apiClient.getSessionTodos(sessionId).onSuccess { remoteTodos ->
+                    localCache.insertSessionTodos(sessionId, remoteTodos)
+                }.onFailure { e ->
+                    Napier.w("Background todo sync failed for session $sessionId", e)
+                }
             }
-        )
+            
+            Resource.Success(localTodos)
+        })
     }.flowOn(Dispatchers.IO)
 
     // ═══════════════════════════════════════════════════════════════════════

@@ -1,0 +1,18 @@
+-- Session Todo list caching table
+CREATE TABLE SessionTodoEntity (
+    sessionId TEXT PRIMARY KEY NOT NULL,
+    todosJson TEXT NOT NULL
+);
+
+insertOrReplace:
+INSERT OR REPLACE INTO SessionTodoEntity(sessionId, todosJson)
+VALUES (?, ?);
+
+selectBySessionId:
+SELECT todosJson FROM SessionTodoEntity WHERE sessionId = ?;
+
+deleteBySessionId:
+DELETE FROM SessionTodoEntity WHERE sessionId = ?;
+
+deleteAll:
+DELETE FROM SessionTodoEntity;
