@@ -4,6 +4,8 @@ import com.mocca.app.api.GitHubApiClient
 import com.mocca.app.api.getHttpEngine
 import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.model.DownloadStatus
+import com.mocca.app.domain.model.GitHubTokenStatus
+import com.mocca.app.domain.model.UpdateCheckResult
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
@@ -28,55 +30,111 @@ class UpdateRepository(
     private val settingsRepository: SettingsRepository
 ) {
 
-    suspend fun checkForUpdate(): Result<UpdateInfo?> {
+    /**
+     * Validates the GitHub token and returns its status.
+     * This should be called when the user wants to check if their token is working.
+     */
+    suspend fun validateGitHubToken(): GitHubTokenStatus {
+        val token = settingsRepository.getGitHubToken()
+        
+        if (token.isNullOrBlank()) {
+            Napier.w("No GitHub token configured", tag = "UpdateRepository")
+            return GitHubTokenStatus.Missing
+        }
+        
+        Napier.d("Validating GitHub token...", tag = "UpdateRepository")
+        return gitHubApiClient.validateToken(token)
+    }
+
+    /**
+     * Checks for updates with detailed result.
+     * Returns UpdateCheckResult which distinguishes between:
+     * - Update available
+     * - No update available (current is latest)
+     * - Error (with token status if relevant)
+     */
+    suspend fun checkForUpdateDetailed(): UpdateCheckResult {
         val currentVersion = appVersionProvider.getVersion()
         val token = settingsRepository.getGitHubToken()
+        
         Napier.d("Checking for updates. Current version: $currentVersion. Token present: ${token != null}", tag = "UpdateRepository")
         
-        return gitHubApiClient.getReleases("K7Adam", "MOCCA", token).mapCatching { releases ->
-            val latestRelease = releases.firstOrNull() ?: return@mapCatching null
-            
-            // Handle success
-            val remoteTag = latestRelease.tagName.removePrefix("v")
-            val currentTag = currentVersion.removePrefix("v")
-            
-            Napier.d("Latest release on GitHub: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
-            
-            if (isNewer(remoteTag, currentTag)) {
-                val asset = latestRelease.assets.find { it.name.endsWith(".apk") }
-                if (asset != null) {
-                    UpdateInfo(
-                        version = latestRelease.tagName,
-                        releaseNotes = latestRelease.body,
-                        downloadUrl = asset.downloadUrl,
-                        apiUrl = asset.apiUrl,
-                        size = asset.size
-                    )
-                } else {
-                    Napier.w("Update found but no APK asset available", tag = "UpdateRepository")
-                    null
+        // If no token, validate first to give user feedback
+        if (token.isNullOrBlank()) {
+            Napier.w("No GitHub token configured - update check will use unauthenticated API (limited rate)", tag = "UpdateRepository")
+        }
+        
+        return gitHubApiClient.getReleases("K7Adam", "MOCCA", token).fold(
+            onSuccess = { releases ->
+                val latestRelease = releases.firstOrNull()
+                
+                if (latestRelease == null) {
+                    Napier.w("No releases found in repository", tag = "UpdateRepository")
+                    return UpdateCheckResult.Error("No releases found in repository")
                 }
-            } else {
-                Napier.d("No update available. Latest: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
-                null
+                
+                val remoteTag = latestRelease.tagName.removePrefix("v")
+                val currentTag = currentVersion.removePrefix("v")
+                
+                Napier.d("Latest release on GitHub: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
+                
+                if (isNewer(remoteTag, currentTag)) {
+                    val asset = latestRelease.assets.find { it.name.endsWith(".apk") }
+                    if (asset != null) {
+                        Napier.i("Update found: ${latestRelease.tagName}", tag = "UpdateRepository")
+                        UpdateCheckResult.UpdateAvailable(
+                            UpdateInfo(
+                                version = latestRelease.tagName,
+                                releaseNotes = latestRelease.body,
+                                downloadUrl = asset.downloadUrl,
+                                apiUrl = asset.apiUrl,
+                                size = asset.size
+                            )
+                        )
+                    } else {
+                        Napier.w("Update found but no APK asset available", tag = "UpdateRepository")
+                        UpdateCheckResult.Error("Update ${latestRelease.tagName} found but no APK asset is available")
+                    }
+                } else {
+                    Napier.d("No update available. Latest: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
+                    UpdateCheckResult.NoUpdate
+                }
+            },
+            onFailure = { e ->
+                val errorMessage = e.message ?: "Unknown error"
+                Napier.e("Update check failed: $errorMessage", e, tag = "UpdateRepository")
+                
+                // Determine token status from error
+                val tokenStatus = when {
+                    errorMessage.contains("Unauthorized", ignoreCase = true) || 
+                    errorMessage.contains("401") -> GitHubTokenStatus.Invalid("Token is invalid or expired")
+                    errorMessage.contains("Forbidden", ignoreCase = true) || 
+                    errorMessage.contains("403") -> GitHubTokenStatus.Invalid("Token lacks required permissions")
+                    errorMessage.contains("rate limit", ignoreCase = true) -> {
+                        if (token.isNullOrBlank()) {
+                            GitHubTokenStatus.Missing
+                        } else {
+                            GitHubTokenStatus.Error("Rate limit exceeded. Try again later.")
+                        }
+                    }
+                    else -> null
+                }
+                
+                UpdateCheckResult.Error(errorMessage, tokenStatus)
             }
-        }.recover { e ->
-            // Handle failure gracefully - log detailed error
-            val errorMessage = e.message ?: "Unknown error"
-            
-            if (errorMessage.contains("No releases found") || errorMessage.contains("Not Found") || errorMessage.contains("404")) {
-                Napier.w(
-                    "Failed to access GitHub releases. Repository may be private or not accessible. Error: $errorMessage",
-                    tag = "UpdateRepository"
-                )
-                null
-            } else if (errorMessage.contains("Unauthorized") || errorMessage.contains("401")) {
-                Napier.w("Unauthorized access to GitHub API. Check token.", tag = "UpdateRepository")
-                null
-            } else {
-                Napier.e("Unexpected error during update check: $errorMessage", e, tag = "UpdateRepository")
-                throw e
-            }
+        )
+    }
+
+    /**
+     * Legacy method for backward compatibility.
+     * Returns null only when no update is available, throws or returns error otherwise.
+     * @deprecated Use checkForUpdateDetailed() instead for better error handling
+     */
+    suspend fun checkForUpdate(): Result<UpdateInfo?> {
+        return when (val result = checkForUpdateDetailed()) {
+            is UpdateCheckResult.UpdateAvailable -> Result.success(result.updateInfo)
+            is UpdateCheckResult.NoUpdate -> Result.success(null)
+            is UpdateCheckResult.Error -> Result.failure(Exception(result.message))
         }
     }
 

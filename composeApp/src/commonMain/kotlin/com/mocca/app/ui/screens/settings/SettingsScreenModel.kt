@@ -39,6 +39,8 @@ data class SettingsState(
     val connectionStatuses: Map<String, ServerConnectionStatus> = emptyMap(),
     val activeConnectionState: ConnectionStatus = ConnectionStatus.NotConfigured,
     val githubToken: String = "",
+    val githubTokenStatus: GitHubTokenStatus? = null,
+    val isValidatingToken: Boolean = false,
     // Provider Auth
     val providers: List<Provider> = emptyList(),
     val providerAuthMethods: Map<String, List<ProviderAuthMethod>> = emptyMap(),
@@ -239,35 +241,70 @@ class SettingsScreenModel(
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, message = "Checking for updates...")
 
-            updateRepository.checkForUpdate().fold(
-                onSuccess = { updateInfo: com.mocca.app.domain.model.UpdateInfo? ->
-                    if (updateInfo != null) {
-                        // Notify global update notifier so MainScreen shows the dialog
-                        updateNotifier.notifyUpdateAvailable(updateInfo)
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            message = "Update available: ${updateInfo.version}. Return to main screen to install."
-                        )
-                    } else {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            message = "No updates available - you have the latest version"
-                        )
-                    }
-                },
-                onFailure = { e: Throwable ->
-                    val errorMsg = e.message ?: "Unknown error"
-                    val friendlyMsg = when {
-                        errorMsg.contains("401") -> "Authentication failed. Check your GitHub token."
-                        errorMsg.contains("404") -> "Repository not found. Check repository settings."
-                        errorMsg.contains("No releases") -> "No releases found in repository."
-                        else -> "Update check failed: $errorMsg"
-                    }
+            when (val result = updateRepository.checkForUpdateDetailed()) {
+                is UpdateCheckResult.UpdateAvailable -> {
+                    // Notify global update notifier so MainScreen shows the dialog
+                    updateNotifier.notifyUpdateAvailable(result.updateInfo)
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        message = friendlyMsg
+                        message = "Update available: ${result.updateInfo.version}. Return to main screen to install."
                     )
                 }
+                is UpdateCheckResult.NoUpdate -> {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        message = "No updates available - you have the latest version"
+                    )
+                }
+                is UpdateCheckResult.Error -> {
+                    val friendlyMsg = buildString {
+                        append("Update check failed: ")
+                        append(result.message)
+                        
+                        // Add specific token-related guidance
+                        result.tokenStatus?.let { status ->
+                            when (status) {
+                                is GitHubTokenStatus.Invalid -> {
+                                    append("\n\nYour GitHub token is invalid or expired. Please update it below.")
+                                }
+                                is GitHubTokenStatus.Missing -> {
+                                    append("\n\nNo GitHub token configured. Add a token for better rate limits.")
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+                    
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        message = friendlyMsg,
+                        githubTokenStatus = result.tokenStatus
+                    )
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates the GitHub token and updates the UI with the status.
+     */
+    fun validateGitHubToken() {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isValidatingToken = true, message = "Validating token...")
+            
+            val status = updateRepository.validateGitHubToken()
+            
+            val message = when (status) {
+                is GitHubTokenStatus.Valid -> "Token is valid and working"
+                is GitHubTokenStatus.Missing -> "No token configured. Add a GitHub PAT for update checks."
+                is GitHubTokenStatus.Invalid -> "Token is invalid: ${status.reason}"
+                is GitHubTokenStatus.Error -> "Validation error: ${status.message}"
+            }
+            
+            _state.value = _state.value.copy(
+                isValidatingToken = false,
+                githubTokenStatus = status,
+                message = message
             )
         }
     }
@@ -284,7 +321,21 @@ class SettingsScreenModel(
             settingsRepository.saveGitHubToken(token)
             _state.value = _state.value.copy(
                 githubToken = token,
-                message = "GitHub token saved"
+                message = "Token saved. Validating..."
+            )
+            
+            // Validate the token after saving
+            val status = updateRepository.validateGitHubToken()
+            val message = when (status) {
+                is GitHubTokenStatus.Valid -> "GitHub token saved and validated successfully"
+                is GitHubTokenStatus.Missing -> "Token cleared"
+                is GitHubTokenStatus.Invalid -> "Token saved but appears invalid: ${status.reason}"
+                is GitHubTokenStatus.Error -> "Token saved but validation failed: ${status.message}"
+            }
+            
+            _state.value = _state.value.copy(
+                githubTokenStatus = status,
+                message = message
             )
         }
     }

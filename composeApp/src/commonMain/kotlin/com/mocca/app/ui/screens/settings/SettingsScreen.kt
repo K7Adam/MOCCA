@@ -29,6 +29,7 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.foundation.shape.CircleShape
 import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.components.glass.liquidGlassHeader
 import com.mocca.app.ui.components.glass.liquidGlassCard
@@ -320,42 +321,97 @@ class SettingsScreen : Screen {
                 
                 item {
                     ModuleCard(title = "GITHUB AUTO UPDATE") {
-                        // GitHub PAT input for private repo access
-                        var tokenInput by remember { mutableStateOf(state.githubToken) }
+                        // Token status indicator
+                        val tokenStatus = state.githubTokenStatus
+                        val statusColor = when {
+                            tokenStatus?.isValid == true -> AppColors.statusOnline
+                            tokenStatus?.isMissing == true -> AppColors.textSecondary
+                            tokenStatus?.isError == true -> AppColors.error
+                            state.githubToken.isBlank() -> AppColors.textSecondary
+                            else -> AppColors.textSecondary
+                        }
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Token Status:",
+                                color = AppColors.textSecondary,
+                                style = AppTypography.labelSmall
+                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(statusColor, CircleShape)
+                                )
+                                Text(
+                                    text = when {
+                                        state.isValidatingToken -> "Validating..."
+                                        tokenStatus?.isValid == true -> "Valid"
+                                        tokenStatus?.isMissing == true -> "Not Set"
+                                        tokenStatus?.isError == true -> "Invalid"
+                                        state.githubToken.isBlank() -> "Not Set"
+                                        else -> "Unknown"
+                                    },
+                                    color = statusColor,
+                                    style = AppTypography.labelSmall
+                                )
+                            }
+                        }
+                        
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
                         
                         Text(
-                            text = "GitHub Personal Access Token (for private repo access)",
+                            text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
                             color = AppColors.textSecondary,
                             style = AppTypography.labelSmall
                         )
                         Spacer(modifier = Modifier.height(AppSpacing.sm))
                         
+                        // GitHub PAT input
+                        var tokenInput by remember { mutableStateOf(state.githubToken) }
+                        
                         MoccaInput(
                             value = tokenInput,
                             onValueChange = { tokenInput = it },
                             label = "GITHUB PAT",
-                            placeholder = "ghp_..."
+                            placeholder = "ghp_... or github_pat_..."
                         )
                         
                         Spacer(modifier = Modifier.height(AppSpacing.md))
                         
+                        // Action buttons
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                         ) {
                             MoccaOutlinedButton(
-                                text = "SAVE TOKEN",
+                                text = "SAVE",
                                 onClick = { screenModel.saveGitHubToken(tokenInput) },
-                                enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken,
+                                enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken && !state.isValidatingToken,
+                                modifier = Modifier.weight(1f),
+                                height = AppSpacing.buttonHeightCompact
+                            )
+                            
+                            MoccaOutlinedButton(
+                                text = "VALIDATE",
+                                onClick = { screenModel.validateGitHubToken() },
+                                enabled = state.githubToken.isNotBlank() && !state.isValidatingToken && !state.isLoading,
                                 modifier = Modifier.weight(1f),
                                 height = AppSpacing.buttonHeightCompact
                             )
                             
                             MoccaButton(
-                                text = "CHECK FOR UPDATES",
+                                text = "CHECK UPDATES",
                                 onClick = { screenModel.checkForUpdates() },
-                                enabled = !state.isLoading,
-                                modifier = Modifier.weight(1f),
+                                enabled = !state.isLoading && !state.isValidatingToken,
+                                modifier = Modifier.weight(1.2f),
                                 height = AppSpacing.buttonHeightCompact
                             )
                         }
@@ -365,11 +421,25 @@ class SettingsScreen : Screen {
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = message,
-                                color = if (message.contains("failed", ignoreCase = true) || message.contains("error", ignoreCase = true)) 
-                                    AppColors.error else AppColors.statusOnline,
+                                color = when {
+                                    message.contains("failed", ignoreCase = true) || 
+                                    message.contains("error", ignoreCase = true) ||
+                                    message.contains("invalid", ignoreCase = true) -> AppColors.error
+                                    message.contains("valid", ignoreCase = true) ||
+                                    message.contains("available", ignoreCase = true) -> AppColors.statusOnline
+                                    else -> AppColors.textSecondary
+                                },
                                 style = AppTypography.labelSmall
                             )
                         }
+                        
+                        // Help text
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        Text(
+                            text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
+                            color = AppColors.textTertiary,
+                            style = AppTypography.labelSmall
+                        )
                     }
                 }
             }

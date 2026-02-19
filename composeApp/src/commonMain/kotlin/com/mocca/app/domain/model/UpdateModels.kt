@@ -27,6 +27,44 @@ data class UpdateInfo(
     val size: Long
 )
 
+/**
+ * Represents the status of a GitHub Personal Access Token.
+ * Used to provide user feedback about token validity.
+ */
+sealed class GitHubTokenStatus {
+    /** Token is valid and working */
+    data object Valid : GitHubTokenStatus()
+    /** No token configured */
+    data object Missing : GitHubTokenStatus()
+    /** Token is invalid, expired, or revoked */
+    data class Invalid(val reason: String) : GitHubTokenStatus()
+    /** Error occurred during validation (network issue, etc.) */
+    data class Error(val message: String) : GitHubTokenStatus()
+    
+    val isValid: Boolean get() = this is Valid
+    val isMissing: Boolean get() = this is Missing
+    val isError: Boolean get() = this is Error || this is Invalid
+    val displayMessage: String? get() = when (this) {
+        is Valid -> "Token is valid"
+        is Missing -> "No token configured"
+        is Invalid -> reason
+        is Error -> message
+    }
+}
+
+/**
+ * Result of an update check with detailed status.
+ * Distinguishes between "no updates available" and errors.
+ */
+sealed class UpdateCheckResult {
+    /** Update is available */
+    data class UpdateAvailable(val updateInfo: UpdateInfo) : UpdateCheckResult()
+    /** No update available (current version is latest) */
+    data object NoUpdate : UpdateCheckResult()
+    /** Error occurred during check */
+    data class Error(val message: String, val tokenStatus: GitHubTokenStatus? = null) : UpdateCheckResult()
+}
+
 sealed class DownloadStatus {
     data class Progress(val progress: Float) : DownloadStatus()
     data class Log(val message: String) : DownloadStatus()
