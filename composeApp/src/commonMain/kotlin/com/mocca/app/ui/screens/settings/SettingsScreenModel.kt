@@ -359,20 +359,24 @@ class SettingsScreenModel(
                 
                 val activeId = _state.value.activeServerId
                 if (activeId != null) {
-                    val status = when (state) {
-                        is ConnectionStatus.NotConfigured -> ServerConnectionStatus.UNKNOWN
-                        is ConnectionStatus.Connecting -> ServerConnectionStatus.CHECKING
-                        is ConnectionStatus.WaitingForNetwork -> ServerConnectionStatus.CHECKING
-                        is ConnectionStatus.Reconnecting -> ServerConnectionStatus.CHECKING
-                        is ConnectionStatus.Connected -> ServerConnectionStatus.CONNECTED
-                        is ConnectionStatus.Disconnected -> ServerConnectionStatus.FAILED
-                        is ConnectionStatus.Error -> ServerConnectionStatus.FAILED
-                    }
+                    val status = mapConnectionStateToStatus(state)
                     _state.value = _state.value.copy(
                         connectionStatuses = _state.value.connectionStatuses + (activeId to status)
                     )
                 }
             }
+        }
+    }
+    
+    private fun mapConnectionStateToStatus(state: ConnectionStatus): ServerConnectionStatus {
+        return when (state) {
+            is ConnectionStatus.NotConfigured -> ServerConnectionStatus.UNKNOWN
+            is ConnectionStatus.Connecting -> ServerConnectionStatus.CHECKING
+            is ConnectionStatus.WaitingForNetwork -> ServerConnectionStatus.CHECKING
+            is ConnectionStatus.Reconnecting -> ServerConnectionStatus.CHECKING
+            is ConnectionStatus.Connected -> ServerConnectionStatus.CONNECTED
+            is ConnectionStatus.Disconnected -> ServerConnectionStatus.FAILED
+            is ConnectionStatus.Error -> ServerConnectionStatus.FAILED
         }
     }
     
@@ -393,6 +397,14 @@ class SettingsScreenModel(
         screenModelScope.launch {
             serverConfigRepository.activeServer.collect { server ->
                 _state.value = _state.value.copy(activeServerId = server?.id)
+                
+                // Immediately update status map for the new active server, ensuring race condition is neutralized
+                if (server != null) {
+                    val status = mapConnectionStateToStatus(_state.value.activeConnectionState)
+                    _state.value = _state.value.copy(
+                        connectionStatuses = _state.value.connectionStatuses + (server.id to status)
+                    )
+                }
             }
         }
     }
@@ -450,6 +462,15 @@ class SettingsScreenModel(
             
             val status = try {
                 val testClient = HttpClient(getHttpEngine()) {
+                    expectSuccess = false // Manually handle status codes
+                    defaultRequest {
+                        if (server.hasCredentials) {
+                            val credentials = "${server.username}:${server.password}"
+                            @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+                            val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
+                            header(io.ktor.http.HttpHeaders.Authorization, "Basic $encoded")
+                        }
+                    }
                     install(ContentNegotiation) {
                         json(Json { ignoreUnknownKeys = true; isLenient = true })
                     }
@@ -465,6 +486,9 @@ class SettingsScreenModel(
                 if (response.status.value in 200..299) {
                     Napier.i("Server ${server.name} connection successful")
                     ServerConnectionStatus.CONNECTED
+                } else if (response.status.value == 401) {
+                    Napier.w("Server ${server.name} auth failed (401)")
+                    ServerConnectionStatus.FAILED
                 } else {
                     Napier.w("Server ${server.name} returned status ${response.status}")
                     ServerConnectionStatus.FAILED
