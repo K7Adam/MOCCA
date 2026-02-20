@@ -376,19 +376,23 @@ class StateCoordinator(
      * Called when app comes to foreground.
      */
     private fun onForeground() {
+        Napier.i("[StateCoordinator] App foregrounded - forcing connection check and state sync")
         // Trigger app resume callback
         onAppResume?.invoke()
         
         coordinatorScope.launch {
-            val now = Clock.System.now().toEpochMilliseconds()
-            val lastSync = _lastSyncTime.value
-            val needsSync = lastSync == null || (now - lastSync) > 30_000L
+            // Force connection check (re-establish SSE if it was broken during background)
+            connectionManager.checkConnection()
             
-            if (needsSync && connectionStatus.value.isConnected) {
+            // Always force a full sync from server when returning to foreground
+            // Delay slightly to allow connection status to update if it was just checking
+            delay(500L)
+            if (connectionStatus.value.isConnected || _isSyncing.value.not()) {
+                Napier.i("[StateCoordinator] Foreground sync triggered")
                 syncFromServer()
             }
             
-            // Refresh session status
+            // Refresh session status immediately as well
             refreshSessionStatus()
         }
     }

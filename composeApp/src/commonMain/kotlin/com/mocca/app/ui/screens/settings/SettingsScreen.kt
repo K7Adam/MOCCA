@@ -516,7 +516,7 @@ private fun TerminalServerCard(
             
             if (isActive) {
                 Text(
-                    text = "ACTIVE",
+                    text = "SELECTED",
                     color = AppColors.statusOnline,
                     style = AppTypography.labelSmall,
                     fontWeight = FontWeight.Bold

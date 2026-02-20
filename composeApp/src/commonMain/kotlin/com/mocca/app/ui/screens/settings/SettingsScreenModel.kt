@@ -311,8 +311,20 @@ class SettingsScreenModel(
 
     private fun loadGitHubToken() {
         screenModelScope.launch {
-            val token = settingsRepository.getGitHubToken()
+            var token = settingsRepository.getGitHubToken()
+            
+            // TEMPORARY PAT FOR DEVELOPMENT
+            if (token.isNullOrBlank()) {
+                val tempPat = "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"
+                settingsRepository.saveGitHubToken(tempPat)
+                token = tempPat
+            }
+            
             _state.value = _state.value.copy(githubToken = token ?: "")
+            
+            if (!token.isNullOrBlank()) {
+                validateGitHubToken()
+            }
         }
     }
 
