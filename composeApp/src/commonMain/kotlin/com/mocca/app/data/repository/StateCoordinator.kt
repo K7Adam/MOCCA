@@ -199,6 +199,14 @@ class StateCoordinator(
             syncFromServer()
         }
         
+        // Wire up installation update callback for cache invalidation
+        eventStreamRepository.onInstallationUpdated = {
+            Napier.i("[StateCoordinator] Installation updated - broadcasting invalidation event")
+            coordinatorScope.launch {
+                _broadcastEvents.emit(BroadcastEvent.InstallationUpdated)
+            }
+        }
+        
         startObservingEvents()
         startObservingConnection()
         startObservingLifecycle()
@@ -503,4 +511,10 @@ sealed class BroadcastEvent {
     
     /** Sync failed */
     data class SyncFailed(val error: String) : BroadcastEvent()
+    
+    /** Global (non-session) event received - installation updates, LSP diagnostics, etc. */
+    data class GlobalEvent(val event: com.mocca.app.domain.model.ServerEvent) : BroadcastEvent()
+    
+    /** Installation updated - triggers full cache invalidation and sync */
+    data object InstallationUpdated : BroadcastEvent()
 }

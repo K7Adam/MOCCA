@@ -477,6 +477,13 @@ class ConnectionManager(
 
     companion object {
         private const val MAX_RECONNECT_ATTEMPTS = 5
-        private const val PERIODIC_CHECK_INTERVAL_MS = 5 * 60 * 1000L // 5 minutes
+        /**
+         * Interval for periodic health checks.
+         *
+         * CHANGED from 5 minutes to 30 seconds for "ALWAYS FRESH" requirement.
+         * The user's #1 priority is that data is ALWAYS synchronized with the server.
+         * Faster health checks mean faster detection of connection issues.
+         */
+        private const val PERIODIC_CHECK_INTERVAL_MS = 30 * 1000L // 30 seconds
     }
 }

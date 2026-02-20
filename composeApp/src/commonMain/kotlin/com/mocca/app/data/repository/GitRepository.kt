@@ -168,6 +168,29 @@ class GitRepository(
             vcsInfo
         }
     }
+    
+    /**
+     * Refresh git status from server.
+     * Called by RealtimeSyncService during periodic sync.
+     */
+    suspend fun refresh() {
+        apiClient.getVcsInfo().fold(
+            onSuccess = { vcsInfo ->
+                val status = GitStatusResponse(
+                    branch = vcsInfo.branch ?: "unknown",
+                    clean = !vcsInfo.dirty,
+                    ahead = vcsInfo.ahead,
+                    behind = vcsInfo.behind
+                )
+                localCache.saveGitStatus(status)
+                Napier.d("[GitRepository] Refreshed VCS info: branch=${vcsInfo.branch}")
+            },
+            onFailure = { error ->
+                Napier.w("[GitRepository] Failed to refresh VCS info: ${error.message}")
+                throw error
+            }
+        )
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // Read Operations via Shell (branches, log, remotes, tags, stashes)

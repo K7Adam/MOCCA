@@ -97,6 +97,13 @@ val commonModule = module {
     singleOf(::ProjectRepository)
     
     // ═══════════════════════════════════════════════════════════════════════════════
+    // SYNC STATE MANAGER - Central hub for tracking sync health across all repos
+    // MUST come before StateCoordinator and repositories that report sync state
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    singleOf(::SyncStateManager)
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
     // STATE COORDINATOR - Central hub for all event handling and state sync
     // NOTE: This MUST come after EventStreamRepository and ConnectionManager
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -121,8 +128,13 @@ val commonModule = module {
         RealtimeSyncService(
             stateCoordinator = get(),
             connectionManager = get(),
+            syncStateManager = get(),
             mcpRepository = get(),
-            gitRepository = get()
+            gitRepository = get(),
+            toolRepository = get(),
+            agentRepository = get(),
+            commandRepository = get(),
+            providerRepository = get()
         )
     }
     
@@ -135,6 +147,7 @@ val commonModule = module {
         AppStateStore(
             localCache = get(),
             stateCoordinator = get(),
+            syncStateManager = get(),
             sessionRepository = get(),
             mcpRepository = get(),
             configRepository = get(),

@@ -2,6 +2,8 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
+import com.mocca.app.domain.model.GlobalSyncState
+import com.mocca.app.domain.model.SyncState
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -39,6 +41,7 @@ import kotlinx.datetime.Clock
 class AppStateStore(
     private val localCache: LocalCache,
     private val stateCoordinator: StateCoordinator,
+    private val syncStateManager: SyncStateManager,
     private val sessionRepository: SessionRepository,
     private val mcpRepository: McpRepository,
     private val configRepository: ConfigRepository,
@@ -146,6 +149,48 @@ class AppStateStore(
     ) { a, b -> a || b }.stateIn(storeScope, SharingStarted.Eagerly, false)
     
     val lastSyncTime: StateFlow<Long?> = realtimeSyncService.lastSyncTime
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GLOBAL SYNC STATE - From SyncStateManager (Atomic Pulse)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Global sync state - the SINGLE source of truth for data freshness.
+     * This decouples "connection status" from "data freshness".
+     * 
+     * States:
+     * - NotSynced: Never synced
+     * - Syncing: Currently syncing (with progress)
+     * - Fresh: All data is fresh
+     * - Partial: Some data fresh, some stale
+     * - Failed: Critical failure
+     */
+    val globalSyncState: StateFlow<GlobalSyncState> = syncStateManager.globalState
+    
+    /**
+     * Per-repository sync states for granular visibility.
+     */
+    val repoSyncStates: StateFlow<Map<String, SyncState>> = syncStateManager.repoStates
+    
+    /**
+     * Human-readable sync status for UI display.
+     */
+    val syncStatusText: StateFlow<String> = syncStateManager.globalState
+        .map { state -> formatSyncState(state) }
+        .stateIn(storeScope, SharingStarted.Eagerly, "Not synced")
+    
+    /**
+     * Whether the app data is ready to use (at least partially synced).
+     */
+    val isDataReady: StateFlow<Boolean> = syncStateManager.globalState
+        .map { it.isUsable }
+        .stateIn(storeScope, SharingStarted.Eagerly, false)
+    
+    /**
+     * Whether all critical repositories are fresh.
+     */
+    val areCriticalReposFresh: Boolean
+        get() = syncStateManager.areCriticalReposFresh()
     
     /**
      * Trigger a full sync from server.
@@ -318,9 +363,15 @@ class AppStateStore(
         when (event) {
             is BroadcastEvent.ServerEvent -> handleServerEvent(event.event)
             is BroadcastEvent.SyncCompleted -> {
-                Napier.v("[AppStateStore] Sync completed - loading config")
-                loadConfig()
-                loadAgents()
+                Napier.v("[AppStateStore] Sync completed - loading all dashboard data")
+                loadAllData()
+                
+                // Refresh Git status and other repository polling
+                storeScope.launch {
+                    gitRepository.getVcsInfo().collect { resource ->
+                        _vcsInfo.value = resource
+                    }
+                }
             }
             is BroadcastEvent.SyncFailed -> {
                 Napier.w("[AppStateStore] Sync failed: ${event.error}")
@@ -330,6 +381,21 @@ class AppStateStore(
             }
             is BroadcastEvent.ActiveSessionChanged -> {
                 Napier.v("[AppStateStore] Active session changed: ${event.sessionId}")
+            }
+            is BroadcastEvent.GlobalEvent -> {
+                Napier.v("[AppStateStore] Global event: ${event.event.type}")
+                // Handle global events like installation updates
+                when (event.event) {
+                    is ServerEvent.InstallationUpdated -> {
+                        Napier.i("[AppStateStore] Installation updated - triggering full sync")
+                        forceFullSync()
+                    }
+                    else -> { /* Other global events */ }
+                }
+            }
+            is BroadcastEvent.InstallationUpdated -> {
+                Napier.i("[AppStateStore] Installation updated broadcast - triggering full sync")
+                forceFullSync()
             }
         }
     }
@@ -599,5 +665,46 @@ class AppStateStore(
         realtimeSyncService.stop()
         storeScope.cancel()
         Napier.i("[AppStateStore] Disposed")
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SYNC HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Force a full sync from server.
+     * Use when user explicitly requests refresh.
+     */
+    fun forceFullSync() {
+        realtimeSyncService.forceFullSync()
+    }
+    
+    /**
+     * Format sync state for UI display.
+     */
+    private fun formatSyncState(state: GlobalSyncState): String {
+        return when (state) {
+            is GlobalSyncState.NotSynced -> "Not synced"
+            is GlobalSyncState.Syncing -> {
+                if (state.currentRepo != null) {
+                    "Syncing ${state.currentRepo}..."
+                } else {
+                    "Syncing..."
+                }
+            }
+            is GlobalSyncState.Fresh -> {
+                val age = Clock.System.now().toEpochMilliseconds() - state.lastSyncMs
+                when {
+                    age < 5000 -> "Synced"
+                    age < 60000 -> "Synced ${age / 1000}s ago"
+                    else -> "Synced ${age / 60000}m ago"
+                }
+            }
+            is GlobalSyncState.Partial -> {
+                val total = state.freshRepos.size + state.staleRepos.size + state.failedRepos.size
+                "${state.freshRepos.size}/$total synced"
+            }
+            is GlobalSyncState.Failed -> "Sync failed"
+        }
     }
 }

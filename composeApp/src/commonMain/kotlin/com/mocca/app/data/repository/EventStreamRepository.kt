@@ -52,6 +52,7 @@ class EventStreamRepository(
     private var lifecycleObserverJob: Job? = null
     private var backgroundPauseJob: Job? = null
     private var permissionActionJob: Job? = null
+    private var globalConnectionJob: Job? = null  // Global SSE stream for installation events
     
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
@@ -70,6 +71,20 @@ class EventStreamRepository(
      * Used by AppStateStore to trigger state sync.
      */
     var onAppResume: (() -> Unit)? = null
+    
+    /**
+     * Callback invoked when installation is updated (plugins installed, config changed).
+     * Used by StateCoordinator to trigger full cache invalidation and sync.
+     */
+    var onInstallationUpdated: (() -> Unit)? = null
+    
+    // Flow for global events (non-session-specific)
+    private val _globalEvents = MutableSharedFlow<ServerEvent>(
+        replay = 0,
+        extraBufferCapacity = 10,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
+    )
+    val globalEvents: SharedFlow<ServerEvent> = _globalEvents.asSharedFlow()
     
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected())
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
@@ -153,6 +168,75 @@ class EventStreamRepository(
             startNetworkObserver()
             startLifecycleObserver()
             startPermissionActionObserver()
+            connectGlobalEvents()  // Also connect to global events
+        }
+    }
+    
+    /**
+     * Connect to the global events stream (/event/global).
+     * This receives system-wide events like installation updates, LSP diagnostics, etc.
+     * CRITICAL for detecting plugin installation changes that affect tools/agents/commands.
+     */
+    fun connectGlobalEvents() {
+        if (globalConnectionJob?.isActive == true) {
+            Napier.d("[EventStream] Global events already connected")
+            return
+        }
+        
+        globalConnectionJob = repositoryScope.launch {
+            Napier.i("[EventStream] Connecting to global events stream...")
+            
+            try {
+                sseClient.subscribeToGlobalEvents()
+                    .catch { error ->
+                        if (error is CancellationException) throw error
+                        Napier.e("[EventStream] Global events error", error)
+                        // Reconnect after delay
+                        delay(5000)
+                        if (autoReconnect) {
+                            globalConnectionJob?.cancel()
+                            connectGlobalEvents()
+                        }
+                    }
+                    .collect { event ->
+                        Napier.i("[EventStream] Global event received: ${event.type}")
+                        handleGlobalEvent(event)
+                    }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Napier.e("[EventStream] Global events connection failed", e)
+            }
+        }
+    }
+    
+    /**
+     * Handle global (non-session-specific) events.
+     * These affect the entire app, not just specific sessions.
+     */
+    private suspend fun handleGlobalEvent(event: ServerEvent) {
+        // Emit to global events flow
+        _globalEvents.emit(event)
+        
+        // Also emit to main events flow for general consumers
+        _events.emit(event)
+        
+        when (event) {
+            is ServerEvent.InstallationUpdated -> {
+                Napier.i("[EventStream] Installation updated to version: ${event.properties.version}")
+                // Trigger callback for cache invalidation and full sync
+                onInstallationUpdated?.invoke()
+            }
+            is ServerEvent.LspDiagnostics -> {
+                Napier.d("[EventStream] LSP diagnostics for: ${event.properties.path}")
+            }
+            is ServerEvent.AgentStatus -> {
+                // Global agent status (not session-specific)
+                Napier.d("[EventStream] Global agent status: ${event.properties.agentName} - ${event.properties.status}")
+            }
+            else -> {
+                Napier.v("[EventStream] Unhandled global event: ${event.type}")
+            }
         }
     }
 
@@ -465,11 +549,13 @@ class EventStreamRepository(
         networkObserverJob?.cancel()
         lifecycleObserverJob?.cancel()
         backgroundPauseJob?.cancel()
+        globalConnectionJob?.cancel()
         connectionJob = null
         heartbeatJob = null
         networkObserverJob = null
         lifecycleObserverJob = null
         backgroundPauseJob = null
+        globalConnectionJob = null
         // Do NOT cancel repositoryScope, it persists for the app lifecycle
         reconnectAttempts = 0
         activeSessionId = null
@@ -853,6 +939,8 @@ class EventStreamRepository(
             
             is ServerEvent.InstallationUpdated -> {
                 Napier.i("OpenCode updated to: ${event.properties.version}")
+                // Trigger callback for cache invalidation - this is critical for staying in sync
+                onInstallationUpdated?.invoke()
             }
             
             is ServerEvent.LspDiagnostics -> {

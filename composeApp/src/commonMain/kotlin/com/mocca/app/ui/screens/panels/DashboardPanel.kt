@@ -57,6 +57,13 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
+        // ─── SYNC STATUS ───────────────────────────────────────────────────
+        SyncStatusCard(
+            globalSyncState = state.globalSyncState,
+            repoSyncStates = state.repoSyncStates,
+            onRefreshClick = { screenModel.forceFullSync() }
+        )
+        
         // ─── MCP Servers ─────────────────────────────────────────────────
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),

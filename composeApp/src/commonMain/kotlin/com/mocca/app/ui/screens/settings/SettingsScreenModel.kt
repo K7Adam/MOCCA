@@ -320,7 +320,8 @@ class SettingsScreenModel(
                 token = tempPat
             }
             
-            _state.value = _state.value.copy(githubToken = token ?: "")
+            // token is guaranteed non-null after the above check
+            _state.value = _state.value.copy(githubToken = token)
             
             if (!token.isNullOrBlank()) {
                 validateGitHubToken()

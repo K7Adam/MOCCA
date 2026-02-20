@@ -8,6 +8,8 @@ import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.ProjectRepository
 import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
+import com.mocca.app.domain.model.GlobalSyncState
+import com.mocca.app.domain.model.SyncState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,6 +61,12 @@ class DashboardScreenModel(
         
         // MCP servers (from AppStateStore - auto-updated)
         val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading(),
+        
+        // Global sync state (from SyncStateManager)
+        val globalSyncState: GlobalSyncState = GlobalSyncState.NotSynced,
+        
+        // Per-repository sync states
+        val repoSyncStates: Map<String, SyncState> = emptyMap(),
         
         // Sync state
         val isSyncing: Boolean = false
@@ -200,6 +208,20 @@ class DashboardScreenModel(
                 _state.update { it.copy(isSyncing = isSyncing) }
             }
         }
+        
+        // Observe global sync state
+        screenModelScope.launch {
+            appStateStore.globalSyncState.collect { globalSyncState ->
+                _state.update { it.copy(globalSyncState = globalSyncState) }
+            }
+        }
+        
+        // Observe per-repository sync states
+        screenModelScope.launch {
+            appStateStore.repoSyncStates.collect { repoSyncStates ->
+                _state.update { it.copy(repoSyncStates = repoSyncStates) }
+            }
+        }
     }
     
     private fun observeEvents() {
@@ -226,6 +248,14 @@ class DashboardScreenModel(
      */
     fun syncNow() {
         appStateStore.syncFromServer()
+    }
+    
+    /**
+     * Force a full sync of all data.
+     * Use when user explicitly requests refresh.
+     */
+    fun forceFullSync() {
+        appStateStore.forceFullSync()
     }
     
     /**
