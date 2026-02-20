@@ -36,9 +36,8 @@ private const val AGSL_SOURCE = """
     
     float helix(float2 uv, float t, float phase) {
         float brightness = 0.0;
-        float nodeCount  = 40.0;
-        for (float i = 0.0; i < nodeCount; i++) {
-            float progress = i / nodeCount;
+        for (int i = 0; i < 40; i++) {
+            float progress = float(i) / 40.0;
             float nx = 0.5 + sin(progress * 6.2832 * 3.0 + t * 0.8 + phase) * 0.18;
             float ny = fract(progress - t * 0.06);
             float dist = length(uv - float2(nx, ny));
@@ -57,7 +56,7 @@ private const val AGSL_SOURCE = """
         float radius     = pulseClock * 1.8;
         float ringWidth  = 0.028;
         float dist       = abs(length(uv - center) - radius);
-        float ring       = smoothstep(ringWidth, 0.0, dist);
+        float ring       = 1.0 - smoothstep(0.0, ringWidth, dist);
         float fade       = 1.0 - smoothstep(0.3, 1.0, pulseClock);
         return ring * fade * 1.4;
     }
@@ -68,6 +67,8 @@ private const val AGSL_SOURCE = """
     }
     
     half4 main(float2 fragCoord) {
+        if (uResolution.x <= 0.0 || uResolution.y <= 0.0) return half4(0.0, 0.0, 0.0, 1.0);
+
         float2 uv = fragCoord / uResolution;
         
         float plasma = plasmaField(uv, uTime) * 0.5 + 0.5;
