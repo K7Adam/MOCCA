@@ -42,9 +42,6 @@ import com.mocca.app.ui.components.chat.PermissionBanner
 import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
-import com.mocca.app.util.FilePickerHelper
-import io.github.vinceglb.filekit.dialogs.FileKitMode
-import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 
 @Composable
@@ -177,22 +174,6 @@ fun ChatContent(
     
     val commands = state.commands
     var showShareDialog by remember { mutableStateOf(false) }
-    
-    val filePickerLauncher = rememberFilePickerLauncher(
-        type = FilePickerHelper.createFileType(),
-        mode = FileKitMode.Multiple()
-    ) { files ->
-        files?.forEach { file ->
-            coroutineScope.launch {
-                try {
-                    val attached = FilePickerHelper.toAttachedFile(file)
-                    screenModel.addAttachment(attached)
-                } catch (e: Exception) {
-                    io.github.aakira.napier.Napier.e("Failed to attach file", e)
-                }
-            }
-        }
-    }
     
     // Track scroll direction for dock auto-hide
     var previousScrollIndex by remember { mutableStateOf(0) }

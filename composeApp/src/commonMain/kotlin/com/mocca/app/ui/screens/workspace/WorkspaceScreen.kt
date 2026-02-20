@@ -28,7 +28,6 @@ import com.mocca.app.ui.components.*
 import com.mocca.app.ui.screens.chat.ChatScreen
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
-import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.*
 
 // Use GridOn as GridView, Terminal as Code
@@ -78,8 +77,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
                     0 -> DashboardContent(sessionId)
                     1 -> ChatScreen(sessionId).Content()
                     2 -> FilesScreen().Content()
-                    3 -> ConsoleScreen().Content()
-                    4 -> GitScreen().Content()
+                    3 -> GitScreen().Content()
                 }
             }
         }
@@ -89,8 +87,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
         0 -> "Dashboard"
         1 -> "Chat"
         2 -> "Explorer"
-        3 -> "Console"
-        4 -> "Git"
+        3 -> "Git"
         else -> "Workspace"
     }
 }
@@ -183,35 +180,6 @@ private fun DashboardContent(sessionId: String) {
             )
         }
 
-        // Mini Terminal (2x1)
-        item {
-            GodModuleCard(
-                modifier = Modifier.fillMaxWidth().height(200.dp),
-                title = "TERMINAL",
-                icon = Icons.Default.Terminal,
-                content = {
-                    Surface(
-                        color = Color.Black.copy(alpha = 0.4f),
-                        shape = AppShapes.medium,
-                        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f)),
-                        modifier = Modifier.fillMaxSize().padding(top = 12.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp)) {
-                            Text("> git checkout -b feat/workspace", style = AppTypography.codeSmall, color = AppColors.white.copy(alpha = 0.5f))
-                            Text("Switched to a new branch 'feat/workspace'", style = AppTypography.codeSmall, color = AppColors.white.copy(alpha = 0.5f))
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("✔", color = AppColors.accentGreen, style = AppTypography.codeSmall)
-                                Text("Ready in 240ms", color = AppColors.white, style = AppTypography.codeSmall)
-                            }
-                            Row(modifier = Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(">", color = AppColors.accentGreen, style = AppTypography.codeSmall)
-                                Box(modifier = Modifier.size(8.dp, 16.dp).background(AppColors.accentGreen))
-                            }
-                        }
-                    }
-                }
-            )
-        }
     }
 }
 
@@ -304,8 +272,7 @@ private fun GodBottomNavBar(
         NavItem(0, "DASH", GridView),
         NavItem(1, "CHAT", Icons.AutoMirrored.Filled.Chat),
         NavItem(2, "FILES", Icons.Default.Folder),
-        NavItem(3, "CONSOLE", Icons.Default.Terminal),
-        NavItem(4, "GIT", Code)
+        NavItem(3, "GIT", Code)
     )
     
     Surface(

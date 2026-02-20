@@ -37,6 +37,15 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -245,8 +254,11 @@ fun ChatInputBar(
                     modifier = Modifier.size(12.dp),
                     tint = AppColors.textTertiary
                 )
+                val displayModelName = modelName.substringAfterLast("/").let {
+                    if (it.length > 14) "…" + it.takeLast(13) else it
+                }
                 Text(
-                    text = modelName.take(12).uppercase(),
+                    text = displayModelName.uppercase(),
                     color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                     style = AppTypography.labelSmall
                 )
@@ -274,47 +286,32 @@ fun ChatInputBar(
             }
 
             // Agent selector
-            Box {
-                var showAgentMenu by remember { mutableStateOf(false) }
-                Row(
-                    modifier = Modifier.clickable { showAgentMenu = true },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = null,
-                        modifier = Modifier.size(12.dp),
-                        tint = AppColors.textTertiary
-                    )
-                    Text(
-                        text = agentName.take(10).uppercase(),
-                        color = AppColors.textTertiary,
-                        style = AppTypography.labelSmall
-                    )
-                }
-                
-                DropdownMenu(
-                    expanded = showAgentMenu,
-                    onDismissRequest = { showAgentMenu = false },
-                    modifier = Modifier.background(AppColors.surfaceElevated)
-                ) {
-                    modes.forEach { mode ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    mode.name.uppercase(),
-                                    style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
-                                )
-                            },
-                            onClick = {
-                                onModeSelected(mode.id)
-                                showAgentMenu = false
-                            }
-                        )
-                    }
-                }
+            var showAgentSelector by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier.clickable { showAgentSelector = true },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = AppColors.textTertiary
+                )
+                Text(
+                    text = agentName.take(10).uppercase(),
+                    color = AppColors.textTertiary,
+                    style = AppTypography.labelSmall
+                )
+            }
+            
+            if (showAgentSelector) {
+                AgentSelectorBottomSheet(
+                    modes = modes,
+                    selectedModeId = selectedModeId,
+                    onModeSelected = onModeSelected,
+                    onDismiss = { showAgentSelector = false }
+                )
             }
         }
 
@@ -378,14 +375,6 @@ fun ChatInputBar(
                 .padding(horizontal = AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // @ mention button
-            MoccaIconButton(
-                icon = Icons.Default.Add,
-                onClick = { handleValueChange(if (inputText.isEmpty()) "@" else "$inputText @") },
-                size = 32.dp,
-                iconColor = AppColors.textSecondary
-            )
-
             // / command button
             MoccaTextButton(
                 text = "/",
@@ -528,3 +517,97 @@ private val InputMinHeight = 32.dp
 private val InputMaxHeight = 80.dp
 private val ActionToolbarHeight = 36.dp
 private val NavIndicatorHeight = 32.dp // Increased to fit icons + dots
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AgentSelectorBottomSheet(
+    modes: List<Mode>,
+    selectedModeId: String?,
+    onModeSelected: (String?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppColors.background,
+        contentColor = AppColors.white,
+        scrimColor = Color.Black.copy(alpha = 0.5f),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.6f)
+        ) {
+            // Header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(AppColors.surface)
+                    .padding(AppSpacing.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "// SELECT AGENT",
+                    style = AppTypography.titleMedium,
+                    color = AppColors.white,
+                    fontWeight = FontWeight.Bold
+                )
+                MoccaIconButton(
+                    icon = Icons.Default.Close,
+                    onClick = onDismiss,
+                    iconColor = AppColors.grey
+                )
+            }
+            
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+            
+            // Agent list
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(AppSpacing.sm)
+            ) {
+                item {
+                    Text(
+                        text = "// AVAILABLE",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.accentGreen,
+                        modifier = Modifier.padding(start = AppSpacing.sm, top = AppSpacing.sm, bottom = AppSpacing.xs)
+                    )
+                }
+                
+                items(modes) { mode ->
+                    val isSelected = mode.id == selectedModeId
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { 
+                                onModeSelected(mode.id)
+                                onDismiss()
+                            }
+                            .background(if (isSelected) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.background)
+                            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "> ${mode.name.uppercase()}",
+                            style = AppTypography.bodySmall,
+                            color = if (isSelected) AppColors.accentGreen else AppColors.white
+                        )
+                        
+                        if (isSelected) {
+                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

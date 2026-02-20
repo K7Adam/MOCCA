@@ -22,7 +22,6 @@ import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.sessions.SessionsScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
-import com.mocca.app.ui.screens.console.ConsoleScreenModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -74,7 +73,6 @@ val commonModule = module {
         )
     }
     singleOf(::FileRepository)
-    singleOf(::TerminalRepository)
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
     singleOf(::SettingsRepository)
@@ -220,9 +218,6 @@ val screenModelModule = module {
         )
     }
     
-    // Console screen
-    factoryOf(::ConsoleScreenModel)
-    
     // Git screen
     factory {
         GitScreenModel(
@@ -275,7 +270,8 @@ val screenModelModule = module {
         DashboardScreenModel(
             appStateStore = get(),
             stateCoordinator = get(),
-            mcpRepository = get()
+            mcpRepository = get(),
+            projectRepository = get()
         )
     }
 }

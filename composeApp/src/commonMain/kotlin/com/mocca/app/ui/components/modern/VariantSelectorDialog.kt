@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.graphics.Color
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -25,6 +25,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Terminal-styled variant selection dialog.
  * Shows available variants for the selected model.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VariantSelectorDialog(
     variants: List<String>,
@@ -32,13 +33,21 @@ fun VariantSelectorDialog(
     onVariantSelected: (variantId: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppColors.background,
+        contentColor = AppColors.white,
+        scrimColor = Color.Black.copy(alpha = 0.5f),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .fillMaxHeight(0.6f)
-                .background(AppColors.background, AppShapes.medium)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
         ) {
             // Header
             Row(

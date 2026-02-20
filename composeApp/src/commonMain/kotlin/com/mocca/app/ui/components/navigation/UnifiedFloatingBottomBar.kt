@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -205,6 +206,7 @@ fun UnifiedFloatingBottomBar(
             .widthIn(min = 320.dp, max = 440.dp)
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .navigationBarsPadding()
+            .imePadding()
     ) {
         // Determine which glass effect to use (priority order)
         @Suppress("DEPRECATION")

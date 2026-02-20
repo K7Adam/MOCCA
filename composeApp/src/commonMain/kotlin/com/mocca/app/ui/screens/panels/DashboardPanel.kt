@@ -13,7 +13,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -24,6 +23,11 @@ import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.text.font.FontWeight
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Right swipe panel: Modular tools dashboard.
@@ -36,7 +40,6 @@ fun DashboardPanel(
     // Navigation callbacks
     onSettingsClick: () -> Unit = {},
     onFilesClick: () -> Unit = {},
-    onTerminalClick: () -> Unit = {},
     onGitClick: () -> Unit = {},
     onMcpConfigClick: () -> Unit = {},
     onSkillsClick: () -> Unit = {},
@@ -100,12 +103,6 @@ fun DashboardPanel(
                 contentDescription = "Settings",
                 iconColor = AppColors.white
             )
-            MoccaIconButton(
-                icon = Icons.Default.Terminal,
-                onClick = onTerminalClick,
-                contentDescription = "Terminal",
-                iconColor = AppColors.accentGreen
-            )
         }
         
         Spacer(modifier = Modifier.weight(1f))
@@ -116,7 +113,7 @@ fun DashboardPanel(
 }
 
 /**
- * WORKSPACE module — merged Projects + Agents into a single card.
+ * WORKSPACE module — merged Projects + Agents into a single card with God Mode aesthetics.
  */
 @Composable
 private fun WorkspaceModule(
@@ -127,92 +124,52 @@ private fun WorkspaceModule(
     val currentId = (currentProject as? Resource.Success)?.data?.id
     
     ModuleCard(title = "WORKSPACE") {
-        // Current project (compact: just the active one)
-        when (projects) {
-            is Resource.Loading -> {
-                ModuleRowItem(
-                    title = "Loading projects...",
-                    subtitle = "",
-                    isEnabled = false,
-                    showToggle = false
-                )
-            }
-            is Resource.Success -> {
-                val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
-                if (active != null) {
-                    ModuleRowItem(
-                        title = active.displayName,
-                        subtitle = active.path ?: active.directory ?: "Active project",
-                        isEnabled = true,
-                        isConnected = true,
-                        showToggle = false
-                    )
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            // Projects
+            when (projects) {
+                is Resource.Loading -> Text("Bootstrapping workspace...", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                is Resource.Success -> {
+                    val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
+                    if (active != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            StatusDot(color = AppColors.accentGreen)
+                            Spacer(Modifier.width(8.dp))
+                            Column {
+                                Text(active.displayName.uppercase(), color = AppColors.white, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
+                                Text(active.path ?: active.directory ?: "/", color = AppColors.textSecondary, style = AppTypography.labelSmall)
+                            }
+                        }
+                    }
+                    if (projects.data.size > 1) {
+                        Text("+${projects.data.size - 1} standby environments", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                    }
                 }
-                if (projects.data.size > 1) {
-                    ModuleRowItem(
-                        title = "+${projects.data.size - 1} more projects",
-                        subtitle = "",
-                        isEnabled = true,
-                        showToggle = false
-                    )
+                is Resource.Error -> Text("ENV INIT FAILED", color = AppColors.error, style = AppTypography.labelMedium)
+            }
+            
+            HorizontalDivider(color = AppColors.border.copy(alpha = 0.5f))
+            
+            // Agents
+            when (agents) {
+                is Resource.Loading -> Text("Loading agents...", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                is Resource.Success -> {
+                    if (agents.data.isNotEmpty()) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("${agents.data.size} ACTIVE AGENTS", color = AppColors.textSecondary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                        }
+                        Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 2)
+                    } else {
+                        Text("NO AGENTS ONLINE", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                    }
                 }
-            }
-            is Resource.Error -> {
-                ModuleRowItem(
-                    title = "Error",
-                    subtitle = projects.message,
-                    isEnabled = false,
-                    isConnected = false,
-                    showToggle = false
-                )
-            }
-        }
-        
-        // Agents (compact: count + top names)
-        when (agents) {
-            is Resource.Loading -> {
-                ModuleRowItem(
-                    title = "Loading agents...",
-                    subtitle = "",
-                    isEnabled = false,
-                    showToggle = false
-                )
-            }
-            is Resource.Success -> {
-                if (agents.data.isNotEmpty()) {
-                    val agentNames = agents.data.take(4).joinToString(", ") { it.name }
-                    val suffix = if (agents.data.size > 4) " +${agents.data.size - 4}" else ""
-                    ModuleRowItem(
-                        title = "${agents.data.size} AGENTS",
-                        subtitle = "$agentNames$suffix",
-                        isEnabled = true,
-                        isConnected = true,
-                        showToggle = false
-                    )
-                } else {
-                    ModuleRowItem(
-                        title = "No agents",
-                        subtitle = "Configure in opencode",
-                        isEnabled = false,
-                        showToggle = false
-                    )
-                }
-            }
-            is Resource.Error -> {
-                ModuleRowItem(
-                    title = "Error",
-                    subtitle = agents.message,
-                    isEnabled = false,
-                    isConnected = false,
-                    showToggle = false
-                )
+                is Resource.Error -> Text("AGENT LINK FAILED", color = AppColors.error, style = AppTypography.labelMedium)
             }
         }
     }
 }
 
 /**
- * CAPABILITIES module — merged Tools + Commands into a single card.
+ * CAPABILITIES module — merged Tools + Commands into a single card with refined aesthetics.
  */
 @Composable
 private fun CapabilitiesModule(
@@ -220,75 +177,39 @@ private fun CapabilitiesModule(
     commands: Resource<List<com.mocca.app.domain.model.Command>>
 ) {
     ModuleCard(title = "CAPABILITIES") {
-        // Tools row (compact summary)
-        when (tools) {
-            is Resource.Loading -> {
-                ModuleRowItem(
-                    title = "Loading tools...",
-                    subtitle = "",
-                    isEnabled = false,
-                    showToggle = false
-                )
-            }
-            is Resource.Success -> {
-                val preview = tools.data.take(3).joinToString(", ").ifEmpty { "None" }
-                ModuleRowItem(
-                    title = "${tools.data.size} TOOLS",
-                    subtitle = preview,
-                    isEnabled = true,
-                    isConnected = true,
-                    showToggle = false
-                )
-            }
-            is Resource.Error -> {
-                ModuleRowItem(
-                    title = "Tools error",
-                    subtitle = tools.message,
-                    isEnabled = false,
-                    isConnected = false,
-                    showToggle = false
-                )
-            }
-        }
-        
-        // Commands row (compact summary)
-        when (commands) {
-            is Resource.Loading -> {
-                ModuleRowItem(
-                    title = "Loading commands...",
-                    subtitle = "",
-                    isEnabled = false,
-                    showToggle = false
-                )
-            }
-            is Resource.Success -> {
-                if (commands.data.isNotEmpty()) {
-                    val preview = commands.data.take(3).joinToString(", ") { "/${it.name}" }
-                    val suffix = if (commands.data.size > 3) " +${commands.data.size - 3}" else ""
-                    ModuleRowItem(
-                        title = "${commands.data.size} COMMANDS",
-                        subtitle = "$preview$suffix",
-                        isEnabled = true,
-                        isConnected = true,
-                        showToggle = false
-                    )
-                } else {
-                    ModuleRowItem(
-                        title = "No commands",
-                        subtitle = "No slash commands available",
-                        isEnabled = false,
-                        showToggle = false
-                    )
+        Row(modifier = Modifier.fillMaxWidth()) {
+            // Tools Column
+            Column(modifier = Modifier.weight(1f)) {
+                Text("INTEGRATED TOOLS", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                Spacer(Modifier.height(4.dp))
+                when (tools) {
+                    is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                    is Resource.Success -> {
+                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        val preview = tools.data.take(3).joinToString("\n") { "• $it" }
+                        if (preview.isNotEmpty()) {
+                            Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)
+                        }
+                    }
+                    is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
                 }
             }
-            is Resource.Error -> {
-                ModuleRowItem(
-                    title = "Commands error",
-                    subtitle = commands.message,
-                    isEnabled = false,
-                    isConnected = false,
-                    showToggle = false
-                )
+            
+            // Commands Column
+            Column(modifier = Modifier.weight(1f)) {
+                Text("SLASH COMMANDS", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                Spacer(Modifier.height(4.dp))
+                when (commands) {
+                    is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                    is Resource.Success -> {
+                        Text("${commands.data.size} AVAILABLE", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        val preview = commands.data.take(3).joinToString("\n") { "• /${it.name}" }
+                        if (preview.isNotEmpty()) {
+                            Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)
+                        }
+                    }
+                    is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
+                }
             }
         }
     }

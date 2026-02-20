@@ -44,9 +44,13 @@ import com.mocca.app.ui.screens.panels.ContextHistoryPanel
 import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreen
-import com.mocca.app.ui.screens.console.ConsoleScreen
 import com.mocca.app.ui.theme.AppColors
 import org.koin.core.parameter.parametersOf
+import androidx.compose.runtime.rememberCoroutineScope
+import com.mocca.app.util.FilePickerHelper
+import io.github.vinceglb.filekit.dialogs.FileKitMode
+import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import kotlinx.coroutines.launch
 
 /**
  * Main screen with swipe panel navigation.
@@ -74,6 +78,24 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         androidx.compose.runtime.LaunchedEffect(state.currentSessionId) {
             state.currentSessionId?.let { id ->
                 chatScreenModel.loadSession(id)
+            }
+        }
+        
+        val coroutineScope = rememberCoroutineScope()
+        
+        val filePickerLauncher = rememberFilePickerLauncher(
+            type = FilePickerHelper.createFileType(),
+            mode = FileKitMode.Multiple()
+        ) { files ->
+            files?.forEach { file ->
+                coroutineScope.launch {
+                    try {
+                        val attached = FilePickerHelper.toAttachedFile(file)
+                        chatScreenModel.addAttachment(attached)
+                    } catch (e: Exception) {
+                        io.github.aakira.napier.Napier.e("Failed to attach file", e)
+                    }
+                }
             }
         }
         
@@ -148,7 +170,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             model = chatState.modelName,
                             latency = state.latency,
                             port = state.port,
-                            usedTokens = chatState.totalInputTokens + chatState.totalOutputTokens,
+                            usedTokens = chatState.contextWindowUsage,
                             maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
                             agentName = chatState.agentName,
                             appVersion = state.appVersion,
@@ -238,7 +260,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             onSettingsClick = { navigator.push(SettingsScreen()) },
                             onGitClick = { navigator.push(GitScreen()) },
                             onFilesClick = { navigator.push(FilesScreen()) },
-                            onTerminalClick = { navigator.push(ConsoleScreen()) },
                             onSkillsClick = { },
                             onSkillClick = { }
                             // NOTE: No onRefreshAll - SSE drives all live state
@@ -294,7 +315,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 onModeSelected = { chatScreenModel.selectMode(it) },
                 attachedFiles = chatState.attachedFiles,
                 onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
-                onAttachClick = { /* File picker handled in ChatContent */ },
+                onAttachClick = { filePickerLauncher.launch() },
                 commands = chatState.commands,
                 onCommandSelected = { cmd -> 
                     // Commands are handled in ChatContent via coroutines

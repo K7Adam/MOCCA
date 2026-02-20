@@ -5,6 +5,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.BroadcastEvent
 import com.mocca.app.data.repository.McpRepository
+import com.mocca.app.data.repository.ProjectRepository
 import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +27,8 @@ import kotlinx.coroutines.launch
 class DashboardScreenModel(
     private val appStateStore: AppStateStore,
     private val stateCoordinator: StateCoordinator,
-    private val mcpRepository: McpRepository
+    private val mcpRepository: McpRepository,
+    private val projectRepository: ProjectRepository
 ) : ScreenModel {
     
     data class State(
@@ -136,6 +138,20 @@ class DashboardScreenModel(
         screenModelScope.launch {
             appStateStore.providers.collect { providers ->
                 _state.update { it.copy(providers = providers) }
+            }
+        }
+        
+        // Observe projects
+        screenModelScope.launch {
+            projectRepository.getProjects().collect { projects ->
+                _state.update { it.copy(projects = projects) }
+            }
+        }
+        
+        // Observe currentProject
+        screenModelScope.launch {
+            projectRepository.getCurrentProject().collect { cp ->
+                _state.update { it.copy(currentProject = cp) }
             }
         }
         

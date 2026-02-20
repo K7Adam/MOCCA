@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.graphics.Color
 import com.mocca.app.domain.model.ProviderInfo
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.domain.model.RecentModel
@@ -29,6 +29,7 @@ import kotlinx.serialization.json.JsonObject
  * Terminal-styled model selection dialog.
  * Shows available providers and their models for selection.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModelSelectorDialog(
     providerResponse: ProviderResponse,
@@ -38,13 +39,21 @@ fun ModelSelectorDialog(
     recentModels: List<RecentModel> = emptyList(),
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = AppColors.background,
+        contentColor = AppColors.white,
+        scrimColor = Color.Black.copy(alpha = 0.5f),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.8f)
-                .background(AppColors.background, AppShapes.medium)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.medium)
+                .fillMaxHeight(0.85f)
         ) {
             // Header
             Row(

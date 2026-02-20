@@ -324,7 +324,7 @@ data class McpServerItem(
 )
 
 /**
- * Git Status module preview.
+ * Git Status module preview - God Mode redesign.
  */
 @Composable
 fun GitStatusModule(
@@ -350,33 +350,37 @@ fun GitStatusModule(
         }
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .clip(AppShapes.small)
+                    .background(AppColors.border.copy(alpha=0.3f))
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                StatusDot(color = AppColors.accentGreen)
                 Text(
-                    text = "BRANCH",
-                    color = AppColors.textTertiary,
-                    style = AppTypography.labelSmall
-                )
-                Text(
-                    text = branchName,
+                    text = branchName.uppercase(),
                     color = AppColors.white,
-                    style = AppTypography.bodyMedium,
+                    style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "CHANGES",
+                    text = "UNCOMMITTED",
                     color = AppColors.textTertiary,
                     style = AppTypography.labelSmall
                 )
                 Text(
-                    text = "$changedFiles FILES",
-                    color = if (changedFiles > 0) AppColors.statusWaiting else AppColors.white,
-                    style = AppTypography.bodyMedium,
-                    fontWeight = FontWeight.Bold
+                    text = if (changedFiles > 0) String.format("%02d", changedFiles) else "00",
+                    color = if (changedFiles > 0) AppColors.statusWaiting else AppColors.textSecondary,
+                    style = AppTypography.headlineSmall,
+                    fontWeight = FontWeight.Black
                 )
             }
         }

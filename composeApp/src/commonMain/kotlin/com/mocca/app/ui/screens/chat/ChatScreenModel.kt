@@ -50,6 +50,11 @@ data class ChatState(
     val totalInputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.input ?: 0 } }
     val totalOutputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.output ?: 0 } }
     val lastTurnInputTokens: Int by lazy { messages.lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }?.tokens?.input ?: 0 }
+    val contextWindowUsage: Int by lazy {
+        messages.lastOrNull { it.role == MessageRole.ASSISTANT && it.tokens != null }?.let { msg ->
+            (msg.tokens?.input ?: 0) + (msg.tokens?.output ?: 0)
+        } ?: 0
+    }
         
     val availableVariants: List<String> get() {
         if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return emptyList()

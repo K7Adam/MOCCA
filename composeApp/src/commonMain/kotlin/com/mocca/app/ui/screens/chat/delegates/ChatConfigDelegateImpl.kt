@@ -63,8 +63,7 @@ class ChatConfigDelegateImpl(
         when {
             modeId != null -> {
                 // First try to find mode name
-                val modeName = modes.find { it.id == modeId }?.description
-                    ?: modes.find { it.id == modeId }?.name
+                val modeName = modes.find { it.id == modeId }?.name
                 if (modeName != null) {
                     modeName.uppercase()
                 } else {
@@ -165,6 +164,7 @@ class ChatConfigDelegateImpl(
         val limit = modelObj["limit"] as? JsonObject ?: return 0
         return limit["context"]?.let { (it as? JsonPrimitive)?.intOrNull }
             ?: limit["max_tokens"]?.let { (it as? JsonPrimitive)?.intOrNull }
+            ?: limit["context_window"]?.let { (it as? JsonPrimitive)?.intOrNull }
             ?: limit["context_length"]?.let { (it as? JsonPrimitive)?.intOrNull }
             ?: 0
     }
