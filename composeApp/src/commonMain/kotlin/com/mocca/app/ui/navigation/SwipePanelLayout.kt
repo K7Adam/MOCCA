@@ -65,7 +65,7 @@ fun SwipePanelLayout(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.background)
+            .background(AppColors.background.copy(alpha = 0.82f))
     ) {
         val density = LocalDensity.current
         val maxWidth = constraints.maxWidth.toFloat()

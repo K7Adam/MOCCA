@@ -89,7 +89,6 @@ fun ContextHistoryPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.background)
             .padding(AppSpacing.lg)
     ) {
         // Agent header

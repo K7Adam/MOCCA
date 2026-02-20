@@ -86,10 +86,7 @@ fun QuoteRotator(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
-        // ASCII art globe/logo
-        if (showAsciiArt) {
-            AsciiGlobe()
-        }
+
         
         // Loading indicator (shown under ASCII art when loading)
         AnimatedVisibility(

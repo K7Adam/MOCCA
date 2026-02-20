@@ -52,7 +52,6 @@ fun DashboardPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(AppColors.background)
             .padding(AppSpacing.lg)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)

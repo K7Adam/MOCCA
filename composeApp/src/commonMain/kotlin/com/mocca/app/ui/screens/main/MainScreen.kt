@@ -150,6 +150,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .statusBarsPadding()
         ) {
+            // ── Layer 0: Full-screen ASCII shader ──────────────────────────────────────
+            FullScreenAsciiBackground(modifier = Modifier.fillMaxSize())
+
+
             // Subtle terminal effect
             ScanlineOverlay(modifier = Modifier.fillMaxSize())
             
