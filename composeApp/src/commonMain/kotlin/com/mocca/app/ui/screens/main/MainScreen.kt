@@ -150,21 +150,24 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .statusBarsPadding()
         ) {
-            // ── Layer 0: Full-screen ASCII shader ──────────────────────────────────────
-            FullScreenAsciiBackground(modifier = Modifier.fillMaxSize())
+            // NEW: Wrapper box to capture EVERYTHING (ASCII + Panels) for the glass blur
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .liquidBackdropSource(backdrop)
+            ) {
+                // ── Layer 0: Full-screen ASCII shader ──────────────────────────────────────
+                FullScreenAsciiBackground(modifier = Modifier.fillMaxSize())
 
-
-            // Subtle terminal effect
-            ScanlineOverlay(modifier = Modifier.fillMaxSize())
-            
-            // ═══════════════════════════════════════════════════════════════════
-            // Content area - full screen, unified bottom bar floats above
-            // Apply liquidBackdropSource for TRUE liquid glass effect on bottom bar
-            // ═══════════════════════════════════════════════════════════════════
-            SwipePanelLayout(
-                    // NEW: Use backdrop-based source for SimpMusic-style liquid glass
-                    modifier = Modifier.liquidBackdropSource(backdrop),
-                    leftPanel = {
+                // Subtle terminal effect
+                ScanlineOverlay(modifier = Modifier.fillMaxSize())
+                
+                // ═══════════════════════════════════════════════════════════════════
+                // Content area - full screen, unified bottom bar floats above
+                // ═══════════════════════════════════════════════════════════════════
+                SwipePanelLayout(
+                        modifier = Modifier, // backdrop source moved to parent Box
+                        leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
                             sessionGroups = state.sessionGroups,
@@ -273,6 +276,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onPanelStateChange = { panelState.state = it },
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
+            } // End of Backdrop Source Wrapper Box
 
             // ═══════════════════════════════════════════════════════════════════════
             // UNIFIED FLOATING BOTTOM BAR - SimpMusic Style Liquid Glass
