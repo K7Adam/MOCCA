@@ -250,7 +250,6 @@ fun ChatContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppColors.background)
     ) {
         
         if (showShareDialog) {

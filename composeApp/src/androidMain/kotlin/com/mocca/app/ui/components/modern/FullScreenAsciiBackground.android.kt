@@ -78,7 +78,7 @@ private const val AGSL_SOURCE = """
         
         float bottomBoost = 1.0 + smoothstep(0.65, 1.0, fragCoord.y / uResolution.y) * 0.5;
         
-        float phase = mod(uTime, 60.0);
+        float phase = uTime - 60.0 * floor(uTime / 60.0);
         float intro = smoothstep(0.0, 8.0, phase);
         float flowing = smoothstep(8.0, 12.0, phase);
         float cresc = smoothstep(44.0, 46.0, phase) * (1.0 - smoothstep(47.0, 49.0, phase));
@@ -104,6 +104,8 @@ private fun AgslAsciiBackground(modifier: Modifier) {
     var time by remember { mutableFloatStateOf(0f) }
     val shader = remember { RuntimeShader(AGSL_SOURCE) }
 
+    val brush = remember(shader) { ShaderBrush(shader) }
+    
     LaunchedEffect(Unit) {
         val t0 = System.nanoTime()
         while (true) {
@@ -112,9 +114,11 @@ private fun AgslAsciiBackground(modifier: Modifier) {
     }
 
     Canvas(modifier = modifier) {
+        val w = size.width.takeIf { it > 0f && it.isFinite() } ?: 1f
+        val h = size.height.takeIf { it > 0f && it.isFinite() } ?: 1f
         shader.setFloatUniform("uTime", time)
-        shader.setFloatUniform("uResolution", size.width, size.height)
-        drawRect(brush = ShaderBrush(shader))
+        shader.setFloatUniform("uResolution", w, h)
+        drawRect(brush = brush)
     }
 }
 
