@@ -2,11 +2,12 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,24 +26,24 @@ import com.mocca.app.ui.theme.AppTypography
 import kotlinx.datetime.Clock
 
 /**
- * Sync status indicator showing data freshness state.
- *
- * This component displays the current synchronization state between the app
- * and the OpenCode server, providing users with confidence about data freshness.
- *
- * States:
- * - NotSynced: Never synced (grey)
- * - Syncing: Currently fetching data (animated green)
- * - Fresh: All data is fresh (green)
- * - Partial: Some data fresh, some stale (yellow)
- * - Failed: Critical failure (red)
+ * Sync status indicator for showing data freshness.
+ * 
+ * DESIGN PHILOSOPHY:
+ * - Background sync is SILENT - no UI indication
+ * - Only manual refresh shows visual feedback
+ * - Only errors/warnings are prominently displayed
+ * - Connection status is separate from data freshness
+ * 
+ * This prevents the "flickering every 5 seconds" UX issue.
  */
+
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPACT INDICATOR
+// COMPACT INLINE INDICATOR - Minimal, non-intrusive
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Compact inline sync status indicator for headers and top bars.
+ * Minimal sync status indicator for headers.
+ * Shows only errors prominently, success is subtle.
  */
 @Composable
 fun SyncStatusIndicator(
@@ -51,39 +52,32 @@ fun SyncStatusIndicator(
     showLabel: Boolean = true,
     onClick: (() -> Unit)? = null
 ) {
+    // Only show visual state for errors or manual sync
     val (icon, color, label) = when (globalSyncState) {
         is GlobalSyncState.NotSynced -> Triple(
             Icons.Default.CloudOff,
             AppColors.grey,
-            "NOT SYNCED"
+            null // Don't show label for NotSynced - not intrusive
         )
         is GlobalSyncState.Syncing -> Triple(
             Icons.Default.Refresh,
             AppColors.accentGreen,
-            if (globalSyncState.currentRepo != null) {
-                "SYNCING ${globalSyncState.currentRepo.uppercase()}..."
-            } else {
-                "SYNCING..."
-            }
+            if (globalSyncState.progress > 0) "SYNCING..." else null
         )
-        is GlobalSyncState.Fresh -> {
-            val ageSeconds = (Clock.System.now().toEpochMilliseconds() - globalSyncState.lastSyncMs) / 1000
-            val freshnessLabel = when {
-                ageSeconds < 5 -> "FRESH"
-                ageSeconds < 60 -> "${ageSeconds}s AGO"
-                else -> "${ageSeconds / 60}m AGO"
-            }
-            Triple(Icons.Default.CheckCircle, AppColors.statusOnline, freshnessLabel)
-        }
+        is GlobalSyncState.Fresh -> Triple(
+            Icons.Default.CheckCircle,
+            AppColors.statusOnline,
+            null // Don't show label for Fresh - not intrusive
+        )
         is GlobalSyncState.Partial -> Triple(
             Icons.Default.Warning,
             AppColors.statusWaiting,
-            "${globalSyncState.freshRepos.size}/${globalSyncState.freshRepos.size + globalSyncState.staleRepos.size + globalSyncState.failedRepos.size} SYNCED"
+            "PARTIAL" // Show warning for partial
         )
         is GlobalSyncState.Failed -> Triple(
             Icons.Default.Error,
             AppColors.statusOffline,
-            "SYNC FAILED"
+            "SYNC ERROR" // Always show errors
         )
     }
 
@@ -100,13 +94,19 @@ fun SyncStatusIndicator(
     )
 
     val isSyncing = globalSyncState is GlobalSyncState.Syncing
+    val isError = globalSyncState is GlobalSyncState.Failed
 
     Row(
         modifier = modifier
             .then(if (onClick != null) Modifier.clip(AppShapes.pill) else Modifier)
             .then(if (onClick != null) {
-                Modifier.background(AppColors.surfaceVariant.copy(alpha = 0.5f), AppShapes.pill)
+                Modifier.background(
+                    if (isError) AppColors.error.copy(alpha = 0.2f)
+                    else AppColors.surfaceVariant.copy(alpha = 0.5f),
+                    AppShapes.pill
+                )
             } else Modifier)
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = if (onClick != null) AppSpacing.sm else 0.dp, vertical = if (onClick != null) AppSpacing.xs else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
@@ -119,7 +119,8 @@ fun SyncStatusIndicator(
                 .size(14.dp)
                 .then(if (isSyncing) Modifier.rotate(rotation) else Modifier)
         )
-        if (showLabel) {
+        // Only show label when there's meaningful content
+        if (showLabel && label != null) {
             Text(
                 text = label,
                 style = AppTypography.labelSmall,
@@ -131,12 +132,13 @@ fun SyncStatusIndicator(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DETAILED STATUS CARD
+// MINIMAL STATUS CARD - No progress bar, no flicker
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Detailed sync status card for dashboard.
- * Shows per-repository sync state with timestamps.
+ * Minimal sync status card for dashboard.
+ * NO progress bar - prevents flicker during background sync.
+ * Only shows status when there's something to report.
  */
 @Composable
 fun SyncStatusCard(
@@ -145,23 +147,54 @@ fun SyncStatusCard(
     modifier: Modifier = Modifier,
     onRefreshClick: (() -> Unit)? = null
 ) {
+    // Only show the card if there's something meaningful to display
+    // (errors, or user-triggered sync)
+    val hasError = globalSyncState is GlobalSyncState.Failed
+    val isSyncing = globalSyncState is GlobalSyncState.Syncing
+    val isPartial = globalSyncState is GlobalSyncState.Partial
+    
+    // Don't render the whole card if everything is fine and quiet
+    if (!hasError && !isSyncing && !isPartial && repoSyncStates.isEmpty()) {
+        // Just show a minimal refresh button
+        if (onRefreshClick != null) {
+            Row(
+                modifier = modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(onClick = onRefreshClick) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Refresh",
+                        tint = AppColors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+        return
+    }
+    
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceContainer, AppShapes.card)
+            .background(
+                if (hasError) AppColors.error.copy(alpha = 0.1f)
+                else AppColors.surfaceContainer,
+                AppShapes.card
+            )
             .padding(AppSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
-        // Header
+        // Header row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "SYNC STATUS",
+                text = if (hasError) "SYNC ERROR" else "SYNC STATUS",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary,
+                color = if (hasError) AppColors.error else AppColors.textSecondary,
                 fontWeight = FontWeight.Bold
             )
             SyncStatusIndicator(
@@ -170,34 +203,31 @@ fun SyncStatusCard(
             )
         }
 
-        // Progress bar for syncing state
-        if (globalSyncState is GlobalSyncState.Syncing) {
-            LinearProgressIndicator(
-                progress = { globalSyncState.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .clip(AppShapes.pill),
-                color = AppColors.accentGreen,
-                trackColor = AppColors.surfaceVariant
-            )
-        }
-
-        // Repository status chips
-        if (repoSyncStates.isNotEmpty()) {
-            Wrap(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalSpacing = AppSpacing.xs,
-                verticalSpacing = AppSpacing.xs
-            ) {
-                repoSyncStates.forEach { (repoName, state) ->
-                    RepoSyncChip(repoName = repoName, syncState = state)
+        // Show failed repos if any
+        if (globalSyncState is GlobalSyncState.Failed) {
+            globalSyncState.errors.forEach { (repo, error) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Error,
+                        contentDescription = null,
+                        tint = AppColors.error,
+                        modifier = Modifier.size(12.dp)
+                    )
+                    Text(
+                        text = "${repo.uppercase()}: $error",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.error
+                    )
                 }
             }
         }
 
-        // Refresh button
-        if (onRefreshClick != null && globalSyncState !is GlobalSyncState.Syncing) {
+        // Refresh button (always available, but not during sync)
+        if (onRefreshClick != null && !isSyncing) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
@@ -205,76 +235,20 @@ fun SyncStatusCard(
                 MoccaTextButton(
                     text = "REFRESH",
                     onClick = onRefreshClick,
-                    textColor = AppColors.accentGreen
+                    textColor = if (hasError) AppColors.error else AppColors.accentGreen
                 )
             }
         }
     }
 }
 
-/**
- * Individual repository sync status chip.
- */
-@Composable
-private fun RepoSyncChip(
-    repoName: String,
-    syncState: SyncState,
-    modifier: Modifier = Modifier
-) {
-    val (color, icon) = when (syncState) {
-        is SyncState.Idle -> AppColors.grey to Icons.Default.HourglassEmpty
-        is SyncState.Fetching -> AppColors.accentGreen to Icons.Default.Refresh
-        is SyncState.Fresh -> AppColors.statusOnline to Icons.Default.CheckCircle
-        is SyncState.Failed -> AppColors.statusOffline to Icons.Default.Error
-    }
-
-    Row(
-        modifier = modifier
-            .background(AppColors.surfaceVariant, AppShapes.pill)
-            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(10.dp)
-        )
-        Text(
-            text = repoName.uppercase(),
-            style = AppTypography.labelSmall,
-            color = color,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-/**
- * Simple wrap layout for chips.
- */
-@Composable
-private fun Wrap(
-    modifier: Modifier = Modifier,
-    horizontalSpacing: Dp = AppSpacing.sm,
-    verticalSpacing: Dp = AppSpacing.sm,
-    content: @Composable () -> Unit
-) {
-    FlowRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
-        verticalArrangement = Arrangement.spacedBy(verticalSpacing)
-    ) {
-        content()
-    }
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
-// MINIMAL STATUS DOT
+// MINIMAL STATUS DOT - For connection indicators
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Minimal sync status dot for very compact displays.
+ * Minimal sync status dot for connection indicators.
+ * Static dot - no pulsing animation to avoid distraction.
  */
 @Composable
 fun SyncStatusDot(
@@ -289,26 +263,10 @@ fun SyncStatusDot(
         is GlobalSyncState.Failed -> AppColors.statusOffline
     }
 
-    // Pulsing animation for syncing state
-    val infiniteTransition = rememberInfiniteTransition(label = "sync_pulse")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(500, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "alpha"
-    )
-
-    val isSyncing = globalSyncState is GlobalSyncState.Syncing
-
+    // Static dot - no animation to prevent visual noise
     Box(
         modifier = modifier
             .size(8.dp)
-            .background(
-                color = if (isSyncing) color.copy(alpha = alpha) else color,
-                shape = AppShapes.circle
-            )
+            .background(color = color, shape = AppShapes.circle)
     )
 }

@@ -6,7 +6,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.datetime.Clock
 
 /**
- * Service for periodic synchronization of data that doesn't have SSE events.
+ * Service for SILENT background synchronization of data that doesn't have SSE events.
+ * 
+ * CRITICAL UX PRINCIPLE: Background sync is COMPLETELY SILENT.
+ * The user should NEVER see loading animations or UI flicker during automatic sync.
+ * Only manual/user-triggered refreshes should show UI feedback.
  * 
  * The OpenCode server sends SSE events for session/message changes but NOT for:
  * - MCP server status
@@ -16,33 +20,31 @@ import kotlinx.datetime.Clock
  * - Git status
  * 
  * This service provides:
- * 1. Periodic polling at configurable intervals (DEFAULT: 5 seconds for ALWAYS FRESH)
- * 2. Immediate sync on connection established
- * 3. Immediate sync on app resume/foreground
- * 4. Intelligent backoff when offline
- * 5. Respects network availability
- * 6. Atomic sync with progress tracking via SyncStateManager
+ * 1. Silent periodic polling at reasonable intervals (30s)
+ * 2. Silent sync on connection established
+ * 3. Silent sync on app resume/foreground
+ * 4. Manual sync with UI feedback (user-triggered only)
  * 
  * Architecture:
  * ```
  * RealtimeSyncService
- *     ├── Periodic Sync Job (every 5s)
- *     ├── Connection Observer (sync on connect)
- *     └── Manual Trigger (syncNow)
+ *     ├── Periodic Sync Job (silent background)
+ *     ├── Connection Observer (silent)
+ *     └── Manual Trigger (shows UI feedback)
  *           ↓
- *     SyncStateManager.startSync()
+ *     Repositories update silently
  *           ↓
- *     For each repository:
- *         - SyncStateManager.updateRepoState(repo, Fetching)
- *         - repository.refresh()
- *         - SyncStateManager.updateRepoState(repo, Fresh/Failed)
+ *     StateFlows emit ONLY if data changed
  *           ↓
- *     SyncStateManager.markSyncComplete/Failed()
- *           ↓
- *     StateFlows emit new data
- *           ↓
- *     UI updates automatically
+ *     UI updates only when data actually differs
  * ```
+ * 
+ * KEY DIFFERENCE FROM PREVIOUS VERSION:
+ * - NO SyncStateManager emissions during automatic sync
+ * - NO progress tracking for background operations
+ * - NO "Syncing..." indicators during periodic refresh
+ * - Only manual sync shows UI state changes
+ * - Sessions removed from polling (SSE handles them)
  */
 class RealtimeSyncService(
     private val stateCoordinator: StateCoordinator,
@@ -57,20 +59,17 @@ class RealtimeSyncService(
 ) {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
-    // Sync configuration
+    // Sync configuration - 30 seconds is reasonable for non-SSE data
     private val syncIntervalMs = SYNC_INTERVAL_MS
     private var periodicSyncJob: Job? = null
     private var connectionObserverJob: Job? = null
     
-    // Sync state
+    // Internal sync state
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
     
     private val _lastSyncTime = MutableStateFlow<Long?>(null)
     val lastSyncTime: StateFlow<Long?> = _lastSyncTime.asStateFlow()
-    
-    private val _syncCount = MutableStateFlow(0)
-    val syncCount: StateFlow<Int> = _syncCount.asStateFlow()
     
     // Track if service is started
     private var isStarted = false
@@ -86,17 +85,19 @@ class RealtimeSyncService(
         }
         isStarted = true
         
-        Napier.i("[RealtimeSync] Starting realtime sync service")
+        Napier.i("[RealtimeSync] Starting silent background sync service")
         
-        // Start periodic sync
+        // Start periodic sync (SILENT)
         startPeriodicSync()
         
-        // Observe connection state for immediate sync
+        // Observe connection state for immediate sync (SILENT)
         startConnectionObserver()
         
-        // Do initial sync if connected
+        // Do initial sync if connected (SILENT)
         if (connectionManager.status.value.isConnected) {
-            syncNow("initial")
+            serviceScope.launch {
+                performSilentSync("initial")
+            }
         }
     }
     
@@ -105,7 +106,7 @@ class RealtimeSyncService(
      * Should be called when app disconnects.
      */
     fun stop() {
-        Napier.i("[RealtimeSync] Stopping realtime sync service")
+        Napier.i("[RealtimeSync] Stopping sync service")
         isStarted = false
         periodicSyncJob?.cancel()
         periodicSyncJob = null
@@ -114,66 +115,66 @@ class RealtimeSyncService(
     }
     
     /**
-     * Trigger an immediate sync.
-     * @param reason Why the sync is being triggered (for logging)
+     * Trigger a MANUAL sync with UI feedback.
+     * This is the ONLY sync that should show UI indicators.
+     * Use when user explicitly requests refresh.
      */
     fun syncNow(reason: String = "manual") {
         serviceScope.launch {
-            performSync(reason)
+            performManualSync(reason)
         }
     }
     
     /**
      * Called when app comes to foreground.
-     * Triggers sync if data is stale.
+     * Triggers SILENT sync if data is stale.
      */
     fun onAppForeground() {
         val lastSync = _lastSyncTime.value
         val now = Clock.System.now().toEpochMilliseconds()
-        val staleThreshold = syncIntervalMs / 2 // 2.5 seconds for 5s interval
+        val staleThreshold = syncIntervalMs * 2 // Double interval for foreground
         
         if (lastSync == null || (now - lastSync) > staleThreshold) {
-            Napier.i("[RealtimeSync] App foreground - data stale, syncing")
-            syncNow("foreground")
+            Napier.i("[RealtimeSync] App foreground - data stale, silent sync")
+            serviceScope.launch {
+                performSilentSync("foreground")
+            }
         } else {
-            Napier.v("[RealtimeSync] App foreground - data fresh, skipping sync")
+            Napier.v("[RealtimeSync] App foreground - data fresh, skipping")
         }
     }
     
     /**
      * Force a full sync of all data.
-     * Use when user explicitly requests refresh or on installation updates.
+     * This is a MANUAL sync with UI feedback.
      */
     fun forceFullSync() {
         serviceScope.launch {
-            // Invalidate all states first
-            syncStateManager.invalidateAll()
-            // Then perform full sync
-            performSync("forced")
+            performManualSync("forced")
         }
     }
     
     /**
      * Sync specific repositories (e.g., after installation update).
+     * This is SILENT - triggered by SSE events.
      */
     fun syncRepos(repoNames: Set<String>) {
         serviceScope.launch {
-            syncStateManager.invalidateRepos(repoNames)
-            performSync("partial-${repoNames.joinToString()}")
+            performSilentSync("partial-${repoNames.joinToString()}", repoNames)
         }
     }
     
     private fun startPeriodicSync() {
         periodicSyncJob?.cancel()
         periodicSyncJob = serviceScope.launch {
-            Napier.i("[RealtimeSync] Starting periodic sync (interval=${syncIntervalMs}ms)")
+            Napier.i("[RealtimeSync] Starting silent periodic sync (interval=${syncIntervalMs}ms)")
             
             while (isActive) {
                 delay(syncIntervalMs)
                 
-                // Only sync if connected
+                // Only sync if connected and not already syncing
                 if (connectionManager.status.value.isConnected && !_isSyncing.value) {
-                    performSync("periodic")
+                    performSilentSync("periodic")
                 }
             }
         }
@@ -184,59 +185,107 @@ class RealtimeSyncService(
         connectionObserverJob = serviceScope.launch {
             connectionManager.status.collect { status ->
                 if (status.isConnected) {
-                    Napier.i("[RealtimeSync] Connection established - triggering sync")
-                    delay(500) // Brief delay to let connection stabilize
-                    performSync("connection")
+                    Napier.i("[RealtimeSync] Connection established - silent sync")
+                    delay(500) // Brief delay for connection stabilization
+                    performSilentSync("connection")
                 }
             }
         }
     }
     
-    private suspend fun performSync(reason: String) {
+    /**
+     * SILENT sync - no UI emissions, just update data.
+     * This is for automatic background sync.
+     */
+    private suspend fun performSilentSync(reason: String, specificRepos: Set<String>? = null) {
         if (_isSyncing.value) {
             Napier.v("[RealtimeSync] Already syncing, skipping ($reason)")
             return
         }
         
         _isSyncing.value = true
-        Napier.i("[RealtimeSync] Starting atomic sync (reason=$reason)")
-        
-        val repoNames = listOf("sessions", "git", "mcp", "tools", "agents", "commands", "providers")
-        val errors = mutableMapOf<String, String>()
+        Napier.v("[RealtimeSync] Silent sync started (reason=$reason)")
         
         try {
-            // Start progress tracking
-            syncStateManager.startSync(repoNames.size)
+            // Determine which repos to sync
+            // NOTE: Sessions are handled by SSE, NOT by polling
+            val repoNames = specificRepos ?: listOf(
+                // "sessions" removed - handled by SSE (SessionUpdated, MessageUpdated events)
+                "git", "mcp", "tools", "agents", "commands", "providers"
+            )
             
-            // Sync each repository atomically
-            repoNames.forEachIndexed { index, repoName ->
+            // Sync each repository silently
+            // NO SyncStateManager emissions - completely silent
+            repoNames.forEach { repoName ->
                 try {
-                    syncStateManager.updateSyncProgress(index, repoNames.size, repoName)
-                    syncRepository(repoName)
+                    syncRepositorySilent(repoName)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    Napier.w("[RealtimeSync] $repoName sync failed", e)
-                    errors[repoName] = e.message ?: "Unknown error"
+                    Napier.w("[RealtimeSync] $repoName silent sync failed: ${e.message}")
                 }
             }
             
-            // Mark completion
-            if (errors.isEmpty()) {
-                syncStateManager.markSyncComplete()
-                Napier.i("[RealtimeSync] Atomic sync completed successfully")
-            } else {
-                syncStateManager.markSyncFailed(errors)
-                Napier.w("[RealtimeSync] Atomic sync completed with errors: ${errors.keys}")
-            }
-            
             _lastSyncTime.value = Clock.System.now().toEpochMilliseconds()
-            _syncCount.value += 1
+            Napier.v("[RealtimeSync] Silent sync completed")
             
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            Napier.e("[RealtimeSync] Atomic sync failed critically", e)
+            Napier.e("[RealtimeSync] Silent sync failed", e)
+        } finally {
+            _isSyncing.value = false
+        }
+    }
+    
+    /**
+     * MANUAL sync - with UI feedback via SyncStateManager.
+     * This is for user-triggered refreshes only.
+     */
+    private suspend fun performManualSync(reason: String) {
+        if (_isSyncing.value) {
+            Napier.v("[RealtimeSync] Already syncing, skipping manual ($reason)")
+            return
+        }
+        
+        _isSyncing.value = true
+        Napier.i("[RealtimeSync] Manual sync started (reason=$reason)")
+        
+        // For manual sync, include sessions too
+        val repoNames = listOf("sessions", "git", "mcp", "tools", "agents", "commands", "providers")
+        val errors = mutableMapOf<String, String>()
+        
+        try {
+            // Only show UI state for MANUAL sync
+            syncStateManager.startSync(repoNames.size)
+            
+            repoNames.forEachIndexed { index, repoName ->
+                try {
+                    syncStateManager.updateSyncProgress(index, repoNames.size, repoName)
+                    syncRepositorySilent(repoName)
+                    syncStateManager.updateRepoState(repoName, com.mocca.app.domain.model.SyncState.Fresh())
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Napier.w("[RealtimeSync] $repoName manual sync failed", e)
+                    errors[repoName] = e.message ?: "Unknown error"
+                    syncStateManager.updateRepoState(repoName, com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+                }
+            }
+            
+            if (errors.isEmpty()) {
+                syncStateManager.markSyncComplete()
+            } else {
+                syncStateManager.markSyncFailed(errors)
+            }
+            
+            _lastSyncTime.value = Clock.System.now().toEpochMilliseconds()
+            Napier.i("[RealtimeSync] Manual sync completed")
+            
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Napier.e("[RealtimeSync] Manual sync failed", e)
             syncStateManager.markSyncFailed(mapOf("global" to (e.message ?: "Critical failure")))
         } finally {
             _isSyncing.value = false
@@ -244,104 +293,91 @@ class RealtimeSyncService(
     }
     
     /**
-     * Sync a specific repository by name.
+     * Sync a specific repository silently (no UI state emissions).
      */
-    private suspend fun syncRepository(repoName: String) {
+    private suspend fun syncRepositorySilent(repoName: String) {
         when (repoName) {
-            "sessions" -> syncSessions()
-            "git" -> syncGit()
-            "mcp" -> syncMcp()
-            "tools" -> syncTools()
-            "agents" -> syncAgents()
-            "commands" -> syncCommands()
-            "providers" -> syncProviders()
+            "sessions" -> syncSessionsSilent()
+            "git" -> syncGitSilent()
+            "mcp" -> syncMcpSilent()
+            "tools" -> syncToolsSilent()
+            "agents" -> syncAgentsSilent()
+            "commands" -> syncCommandsSilent()
+            "providers" -> syncProvidersSilent()
         }
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // Per-Repository Sync Functions with SyncStateManager Integration
+    // Silent Per-Repository Sync Functions
+    // These update data WITHOUT emitting sync state to UI
     // ═══════════════════════════════════════════════════════════════════════════════
     
-    private suspend fun syncSessions() {
-        syncStateManager.updateRepoState("sessions", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncSessionsSilent() {
         try {
             stateCoordinator.syncFromServer()
-            syncStateManager.updateRepoState("sessions", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Sessions synced")
+            Napier.v("[RealtimeSync] Sessions synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("sessions", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Sessions sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncGit() {
-        syncStateManager.updateRepoState("git", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncGitSilent() {
         try {
             gitRepository.refresh()
-            syncStateManager.updateRepoState("git", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Git synced")
+            Napier.v("[RealtimeSync] Git synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("git", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Git sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncMcp() {
-        syncStateManager.updateRepoState("mcp", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncMcpSilent() {
         try {
             mcpRepository.refresh()
-            syncStateManager.updateRepoState("mcp", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] MCP synced")
+            Napier.v("[RealtimeSync] MCP synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("mcp", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] MCP sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncTools() {
-        syncStateManager.updateRepoState("tools", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncToolsSilent() {
         try {
             toolRepository.refreshCache()
-            syncStateManager.updateRepoState("tools", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Tools synced")
+            Napier.v("[RealtimeSync] Tools synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("tools", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Tools sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncAgents() {
-        syncStateManager.updateRepoState("agents", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncAgentsSilent() {
         try {
             agentRepository.refresh()
-            syncStateManager.updateRepoState("agents", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Agents synced")
+            Napier.v("[RealtimeSync] Agents synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("agents", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Agents sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncCommands() {
-        syncStateManager.updateRepoState("commands", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncCommandsSilent() {
         try {
             commandRepository.refresh()
-            syncStateManager.updateRepoState("commands", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Commands synced")
+            Napier.v("[RealtimeSync] Commands synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("commands", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Commands sync failed: ${e.message}")
             throw e
         }
     }
     
-    private suspend fun syncProviders() {
-        syncStateManager.updateRepoState("providers", com.mocca.app.domain.model.SyncState.Fetching)
+    private suspend fun syncProvidersSilent() {
         try {
             providerRepository.refresh()
-            syncStateManager.updateRepoState("providers", com.mocca.app.domain.model.SyncState.Fresh())
-            Napier.v("[RealtimeSync] Providers synced")
+            Napier.v("[RealtimeSync] Providers synced (silent)")
         } catch (e: Exception) {
-            syncStateManager.updateRepoState("providers", com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
+            Napier.w("[RealtimeSync] Providers sync failed: ${e.message}")
             throw e
         }
     }
@@ -354,17 +390,20 @@ class RealtimeSyncService(
     
     companion object {
         /**
-         * Interval for periodic sync.
+         * Interval for periodic silent sync.
          * 
-         * CRITICAL: Changed from 30s to 5s for "ALWAYS FRESH" requirement.
-         * The user's #1 priority is that data is ALWAYS synchronized with the server.
-         * Battery/performance is secondary to data freshness.
+         * 30 seconds is a reasonable balance between freshness and efficiency.
+         * Sessions/messages are handled by SSE (real-time), so this only syncs
+         * MCP, Git, Tools, Agents, Commands, Providers.
+         * 
+         * These data types change rarely compared to session messages,
+         * so 30s is perfectly adequate for "always fresh" without UI churn.
          */
-        private const val SYNC_INTERVAL_MS = 5_000L
+        private const val SYNC_INTERVAL_MS = 30_000L
         
         /**
          * Minimum interval between syncs (prevents spam).
          */
-        const val MIN_SYNC_INTERVAL_MS = 1_000L
+        const val MIN_SYNC_INTERVAL_MS = 5_000L
     }
 }
