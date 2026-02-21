@@ -141,6 +141,9 @@ fun ChatInputContent(
     var suggestionQuery by remember { mutableStateOf("") }
     var suggestionType by remember { mutableStateOf<SuggestionType?>(null) }
     var isInputFocused by remember { mutableStateOf(false) }
+    // Manual palette triggers (for / and @ buttons)
+    var showCommandPalette by remember { mutableStateOf(false) }
+    var showAgentPalette by remember { mutableStateOf(false) }
 
     // Calculate suggestions
     val currentSuggestions = remember(inputText, showSuggestions, suggestionType, suggestionQuery, modes, commands) {
@@ -392,12 +395,49 @@ fun ChatInputContent(
                 }
             )
 
-            // Suggestions popup
+            // Suggestions popup (text-triggered)
             if (showSuggestions && currentSuggestions.isNotEmpty()) {
                 SuggestionPopup(
                     suggestions = currentSuggestions,
                     onSuggestionSelected = onSuggestionSelected,
                     onDismiss = { showSuggestions = false }
+                )
+            }
+
+            // Manual command palette (triggered by / button)
+            if (showCommandPalette && commands.isNotEmpty()) {
+                SuggestionPopup(
+                    suggestions = commands.map { cmd ->
+                        SuggestionItem(cmd.trigger, cmd.trigger, cmd.description, SuggestionType.COMMAND)
+                    },
+                    onSuggestionSelected = { item ->
+                        val cmd = commands.find { it.trigger == item.id }
+                        if (cmd != null) {
+                            onCommandSelected(cmd)
+                        } else {
+                            // Fallback: insert into input
+                            onInputTextChange("/${item.id} ")
+                        }
+                        showCommandPalette = false
+                    },
+                    onDismiss = { showCommandPalette = false }
+                )
+            }
+
+            // Manual agent palette (triggered by @ button)
+            if (showAgentPalette && modes.isNotEmpty()) {
+                SuggestionPopup(
+                    suggestions = modes.map { mode ->
+                        SuggestionItem(mode.id, mode.name.uppercase(), mode.description, SuggestionType.MODE)
+                    },
+                    onSuggestionSelected = { item ->
+                        val mode = modes.find { it.id == item.id }
+                        if (mode != null) {
+                            onModeSelectedForMention(mode)
+                        }
+                        showAgentPalette = false
+                    },
+                    onDismiss = { showAgentPalette = false }
                 )
             }
         }
@@ -420,47 +460,53 @@ fun ChatInputContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
             ) {
-                // @ mention button - styled as subtle chip
+                // @ mention button - opens agent palette directly
                 Box(
                     modifier = Modifier
                         .size(NavConstants.ActionButtonSize)
                         .background(
-                            color = AppColors.surface.copy(alpha = 0.3f),
+                            color = if (showAgentPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                             shape = AppShapes.pill
+                        )
+                        .then(
+                            if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { handleValueChange(if (inputText.isEmpty()) "@" else "$inputText @") }
+                            onClick = { showAgentPalette = !showAgentPalette }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "@",
-                        color = AppColors.textSecondary,
+                        color = if (showAgentPalette) AppColors.accentGreen else AppColors.textSecondary,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
-                // / command button - styled as subtle chip
+                // / command button - opens command palette directly
                 Box(
                     modifier = Modifier
                         .size(NavConstants.ActionButtonSize)
                         .background(
-                            color = AppColors.surface.copy(alpha = 0.3f),
+                            color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                             shape = AppShapes.pill
+                        )
+                        .then(
+                            if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = { handleValueChange("/") }
+                            onClick = { showCommandPalette = !showCommandPalette }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "/",
-                        color = AppColors.textSecondary,
+                        color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )

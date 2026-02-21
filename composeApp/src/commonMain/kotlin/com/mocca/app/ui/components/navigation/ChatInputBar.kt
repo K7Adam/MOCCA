@@ -161,6 +161,8 @@ fun ChatInputBar(
     var suggestionQuery by remember { mutableStateOf("") }
     var suggestionType by remember { mutableStateOf<SuggestionType?>(null) }
     var isInputFocused by remember { mutableStateOf(false) }
+    // Manual palette trigger (for / button)
+    var showCommandPalette by remember { mutableStateOf(false) }
 
     val items = defaultBottomNavItems
     var travelDistancePx by remember { mutableFloatStateOf(0f) }
@@ -352,12 +354,32 @@ fun ChatInputBar(
                 }
             )
 
-            // Suggestions popup
+            // Suggestions popup (text-triggered)
             if (showSuggestions && currentSuggestions.isNotEmpty()) {
                 SuggestionPopup(
                     suggestions = currentSuggestions,
                     onSuggestionSelected = onSuggestionSelected,
                     onDismiss = { showSuggestions = false }
+                )
+            }
+
+            // Manual command palette (triggered by / button)
+            if (showCommandPalette && commands.isNotEmpty()) {
+                SuggestionPopup(
+                    suggestions = commands.map { cmd ->
+                        SuggestionItem(cmd.trigger, cmd.trigger, cmd.description, SuggestionType.COMMAND)
+                    },
+                    onSuggestionSelected = { item ->
+                        val cmd = commands.find { it.trigger == item.id }
+                        if (cmd != null) {
+                            onCommandSelected(cmd)
+                        } else {
+                            // Fallback: insert into input
+                            onInputTextChange("/${item.id} ")
+                        }
+                        showCommandPalette = false
+                    },
+                    onDismiss = { showCommandPalette = false }
                 )
             }
         }
@@ -375,12 +397,32 @@ fun ChatInputBar(
                 .padding(horizontal = AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // / command button
-            MoccaTextButton(
-                text = "/",
-                onClick = { handleValueChange("/") },
-                textColor = AppColors.textSecondary
-            )
+            // / command button - opens command palette directly
+            Box(
+                modifier = Modifier
+                    .size(ActionToolbarHeight)
+                    .background(
+                        color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                        shape = AppShapes.pill
+                    )
+                    .then(
+                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                    )
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = { showCommandPalette = !showCommandPalette }
+                    )
+                    .padding(horizontal = AppSpacing.sm),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "/",
+                    color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                    style = AppTypography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             VerticalDivider(
