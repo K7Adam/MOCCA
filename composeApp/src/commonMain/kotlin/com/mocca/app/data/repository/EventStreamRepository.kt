@@ -93,7 +93,7 @@ class EventStreamRepository(
     // REPLAY=1 is CRITICAL: Ensures the last event (like SessionIdle) is not missed if collector reconnects
     private val _events = MutableSharedFlow<ServerEvent>(
         replay = 1,
-        extraBufferCapacity = NetworkConfig.SSE_BUFFER_CAPACITY,
+        extraBufferCapacity = 2048,
         onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.SUSPEND
     )
     val events: SharedFlow<ServerEvent> = _events.asSharedFlow()
@@ -811,15 +811,17 @@ class EventStreamRepository(
                 // IMPROVED: Incrementally update message part in cache
                 // This avoids fetching all messages on every update
                 // Note: part.id and part.messageID are non-null String in MessagePartInfo
-                try {
-                    localCache?.updateMessagePart(
-                        messageId = part.messageID,
-                        partId = part.id,
-                        content = part.text,
-                        delta = delta
-                    )
-                } catch (e: Exception) {
-                    Napier.w("[EventStream] Failed to incrementally update message part", e)
+                repositoryScope.launch {
+                    try {
+                        localCache?.updateMessagePart(
+                            messageId = part.messageID,
+                            partId = part.id,
+                            content = part.text,
+                            delta = delta
+                        )
+                    } catch (e: Exception) {
+                        Napier.w("[EventStream] Failed to incrementally update message part", e)
+                    }
                 }
             }
             
@@ -835,28 +837,30 @@ class EventStreamRepository(
                     _thinkingStartTime.value = null
                 }
                 // Update session status to running when message is being processed
-                try {
-                    localCache?.updateSessionStatus(messageInfo.sessionID, "running")
-                    
-                    // IMPROVED: Only fetch messages if we don't have incremental updates
-                    // Check if we already have this message in cache
-                    val existingMessage = localCache?.getMessage(messageInfo.id)
-                    if (existingMessage == null && apiClient != null && localCache != null) {
-                        // Message not in cache, fetch it
-                        Napier.i("[EventStream] Fetching new message: ${messageInfo.id}")
-                        val result = apiClient.getMessages(messageInfo.sessionID)
-                        result.onSuccess { responses ->
-                            val messages = responses.map { Message.fromResponse(it) }
-                            localCache.insertMessages(messages)
-                            Napier.i("[EventStream] Messages persisted for session: ${messageInfo.sessionID}")
-                        }.onFailure { e ->
-                            Napier.w("[EventStream] Failed to fetch messages", e)
+                repositoryScope.launch {
+                    try {
+                        localCache?.updateSessionStatus(messageInfo.sessionID, "running")
+                        
+                        // IMPROVED: Only fetch messages if we don't have incremental updates
+                        // Check if we already have this message in cache
+                        val existingMessage = localCache?.getMessage(messageInfo.id)
+                        if (existingMessage == null && apiClient != null && localCache != null) {
+                            // Message not in cache, fetch it
+                            Napier.i("[EventStream] Fetching new message: ${messageInfo.id}")
+                            val result = apiClient.getMessages(messageInfo.sessionID)
+                            result.onSuccess { responses ->
+                                val messages = responses.map { Message.fromResponse(it) }
+                                localCache?.insertMessages(messages)
+                                Napier.i("[EventStream] Messages persisted for session: ${messageInfo.sessionID}")
+                            }.onFailure { e ->
+                                Napier.w("[EventStream] Failed to fetch messages", e)
+                            }
+                        } else {
+                            Napier.v("[EventStream] Message already in cache, skipping full fetch")
                         }
-                    } else {
-                        Napier.v("[EventStream] Message already in cache, skipping full fetch")
+                    } catch (e: Exception) {
+                        Napier.w("[EventStream] Failed to update session status or fetch messages", e)
                     }
-                } catch (e: Exception) {
-                    Napier.w("[EventStream] Failed to update session status", e)
                 }
                 Napier.d("[EventStream] Message updated: ${messageInfo.id}")
             }
@@ -864,11 +868,13 @@ class EventStreamRepository(
             is ServerEvent.MessageRemoved -> {
                 val messageId = event.properties.messageID
                 // Remove from local cache
-                try {
-                    localCache?.deleteMessage(messageId)
-                    Napier.d("Message removed and deleted from cache: $messageId")
-                } catch (e: Exception) {
-                    Napier.w("Failed to delete message from cache", e)
+                repositoryScope.launch {
+                    try {
+                        localCache?.deleteMessage(messageId)
+                        Napier.d("Message removed and deleted from cache: $messageId")
+                    } catch (e: Exception) {
+                        Napier.w("Failed to delete message from cache", e)
+                    }
                 }
             }
             

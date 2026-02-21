@@ -493,34 +493,49 @@ class SessionRepository(
      * Load and cache the default model/provider from server config.
      */
     suspend fun loadDefaultConfig() {
-        // 1. Try to load global config first (contains default model)
-        apiClient.getConfig().onSuccess { config ->
-            // Parse "provider/model" format (e.g. "anthropic/claude-sonnet-4-5")
-            config.model?.let { modelStr ->
-                val parts = modelStr.split("/", limit = 2)
-                if (parts.size == 2) {
-                    defaultProviderId = parts[0]
-                    defaultModelId = parts[1]
-                    Napier.i("Default config loaded from server: $defaultProviderId / $defaultModelId")
-                }
+        // 0. Instant Load: Check local cache for recent models to instantly populate UI
+        try {
+            val recent = localCache.getRecentModels().firstOrNull()
+            if (recent != null) {
+                defaultProviderId = recent.providerId
+                defaultModelId = recent.modelId
+                Napier.i("Fast-loaded default config from cache: $defaultProviderId / $defaultModelId")
             }
-
-            // Set default mode
-            config.modes.firstOrNull()?.let { mode ->
-                defaultMode = mode.id
-                Napier.i("Default mode: $defaultMode")
-            }
-        }.onFailure { error ->
-            Napier.w("Failed to load server config: ${error.message}")
+        } catch (e: Exception) {
+            Napier.w("Failed to read recent models from cache for fast-loading", e)
         }
 
-        // 2. Fallback: If defaults still empty, try to pick first available from providers list
-        if (defaultModelId.isEmpty()) {
-            apiClient.getProviders().onSuccess { providers ->
-                providers.firstOrNull { it.models.isNotEmpty() }?.let { provider ->
-                    defaultProviderId = provider.id
-                    defaultModelId = provider.models.values.first().id
-                    Napier.i("Fallback default config: $defaultProviderId / $defaultModelId")
+        // We launch the network fetch asynchronously instead of blocking the config load
+        repositoryScope.launch {
+            // 1. Try to load global config first (contains default model)
+            apiClient.getConfig().onSuccess { config ->
+                // Parse "provider/model" format (e.g. "anthropic/claude-sonnet-4-5")
+                config.model?.let { modelStr ->
+                    val parts = modelStr.split("/", limit = 2)
+                    if (parts.size == 2) {
+                        defaultProviderId = parts[0]
+                        defaultModelId = parts[1]
+                        Napier.i("Default config synced from server: $defaultProviderId / $defaultModelId")
+                    }
+                }
+
+                // Set default mode
+                config.modes.firstOrNull()?.let { mode ->
+                    defaultMode = mode.id
+                    Napier.i("Default mode synced: $defaultMode")
+                }
+            }.onFailure { error ->
+                Napier.w("Failed to sync server config: ${error.message}")
+            }
+
+            // 2. Fallback: If defaults still empty, try to pick first available from providers list
+            if (defaultModelId.isEmpty()) {
+                apiClient.getProviders().onSuccess { providers ->
+                    providers.firstOrNull { it.models.isNotEmpty() }?.let { provider ->
+                        defaultProviderId = provider.id
+                        defaultModelId = provider.models.values.first().id
+                        Napier.i("Fallback default config: $defaultProviderId / $defaultModelId")
+                    }
                 }
             }
         }
