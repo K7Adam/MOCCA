@@ -37,6 +37,7 @@ data class Session(
 }
 
 @Serializable
+@Immutable
 data class SessionPermission(
     val permission: String,
     val action: String,
@@ -44,12 +45,14 @@ data class SessionPermission(
 )
 
 @Serializable
+@Immutable
 data class SessionTime(
     val created: Long = 0,
     val updated: Long = 0
 )
 
 @Serializable
+@Immutable
 data class SessionSummary(
     val additions: Int = 0,
     val deletions: Int = 0,
@@ -73,12 +76,14 @@ enum class SessionStatus {
  * This is the response format with info + parts.
  */
 @Serializable
+@Immutable
 data class MessageResponse(
     val info: MessageInfo,
     val parts: List<MessagePartResponse> = emptyList()
 )
 
 @Serializable
+@Immutable
 data class MessageInfo(
     val id: String,
     val role: MessageRole,
@@ -116,6 +121,7 @@ data class MessageInfo(
 }
 
 @Serializable
+@Immutable
 data class ModelInfo(
     @SerialName("providerID")
     val providerID: String? = null,
@@ -124,12 +130,14 @@ data class ModelInfo(
 )
 
 @Serializable
+@Immutable
 data class MessageSummary(
     val title: String? = null,
     val diffs: List<JsonElement>? = null
 )
 
 @Serializable
+@Immutable
 data class TokenUsage(
     val input: Int = 0,
     val output: Int = 0,
@@ -138,12 +146,14 @@ data class TokenUsage(
 )
 
 @Serializable
+@Immutable
 data class CacheUsage(
     val read: Int = 0,
     val write: Int = 0
 )
 
 @Serializable
+@Immutable
 data class MessageTime(
     val created: Long = 0,
     val completed: Long? = null
@@ -155,6 +165,7 @@ data class MessageTime(
  * Types: "text", "tool", "file", "step-start", "step-finish"
  */
 @Serializable
+@Immutable
 data class MessagePartResponse(
     val id: String,
     @SerialName("sessionID")
@@ -183,6 +194,7 @@ data class MessagePartResponse(
 )
 
 @Serializable
+@Immutable
 data class ToolStateResponse(
     val status: String, // "pending", "running", "completed", "error"
     val input: JsonElement? = null,
@@ -193,6 +205,7 @@ data class ToolStateResponse(
 )
 
 @Serializable
+@Immutable
 data class ToolTimeResponse(
     val start: Long? = null,
     val end: Long? = null
@@ -212,6 +225,7 @@ enum class MessageRole {
  * Request body for POST /session/:id/message (chat).
  */
 @Serializable
+@Immutable
 data class ChatRequest(
     @SerialName("modelID")
     val modelID: String,
@@ -233,6 +247,7 @@ data class ChatRequest(
 sealed class ChatPart {
     @Serializable
     @SerialName("text")
+    @Immutable
     data class Text(
         val text: String,
         val id: String? = null,
@@ -241,6 +256,7 @@ sealed class ChatPart {
     
     @Serializable
     @SerialName("file")
+    @Immutable
     data class File(
         val mime: String,
         val url: String,
@@ -252,6 +268,7 @@ sealed class ChatPart {
  * Request body for POST /session/:id/permissions/:permissionId (legacy format).
  */
 @Serializable
+@Immutable
 data class PermissionResponse(
     val response: String, // "allow" or "deny"
     val remember: Boolean = false
@@ -262,6 +279,7 @@ data class PermissionResponse(
  * Matches OpenChamber SDK permission.reply API.
  */
 @Serializable
+@Immutable
 data class PermissionReplyRequest(
     @SerialName("requestID")
     val requestID: String,
@@ -274,6 +292,7 @@ data class PermissionReplyRequest(
  * Matches OpenChamber SDK question.reply API.
  */
 @Serializable
+@Immutable
 data class QuestionReplyRequest(
     @SerialName("requestID")
     val requestID: String,
@@ -284,6 +303,7 @@ data class QuestionReplyRequest(
  * Request body for POST /question/:requestId/reject.
  */
 @Serializable
+@Immutable
 data class QuestionRejectRequest(
     @SerialName("requestID")
     val requestID: String
@@ -293,6 +313,7 @@ data class QuestionRejectRequest(
  * Request body for POST /session/:id/fork.
  */
 @Serializable
+@Immutable
 data class ForkSessionRequest(
     @SerialName("messageID")
     val messageID: String? = null
@@ -302,6 +323,7 @@ data class ForkSessionRequest(
  * Request body for POST /session/:id/revert.
  */
 @Serializable
+@Immutable
 data class RevertSessionRequest(
     @SerialName("messageID")
     val messageID: String,
@@ -383,9 +405,11 @@ data class Message(
 @Serializable
 sealed interface MessagePart {
     @Serializable
+    @Immutable
     data class Text(val text: String) : MessagePart
 
     @Serializable
+    @Immutable
     data class Reasoning(
         val content: String,
         val timeMs: Long
@@ -396,12 +420,14 @@ sealed interface MessagePart {
      * Displayed with a distinct "thinking" visualization before text response.
      */
     @Serializable
+    @Immutable
     data class Thinking(
         val content: String,
         val durationMs: Long? = null
     ) : MessagePart
 
     @Serializable
+    @Immutable
     data class ToolInvocation(
         val id: String,
         val name: String,
@@ -419,12 +445,14 @@ sealed interface MessagePart {
     ) : MessagePart
 
     @Serializable
+    @Immutable
     data class ToolResult(
         val id: String,
         val result: String
     ) : MessagePart
 
     @Serializable
+    @Immutable
     data class File(
         val mediaType: String,
         val url: String? = null,
@@ -432,6 +460,7 @@ sealed interface MessagePart {
     ) : MessagePart
 
     @Serializable
+    @Immutable
     data class SubTask(
         val sessionId: String,
         val title: String,
@@ -455,9 +484,13 @@ enum class ToolState {
 sealed interface RichToolState {
     val status: ToolState
     
+    @Immutable
+    
     data class Pending(
         override val status: ToolState = ToolState.PENDING
     ) : RichToolState
+    
+    @Immutable
     
     data class Running(
         override val status: ToolState = ToolState.RUNNING,
@@ -466,6 +499,8 @@ sealed interface RichToolState {
         val metadata: Map<String, JsonElement>? = null,
         val startTime: Long
     ) : RichToolState
+    
+    @Immutable
     
     data class Completed(
         override val status: ToolState = ToolState.COMPLETED,
@@ -478,6 +513,8 @@ sealed interface RichToolState {
     ) : RichToolState {
         val durationMs: Long get() = endTime - startTime
     }
+    
+    @Immutable
     
     data class Error(
         override val status: ToolState = ToolState.ERROR,
@@ -539,6 +576,7 @@ sealed interface RichToolState {
 }
 
 @Serializable
+@Immutable
 data class AppInfo(
     val version: String,
     val initialized: Boolean = false,
@@ -546,6 +584,7 @@ data class AppInfo(
 )
 
 @Serializable
+@Immutable
 data class Provider(
     val id: String,
     val name: String,
@@ -553,11 +592,13 @@ data class Provider(
 )
 
 @Serializable
+@Immutable
 data class ProvidersResponse(
     val providers: List<Provider> = emptyList()
 )
 
 @Serializable
+@Immutable
 data class Model(
     val id: String,
     val name: String,
@@ -565,6 +606,7 @@ data class Model(
 )
 
 @Serializable
+@Immutable
 data class ModelVariant(
     val description: String? = null,
     // Add other variant fields if needed, but the key (e.g., "high", "low") is the main identifier
@@ -575,6 +617,7 @@ data class ModelVariant(
 )
 
 @Serializable
+@Immutable
 data class Mode(
     val id: String,
     val name: String,
@@ -595,6 +638,7 @@ data class FileInfo(
 }
 
 @Serializable
+@Immutable
 data class FileContent(
     val path: String,
     val content: String,
@@ -602,12 +646,14 @@ data class FileContent(
 )
 
 @Serializable
+@Immutable
 data class FileUpdateRequest(
     val path: String,
     val content: String
 )
 
 @Serializable
+@Immutable
 data class FileStatus(
     val path: String,
     val gitStatus: GitStatus? = null,
@@ -615,12 +661,14 @@ data class FileStatus(
 )
 
 @Serializable
+@Immutable
 data class GitStatus(
     val status: String,
     val staged: Boolean = false
 )
 
 @Serializable
+@Immutable
 data class Diagnostic(
     val severity: DiagnosticSeverity,
     val message: String,
@@ -667,6 +715,7 @@ data class Terminal(
 )
 
 @Serializable
+@Immutable
 data class TerminalResizeRequest(
     val cols: Int,
     val rows: Int
@@ -676,6 +725,7 @@ data class TerminalResizeRequest(
  * Response from /config endpoint.
  */
 @Serializable
+@Immutable
 data class ConfigResponse(
     val model: String? = null, // Default model (e.g., "anthropic/claude-sonnet-4-5")
     val providers: List<Provider> = emptyList(),
@@ -687,6 +737,7 @@ data class ConfigResponse(
  * Agent configuration from OpenCode.
  */
 @Serializable
+@Immutable
 data class AgentConfig(
     val id: String,
     val name: String,
@@ -698,6 +749,7 @@ data class AgentConfig(
  * Matches OpenChamber's session status types.
  */
 @Serializable
+@Immutable
 data class SessionStatusInfo(
     val type: String, // "idle", "busy", "retry"
     val attempt: Int? = null,
@@ -714,6 +766,7 @@ data class SessionStatusInfo(
  * Used for undo/redo functionality.
  */
 @Serializable
+@Immutable
 data class SessionRevertInfo(
     @SerialName("messageID")
     val messageID: String
@@ -723,6 +776,7 @@ data class SessionRevertInfo(
  * Recent model entry for UI persistence.
  */
 @Serializable
+@Immutable
 data class RecentModel(
     val providerId: String,
     val modelId: String,
@@ -734,6 +788,7 @@ data class RecentModel(
  * Used to parse error bodies when the server returns a non-200 status or unexpected JSON.
  */
 @Serializable
+@Immutable
 data class ServerErrorResponse(
     val name: String? = null,
     val message: String? = null,
@@ -784,6 +839,7 @@ enum class TodoPriority {
  * Request body for POST /session/:id/summarize.
  */
 @Serializable
+@Immutable
 data class SummarizeRequest(
     @SerialName("providerID")
     val providerID: String,
@@ -795,6 +851,7 @@ data class SummarizeRequest(
  * Request body for POST /session/:id/init.
  */
 @Serializable
+@Immutable
 data class InitSessionRequest(
     @SerialName("messageID")
     val messageID: String,
@@ -812,6 +869,7 @@ data class InitSessionRequest(
  * Request body for PATCH /config.
  */
 @Serializable
+@Immutable
 data class ConfigUpdate(
     val model: ModelConfig? = null,
     val provider: String? = null,
@@ -821,6 +879,7 @@ data class ConfigUpdate(
 )
 
 @Serializable
+@Immutable
 data class ModelConfig(
     val default: String? = null,
     val reasoning: String? = null
@@ -835,6 +894,7 @@ data class ModelConfig(
  * Note: Fields are nullable to handle various API response formats.
  */
 @Serializable
+@Immutable
 data class Project(
     val id: String? = null,
     val name: String? = null,
@@ -863,6 +923,7 @@ enum class VcsType {
  * Path information from /path endpoint.
  */
 @Serializable
+@Immutable
 data class PathInfo(
     val cwd: String,
     val home: String? = null,
@@ -877,6 +938,7 @@ data class PathInfo(
  * Request body for POST /log.
  */
 @Serializable
+@Immutable
 data class LogEntry(
     val service: String,
     val level: String, // "debug", "info", "warn", "error"
@@ -892,11 +954,13 @@ data class LogEntry(
  * Full tool list response.
  */
 @Serializable
+@Immutable
 data class ToolList(
     val tools: List<ToolDefinition> = emptyList()
 )
 
 @Serializable
+@Immutable
 data class ToolDefinition(
     val id: String,
     val name: String,

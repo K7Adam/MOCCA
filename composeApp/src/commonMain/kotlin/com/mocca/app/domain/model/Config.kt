@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.Serializable
 
 /**
@@ -11,6 +13,7 @@ import kotlinx.serialization.Serializable
  * - OPENCODE_SERVER_USERNAME — defaults to "opencode"
  */
 @Serializable
+@Immutable
 data class ServerConfig(
     val id: String,
     val name: String,
@@ -53,8 +56,11 @@ data class ServerConfig(
  * Wrapper for API responses with cached/fresh status.
  */
 sealed class Resource<out T> {
+    @Immutable
     data class Success<T>(val data: T) : Resource<T>()
+    @Immutable
     data class Loading<T>(val data: T? = null) : Resource<T>()
+    @Immutable
     data class Error<T>(val message: String, val data: T? = null, val cause: Throwable? = null) : Resource<T>()
     
     fun dataOrNull(): T? = when (this) {
@@ -79,16 +85,20 @@ sealed class ConnectionStatus {
     /** No server configured yet. */
     data object NotConfigured : ConnectionStatus()
     /** Disconnected from server (may have an error reason). */
+    @Immutable
     data class Disconnected(val reason: String? = null) : ConnectionStatus()
     /** Currently attempting initial connection. */
     data object Connecting : ConnectionStatus()
     /** Waiting for device network to become available. */
     data object WaitingForNetwork : ConnectionStatus()
     /** Reconnecting after a connection loss. */
+    @Immutable
     data class Reconnecting(val attempt: Int, val maxAttempts: Int) : ConnectionStatus()
     /** Successfully connected to server. */
+    @Immutable
     data class Connected(val serverInfo: AppInfo, val latencyMs: Long = 0) : ConnectionStatus()
     /** Connection failed with an error. */
+    @Immutable
     data class Error(val message: String) : ConnectionStatus()
 
     val isConnected: Boolean get() = this is Connected

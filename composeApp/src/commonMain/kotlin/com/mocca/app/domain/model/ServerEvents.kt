@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -14,6 +16,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("server.connected")
+    @Immutable
     data class Connected(
         override val type: String = "server.connected",
         val properties: ConnectedProperties
@@ -21,6 +24,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("server.heartbeat")
+    @Immutable
     data class Heartbeat(
         override val type: String = "server.heartbeat",
         val properties: HeartbeatProperties = HeartbeatProperties()
@@ -28,6 +32,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("session.updated")
+    @Immutable
     data class SessionUpdated(
         override val type: String = "session.updated",
         val properties: SessionUpdatedProperties
@@ -35,6 +40,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("session.deleted")
+    @Immutable
     data class SessionDeleted(
         override val type: String = "session.deleted",
         val properties: SessionDeletedProperties
@@ -42,6 +48,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("session.idle")
+    @Immutable
     data class SessionIdle(
         override val type: String = "session.idle",
         val properties: SessionIdleProperties
@@ -49,6 +56,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("session.error")
+    @Immutable
     data class SessionError(
         override val type: String = "session.error",
         val properties: SessionErrorProperties
@@ -56,6 +64,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("message.updated")
+    @Immutable
     data class MessageUpdated(
         override val type: String = "message.updated",
         val properties: MessageUpdatedProperties
@@ -63,6 +72,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("message.removed")
+    @Immutable
     data class MessageRemoved(
         override val type: String = "message.removed",
         val properties: MessageRemovedProperties
@@ -70,6 +80,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("message.part.updated")
+    @Immutable
     data class MessagePartUpdated(
         override val type: String = "message.part.updated",
         val properties: MessagePartUpdatedProperties
@@ -77,6 +88,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("message.part.removed")
+    @Immutable
     data class MessagePartRemoved(
         override val type: String = "message.part.removed",
         val properties: MessagePartRemovedProperties
@@ -84,6 +96,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("permission.updated")
+    @Immutable
     data class PermissionUpdated(
         override val type: String = "permission.updated",
         val properties: LegacyPermissionProperties
@@ -91,6 +104,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("permission.asked")
+    @Immutable
     data class PermissionAsked(
         override val type: String = "permission.asked",
         val properties: PermissionAskedProperties
@@ -98,6 +112,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("permission.replied")
+    @Immutable
     data class PermissionReplied(
         override val type: String = "permission.replied",
         val properties: PermissionRepliedProperties
@@ -105,6 +120,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("question.asked")
+    @Immutable
     data class QuestionAsked(
         override val type: String = "question.asked",
         val properties: QuestionAskedProperties
@@ -112,6 +128,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("question.replied")
+    @Immutable
     data class QuestionReplied(
         override val type: String = "question.replied",
         val properties: QuestionRepliedProperties
@@ -119,6 +136,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("file.edited")
+    @Immutable
     data class FileEdited(
         override val type: String = "file.edited",
         val properties: FileEditedProperties
@@ -126,6 +144,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("file.watcher.updated")
+    @Immutable
     data class FileWatcherUpdated(
         override val type: String = "file.watcher.updated",
         val properties: FileWatcherProperties
@@ -133,6 +152,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("installation.updated")
+    @Immutable
     data class InstallationUpdated(
         override val type: String = "installation.updated",
         val properties: InstallationProperties
@@ -140,6 +160,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("lsp.client.diagnostics")
+    @Immutable
     data class LspDiagnostics(
         override val type: String = "lsp.client.diagnostics",
         val properties: LspDiagnosticsProperties
@@ -147,6 +168,7 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("log")
+    @Immutable
     data class Log(
         override val type: String = "log",
         val properties: LogProperties
@@ -154,12 +176,14 @@ sealed interface ServerEvent {
     
     @Serializable
     @SerialName("agent.status")
+    @Immutable
     data class AgentStatus(
         override val type: String = "agent.status",
         val properties: AgentStatusProperties
     ) : ServerEvent
     
     @Serializable
+    @Immutable
     data class Unknown(
         override val type: String,
         val rawData: String? = null
@@ -167,6 +191,7 @@ sealed interface ServerEvent {
 }
 
 @Serializable
+@Immutable
 data class ConnectedProperties(
     val status: String = "connected",
     val version: String = "unknown",
@@ -174,11 +199,13 @@ data class ConnectedProperties(
 )
 
 @Serializable
+@Immutable
 data class HeartbeatProperties(
     val timestamp: Long? = null
 )
 
 @Serializable
+@Immutable
 data class LogProperties(
     val level: String = "info", // "debug", "info", "warn", "error"
     val message: String,
@@ -187,6 +214,7 @@ data class LogProperties(
 )
 
 @Serializable
+@Immutable
 data class AgentStatusProperties(
     val sessionID: String,
     val agentName: String,
@@ -196,38 +224,45 @@ data class AgentStatusProperties(
 )
 
 @Serializable
+@Immutable
 data class SessionUpdatedProperties(
     val info: Session
 )
 
 @Serializable
+@Immutable
 data class SessionDeletedProperties(
     val info: Session
 )
 
 @Serializable
+@Immutable
 data class SessionIdleProperties(
     val sessionID: String
 )
 
 @Serializable
+@Immutable
 data class SessionErrorProperties(
     val sessionID: String? = null,
     val error: SessionErrorInfo? = null
 )
 
 @Serializable
+@Immutable
 data class SessionErrorInfo(
     val message: String? = null,
     val code: String? = null
 )
 
 @Serializable
+@Immutable
 data class MessageUpdatedProperties(
     val info: AssistantMessageInfo
 )
 
 @Serializable
+@Immutable
 data class AssistantMessageInfo(
     val id: String,
     val role: String = "assistant",
@@ -244,6 +279,7 @@ data class AssistantMessageInfo(
 )
 
 @Serializable
+@Immutable
 data class TokenInfo(
     val input: Int = 0,
     val output: Int = 0,
@@ -252,30 +288,35 @@ data class TokenInfo(
 )
 
 @Serializable
+@Immutable
 data class CacheInfo(
     val read: Int = 0,
     val write: Int = 0
 )
 
 @Serializable
+@Immutable
 data class MessageTimeInfo(
     val created: Long = 0,
     val completed: Long? = null
 )
 
 @Serializable
+@Immutable
 data class MessageRemovedProperties(
     val messageID: String,
     val sessionID: String
 )
 
 @Serializable
+@Immutable
 data class MessagePartUpdatedProperties(
     val part: MessagePartInfo,
     val delta: String? = null
 )
 
 @Serializable
+@Immutable
 data class MessagePartInfo(
     val id: String,
     val type: String, // "text", "tool", "file"
@@ -294,6 +335,7 @@ data class MessagePartInfo(
 )
 
 @Serializable
+@Immutable
 data class ToolStateInfo(
     val status: String, // "pending", "running", "completed", "error"
     val input: JsonElement? = null,
@@ -348,18 +390,21 @@ data class ToolStateInfo(
 }
 
 @Serializable
+@Immutable
 data class ToolTimeInfo(
     val start: Long? = null,
     val end: Long? = null
 )
 
 @Serializable
+@Immutable
 data class MessagePartRemovedProperties(
     val messageID: String,
     val partID: String
 )
 
 @Serializable
+@Immutable
 data class LegacyPermissionProperties(
     val id: String,
     val sessionID: String,
@@ -372,6 +417,7 @@ data class LegacyPermissionProperties(
  * Properties for permission.asked event - matches OpenChamber's PermissionRequest.
  */
 @Serializable
+@Immutable
 data class PermissionAskedProperties(
     val id: String,
     @SerialName("sessionID")
@@ -387,6 +433,7 @@ data class PermissionAskedProperties(
  * Properties for permission.replied event.
  */
 @Serializable
+@Immutable
 data class PermissionRepliedProperties(
     @SerialName("sessionID")
     val sessionID: String,
@@ -396,6 +443,7 @@ data class PermissionRepliedProperties(
 )
 
 @Serializable
+@Immutable
 data class PermissionTimeInfo(
     val created: Long = 0
 )
@@ -404,6 +452,7 @@ data class PermissionTimeInfo(
  * Tool info associated with a permission request.
  */
 @Serializable
+@Immutable
 data class PermissionToolInfo(
     @SerialName("messageID")
     val messageId: String,
@@ -417,6 +466,7 @@ data class PermissionToolInfo(
  * Properties for question.asked event - matches OpenChamber's QuestionRequest.
  */
 @Serializable
+@Immutable
 data class QuestionAskedProperties(
     val id: String,
     @SerialName("sessionID")
@@ -429,6 +479,7 @@ data class QuestionAskedProperties(
  * Properties for question.replied event.
  */
 @Serializable
+@Immutable
 data class QuestionRepliedProperties(
     @SerialName("sessionID")
     val sessionID: String,
@@ -441,6 +492,7 @@ data class QuestionRepliedProperties(
  * Individual question in a question request.
  */
 @Serializable
+@Immutable
 data class QuestionInfo(
     val question: String,
     val header: String = "",
@@ -452,6 +504,7 @@ data class QuestionInfo(
  * Option for a question.
  */
 @Serializable
+@Immutable
 data class QuestionOption(
     val label: String,
     val description: String = ""
@@ -462,6 +515,7 @@ data class QuestionOption(
  * Matches OpenChamber's QuestionRequest type.
  */
 @Serializable
+@Immutable
 data class QuestionRequest(
     val id: String,
     @SerialName("sessionID")
@@ -482,22 +536,26 @@ data class QuestionRequest(
 }
 
 @Serializable
+@Immutable
 data class FileEditedProperties(
     val file: String
 )
 
 @Serializable
+@Immutable
 data class FileWatcherProperties(
     val event: String, // "rename" or "change"
     val file: String
 )
 
 @Serializable
+@Immutable
 data class InstallationProperties(
     val version: String
 )
 
 @Serializable
+@Immutable
 data class LspDiagnosticsProperties(
     val path: String,
     val serverID: String
@@ -506,6 +564,7 @@ data class LspDiagnosticsProperties(
 // Permission request shown to user for tool approval.
 // Matches OpenChamber's PermissionRequest type with patterns and always list.
 @Serializable
+@Immutable
 data class PermissionRequest(
     val id: String,
     @SerialName("sessionID")

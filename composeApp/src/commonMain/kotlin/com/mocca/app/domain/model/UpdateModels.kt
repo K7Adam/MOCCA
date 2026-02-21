@@ -1,9 +1,12 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Immutable
 data class GitHubRelease(
     @SerialName("tag_name") val tagName: String,
     val body: String,
@@ -11,6 +14,7 @@ data class GitHubRelease(
 )
 
 @Serializable
+@Immutable
 data class GitHubAsset(
     val name: String,
     @SerialName("browser_download_url") val downloadUrl: String,
@@ -18,6 +22,8 @@ data class GitHubAsset(
     val size: Long,
     @SerialName("content_type") val contentType: String
 )
+
+@Immutable
 
 data class UpdateInfo(
     val version: String,
@@ -37,8 +43,10 @@ sealed class GitHubTokenStatus {
     /** No token configured */
     data object Missing : GitHubTokenStatus()
     /** Token is invalid, expired, or revoked */
+    @Immutable
     data class Invalid(val reason: String) : GitHubTokenStatus()
     /** Error occurred during validation (network issue, etc.) */
+    @Immutable
     data class Error(val message: String) : GitHubTokenStatus()
     
     val isValid: Boolean get() = this is Valid
@@ -58,16 +66,21 @@ sealed class GitHubTokenStatus {
  */
 sealed class UpdateCheckResult {
     /** Update is available */
+    @Immutable
     data class UpdateAvailable(val updateInfo: UpdateInfo) : UpdateCheckResult()
     /** No update available (current version is latest) */
     data object NoUpdate : UpdateCheckResult()
     /** Error occurred during check */
+    @Immutable
     data class Error(val message: String, val tokenStatus: GitHubTokenStatus? = null) : UpdateCheckResult()
 }
 
 sealed class DownloadStatus {
+    @Immutable
     data class Progress(val progress: Float) : DownloadStatus()
+    @Immutable
     data class Log(val message: String) : DownloadStatus()
     data object Complete : DownloadStatus()
+    @Immutable
     data class Error(val message: String, val throwable: Throwable? = null) : DownloadStatus()
 }

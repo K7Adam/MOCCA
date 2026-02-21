@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -12,6 +14,7 @@ import kotlinx.serialization.json.JsonElement
  * Tools, resources, prompts are only available after connection in detail endpoints.
  */
 @Serializable
+@Immutable
 data class McpServerStatus(
     val status: McpConnectionStatus,
     val error: String? = null,
@@ -70,6 +73,7 @@ enum class McpConnectionStatus {
  * MCP Tool definition from server.
  */
 @Serializable
+@Immutable
 data class McpTool(
     val name: String,
     val description: String? = null,
@@ -80,6 +84,7 @@ data class McpTool(
  * MCP Resource definition from server.
  */
 @Serializable
+@Immutable
 data class McpResource(
     val uri: String,
     val name: String,
@@ -91,6 +96,7 @@ data class McpResource(
  * MCP Prompt definition from server.
  */
 @Serializable
+@Immutable
 data class McpPrompt(
     val name: String,
     val description: String? = null,
@@ -101,6 +107,7 @@ data class McpPrompt(
  * MCP Prompt argument.
  */
 @Serializable
+@Immutable
 data class McpPromptArgument(
     val name: String,
     val description: String? = null,
@@ -111,6 +118,7 @@ data class McpPromptArgument(
  * MCP Server configuration as stored in opencode.json.
  */
 @Serializable
+@Immutable
 data class McpServerConfig(
     val type: McpServerType = McpServerType.LOCAL,
     val command: List<String>? = null,
@@ -136,6 +144,7 @@ enum class McpServerType {
  * Request to connect/disconnect MCP server.
  */
 @Serializable
+@Immutable
 data class McpConnectRequest(
     val name: String,
     val directory: String? = null
@@ -145,6 +154,7 @@ data class McpConnectRequest(
  * Request to configure/update MCP server.
  */
 @Serializable
+@Immutable
 data class McpConfigureRequest(
     val name: String,
     val config: McpServerConfig
@@ -154,6 +164,7 @@ data class McpConfigureRequest(
  * Combined MCP server info for UI display.
  * Includes both config and runtime status.
  */
+@Immutable
 data class McpServerInfo(
     val name: String,
     val status: McpServerStatus,

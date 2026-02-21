@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -10,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
  */
 
 @Serializable
+@Immutable
 data class Agent(
     val name: String,
     val mode: String? = null,
@@ -27,6 +30,7 @@ data class Agent(
 }
 
 @Serializable
+@Immutable
 data class AgentModel(
     @SerialName("providerID")
     val providerId: String? = null,
@@ -35,6 +39,7 @@ data class AgentModel(
 )
 
 @Serializable
+@Immutable
 data class AgentPermission(
     val permission: String,
     val action: String,

@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,6 +11,7 @@ import kotlinx.serialization.Serializable
  * Example response: [{"id":"kotlin-ls","name":"kotlin-ls","root":"","status":"connected"}]
  */
 @Serializable
+@Immutable
 data class LspStatus(
     val id: String,
     val name: String,

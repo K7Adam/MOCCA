@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.Serializable
 
 /**
@@ -7,6 +9,7 @@ import kotlinx.serialization.Serializable
  * Used for image attachments, documents, etc.
  */
 @Serializable
+@Immutable
 data class AttachedFile(
     val id: String,
     val name: String,

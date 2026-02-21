@@ -56,13 +56,13 @@ data class ChatState(
         } ?: 0
     }
         
-    val availableVariants: List<String> get() {
-        if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return emptyList()
-        val provider = providerInfo.all.find { it.id == selectedProviderId } ?: return emptyList()
-        val modelsObj = provider.models as? kotlinx.serialization.json.JsonObject ?: return emptyList()
-        val modelObj = modelsObj[selectedModelId] as? kotlinx.serialization.json.JsonObject ?: return emptyList()
-        val variantsObj = modelObj["variants"] as? kotlinx.serialization.json.JsonObject ?: return emptyList()
-        return variantsObj.keys.toList().sorted()
+    val availableVariants: ImmutableList<String> get() {
+        if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return persistentListOf()
+        val provider = providerInfo.all.find { it.id == selectedProviderId } ?: return persistentListOf()
+        val modelsObj = provider.models as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
+        val modelObj = modelsObj[selectedModelId] as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
+        val variantsObj = modelObj["variants"] as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
+        return variantsObj.keys.toList().sorted().toImmutableList()
     }
 }
 

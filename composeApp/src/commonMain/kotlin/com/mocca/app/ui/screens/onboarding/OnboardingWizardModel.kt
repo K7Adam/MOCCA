@@ -12,6 +12,7 @@ import com.mocca.app.domain.model.DiscoverySource
 import com.mocca.app.domain.model.QrConnectionPayload
 import com.mocca.app.domain.model.ServerConfig
 import io.github.aakira.napier.Napier
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,7 +52,7 @@ class OnboardingWizardModel(
             try {
                 val saved = serverConfigRepository.getAllServers()
                     .filter { it.host.isNotBlank() } // Filter out invalid configs (BUG 5 safety)
-                _state.update { it.copy(savedServers = saved) }
+                _state.update { it.copy(savedServers = saved.toImmutableList()) }
                 Napier.d("Loaded ${saved.size} saved servers")
             } catch (e: Exception) {
                 Napier.w("Could not load saved servers", e)
@@ -120,7 +121,7 @@ class OnboardingWizardModel(
 
         _state.update {
             it.copy(
-                discoveredServers = result.servers,
+                discoveredServers = result.servers.toImmutableList(),
                 isLoading = false,
                 currentStep = OnboardingStep.SELECT_SERVER
             )
@@ -150,7 +151,7 @@ class OnboardingWizardModel(
             val discovered = payload.toDiscoveredServer()
             _state.update {
                 it.copy(
-                    discoveredServers = it.discoveredServers + discovered,
+                    discoveredServers = (it.discoveredServers + discovered).toImmutableList(),
                     selectedServer = discovered
                 )
             }

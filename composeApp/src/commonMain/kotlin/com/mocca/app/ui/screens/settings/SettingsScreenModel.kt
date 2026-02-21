@@ -1,5 +1,11 @@
 package com.mocca.app.ui.screens.settings
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.api.getHttpEngine
@@ -30,8 +36,10 @@ enum class ServerConnectionStatus {
     FAILED
 }
 
+@Immutable
+
 data class SettingsState(
-    val servers: List<ServerConfig> = emptyList(),
+    val servers: ImmutableList<ServerConfig> = persistentListOf(),
     val activeServerId: String? = null,
     val editingServer: ServerConfig? = null,
     val isLoading: Boolean = false,
@@ -42,15 +50,15 @@ data class SettingsState(
     val githubTokenStatus: GitHubTokenStatus? = null,
     val isValidatingToken: Boolean = false,
     // Provider Auth
-    val providers: List<Provider> = emptyList(),
-    val providerAuthMethods: Map<String, List<ProviderAuthMethod>> = emptyMap(),
+    val providers: ImmutableList<Provider> = persistentListOf(),
+    val providerAuthMethods: Map<String, ImmutableList<ProviderAuthMethod>> = emptyMap(),
     val selectedProviderId: String? = null,
     val authLoading: Boolean = false,
     // Server Config (fetched from /config endpoint)
     val serverConfig: ConfigResponse? = null,
     val serverDefaultProvider: String? = null,
     val serverDefaultModel: String? = null,
-    val serverModes: List<Mode> = emptyList()
+    val serverModes: ImmutableList<Mode> = persistentListOf()
 ) {
     /** Server version from SSE Connected event, or null if not connected */
     val serverVersion: String? get() = (activeConnectionState as? ConnectionStatus.Connected)?.serverInfo?.version
@@ -91,7 +99,7 @@ class SettingsScreenModel(
                         _state.value = _state.value.copy(
                             serverConfig = config,
                             serverDefaultModel = config.model,
-                            serverModes = config.modes
+                            serverModes = config.modes.toImmutableList()
                         )
                         Napier.i { "Server config loaded: defaultModel=${config.model}, modes=${config.modes.size}" }
                     }
@@ -165,7 +173,7 @@ class SettingsScreenModel(
                     is Resource.Success -> {
                         _state.value = _state.value.copy(
                             authLoading = false, 
-                            providerAuthMethods = _state.value.providerAuthMethods + (providerId to resource.data)
+                            providerAuthMethods = (_state.value.providerAuthMethods + (providerId to resource.data.toImmutableList())).toImmutableMap()
                         )
                     }
                     is Resource.Error -> {
@@ -384,7 +392,7 @@ class SettingsScreenModel(
     private fun loadServers() {
         screenModelScope.launch {
             val servers = serverConfigRepository.getAllServers()
-            _state.value = _state.value.copy(servers = servers)
+            _state.value = _state.value.copy(servers = servers.toImmutableList())
             
             servers.forEach { server ->
                 if (_state.value.connectionStatuses[server.id] == null) {

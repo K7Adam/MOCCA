@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -11,6 +13,7 @@ import kotlinx.serialization.json.JsonObject
  */
 
 @Serializable
+@Immutable
 data class ProviderInfo(
     val id: String,
     val name: String,
@@ -30,6 +33,7 @@ data class ProviderInfo(
 }
 
 @Serializable
+@Immutable
 data class ProviderModel(
     val id: String,
     val name: String,
@@ -44,6 +48,7 @@ data class ProviderModel(
 )
 
 @Serializable
+@Immutable
 data class ProviderResponse(
     val all: List<ProviderInfo> = emptyList(),
     // default is Map<providerId, modelId> in the API
@@ -53,12 +58,14 @@ data class ProviderResponse(
 
 // Legacy type for backward compatibility
 @Serializable
+@Immutable
 data class DefaultProvider(
     val provider: String? = null,
     val model: String? = null
 )
 
 @Serializable
+@Immutable
 data class ProvidersConfig(
     val providers: List<ProviderInfo> = emptyList(),
     val default: Map<String, String> = emptyMap()
@@ -72,6 +79,7 @@ data class ProvidersConfig(
  * Provider authentication method descriptor.
  */
 @Serializable
+@Immutable
 data class ProviderAuthMethod(
     val type: String, // "oauth", "api_key", "manual"
     val name: String,
@@ -83,6 +91,7 @@ data class ProviderAuthMethod(
  * OAuth authorization response containing the URL to redirect the user to.
  */
 @Serializable
+@Immutable
 data class ProviderAuthAuthorization(
     val url: String,
     val state: String,
@@ -93,6 +102,7 @@ data class ProviderAuthAuthorization(
  * OAuth callback request body.
  */
 @Serializable
+@Immutable
 data class OAuthCallbackRequest(
     val code: String,
     val state: String
@@ -105,12 +115,14 @@ data class OAuthCallbackRequest(
 sealed class ProviderCredentials {
     @Serializable
     @SerialName("api_key")
+    @Immutable
     data class ApiKey(
         val apiKey: String
     ) : ProviderCredentials()
     
     @Serializable
     @SerialName("openai")
+    @Immutable
     data class OpenAI(
         val apiKey: String,
         val organization: String? = null
@@ -118,12 +130,14 @@ sealed class ProviderCredentials {
     
     @Serializable
     @SerialName("anthropic")
+    @Immutable
     data class Anthropic(
         val apiKey: String
     ) : ProviderCredentials()
     
     @Serializable
     @SerialName("aws")
+    @Immutable
     data class AWS(
         val accessKeyId: String,
         val secretAccessKey: String,
@@ -132,6 +146,7 @@ sealed class ProviderCredentials {
     
     @Serializable
     @SerialName("azure")
+    @Immutable
     data class Azure(
         val apiKey: String,
         val endpoint: String

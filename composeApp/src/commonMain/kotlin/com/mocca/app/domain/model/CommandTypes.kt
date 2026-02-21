@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -10,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
  */
 
 @Serializable
+@Immutable
 data class Command(
     val name: String,
     val description: String? = null,
@@ -28,6 +31,7 @@ data class Command(
  * Request body for POST /session/:id/command.
  */
 @Serializable
+@Immutable
 data class CommandExecutionRequest(
     val command: String,
     val arguments: String? = null,
@@ -41,6 +45,7 @@ data class CommandExecutionRequest(
  * Request body for POST /session/:id/shell.
  */
 @Serializable
+@Immutable
 data class ShellExecutionRequest(
     val command: String,
     val agent: String,

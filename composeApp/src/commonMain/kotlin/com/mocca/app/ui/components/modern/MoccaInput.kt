@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -18,9 +20,14 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
@@ -34,12 +41,11 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
@@ -53,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
@@ -62,6 +69,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.components.glass.glassy
+import com.mocca.app.ui.components.glass.glassyMint
 
 /**
  * Modern MOCCA input components with pill-shaped design.
@@ -304,13 +312,18 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .glassy(AppShapes.card)
+            .glassyMint(
+                shape = AppShapes.rounded2xl,
+                backgroundAlpha = 0.6f,
+                borderAlpha = 0.25f
+            )
+            .windowInsetsPadding(WindowInsets.ime)
     ) {
         // Status bar (MODEL + MODE) - clickable to open selectors
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(32.dp)
                 .padding(horizontal = AppSpacing.inputPaddingHorizontal),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -325,7 +338,7 @@ fun RichChatInput(
                 Icon(
                     imageVector = Icons.Default.SmartToy,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(12.dp),
                     tint = AppColors.textTertiary
                 )
                 Text(
@@ -346,7 +359,7 @@ fun RichChatInput(
                     Icon(
                         imageVector = Icons.Default.Tune,
                         contentDescription = null,
-                        modifier = Modifier.size(14.dp),
+                        modifier = Modifier.size(12.dp),
                         tint = AppColors.textTertiary
                     )
                     Text(
@@ -366,7 +379,7 @@ fun RichChatInput(
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    modifier = Modifier.size(12.dp),
                     tint = AppColors.textTertiary
                 )
                 Text(
@@ -406,10 +419,14 @@ fun RichChatInput(
         }
         
         // Input area
+        val inputScrollState = rememberScrollState()
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 80.dp, max = 240.dp)
+                .heightIn(
+                    min = GlassInputDefaults.MinHeight,
+                    max = GlassInputDefaults.MaxHeight
+                )
                 .padding(AppSpacing.inputPaddingHorizontal)
         ) {
             BasicTextField(
@@ -417,6 +434,7 @@ fun RichChatInput(
                 onValueChange = handleValueChange,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(inputScrollState)
                     .onPreviewKeyEvent { event ->
                         if (event.type == KeyEventType.KeyDown && 
                             event.key == Key.Enter && 
@@ -477,7 +495,7 @@ fun RichChatInput(
             MoccaIconButton(
                 icon = Icons.Default.Add,
                 onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
-                size = 36.dp,
+                size = AppSpacing.iconButtonSizeCompact,
                 iconColor = AppColors.textSecondary
             )
             
@@ -538,7 +556,7 @@ fun RichChatInput(
             MoccaIconButton(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachClick,
-                size = 36.dp,
+                size = AppSpacing.iconButtonSizeCompact,
                 iconColor = AppColors.textSecondary
             )
             
@@ -549,7 +567,9 @@ fun RichChatInput(
                 text = "SEND",
                 onClick = onSendClick,
                 enabled = enabled && value.isNotBlank(),
-                icon = Icons.AutoMirrored.Filled.Send
+                icon = Icons.AutoMirrored.Filled.Send,
+                backgroundColor = AppColors.accentGreen,
+                textColor = AppColors.background
             )
         }
     }
@@ -697,7 +717,7 @@ fun CommandLineInput(
                         onClick = onHistoryUp,
                         enabled = enabled,
                         iconColor = AppColors.textSecondary,
-                        size = 24.dp,
+                        size = AppSpacing.iconButtonSizeCompact,
                         contentDescription = "Previous command"
                     )
                 }
@@ -707,7 +727,7 @@ fun CommandLineInput(
                         onClick = onHistoryDown,
                         enabled = enabled,
                         iconColor = AppColors.textSecondary,
-                        size = 24.dp,
+                        size = AppSpacing.iconButtonSizeCompact,
                         contentDescription = "Next command"
                     )
                 }
@@ -720,9 +740,241 @@ fun CommandLineInput(
         MoccaFab(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
-            size = 48.dp,
-            backgroundColor = if (value.isNotBlank()) AppColors.buttonBackground else AppColors.greyDark,
-            iconColor = if (value.isNotBlank()) AppColors.buttonText else AppColors.textTertiary
+            size = AppSpacing.fabSize,
+            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.greyDark,
+            iconColor = if (value.isNotBlank()) AppColors.background else AppColors.textTertiary
         )
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GLASS CHAT INPUT (Pill-shaped, glassmorphic, IME-aware)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+private object GlassInputDefaults {
+    val MinHeight: Dp = 44.dp
+    val MaxLines: Int = 5
+    val LineHeight: Dp = 20.dp
+    val MaxHeight: Dp get() = MinHeight + LineHeight.times(MaxLines - 1)
+    val PaddingHorizontal: Dp = 16.dp
+    val PaddingVertical: Dp = 12.dp
+    val IconSize: Dp = 20.dp
+}
+
+@Composable
+fun GlassChatInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Message...",
+    enabled: Boolean = true,
+    showSendButton: Boolean = true
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val scrollState = rememberScrollState()
+    
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(AppShapes.pill)
+            .glassyMint(
+                shape = AppShapes.pill,
+                backgroundAlpha = if (isFocused) 0.7f else 0.6f,
+                borderAlpha = if (isFocused) 0.5f else 0.3f
+            )
+            .padding(
+                horizontal = GlassInputDefaults.PaddingHorizontal,
+                vertical = GlassInputDefaults.PaddingVertical
+            )
+            .windowInsetsPadding(WindowInsets.ime),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .weight(1f)
+                .heightIn(
+                    min = GlassInputDefaults.MinHeight - GlassInputDefaults.PaddingVertical * 2,
+                    max = GlassInputDefaults.MaxHeight - GlassInputDefaults.PaddingVertical * 2
+                )
+                .verticalScroll(scrollState),
+            enabled = enabled,
+            textStyle = AppTypography.bodyMedium.copy(
+                color = AppColors.white
+            ),
+            cursorBrush = SolidColor(AppColors.accentGreen),
+            interactionSource = interactionSource,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(onSend = { if (value.isNotBlank()) onSendClick() }),
+            decorationBox = { innerTextField ->
+                Box {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            color = AppColors.textPlaceholder,
+                            style = AppTypography.bodyMedium
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+        
+        if (showSendButton) {
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            
+            val canSend = enabled && value.isNotBlank()
+            Box(
+                modifier = Modifier
+                    .size(GlassInputDefaults.MinHeight - 8.dp)
+                    .clip(CircleShape)
+                    .background(
+                        color = if (canSend) AppColors.accentGreen else AppColors.surface.copy(alpha = 0.5f),
+                        shape = CircleShape
+                    )
+                    .clickable(
+                        enabled = canSend,
+                        onClick = onSendClick
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = "Send",
+                    tint = if (canSend) AppColors.background else AppColors.grey,
+                    modifier = Modifier.size(GlassInputDefaults.IconSize)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun GlassChatInputWithActions(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onSendClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String = "Message...",
+    enabled: Boolean = true,
+    onAttachClick: () -> Unit = {},
+    showAttachButton: Boolean = true,
+    attachmentCount: Int = 0
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    val scrollState = rememberScrollState()
+    
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(AppShapes.rounded2xl)
+            .glassyMint(
+                shape = AppShapes.rounded2xl,
+                backgroundAlpha = if (isFocused) 0.7f else 0.6f,
+                borderAlpha = if (isFocused) 0.5f else 0.3f
+            )
+            .windowInsetsPadding(WindowInsets.ime)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    horizontal = GlassInputDefaults.PaddingHorizontal,
+                    vertical = GlassInputDefaults.PaddingVertical
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (showAttachButton) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(AppColors.surface.copy(alpha = 0.3f), CircleShape)
+                        .clickable(enabled = enabled, onClick = onAttachClick),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AttachFile,
+                        contentDescription = "Attach",
+                        tint = if (attachmentCount > 0) AppColors.accentGreen else AppColors.textSecondary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+            }
+            
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(
+                        min = GlassInputDefaults.MinHeight - GlassInputDefaults.PaddingVertical * 2,
+                        max = GlassInputDefaults.MaxHeight - GlassInputDefaults.PaddingVertical * 2
+                    )
+                    .verticalScroll(scrollState),
+                enabled = enabled,
+                textStyle = AppTypography.bodyMedium.copy(
+                    color = AppColors.white
+                ),
+                cursorBrush = SolidColor(AppColors.accentGreen),
+                interactionSource = interactionSource,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+                keyboardActions = KeyboardActions(onSend = { if (value.isNotBlank()) onSendClick() }),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (value.isEmpty()) {
+                            Text(
+                                text = placeholder,
+                                color = AppColors.textPlaceholder,
+                                style = AppTypography.bodyMedium
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+            
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            
+            val canSend = enabled && value.isNotBlank()
+            Box(
+                modifier = Modifier
+                    .height(36.dp)
+                    .clip(AppShapes.pill)
+                    .background(
+                        color = if (canSend) AppColors.accentGreen else AppColors.surface.copy(alpha = 0.5f),
+                        shape = AppShapes.pill
+                    )
+                    .clickable(
+                        enabled = canSend,
+                        onClick = onSendClick
+                    )
+                    .padding(horizontal = AppSpacing.md),
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = null,
+                        tint = if (canSend) AppColors.background else AppColors.grey,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "SEND",
+                        color = if (canSend) AppColors.background else AppColors.grey,
+                        style = AppTypography.labelSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
     }
 }

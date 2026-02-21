@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -8,6 +10,7 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
+@Immutable
 data class GitStatusResponse(
     val branch: String = "",
     val upstream: String? = null,
@@ -25,6 +28,7 @@ data class GitStatusResponse(
 }
 
 @Serializable
+@Immutable
 data class GitFileChange(
     val path: String,
     val status: GitFileStatus,
@@ -50,6 +54,7 @@ enum class GitFileStatus {
 }
 
 @Serializable
+@Immutable
 data class GitBranch(
     val name: String,
     val current: Boolean = false,
@@ -64,6 +69,7 @@ data class GitBranch(
 )
 
 @Serializable
+@Immutable
 data class GitCommit(
     val hash: String,
     val shortHash: String = hash.take(7),
@@ -79,6 +85,7 @@ data class GitCommit(
 }
 
 @Serializable
+@Immutable
 data class GitLog(
     val commits: List<GitCommit> = emptyList(),
     val total: Int = 0,
@@ -86,6 +93,7 @@ data class GitLog(
 )
 
 @Serializable
+@Immutable
 data class GitDiff(
     val files: List<GitDiffFile> = emptyList(),
     val additions: Int = 0,
@@ -94,6 +102,7 @@ data class GitDiff(
 )
 
 @Serializable
+@Immutable
 data class GitDiffFile(
     val path: String,
     val oldPath: String? = null,
@@ -105,6 +114,7 @@ data class GitDiffFile(
 )
 
 @Serializable
+@Immutable
 data class GitDiffHunk(
     val oldStart: Int,
     val oldLines: Int,
@@ -115,6 +125,7 @@ data class GitDiffHunk(
 )
 
 @Serializable
+@Immutable
 data class GitDiffLine(
     val type: DiffLineType,
     val content: String,
@@ -137,6 +148,7 @@ enum class DiffLineType {
 // Request/Response types for Git operations
 
 @Serializable
+@Immutable
 data class GitCommitRequest(
     val message: String,
     val files: List<String>? = null, // null = all staged
@@ -144,6 +156,7 @@ data class GitCommitRequest(
 )
 
 @Serializable
+@Immutable
 data class GitPushRequest(
     val remote: String = "origin",
     val branch: String? = null, // null = current branch
@@ -153,6 +166,7 @@ data class GitPushRequest(
 )
 
 @Serializable
+@Immutable
 data class GitPullRequest(
     val remote: String = "origin",
     val branch: String? = null,
@@ -160,6 +174,7 @@ data class GitPullRequest(
 )
 
 @Serializable
+@Immutable
 data class GitFetchRequest(
     val remote: String = "origin",
     val prune: Boolean = false,
@@ -167,6 +182,7 @@ data class GitFetchRequest(
 )
 
 @Serializable
+@Immutable
 data class GitCheckoutRequest(
     val ref: String, // branch name, tag, or commit hash
     val create: Boolean = false, // -b flag
@@ -174,22 +190,26 @@ data class GitCheckoutRequest(
 )
 
 @Serializable
+@Immutable
 data class GitStageRequest(
     val files: List<String>,
     val intent: Boolean = false // --intent-to-add
 )
 
 @Serializable
+@Immutable
 data class GitUnstageRequest(
     val files: List<String>
 )
 
 @Serializable
+@Immutable
 data class GitDiscardRequest(
     val files: List<String>
 )
 
 @Serializable
+@Immutable
 data class GitOperationResult(
     val success: Boolean,
     val message: String? = null,
@@ -197,6 +217,7 @@ data class GitOperationResult(
 )
 
 @Serializable
+@Immutable
 data class GitRemote(
     val name: String,
     val url: String,
@@ -205,6 +226,7 @@ data class GitRemote(
 )
 
 @Serializable
+@Immutable
 data class GitStash(
     val index: Int,
     val message: String,

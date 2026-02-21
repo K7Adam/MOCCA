@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.main
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
@@ -35,11 +40,12 @@ import kotlinx.coroutines.launch
 /**
  * State for the main screen.
  */
+@Immutable
 data class MainScreenState(
     // Session state
     val currentSessionId: String? = null,
-    val sessions: List<Session> = emptyList(),
-    val messages: List<Message> = emptyList(),
+    val sessions: ImmutableList<Session> = persistentListOf(),
+    val messages: ImmutableList<Message> = persistentListOf(),
     
     // Input state
     val inputText: String = "",
@@ -73,7 +79,7 @@ data class MainScreenState(
     val error: String? = null,
     
     // MCP servers
-    val mcpServers: List<McpServerInfo> = emptyList(),
+    val mcpServers: ImmutableList<McpServerInfo> = persistentListOf(),
     val isMcpLoading: Boolean = false,
     
     // App info
@@ -85,10 +91,10 @@ data class MainScreenState(
     val isDownloadingUpdate: Boolean = false,
     val downloadProgress: Float = 0f,
     val updateError: String? = null,
-    val updateLogs: List<String> = emptyList(),
+    val updateLogs: ImmutableList<String> = persistentListOf(),
     
     // Session grouping and real-time status
-    val sessionGroups: List<SessionGroup> = emptyList(),
+    val sessionGroups: ImmutableList<SessionGroup> = persistentListOf(),
     val runningSessionIds: Set<String> = emptySet(), // Sessions with active agent/LLM
     val expandedGroupIds: Set<String> = emptySet() // IDs of expanded session groups
 ) {
@@ -158,8 +164,8 @@ class MainScreenModel(
             appStateStore.sessions.collect { sessions ->
                 _state.update { current ->
                     current.copy(
-                        sessions = sessions,
-                        sessionGroups = buildSessionGroups(sessions, current.runningSessionIds, current.expandedGroupIds)
+                        sessions = sessions.toImmutableList(),
+                        sessionGroups = buildSessionGroups(sessions, current.runningSessionIds, current.expandedGroupIds).toImmutableList()
                     )
                 }
             }
@@ -171,7 +177,7 @@ class MainScreenModel(
                 _state.update { current ->
                     current.copy(
                         runningSessionIds = runningIds,
-                        sessionGroups = buildSessionGroups(current.sessions, runningIds, current.expandedGroupIds)
+                        sessionGroups = buildSessionGroups(current.sessions, runningIds, current.expandedGroupIds).toImmutableList()
                     )
                 }
             }
@@ -293,7 +299,7 @@ class MainScreenModel(
                     isDownloadingUpdate = true,
                     downloadProgress = 0f,
                     updateError = null,
-                    updateLogs = listOf("Initializing download...")
+                    updateLogs = persistentListOf("Initializing download...")
                 )
             }
 
@@ -302,12 +308,12 @@ class MainScreenModel(
                     .collect { status ->
                         when (status) {
                             is DownloadStatus.Progress -> _state.update { it.copy(downloadProgress = status.progress) }
-                            is DownloadStatus.Log -> _state.update { it.copy(updateLogs = it.updateLogs + status.message) }
+                            is DownloadStatus.Log -> _state.update { it.copy(updateLogs = (it.updateLogs + status.message).toImmutableList()) }
                             is DownloadStatus.Error -> _state.update { 
                                 it.copy(
                                     isDownloadingUpdate = false,
                                     updateError = status.message,
-                                    updateLogs = it.updateLogs + "ERROR: ${status.message}"
+                                    updateLogs = (it.updateLogs + "ERROR: ${status.message}").toImmutableList()
                                 ) 
                             }
                             is DownloadStatus.Complete -> {
@@ -315,7 +321,7 @@ class MainScreenModel(
                                     it.copy(
                                         isDownloadingUpdate = false,
                                         isUpdateAvailable = false,
-                                        updateLogs = it.updateLogs + "Download complete. Installing..."
+                                        updateLogs = (it.updateLogs + "Download complete. Installing...").toImmutableList()
                                     ) 
                                 }
                             }
@@ -327,7 +333,7 @@ class MainScreenModel(
                     it.copy(
                         isDownloadingUpdate = false,
                         updateError = e.message ?: "Download failed",
-                        updateLogs = it.updateLogs + "CRITICAL EXCEPTION: ${e.message}\n${e.stackTraceToString()}"
+                        updateLogs = (it.updateLogs + "CRITICAL EXCEPTION: ${e.message}\n${e.stackTraceToString()}").toImmutableList()
                     )
                 }
             }
@@ -457,7 +463,7 @@ class MainScreenModel(
         screenModelScope.launch {
             mcpRepository.mcpServers.collect { serversMap ->
                 _state.update { it.copy(
-                    mcpServers = serversMap.values.toList().sortedBy { server -> server.name }
+                    mcpServers = serversMap.values.toList().sortedBy { server -> server.name }.toImmutableList()
                 )}
             }
         }
@@ -495,7 +501,7 @@ class MainScreenModel(
             val updatedGroups = buildSessionGroups(current.sessions, current.runningSessionIds, newExpandedIds)
             current.copy(
                 expandedGroupIds = newExpandedIds,
-                sessionGroups = updatedGroups
+                sessionGroups = updatedGroups.toImmutableList()
             )
         }
     }
@@ -508,7 +514,7 @@ class MainScreenModel(
                     is Resource.Success<*> -> _state.update {
                         @Suppress("UNCHECKED_CAST")
                         val messages = (resource.data as? List<Message>) ?: emptyList()
-                        it.copy(messages = messages)
+                        it.copy(messages = messages.toImmutableList())
                     }
                     is Resource.Error<*> -> _state.update { 
                         it.copy(error = resource.message)
@@ -561,7 +567,7 @@ class MainScreenModel(
                     // Add to sessions list immediately for animation
                     _state.update { current ->
                         current.copy(
-                            sessions = listOf(session) + current.sessions,
+                            sessions = (listOf(session) + current.sessions).toImmutableList(),
                             newlyCreatedSessionId = session.id,
                             isCreatingSession = false
                         )
@@ -593,9 +599,9 @@ class MainScreenModel(
                     _state.update { 
                         it.copy(
                             isLoading = false,
-                            sessions = emptyList(),
+                            sessions = persistentListOf(),
                             currentSessionId = null,
-                            messages = emptyList()
+                            messages = persistentListOf()
                         )
                     }
                 },

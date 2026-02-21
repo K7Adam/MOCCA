@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,31 +12,33 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.NetworkWifi
 import androidx.compose.material.icons.filled.NetworkWifi1Bar
 import androidx.compose.material.icons.filled.NetworkWifi2Bar
 import androidx.compose.material.icons.filled.NetworkWifi3Bar
 import androidx.compose.material.icons.filled.WifiOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.ConnectionQuality
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.components.glass.GlassAppBar
 import com.mocca.app.ui.components.glass.GlassDefaults
 import com.mocca.app.ui.components.glass.GlassThemeTokens
+import com.mocca.app.ui.components.glass.glassyAppBar
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Modern Glassmorphic Top Bar and Divider components.
@@ -154,6 +157,56 @@ fun ModernTopBarGlass(
         actions = actions,
         tokens = tokens
     )
+}
+
+@Composable
+fun ModernTopBarSimpleGlass(
+    title: String,
+    modifier: Modifier = Modifier,
+    navigationIcon: ImageVector? = null,
+    onNavigationClick: (() -> Unit)? = null,
+    showDivider: Boolean = true,
+    actions: @Composable RowScope.() -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .glassyAppBar(hasBottomBorder = showDivider)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(AppSpacing.topBarHeight)
+                .padding(horizontal = AppSpacing.lg),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            ) {
+                if (navigationIcon != null && onNavigationClick != null) {
+                    MoccaIconButton(
+                        icon = navigationIcon,
+                        onClick = onNavigationClick,
+                        iconColor = AppColors.white
+                    )
+                }
+                
+                Text(
+                    text = title.uppercase(),
+                    color = AppColors.white,
+                    style = AppTypography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                content = actions
+            )
+        }
+    }
 }
 
 /**

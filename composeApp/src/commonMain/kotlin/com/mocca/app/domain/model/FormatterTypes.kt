@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,6 +10,7 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
+@Immutable
 data class FormatterStatus(
     val name: String,
     val extensions: List<String> = emptyList(),

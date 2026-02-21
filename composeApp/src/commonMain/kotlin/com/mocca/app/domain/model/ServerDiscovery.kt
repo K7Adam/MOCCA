@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import com.mocca.app.api.NetworkConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -7,6 +9,7 @@ import kotlinx.serialization.json.Json
 /**
  * Represents a server discovered through various methods.
  */
+@Immutable
 data class DiscoveredServer(
     val name: String,
     val host: String,
@@ -74,6 +77,7 @@ enum class DiscoverySource {
  * This is what the OpenCode server displays as a QR code.
  */
 @Serializable
+@Immutable
 data class QrConnectionPayload(
     val host: String,
     val port: Int = NetworkConfig.OPENCODE_SERVER_PORT,
@@ -158,6 +162,7 @@ data class QrConnectionPayload(
 /**
  * Discovery preferences for the user.
  */
+@Immutable
 data class DiscoveryPreferences(
     val autoDiscoveryEnabled: Boolean = true,
     val preferSavedServers: Boolean = true,

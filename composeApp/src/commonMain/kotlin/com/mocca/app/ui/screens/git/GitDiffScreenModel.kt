@@ -1,5 +1,9 @@
 package com.mocca.app.ui.screens.git
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.GitRepository
@@ -144,6 +148,8 @@ class GitDiffScreenModel(
         )
     }
 }
+
+@Immutable
 
 data class GitDiffUiState(
     val isLoading: Boolean = false,

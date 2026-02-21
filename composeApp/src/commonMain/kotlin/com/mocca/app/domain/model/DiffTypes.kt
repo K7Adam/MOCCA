@@ -1,5 +1,7 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -9,6 +11,7 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
+@Immutable
 data class FileDiff(
     val path: String,
     val original: String? = null,
@@ -17,6 +20,7 @@ data class FileDiff(
 )
 
 @Serializable
+@Immutable
 data class DiffHunk(
     @SerialName("old_start")
     val oldStart: Int,

@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.mcp
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.McpRepository
@@ -16,8 +21,9 @@ import kotlinx.coroutines.launch
 /**
  * UI State for MCP management screen.
  */
+@Immutable
 data class McpScreenState(
-    val servers: List<McpServerInfo> = emptyList(),
+    val servers: ImmutableList<McpServerInfo> = persistentListOf(),
     val isLoading: Boolean = false,
     val isRefreshing: Boolean = false,
     val error: String? = null,
@@ -49,7 +55,7 @@ class McpScreenModel(
         screenModelScope.launch {
             mcpRepository.mcpServers.collect { serversMap ->
                 _state.update { it.copy(
-                    servers = serversMap.values.toList().sortedBy { server -> server.name }
+                    servers = serversMap.values.toList().sortedBy { server -> server.name }.toImmutableList()
                 )}
             }
         }

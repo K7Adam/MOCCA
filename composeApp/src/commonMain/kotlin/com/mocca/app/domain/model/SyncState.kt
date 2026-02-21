@@ -207,6 +207,7 @@ object SyncConfigs {
  * Freshness verification result.
  */
 sealed class FreshnessResult {
+    @Immutable
     data class Fresh(val verifiedAt: Long) : FreshnessResult()
     @Immutable
     data class Stale(

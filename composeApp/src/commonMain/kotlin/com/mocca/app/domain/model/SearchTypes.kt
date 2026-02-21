@@ -1,14 +1,18 @@
 package com.mocca.app.domain.model
 
+import androidx.compose.runtime.Immutable
+
 import kotlinx.serialization.Serializable
 
 @Serializable
+@Immutable
 data class FileSearchResult(
     val path: String,
     val name: String? = null
 )
 
 @Serializable
+@Immutable
 data class SymbolSearchResult(
     val name: String,
     val kind: String,
@@ -18,6 +22,7 @@ data class SymbolSearchResult(
 )
 
 @Serializable
+@Immutable
 data class TextSearchResult(
     val path: String,
     val line: Int,
@@ -26,6 +31,7 @@ data class TextSearchResult(
 )
 
 @Serializable
+@Immutable
 data class TextMatch(
     val start: Int,
     val end: Int

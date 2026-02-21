@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.git
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.GitRepository
@@ -95,7 +100,7 @@ class GitScreenModel(
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
-                        is Resource.Success -> state.copy(isLoading = false, branches = resource.data, error = null)
+                        is Resource.Success -> state.copy(isLoading = false, branches = resource.data.toImmutableList(), error = null)
                         is Resource.Error -> state.copy(isLoading = false, error = resource.message)
                     }
                 }
@@ -123,7 +128,7 @@ class GitScreenModel(
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
-                        is Resource.Success -> state.copy(isLoading = false, remotes = resource.data, error = null)
+                        is Resource.Success -> state.copy(isLoading = false, remotes = resource.data.toImmutableList(), error = null)
                         is Resource.Error -> state.copy(isLoading = false, error = resource.message)
                     }
                 }
@@ -137,7 +142,7 @@ class GitScreenModel(
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(isLoading = true)
-                        is Resource.Success -> state.copy(isLoading = false, tags = resource.data, error = null)
+                        is Resource.Success -> state.copy(isLoading = false, tags = resource.data.toImmutableList(), error = null)
                         is Resource.Error -> state.copy(isLoading = false, error = resource.message)
                     }
                 }
@@ -151,7 +156,7 @@ class GitScreenModel(
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state
-                        is Resource.Success -> state.copy(stashes = resource.data)
+                        is Resource.Success -> state.copy(stashes = resource.data.toImmutableList())
                         is Resource.Error -> state
                     }
                 }
@@ -422,17 +427,19 @@ class GitScreenModel(
     fun clearWarning() { _uiState.update { it.copy(warningMessage = null) } }
 }
 
+@Immutable
+
 data class GitUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val warningMessage: String? = null,
     val operationResult: String? = null,
     val status: GitStatusResponse? = null,
-    val branches: List<GitBranch> = emptyList(),
+    val branches: ImmutableList<GitBranch> = persistentListOf(),
     val log: GitLog? = null,
-    val remotes: List<GitRemote> = emptyList(),
-    val tags: List<String> = emptyList(),
-    val stashes: List<GitStash> = emptyList(),
+    val remotes: ImmutableList<GitRemote> = persistentListOf(),
+    val tags: ImmutableList<String> = persistentListOf(),
+    val stashes: ImmutableList<GitStash> = persistentListOf(),
     val showCommitDialog: Boolean = false,
     val commitMessage: String = "",
     val showStashDialog: Boolean = false,

@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.onboarding
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import com.mocca.app.discovery.DiscoveryResult
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.ServerConfig
@@ -18,14 +23,15 @@ enum class OnboardingStep {
 /**
  * State for the progressive onboarding wizard.
  */
+@Immutable
 data class OnboardingWizardState(
     val currentStep: OnboardingStep = OnboardingStep.WELCOME,
     val isLoading: Boolean = false,
     val error: String? = null,
     
     // Discovery results
-    val discoveredServers: List<DiscoveredServer> = emptyList(),
-    val savedServers: List<ServerConfig> = emptyList(),
+    val discoveredServers: ImmutableList<DiscoveredServer> = persistentListOf(),
+    val savedServers: ImmutableList<ServerConfig> = persistentListOf(),
     val selectedServer: DiscoveredServer? = null,
     
     // Connection state
@@ -54,7 +60,7 @@ data class OnboardingWizardState(
     val hasServers: Boolean
         get() = discoveredServers.isNotEmpty() || savedServers.isNotEmpty()
     
-    val allServers: List<DiscoveredServer>
+    val allServers: ImmutableList<DiscoveredServer>
         get() {
             val savedAsDiscovered = savedServers.map { config ->
                 DiscoveredServer(
@@ -66,7 +72,7 @@ data class OnboardingWizardState(
                     source = com.mocca.app.domain.model.DiscoverySource.SAVED
                 )
             }
-            return (savedAsDiscovered + discoveredServers).distinctBy { it.baseUrl }
+            return (savedAsDiscovered + discoveredServers).distinctBy { it.baseUrl }.toImmutableList()
         }
 }
 

@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.files
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.FileRepository
@@ -9,14 +14,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+@Immutable
+
 data class FilesState(
     val currentPath: String = "",
-    val files: List<FileInfo> = emptyList(),
+    val files: ImmutableList<FileInfo> = persistentListOf(),
     val selectedFile: FileInfo? = null,
     val fileContent: FileContent? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val pathHistory: List<String> = listOf("")
+    val pathHistory: ImmutableList<String> = persistentListOf("")
 )
 
 class FilesScreenModel(
@@ -46,7 +53,7 @@ class FilesScreenModel(
                             files = resource.data.sortedWith(
                                 compareByDescending<FileInfo> { it.isDirectory }
                                     .thenBy { it.name.lowercase() }
-                            ),
+                            ).toImmutableList(),
                             error = null
                         )
                     }
@@ -71,7 +78,7 @@ class FilesScreenModel(
         }
         
         _state.value = _state.value.copy(
-            pathHistory = _state.value.pathHistory + newPath
+            pathHistory = (_state.value.pathHistory + newPath).toImmutableList()
         )
         
         loadFiles(newPath)
@@ -82,7 +89,7 @@ class FilesScreenModel(
         if (history.size > 1) {
             val newHistory = history.dropLast(1)
             val newPath = newHistory.last()
-            _state.value = _state.value.copy(pathHistory = newHistory)
+            _state.value = _state.value.copy(pathHistory = newHistory.toImmutableList())
             loadFiles(newPath)
         }
     }

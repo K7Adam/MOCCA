@@ -1,5 +1,10 @@
 package com.mocca.app.ui.screens.panels
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
@@ -33,28 +38,30 @@ class DashboardScreenModel(
     private val projectRepository: ProjectRepository
 ) : ScreenModel {
     
+    @Immutable
+    
     data class State(
         // Provider data (from AppStateStore - auto-updated)
         val providers: Resource<ProviderResponse> = Resource.Loading(),
         
         // Projects (from AppStateStore - auto-updated)
-        val projects: Resource<List<Project>> = Resource.Loading(),
+        val projects: Resource<ImmutableList<Project>> = Resource.Loading(),
         val currentProject: Resource<Project> = Resource.Loading(),
         
         // Agents (from AppStateStore - auto-updated)
-        val agents: Resource<List<Agent>> = Resource.Loading(),
+        val agents: Resource<ImmutableList<Agent>> = Resource.Loading(),
         
         // Tools (from AppStateStore - auto-updated)
-        val tools: Resource<List<String>> = Resource.Loading(),
+        val tools: Resource<ImmutableList<String>> = Resource.Loading(),
         
         // Slash commands (from AppStateStore - auto-updated)
-        val commands: Resource<List<Command>> = Resource.Loading(),
+        val commands: Resource<ImmutableList<Command>> = Resource.Loading(),
         
         // Formatters
-        val formatters: Resource<List<FormatterStatus>> = Resource.Loading(),
+        val formatters: Resource<ImmutableList<FormatterStatus>> = Resource.Loading(),
         
         // LSP status
-        val lspStatus: Resource<List<LspStatus>> = Resource.Loading(),
+        val lspStatus: Resource<ImmutableList<LspStatus>> = Resource.Loading(),
         
         // VCS/Git info (from AppStateStore - auto-updated)
         val vcsInfo: Resource<VcsInfo> = Resource.Loading(),
@@ -72,8 +79,8 @@ class DashboardScreenModel(
         val isSyncing: Boolean = false
     ) {
         // Derived properties for UI convenience
-        val connectedProviders: List<ProviderInfo>
-            get() = (providers as? Resource.Success)?.data?.all?.filter { it.connected } ?: emptyList()
+        val connectedProviders: ImmutableList<ProviderInfo>
+            get() = ((providers as? Resource.Success)?.data?.all?.filter { it.connected } ?: emptyList()).toImmutableList()
         
         val providerCount: Int
             get() = (providers as? Resource.Success)?.data?.connected?.size ?: 0
@@ -108,13 +115,13 @@ class DashboardScreenModel(
         val gitChangeCount: Int
             get() = (vcsInfo as? Resource.Success)?.data?.changeCount ?: 0
         
-        val activeLspServers: List<LspStatus>
-            get() = (lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()
+        val activeLspServers: ImmutableList<LspStatus>
+            get() = ((lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()).toImmutableList()
         
-        val connectedMcpServers: List<Pair<String, McpServerStatus>>
-            get() = (mcpServers as? Resource.Success)?.data
+        val connectedMcpServers: ImmutableList<Pair<String, McpServerStatus>>
+            get() = ((mcpServers as? Resource.Success)?.data
                 ?.filter { it.value.isConnected }
-                ?.map { it.key to it.value } ?: emptyList()
+                ?.map { it.key to it.value } ?: emptyList()).toImmutableList()
         
         val isLoading: Boolean
             get() = isSyncing || listOf(providers, agents, tools, commands, formatters, lspStatus, vcsInfo, mcpServers)
@@ -152,7 +159,12 @@ class DashboardScreenModel(
         // Observe projects
         screenModelScope.launch {
             projectRepository.getProjects().collect { projects ->
-                _state.update { it.copy(projects = projects) }
+                val mapped = when (projects) {
+                    is Resource.Success -> Resource.Success(projects.data.toImmutableList())
+                    is Resource.Loading -> Resource.Loading(projects.data?.toImmutableList())
+                    is Resource.Error -> Resource.Error(projects.message, projects.data?.toImmutableList())
+                }
+                _state.update { it.copy(projects = mapped) }
             }
         }
         
@@ -166,21 +178,31 @@ class DashboardScreenModel(
         // Observe agents
         screenModelScope.launch {
             appStateStore.agents.collect { agents ->
-                _state.update { it.copy(agents = Resource.Success(agents)) }
+                _state.update { it.copy(agents = Resource.Success(agents.toImmutableList())) }
             }
         }
         
         // Observe tools
         screenModelScope.launch {
             appStateStore.tools.collect { tools ->
-                _state.update { it.copy(tools = tools) }
+                val mapped = when (tools) {
+                    is Resource.Success -> Resource.Success(tools.data.toImmutableList())
+                    is Resource.Loading -> Resource.Loading(tools.data?.toImmutableList())
+                    is Resource.Error -> Resource.Error(tools.message, tools.data?.toImmutableList())
+                }
+                _state.update { it.copy(tools = mapped) }
             }
         }
         
         // Observe commands
         screenModelScope.launch {
             appStateStore.commands.collect { commands ->
-                _state.update { it.copy(commands = commands) }
+                val mapped = when (commands) {
+                    is Resource.Success -> Resource.Success(commands.data.toImmutableList())
+                    is Resource.Loading -> Resource.Loading(commands.data?.toImmutableList())
+                    is Resource.Error -> Resource.Error(commands.message, commands.data?.toImmutableList())
+                }
+                _state.update { it.copy(commands = mapped) }
             }
         }
         

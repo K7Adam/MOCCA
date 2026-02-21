@@ -1,9 +1,12 @@
 package com.mocca.app.ui.screens.chat
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -43,6 +46,8 @@ import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 
 @Composable
 fun MarkdownText(
@@ -148,6 +153,138 @@ enum class ScrollDirection {
     IDLE     // Not scrolling - show dock
 }
 
+/**
+ * State holder for auto-scroll behavior.
+ * Tracks whether user is at bottom and manages auto-scroll decisions.
+ */
+data class AutoScrollState(
+    val isAtBottom: Boolean = true,
+    val shouldAutoScroll: Boolean = true,
+    val userHasScrolledUp: Boolean = false
+)
+
+/**
+ * Threshold (in items) to determine if user is "at bottom" in reverse layout.
+ * With reverseLayout=true, index 0 is the bottom (newest messages).
+ */
+private const val BOTTOM_THRESHOLD = 2
+
+/**
+ * Creates and manages auto-scroll state for a LazyColumn with reverseLayout.
+ * 
+ * With reverseLayout = true:
+ * - Index 0 is the BOTTOM (newest messages)
+ * - Higher indices are at the TOP (older messages)
+ * 
+ * @param listState The LazyListState to track
+ * @param enabled Whether auto-scroll is enabled
+ * @return AutoScrollState indicating current scroll position state
+ */
+@Composable
+fun rememberAutoScrollState(
+    listState: LazyListState,
+    enabled: Boolean = true
+): AutoScrollState {
+    val isAtBottom by remember(listState) {
+        derivedStateOf {
+            if (!enabled) true
+            else listState.firstVisibleItemIndex <= BOTTOM_THRESHOLD
+        }
+    }
+    
+    val userHasScrolledUp by remember(listState) {
+        derivedStateOf {
+            if (!enabled) false
+            else listState.firstVisibleItemIndex > BOTTOM_THRESHOLD
+        }
+    }
+    
+    val shouldAutoScroll by remember(listState) {
+        derivedStateOf {
+            if (!enabled) false
+            else isAtBottom
+        }
+    }
+    
+    return remember(isAtBottom, shouldAutoScroll, userHasScrolledUp) {
+        AutoScrollState(
+            isAtBottom = isAtBottom,
+            shouldAutoScroll = shouldAutoScroll,
+            userHasScrolledUp = userHasScrolledUp
+        )
+    }
+}
+
+/**
+ * Auto-scroll effect that smoothly scrolls to bottom when new content arrives.
+ * Respects user scroll position - won't auto-scroll if user is reading history.
+ * 
+ * @param listState The LazyListState to control
+ * @param messageCount Current message count (triggers scroll when changed)
+ * @param streamingText Current streaming text (triggers scroll when non-empty)
+ * @param autoScrollState Current auto-scroll state
+ * @param enabled Whether auto-scroll is enabled
+ */
+@Composable
+fun AutoScrollEffect(
+    listState: LazyListState,
+    messageCount: Int,
+    streamingText: String,
+    autoScrollState: AutoScrollState,
+    enabled: Boolean = true
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val scrollAnimationSpec = remember {
+        tween<Int>(
+            durationMillis = 300,
+            easing = FastOutSlowInEasing
+        )
+    }
+    
+    var lastMessageCount by remember { mutableStateOf(messageCount) }
+    var wasStreaming by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(messageCount, streamingText, enabled) {
+        if (!enabled) return@LaunchedEffect
+        
+        val messagesChanged = messageCount != lastMessageCount
+        val startedStreaming = streamingText.isNotEmpty() && !wasStreaming
+        val isStreaming = streamingText.isNotEmpty()
+        
+        val shouldScroll = autoScrollState.shouldAutoScroll && (
+            messagesChanged || 
+            startedStreaming ||
+            (isStreaming && autoScrollState.isAtBottom)
+        )
+        
+        if (shouldScroll) {
+            coroutineScope.launch {
+                listState.animateScrollToItem(
+                    index = 0,
+                    scrollOffset = 0
+                )
+            }
+        }
+        
+        lastMessageCount = messageCount
+        wasStreaming = streamingText.isNotEmpty()
+    }
+}
+
+/**
+ * Extension function to smoothly scroll to the bottom of a reverse-layout LazyColumn.
+ */
+suspend fun LazyListState.animateScrollToBottom() {
+    animateScrollToItem(index = 0, scrollOffset = 0)
+}
+
+/**
+ * Extension function to instantly scroll to the bottom.
+ */
+suspend fun LazyListState.scrollToBottom() {
+    scrollToItem(index = 0, scrollOffset = 0)
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatContent(
@@ -206,6 +343,18 @@ fun ChatContent(
         }
     }
 
+    // Auto-scroll state management
+    val autoScrollState = rememberAutoScrollState(listState = listState)
+    
+    // Apply auto-scroll effect - respects user scroll position
+    AutoScrollEffect(
+        listState = listState,
+        messageCount = aggregatedMessages.size,
+        streamingText = streamingText,
+        autoScrollState = autoScrollState,
+        enabled = !state.isLoading
+    )
+
     val isAtTop by remember(listState) {
         derivedStateOf {
             val layoutInfo = listState.layoutInfo
@@ -215,36 +364,30 @@ fun ChatContent(
         }
     }
 
+    // Show scroll-to-bottom button when user has scrolled up
     val showScrollToBottom by remember(listState) {
         derivedStateOf {
-            listState.firstVisibleItemIndex > 2
+            autoScrollState.userHasScrolledUp
         }
     }
 
+    // Track new messages while scrolled up (for badge indicator)
     var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
 
     LaunchedEffect(listState.firstVisibleItemIndex) {
-        if (listState.firstVisibleItemIndex <= 2) {
+        if (listState.firstVisibleItemIndex <= BOTTOM_THRESHOLD) {
             hasNewMessagesWhileScrolledUp = false
         }
     }
 
     LaunchedEffect(aggregatedMessages.size) {
-        if (showScrollToBottom) {
+        if (autoScrollState.userHasScrolledUp) {
             hasNewMessagesWhileScrolledUp = true
         }
     }
 
     LaunchedEffect(isAtTop) {
         if (isAtTop) screenModel.loadMoreMessages()
-    }
-    
-    LaunchedEffect(aggregatedMessages.size, streamingText) {
-        if (aggregatedMessages.isNotEmpty() || streamingText.isNotEmpty()) {
-            if (listState.firstVisibleItemIndex <= 1) {
-                 listState.animateScrollToItem(0)
-            }
-        }
     }
     
     Column(
@@ -393,14 +536,23 @@ fun ChatContent(
                     ),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
-                    item { Spacer(modifier = Modifier.height(32.dp)) }
+                    item(
+                        key = "bottom_spacer",
+                        contentType = "spacer"
+                    ) { Spacer(modifier = Modifier.height(32.dp)) }
 
                     if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
-                        item(contentType = "processing") { ModernProcessingIndicator() }
+                        item(
+                            key = "processing_indicator",
+                            contentType = "processing"
+                        ) { ModernProcessingIndicator() }
                     }
                     
                     if (state.isThinking) {
-                        item(contentType = "thinking") {
+                        item(
+                            key = "thinking_indicator",
+                            contentType = "thinking"
+                        ) {
                             ModernThinkingIndicator(
                                 thinkingContent = state.thinkingContent,
                                 elapsedMs = state.thinkingElapsedMs
@@ -409,7 +561,10 @@ fun ChatContent(
                     }
                     
                     if (streamingText.isNotEmpty()) {
-                        item(contentType = "streaming") { ModernStreamingMessage(text = streamingText) }
+                        item(
+                            key = "streaming_message",
+                            contentType = "streaming"
+                        ) { ModernStreamingMessage(text = streamingText) }
                     }
                     
                     items(
@@ -459,14 +614,15 @@ fun ChatContent(
                 hasNewMessages = hasNewMessagesWhileScrolledUp,
                 onClick = {
                     coroutineScope.launch {
-                        listState.animateScrollToItem(0)
+                        listState.animateScrollToBottom()
+                        hasNewMessagesWhileScrolledUp = false
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 },
                 liquidState = liquidState,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.md, bottom = 160.dp) // Space for unified bottom bar
+                    .padding(end = AppSpacing.md, bottom = 160.dp)
                     .zIndex(10f)
             )
             

@@ -1,5 +1,11 @@
 package com.mocca.app.ui.screens.sessions
 
+import androidx.compose.runtime.Immutable
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toImmutableMap
+
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.ConnectionManager
@@ -15,9 +21,11 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+@Immutable
+
 data class SessionsState(
-    val sessions: List<Session> = emptyList(),
-    val childrenMap: Map<String, List<Session>> = emptyMap(),
+    val sessions: ImmutableList<Session> = persistentListOf(),
+    val childrenMap: Map<String, ImmutableList<Session>> = emptyMap(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val selectedSessionId: String? = null,
@@ -31,14 +39,14 @@ data class SessionsState(
     /**
      * Filtered sessions based on search query.
      */
-    val filteredSessions: List<Session>
+    val filteredSessions: ImmutableList<Session>
         get() = if (searchQuery.isBlank()) {
             sessions
         } else {
             sessions.filter { session ->
                 session.title?.contains(searchQuery, ignoreCase = true) == true ||
                 session.id.contains(searchQuery, ignoreCase = true)
-            }
+            }.toImmutableList()
         }
 }
 
@@ -83,7 +91,7 @@ class SessionsScreenModel(
                     is Resource.Loading -> {
                         _state.value = _state.value.copy(
                             isLoading = true,
-                            sessions = resource.data ?: _state.value.sessions
+                            sessions = resource.data?.toImmutableList() ?: _state.value.sessions
                         )
                     }
                     is Resource.Success -> {
@@ -108,10 +116,12 @@ class SessionsScreenModel(
                             
                             hasParent || isInternal
                         }.groupBy { it.effectiveParentID ?: "internal" }
+                            .mapValues { (_, v) -> v.toImmutableList() }
+                            .toImmutableMap()
                         
                         _state.value = _state.value.copy(
                             isLoading = false,
-                            sessions = roots,
+                            sessions = roots.toImmutableList(),
                             childrenMap = children,
                             error = null
                         )
@@ -120,7 +130,7 @@ class SessionsScreenModel(
                         _state.value = _state.value.copy(
                             isLoading = false,
                             error = resource.message,
-                            sessions = resource.data ?: _state.value.sessions
+                            sessions = resource.data?.toImmutableList() ?: _state.value.sessions
                         )
                     }
                 }
@@ -135,7 +145,7 @@ class SessionsScreenModel(
                 onSuccess = { session ->
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        sessions = listOf(session) + _state.value.sessions,
+                        sessions = (listOf(session) + _state.value.sessions).toImmutableList(),
                         selectedSessionId = session.id
                     )
                     _navigationEvent.emit(session.id)
@@ -155,7 +165,7 @@ class SessionsScreenModel(
             sessionRepository.deleteSession(sessionId).fold(
                 onSuccess = {
                     _state.value = _state.value.copy(
-                        sessions = _state.value.sessions.filter { it.id != sessionId },
+                        sessions = _state.value.sessions.filter { it.id != sessionId }.toImmutableList(),
                         selectedSessionId = if (_state.value.selectedSessionId == sessionId) null else _state.value.selectedSessionId
                     )
                 },
