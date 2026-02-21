@@ -6,7 +6,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.*
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.screens.chat.delegates.*
-import com.mocca.app.util.TerminalCommand
 import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
@@ -41,7 +40,7 @@ data class ChatState(
     val modes: ImmutableList<Mode> = persistentListOf(),
     val selectedModeId: String? = null,
     val attachedFiles: ImmutableList<AttachedFile> = persistentListOf(),
-    val commands: ImmutableList<TerminalCommand> = persistentListOf(),
+    val commands: ImmutableList<Command> = persistentListOf(),
     val recentModels: ImmutableList<RecentModel> = persistentListOf(),
     val todos: ImmutableList<Todo> = persistentListOf(),
     val showTodoPanel: Boolean = false,
@@ -152,6 +151,7 @@ class ChatScreenModel(
                 configDelegate.agentName,
                 configDelegate.maxTokens,
                 configDelegate.recentModels,
+                configDelegate.commands,
                 chatStateStore.todos
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
@@ -176,7 +176,8 @@ class ChatScreenModel(
                     agentName = args[17] as String,
                     maxTokens = args[18] as Int,
                     recentModels = args[19] as ImmutableList<RecentModel>,
-                    todos = (args[20] as List<Todo>).toImmutableList()
+                    commands = args[20] as ImmutableList<Command>,
+                    todos = (args[21] as List<Todo>).toImmutableList()
                 )
             }.collect { newState ->
                 _state.update { newState }
@@ -214,6 +215,16 @@ class ChatScreenModel(
     fun addAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = (it.attachedFiles + f).toImmutableList()) }
     fun removeAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = it.attachedFiles.filter { a -> a.id != f.id }.toImmutableList()) }
     fun clearAttachments() = _state.update { it.copy(attachedFiles = persistentListOf()) }
+
+    fun executeCommand(cmd: Command) {
+        screenModelScope.launch {
+            _inputText.value = ""
+            _state.update { it.copy(isSending = true, isSessionIdle = false) }
+            if (sessionRepository.executeCommand(sessionId, cmd.name, null) is Resource.Error) {
+                _state.update { it.copy(isSending = false, isSessionIdle = true, error = "Command failed") }
+            }
+        }
+    }
 
     fun sendMessage() {
         val text = _inputText.value.trim()

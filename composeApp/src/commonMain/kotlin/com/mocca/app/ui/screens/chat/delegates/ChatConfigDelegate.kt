@@ -15,6 +15,7 @@ interface ChatConfigDelegate {
     val agentName: StateFlow<String>
     val maxTokens: StateFlow<Int>
     val recentModels: StateFlow<ImmutableList<RecentModel>>
+    val commands: StateFlow<ImmutableList<Command>>
     
     fun loadConfig()
     fun loadRecentModels()

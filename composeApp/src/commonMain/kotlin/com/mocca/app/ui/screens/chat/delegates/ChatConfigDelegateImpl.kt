@@ -54,6 +54,16 @@ class ChatConfigDelegateImpl(
         .map { it.toImmutableList() }
         .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
     
+    override val commands: StateFlow<ImmutableList<Command>> = appStateStore.commands
+        .map { resource ->
+            when (resource) {
+                is Resource.Success -> resource.data.toImmutableList()
+                is Resource.Loading -> (resource.data ?: emptyList()).toImmutableList()
+                is Resource.Error -> (resource.data ?: emptyList()).toImmutableList()
+            }
+        }
+        .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
+    
     // Agent name is derived from selected mode
     override val agentName: StateFlow<String> = combine(
         appStateStore.selectedModeId,

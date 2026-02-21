@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
+import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.components.glass.GlassDefaults
@@ -39,7 +40,6 @@ import com.mocca.app.ui.components.modern.liquidGlassFloating
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.util.TerminalCommand
 import io.github.fletchmckee.liquid.LiquidState
 
 /**
@@ -162,8 +162,8 @@ fun UnifiedFloatingBottomBar(
     onRemoveAttachment: (AttachedFile) -> Unit = {},
     onAttachClick: () -> Unit = {},
     // Commands
-    commands: List<TerminalCommand> = emptyList(),
-    onCommandSelected: (TerminalCommand) -> Unit = {},
+    commands: List<Command> = emptyList(),
+    onCommandSelected: (Command) -> Unit = {},
     onModeSelectedForMention: (Mode) -> Unit = {},
     modifier: Modifier = Modifier
 ) {

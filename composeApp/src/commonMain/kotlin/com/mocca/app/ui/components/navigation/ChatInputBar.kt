@@ -64,6 +64,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
+import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.components.modern.MoccaCompactButton
@@ -79,7 +80,6 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.util.TerminalCommand
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -149,8 +149,8 @@ fun ChatInputBar(
     onRemoveAttachment: (AttachedFile) -> Unit,
     onAttachClick: () -> Unit,
     // Commands
-    commands: List<TerminalCommand>,
-    onCommandSelected: (TerminalCommand) -> Unit,
+    commands: List<Command>,
+    onCommandSelected: (Command) -> Unit,
     onModeSelectedForMention: (Mode) -> Unit,
     modifier: Modifier = Modifier,
     alpha: Float = 1f
@@ -176,8 +176,8 @@ fun ChatInputBar(
             val query = suggestionQuery.lowercase()
             when (suggestionType) {
                 SuggestionType.COMMAND -> {
-                    commands.filter { it.trigger.lowercase().contains(query) }.map {
-                        SuggestionItem(it.trigger, it.trigger, it.description, SuggestionType.COMMAND)
+                    commands.filter { it.name.lowercase().contains(query) }.map {
+                        SuggestionItem(it.name, "/${it.name}", it.description, SuggestionType.COMMAND)
                     }
                 }
                 SuggestionType.MODE -> {
@@ -367,10 +367,10 @@ fun ChatInputBar(
             if (showCommandPalette && commands.isNotEmpty()) {
                 SuggestionPopup(
                     suggestions = commands.map { cmd ->
-                        SuggestionItem(cmd.trigger, cmd.trigger, cmd.description, SuggestionType.COMMAND)
+                        SuggestionItem(cmd.name, "/${cmd.name}", cmd.description, SuggestionType.COMMAND)
                     },
                     onSuggestionSelected = { item ->
-                        val cmd = commands.find { it.trigger == item.id }
+                        val cmd = commands.find { it.name == item.id }
                         if (cmd != null) {
                             onCommandSelected(cmd)
                         } else {

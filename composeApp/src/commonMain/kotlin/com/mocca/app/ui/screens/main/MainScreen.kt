@@ -325,10 +325,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
                 onAttachClick = { filePickerLauncher.launch() },
                 commands = chatState.commands,
-                onCommandSelected = { cmd -> 
-                    // Commands are handled in ChatContent via coroutines
-                    // This is a placeholder - actual command execution happens there
-                },
+                onCommandSelected = { cmd -> chatScreenModel.executeCommand(cmd) },
                 onModeSelectedForMention = { mode -> chatScreenModel.selectMode(mode.id) },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
