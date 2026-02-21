@@ -26,25 +26,32 @@ private const val AGSL_SOURCE = """
     uniform float  uTime;
     uniform float2 uResolution;
     
+    // Optimized Plasma: Dropped 1 radial wave and simplified inner parameters for ALU speedup
     float plasmaField(float2 uv, float t) {
         float w1 = sin(uv.x * 7.3  + t * 1.1 + sin(uv.y * 4.1  + t * 0.7) * 1.5);
         float w2 = sin(uv.y * 11.7 + t * 0.8 + sin(uv.x * 8.9  + t * 1.3) * 1.2);
-        float w3 = sin((uv.x + uv.y) * 6.5 + t * 1.6 + sin(t * 0.5) * 2.0);
-        float w4 = sin(length(uv - float2(0.5 + sin(t*0.23)*0.3, 0.5)) * 13.0 - t * 2.1);
-        return (w1 + w2 + w3 + w4) * 0.25;
+        float w3 = sin((uv.x + uv.y) * 6.5 + t * 1.6);
+        return (w1 + w2 + w3) * 0.333;
     }
     
-    float helix(float2 uv, float t, float phase) {
-        float brightness = 0.0;
-        for (int i = 0; i < 40; i++) {
-            float progress = float(i) / 40.0;
-            float nx = 0.5 + sin(progress * 6.2832 * 3.0 + t * 0.8 + phase) * 0.18;
-            float ny = fract(progress - t * 0.06);
-            float dist = length(uv - float2(nx, ny));
-            float trail = exp(-dist * 18.0) * (1.0 - progress * 0.6);
-            brightness += trail;
-        }
-        return clamp(brightness, 0.0, 1.0);
+    // O(1) Analytical DNA Helix (Previously O(N) with 80 loops per pixel)
+    float dnaHelix(float2 uv, float t) {
+        float progress = fract(uv.y + t * 0.06);
+        float basePhase = progress * 18.8496 + t * 0.8;
+        
+        float fade = 1.0 - progress * 0.6;
+        
+        // Strand 1
+        float nx1 = 0.5 + sin(basePhase) * 0.18;
+        float dn1 = cos(basePhase) * 3.39; // 0.18 * 18.8496
+        float d1 = abs(uv.x - nx1) / sqrt(1.0 + dn1 * dn1);
+        
+        // Strand 2
+        float nx2 = 0.5 + sin(basePhase + 3.1416) * 0.18;
+        float dn2 = cos(basePhase + 3.1416) * 3.39;
+        float d2 = abs(uv.x - nx2) / sqrt(1.0 + dn2 * dn2);
+        
+        return (exp(-d1 * 18.0) + exp(-d2 * 18.0)) * fade;
     }
     
     float shockwave(float2 uv, float t) {
@@ -52,13 +59,10 @@ private const val AGSL_SOURCE = """
             0.5 + sin(t * 0.37) * 0.28,
             0.5 + cos(t * 0.29) * 0.22
         );
-        float pulseClock = fract(t / 12.0);
-        float radius     = pulseClock * 1.8;
-        float ringWidth  = 0.028;
-        float dist       = abs(length(uv - center) - radius);
-        float ring       = 1.0 - smoothstep(0.0, ringWidth, dist);
-        float fade       = 1.0 - smoothstep(0.3, 1.0, pulseClock);
-        return ring * fade * 1.4;
+        float pulse = fract(t / 12.0);
+        float dist = abs(length(uv - center) - (pulse * 1.8));
+        float ring = 1.0 - smoothstep(0.0, 0.028, dist);
+        return ring * (1.0 - smoothstep(0.3, 1.0, pulse)) * 1.4;
     }
     
     float asciiGrid(float2 uv) {
@@ -72,7 +76,7 @@ private const val AGSL_SOURCE = """
         float2 uv = fragCoord / uResolution;
         
         float plasma = plasmaField(uv, uTime) * 0.5 + 0.5;
-        float dna    = helix(uv, uTime, 0.0) + helix(uv, uTime, 3.1416);
+        float dna    = dnaHelix(uv, uTime);
         float shock  = shockwave(uv, uTime);
         float grid   = asciiGrid(uv);
         
@@ -80,7 +84,6 @@ private const val AGSL_SOURCE = """
         
         float phase = uTime - 60.0 * floor(uTime / 60.0);
         float intro = smoothstep(0.0, 8.0, phase);
-        float flowing = smoothstep(8.0, 12.0, phase);
         float cresc = smoothstep(44.0, 46.0, phase) * (1.0 - smoothstep(47.0, 49.0, phase));
         float decay = smoothstep(49.0, 60.0, phase) * 0.3;
         float envelope = intro * (1.0 - decay) + cresc * 0.3;
@@ -88,11 +91,11 @@ private const val AGSL_SOURCE = """
         float luma = clamp((plasma * 0.55 + dna * 0.30 + shock * 0.15) * envelope * bottomBoost, 0.0, 1.0);
         luma = floor(luma * 10.0) / 10.0;
         
-        float3 darkTeal   = float3(0.0, 0.08, 0.07);
-        float3 mintGreen  = float3(0.0, 1.0,  0.80);
-        float3 col = mix(darkTeal, mintGreen, luma) * grid;
+        half3 darkTeal  = half3(0.0, 0.08, 0.07);
+        half3 mintGreen = half3(0.0, 1.0,  0.80);
         
-        col += mintGreen * 0.015;
+        half3 col = mix(darkTeal, mintGreen, half(luma * grid));
+        col += mintGreen * half(0.015);
         
         return half4(col, 1.0);
     }
