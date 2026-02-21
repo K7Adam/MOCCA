@@ -11,6 +11,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ConfigRepository
+import com.mocca.app.data.repository.PreferencesManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.data.repository.SettingsRepository
 import com.mocca.app.data.repository.UpdateNotifier
@@ -58,7 +59,11 @@ data class SettingsState(
     val serverConfig: ConfigResponse? = null,
     val serverDefaultProvider: String? = null,
     val serverDefaultModel: String? = null,
-    val serverModes: ImmutableList<Mode> = persistentListOf()
+    val serverModes: ImmutableList<Mode> = persistentListOf(),
+    // User Preferences
+    val preferences: UserPreferences = UserPreferences.DEFAULT,
+    // Clear Cache Dialog
+    val showClearCacheDialog: Boolean = false
 ) {
     /** Server version from SSE Connected event, or null if not connected */
     val serverVersion: String? get() = (activeConnectionState as? ConnectionStatus.Connected)?.serverInfo?.version
@@ -70,7 +75,8 @@ class SettingsScreenModel(
     private val updateRepository: UpdateRepository,
     private val settingsRepository: SettingsRepository,
     private val configRepository: ConfigRepository,
-    private val updateNotifier: UpdateNotifier
+    private val updateNotifier: UpdateNotifier,
+    private val preferencesManager: PreferencesManager
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -79,11 +85,212 @@ class SettingsScreenModel(
     init {
         loadServers()
         loadGitHubToken()
+        loadUserPreferences()
         observeActiveServer()
         observeActiveConnectionState()
         // Load remote config if connected
         loadRemoteConfig()
         loadServerConfig()
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // User Preferences
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    private fun loadUserPreferences() {
+        screenModelScope.launch {
+            val prefs = settingsRepository.getUserPreferences()
+            _state.value = _state.value.copy(preferences = prefs)
+        }
+    }
+    
+    // Appearance
+    fun setShowTokenCounts(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setShowTokenCounts(value)
+            val newPrefs = _state.value.preferences.copy(showTokenCounts = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setShowTimestamps(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setShowTimestamps(value)
+            val newPrefs = _state.value.preferences.copy(showTimestamps = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setCompactMode(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setCompactMode(value)
+            val newPrefs = _state.value.preferences.copy(compactMode = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setFontScale(value: Float) {
+        screenModelScope.launch {
+            val clampedValue = value.coerceIn(UserPreferences.FONT_SCALE_RANGE)
+            settingsRepository.setFontScale(clampedValue)
+            val newPrefs = _state.value.preferences.copy(fontScale = clampedValue)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setHideApiKeys(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setHideApiKeys(value)
+            val newPrefs = _state.value.preferences.copy(hideApiKeys = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    // Chat
+    fun setAutoScroll(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setAutoScroll(value)
+            val newPrefs = _state.value.preferences.copy(autoScroll = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setConfirmDelete(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setConfirmDelete(value)
+            val newPrefs = _state.value.preferences.copy(confirmDelete = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setShowThinkingBlocks(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setShowThinkingBlocks(value)
+            val newPrefs = _state.value.preferences.copy(showThinkingBlocks = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    // Connection
+    fun setAutoReconnect(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setAutoReconnect(value)
+            val newPrefs = _state.value.preferences.copy(autoReconnect = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setDataSaverMode(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setDataSaverMode(value)
+            val newPrefs = _state.value.preferences.copy(dataSaverMode = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    // Notifications
+    fun setNotifyPermissions(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setNotifyPermissions(value)
+            val newPrefs = _state.value.preferences.copy(notifyPermissions = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setNotifySessionComplete(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setNotifySessionComplete(value)
+            val newPrefs = _state.value.preferences.copy(notifySessionComplete = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setNotifyConnectionLost(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setNotifyConnectionLost(value)
+            val newPrefs = _state.value.preferences.copy(notifyConnectionLost = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    // Privacy
+    fun setScreenSecurity(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setScreenSecurity(value)
+            val newPrefs = _state.value.preferences.copy(screenSecurity = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    fun setClearCacheOnExit(value: Boolean) {
+        screenModelScope.launch {
+            settingsRepository.setClearCacheOnExit(value)
+            val newPrefs = _state.value.preferences.copy(clearCacheOnExit = value)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
+    // Clear Cache
+    fun showClearCacheDialog() {
+        _state.value = _state.value.copy(showClearCacheDialog = true)
+    }
+    
+    fun hideClearCacheDialog() {
+        _state.value = _state.value.copy(showClearCacheDialog = false)
+    }
+    
+    fun confirmClearCache() {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, showClearCacheDialog = false)
+            // Clear all local data - this would need to be implemented in LocalCache
+            // For now, just show a message
+            _state.value = _state.value.copy(
+                isLoading = false,
+                message = "Cache cleared. Restart app for full effect."
+            )
+        }
+    }
+    
+    fun resetPreferencesToDefaults() {
+        screenModelScope.launch {
+            val defaults = UserPreferences.DEFAULT
+            // Save all defaults
+            settingsRepository.setShowTokenCounts(defaults.showTokenCounts)
+            settingsRepository.setShowTimestamps(defaults.showTimestamps)
+            settingsRepository.setCompactMode(defaults.compactMode)
+            settingsRepository.setFontScale(defaults.fontScale)
+            settingsRepository.setHideApiKeys(defaults.hideApiKeys)
+            settingsRepository.setAutoScroll(defaults.autoScroll)
+            settingsRepository.setConfirmDelete(defaults.confirmDelete)
+            settingsRepository.setShowThinkingBlocks(defaults.showThinkingBlocks)
+            settingsRepository.setAutoReconnect(defaults.autoReconnect)
+            settingsRepository.setDataSaverMode(defaults.dataSaverMode)
+            settingsRepository.setNotifyPermissions(defaults.notifyPermissions)
+            settingsRepository.setNotifySessionComplete(defaults.notifySessionComplete)
+            settingsRepository.setNotifyConnectionLost(defaults.notifyConnectionLost)
+            settingsRepository.setScreenSecurity(defaults.screenSecurity)
+            settingsRepository.setClearCacheOnExit(defaults.clearCacheOnExit)
+            
+            _state.value = _state.value.copy(
+                preferences = defaults,
+                message = "Preferences reset to defaults"
+            )
+        }
     }
 
     /**

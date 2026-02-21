@@ -311,6 +311,345 @@ class SettingsScreen : Screen {
                     }
                 }
                 
+                // ═══════════════════════════════════════════════════════════════════════════
+                // APPEARANCE SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "APPEARANCE",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+                
+                item {
+                    ModuleCard(title = "DISPLAY") {
+                        // Show Token Counts
+                        ModuleRowItem(
+                            title = "SHOW TOKEN COUNTS",
+                            subtitle = "Display input/output tokens in chat",
+                            isEnabled = state.preferences.showTokenCounts,
+                            onToggle = { screenModel.setShowTokenCounts(!state.preferences.showTokenCounts) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Show Timestamps
+                        ModuleRowItem(
+                            title = "SHOW TIMESTAMPS",
+                            subtitle = "Display message timestamps",
+                            isEnabled = state.preferences.showTimestamps,
+                            onToggle = { screenModel.setShowTimestamps(!state.preferences.showTimestamps) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Compact Mode
+                        ModuleRowItem(
+                            title = "COMPACT MODE",
+                            subtitle = "Reduced padding for higher density",
+                            isEnabled = state.preferences.compactMode,
+                            onToggle = { screenModel.setCompactMode(!state.preferences.compactMode) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Hide API Keys
+                        ModuleRowItem(
+                            title = "HIDE API KEYS",
+                            subtitle = "Mask sensitive keys in settings",
+                            isEnabled = state.preferences.hideApiKeys,
+                            onToggle = { screenModel.setHideApiKeys(!state.preferences.hideApiKeys) }
+                        )
+                    }
+                }
+                
+                // Font Scale Slider
+                item {
+                    ModuleCard(title = "FONT SIZE") {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "TEXT SCALE",
+                                    color = AppColors.textPrimary,
+                                    style = AppTypography.bodyMedium
+                                )
+                                Text(
+                                    text = "${state.preferences.fontScalePercent}%",
+                                    color = AppColors.accentGreen,
+                                    style = AppTypography.labelMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            
+                            // Font scale slider
+                            var sliderValue by remember { mutableStateOf(state.preferences.fontScale) }
+                            
+                            androidx.compose.material3.Slider(
+                                value = sliderValue,
+                                onValueChange = { sliderValue = it },
+                                onValueChangeFinished = { screenModel.setFontScale(sliderValue) },
+                                valueRange = 0.8f..1.4f,
+                                steps = 5,
+                                colors = androidx.compose.material3.SliderDefaults.colors(
+                                    thumbColor = AppColors.accentGreen,
+                                    activeTrackColor = AppColors.accentGreen,
+                                    inactiveTrackColor = AppColors.greyDark
+                                )
+                            )
+                            
+                            // Labels
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("Small", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                Text("Default", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                Text("Large", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                            }
+                        }
+                    }
+                }
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // CHAT SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "CHAT",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+                
+                item {
+                    ModuleCard(title = "MESSAGING") {
+                        // Auto Scroll
+                        ModuleRowItem(
+                            title = "AUTO SCROLL",
+                            subtitle = "Scroll to bottom on new messages",
+                            isEnabled = state.preferences.autoScroll,
+                            onToggle = { screenModel.setAutoScroll(!state.preferences.autoScroll) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Confirm Delete
+                        ModuleRowItem(
+                            title = "CONFIRM DELETE",
+                            subtitle = "Ask before deleting sessions",
+                            isEnabled = state.preferences.confirmDelete,
+                            onToggle = { screenModel.setConfirmDelete(!state.preferences.confirmDelete) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Show Thinking Blocks
+                        ModuleRowItem(
+                            title = "SHOW THINKING",
+                            subtitle = "Display AI reasoning blocks",
+                            isEnabled = state.preferences.showThinkingBlocks,
+                            onToggle = { screenModel.setShowThinkingBlocks(!state.preferences.showThinkingBlocks) }
+                        )
+                    }
+                }
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // NOTIFICATIONS SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "NOTIFICATIONS",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+                
+                item {
+                    ModuleCard(title = "ALERTS") {
+                        // Permission Notifications
+                        ModuleRowItem(
+                            title = "PERMISSION REQUESTS",
+                            subtitle = "Alert when AI needs approval",
+                            isEnabled = state.preferences.notifyPermissions,
+                            onToggle = { screenModel.setNotifyPermissions(!state.preferences.notifyPermissions) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Session Complete
+                        ModuleRowItem(
+                            title = "SESSION COMPLETE",
+                            subtitle = "Alert when AI finishes task",
+                            isEnabled = state.preferences.notifySessionComplete,
+                            onToggle = { screenModel.setNotifySessionComplete(!state.preferences.notifySessionComplete) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Connection Lost
+                        ModuleRowItem(
+                            title = "CONNECTION LOST",
+                            subtitle = "Alert on server disconnect",
+                            isEnabled = state.preferences.notifyConnectionLost,
+                            onToggle = { screenModel.setNotifyConnectionLost(!state.preferences.notifyConnectionLost) }
+                        )
+                    }
+                }
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // CONNECTION SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "CONNECTION",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+                
+                item {
+                    ModuleCard(title = "NETWORK") {
+                        // Auto Reconnect
+                        ModuleRowItem(
+                            title = "AUTO RECONNECT",
+                            subtitle = "Reconnect when connection drops",
+                            isEnabled = state.preferences.autoReconnect,
+                            onToggle = { screenModel.setAutoReconnect(!state.preferences.autoReconnect) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Data Saver Mode
+                        ModuleRowItem(
+                            title = "DATA SAVER",
+                            subtitle = "Reduce background network usage",
+                            isEnabled = state.preferences.dataSaverMode,
+                            onToggle = { screenModel.setDataSaverMode(!state.preferences.dataSaverMode) }
+                        )
+                        
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        
+                        Text(
+                            text = "Data Saver disables background sync and reduces network calls.",
+                            color = AppColors.textTertiary,
+                            style = AppTypography.labelSmall
+                        )
+                    }
+                }
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // PRIVACY SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "PRIVACY & SECURITY",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+                
+                item {
+                    ModuleCard(title = "SECURITY") {
+                        // Screen Security
+                        ModuleRowItem(
+                            title = "SCREEN SECURITY",
+                            subtitle = "Prevent screenshots",
+                            isEnabled = state.preferences.screenSecurity,
+                            onToggle = { screenModel.setScreenSecurity(!state.preferences.screenSecurity) }
+                        )
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Clear Cache on Exit
+                        ModuleRowItem(
+                            title = "CLEAR CACHE ON EXIT",
+                            subtitle = "Remove local data when app closes",
+                            isEnabled = state.preferences.clearCacheOnExit,
+                            onToggle = { screenModel.setClearCacheOnExit(!state.preferences.clearCacheOnExit) }
+                        )
+                    }
+                }
+                
+                // Data Management
+                item {
+                    ModuleCard(title = "DATA") {
+                        // Clear Cache Button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "CLEAR ALL CACHE",
+                                    color = AppColors.textPrimary,
+                                    style = AppTypography.bodyMedium
+                                )
+                                Text(
+                                    text = "Remove cached sessions and messages",
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelSmall
+                                )
+                            }
+                            
+                            MoccaOutlinedButton(
+                                text = "CLEAR",
+                                onClick = { screenModel.showClearCacheDialog() },
+                                height = AppSpacing.buttonHeightSmall
+                            )
+                        }
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                        
+                        // Reset Preferences
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "RESET PREFERENCES",
+                                    color = AppColors.textPrimary,
+                                    style = AppTypography.bodyMedium
+                                )
+                                Text(
+                                    text = "Restore all settings to defaults",
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelSmall
+                                )
+                            }
+                            
+                            MoccaOutlinedButton(
+                                text = "RESET",
+                                onClick = { screenModel.resetPreferencesToDefaults() },
+                                height = AppSpacing.buttonHeightSmall
+                            )
+                        }
+                    }
+                }
+                
+                // ═══════════════════════════════════════════════════════════════════════════
+                // APP UPDATES SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                
                 // Auto Update Section
                 item {
                     Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -454,6 +793,42 @@ class SettingsScreen : Screen {
                     isNewServer = isNewServer,
                     onSave = { screenModel.saveServer(it, isNewServer) },
                     onDismiss = { screenModel.cancelEdit() }
+                )
+            }
+            
+            // Clear Cache Confirmation Dialog
+            if (state.showClearCacheDialog) {
+                AlertDialog(
+                    onDismissRequest = { screenModel.hideClearCacheDialog() },
+                    containerColor = AppColors.surfaceElevated,
+                    shape = AppShapes.dialog,
+                    title = {
+                        Text(
+                            text = "CLEAR ALL CACHE",
+                            color = AppColors.white,
+                            style = AppTypography.headlineSmall
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "This will remove all cached sessions, messages, and local data. You will need to re-download data from the server.\n\nThis action cannot be undone.",
+                            color = AppColors.textSecondary,
+                            style = AppTypography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        MoccaButton(
+                            text = "CLEAR",
+                            onClick = { screenModel.confirmClearCache() },
+                            height = AppSpacing.buttonHeightCompact
+                        )
+                    },
+                    dismissButton = {
+                        MoccaTextButton(
+                            text = "CANCEL",
+                            onClick = { screenModel.hideClearCacheDialog() }
+                        )
+                    }
                 )
             }
         }

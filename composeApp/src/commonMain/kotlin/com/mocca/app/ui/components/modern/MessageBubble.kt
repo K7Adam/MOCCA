@@ -62,6 +62,15 @@ import com.mocca.app.domain.model.SessionStatus
 /**
  * Modern Glassmorphic message bubble.
  * Compact refactor: Rounded corners, reduced padding, distinct user/agent styles.
+ *
+ * @param message The message to display
+ * @param modifier Modifier for the bubble
+ * @param isFirstInGroup Whether this is the first message in a group
+ * @param dateHeader Optional date header to display above the message
+ * @param onFork Callback for forking the session from this message
+ * @param onRevert Callback for reverting the session to this message
+ * @param showTimestamps Whether to show timestamps in the message header
+ * @param showTokenCounts Whether to show token counts (for assistant messages)
  */
 @Composable
 fun MessageBubble(
@@ -70,7 +79,9 @@ fun MessageBubble(
     isFirstInGroup: Boolean = true,
     dateHeader: String? = null,
     onFork: () -> Unit = {},
-    onRevert: () -> Unit = {}
+    onRevert: () -> Unit = {},
+    showTimestamps: Boolean = true,
+    showTokenCounts: Boolean = true
 ) {
     val isUser = message.role == MessageRole.USER
     
@@ -114,13 +125,16 @@ fun MessageBubble(
                     fontWeight = FontWeight.Bold
                 )
                 
-                Spacer(modifier = Modifier.width(AppSpacing.sm))
-                
-                Text(
-                    text = timeText,
-                    color = AppColors.textTertiary,
-                    style = AppTypography.labelExtraSmall
-                )
+                // Show timestamp if enabled
+                if (showTimestamps) {
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
+                    
+                    Text(
+                        text = timeText,
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelExtraSmall
+                    )
+                }
                 
                 if (isUser) {
                     Spacer(modifier = Modifier.width(AppSpacing.xs))
@@ -202,8 +216,64 @@ fun MessageBubble(
                     }
                     Spacer(modifier = Modifier.height(AppSpacing.xs))
                 }
+                
+                // Token Count Display (for assistant messages with token info)
+                if (showTokenCounts && !isUser && message.tokens != null) {
+                    val tokens = message.tokens
+                    if (tokens.input > 0 || tokens.output > 0) {
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                        HorizontalDivider(
+                            color = AppColors.border.copy(alpha = 0.3f),
+                            thickness = 0.5.dp
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (tokens.input > 0) {
+                                Text(
+                                    text = "IN: ${formatTokenCount(tokens.input)}",
+                                    color = AppColors.textTertiary,
+                                    style = AppTypography.labelExtraSmall,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                            }
+                            if (tokens.output > 0) {
+                                Text(
+                                    text = "OUT: ${formatTokenCount(tokens.output)}",
+                                    color = AppColors.accentGreen.copy(alpha = 0.7f),
+                                    style = AppTypography.labelExtraSmall,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            if (tokens.reasoning > 0) {
+                                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                                Text(
+                                    text = "REASON: ${formatTokenCount(tokens.reasoning)}",
+                                    color = AppColors.accentGreen.copy(alpha = 0.5f),
+                                    style = AppTypography.labelExtraSmall,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
+    }
+}
+
+/**
+ * Format token count for display (e.g., 1.2K, 15K)
+ */
+private fun formatTokenCount(count: Int): String {
+    return when {
+        count >= 1_000_000 -> "${(count / 1_000_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}M"
+        count >= 1_000 -> "${(count / 1_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}K"
+        else -> count.toString()
     }
 }
 

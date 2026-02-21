@@ -593,7 +593,9 @@ fun ChatContent(
                             isFirstInGroup = isFirstInGroup,
                             dateHeader = showDateHeader,
                             onFork = { screenModel.forkSession(message) },
-                            onRevert = { screenModel.revertSession(message) }
+                            onRevert = { screenModel.revertSession(message) },
+                            showTimestamps = true, // TODO: Get from preferences
+                            showTokenCounts = true // TODO: Get from preferences
                         )
                     }
                 }
