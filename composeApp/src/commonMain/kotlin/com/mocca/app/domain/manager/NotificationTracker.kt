@@ -71,7 +71,10 @@ interface NotificationTracker {
     fun updateProgressNotification(
         sessionId: String,
         sessionTitle: String,
+        toolTitle: String?,
         modelName: String,
-        elapsedSeconds: Long
+        elapsedSeconds: Long,
+        totalCount: Int = 0,
+        completedCount: Int = 0
     )
 }

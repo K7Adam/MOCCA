@@ -75,6 +75,9 @@ class ActiveSessionService : Service() {
         const val EXTRA_PERMISSION_ID = "permission_id"
         const val EXTRA_MODEL_NAME = "model_name"
         const val EXTRA_ELAPSED_TIME = "elapsed_time"
+        const val EXTRA_TOOL_TITLE = "tool_title"
+        const val EXTRA_TOTAL_COUNT = "total_count"
+        const val EXTRA_COMPLETED_COUNT = "completed_count"
         
         // ─────────────────────────────────────────────────────────────────────
         // Public API - Start/Stop Service
@@ -316,8 +319,11 @@ class ActiveSessionService : Service() {
             context: Context,
             sessionId: String,
             sessionTitle: String,
+            toolTitle: String?,
             modelName: String,
-            elapsedSeconds: Long
+            elapsedSeconds: Long,
+            totalCount: Int = 0,
+            completedCount: Int = 0
         ) {
             val serviceIntent = Intent(context, ActiveSessionService::class.java)
             context.startService(serviceIntent)
@@ -345,13 +351,19 @@ class ActiveSessionService : Service() {
             
             val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_ACTIVE)
                 .setContentTitle(sessionTitle)
-                .setContentText("$modelName • $timeStr")
+                .setContentText(
+                    if (toolTitle != null) {
+                        "$toolTitle\n$timeStr"
+                    } else {
+                        "$modelName • $timeStr"
+                    }
+                )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setProgress(0, 0, true) // Indeterminate progress
+                .setProgress(totalCount, completedCount, totalCount == 0)
                 .setWhen(System.currentTimeMillis() - (elapsedSeconds * 1000))
                 .setUsesChronometer(true)
                 .build()

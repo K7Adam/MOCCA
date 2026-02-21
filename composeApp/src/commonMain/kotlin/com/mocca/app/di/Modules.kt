@@ -116,7 +116,9 @@ val commonModule = module {
             localCache = get(),
             sessionRepository = get(),
             appLifecycleObserver = getOrNull(),
-            networkObserver = getOrNull()
+            networkObserver = getOrNull(),
+            notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>(),
+            moccaApiClient = get()
         )
     }
     

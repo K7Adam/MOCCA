@@ -2,6 +2,7 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
+import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.util.AppLifecycleObserver
 import com.mocca.app.util.AppLifecycleState
 import com.mocca.app.util.NetworkObserver
@@ -42,7 +43,9 @@ class StateCoordinator(
     private val localCache: LocalCache,
     private val sessionRepository: SessionRepository,
     private val appLifecycleObserver: AppLifecycleObserver?,
-    private val networkObserver: NetworkObserver?
+    private val networkObserver: NetworkObserver?,
+    private val notificationTracker: NotificationTracker? = null,
+    private val moccaApiClient: com.mocca.app.api.MoccaApiClient
 ) {
     private val coordinatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -53,6 +56,16 @@ class StateCoordinator(
     private val sessionMutex = Mutex()
     private val _activeSessionId = MutableStateFlow<String?>(null)
     val activeSessionId: StateFlow<String?> = _activeSessionId.asStateFlow()
+    
+    private val _runningSessionIds = MutableStateFlow<Set<String>>(emptySet())
+    val runningSessionIds: StateFlow<Set<String>> = _runningSessionIds.asStateFlow()
+    
+    // Track active tool titles for running sessions
+    private val _activeToolTitles = MutableStateFlow<Map<String, String>>(emptyMap())
+    val activeToolTitles: StateFlow<Map<String, String>> = _activeToolTitles.asStateFlow()
+    
+    // Track start times for running sessions to calculate elapsed time
+    private val _runningSessionStartTimes = mutableMapOf<String, Long>()
     
     private val _monitoredSessionIds = MutableStateFlow<Set<String>>(emptySet())
     val monitoredSessionIds: StateFlow<Set<String>> = _monitoredSessionIds.asStateFlow()
@@ -154,11 +167,6 @@ class StateCoordinator(
         }
     
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SESSION RUNNING STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    private val _runningSessionIds = MutableStateFlow<Set<String>>(emptySet())
-    val runningSessionIds: StateFlow<Set<String>> = _runningSessionIds.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // SYNC STATE
@@ -338,27 +346,82 @@ class StateCoordinator(
      * This is the central event dispatch point.
      */
     private suspend fun handleServerEvent(event: ServerEvent) {
+        val previousRunning = _runningSessionIds.value
+
         // Update running session tracking
         when (event) {
             is ServerEvent.SessionUpdated -> {
                 val session = event.properties.info
                 val isRunning = session.status == SessionStatus.RUNNING
+                
+                if (isRunning && !_runningSessionIds.value.contains(session.id)) {
+                    _runningSessionStartTimes[session.id] = System.currentTimeMillis()
+                } else if (!isRunning) {
+                    _runningSessionStartTimes.remove(session.id)
+                }
+                
                 _runningSessionIds.update { current ->
                     if (isRunning) current + session.id else current - session.id
                 }
+                
+                val nowRunning = _runningSessionIds.value
+                if (isRunning && !previousRunning.contains(session.id) && nowRunning.contains(session.id)) {
+                    notificationTracker?.startSession(session.id, session.title)
+                } else if (!isRunning && previousRunning.contains(session.id) && !nowRunning.contains(session.id)) {
+                    notificationTracker?.stopSession(session.id)
+                }
             }
             is ServerEvent.SessionIdle -> {
-                _runningSessionIds.update { it - event.properties.sessionID }
+                val sessionId = event.properties.sessionID
+                _runningSessionIds.update { it - sessionId }
+                _activeToolTitles.update { it - sessionId }
+                _runningSessionStartTimes.remove(sessionId)
+                if (previousRunning.contains(sessionId)) {
+                    notificationTracker?.stopSession(sessionId)
+                }
                 // Trigger callback for message refresh
-                onSessionIdle?.invoke(event.properties.sessionID)
+                onSessionIdle?.invoke(sessionId)
             }
             is ServerEvent.SessionError -> {
-                event.properties.sessionID?.let { 
-                    _runningSessionIds.update { it - it }
+                event.properties.sessionID?.let { sessionId -> 
+                    _runningSessionIds.update { it - sessionId }
+                    _activeToolTitles.update { it - sessionId }
+                    _runningSessionStartTimes.remove(sessionId)
+                    if (previousRunning.contains(sessionId)) {
+                        notificationTracker?.stopSession(sessionId)
+                    }
                 }
             }
             is ServerEvent.SessionDeleted -> {
-                _runningSessionIds.update { it - event.properties.info.id }
+                val sessionId = event.properties.info.id
+                _runningSessionIds.update { it - sessionId }
+                _activeToolTitles.update { it - sessionId }
+                _runningSessionStartTimes.remove(sessionId)
+                if (previousRunning.contains(sessionId)) {
+                    notificationTracker?.stopSession(sessionId)
+                }
+            }
+            is ServerEvent.MessagePartUpdated -> {
+                val part = event.properties.part
+                if (part.type == "tool" && part.state != null) {
+                    val sessionId = part.sessionID
+                    val status = part.state.status
+                    val title = part.state.title ?: part.tool
+                    
+                    if (status == "running" || status == "pending") {
+                        title?.let { t -> 
+                            _activeToolTitles.update { it + (sessionId to t) }
+                            coordinatorScope.launch {
+                                updateSessionProgressNotification(sessionId, t)
+                            }
+                        }
+                    } else if (status == "completed" || status == "error") {
+                        // After tool completion, we can update the notification too
+                        coordinatorScope.launch {
+                            updateSessionProgressNotification(sessionId, null)
+                        }
+                    }
+                }
             }
             else -> {}
         }
@@ -374,6 +437,41 @@ class StateCoordinator(
             }
             else -> {}
         }
+    }
+    
+    private suspend fun updateSessionProgressNotification(sessionId: String, toolTitle: String?) {
+        if (notificationTracker == null) return
+        
+        // Fetch session for title
+        var sessionTitle = "Task Runner"
+        val sessionRes = sessionRepository.getSession(sessionId)
+        if (sessionRes is com.mocca.app.domain.model.Resource.Success) {
+            sessionTitle = sessionRes.data.title ?: "Task Runner"
+        }
+        
+        val startTime = _runningSessionStartTimes[sessionId] ?: System.currentTimeMillis()
+        val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
+        
+        var totalCount = 0
+        var completedCount = 0
+        
+        // Fetch Todos for determinate progress
+        moccaApiClient.getSessionTodos(sessionId).onSuccess { todos ->
+            totalCount = todos.size
+            completedCount = todos.count { it.status == com.mocca.app.domain.model.TodoStatus.COMPLETED }
+        }
+        
+        val displayToolTitle = toolTitle ?: _activeToolTitles.value[sessionId]
+        
+        notificationTracker.updateProgressNotification(
+            sessionId = sessionId,
+            sessionTitle = sessionTitle,
+            toolTitle = displayToolTitle,
+            modelName = "Agent", // Or dynamic based on session if tracked later
+            elapsedSeconds = elapsedSeconds,
+            totalCount = totalCount,
+            completedCount = completedCount
+        )
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -448,10 +546,22 @@ class StateCoordinator(
     private suspend fun refreshSessionStatus() {
         sessionRepository.getSessionStatus().fold(
             onSuccess = { statusMap ->
+                val previousRunning = _runningSessionIds.value
                 val runningIds = statusMap.filter { (_, status) ->
                     status.isBusy || status.isRetrying
                 }.keys
                 _runningSessionIds.value = runningIds
+                
+                val newlyRunning = runningIds - previousRunning
+                newlyRunning.forEach { sessionId ->
+                    notificationTracker?.startSession(sessionId, null)
+                }
+                
+                val stoppedRunning = previousRunning - runningIds
+                stoppedRunning.forEach { sessionId ->
+                    notificationTracker?.stopSession(sessionId)
+                }
+                
                 Napier.v("[StateCoordinator] Refreshed session status: ${runningIds.size} running")
             },
             onFailure = { error ->
