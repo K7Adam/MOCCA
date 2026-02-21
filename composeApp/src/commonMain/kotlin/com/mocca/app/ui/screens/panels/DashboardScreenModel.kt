@@ -15,6 +15,7 @@ import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
 import com.mocca.app.domain.model.GlobalSyncState
 import com.mocca.app.domain.model.SyncState
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -139,24 +140,33 @@ class DashboardScreenModel(
         // Start observing centralized state from AppStateStore
         observeAppStateStore()
         observeEvents()
+        observeConnectionState()
         
         // Start the sync service (if not already started)
         appStateStore.start()
     }
     
     /**
-     * Observe centralized state from AppStateStore.
-     * All data updates automatically - NO manual refresh needed.
+     * Observe connection state and trigger data loading when connected.
+     * This prevents premature API calls before connection is established.
      */
-    private fun observeAppStateStore() {
-        // Observe providers
+    private fun observeConnectionState() {
         screenModelScope.launch {
-            appStateStore.providers.collect { providers ->
-                _state.update { it.copy(providers = providers) }
+            stateCoordinator.connectionStatus.collect { status ->
+                if (status.isConnected) {
+                    Napier.i("[DashboardScreenModel] Connection established - loading projects")
+                    loadProjectsWhenConnected()
+                }
             }
         }
-        
-        // Observe projects
+    }
+    
+    /**
+     * Load projects data only when connected.
+     * This is called once when connection is established.
+     */
+    private fun loadProjectsWhenConnected() {
+        // Observe projects - only start collecting when connected
         screenModelScope.launch {
             projectRepository.getProjects().collect { projects ->
                 val mapped = when (projects) {
@@ -174,6 +184,24 @@ class DashboardScreenModel(
                 _state.update { it.copy(currentProject = cp) }
             }
         }
+    }
+    
+    /**
+     * Observe centralized state from AppStateStore.
+     * All data updates automatically - NO manual refresh needed.
+     * 
+     * NOTE: Projects are observed separately in loadProjectsWhenConnected() 
+     * to prevent premature API calls before connection is established.
+     */
+    private fun observeAppStateStore() {
+        // Observe providers
+        screenModelScope.launch {
+            appStateStore.providers.collect { providers ->
+                _state.update { it.copy(providers = providers) }
+            }
+        }
+        
+        // Projects are observed via loadProjectsWhenConnected() - DO NOT observe here
         
         // Observe agents
         screenModelScope.launch {

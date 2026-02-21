@@ -18,6 +18,7 @@ interface LocalCache {
     suspend fun getAllSessions(): List<Session>
     suspend fun getSession(id: String): Session?
     suspend fun insertSession(session: Session)
+    suspend fun insertSessions(sessions: List<Session>)  // Batch insert for atomic updates
     suspend fun updateSessionStatus(id: String, status: String)
     suspend fun deleteSession(id: String)
     suspend fun deleteAllSessions()

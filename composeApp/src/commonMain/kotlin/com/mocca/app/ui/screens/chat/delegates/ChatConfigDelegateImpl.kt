@@ -106,16 +106,15 @@ class ChatConfigDelegateImpl(
     /**
      * Load config - triggers AppStateStore to load data.
      * This is called when the chat screen initializes.
+     * 
+     * IMPORTANT: Does NOT make direct API calls - checks connection first.
+     * Actual config loading is handled by AppStateStore when connected.
      */
     override fun loadConfig() {
-        // AppStateStore.loadConfig() is called on connection via RealtimeSyncService
-        // But we also trigger it here to ensure config is loaded when chat opens
-        Napier.i("[ChatConfigDelegate] loadConfig() called - triggering AppStateStore sync")
-        
-        scope.launch(Dispatchers.IO) {
-            // Ensure default config is loaded in session repository
-            sessionRepository.loadDefaultConfig()
-        }
+        // AppStateStore.loadConfig() is called on connection via observeConnectionState()
+        // We don't need to call sessionRepository.loadDefaultConfig() here anymore
+        // as it's already handled by AppStateStore.loadConfig() with proper connection guards
+        Napier.v("[ChatConfigDelegate] loadConfig() called - config is managed by AppStateStore")
     }
 
     /**

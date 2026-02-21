@@ -77,6 +77,30 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
     
+    override suspend fun insertSessions(sessions: List<Session>) {
+        if (sessions.isEmpty()) return
+        try {
+            // Use transaction for atomic batch insert - observer fires ONCE instead of N times
+            database.transaction {
+                sessions.forEach { session ->
+                    sessionQueries.insertOrReplace(
+                        id = session.id,
+                        title = session.title,
+                        createdAt = session.createdAt,
+                        updatedAt = session.updatedAt,
+                        status = session.status.name.lowercase(),
+                        cost = 0.0,
+                        parentId = session.effectiveParentID,
+                        isSynced = true,
+                        lastFetchedAt = session.lastFetchedAt
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            Napier.w("Failed to batch cache sessions", e)
+        }
+    }
+    
     override suspend fun updateSessionStatus(id: String, status: String) {
         try {
             sessionQueries.updateStatus(status = status, updatedAt = System.currentTimeMillis(), id = id)

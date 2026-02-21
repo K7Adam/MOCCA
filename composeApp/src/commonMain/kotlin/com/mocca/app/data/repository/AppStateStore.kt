@@ -201,6 +201,7 @@ class AppStateStore(
     }
     
     private var isInitialized = false
+    private var isDataLoaded = false
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -212,11 +213,35 @@ class AppStateStore(
         observeLocalCache()
         observeBroadcastEvents()
         observeRepositoryFlows()
+        observeConnectionState()
+    }
+    
+    /**
+     * Observe connection state and trigger data loading when connected.
+     * This is the KEY fix for the startup race condition.
+     */
+    private fun observeConnectionState() {
+        storeScope.launch {
+            connectionStatus.collect { status ->
+                if (status.isConnected && !isDataLoaded) {
+                    Napier.i("[AppStateStore] Connection established - loading initial data")
+                    loadAllData()
+                    startObservingVcsInfo()
+                    isDataLoaded = true
+                } else if (!status.isConnected) {
+                    // Reset flag when disconnected so we reload on reconnect
+                    isDataLoaded = false
+                }
+            }
+        }
     }
     
     /**
      * Start observing and syncing state.
      * Called when app starts or when connection is established.
+     * 
+     * IMPORTANT: Does NOT immediately load data - waits for connection.
+     * Data loading is triggered by connection state observation.
      */
     fun start() {
         if (isInitialized) return
@@ -224,14 +249,15 @@ class AppStateStore(
         
         Napier.i("[AppStateStore] Starting state observation and realtime sync")
         
-        // Load initial state from cache
+        // Load initial state from cache (instant, no network)
         loadFromCache()
         
         // Start realtime sync service (handles periodic polling + connection sync)
+        // The service itself will wait for connection before syncing
         realtimeSyncService.start()
         
-        // Load all data initially
-        loadAllData()
+        // DO NOT call loadAllData() here - let observeConnectionState() handle it
+        // This fixes the race condition where UI tries to load data before connection is established
     }
     
     /**
@@ -245,14 +271,20 @@ class AppStateStore(
     /**
      * Observe local database for reactive updates.
      * This ensures UI is always in sync with DB changes.
+     * 
+     * PERFORMANCE: Uses debounce(50ms) to batch rapid DB updates into single emission.
+     * This prevents UI churn when multiple sessions are inserted in quick succession.
      */
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
     private fun observeLocalCache() {
-        // Observe sessions from DB
+        // Observe sessions from DB with debounce to batch rapid updates
         storeScope.launch {
-            localCache.observeAllSessions().collect { sessions ->
-                _sessions.value = sessions.sortedByDescending { it.updatedAt }
-                Napier.v("[AppStateStore] Sessions updated from cache: ${sessions.size}")
-            }
+            localCache.observeAllSessions()
+                .debounce(50)  // Wait 50ms for batch updates to settle
+                .collect { sessions ->
+                    _sessions.value = sessions.sortedByDescending { it.updatedAt }
+                    Napier.v("[AppStateStore] Sessions updated from cache: ${sessions.size}")
+                }
         }
         
         // Observe recent models from DB
@@ -265,10 +297,13 @@ class AppStateStore(
     
     /**
      * Observe repository StateFlows for reactive updates.
-     * These are updated by RealtimeSyncService periodically.
+     * 
+     * IMPORTANT: Git/VCS info is observed via RealtimeSyncService periodic sync,
+     * NOT here. Observing here would cause immediate network calls before connection
+     * is established.
      */
     private fun observeRepositoryFlows() {
-        // Observe MCP servers
+        // Observe MCP servers - these are updated by RealtimeSyncService
         storeScope.launch {
             mcpRepository.mcpServers.collect { servers ->
                 _mcpServers.value = servers
@@ -281,7 +316,15 @@ class AppStateStore(
             }
         }
         
-        // Observe Git/VCS info
+        // Git/VCS info is observed via loadVcsInfoWhenConnected() below
+        // This prevents premature network calls before connection is established
+    }
+    
+    /**
+     * Start observing Git/VCS info only after connection is established.
+     * Called from observeConnectionState() when connected.
+     */
+    private fun startObservingVcsInfo() {
         storeScope.launch {
             gitRepository.getVcsInfo().collect { resource ->
                 _vcsInfo.value = resource
@@ -292,24 +335,55 @@ class AppStateStore(
     /**
      * Load all data from server.
      * Called on start and triggered by RealtimeSyncService.
+     * GUARDED by connection check - will skip if not connected.
+     * 
+     * PERFORMANCE: Loads data in PARALLEL using async/awaitAll.
+     * Total time = max(all API calls) instead of sum(all API calls).
+     * 
+     * NOTE: loadConfig() already loads provider info, so loadProviders() is NOT called here.
      */
     private fun loadAllData() {
-        loadConfig()
-        loadAgents()
-        loadProviders()
-        loadTools()
-        loadCommands()
+        // Guard: Only load data if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.w("[AppStateStore] Skipping loadAllData() - not connected")
+            return
+        }
+        
+        Napier.i("[AppStateStore] Loading all data from server in parallel...")
+        
+        // Load all data in parallel using structured concurrency
+        storeScope.launch {
+            coroutineScope {
+                listOf(
+                    async { loadConfig() },      // Contains getProviderInfo() - 4.4s
+                    async { loadAgents() },      // Independent
+                    async { loadTools() },       // Independent
+                    async { loadCommands() }     // Independent
+                ).awaitAll()
+            }
+        }
     }
     
     /**
      * Load providers from server.
+     * GUARDED by connection check.
      */
     private fun loadProviders() {
+        // Guard: Only load if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.d("[AppStateStore] Skipping loadProviders() - not connected")
+            return
+        }
+        
         storeScope.launch {
             providerRepository.getProviders().collect { resource ->
                 _providers.value = resource
                 if (resource is Resource.Success) {
                     Napier.v("[AppStateStore] Providers loaded: ${resource.data.all.size}")
+                } else if (resource is Resource.Error) {
+                    if (resource.message.contains("Not connected", ignoreCase = true)) {
+                        Napier.d("[AppStateStore] loadProviders skipped - connection lost")
+                    }
                 }
             }
         }
@@ -317,13 +391,24 @@ class AppStateStore(
     
     /**
      * Load tools from server.
+     * GUARDED by connection check.
      */
     private fun loadTools() {
+        // Guard: Only load if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.d("[AppStateStore] Skipping loadTools() - not connected")
+            return
+        }
+        
         storeScope.launch {
             toolRepository.getToolIds().collect { resource ->
                 _tools.value = resource
                 if (resource is Resource.Success) {
                     Napier.v("[AppStateStore] Tools loaded: ${resource.data.size}")
+                } else if (resource is Resource.Error) {
+                    if (resource.message.contains("Not connected", ignoreCase = true)) {
+                        Napier.d("[AppStateStore] loadTools skipped - connection lost")
+                    }
                 }
             }
         }
@@ -331,13 +416,24 @@ class AppStateStore(
     
     /**
      * Load commands from server.
+     * GUARDED by connection check.
      */
     private fun loadCommands() {
+        // Guard: Only load if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.d("[AppStateStore] Skipping loadCommands() - not connected")
+            return
+        }
+        
         storeScope.launch {
             commandRepository.getCommands().collect { resource ->
                 _commands.value = resource
                 if (resource is Resource.Success) {
                     Napier.v("[AppStateStore] Commands loaded: ${resource.data.size}")
+                } else if (resource is Resource.Error) {
+                    if (resource.message.contains("Not connected", ignoreCase = true)) {
+                        Napier.d("[AppStateStore] loadCommands skipped - connection lost")
+                    }
                 }
             }
         }
@@ -444,13 +540,23 @@ class AppStateStore(
     /**
      * Load config from server (providers, models, modes).
      * Also loads default model/provider from server config.
+     * GUARDED by connection check.
      */
     private fun loadConfig() {
+        // Guard: Only load if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.d("[AppStateStore] Skipping loadConfig() - not connected")
+            return
+        }
+        
         storeScope.launch {
             // First, load default config from server (sets default model/provider)
             try {
                 sessionRepository.loadDefaultConfig()
                 Napier.i("[AppStateStore] Default config loaded from server")
+            } catch (e: com.mocca.app.api.ConnectionException) {
+                Napier.d("[AppStateStore] loadDefaultConfig skipped - connection lost")
+                return@launch
             } catch (e: Exception) {
                 Napier.w("[AppStateStore] Failed to load default config: ${e.message}")
             }
@@ -484,7 +590,13 @@ class AppStateStore(
                         }
                     }
                 },
-                onFailure = { Napier.w("[AppStateStore] Failed to load provider info: ${it.message}") }
+                onFailure = { 
+                    if (it is com.mocca.app.api.ConnectionException) {
+                        Napier.d("[AppStateStore] getProviderInfo skipped - connection lost")
+                    } else {
+                        Napier.w("[AppStateStore] Failed to load provider info: ${it.message}")
+                    }
+                }
             )
             
             // Load modes from server
@@ -497,7 +609,13 @@ class AppStateStore(
                         Napier.i("[AppStateStore] Default mode set: ${modes.first().id}")
                     }
                 },
-                onFailure = { Napier.w("[AppStateStore] Failed to load modes: ${it.message}") }
+                onFailure = { 
+                    if (it is com.mocca.app.api.ConnectionException) {
+                        Napier.d("[AppStateStore] getModes skipped - connection lost")
+                    } else {
+                        Napier.w("[AppStateStore] Failed to load modes: ${it.message}")
+                    }
+                }
             )
         }
     }
@@ -505,8 +623,15 @@ class AppStateStore(
     /**
      * Load agents from server.
      * Also derives modes from agents if modes endpoint hasn't provided any.
+     * GUARDED by connection check.
      */
     private fun loadAgents() {
+        // Guard: Only load if connected
+        if (!connectionStatus.value.isConnected) {
+            Napier.d("[AppStateStore] Skipping loadAgents() - not connected")
+            return
+        }
+        
         storeScope.launch {
             agentRepository.getAgents().collect { resource ->
                 when (resource) {
@@ -541,7 +666,13 @@ class AppStateStore(
                             }
                         }
                     }
-                    is Resource.Error -> Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
+                    is Resource.Error -> {
+                        if (resource.message.contains("Not connected", ignoreCase = true)) {
+                            Napier.d("[AppStateStore] loadAgents skipped - connection lost")
+                        } else {
+                            Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
+                        }
+                    }
                     else -> {}
                 }
             }

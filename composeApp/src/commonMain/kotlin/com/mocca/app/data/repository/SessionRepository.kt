@@ -58,7 +58,8 @@ class SessionRepository(
                         try {
                             apiClient.listSessions().also { res ->
                                 res.onSuccess { sessions ->
-                                    sessions.forEach { localCache.insertSession(it) }
+                                    // Use batch insert for atomic update - observer fires ONCE
+                                    localCache.insertSessions(sessions)
                                 }
                             }
                         } finally {
@@ -478,9 +479,8 @@ class SessionRepository(
     suspend fun refreshSessions() {
         apiClient.listSessions().fold(
             onSuccess = { sessions ->
-                sessions.forEach { session ->
-                    localCache.insertSession(session)
-                }
+                // Use batch insert for atomic update
+                localCache.insertSessions(sessions)
                 Napier.i("Refreshed ${sessions.size} sessions from server")
             },
             onFailure = { error ->
