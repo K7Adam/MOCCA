@@ -4,6 +4,8 @@
 **Target:** Android Emulator (10.0.2.2)
 **Format:** Maestro YAML Flows
 
+**Relevant Skills:** `android-mcp` (ADB, device automation)
+
 ## OVERVIEW
 This workspace contains the End-to-End (E2E) UI testing suite for MOCCA. It uses Maestro to simulate user interactions on an Android emulator. These tests are strictly external and do not contain any internal unit or integration tests.
 

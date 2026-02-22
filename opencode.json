@@ -1,0 +1,29 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/glm-5-free",
+  "small_model": "opencode/minimax-m2.5-free",
+  "theme": "opencode",
+  "default_agent": "build",
+  "autoupdate": true,
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "permission": {
+    "edit": "allow",
+    "bash": "allow"
+  },
+  "formatter": {
+    "kotlin": {
+      "command": ["ktfmt"]
+    }
+  },
+  "mcpServers": {
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp",
+      "headers": {
+        "Authorization": "Bearer 0a9479ab-7ecf-452f-b48b-f8c7a8a0a9c6"
+      }
+    }
+  }
+}

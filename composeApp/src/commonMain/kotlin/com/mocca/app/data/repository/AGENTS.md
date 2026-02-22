@@ -1,5 +1,9 @@
 # DATA REPOSITORY LAYER
 
+**Scope:** Offline-First Repositories, ConnectionManager
+
+**Relevant Skills:** `kotlin-best-practices` (repository patterns, Flow)
+
 ## OVERVIEW
 The Repository layer implements an **offline-first** architecture, mediating between the `MoccaApiClient` (Network) and `LocalCache` (SQLDelight Persistence). Its primary goal is to provide immediate UI updates using cached data while fetching fresh data from the server in the background.
 

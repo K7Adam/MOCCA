@@ -1,6 +1,8 @@
-# PROJECT KNOWLEDGE BASE
+# DOMAIN MODELS KNOWLEDGE BASE
 
 **Scope:** Domain Models & Contracts
+
+**Relevant Skills:** `kotlin-best-practices` (data classes, sealed classes)
 
 ## OVERVIEW
 Core immutable data structures and sealed class hierarchies that define the MOCCA domain language. These models represent the source of truth for the application state and are used across the UI, Data, and Domain layers to ensure consistency and type safety.

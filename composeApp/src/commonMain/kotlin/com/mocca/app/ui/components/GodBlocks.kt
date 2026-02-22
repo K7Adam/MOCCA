@@ -50,7 +50,7 @@ fun GodHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .glassy(shape = androidx.compose.ui.graphics.RectangleShape)
+            .glassy(shape = com.mocca.app.ui.theme.AppShapes.none)
     ) {
         Row(
             modifier = Modifier

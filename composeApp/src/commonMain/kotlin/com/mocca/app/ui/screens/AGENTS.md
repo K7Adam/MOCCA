@@ -1,5 +1,9 @@
 # UI & SCREENS KNOWLEDGE BASE
 
+**Scope:** UI Screens, MVI Architecture, Navigation
+
+**Relevant Skills:** `taste-skill-compose` (UI/UX), `kotlin-best-practices` (MVI architecture)
+
 ## OVERVIEW
 The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a **Compact Modern Glassmorphic** aesthetic.
 

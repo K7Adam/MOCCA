@@ -1,5 +1,9 @@
 # DATA LAYER KNOWLEDGE BASE
 
+**Scope:** SQLDelight, LocalCache, Offline-First
+
+**Relevant Skills:** `kotlin-best-practices` (SQLDelight, repositories)
+
 ## OVERVIEW
 Clean data layer separating SQLDelight persistence from business logic via offline-first repositories.
 

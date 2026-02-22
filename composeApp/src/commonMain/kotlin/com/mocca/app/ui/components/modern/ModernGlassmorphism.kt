@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import io.github.fletchmckee.liquid.LiquidState
 import io.github.fletchmckee.liquid.liquid
@@ -118,49 +119,49 @@ object LiquidGlassDefaults {
     // ═════════════════════════════════════════════════════════════════════════
 
     /** Dark tint for contrast - most common for UI */
-    val tintDark: Color = Color(0x40000000) // 25% black
+    val tintDark: Color = AppColors.liquidGlassTint // 25% black
 
     /** Semi-dark tint */
-    val tintSemiDark: Color = Color(0x30000000) // 19% black
+    val tintSemiDark: Color = AppColors.liquidGlassTintSecondary // 19% black
 
     /** Light tint for bright backgrounds */
-    val tintLight: Color = Color(0x20FFFFFF) // 12% white
+    val tintLight: Color = AppColors.liquidGlassTintLight // 12% white
 
     /** Mint accent tint */
-    val tintMint: Color = Color(0x1000D9A5) // 6% mint
+    val tintMint: Color = AppColors.liquidGlassRefraction // 6% mint
 
     // Legacy aliases for backward compatibility
     /** Primary tint - 75% opacity dark for excellent legibility */
-    val tintPrimary: Color = Color(0xBF1A1A1A)
+    val tintPrimary: Color = AppColors.glassBackground
 
     /** Secondary tint - 65% opacity for layered elements */
-    val tintSecondary: Color = Color(0xA61E1E1E)
+    val tintSecondary: Color = AppColors.glassBackground
 
     // ═════════════════════════════════════════════════════════════════════════
     // BORDER COLORS
     // ═════════════════════════════════════════════════════════════════════════
 
     /** Primary border - white with 25% opacity */
-    val borderPrimary: Color = Color(0x40FFFFFF)
+    val borderPrimary: Color = AppColors.liquidGlassSpecular
 
     /** Border highlight - top edge brighter */
-    val borderHighlight: Color = Color(0x66FFFFFF)
+    val borderHighlight: Color = AppColors.liquidGlassBorderHighlight
 
     /** Border shadow - bottom edge darker */
-    val borderShadow: Color = Color(0x1AFFFFFF)
+    val borderShadow: Color = AppColors.liquidGlassSpecularInner
 
     // ═════════════════════════════════════════════════════════════════════════
     // SPECULAR HIGHLIGHTS
     // ═════════════════════════════════════════════════════════════════════════
 
     /** Top edge specular - bright white highlight */
-    val specularTop: Color = Color(0x40FFFFFF)
+    val specularTop: Color = AppColors.liquidGlassSpecular
 
     /** Inner specular glow - subtle white */
-    val specularInner: Color = Color(0x1AFFFFFF)
+    val specularInner: Color = AppColors.liquidGlassSpecularInner
 
     /** Refraction accent - mint green glow */
-    val refractionAccent: Color = Color(0x3300D9A5)
+    val refractionAccent: Color = AppColors.liquidGlassRefraction
 
     // ═════════════════════════════════════════════════════════════════════════
     // CONTRAST
@@ -185,8 +186,8 @@ object LiquidGlassDefaults {
 fun Modifier.glassySimple(
     shape: Shape,
     borderWidth: Dp = 0.5.dp,
-    backgroundColor: Color = Color(0x80000000),
-    borderColor: Color = Color(0x30FFFFFF)
+    backgroundColor: Color = AppColors.glassBackground,
+    borderColor: Color = AppColors.liquidGlassBorder
 ): Modifier = this.then(
     Modifier
         .clip(shape)
@@ -327,7 +328,7 @@ fun Modifier.hazeGlass(
     hazeState: HazeState,
     shape: Shape = AppShapes.rounded2xl,
     blurRadius: Dp = 20.dp,
-    backgroundColor: Color = Color(0x80000000),
+    backgroundColor: Color = AppColors.glassBackground,
     noiseFactor: Float = 0.1f
 ): Modifier = this.then(
     Modifier

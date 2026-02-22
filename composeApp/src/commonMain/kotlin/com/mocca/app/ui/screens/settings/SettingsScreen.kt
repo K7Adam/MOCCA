@@ -30,7 +30,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import androidx.compose.ui.graphics.RectangleShape
+
 import androidx.compose.foundation.shape.CircleShape
 import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.components.glass.liquidGlassHeader
@@ -71,7 +71,7 @@ class SettingsScreen : Screen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .liquidGlassHeader(shape = RectangleShape)
+                    .liquidGlassHeader(shape = AppShapes.none)
                     .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -852,7 +852,7 @@ private fun TerminalServerCard(
             .fillMaxWidth()
             .liquidGlassCard(
                 shape = AppShapes.card,
-                tint = if (isActive) Color(0x1500D9A5) else Color(0x40000000)
+                tint = if (isActive) AppColors.accentGreen.copy(alpha = 0.08f) else AppColors.liquidGlassTint
             )
             .then(
                 if (borderColor != null) {

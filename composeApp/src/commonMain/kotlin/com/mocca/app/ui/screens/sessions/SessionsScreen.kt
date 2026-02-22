@@ -26,7 +26,6 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.RectangleShape
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.components.glass.glassy
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +79,7 @@ class SessionsScreen : Screen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .glassy(shape = RectangleShape)
+                    .glassy(shape = AppShapes.none)
                     .padding(AppSpacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically

@@ -34,7 +34,6 @@ import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
-import androidx.compose.ui.graphics.RectangleShape
 import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -57,7 +56,7 @@ class FilesScreen : Screen {
                 GodHeader(
                     title = "Files",
                     onBackClick = { navigator.pop() },
-                    modifier = Modifier.glassy(shape = RectangleShape),
+                    modifier = Modifier.glassy(shape = AppShapes.none),
                     subtitle = "mobile-agent-v2",
                     subtitleIcon = {
                         Icon(
@@ -86,7 +85,7 @@ class FilesScreen : Screen {
             pathHistory = state.pathHistory,
             canNavigateUp = state.pathHistory.size > 1,
             onNavigateUp = { screenModel.navigateUp() },
-            modifier = Modifier.glassy(shape = RectangleShape)
+            modifier = Modifier.glassy(shape = AppShapes.none)
         )
                 
                 // Content

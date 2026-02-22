@@ -29,7 +29,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import androidx.compose.ui.graphics.RectangleShape
 import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.components.*
 import com.mocca.app.ui.components.modern.*
@@ -75,7 +74,7 @@ class GitScreen : Screen {
                 GodHeader(
                     title = selectedTab.title,
                     onBackClick = { navigator.pop() },
-                    modifier = Modifier.glassy(shape = RectangleShape),
+                    modifier = Modifier.glassy(shape = AppShapes.none),
                     subtitle = "mobile-agent-v2",
                     subtitleIcon = {
                         Icon(
@@ -106,11 +105,10 @@ class GitScreen : Screen {
         Column(modifier = Modifier.fillMaxSize()) {
             // Tabs Navigation
             GitTabsNavigation(
-                selectedTab, 
-                onTabSelected = { screenModel.selectTab(it) },
-                modifier = Modifier.glassy(shape = RectangleShape)
-            )
-                    
+                                selectedTab,
+                                onTabSelected = { screenModel.selectTab(it) },
+                                modifier = Modifier.glassy(shape = AppShapes.none)
+                            )                    
                     // Main Content
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         when {

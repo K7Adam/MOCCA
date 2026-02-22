@@ -3,6 +3,8 @@
 **Updated:** 2026-02-15
 **Scope:** `com.mocca.app.api`
 
+**Relevant Skills:** `kotlin-best-practices` (Ktor, coroutines)
+
 ## OVERVIEW
 Ktor-based networking layer providing REST and SSE connectivity to a single OpenCode server instance. Authentication uses HTTP Basic Auth. The `ApiExecutor` interface ensures consumers never hold `HttpClient` references directly.
 

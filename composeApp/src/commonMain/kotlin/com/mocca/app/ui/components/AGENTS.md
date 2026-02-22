@@ -2,8 +2,38 @@
 
 **Scope:** Shared UI components & Modern Glassmorphic Design System
 
+## RELEVANT SKILLS
+- **taste-skill-compose** — UI/UX design rules, animations, theming, glass effects
+
 ## OVERVIEW
 Shared UI library implementing the **Modern Glassmorphic Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Pitch Black" aesthetic.
+
+## LIQUID GLASS EFFECTS
+**REQUIRED**: Use [AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass) for glassmorphic UI effects.
+
+**Dependency**: `io.github.kyant0:backdrop`
+**Docs**: https://kyant.gitbook.io/backdrop
+
+**Example Components:**
+- `LiquidButton` — Glass button with refractive effects
+- `LiquidToggle` — Glass toggle switch
+- `LiquidSlider` — Glass slider control
+- `LiquidBottomTabs` — Glass bottom navigation
+
+**Integration:**
+```kotlin
+// In build.gradle.kts
+implementation("io.github.kyant0:backdrop:1.0.6")
+
+// Usage
+Backdrop(
+    specular = 0.5f,
+    refract = 0.3f,
+    // ... glass parameters
+) {
+    // Content
+}
+```
 
 ## THEME RULES
 The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (pastel colors, elevation shadows).
