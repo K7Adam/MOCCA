@@ -588,6 +588,10 @@ class MoccaApiClient(
         get("experimental/tool/ids")
     }
     
+    suspend fun getToolSchema(id: String): Result<ToolSchema> = safeRequest("getToolSchema") {
+        get("experimental/tool/$id")
+    }
+    
     // Slash Commands
     suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") {
         get("command")
