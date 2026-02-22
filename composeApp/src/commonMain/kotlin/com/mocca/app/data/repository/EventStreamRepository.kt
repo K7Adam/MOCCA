@@ -850,7 +850,7 @@ class EventStreamRepository(
                             val result = apiClient.getMessages(messageInfo.sessionID)
                             result.onSuccess { responses ->
                                 val messages = responses.map { Message.fromResponse(it) }
-                                localCache?.insertMessages(messages)
+                                localCache.insertMessages(messages)
                                 Napier.i("[EventStream] Messages persisted for session: ${messageInfo.sessionID}")
                             }.onFailure { e ->
                                 Napier.w("[EventStream] Failed to fetch messages", e)
