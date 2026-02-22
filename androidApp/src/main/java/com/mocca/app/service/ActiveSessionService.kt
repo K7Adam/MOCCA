@@ -16,14 +16,17 @@ import androidx.core.app.ServiceCompat
 import com.mocca.app.MainActivity
 import com.mocca.app.android.R
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Foreground service for keeping connections alive during active sessions.
- * 
+ *
  * This service is started when a session enters RUNNING state and stopped
  * when all sessions are IDLE. It ensures that:
  * - SSE connections are maintained even when the app is backgrounded
@@ -33,18 +36,18 @@ import kotlinx.coroutines.flow.asStateFlow
  * - Android 16 Live Updates for running agent tasks
  */
 class ActiveSessionService : Service() {
-    
+
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    
+
     private val _activeSessions = MutableStateFlow<Set<String>>(emptySet())
     val activeSessions: StateFlow<Set<String>> = _activeSessions.asStateFlow()
-    
+
     private val binder = LocalBinder()
-    
+
     // ─────────────────────────────────────────────────────────────────────────
     // Notification Channel IDs - Multiple channels for different event types
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     companion object {
         // Channel IDs
         const val CHANNEL_AGENT_ACTIVE = "agent_active_channel"
@@ -53,14 +56,14 @@ class ActiveSessionService : Service() {
         const val CHANNEL_AGENT_ERROR = "agent_error_channel"
         const val CHANNEL_CONNECTION_LOST = "connection_lost_channel"
         const val CHANNEL_QUESTION_PENDING = "question_pending_channel"
-        
+
         // Notification IDs
         private const val NOTIFICATION_ID_ACTIVE = 1001
         private const val NOTIFICATION_ID_PERMISSION_PREFIX = 2000
         private const val NOTIFICATION_ID_QUESTION_PREFIX = 3000
         private const val NOTIFICATION_ID_ERROR = 4000
         private const val NOTIFICATION_ID_CONNECTION = 5000
-        
+
         // Actions
         private const val ACTION_START = "com.mocca.app.action.START_SESSION"
         private const val ACTION_STOP = "com.mocca.app.action.STOP_SESSION"
@@ -68,7 +71,7 @@ class ActiveSessionService : Service() {
         private const val ACTION_ABORT = "com.mocca.app.action.ABORT_SESSION"
         private const val ACTION_PERMISSION_APPROVE = "com.mocca.app.action.PERMISSION_APPROVE"
         private const val ACTION_PERMISSION_DENY = "com.mocca.app.action.PERMISSION_DENY"
-        
+
         // Extras
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_SESSION_TITLE = "session_title"
@@ -78,11 +81,15 @@ class ActiveSessionService : Service() {
         const val EXTRA_TOOL_TITLE = "tool_title"
         const val EXTRA_TOTAL_COUNT = "total_count"
         const val EXTRA_COMPLETED_COUNT = "completed_count"
-        
+
+        // Time constants
+        private const val SECONDS_PER_MINUTE = 60L
+        private const val MILLIS_PER_SECOND = 1000L
+
         // ─────────────────────────────────────────────────────────────────────
         // Public API - Start/Stop Service
         // ─────────────────────────────────────────────────────────────────────
-        
+
         /**
          * Start the service for a session.
          */
@@ -94,7 +101,7 @@ class ActiveSessionService : Service() {
             }
             context.startForegroundService(intent)
         }
-        
+
         /**
          * Stop the service for a specific session.
          */
@@ -105,7 +112,7 @@ class ActiveSessionService : Service() {
             }
             context.startService(intent)
         }
-        
+
         /**
          * Stop all sessions and the service.
          */
@@ -115,11 +122,11 @@ class ActiveSessionService : Service() {
             }
             context.startService(intent)
         }
-        
+
         // ─────────────────────────────────────────────────────────────────────
         // Public API - Notifications
         // ─────────────────────────────────────────────────────────────────────
-        
+
         /**
          * Show a permission request notification with Approve/Deny actions.
          * Uses BroadcastReceiver for handling actions to enable proper permission handling.
@@ -133,9 +140,9 @@ class ActiveSessionService : Service() {
         ) {
             val serviceIntent = Intent(context, ActiveSessionService::class.java)
             context.startService(serviceIntent)
-            
+
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             // Approve action - uses BroadcastReceiver
             val approveIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_APPROVE
@@ -144,11 +151,11 @@ class ActiveSessionService : Service() {
             }
             val approvePendingIntent = PendingIntent.getBroadcast(
                 context,
-                (NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode()),
+                NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode(),
                 approveIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            
+
             // Deny action - uses BroadcastReceiver
             val denyIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_DENY
@@ -157,11 +164,11 @@ class ActiveSessionService : Service() {
             }
             val denyPendingIntent = PendingIntent.getBroadcast(
                 context,
-                (NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode() + 1),
+                NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode() + 1,
                 denyIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_PERMISSION_REQUIRED)
                 .setContentTitle("Permission Required")
                 .setContentText(title)
@@ -174,13 +181,13 @@ class ActiveSessionService : Service() {
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .build()
-            
+
             notificationManager.notify(
                 NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode(),
                 notification
             )
         }
-        
+
         /**
          * Dismiss a permission notification.
          */
@@ -188,7 +195,7 @@ class ActiveSessionService : Service() {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
             notificationManager.cancel(NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode())
         }
-        
+
         /**
          * Show an agent finished notification.
          */
@@ -198,7 +205,7 @@ class ActiveSessionService : Service() {
             sessionTitle: String
         ) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_SESSION_ID, sessionId)
@@ -209,7 +216,7 @@ class ActiveSessionService : Service() {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_FINISHED)
                 .setContentTitle("Task Completed")
                 .setContentText(sessionTitle)
@@ -218,10 +225,10 @@ class ActiveSessionService : Service() {
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_STATUS)
                 .build()
-            
+
             notificationManager.notify(sessionId.hashCode(), notification)
         }
-        
+
         /**
          * Show an agent error notification.
          */
@@ -231,7 +238,7 @@ class ActiveSessionService : Service() {
             errorMessage: String
         ) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_ERROR)
                 .setContentTitle("Agent Error")
                 .setContentText(errorMessage)
@@ -240,10 +247,10 @@ class ActiveSessionService : Service() {
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
                 .build()
-            
+
             notificationManager.notify(NOTIFICATION_ID_ERROR + sessionId.hashCode(), notification)
         }
-        
+
         /**
          * Show a connection lost notification.
          */
@@ -252,7 +259,7 @@ class ActiveSessionService : Service() {
             reason: String? = null
         ) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_CONNECTION_LOST)
                 .setContentTitle("Connection Lost")
                 .setContentText(reason ?: "Unable to reach OpenCode server")
@@ -260,10 +267,10 @@ class ActiveSessionService : Service() {
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_STATUS)
                 .build()
-            
+
             notificationManager.notify(NOTIFICATION_ID_CONNECTION, notification)
         }
-        
+
         /**
          * Show a question pending notification with MessagingStyle.
          */
@@ -274,7 +281,7 @@ class ActiveSessionService : Service() {
             question: String
         ) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_SESSION_ID, sessionId)
@@ -285,7 +292,7 @@ class ActiveSessionService : Service() {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_QUESTION_PENDING)
                 .setContentTitle("Question from Agent")
                 .setContentText(question)
@@ -297,13 +304,13 @@ class ActiveSessionService : Service() {
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
-            
+
             notificationManager.notify(
                 NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode(),
                 notification
             )
         }
-        
+
         /**
          * Dismiss a question notification.
          */
@@ -311,25 +318,19 @@ class ActiveSessionService : Service() {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
             notificationManager.cancel(NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode())
         }
-        
+
         /**
          * Update the active session notification with progress (Android 16 Live Updates style).
          */
         fun updateProgressNotification(
             context: Context,
-            sessionId: String,
-            sessionTitle: String,
-            toolTitle: String?,
-            modelName: String,
-            elapsedSeconds: Long,
-            totalCount: Int = 0,
-            completedCount: Int = 0
+            progressInfo: ProgressInfo
         ) {
             val serviceIntent = Intent(context, ActiveSessionService::class.java)
             context.startService(serviceIntent)
-            
+
             val notificationManager = context.getSystemService(NotificationManager::class.java)
-            
+
             val intent = Intent(context, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
             }
@@ -339,23 +340,23 @@ class ActiveSessionService : Service() {
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            
+
             // Format elapsed time
-            val minutes = elapsedSeconds / 60
-            val seconds = elapsedSeconds % 60
+            val minutes = progressInfo.elapsedSeconds / SECONDS_PER_MINUTE
+            val seconds = progressInfo.elapsedSeconds % SECONDS_PER_MINUTE
             val timeStr = if (minutes > 0) {
                 "${minutes}m ${seconds}s"
             } else {
                 "${seconds}s"
             }
-            
+
             val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_ACTIVE)
-                .setContentTitle(sessionTitle)
+                .setContentTitle(progressInfo.sessionTitle)
                 .setContentText(
-                    if (toolTitle != null) {
-                        "$toolTitle\n$timeStr"
+                    if (progressInfo.toolTitle != null) {
+                        "${progressInfo.toolTitle}\n$timeStr"
                     } else {
-                        "$modelName • $timeStr"
+                        "${progressInfo.modelName} • $timeStr"
                     }
                 )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -363,31 +364,51 @@ class ActiveSessionService : Service() {
                 .setOngoing(true)
                 .setSilent(true)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setProgress(totalCount, completedCount, totalCount == 0)
-                .setWhen(System.currentTimeMillis() - (elapsedSeconds * 1000))
+                .setProgress(
+                    progressInfo.totalCount,
+                    progressInfo.completedCount,
+                    progressInfo.totalCount == 0
+                )
+                .setWhen(
+                    System.currentTimeMillis() -
+                        progressInfo.elapsedSeconds * MILLIS_PER_SECOND
+                )
                 .setUsesChronometer(true)
                 .build()
-            
+
             notificationManager.notify(NOTIFICATION_ID_ACTIVE, notification)
         }
     }
-    
+
+    /**
+     * Data class for progress notification parameters.
+     * Extracted to avoid LongParameterList warning.
+     */
+    data class ProgressInfo(
+        val sessionTitle: String,
+        val toolTitle: String?,
+        val modelName: String,
+        val elapsedSeconds: Long,
+        val totalCount: Int = 0,
+        val completedCount: Int = 0
+    )
+
     // ─────────────────────────────────────────────────────────────────────────
     // Service Lifecycle
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     inner class LocalBinder : Binder() {
         fun getService(): ActiveSessionService = this@ActiveSessionService
     }
-    
+
     override fun onBind(intent: Intent?): IBinder = binder
-    
+
     override fun onCreate() {
         super.onCreate()
         createAllNotificationChannels()
         Napier.i("[ActiveSessionService] Service created")
     }
-    
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
@@ -434,26 +455,26 @@ class ActiveSessionService : Service() {
         }
         return START_STICKY
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         serviceScope.cancel()
         Napier.i("[ActiveSessionService] Service destroyed")
     }
-    
+
     // ─────────────────────────────────────────────────────────────────────────
     // Session Management
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     private fun addActiveSession(sessionId: String, sessionTitle: String?) {
         val currentSessions = _activeSessions.value
         if (sessionId in currentSessions) return
-        
+
         val newSessions = currentSessions + sessionId
         _activeSessions.value = newSessions
-        
+
         Napier.i("[ActiveSessionService] Added session: $sessionId, total: ${newSessions.size}")
-        
+
         // Start foreground if this is the first session
         if (currentSessions.isEmpty()) {
             startForeground(sessionTitle)
@@ -461,14 +482,14 @@ class ActiveSessionService : Service() {
             updateNotification()
         }
     }
-    
+
     private fun removeActiveSession(sessionId: String) {
         val currentSessions = _activeSessions.value
         val newSessions = currentSessions - sessionId
         _activeSessions.value = newSessions
-        
+
         Napier.i("[ActiveSessionService] Removed session: $sessionId, remaining: ${newSessions.size}")
-        
+
         if (newSessions.isEmpty()) {
             // Stop foreground and service
             stopForeground(STOP_FOREGROUND_REMOVE)
@@ -477,26 +498,26 @@ class ActiveSessionService : Service() {
             updateNotification()
         }
     }
-    
+
     private fun stopAllSessions() {
         _activeSessions.value = emptySet()
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
         Napier.i("[ActiveSessionService] All sessions stopped")
     }
-    
+
     private fun dismissPermissionNotification(permissionId: String) {
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager.cancel(NOTIFICATION_ID_PERMISSION_PREFIX + permissionId.hashCode())
     }
-    
+
     // ─────────────────────────────────────────────────────────────────────────
     // Foreground Service
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     private fun startForeground(sessionTitle: String?) {
         val notification = createActiveSessionNotification(sessionTitle)
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(
                 this,
@@ -507,19 +528,28 @@ class ActiveSessionService : Service() {
         } else {
             startForeground(NOTIFICATION_ID_ACTIVE, notification)
         }
-        
+
         Napier.i("[ActiveSessionService] Started foreground")
     }
-    
+
     // ─────────────────────────────────────────────────────────────────────────
     // Notification Channels
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     private fun createAllNotificationChannels() {
         val notificationManager = getSystemService(NotificationManager::class.java)
-        
-        // Agent Active - Low importance, persistent while running
-        val agentActiveChannel = NotificationChannel(
+        notificationManager.createNotificationChannels(listOf(
+            createAgentActiveChannel(),
+            createAgentFinishedChannel(),
+            createPermissionChannel(),
+            createErrorChannel(),
+            createConnectionChannel(),
+            createQuestionChannel()
+        ))
+    }
+
+    private fun createAgentActiveChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_AGENT_ACTIVE,
             "Active Agent",
             NotificationManager.IMPORTANCE_LOW
@@ -527,9 +557,10 @@ class ActiveSessionService : Service() {
             description = "Shows when an agent is actively processing"
             setShowBadge(false)
         }
-        
-        // Agent Finished - Default importance, one-time notification
-        val agentFinishedChannel = NotificationChannel(
+    }
+
+    private fun createAgentFinishedChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_AGENT_FINISHED,
             "Task Completed",
             NotificationManager.IMPORTANCE_DEFAULT
@@ -537,9 +568,10 @@ class ActiveSessionService : Service() {
             description = "Notifies when an agent completes a task"
             setShowBadge(true)
         }
-        
-        // Permission Required - High importance, requires attention
-        val permissionChannel = NotificationChannel(
+    }
+
+    private fun createPermissionChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_PERMISSION_REQUIRED,
             "Permission Required",
             NotificationManager.IMPORTANCE_HIGH
@@ -548,9 +580,10 @@ class ActiveSessionService : Service() {
             setShowBadge(true)
             enableVibration(true)
         }
-        
-        // Agent Error - High importance
-        val errorChannel = NotificationChannel(
+    }
+
+    private fun createErrorChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_AGENT_ERROR,
             "Agent Errors",
             NotificationManager.IMPORTANCE_HIGH
@@ -558,9 +591,10 @@ class ActiveSessionService : Service() {
             description = "Notifies when an agent encounters an error"
             setShowBadge(true)
         }
-        
-        // Connection Lost - Default importance
-        val connectionChannel = NotificationChannel(
+    }
+
+    private fun createConnectionChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_CONNECTION_LOST,
             "Connection Status",
             NotificationManager.IMPORTANCE_DEFAULT
@@ -568,9 +602,10 @@ class ActiveSessionService : Service() {
             description = "Notifies when connection to server is lost"
             setShowBadge(false)
         }
-        
-        // Question Pending - High importance
-        val questionChannel = NotificationChannel(
+    }
+
+    private fun createQuestionChannel(): NotificationChannel {
+        return NotificationChannel(
             CHANNEL_QUESTION_PENDING,
             "Agent Questions",
             NotificationManager.IMPORTANCE_HIGH
@@ -579,35 +614,24 @@ class ActiveSessionService : Service() {
             setShowBadge(true)
             enableVibration(true)
         }
-        
-        notificationManager.createNotificationChannels(
-            listOf(
-                agentActiveChannel,
-                agentFinishedChannel,
-                permissionChannel,
-                errorChannel,
-                connectionChannel,
-                questionChannel
-            )
-        )
     }
-    
+
     // ─────────────────────────────────────────────────────────────────────────
     // Notification Builders
     // ─────────────────────────────────────────────────────────────────────────
-    
+
     private fun createActiveSessionNotification(sessionTitle: String?): Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        
+
         val pendingIntent = PendingIntent.getActivity(
             this,
             0,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-        
+
         return NotificationCompat.Builder(this, CHANNEL_AGENT_ACTIVE)
             .setContentTitle("MOCCA")
             .setContentText(
@@ -622,11 +646,11 @@ class ActiveSessionService : Service() {
             .setProgress(0, 0, true) // Indeterminate progress
             .build()
     }
-    
+
     private fun updateNotification() {
         val sessionCount = _activeSessions.value.size
         val notificationManager = getSystemService(NotificationManager::class.java)
-        
+
         val notification = NotificationCompat.Builder(this, CHANNEL_AGENT_ACTIVE)
             .setContentTitle("MOCCA")
             .setContentText(
@@ -641,7 +665,7 @@ class ActiveSessionService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setProgress(0, 0, true)
             .build()
-        
+
         notificationManager.notify(NOTIFICATION_ID_ACTIVE, notification)
     }
 }

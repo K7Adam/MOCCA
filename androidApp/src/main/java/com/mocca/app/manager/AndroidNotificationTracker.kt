@@ -3,6 +3,7 @@ package com.mocca.app.manager
 import android.content.Context
 import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.service.ActiveSessionService
+import com.mocca.app.service.ActiveSessionService.ProgressInfo
 
 /**
  * Android implementation of NotificationTracker.
@@ -73,8 +74,14 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
         totalCount: Int,
         completedCount: Int
     ) {
-        ActiveSessionService.updateProgressNotification(
-            context, sessionId, sessionTitle, toolTitle, modelName, elapsedSeconds, totalCount, completedCount
+        val progressInfo = ProgressInfo(
+            sessionTitle = sessionTitle,
+            toolTitle = toolTitle,
+            modelName = modelName,
+            elapsedSeconds = elapsedSeconds,
+            totalCount = totalCount,
+            completedCount = completedCount
         )
+        ActiveSessionService.updateProgressNotification(context, progressInfo)
     }
 }
