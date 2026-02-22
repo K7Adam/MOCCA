@@ -40,7 +40,6 @@ import java.util.concurrent.ConcurrentHashMap
 class EventStreamRepository(
     private val sseClient: MoccaSseClient,
     private val networkObserver: NetworkObserver? = null,
-    private val localCache: LocalCache? = null,
     private val apiClient: MoccaApiClient? = null,
     private val appLifecycleObserver: AppLifecycleObserver? = null,
     private val notificationTracker: NotificationTracker? = null
@@ -52,7 +51,6 @@ class EventStreamRepository(
     private var lifecycleObserverJob: Job? = null
     private var backgroundPauseJob: Job? = null
     private var permissionActionJob: Job? = null
-    private var globalConnectionJob: Job? = null  // Global SSE stream for installation events
     
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
@@ -168,78 +166,9 @@ class EventStreamRepository(
             startNetworkObserver()
             startLifecycleObserver()
             startPermissionActionObserver()
-            connectGlobalEvents()  // Also connect to global events
         }
     }
     
-    /**
-     * Connect to the global events stream (/event/global).
-     * This receives system-wide events like installation updates, LSP diagnostics, etc.
-     * CRITICAL for detecting plugin installation changes that affect tools/agents/commands.
-     */
-    fun connectGlobalEvents() {
-        if (globalConnectionJob?.isActive == true) {
-            Napier.d("[EventStream] Global events already connected")
-            return
-        }
-        
-        globalConnectionJob = repositoryScope.launch {
-            Napier.i("[EventStream] Connecting to global events stream...")
-            
-            try {
-                sseClient.subscribeToGlobalEvents()
-                    .catch { error ->
-                        if (error is CancellationException) throw error
-                        Napier.e("[EventStream] Global events error", error)
-                        // Reconnect after delay
-                        delay(5000)
-                        if (autoReconnect) {
-                            globalConnectionJob?.cancel()
-                            connectGlobalEvents()
-                        }
-                    }
-                    .collect { event ->
-                        Napier.i("[EventStream] Global event received: ${event.type}")
-                        handleGlobalEvent(event)
-                    }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Napier.e("[EventStream] Global events connection failed", e)
-            }
-        }
-    }
-    
-    /**
-     * Handle global (non-session-specific) events.
-     * These affect the entire app, not just specific sessions.
-     */
-    private suspend fun handleGlobalEvent(event: ServerEvent) {
-        // Emit to global events flow
-        _globalEvents.emit(event)
-        
-        // Also emit to main events flow for general consumers
-        _events.emit(event)
-        
-        when (event) {
-            is ServerEvent.InstallationUpdated -> {
-                Napier.i("[EventStream] Installation updated to version: ${event.properties.version}")
-                // Trigger callback for cache invalidation and full sync
-                onInstallationUpdated?.invoke()
-            }
-            is ServerEvent.LspDiagnostics -> {
-                Napier.d("[EventStream] LSP diagnostics for: ${event.properties.path}")
-            }
-            is ServerEvent.AgentStatus -> {
-                // Global agent status (not session-specific)
-                Napier.d("[EventStream] Global agent status: ${event.properties.agentName} - ${event.properties.status}")
-            }
-            else -> {
-                Napier.v("[EventStream] Unhandled global event: ${event.type}")
-            }
-        }
-    }
-
     /**
      * Add a session ID to monitor.
      */
@@ -549,13 +478,11 @@ class EventStreamRepository(
         networkObserverJob?.cancel()
         lifecycleObserverJob?.cancel()
         backgroundPauseJob?.cancel()
-        globalConnectionJob?.cancel()
         connectionJob = null
         heartbeatJob = null
         networkObserverJob = null
         lifecycleObserverJob = null
         backgroundPauseJob = null
-        globalConnectionJob = null
         // Do NOT cancel repositoryScope, it persists for the app lifecycle
         reconnectAttempts = 0
         activeSessionId = null
@@ -671,25 +598,11 @@ class EventStreamRepository(
             }
             
             is ServerEvent.SessionUpdated -> {
-                val session = event.properties.info
-                // Persist session update to local cache
-                try {
-                    localCache?.insertSession(session)
-                    Napier.d("Session updated and persisted: ${session.id}")
-                } catch (e: Exception) {
-                    Napier.w("Failed to persist session update", e)
-                }
+                Napier.d("Session updated: ${event.properties.info.id}")
             }
             
             is ServerEvent.SessionDeleted -> {
-                val sessionId = event.properties.info.id
-                // Remove from local cache
-                try {
-                    localCache?.deleteSession(sessionId)
-                    Napier.d("Session deleted and removed from cache: $sessionId")
-                } catch (e: Exception) {
-                    Napier.w("Failed to delete session from cache", e)
-                }
+                Napier.d("Session deleted: ${event.properties.info.id}")
             }
             
             is ServerEvent.SessionIdle -> {
@@ -704,22 +617,11 @@ class EventStreamRepository(
                     _thinkingContent.value = ""
                     _thinkingStartTime.value = null
                 }
-                // Update session status in cache
-                try {
-                    localCache?.updateSessionStatus(sessionId, "idle")
-                } catch (e: Exception) {
-                    Napier.w("Failed to update session status", e)
-                }
                 Napier.d("Session idle: $sessionId")
             }
             
             is ServerEvent.SessionError -> {
                 event.properties.sessionID?.let { sessionId ->
-                    try {
-                        localCache?.updateSessionStatus(sessionId, "error")
-                    } catch (e: Exception) {
-                        Napier.w("Failed to update session error status", e)
-                    }
                     if (monitoredSessionIds.value.contains(sessionId)) {
                         notificationTracker?.showAgentErrorNotification(
                             sessionId = sessionId,
@@ -807,22 +709,6 @@ class EventStreamRepository(
                 if (part.type == "tool" && part.state != null) {
                     Napier.d("Tool ${part.tool}: ${part.state.status}")
                 }
-                
-                // IMPROVED: Incrementally update message part in cache
-                // This avoids fetching all messages on every update
-                // Note: part.id and part.messageID are non-null String in MessagePartInfo
-                repositoryScope.launch {
-                    try {
-                        localCache?.updateMessagePart(
-                            messageId = part.messageID,
-                            partId = part.id,
-                            content = part.text,
-                            delta = delta
-                        )
-                    } catch (e: Exception) {
-                        Napier.w("[EventStream] Failed to incrementally update message part", e)
-                    }
-                }
             }
             
             is ServerEvent.MessageUpdated -> {
@@ -836,46 +722,12 @@ class EventStreamRepository(
                     _thinkingContent.value = ""
                     _thinkingStartTime.value = null
                 }
-                // Update session status to running when message is being processed
-                repositoryScope.launch {
-                    try {
-                        localCache?.updateSessionStatus(messageInfo.sessionID, "running")
-                        
-                        // IMPROVED: Only fetch messages if we don't have incremental updates
-                        // Check if we already have this message in cache
-                        val existingMessage = localCache?.getMessage(messageInfo.id)
-                        if (existingMessage == null && apiClient != null && localCache != null) {
-                            // Message not in cache, fetch it
-                            Napier.i("[EventStream] Fetching new message: ${messageInfo.id}")
-                            val result = apiClient.getMessages(messageInfo.sessionID)
-                            result.onSuccess { responses ->
-                                val messages = responses.map { Message.fromResponse(it) }
-                                localCache.insertMessages(messages)
-                                Napier.i("[EventStream] Messages persisted for session: ${messageInfo.sessionID}")
-                            }.onFailure { e ->
-                                Napier.w("[EventStream] Failed to fetch messages", e)
-                            }
-                        } else {
-                            Napier.v("[EventStream] Message already in cache, skipping full fetch")
-                        }
-                    } catch (e: Exception) {
-                        Napier.w("[EventStream] Failed to update session status or fetch messages", e)
-                    }
-                }
                 Napier.d("[EventStream] Message updated: ${messageInfo.id}")
             }
             
             is ServerEvent.MessageRemoved -> {
                 val messageId = event.properties.messageID
-                // Remove from local cache
-                repositoryScope.launch {
-                    try {
-                        localCache?.deleteMessage(messageId)
-                        Napier.d("Message removed and deleted from cache: $messageId")
-                    } catch (e: Exception) {
-                        Napier.w("Failed to delete message from cache", e)
-                    }
-                }
+                Napier.d("Message removed: $messageId")
             }
             
             is ServerEvent.MessagePartRemoved -> {

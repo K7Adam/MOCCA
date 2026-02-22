@@ -61,7 +61,6 @@ class RealtimeSyncService(
     
     // Sync configuration - 30 seconds is reasonable for non-SSE data
     private val syncIntervalMs = SYNC_INTERVAL_MS
-    private var periodicSyncJob: Job? = null
     private var connectionObserverJob: Job? = null
     
     // Internal sync state
@@ -87,9 +86,6 @@ class RealtimeSyncService(
         
         Napier.i("[RealtimeSync] Starting silent background sync service")
         
-        // Start periodic sync (SILENT)
-        startPeriodicSync()
-        
         // Observe connection state for immediate sync (SILENT)
         startConnectionObserver()
         
@@ -108,8 +104,6 @@ class RealtimeSyncService(
     fun stop() {
         Napier.i("[RealtimeSync] Stopping sync service")
         isStarted = false
-        periodicSyncJob?.cancel()
-        periodicSyncJob = null
         connectionObserverJob?.cancel()
         connectionObserverJob = null
     }
@@ -161,22 +155,6 @@ class RealtimeSyncService(
     fun syncRepos(repoNames: Set<String>) {
         serviceScope.launch {
             performSilentSync("partial-${repoNames.joinToString()}", repoNames)
-        }
-    }
-    
-    private fun startPeriodicSync() {
-        periodicSyncJob?.cancel()
-        periodicSyncJob = serviceScope.launch {
-            Napier.i("[RealtimeSync] Starting silent periodic sync (interval=${syncIntervalMs}ms)")
-            
-            while (isActive) {
-                delay(syncIntervalMs)
-                
-                // Only sync if connected and not already syncing
-                if (connectionManager.status.value.isConnected && !_isSyncing.value) {
-                    performSilentSync("periodic")
-                }
-            }
         }
     }
     

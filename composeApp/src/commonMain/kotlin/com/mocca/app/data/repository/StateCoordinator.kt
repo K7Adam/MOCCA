@@ -245,7 +245,7 @@ class StateCoordinator(
         
         // Connect to global SSE stream for system-wide events (installation updates, LSP diagnostics)
         // This ensures we receive real-time updates even without an active session
-        eventStreamRepository.connectGlobalEvents()
+        eventStreamRepository.connect()
         Napier.i("[StateCoordinator] Connected to global SSE stream")
         
         // Restore last session ID from preferences
@@ -381,7 +381,7 @@ class StateCoordinator(
     private suspend fun handleServerEvent(event: ServerEvent) {
         val previousRunning = _runningSessionIds.value
 
-        // Update running session tracking
+        // Update running session tracking and perform cache synchronization
         when (event) {
             is ServerEvent.SessionUpdated -> {
                 val session = event.properties.info
@@ -403,6 +403,15 @@ class StateCoordinator(
                 } else if (!isRunning && previousRunning.contains(session.id) && !nowRunning.contains(session.id)) {
                     notificationTracker?.stopSession(session.id)
                 }
+                
+                // Cache persistence
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.insertSession(session)
+                    } catch (e: Exception) {
+                        Napier.w("Failed to persist session", e)
+                    }
+                }
             }
             is ServerEvent.SessionIdle -> {
                 val sessionId = event.properties.sessionID
@@ -412,6 +421,16 @@ class StateCoordinator(
                 if (previousRunning.contains(sessionId)) {
                     notificationTracker?.stopSession(sessionId)
                 }
+                
+                // Cache persistence
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.updateSessionStatus(sessionId, "idle")
+                    } catch (e: Exception) {
+                        Napier.w("Failed to update session status idle", e)
+                    }
+                }
+                
                 // Trigger callback for message refresh
                 onSessionIdle?.invoke(sessionId)
             }
@@ -423,6 +442,15 @@ class StateCoordinator(
                     if (previousRunning.contains(sessionId)) {
                         notificationTracker?.stopSession(sessionId)
                     }
+                    
+                    // Cache persistence
+                    coordinatorScope.launch(Dispatchers.IO) {
+                        try {
+                            localCache.updateSessionStatus(sessionId, "error")
+                        } catch (e: Exception) {
+                            Napier.w("Failed to update session status error", e)
+                        }
+                    }
                 }
             }
             is ServerEvent.SessionDeleted -> {
@@ -433,9 +461,19 @@ class StateCoordinator(
                 if (previousRunning.contains(sessionId)) {
                     notificationTracker?.stopSession(sessionId)
                 }
+                
+                // Cache persistence
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.deleteSession(sessionId)
+                    } catch (e: Exception) {
+                        Napier.w("Failed to delete session from cache", e)
+                    }
+                }
             }
             is ServerEvent.MessagePartUpdated -> {
                 val part = event.properties.part
+                val delta = event.properties.delta
                 if (part.type == "tool" && part.state != null) {
                     val sessionId = part.sessionID
                     val status = part.state.status
@@ -453,6 +491,47 @@ class StateCoordinator(
                         coordinatorScope.launch {
                             updateSessionProgressNotification(sessionId, null)
                         }
+                    }
+                }
+                
+                // Cache persistence
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.updateMessagePart(
+                            messageId = part.messageID,
+                            partId = part.id,
+                            content = part.text,
+                            delta = delta
+                        )
+                    } catch (e: Exception) {
+                        Napier.w("Failed to update message part", e)
+                    }
+                }
+            }
+            is ServerEvent.MessageUpdated -> {
+                val messageInfo = event.properties.info
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.updateSessionStatus(messageInfo.sessionID, "running")
+                        val existingMessage = localCache.getMessage(messageInfo.id)
+                        if (existingMessage == null) {
+                            moccaApiClient.getMessages(messageInfo.sessionID).onSuccess { responses ->
+                                val messages = responses.map { Message.fromResponse(it) }
+                                localCache.insertMessages(messages)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Napier.w("Failed to update message from cache", e)
+                    }
+                }
+            }
+            is ServerEvent.MessageRemoved -> {
+                val messageId = event.properties.messageID
+                coordinatorScope.launch(Dispatchers.IO) {
+                    try {
+                        localCache.deleteMessage(messageId)
+                    } catch (e: Exception) {
+                        Napier.w("Failed to remove message from cache", e)
                     }
                 }
             }

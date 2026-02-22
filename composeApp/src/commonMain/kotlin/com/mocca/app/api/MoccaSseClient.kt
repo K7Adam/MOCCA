@@ -36,11 +36,11 @@ class MoccaSseClient(
      */
     fun subscribeToEvents(): Flow<ServerEvent> = callbackFlow {
         try {
-            Napier.i(">>> Connecting to SSE at /event")
+            Napier.i(">>> Connecting to SSE at /global/event")
             
             api.execute {
                 sse(
-                    urlString = "event",
+                    urlString = "global/event",
                     reconnectionTime = 3.seconds
                 ) {
                 Napier.i(">>> SSE session block entered - connection established")
@@ -98,59 +98,6 @@ class MoccaSseClient(
         }
     }
     
-    /**
-     * Subscribe to global events (not session-specific).
-     * Useful for monitoring system-wide events like installation updates,
-     * LSP diagnostics, and agent status across all sessions.
-     * Returns a Flow that emits only global ServerEvent objects.
-     */
-    fun subscribeToGlobalEvents(): Flow<ServerEvent> = callbackFlow {
-        try {
-            Napier.i(">>> Connecting to Global SSE at /event/global")
-            
-            api.execute {
-                sse(
-                    urlString = "event/global",
-                    reconnectionTime = 3.seconds
-                ) {
-                    Napier.i(">>> Global SSE session established")
-                    
-                    send(ServerEvent.Connected(
-                        type = "server.connected",
-                        properties = ConnectedProperties(
-                            status = "connected",
-                            version = "unknown"
-                        )
-                    ))
-                    
-                    this.incoming
-                        .buffer(100)
-                        .collect { sseEvent ->
-                        val data = sseEvent.data
-                        if (data.isNullOrBlank()) return@collect
-                        
-                        try {
-                            val event = parseEvent(data)
-                            send(event)
-                        } catch (e: Exception) {
-                            Napier.w(">>> Failed to parse global SSE event: ${data.take(100)}", e)
-                            send(ServerEvent.Unknown(type = "parse_error", rawData = data))
-                        }
-                    }
-                }
-            }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Napier.e(">>> Global SSE connection error: ${e.message}", e)
-            close(e)
-        }
-        
-        awaitClose {
-            Napier.i(">>> Global SSE connection closed")
-        }
-    }
-
     /**
      * Parse raw JSON string into ServerEvent.
      * Based on OpenCode SDK event types.

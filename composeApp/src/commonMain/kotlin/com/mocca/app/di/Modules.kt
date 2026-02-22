@@ -66,7 +66,6 @@ val commonModule = module {
         EventStreamRepository(
             sseClient = get(),
             networkObserver = getOrNull(),
-            localCache = get(),
             apiClient = get(),
             appLifecycleObserver = getOrNull(),
             notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>()
