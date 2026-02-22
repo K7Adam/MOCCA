@@ -12,6 +12,9 @@ class SettingsRepository(
     private val localCache: LocalCache
 ) {
     companion object {
+        // Session State
+        const val KEY_LAST_SESSION_ID = "last_session_id"
+        
         // GitHub / Updates
         const val KEY_GITHUB_TOKEN = "github_token"
         
@@ -39,6 +42,28 @@ class SettingsRepository(
         // Privacy
         const val KEY_SCREEN_SECURITY = "screen_security"
         const val KEY_CLEAR_CACHE_ON_EXIT = "clear_cache_on_exit"
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Session State
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Get the last active session ID for restoration.
+     */
+    suspend fun getLastSessionId(): String? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_LAST_SESSION_ID)
+    }
+
+    /**
+     * Save the last active session ID.
+     */
+    suspend fun saveLastSessionId(sessionId: String?) = withContext(Dispatchers.IO) {
+        if (sessionId.isNullOrBlank()) {
+            localCache.deleteSetting(KEY_LAST_SESSION_ID)
+        } else {
+            localCache.saveSetting(KEY_LAST_SESSION_ID, sessionId)
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -70,6 +95,7 @@ class SettingsRepository(
      */
     suspend fun getUserPreferences(): UserPreferences = withContext(Dispatchers.IO) {
         UserPreferences(
+            lastSessionId = getLastSessionId(),
             showTokenCounts = getBoolean(KEY_SHOW_TOKEN_COUNTS, true),
             showTimestamps = getBoolean(KEY_SHOW_TIMESTAMPS, true),
             compactMode = getBoolean(KEY_COMPACT_MODE, false),

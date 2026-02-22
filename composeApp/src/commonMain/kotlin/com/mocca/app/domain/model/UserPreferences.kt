@@ -13,6 +13,13 @@ import kotlinx.serialization.Serializable
 @Immutable
 data class UserPreferences(
     // ═══════════════════════════════════════════════════════════════════════════════
+    // Session State
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /** Last active session ID - persisted for restoration on app restart */
+    val lastSessionId: String? = null,
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
     // Appearance
     // ═══════════════════════════════════════════════════════════════════════════════
     
