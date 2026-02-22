@@ -159,7 +159,8 @@ val commonModule = module {
             toolRepository = get(),
             commandRepository = get(),
             gitRepository = get(),
-            realtimeSyncService = get()
+            realtimeSyncService = get(),
+            preferencesManager = get()
         )
     }
     

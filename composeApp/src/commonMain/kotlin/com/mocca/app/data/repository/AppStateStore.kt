@@ -2,8 +2,6 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
-import com.mocca.app.domain.model.GlobalSyncState
-import com.mocca.app.domain.model.SyncState
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -50,7 +48,8 @@ class AppStateStore(
     private val toolRepository: ToolRepository,
     private val commandRepository: CommandRepository,
     private val gitRepository: GitRepository,
-    private val realtimeSyncService: RealtimeSyncService
+    private val realtimeSyncService: RealtimeSyncService,
+    private val preferencesManager: PreferencesManager
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -144,6 +143,12 @@ class AppStateStore(
     
     private val _vcsInfo = MutableStateFlow<Resource<VcsInfo>>(Resource.Loading())
     val vcsInfo: StateFlow<Resource<VcsInfo>> = _vcsInfo.asStateFlow()
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // USER PREFERENCES - Reactive from PreferencesManager
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    val userPreferences: StateFlow<UserPreferences> = preferencesManager.preferences
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // SYNC STATE - From StateCoordinator + RealtimeSyncService

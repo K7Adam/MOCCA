@@ -4,7 +4,6 @@ import com.mocca.app.api.ConnectionQualityTracker
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.NetworkConfig
-import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.util.AppLifecycleObserver

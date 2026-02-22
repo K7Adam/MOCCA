@@ -44,7 +44,9 @@ data class ChatState(
     val recentModels: ImmutableList<RecentModel> = persistentListOf(),
     val todos: ImmutableList<Todo> = persistentListOf(),
     val showTodoPanel: Boolean = false,
-    val maxTokens: Int = 0
+    val maxTokens: Int = 0,
+    val showTimestamps: Boolean = true,
+    val showTokenCounts: Boolean = true
 ) {
     val totalInputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.input ?: 0 } }
     val totalOutputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.output ?: 0 } }
@@ -152,9 +154,11 @@ class ChatScreenModel(
                 configDelegate.maxTokens,
                 configDelegate.recentModels,
                 configDelegate.commands,
-                chatStateStore.todos
+                chatStateStore.todos,
+                appStateStore.userPreferences
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
+                val prefs = args[22] as UserPreferences
                 _state.value.copy(
                     messages = (args[0] as List<Message>).toImmutableList(),
                     childSessions = (args[1] as Map<String, Session>).toImmutableMap(),
@@ -177,7 +181,9 @@ class ChatScreenModel(
                     maxTokens = args[18] as Int,
                     recentModels = args[19] as ImmutableList<RecentModel>,
                     commands = args[20] as ImmutableList<Command>,
-                    todos = (args[21] as List<Todo>).toImmutableList()
+                    todos = (args[21] as List<Todo>).toImmutableList(),
+                    showTimestamps = prefs.showTimestamps,
+                    showTokenCounts = prefs.showTokenCounts
                 )
             }.collect { newState ->
                 _state.update { newState }

@@ -1,6 +1,7 @@
 package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
+import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.domain.model.*
 import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.util.AppLifecycleObserver
@@ -46,7 +47,7 @@ class StateCoordinator(
     private val appLifecycleObserver: AppLifecycleObserver?,
     private val networkObserver: NetworkObserver?,
     private val notificationTracker: NotificationTracker? = null,
-    private val moccaApiClient: com.mocca.app.api.MoccaApiClient
+    private val moccaApiClient: MoccaApiClient
 ) {
     private val coordinatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     

@@ -1,10 +1,6 @@
 package com.mocca.app.api
 
 import com.mocca.app.domain.model.*
-import com.mocca.app.domain.model.McpServerStatus
-import com.mocca.app.domain.model.McpConnectRequest
-import com.mocca.app.domain.model.McpConfigureRequest
-import com.mocca.app.domain.model.McpServerConfig
 import io.github.aakira.napier.Napier
 import io.ktor.client.*
 import io.ktor.client.call.*

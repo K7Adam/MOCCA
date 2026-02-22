@@ -594,8 +594,8 @@ fun ChatContent(
                             dateHeader = showDateHeader,
                             onFork = { screenModel.forkSession(message) },
                             onRevert = { screenModel.revertSession(message) },
-                            showTimestamps = true, // TODO: Get from preferences
-                            showTokenCounts = true // TODO: Get from preferences
+                            showTimestamps = state.showTimestamps,
+                            showTokenCounts = state.showTokenCounts
                         )
                     }
                 }

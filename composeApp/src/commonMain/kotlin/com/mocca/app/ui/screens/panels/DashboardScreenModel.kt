@@ -13,8 +13,6 @@ import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.ProjectRepository
 import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
-import com.mocca.app.domain.model.GlobalSyncState
-import com.mocca.app.domain.model.SyncState
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
