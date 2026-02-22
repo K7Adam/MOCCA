@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
@@ -49,19 +50,29 @@ enum class SuggestionType {
 /**
  * Popup showing suggestions for commands or mentions.
  * Premium styled with glass border and consistent theming.
+ * 
+ * IMPORTANT: This popup is triggered by the "/" and "@" buttons in the chat input.
+ * It must be positioned above the input field at the bottom of the screen.
+ *
+ * @param suggestions List of suggestions to display
+ * @param onSuggestionSelected Callback when a suggestion is selected
+ * @param onDismiss Callback when the popup should be dismissed
+ * @param offset Optional offset to position the popup (defaults to bottom-center above input)
  */
 @Composable
 fun SuggestionPopup(
     suggestions: List<SuggestionItem>,
     onSuggestionSelected: (SuggestionItem) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    offset: IntOffset = IntOffset(0, -280) // Default offset to position above bottom bar
 ) {
     if (suggestions.isEmpty()) return
 
     Popup(
-        alignment = Alignment.TopStart,
+        alignment = Alignment.BottomCenter,
         onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = false)
+        properties = PopupProperties(focusable = false),
+        offset = offset
     ) {
         Box(
             modifier = Modifier

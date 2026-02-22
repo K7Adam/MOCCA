@@ -60,6 +60,9 @@ data class MainScreenState(
     val maxConnectionAttempts: Int = 10,
     val connectionError: String? = null,
     
+    // SSE connection state (real-time event streaming)
+    val isSseConnected: Boolean = false,
+    
     // Context info
     val mcpStatus: String = "OFFLINE",
     val isMcpOnline: Boolean = false,
@@ -159,6 +162,19 @@ class MainScreenModel(
      * This replaces manual session loading and SSE event observation.
      */
     private fun observeAppStateStore() {
+        // Observe current session ID from centralized store (restored from preferences on startup)
+        screenModelScope.launch {
+            appStateStore.currentSessionId.collect { sessionId ->
+                Napier.i("[MainScreenModel] Current session ID from store: $sessionId")
+                // Only update if we don't have an explicit initialSessionId or if it changed
+                if (sessionId != null && _state.value.currentSessionId == null) {
+                    _state.update { it.copy(currentSessionId = sessionId) }
+                    loadMessages(sessionId)
+                    Napier.i("[MainScreenModel] Restored session from store: $sessionId")
+                }
+            }
+        }
+        
         // Observe sessions
         screenModelScope.launch {
             appStateStore.sessions.collect { sessions ->
@@ -408,7 +424,8 @@ class MainScreenModel(
                             isConnecting = false,
                             connectionError = status.reason,
                             mcpStatus = "OFFLINE",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                     is ConnectionStatus.Connecting -> {
@@ -416,7 +433,8 @@ class MainScreenModel(
                             isConnected = false,
                             isConnecting = true,
                             mcpStatus = "CONNECTING",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                     is ConnectionStatus.Reconnecting -> {
@@ -425,7 +443,8 @@ class MainScreenModel(
                             isConnecting = true,
                             connectionAttempt = status.attempt,
                             mcpStatus = "RECONNECTING",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                     is ConnectionStatus.WaitingForNetwork -> {
@@ -434,7 +453,8 @@ class MainScreenModel(
                             isConnecting = false,
                             isWaitingForNetwork = true,
                             mcpStatus = "WAITING",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                     is ConnectionStatus.NotConfigured -> {
@@ -442,7 +462,8 @@ class MainScreenModel(
                             isConnected = false,
                             isConnecting = false,
                             mcpStatus = "NOT_CONFIGURED",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                     is ConnectionStatus.Error -> {
@@ -451,10 +472,18 @@ class MainScreenModel(
                             isConnecting = false,
                             connectionError = status.message,
                             mcpStatus = "ERROR",
-                            isMcpOnline = false
+                            isMcpOnline = false,
+                            isSseConnected = false
                         )}
                     }
                 }
+            }
+        }
+        
+        // Observe SSE connection status for real-time event streaming indicator
+        screenModelScope.launch {
+            appStateStore.isSseConnected.collect { isSseConnected ->
+                _state.update { it.copy(isSseConnected = isSseConnected) }
             }
         }
     }

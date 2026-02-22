@@ -42,6 +42,7 @@ class StateCoordinator(
     private val connectionManager: ConnectionManager,
     private val localCache: LocalCache,
     private val sessionRepository: SessionRepository,
+    private val settingsRepository: SettingsRepository,
     private val appLifecycleObserver: AppLifecycleObserver?,
     private val networkObserver: NetworkObserver?,
     private val notificationTracker: NotificationTracker? = null,
@@ -54,6 +55,7 @@ class StateCoordinator(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     private val sessionMutex = Mutex()
+    private val syncMutex = Mutex()  // Prevents concurrent sync operations
     private val _activeSessionId = MutableStateFlow<String?>(null)
     val activeSessionId: StateFlow<String?> = _activeSessionId.asStateFlow()
     
@@ -96,6 +98,14 @@ class StateCoordinator(
     val isThinking: StateFlow<Boolean> = eventStreamRepository.isThinking
     val thinkingContent: StateFlow<String> = eventStreamRepository.thinkingContent
     val thinkingStartTime: StateFlow<Long?> = eventStreamRepository.thinkingStartTime
+    
+    // SSE connection status - indicates if real-time events are being received
+    val sseConnectionStatus: StateFlow<ConnectionStatus> = eventStreamRepository.connectionStatus
+    
+    // Convenience property for UI - true when SSE is connected
+    val isSseConnected: StateFlow<Boolean> = eventStreamRepository.connectionStatus
+        .map { it.isConnected }
+        .stateIn(coordinatorScope, SharingStarted.Eagerly, false)
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // PERMISSION/QUESTION STATE - From EventStreamRepository
@@ -223,6 +233,7 @@ class StateCoordinator(
     /**
      * Start the coordinator.
      * Called automatically when connection is established.
+     * Restores the last active session from preferences.
      */
     fun start() {
         if (isInitialized) {
@@ -231,6 +242,23 @@ class StateCoordinator(
         }
         isInitialized = true
         Napier.i("[StateCoordinator] Started")
+        
+        // Connect to global SSE stream for system-wide events (installation updates, LSP diagnostics)
+        // This ensures we receive real-time updates even without an active session
+        eventStreamRepository.connectGlobalEvents()
+        Napier.i("[StateCoordinator] Connected to global SSE stream")
+        
+        // Restore last session ID from preferences
+        coordinatorScope.launch {
+            val lastSessionId = settingsRepository.getLastSessionId()
+            if (!lastSessionId.isNullOrBlank()) {
+                Napier.i("[StateCoordinator] Restoring last session: $lastSessionId")
+                _activeSessionId.value = lastSessionId
+                _monitoredSessionIds.update { it + lastSessionId }
+                // Broadcast session change
+                _broadcastEvents.emit(BroadcastEvent.ActiveSessionChanged(lastSessionId))
+            }
+        }
         
         // Sync if connected
         if (connectionStatus.value.isConnected) {
@@ -245,6 +273,7 @@ class StateCoordinator(
     /**
      * Set the active session.
      * This updates EventStreamRepository and all state stores.
+     * Persists the session ID for restoration on app restart.
      */
     suspend fun setActiveSession(sessionId: String?) {
         sessionMutex.withLock {
@@ -256,6 +285,10 @@ class StateCoordinator(
             
             Napier.i("[StateCoordinator] Setting active session: $previousId -> $sessionId")
             _activeSessionId.value = sessionId
+            
+            // Persist session ID for restoration
+            settingsRepository.saveLastSessionId(sessionId)
+            Napier.v("[StateCoordinator] Persisted last session ID: $sessionId")
             
             // Update monitored sessions
             if (sessionId != null) {
@@ -505,19 +538,26 @@ class StateCoordinator(
     
     /**
      * Sync all state from server.
+     * Uses mutex to prevent concurrent sync operations (debounce).
      */
     fun syncFromServer() {
         syncJob?.cancel()
         syncJob = coordinatorScope.launch {
-            if (_isSyncing.value) {
-                Napier.v("[StateCoordinator] Already syncing, skipping")
+            // Use mutex to prevent concurrent syncs (debounce)
+            if (!syncMutex.tryLock()) {
+                Napier.v("[StateCoordinator] Sync already in progress, skipping")
                 return@launch
             }
             
-            _isSyncing.value = true
-            Napier.i("[StateCoordinator] Starting full sync...")
-            
             try {
+                if (_isSyncing.value) {
+                    Napier.v("[StateCoordinator] Already syncing, skipping")
+                    return@launch
+                }
+                
+                _isSyncing.value = true
+                Napier.i("[StateCoordinator] Starting full sync...")
+                
                 // Sync sessions
                 sessionRepository.refreshSessions()
                 
@@ -536,6 +576,7 @@ class StateCoordinator(
                 _broadcastEvents.emit(BroadcastEvent.SyncFailed(e.message ?: "Unknown error"))
             } finally {
                 _isSyncing.value = false
+                syncMutex.unlock()
             }
         }
     }

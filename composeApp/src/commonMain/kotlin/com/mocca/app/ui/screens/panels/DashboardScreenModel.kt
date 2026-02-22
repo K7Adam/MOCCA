@@ -76,6 +76,9 @@ class DashboardScreenModel(
         // Per-repository sync states
         val repoSyncStates: Map<String, SyncState> = emptyMap(),
         
+        // SSE connection status (real-time event streaming)
+        val isSseConnected: Boolean = false,
+        
         // Sync state
         val isSyncing: Boolean = false
     ) {
@@ -270,6 +273,13 @@ class DashboardScreenModel(
         screenModelScope.launch {
             appStateStore.repoSyncStates.collect { repoSyncStates ->
                 _state.update { it.copy(repoSyncStates = repoSyncStates) }
+            }
+        }
+        
+        // Observe SSE connection status (real-time event streaming)
+        screenModelScope.launch {
+            appStateStore.isSseConnected.collect { isSseConnected ->
+                _state.update { it.copy(isSseConnected = isSseConnected) }
             }
         }
     }

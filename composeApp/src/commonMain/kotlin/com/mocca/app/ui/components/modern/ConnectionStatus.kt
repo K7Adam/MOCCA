@@ -184,6 +184,81 @@ fun InlineConnectionStatus(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SSE STATUS INDICATOR
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * SSE (Server-Sent Events) connection status indicator.
+ * Shows a small indicator when SSE is connected/disconnected.
+ * Used for real-time synchronization status.
+ */
+@Composable
+fun SseStatusIndicator(
+    isConnected: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
+    ) {
+        StatusDot(
+            color = if (isConnected) AppColors.accentGreen else AppColors.statusOffline
+        )
+        Text(
+            text = if (isConnected) "SSE" else "POLL",
+            color = if (isConnected) AppColors.accentGreen else AppColors.statusOffline,
+            style = AppTypography.labelSmall,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+/**
+ * Combined connection + SSE status indicator for dashboard.
+ */
+@Composable
+fun CombinedConnectionIndicator(
+    isHttpConnected: Boolean,
+    isSseConnected: Boolean,
+    serverName: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+    ) {
+        // HTTP connection status
+        if (isHttpConnected) {
+            StatusDot(color = AppColors.accentGreen)
+            Text(
+                text = serverName?.uppercase() ?: "ONLINE",
+                color = AppColors.textSecondary,
+                style = AppTypography.labelSmall
+            )
+        } else {
+            StatusDot(color = AppColors.statusOffline)
+            Text(
+                text = "OFFLINE",
+                color = AppColors.statusOffline,
+                style = AppTypography.labelSmall
+            )
+        }
+        
+        // SSE status (separate indicator)
+        if (isHttpConnected) {
+            Text(
+                text = "•",
+                color = AppColors.textTertiary,
+                style = AppTypography.labelSmall
+            )
+            SseStatusIndicator(isConnected = isSseConnected)
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // NOT IMPLEMENTED BANNER
 // ═══════════════════════════════════════════════════════════════════════════════
 

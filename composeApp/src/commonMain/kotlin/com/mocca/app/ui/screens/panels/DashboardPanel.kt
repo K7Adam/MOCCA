@@ -63,6 +63,22 @@ fun DashboardPanel(
             onRefreshClick = { screenModel.forceFullSync() }
         )
         
+        // ─── SSE STATUS INDICATOR ─────────────────────────────────────────
+        // Show SSE connection status for real-time event streaming
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "REAL-TIME EVENTS",
+                style = AppTypography.labelSmall,
+                color = AppColors.textSecondary,
+                fontWeight = FontWeight.Bold
+            )
+            SseStatusIndicator(isConnected = state.isSseConnected)
+        }
+        
         // ─── MCP Servers ─────────────────────────────────────────────────
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),

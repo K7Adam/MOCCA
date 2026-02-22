@@ -414,18 +414,22 @@ class ConnectionManager(
         Napier.i("[ConnectionManager] Config - Host: ${config.host}, Port: ${config.port}, useHttps: ${config.useHttps}")
         Napier.i("[ConnectionManager] Auth - Username: ${config.username}, HasPassword: ${config.password.isNotBlank()}")
         
+        // Cache the Base64-encoded credentials once per connection (optimization)
+        // This avoids re-encoding on every HTTP request
+        val authHeader = if (config.hasCredentials) {
+            val credentials = "${config.username}:${config.password}"
+            @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+            val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
+            "Basic $encoded"
+        } else null
+        
         return HttpClient(getHttpEngine()) {
             expectSuccess = true
             defaultRequest {
                 url(config.baseUrl + "/")
-                Napier.d("[ConnectionManager] HttpClient base URL set to: ${config.baseUrl}")
-                // Manual Basic Auth header — more reliable than Ktor Auth plugin
-                if (config.hasCredentials) {
-                    val credentials = "${config.username}:${config.password}"
-                    @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
-                    val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
-                    header(HttpHeaders.Authorization, "Basic $encoded")
-                    Napier.d("[ConnectionManager] Authorization header set for user: ${config.username}")
+                // Use cached auth header instead of computing on every request
+                if (authHeader != null) {
+                    header(HttpHeaders.Authorization, authHeader)
                 }
             }
             install(ContentNegotiation) {

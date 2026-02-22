@@ -73,6 +73,12 @@ class AppStateStore(
     
     val connectionStatus: StateFlow<ConnectionStatus> = stateCoordinator.connectionStatus
     
+    // SSE connection status - indicates real-time event streaming
+    val sseConnectionStatus: StateFlow<ConnectionStatus> = stateCoordinator.sseConnectionStatus
+    
+    // Convenience: true when SSE is connected (receiving real-time events)
+    val isSseConnected: StateFlow<Boolean> = stateCoordinator.isSseConnected
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONFIG STATE - Models, providers, agents
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -213,27 +219,8 @@ class AppStateStore(
         observeLocalCache()
         observeBroadcastEvents()
         observeRepositoryFlows()
-        observeConnectionState()
-    }
-    
-    /**
-     * Observe connection state and trigger data loading when connected.
-     * This is the KEY fix for the startup race condition.
-     */
-    private fun observeConnectionState() {
-        storeScope.launch {
-            connectionStatus.collect { status ->
-                if (status.isConnected && !isDataLoaded) {
-                    Napier.i("[AppStateStore] Connection established - loading initial data")
-                    loadAllData()
-                    startObservingVcsInfo()
-                    isDataLoaded = true
-                } else if (!status.isConnected) {
-                    // Reset flag when disconnected so we reload on reconnect
-                    isDataLoaded = false
-                }
-            }
-        }
+        // NOTE: DO NOT observe connection state here - StateCoordinator already does that
+        // and triggers sync. We load data in response to SyncCompleted broadcast event.
     }
     
     /**
@@ -241,7 +228,7 @@ class AppStateStore(
      * Called when app starts or when connection is established.
      * 
      * IMPORTANT: Does NOT immediately load data - waits for connection.
-     * Data loading is triggered by connection state observation.
+     * Data loading is triggered by SyncCompleted broadcast event from StateCoordinator.
      */
     fun start() {
         if (isInitialized) return
@@ -256,8 +243,14 @@ class AppStateStore(
         // The service itself will wait for connection before syncing
         realtimeSyncService.start()
         
-        // DO NOT call loadAllData() here - let observeConnectionState() handle it
-        // This fixes the race condition where UI tries to load data before connection is established
+        // If already connected, load data immediately
+        // Otherwise, wait for SyncCompleted broadcast event
+        if (connectionStatus.value.isConnected && !isDataLoaded) {
+            Napier.i("[AppStateStore] Already connected - loading initial data")
+            loadAllData()
+            startObservingVcsInfo()
+            isDataLoaded = true
+        }
     }
     
     /**
@@ -460,7 +453,13 @@ class AppStateStore(
             is BroadcastEvent.ServerEvent -> handleServerEvent(event.event)
             is BroadcastEvent.SyncCompleted -> {
                 Napier.v("[AppStateStore] Sync completed - loading all dashboard data")
-                loadAllData()
+                
+                // Load data if not already loaded (first connection)
+                if (!isDataLoaded) {
+                    loadAllData()
+                    startObservingVcsInfo()
+                    isDataLoaded = true
+                }
                 
                 // Refresh Git status and other repository polling
                 storeScope.launch {
@@ -474,6 +473,10 @@ class AppStateStore(
             }
             is BroadcastEvent.ConnectionStateChanged -> {
                 Napier.v("[AppStateStore] Connection state: ${event.status}")
+                // Reset data loaded flag when disconnected
+                if (!event.status.isConnected) {
+                    isDataLoaded = false
+                }
             }
             is BroadcastEvent.ActiveSessionChanged -> {
                 Napier.v("[AppStateStore] Active session changed: ${event.sessionId}")
