@@ -5,9 +5,7 @@
   "theme": "opencode",
   "default_agent": "build",
   "autoupdate": true,
-  "instructions": [
-    "AGENTS.md"
-  ],
+  "instructions": ["AGENTS.md"],
   "permission": {
     "edit": "allow",
     "bash": "allow"
@@ -17,9 +15,9 @@
       "command": ["ktfmt"]
     }
   },
-  "mcpServers": {
+  "mcp": {
     "exa": {
-      "type": "http",
+      "type": "remote",
       "url": "https://mcp.exa.ai/mcp",
       "headers": {
         "Authorization": "Bearer 0a9479ab-7ecf-452f-b48b-f8c7a8a0a9c6"
