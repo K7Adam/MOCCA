@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -395,49 +394,12 @@ fun ChatInputContent(
                 }
             )
 
-            // Suggestions popup (text-triggered)
+            // Suggestions popup (text-triggered only - typing "/" or "@" in input)
             if (showSuggestions && currentSuggestions.isNotEmpty()) {
                 SuggestionPopup(
                     suggestions = currentSuggestions,
                     onSuggestionSelected = onSuggestionSelected,
                     onDismiss = { showSuggestions = false }
-                )
-            }
-
-            // Manual command palette (triggered by / button)
-            if (showCommandPalette && commands.isNotEmpty()) {
-                SuggestionPopup(
-                    suggestions = commands.map { cmd ->
-                        SuggestionItem(cmd.name, "/${cmd.name}", cmd.description, SuggestionType.COMMAND)
-                    },
-                    onSuggestionSelected = { item ->
-                        val cmd = commands.find { it.name == item.id }
-                        if (cmd != null) {
-                            onCommandSelected(cmd)
-                        } else {
-                            // Fallback: insert into input
-                            onInputTextChange("/${item.id} ")
-                        }
-                        showCommandPalette = false
-                    },
-                    onDismiss = { showCommandPalette = false }
-                )
-            }
-
-            // Manual agent palette (triggered by @ button)
-            if (showAgentPalette && modes.isNotEmpty()) {
-                SuggestionPopup(
-                    suggestions = modes.map { mode ->
-                        SuggestionItem(mode.id, mode.name.uppercase(), mode.description, SuggestionType.MODE)
-                    },
-                    onSuggestionSelected = { item ->
-                        val mode = modes.find { it.id == item.id }
-                        if (mode != null) {
-                            onModeSelectedForMention(mode)
-                        }
-                        showAgentPalette = false
-                    },
-                    onDismiss = { showAgentPalette = false }
                 )
             }
         }
@@ -460,56 +422,158 @@ fun ChatInputContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
             ) {
-                // @ mention button - opens agent palette directly
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = if (showAgentPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
+                // @ mention button - opens agent palette via DropdownMenu
+                Box {
+                    // Anchor for dropdown
+                    Box(
+                        modifier = Modifier
+                            .size(NavConstants.ActionButtonSize)
+                            .background(
+                                color = if (showAgentPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                                shape = AppShapes.pill
+                            )
+                            .then(
+                                if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { showAgentPalette = !showAgentPalette }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "@",
+                            color = if (showAgentPalette) AppColors.accentGreen else AppColors.textSecondary,
+                            style = AppTypography.labelMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                        .then(
-                            if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { showAgentPalette = !showAgentPalette }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "@",
-                        color = if (showAgentPalette) AppColors.accentGreen else AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    }
+                    
+                    // Agent dropdown menu (stable positioning)
+                    DropdownMenu(
+                        expanded = showAgentPalette,
+                        onDismissRequest = { showAgentPalette = false },
+                        modifier = Modifier
+                            .background(AppColors.surfaceElevated, AppShapes.medium)
+                            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+                    ) {
+                        if (modes.isEmpty()) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "No agents available",
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.textTertiary
+                                    )
+                                },
+                                onClick = { showAgentPalette = false }
+                            )
+                        } else {
+                            modes.forEach { mode ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                mode.name.uppercase(),
+                                                style = AppTypography.labelSmall,
+                                                color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                            )
+                                            mode.description?.let { desc ->
+                                                Text(
+                                                    desc,
+                                                    style = AppTypography.labelSmall,
+                                                    color = AppColors.textTertiary,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        onModeSelectedForMention(mode)
+                                        showAgentPalette = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
 
-                // / command button - opens command palette directly
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
+                // / command button - opens command palette via DropdownMenu
+                Box {
+                    // Anchor for dropdown
+                    Box(
+                        modifier = Modifier
+                            .size(NavConstants.ActionButtonSize)
+                            .background(
+                                color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                                shape = AppShapes.pill
+                            )
+                            .then(
+                                if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                            )
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { showCommandPalette = !showCommandPalette }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "/",
+                            color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                            style = AppTypography.labelMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                        .then(
-                            if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { showCommandPalette = !showCommandPalette }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "/",
-                        color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
+                    }
+                    
+                    // Command dropdown menu (stable positioning)
+                    DropdownMenu(
+                        expanded = showCommandPalette,
+                        onDismissRequest = { showCommandPalette = false },
+                        modifier = Modifier
+                            .background(AppColors.surfaceElevated, AppShapes.medium)
+                            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+                    ) {
+                        if (commands.isEmpty()) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "No commands available",
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.textTertiary
+                                    )
+                                },
+                                onClick = { showCommandPalette = false }
+                            )
+                        } else {
+                            commands.forEach { cmd ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Column {
+                                            Text(
+                                                "/${cmd.name}",
+                                                style = AppTypography.labelSmall,
+                                                color = AppColors.accentGreen
+                                            )
+                                            cmd.description?.let { desc ->
+                                                Text(
+                                                    desc,
+                                                    style = AppTypography.labelSmall,
+                                                    color = AppColors.textTertiary,
+                                                    maxLines = 1
+                                                )
+                                            }
+                                        }
+                                    },
+                                    onClick = {
+                                        onCommandSelected(cmd)
+                                        showCommandPalette = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                 }
             }
 
