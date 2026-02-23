@@ -245,6 +245,17 @@ class SettingsScreenModel(
         }
     }
     
+    // Updates
+    fun setAutoUpdateCheckInterval(minutes: Int) {
+        screenModelScope.launch {
+            val clampedValue = minutes.coerceIn(UserPreferences.AUTO_UPDATE_INTERVAL_RANGE)
+            settingsRepository.setAutoUpdateCheckInterval(clampedValue)
+            val newPrefs = _state.value.preferences.copy(autoUpdateCheckIntervalMinutes = clampedValue)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
     // Clear Cache
     fun showClearCacheDialog() {
         _state.value = _state.value.copy(showClearCacheDialog = true)

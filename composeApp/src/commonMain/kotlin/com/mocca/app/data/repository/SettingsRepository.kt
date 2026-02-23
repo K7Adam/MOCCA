@@ -42,6 +42,9 @@ class SettingsRepository(
         // Privacy
         const val KEY_SCREEN_SECURITY = "screen_security"
         const val KEY_CLEAR_CACHE_ON_EXIT = "clear_cache_on_exit"
+        
+        // Updates
+        const val KEY_AUTO_UPDATE_CHECK_INTERVAL = "auto_update_check_interval"
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -110,7 +113,8 @@ class SettingsRepository(
             notifySessionComplete = getBoolean(KEY_NOTIFY_SESSION_COMPLETE, true),
             notifyConnectionLost = getBoolean(KEY_NOTIFY_CONNECTION_LOST, true),
             screenSecurity = getBoolean(KEY_SCREEN_SECURITY, false),
-            clearCacheOnExit = getBoolean(KEY_CLEAR_CACHE_ON_EXIT, false)
+            clearCacheOnExit = getBoolean(KEY_CLEAR_CACHE_ON_EXIT, false),
+            autoUpdateCheckIntervalMinutes = getInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, 10)
         )
     }
 
@@ -178,6 +182,13 @@ class SettingsRepository(
 
     suspend fun getClearCacheOnExit(): Boolean = getBoolean(KEY_CLEAR_CACHE_ON_EXIT, false)
     suspend fun setClearCacheOnExit(value: Boolean) = setBoolean(KEY_CLEAR_CACHE_ON_EXIT, value)
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Update Settings
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    suspend fun getAutoUpdateCheckInterval(): Int = getInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, 10)
+    suspend fun setAutoUpdateCheckInterval(value: Int) = setInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, value)
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // Helper Methods

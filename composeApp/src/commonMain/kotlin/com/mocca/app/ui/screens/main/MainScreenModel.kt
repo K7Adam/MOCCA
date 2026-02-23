@@ -12,6 +12,7 @@ import com.mocca.app.data.repository.ChatStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.data.repository.UpdateCheckScheduler
 import com.mocca.app.data.repository.UpdateNotifier
 import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.McpServerInfo
@@ -129,6 +130,7 @@ class MainScreenModel(
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,
     private val updateNotifier: UpdateNotifier,
+    private val updateCheckScheduler: UpdateCheckScheduler,
     private val appVersionProvider: AppVersionProvider
 ) : ScreenModel {
     
@@ -148,6 +150,9 @@ class MainScreenModel(
         observeMcpServers()
         observeUpdateNotifications()
         checkForUpdates()
+        
+        // Start periodic update checks
+        updateCheckScheduler.start()
         
         // Sync initial state
         appStateStore.start()
@@ -722,6 +727,8 @@ class MainScreenModel(
     }
     
     override fun onDispose() {
+        // Stop periodic update checks
+        updateCheckScheduler.stop()
         // State is maintained in AppStateStore, no need to disconnect
     }
 }

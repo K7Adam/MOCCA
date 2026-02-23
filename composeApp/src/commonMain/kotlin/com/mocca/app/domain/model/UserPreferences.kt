@@ -82,7 +82,14 @@ data class UserPreferences(
     val screenSecurity: Boolean = false,
     
     /** Clear local cache when app exits */
-    val clearCacheOnExit: Boolean = false
+    val clearCacheOnExit: Boolean = false,
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Updates
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /** Auto-check for app updates interval in minutes (0 = disabled, default 10 min) */
+    val autoUpdateCheckIntervalMinutes: Int = 10
 ) {
     /**
      * Font scale clamped to valid range.
@@ -100,6 +107,19 @@ data class UserPreferences(
         
         /** Valid font scale range */
         val FONT_SCALE_RANGE = 0.8f..1.4f
+        
+        /** Valid auto-update check interval range in minutes (0 = disabled, max = 60) */
+        val AUTO_UPDATE_INTERVAL_RANGE = 0..60
+        
+        /** Preset intervals for auto-update check (in minutes) */
+        val AUTO_UPDATE_INTERVAL_PRESETS = listOf(
+            0 to "Disabled",
+            5 to "5 minutes",
+            10 to "10 minutes (default)",
+            15 to "15 minutes",
+            30 to "30 minutes",
+            60 to "1 hour"
+        )
         
         /** Font scale presets */
         val FONT_SCALE_PRESETS = listOf(

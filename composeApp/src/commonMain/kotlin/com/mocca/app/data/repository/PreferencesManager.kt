@@ -132,4 +132,7 @@ class PreferencesManager(
     
     /** Whether to clear cache on exit */
     val clearCacheOnExit: Boolean get() = _preferences.value.clearCacheOnExit
+    
+    /** Auto-update check interval in minutes (0 = disabled) */
+    val autoUpdateCheckIntervalMinutes: Int get() = _preferences.value.autoUpdateCheckIntervalMinutes
 }

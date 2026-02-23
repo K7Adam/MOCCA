@@ -82,6 +82,9 @@ val commonModule = module {
     
     // Global update notifier - allows any screen to trigger update dialog
     singleOf(::UpdateNotifier)
+    
+    // Periodic update check scheduler
+    singleOf(::UpdateCheckScheduler)
 
     // Global Activity Manager - singleton for tracking background activity
     single { GlobalActivityManager() }
@@ -271,6 +274,7 @@ val screenModelModule = module {
             mcpRepository = get(),
             updateRepository = get(),
             updateNotifier = get(),
+            updateCheckScheduler = get(),
             appVersionProvider = get()
         )
     }
