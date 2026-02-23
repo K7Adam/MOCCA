@@ -199,6 +199,19 @@ object AppColors {
 
     // Noise texture alpha (for glass grain effect)
     const val liquidGlassNoiseFactor = 0.12f
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SHIMMER COLORS (Loading Animation)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** Shimmer base color - dark gray for loading placeholders */
+    val shimmerBase = Color(0xFF1A1A1A)
+
+    /** Shimmer highlight color - subtle white for sweep effect */
+    val shimmerHighlight = Color(0xFF333333)
+
+    /** Shimmer accent - optional mint tint for branded shimmer */
+    val shimmerAccent = Color(0x1500D9A5)
 }
 
 /**
@@ -252,6 +265,10 @@ data class ExtendedAppColors(
     val fileTsx: Color = AppColors.fileTsx,
     val fileCss: Color = AppColors.fileCss,
     val fileJson: Color = AppColors.fileJson,
+    // Shimmer colors
+    val shimmerBase: Color = AppColors.shimmerBase,
+    val shimmerHighlight: Color = AppColors.shimmerHighlight,
+    val shimmerAccent: Color = AppColors.shimmerAccent,
 )
 
 val LocalExtendedColors = staticCompositionLocalOf { ExtendedAppColors() }

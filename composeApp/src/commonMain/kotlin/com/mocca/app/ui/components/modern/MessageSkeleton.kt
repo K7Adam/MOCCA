@@ -1,11 +1,5 @@
 package com.mocca.app.ui.components.modern
 
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,10 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,24 +23,16 @@ import com.mocca.app.ui.theme.AppSpacing
 
 /**
  * Skeleton loading placeholder for messages.
- * Terminal aesthetic: rectangular shimmer blocks, no rounded corners.
+ * Terminal aesthetic with true shimmer effect.
+ *
+ * @param modifier Modifier for the skeleton
+ * @param lineCount Number of content lines to show
  */
 @Composable
 fun MessageSkeleton(
     modifier: Modifier = Modifier,
     lineCount: Int = 3
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "skeleton_shimmer")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 800, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "skeleton_alpha"
-    )
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -62,15 +47,15 @@ fun MessageSkeleton(
             SkeletonBlock(
                 width = 60.dp,
                 height = 16.dp,
-                alpha = alpha
+                showShimmer = true
             )
             SkeletonBlock(
                 width = 80.dp,
                 height = 12.dp,
-                alpha = alpha * 0.7f
+                showShimmer = true
             )
         }
-        
+
         // Content lines skeleton
         repeat(lineCount) { index ->
             val widthFraction = when (index) {
@@ -81,7 +66,7 @@ fun MessageSkeleton(
             SkeletonBlock(
                 modifier = Modifier.fillMaxWidth(widthFraction),
                 height = 14.dp,
-                alpha = alpha
+                showShimmer = true
             )
         }
     }
@@ -94,24 +79,13 @@ fun MessageSkeleton(
 fun CompactMessageSkeleton(
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "compact_skeleton_shimmer")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 600, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "compact_skeleton_alpha"
-    )
-    
     Row(
         modifier = modifier.padding(AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
-        SkeletonBlock(width = 48.dp, height = 14.dp, alpha = alpha)
-        SkeletonBlock(width = 120.dp, height = 12.dp, alpha = alpha * 0.8f)
+        SkeletonBlock(width = 48.dp, height = 14.dp, showShimmer = true)
+        SkeletonBlock(width = 120.dp, height = 12.dp, showShimmer = true)
     }
 }
 
@@ -122,17 +96,6 @@ fun CompactMessageSkeleton(
 fun ToolCardSkeleton(
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "tool_skeleton_shimmer")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 700, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "tool_skeleton_alpha"
-    )
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -146,19 +109,19 @@ fun ToolCardSkeleton(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             // Icon placeholder
-            SkeletonBlock(width = 18.dp, height = 18.dp, alpha = alpha)
+            SkeletonBlock(width = 18.dp, height = 18.dp, showShimmer = true)
             // Tool name
-            SkeletonBlock(width = 60.dp, height = 14.dp, alpha = alpha)
+            SkeletonBlock(width = 60.dp, height = 14.dp, showShimmer = true)
             Spacer(modifier = Modifier.weight(1f))
             // Status
-            SkeletonBlock(width = 50.dp, height = 12.dp, alpha = alpha * 0.7f)
+            SkeletonBlock(width = 50.dp, height = 12.dp, showShimmer = true)
         }
-        
+
         // Content placeholder
         SkeletonBlock(
             modifier = Modifier.fillMaxWidth(),
             height = 40.dp,
-            alpha = alpha * 0.5f
+            showShimmer = true
         )
     }
 }
@@ -170,17 +133,6 @@ fun ToolCardSkeleton(
 fun SessionItemSkeleton(
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "session_skeleton_shimmer")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.2f,
-        targetValue = 0.5f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 750, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "session_skeleton_alpha"
-    )
-    
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -191,36 +143,39 @@ fun SessionItemSkeleton(
         SkeletonBlock(
             modifier = Modifier.fillMaxWidth(0.7f),
             height = 16.dp,
-            alpha = alpha
+            showShimmer = true
         )
         // Subtitle line
         Row(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
-            SkeletonBlock(width = 80.dp, height = 12.dp, alpha = alpha * 0.7f)
-            SkeletonBlock(width = 60.dp, height = 12.dp, alpha = alpha * 0.6f)
+            SkeletonBlock(width = 80.dp, height = 12.dp, showShimmer = true)
+            SkeletonBlock(width = 60.dp, height = 12.dp, showShimmer = true)
         }
     }
 }
 
 /**
- * Base skeleton block component.
+ * Base skeleton block component with shimmer effect.
+ *
+ * @param modifier Modifier for the block
+ * @param width Fixed width (optional if modifier provides width)
+ * @param height Height of the block
+ * @param showShimmer Whether to show shimmer animation
  */
 @Composable
 private fun SkeletonBlock(
     modifier: Modifier = Modifier,
     width: Dp? = null,
     height: Dp,
-    alpha: Float
+    showShimmer: Boolean = true
 ) {
     Box(
         modifier = modifier
             .then(if (width != null) Modifier.width(width) else Modifier)
             .height(height)
-            .alpha(alpha)
-            .background(
-                color = AppColors.grey,
-                shape = AppShapes.small
-            )
+            .clip(AppShapes.small)
+            .background(AppColors.shimmerBase)
+            .shimmer(enabled = showShimmer)
     )
 }
