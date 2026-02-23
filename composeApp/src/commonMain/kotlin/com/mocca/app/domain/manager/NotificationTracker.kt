@@ -77,4 +77,54 @@ interface NotificationTracker {
         totalCount: Int = 0,
         completedCount: Int = 0
     )
+    
+    /**
+     * Update the progress notification with detailed todo information.
+     * This provides rich progress tracking with individual todo states.
+     * 
+     * @param sessionId The session ID
+     * @param sessionTitle The session title
+     * @param currentTask The currently executing task (in_progress todo)
+     * @param todos List of todo items with their content and status
+     * @param elapsedSeconds Elapsed time since session started
+     * @param modelName The AI model being used
+     */
+    fun updateProgressNotificationWithTodos(
+        sessionId: String,
+        sessionTitle: String,
+        currentTask: String?,
+        todos: List<TodoProgressInfo>,
+        elapsedSeconds: Long,
+        modelName: String
+    )
+}
+
+/**
+ * Data class representing a todo item's progress information for notifications.
+ */
+data class TodoProgressInfo(
+    val content: String,
+    val status: TodoStatus,
+    val priority: TodoPriority
+)
+
+/**
+ * Enum representing todo status for notifications.
+ * Matches domain.model.TodoStatus but kept here for platform independence.
+ */
+enum class TodoStatus {
+    PENDING,
+    IN_PROGRESS,
+    COMPLETED,
+    CANCELLED
+}
+
+/**
+ * Enum representing todo priority for notifications.
+ * Matches domain.model.TodoPriority but kept here for platform independence.
+ */
+enum class TodoPriority {
+    HIGH,
+    MEDIUM,
+    LOW
 }

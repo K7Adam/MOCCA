@@ -2,8 +2,10 @@ package com.mocca.app.manager
 
 import android.content.Context
 import com.mocca.app.domain.manager.NotificationTracker
+import com.mocca.app.domain.manager.TodoProgressInfo
 import com.mocca.app.service.ActiveSessionService
 import com.mocca.app.service.ActiveSessionService.ProgressInfo
+import com.mocca.app.service.ActiveSessionService.TodoInfo
 
 /**
  * Android implementation of NotificationTracker.
@@ -83,5 +85,40 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
             completedCount = completedCount
         )
         ActiveSessionService.updateProgressNotification(context, progressInfo)
+    }
+
+    override fun updateProgressNotificationWithTodos(
+        sessionId: String,
+        sessionTitle: String,
+        currentTask: String?,
+        todos: List<TodoProgressInfo>,
+        elapsedSeconds: Long,
+        modelName: String
+    ) {
+        val todoInfos = todos.map { todo ->
+            TodoInfo(
+                content = todo.content,
+                status = when (todo.status) {
+                    com.mocca.app.domain.manager.TodoStatus.PENDING -> "pending"
+                    com.mocca.app.domain.manager.TodoStatus.IN_PROGRESS -> "in_progress"
+                    com.mocca.app.domain.manager.TodoStatus.COMPLETED -> "completed"
+                    com.mocca.app.domain.manager.TodoStatus.CANCELLED -> "cancelled"
+                },
+                priority = when (todo.priority) {
+                    com.mocca.app.domain.manager.TodoPriority.HIGH -> "high"
+                    com.mocca.app.domain.manager.TodoPriority.MEDIUM -> "medium"
+                    com.mocca.app.domain.manager.TodoPriority.LOW -> "low"
+                }
+            )
+        }
+        
+        ActiveSessionService.updateProgressNotificationWithTodos(
+            context,
+            sessionTitle,
+            currentTask,
+            todoInfos,
+            elapsedSeconds,
+            modelName
+        )
     }
 }

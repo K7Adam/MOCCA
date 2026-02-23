@@ -4,6 +4,9 @@ import com.mocca.app.data.local.LocalCache
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.domain.model.*
 import com.mocca.app.domain.manager.NotificationTracker
+import com.mocca.app.domain.manager.TodoProgressInfo
+import com.mocca.app.domain.manager.TodoStatus as NotificationTodoStatus
+import com.mocca.app.domain.manager.TodoPriority as NotificationTodoPriority
 import com.mocca.app.util.AppLifecycleObserver
 import com.mocca.app.util.AppLifecycleState
 import com.mocca.app.util.NetworkObserver
@@ -567,33 +570,59 @@ class StateCoordinator(
         // Fetch session for title
         var sessionTitle = "Task Runner"
         val sessionRes = sessionRepository.getSession(sessionId)
-        if (sessionRes is com.mocca.app.domain.model.Resource.Success) {
+        if (sessionRes is Resource.Success) {
             sessionTitle = sessionRes.data.title ?: "Task Runner"
         }
         
         val startTime = _runningSessionStartTimes[sessionId] ?: System.currentTimeMillis()
         val elapsedSeconds = (System.currentTimeMillis() - startTime) / 1000
         
-        var totalCount = 0
-        var completedCount = 0
-        
-        // Fetch Todos for determinate progress
+        // Fetch Todos for detailed progress notification
         moccaApiClient.getSessionTodos(sessionId).onSuccess { todos ->
-            totalCount = todos.size
-            completedCount = todos.count { it.status == com.mocca.app.domain.model.TodoStatus.COMPLETED }
+            // Find the current in-progress task
+            val inProgressTodo = todos.find { it.status == TodoStatus.IN_PROGRESS }
+            val currentTask = inProgressTodo?.content ?: toolTitle ?: _activeToolTitles.value[sessionId]
+            
+            // Convert todos to TodoProgressInfo for notification
+            val todoProgressInfos = todos.map { todo ->
+                TodoProgressInfo(
+                    content = todo.content,
+                    status = when (todo.status) {
+                        TodoStatus.PENDING -> NotificationTodoStatus.PENDING
+                        TodoStatus.IN_PROGRESS -> NotificationTodoStatus.IN_PROGRESS
+                        TodoStatus.COMPLETED -> NotificationTodoStatus.COMPLETED
+                        TodoStatus.CANCELLED -> NotificationTodoStatus.CANCELLED
+                    },
+                    priority = when (todo.priority) {
+                        TodoPriority.HIGH -> NotificationTodoPriority.HIGH
+                        TodoPriority.MEDIUM -> NotificationTodoPriority.MEDIUM
+                        TodoPriority.LOW -> NotificationTodoPriority.LOW
+                    }
+                )
+            }
+            
+            // Use the new todo-aware notification method
+            notificationTracker.updateProgressNotificationWithTodos(
+                sessionId = sessionId,
+                sessionTitle = sessionTitle,
+                currentTask = currentTask,
+                todos = todoProgressInfos,
+                elapsedSeconds = elapsedSeconds,
+                modelName = "Agent"
+            )
+        }.onFailure {
+            // Fallback to legacy notification if todos fetch fails
+            val displayToolTitle = toolTitle ?: _activeToolTitles.value[sessionId]
+            notificationTracker.updateProgressNotification(
+                sessionId = sessionId,
+                sessionTitle = sessionTitle,
+                toolTitle = displayToolTitle,
+                modelName = "Agent",
+                elapsedSeconds = elapsedSeconds,
+                totalCount = 0,
+                completedCount = 0
+            )
         }
-        
-        val displayToolTitle = toolTitle ?: _activeToolTitles.value[sessionId]
-        
-        notificationTracker.updateProgressNotification(
-            sessionId = sessionId,
-            sessionTitle = sessionTitle,
-            toolTitle = displayToolTitle,
-            modelName = "Agent", // Or dynamic based on session if tracked later
-            elapsedSeconds = elapsedSeconds,
-            totalCount = totalCount,
-            completedCount = completedCount
-        )
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════

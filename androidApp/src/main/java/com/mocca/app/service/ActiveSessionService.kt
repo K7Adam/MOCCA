@@ -8,9 +8,11 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.Color
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.mocca.app.MainActivity
@@ -33,7 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
  * - Network operations continue during long LLM responses
  * - The user is notified of active background processing
  * - Actionable notifications for permissions and questions
- * - Android 16 Live Updates for running agent tasks
+ * - Android 16 Live Updates for running agent tasks with todo progress
  */
 class ActiveSessionService : Service() {
 
@@ -43,6 +45,15 @@ class ActiveSessionService : Service() {
     val activeSessions: StateFlow<Set<String>> = _activeSessions.asStateFlow()
 
     private val binder = LocalBinder()
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Theme Colors - Pitch Black OLED with Mint Green accents
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private val accentGreen = Color.parseColor("#00D9A5")
+    private val pitchBlack = Color.parseColor("#000000")
+    private val darkGrey = Color.parseColor("#1A1A1A")
+    private val lightGrey = Color.parseColor("#666666")
 
     // ─────────────────────────────────────────────────────────────────────────
     // Notification Channel IDs - Multiple channels for different event types
@@ -129,7 +140,6 @@ class ActiveSessionService : Service() {
 
         /**
          * Show a permission request notification with Approve/Deny actions.
-         * Uses BroadcastReceiver for handling actions to enable proper permission handling.
          */
         fun showPermissionNotification(
             context: Context,
@@ -143,7 +153,6 @@ class ActiveSessionService : Service() {
 
             val notificationManager = context.getSystemService(NotificationManager::class.java)
 
-            // Approve action - uses BroadcastReceiver
             val approveIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_APPROVE
                 putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
@@ -156,7 +165,6 @@ class ActiveSessionService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // Deny action - uses BroadcastReceiver
             val denyIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_DENY
                 putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
@@ -272,7 +280,7 @@ class ActiveSessionService : Service() {
         }
 
         /**
-         * Show a question pending notification with MessagingStyle.
+         * Show a question pending notification.
          */
         fun showQuestionNotification(
             context: Context,
@@ -320,11 +328,41 @@ class ActiveSessionService : Service() {
         }
 
         /**
-         * Update the active session notification with progress (Android 16 Live Updates style).
+         * Update the active session notification with progress (legacy method).
          */
         fun updateProgressNotification(
             context: Context,
             progressInfo: ProgressInfo
+        ) {
+            // Convert to empty todo list and use new method
+            updateProgressNotificationWithTodos(
+                context = context,
+                sessionTitle = progressInfo.sessionTitle,
+                currentTask = progressInfo.toolTitle,
+                todos = emptyList(),
+                elapsedSeconds = progressInfo.elapsedSeconds,
+                modelName = progressInfo.modelName
+            )
+        }
+
+        /**
+         * Update the progress notification with detailed todo information.
+         * Uses Android 16 ProgressStyle for promoted live notifications.
+         *
+         * @param context Android context
+         * @param sessionTitle The session title
+         * @param currentTask The currently executing task (in_progress todo)
+         * @param todos List of todo items with their content and status
+         * @param elapsedSeconds Elapsed time since session started
+         * @param modelName The AI model being used
+         */
+        fun updateProgressNotificationWithTodos(
+            context: Context,
+            sessionTitle: String,
+            currentTask: String?,
+            todos: List<TodoInfo>,
+            elapsedSeconds: Long,
+            modelName: String
         ) {
             val serviceIntent = Intent(context, ActiveSessionService::class.java)
             context.startService(serviceIntent)
@@ -341,48 +379,208 @@ class ActiveSessionService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+            // Calculate progress
+            val completedCount = todos.count { it.status == "completed" }
+            val inProgressCount = todos.count { it.status == "in_progress" }
+            val totalCount = todos.size
+
             // Format elapsed time
-            val minutes = progressInfo.elapsedSeconds / SECONDS_PER_MINUTE
-            val seconds = progressInfo.elapsedSeconds % SECONDS_PER_MINUTE
+            val minutes = elapsedSeconds / SECONDS_PER_MINUTE
+            val seconds = elapsedSeconds % SECONDS_PER_MINUTE
             val timeStr = if (minutes > 0) {
                 "${minutes}m ${seconds}s"
             } else {
                 "${seconds}s"
             }
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_ACTIVE)
-                .setContentTitle(progressInfo.sessionTitle)
-                .setContentText(
-                    if (progressInfo.toolTitle != null) {
-                        "${progressInfo.toolTitle}\n$timeStr"
-                    } else {
-                        "${progressInfo.modelName} • $timeStr"
+            // Build short critical text for status bar chip
+            val shortCriticalText = if (totalCount > 0) {
+                "$completedCount/$totalCount"
+            } else {
+                timeStr
+            }
+
+            // Build content text
+            val contentText = when {
+                currentTask != null -> currentTask
+                inProgressCount > 0 -> {
+                    val inProgressTodo = todos.find { it.status == "in_progress" }
+                    inProgressTodo?.content ?: "Processing..."
+                }
+                totalCount > 0 -> "Task progress: $completedCount/$totalCount"
+                else -> "$modelName • $timeStr"
+            }
+
+            // Build the notification based on Android version
+            val notification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+                buildAndroid16ProgressNotification(
+                    context = context,
+                    sessionTitle = sessionTitle,
+                    contentText = contentText,
+                    shortCriticalText = shortCriticalText,
+                    pendingIntent = pendingIntent,
+                    todos = todos,
+                    elapsedSeconds = elapsedSeconds
+                )
+            } else {
+                buildLegacyProgressNotification(
+                    context = context,
+                    sessionTitle = sessionTitle,
+                    contentText = contentText,
+                    pendingIntent = pendingIntent,
+                    todos = todos,
+                    elapsedSeconds = elapsedSeconds,
+                    totalCount = totalCount,
+                    completedCount = completedCount
+                )
+            }
+
+            notificationManager.notify(NOTIFICATION_ID_ACTIVE, notification)
+        }
+
+        /**
+         * Build Android 16+ ProgressStyle notification with segments and points.
+         */
+        @RequiresApi(Build.VERSION_CODES.BAKLAVA)
+        private fun buildAndroid16ProgressNotification(
+            context: Context,
+            sessionTitle: String,
+            contentText: String,
+            shortCriticalText: String,
+            pendingIntent: PendingIntent,
+            todos: List<TodoInfo>,
+            elapsedSeconds: Long
+        ): Notification {
+            val completedCount = todos.count { it.status == "completed" }
+            val totalCount = todos.size.coerceAtLeast(1)
+
+            // Build progress segments based on todo statuses
+            val segments = buildProgressSegments(todos)
+
+            // Build the ProgressStyle
+            // Note: Android 16 ProgressStyle.setProgress() takes single Int parameter
+            val progressStyle = Notification.ProgressStyle()
+                .setProgress(completedCount * 100) // Current progress value
+                .setProgressSegments(segments)
+
+            // Add progress points for visual milestones
+            if (todos.isNotEmpty()) {
+                val points = mutableListOf<Notification.ProgressStyle.Point>()
+                
+                // Add point at current progress position
+                val progressPercent = (completedCount * 100f / totalCount).toInt()
+                if (progressPercent > 0 && progressPercent < 100) {
+                    points.add(
+                        Notification.ProgressStyle.Point(progressPercent)
+                            .setColor(Color.parseColor("#00D9A5")) // Mint green
+                    )
+                }
+                
+                if (points.isNotEmpty()) {
+                    progressStyle.setProgressPoints(points)
+                }
+            }
+
+            return Notification.Builder(context, CHANNEL_AGENT_ACTIVE)
+                .setContentTitle(sessionTitle)
+                .setContentText(contentText)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setCategory(Notification.CATEGORY_SERVICE)
+                .setWhen(System.currentTimeMillis() - elapsedSeconds * MILLIS_PER_SECOND)
+                .setUsesChronometer(true)
+                .setShortCriticalText(shortCriticalText)
+                .setStyle(progressStyle)
+                .build()
+        }
+
+        /**
+         * Build progress segments based on todo statuses.
+         * Each todo becomes a segment with color based on its status.
+         */
+        @RequiresApi(Build.VERSION_CODES.BAKLAVA)
+        private fun buildProgressSegments(todos: List<TodoInfo>): List<Notification.ProgressStyle.Segment> {
+            if (todos.isEmpty()) {
+                // Indeterminate progress segment
+                return listOf(
+                    Notification.ProgressStyle.Segment(100)
+                        .setColor(Color.parseColor("#333333"))
+                )
+            }
+
+            return todos.map { todo ->
+                val color = when (todo.status) {
+                    "completed" -> Color.parseColor("#00D9A5")  // Mint green
+                    "in_progress" -> Color.parseColor("#FFB800") // Amber
+                    "cancelled" -> Color.parseColor("#666666")   // Grey
+                    "pending" -> Color.parseColor("#333333")     // Dark grey
+                    else -> Color.parseColor("#333333")
+                }
+                Notification.ProgressStyle.Segment(1).setColor(color)
+            }
+        }
+
+        /**
+         * Build legacy (pre-Android 16) notification with BigTextStyle.
+         */
+        private fun buildLegacyProgressNotification(
+            context: Context,
+            sessionTitle: String,
+            contentText: String,
+            pendingIntent: PendingIntent,
+            todos: List<TodoInfo>,
+            elapsedSeconds: Long,
+            totalCount: Int,
+            completedCount: Int
+        ): Notification {
+            // Build big text with todo list
+            val bigTextBuilder = StringBuilder()
+            bigTextBuilder.append(contentText)
+            
+            if (todos.isNotEmpty()) {
+                bigTextBuilder.append("\n\n")
+                bigTextBuilder.append("━".repeat(20))
+                bigTextBuilder.append("\n")
+                
+                todos.take(5).forEach { todo ->
+                    val icon = when (todo.status) {
+                        "completed" -> "✓"
+                        "in_progress" -> "►"
+                        "cancelled" -> "✗"
+                        "pending" -> "○"
+                        else -> "○"
                     }
+                    bigTextBuilder.append("$icon ${todo.content}\n")
+                }
+                
+                if (todos.size > 5) {
+                    bigTextBuilder.append("... +${todos.size - 5} more")
+                }
+            }
+
+            return NotificationCompat.Builder(context, CHANNEL_AGENT_ACTIVE)
+                .setContentTitle(sessionTitle)
+                .setContentText(contentText)
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText(bigTextBuilder.toString())
                 )
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
-                .setProgress(
-                    progressInfo.totalCount,
-                    progressInfo.completedCount,
-                    progressInfo.totalCount == 0
-                )
-                .setWhen(
-                    System.currentTimeMillis() -
-                        progressInfo.elapsedSeconds * MILLIS_PER_SECOND
-                )
+                .setProgress(totalCount.coerceAtLeast(0), completedCount, totalCount == 0)
+                .setWhen(System.currentTimeMillis() - elapsedSeconds * MILLIS_PER_SECOND)
                 .setUsesChronometer(true)
                 .build()
-
-            notificationManager.notify(NOTIFICATION_ID_ACTIVE, notification)
         }
     }
 
     /**
      * Data class for progress notification parameters.
-     * Extracted to avoid LongParameterList warning.
      */
     data class ProgressInfo(
         val sessionTitle: String,
@@ -391,6 +589,15 @@ class ActiveSessionService : Service() {
         val elapsedSeconds: Long,
         val totalCount: Int = 0,
         val completedCount: Int = 0
+    )
+
+    /**
+     * Data class for todo item information in notifications.
+     */
+    data class TodoInfo(
+        val content: String,
+        val status: String,  // "pending", "in_progress", "completed", "cancelled"
+        val priority: String // "high", "medium", "low"
     )
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -430,7 +637,6 @@ class ActiveSessionService : Service() {
             ACTION_ABORT -> {
                 val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
                 if (sessionId != null) {
-                    // Abort would be handled by the app via broadcast/event
                     Napier.i("[ActiveSessionService] Abort requested for session: $sessionId")
                 }
             }
@@ -438,7 +644,6 @@ class ActiveSessionService : Service() {
                 val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
                 val permissionId = intent.getStringExtra(EXTRA_PERMISSION_ID)
                 if (sessionId != null && permissionId != null) {
-                    // Would be handled by the app via broadcast/event
                     Napier.i("[ActiveSessionService] Permission approved: $permissionId")
                     dismissPermissionNotification(permissionId)
                 }
@@ -447,7 +652,6 @@ class ActiveSessionService : Service() {
                 val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
                 val permissionId = intent.getStringExtra(EXTRA_PERMISSION_ID)
                 if (sessionId != null && permissionId != null) {
-                    // Would be handled by the app via broadcast/event
                     Napier.i("[ActiveSessionService] Permission denied: $permissionId")
                     dismissPermissionNotification(permissionId)
                 }
@@ -475,7 +679,6 @@ class ActiveSessionService : Service() {
 
         Napier.i("[ActiveSessionService] Added session: $sessionId, total: ${newSessions.size}")
 
-        // Start foreground if this is the first session
         if (currentSessions.isEmpty()) {
             startForeground(sessionTitle)
         } else {
@@ -491,7 +694,6 @@ class ActiveSessionService : Service() {
         Napier.i("[ActiveSessionService] Removed session: $sessionId, remaining: ${newSessions.size}")
 
         if (newSessions.isEmpty()) {
-            // Stop foreground and service
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         } else {
@@ -554,7 +756,7 @@ class ActiveSessionService : Service() {
             "Active Agent",
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shows when an agent is actively processing"
+            description = "Shows when an agent is actively processing tasks"
             setShowBadge(false)
         }
     }
@@ -643,7 +845,7 @@ class ActiveSessionService : Service() {
             .setOngoing(true)
             .setSilent(true)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setProgress(0, 0, true) // Indeterminate progress
+            .setProgress(0, 0, true)
             .build()
     }
 

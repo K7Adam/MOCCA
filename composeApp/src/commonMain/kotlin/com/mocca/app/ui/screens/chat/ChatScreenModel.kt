@@ -164,6 +164,7 @@ class ChatScreenModel(
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 val prefs = args[22] as UserPreferences
+                @Suppress("UNCHECKED_CAST")
                 _state.value.copy(
                     messages = (args[0] as List<Message>).toImmutableList(),
                     childSessions = (args[1] as Map<String, Session>).toImmutableMap(),
