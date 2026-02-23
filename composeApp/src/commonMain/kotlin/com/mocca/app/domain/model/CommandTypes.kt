@@ -23,6 +23,52 @@ data class Command(
     val mcp: Boolean = false
 )
 
+/**
+ * Built-in OpenCode CLI commands that are always available.
+ * These commands are defined by the OpenCode TUI and should be included
+ * even if the server doesn't return them from the /command endpoint.
+ * 
+ * Reference: https://opencode.ai/docs/de/tui/#befehle
+ */
+val BUILTIN_COMMANDS = listOf(
+    Command("compact", "Compact the current session (alias: /summarize)"),
+    Command("connect", "Add a provider to OpenCode"),
+    Command("details", "Toggle tool execution details"),
+    Command("editor", "Open external editor for composing messages"),
+    Command("exit", "Exit OpenCode (aliases: /quit, /q)"),
+    Command("export", "Export current conversation to Markdown"),
+    Command("help", "Show the help dialog"),
+    Command("init", "Create or update AGENTS.md file"),
+    Command("models", "List available models"),
+    Command("new", "Start a new session (alias: /clear)"),
+    Command("redo", "Redo a previously undone message"),
+    Command("sessions", "List and switch between sessions (aliases: /resume, /continue)"),
+    Command("share", "Share current session"),
+    Command("themes", "List available themes"),
+    Command("thinking", "Toggle thinking/reasoning block visibility"),
+    Command("undo", "Undo last message in the conversation"),
+    Command("unshare", "Unshare current session")
+)
+
+/**
+ * Merge API commands with built-in commands.
+ * API commands take precedence (they can override built-ins with custom versions).
+ * Built-in commands fill in gaps where the server doesn't provide them.
+ */
+fun mergeCommands(apiCommands: List<Command>): List<Command> {
+    val apiCommandNames = apiCommands.map { it.name.lowercase() }.toSet()
+    val mergedCommands = apiCommands.toMutableList()
+    
+    // Add built-in commands that aren't already provided by API
+    BUILTIN_COMMANDS.forEach { builtin ->
+        if (builtin.name.lowercase() !in apiCommandNames) {
+            mergedCommands.add(builtin)
+        }
+    }
+    
+    return mergedCommands.sortedBy { it.name }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // COMMAND & SHELL EXECUTION
 // ═══════════════════════════════════════════════════════════════════════════

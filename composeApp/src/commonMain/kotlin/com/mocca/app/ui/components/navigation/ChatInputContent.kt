@@ -51,10 +51,8 @@ import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
+import com.mocca.app.domain.model.mergeCommands
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
-import com.mocca.app.ui.components.modern.SuggestionItem
-import com.mocca.app.ui.components.modern.SuggestionPopup
-import com.mocca.app.ui.components.modern.SuggestionType
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -136,73 +134,51 @@ fun ChatInputContent(
 ) {
     var showModelSelector by remember { mutableStateOf(false) }
     var showVariantSelector by remember { mutableStateOf(false) }
-    var showSuggestions by remember { mutableStateOf(false) }
-    var suggestionQuery by remember { mutableStateOf("") }
-    var suggestionType by remember { mutableStateOf<SuggestionType?>(null) }
     var isInputFocused by remember { mutableStateOf(false) }
+    
+    // Text-triggered suggestions state
+    var showTextSuggestions by remember { mutableStateOf(false) }
+    var suggestionQuery by remember { mutableStateOf("") }
+    var isCommandSuggestion by remember { mutableStateOf(true) } // true = commands, false = modes
+    
     // Manual palette triggers (for / and @ buttons)
     var showCommandPalette by remember { mutableStateOf(false) }
     var showAgentPalette by remember { mutableStateOf(false) }
 
-    // Calculate suggestions
-    val currentSuggestions = remember(inputText, showSuggestions, suggestionType, suggestionQuery, modes, commands) {
-        if (!showSuggestions || suggestionType == null) emptyList<SuggestionItem>()
-        else {
-            val query = suggestionQuery.lowercase()
-            when (suggestionType) {
-                SuggestionType.COMMAND -> {
-                    commands.filter { it.name.lowercase().contains(query) }.map {
-                        SuggestionItem(it.name, "/${it.name}", it.description, SuggestionType.COMMAND)
-                    }
-                }
-                SuggestionType.MODE -> {
-                    modes.filter { it.name.lowercase().contains(query) || it.id.lowercase().contains(query) }.map {
-                        SuggestionItem(it.id, it.name.uppercase(), it.description, SuggestionType.MODE)
-                    }
-                }
-                else -> emptyList()
-            }
-        }
+    // Merge API commands with built-in commands
+    val mergedCommands = remember(commands) { mergeCommands(commands) }
+    
+    // Calculate filtered suggestions based on current query
+    val filteredCommands = remember(mergedCommands, suggestionQuery) {
+        val query = suggestionQuery.lowercase()
+        if (query.isEmpty()) mergedCommands
+        else mergedCommands.filter { it.name.lowercase().contains(query) }
+    }
+    
+    val filteredModes = remember(modes, suggestionQuery) {
+        val query = suggestionQuery.lowercase()
+        if (query.isEmpty()) modes
+        else modes.filter { it.name.lowercase().contains(query) || it.id.lowercase().contains(query) }
     }
 
     // Handle input changes for suggestions
     val handleValueChange = { newValue: String ->
         onInputTextChange(newValue)
         if (newValue.startsWith("/")) {
-            suggestionType = SuggestionType.COMMAND
+            isCommandSuggestion = true
             suggestionQuery = newValue.drop(1)
-            showSuggestions = true
+            showTextSuggestions = true
         } else {
             val lastAt = newValue.lastIndexOf('@')
             if (lastAt != -1 && (lastAt == 0 || newValue[lastAt - 1].isWhitespace())) {
-                suggestionType = SuggestionType.MODE
+                isCommandSuggestion = false
                 suggestionQuery = newValue.substring(lastAt + 1)
-                showSuggestions = true
+                showTextSuggestions = true
             } else {
-                showSuggestions = false
+                showTextSuggestions = false
             }
         }
-        if (newValue.isEmpty()) showSuggestions = false
-    }
-
-    val onSuggestionSelected = { item: SuggestionItem ->
-        when (item.type) {
-            SuggestionType.COMMAND -> {
-                onInputTextChange("/${item.id}")
-                showSuggestions = false
-            }
-            SuggestionType.MODE -> {
-                val mode = modes.find { it.id == item.id }
-                if (mode != null) {
-                    onModeSelectedForMention(mode)
-                    val lastAt = inputText.lastIndexOf('@')
-                    if (lastAt != -1) {
-                        onInputTextChange(inputText.substring(0, lastAt))
-                    }
-                }
-                showSuggestions = false
-            }
-        }
+        if (newValue.isEmpty()) showTextSuggestions = false
     }
 
     Column(
@@ -394,13 +370,101 @@ fun ChatInputContent(
                 }
             )
 
-            // Suggestions popup (text-triggered only - typing "/" or "@" in input)
-            if (showSuggestions && currentSuggestions.isNotEmpty()) {
-                SuggestionPopup(
-                    suggestions = currentSuggestions,
-                    onSuggestionSelected = onSuggestionSelected,
-                    onDismiss = { showSuggestions = false }
-                )
+            // Text-triggered suggestions dropdown (typing "/" or "@" in input)
+            // Uses DropdownMenu for stable positioning instead of SuggestionPopup
+            DropdownMenu(
+                expanded = showTextSuggestions,
+                onDismissRequest = { showTextSuggestions = false },
+                modifier = Modifier
+                    .background(AppColors.surfaceElevated, AppShapes.medium)
+                    .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+            ) {
+                if (isCommandSuggestion) {
+                    // Command suggestions (triggered by "/")
+                    if (filteredCommands.isEmpty()) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "No commands match \"$suggestionQuery\"",
+                                    style = AppTypography.labelSmall,
+                                    color = AppColors.textTertiary
+                                )
+                            },
+                            onClick = { showTextSuggestions = false }
+                        )
+                    } else {
+                        filteredCommands.forEach { cmd ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            "/${cmd.name}",
+                                            style = AppTypography.labelSmall,
+                                            color = AppColors.accentGreen
+                                        )
+                                        cmd.description?.let { desc ->
+                                            Text(
+                                                desc,
+                                                style = AppTypography.labelSmall,
+                                                color = AppColors.textTertiary,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    onCommandSelected(cmd)
+                                    showTextSuggestions = false
+                                }
+                            )
+                        }
+                    }
+                } else {
+                    // Mode/Agent suggestions (triggered by "@")
+                    if (filteredModes.isEmpty()) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    "No agents match \"$suggestionQuery\"",
+                                    style = AppTypography.labelSmall,
+                                    color = AppColors.textTertiary
+                                )
+                            },
+                            onClick = { showTextSuggestions = false }
+                        )
+                    } else {
+                        filteredModes.forEach { mode ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            mode.name.uppercase(),
+                                            style = AppTypography.labelSmall,
+                                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                        )
+                                        mode.description?.let { desc ->
+                                            Text(
+                                                desc,
+                                                style = AppTypography.labelSmall,
+                                                color = AppColors.textTertiary,
+                                                maxLines = 1
+                                            )
+                                        }
+                                    }
+                                },
+                                onClick = {
+                                    onModeSelectedForMention(mode)
+                                    // Remove the @ and any partial query from input
+                                    val lastAt = inputText.lastIndexOf('@')
+                                    if (lastAt != -1) {
+                                        onInputTextChange(inputText.substring(0, lastAt))
+                                    }
+                                    showTextSuggestions = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -535,7 +599,7 @@ fun ChatInputContent(
                             .background(AppColors.surfaceElevated, AppShapes.medium)
                             .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
                     ) {
-                        if (commands.isEmpty()) {
+                        if (mergedCommands.isEmpty()) {
                             DropdownMenuItem(
                                 text = {
                                     Text(
@@ -547,7 +611,7 @@ fun ChatInputContent(
                                 onClick = { showCommandPalette = false }
                             )
                         } else {
-                            commands.forEach { cmd ->
+                            mergedCommands.forEach { cmd ->
                                 DropdownMenuItem(
                                     text = {
                                         Column {
