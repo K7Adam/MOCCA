@@ -213,12 +213,12 @@ class SessionRepository(
     fun getMessages(sessionId: String, limit: Long = 50): Flow<Resource<List<Message>>> = channelFlow {
         send(Resource.Loading())
 
-        // 1. Memory
+        // 1. Memory cache
         cacheMutex.withLock { memoryCache[sessionId] }?.let {
             send(Resource.Success(it))
         }
 
-        // 2. DB Observer
+        // 2. DB Observer - reactive updates from local cache
         val dbJob = launch {
             localCache.observeRecentMessages(sessionId, limit).collect { messages ->
                 cacheMutex.withLock { memoryCache[sessionId] = messages }
@@ -226,16 +226,18 @@ class SessionRepository(
             }
         }
 
-        // 3. Network Refresh
+        // 3. Network Refresh - fetch latest from server
         launch {
             val result = apiClient.getMessages(sessionId)
             result.fold(
                 onSuccess = { responses ->
                     val messages = responses.map { Message.fromResponse(it) }
-                    localCache.insertMessages(messages)
+                    if (messages.isNotEmpty()) {
+                        localCache.insertMessages(messages)
+                    }
                 },
                 onFailure = { error ->
-                    Napier.e("Failed to refresh messages", error)
+                    Napier.e("[SessionRepository] Failed to refresh messages: ${error.message}", error)
                     val current = cacheMutex.withLock { memoryCache[sessionId] } ?: emptyList()
                     send(Resource.Error(error.message ?: "Failed to refresh messages", current))
                 }
@@ -491,6 +493,7 @@ class SessionRepository(
     
     /**
      * Load and cache the default model/provider from server config.
+     * Now properly awaits network response before returning.
      */
     suspend fun loadDefaultConfig() {
         // 0. Instant Load: Check local cache for recent models to instantly populate UI
@@ -505,9 +508,12 @@ class SessionRepository(
             Napier.w("Failed to read recent models from cache for fast-loading", e)
         }
 
-        // We launch the network fetch asynchronously instead of blocking the config load
-        repositoryScope.launch {
-            // 1. Try to load global config first (contains default model)
+        // If we already have defaults from cache, we can return early but still sync in background
+        val hadCacheHit = defaultModelId.isNotEmpty()
+        
+        // 1. Try to load global config from server (contains default model)
+        // Now we AWAIT this instead of fire-and-forget
+        if (!hadCacheHit || true) { // Always sync to ensure we have latest
             apiClient.getConfig().onSuccess { config ->
                 // Parse "provider/model" format (e.g. "anthropic/claude-sonnet-4-5")
                 config.model?.let { modelStr ->
@@ -516,6 +522,8 @@ class SessionRepository(
                         defaultProviderId = parts[0]
                         defaultModelId = parts[1]
                         Napier.i("Default config synced from server: $defaultProviderId / $defaultModelId")
+                        // Save to RecentModel for future instant loading
+                        addRecentModel(defaultProviderId, defaultModelId)
                     }
                 }
 
@@ -535,6 +543,8 @@ class SessionRepository(
                         defaultProviderId = provider.id
                         defaultModelId = provider.models.values.first().id
                         Napier.i("Fallback default config: $defaultProviderId / $defaultModelId")
+                        // Save to RecentModel for future instant loading
+                        addRecentModel(defaultProviderId, defaultModelId)
                     }
                 }
             }

@@ -137,7 +137,8 @@ val commonModule = module {
             toolRepository = get(),
             agentRepository = get(),
             commandRepository = get(),
-            providerRepository = get()
+            providerRepository = get(),
+            sessionRepository = get()
         )
     }
     

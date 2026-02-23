@@ -239,10 +239,10 @@ class AppStateStore(
         if (isInitialized) return
         isInitialized = true
         
-        Napier.i("[AppStateStore] Starting state observation and realtime sync")
-        
         // Load initial state from cache (instant, no network)
         loadFromCache()
+        
+        Napier.i("[AppStateStore] Starting state observation and realtime sync")
         
         // Start realtime sync service (handles periodic polling + connection sync)
         // The service itself will wait for connection before syncing
@@ -314,8 +314,81 @@ class AppStateStore(
             }
         }
         
+        // Observe providers from ProviderRepository - set default model when loaded
+        storeScope.launch {
+            providerRepository.cachedProviders.collect { providers ->
+                if (providers != null && _selectedModelId.value.isEmpty()) {
+                    // Set default model from loaded providers
+                    setDefaultModelFromProviders(providers)
+                }
+            }
+        }
+        
+        // Observe agents from AgentRepository - set default mode and derive modes
+        storeScope.launch {
+            agentRepository.cachedAgents.collect { agents ->
+                if (agents.isNotEmpty()) {
+                    // Update agents list
+                    _agents.value = agents
+                    // Derive modes from agents if not already set
+                    if (_modes.value.isEmpty()) {
+                        val derivedModes = agents
+                            .filter { !it.hidden }
+                            .map { agent ->
+                                Mode(
+                                    id = agent.name,
+                                    name = agent.name,
+                                    description = agent.description
+                                )
+                            }
+                        _modes.value = derivedModes
+                        Napier.i("[AppStateStore] Derived ${derivedModes.size} modes from agents")
+                    }
+                    // Set default mode if not set
+                    if (_selectedModeId.value == null) {
+                        val defaultMode = sessionRepository.getDefaultMode()
+                        val modes = _modes.value
+                        _selectedModeId.value = if (modes.any { it.id == defaultMode }) {
+                            defaultMode
+                        } else {
+                            modes.firstOrNull()?.id
+                        }
+                        Napier.i("[AppStateStore] Set default mode from agents: ${_selectedModeId.value}")
+                    }
+                }
+            }
+        }
+        
         // Git/VCS info is observed via loadVcsInfoWhenConnected() below
         // This prevents premature network calls before connection is established
+    }
+    
+    /**
+     * Set default model and provider from loaded providers response.
+     * This is called when providers are loaded via RealtimeSyncService.
+     */
+    private fun setDefaultModelFromProviders(providers: ProviderResponse) {
+        // First check if we have cached defaults from SessionRepository
+        val (cachedModelId, cachedProviderId) = sessionRepository.getDefaultModelProvider()
+        if (cachedModelId.isNotEmpty() && cachedProviderId.isNotEmpty()) {
+            _selectedProviderId.value = cachedProviderId
+            _selectedModelId.value = cachedModelId
+            Napier.i("[AppStateStore] Set default model from cache: $cachedProviderId / $cachedModelId")
+            return
+        }
+        
+        // Fallback: Find first available model from providers
+        providers.all.firstOrNull { provider ->
+            (provider.models as? Map<*, *>)?.isNotEmpty() == true
+        }?.let { provider ->
+            val modelsMap = provider.models as? Map<*, *> ?: return@let
+            val firstModelId = modelsMap.keys.firstOrNull()?.toString()
+            if (firstModelId != null) {
+                _selectedProviderId.value = provider.id
+                _selectedModelId.value = firstModelId
+                Napier.i("[AppStateStore] Set default model from providers: ${provider.id} / $firstModelId")
+            }
+        }
     }
     
     /**
@@ -342,7 +415,10 @@ class AppStateStore(
      */
     private fun loadAllData() {
         // Guard: Only load data if connected
-        if (!connectionStatus.value.isConnected) {
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadAllData() called - isConnected: $isConnected, isDataLoaded: $isDataLoaded")
+        
+        if (!isConnected) {
             Napier.w("[AppStateStore] Skipping loadAllData() - not connected")
             return
         }
@@ -359,6 +435,7 @@ class AppStateStore(
                     async { loadCommands() }     // Independent
                 ).awaitAll()
             }
+            Napier.i("[AppStateStore] All data loaded successfully")
         }
     }
     
@@ -368,8 +445,11 @@ class AppStateStore(
      */
     private fun loadProviders() {
         // Guard: Only load if connected
-        if (!connectionStatus.value.isConnected) {
-            Napier.d("[AppStateStore] Skipping loadProviders() - not connected")
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadProviders() called - isConnected: $isConnected")
+        
+        if (!isConnected) {
+            Napier.w("[AppStateStore] Skipping loadProviders() - not connected")
             return
         }
         
@@ -377,11 +457,9 @@ class AppStateStore(
             providerRepository.getProviders().collect { resource ->
                 _providers.value = resource
                 if (resource is Resource.Success) {
-                    Napier.v("[AppStateStore] Providers loaded: ${resource.data.all.size}")
+                    Napier.i("[AppStateStore] Providers loaded: ${resource.data.all.size}")
                 } else if (resource is Resource.Error) {
-                    if (resource.message.contains("Not connected", ignoreCase = true)) {
-                        Napier.d("[AppStateStore] loadProviders skipped - connection lost")
-                    }
+                    Napier.e("[AppStateStore] Failed to load providers: ${resource.message}")
                 }
             }
         }
@@ -393,8 +471,11 @@ class AppStateStore(
      */
     private fun loadTools() {
         // Guard: Only load if connected
-        if (!connectionStatus.value.isConnected) {
-            Napier.d("[AppStateStore] Skipping loadTools() - not connected")
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadTools() called - isConnected: $isConnected")
+        
+        if (!isConnected) {
+            Napier.w("[AppStateStore] Skipping loadTools() - not connected")
             return
         }
         
@@ -402,11 +483,9 @@ class AppStateStore(
             toolRepository.getToolIds().collect { resource ->
                 _tools.value = resource
                 if (resource is Resource.Success) {
-                    Napier.v("[AppStateStore] Tools loaded: ${resource.data.size}")
+                    Napier.i("[AppStateStore] Tools loaded: ${resource.data.size}")
                 } else if (resource is Resource.Error) {
-                    if (resource.message.contains("Not connected", ignoreCase = true)) {
-                        Napier.d("[AppStateStore] loadTools skipped - connection lost")
-                    }
+                    Napier.e("[AppStateStore] Failed to load tools: ${resource.message}")
                 }
             }
         }
@@ -418,8 +497,11 @@ class AppStateStore(
      */
     private fun loadCommands() {
         // Guard: Only load if connected
-        if (!connectionStatus.value.isConnected) {
-            Napier.d("[AppStateStore] Skipping loadCommands() - not connected")
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadCommands() called - isConnected: $isConnected")
+        
+        if (!isConnected) {
+            Napier.w("[AppStateStore] Skipping loadCommands() - not connected")
             return
         }
         
@@ -427,11 +509,9 @@ class AppStateStore(
             commandRepository.getCommands().collect { resource ->
                 _commands.value = resource
                 if (resource is Resource.Success) {
-                    Napier.v("[AppStateStore] Commands loaded: ${resource.data.size}")
+                    Napier.i("[AppStateStore] Commands loaded: ${resource.data.size}")
                 } else if (resource is Resource.Error) {
-                    if (resource.message.contains("Not connected", ignoreCase = true)) {
-                        Napier.d("[AppStateStore] loadCommands skipped - connection lost")
-                    }
+                    Napier.e("[AppStateStore] Failed to load commands: ${resource.message}")
                 }
             }
         }
@@ -536,7 +616,62 @@ class AppStateStore(
                 _sessions.value = sessions.sortedByDescending { it.updatedAt }
                 
                 // Load recent models
-                _recentModels.value = localCache.getRecentModels()
+                val recentModels = localCache.getRecentModels()
+                _recentModels.value = recentModels
+                Napier.i("[AppStateStore] Loaded ${recentModels.size} recent models from cache")
+                
+                // Set default model/provider from most recent
+                recentModels.firstOrNull()?.let { recent ->
+                    if (_selectedModelId.value.isEmpty()) {
+                        _selectedModelId.value = recent.modelId
+                        _selectedProviderId.value = recent.providerId
+                        sessionRepository.setDefaultModel(recent.modelId, recent.providerId)
+                        Napier.i("[AppStateStore] Set default model from cache: ${recent.providerId} / ${recent.modelId}")
+                    } else {
+                        Napier.i("[AppStateStore] Selected model already set: ${_selectedModelId.value}")
+                    }
+                } ?: run {
+                    Napier.i("[AppStateStore] No recent models in cache")
+                }
+
+                // Load agents from cache
+                val agents = localCache.getAllAgents()
+                if (agents.isNotEmpty()) {
+                    _agents.value = agents
+                    // Derive modes if empty
+                    if (_modes.value.isEmpty()) {
+                        val derivedModes = agents
+                            .filter { !it.hidden }
+                            .map { agent ->
+                                Mode(
+                                    id = agent.name,
+                                    name = agent.name,
+                                    description = agent.description
+                                )
+                            }
+                        _modes.value = derivedModes
+                    }
+                    
+                    // Set default mode if not set
+                    if (_selectedModeId.value == null) {
+                        val defaultMode = sessionRepository.getDefaultMode()
+                        val modes = _modes.value
+                        _selectedModeId.value = if (modes.any { it.id == defaultMode }) {
+                            defaultMode
+                        } else {
+                            modes.firstOrNull()?.id
+                        }
+                        Napier.i("[AppStateStore] Set default mode from cache: ${_selectedModeId.value}")
+                    }
+                    Napier.i("[AppStateStore] Loaded ${agents.size} agents from cache")
+                }
+
+                // Load commands from cache
+                val commands = localCache.getAllCommands()
+                if (commands.isNotEmpty()) {
+                    _commands.value = Resource.Success(commands)
+                    Napier.i("[AppStateStore] Loaded ${commands.size} commands from cache")
+                }
                 
                 Napier.i("[AppStateStore] Loaded ${sessions.size} sessions from cache")
             } catch (e: Exception) {
@@ -552,38 +687,46 @@ class AppStateStore(
      */
     private fun loadConfig() {
         // Guard: Only load if connected
-        if (!connectionStatus.value.isConnected) {
-            Napier.d("[AppStateStore] Skipping loadConfig() - not connected")
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadConfig() called - isConnected: $isConnected")
+        
+        if (!isConnected) {
+            Napier.w("[AppStateStore] Skipping loadConfig() - not connected")
             return
         }
         
         storeScope.launch {
+            Napier.i("[AppStateStore] Loading default config from server...")
+            
             // First, load default config from server (sets default model/provider)
             try {
                 sessionRepository.loadDefaultConfig()
                 Napier.i("[AppStateStore] Default config loaded from server")
+                
+                // IMMEDIATELY set the model from the loaded config - don't wait for provider info!
+                val (modelId, providerId) = sessionRepository.getDefaultModelProvider()
+                if (modelId.isNotEmpty() && _selectedModelId.value.isEmpty()) {
+                    _selectedModelId.value = modelId
+                    _selectedProviderId.value = providerId
+                    Napier.i("[AppStateStore] Default model set immediately: $providerId / $modelId")
+                }
             } catch (e: com.mocca.app.api.ConnectionException) {
-                Napier.d("[AppStateStore] loadDefaultConfig skipped - connection lost")
+                Napier.e("[AppStateStore] loadDefaultConfig failed - connection lost: ${e.message}")
                 return@launch
             } catch (e: Exception) {
-                Napier.w("[AppStateStore] Failed to load default config: ${e.message}")
+                Napier.e("[AppStateStore] Failed to load default config: ${e.message}")
             }
             
-            // Load provider info
-            sessionRepository.getProviderInfo().fold(
-                onSuccess = { info ->
-                    _providerInfo.value = info
-                    Napier.i("[AppStateStore] Provider info loaded: ${info.all.size} providers")
-                    
-                    // Set default model if not already set
-                    if (_selectedModelId.value.isEmpty()) {
-                        val (modelId, providerId) = sessionRepository.getDefaultModelProvider()
-                        if (modelId.isNotEmpty()) {
-                            _selectedModelId.value = modelId
-                            _selectedProviderId.value = providerId
-                            Napier.i("[AppStateStore] Default model set: $providerId / $modelId")
-                        } else {
-                            // Fallback: try to find first available model
+            // Load provider info in parallel with modes (non-blocking for model display)
+            val providerJob = async {
+                Napier.i("[AppStateStore] Loading provider info...")
+                sessionRepository.getProviderInfo().fold(
+                    onSuccess = { info ->
+                        _providerInfo.value = info
+                        Napier.i("[AppStateStore] Provider info loaded: ${info.all.size} providers")
+                        
+                        // Fallback: try to find first available model if still not set
+                        if (_selectedModelId.value.isEmpty()) {
                             info.all.firstOrNull { provider ->
                                 (provider.models as? Map<*, *>)?.isNotEmpty() == true
                             }?.let { provider ->
@@ -596,35 +739,33 @@ class AppStateStore(
                                 }
                             }
                         }
+                    },
+                    onFailure = { 
+                        Napier.e("[AppStateStore] Failed to load provider info: ${it.message}")
                     }
-                },
-                onFailure = { 
-                    if (it is com.mocca.app.api.ConnectionException) {
-                        Napier.d("[AppStateStore] getProviderInfo skipped - connection lost")
-                    } else {
-                        Napier.w("[AppStateStore] Failed to load provider info: ${it.message}")
-                    }
-                }
-            )
+                )
+            }
             
-            // Load modes from server
-            sessionRepository.getModes().fold(
-                onSuccess = { modes ->
-                    _modes.value = modes
-                    Napier.i("[AppStateStore] Modes loaded: ${modes.size} modes")
-                    if (_selectedModeId.value == null && modes.isNotEmpty()) {
-                        _selectedModeId.value = modes.first().id
-                        Napier.i("[AppStateStore] Default mode set: ${modes.first().id}")
+            // Load modes from server in parallel
+            val modesJob = async {
+                Napier.i("[AppStateStore] Loading modes...")
+                sessionRepository.getModes().fold(
+                    onSuccess = { modes ->
+                        _modes.value = modes
+                        Napier.i("[AppStateStore] Modes loaded: ${modes.size} modes")
+                        if (_selectedModeId.value == null && modes.isNotEmpty()) {
+                            _selectedModeId.value = modes.first().id
+                            Napier.i("[AppStateStore] Default mode set: ${modes.first().id}")
+                        }
+                    },
+                    onFailure = { 
+                        Napier.e("[AppStateStore] Failed to load modes: ${it.message}")
                     }
-                },
-                onFailure = { 
-                    if (it is com.mocca.app.api.ConnectionException) {
-                        Napier.d("[AppStateStore] getModes skipped - connection lost")
-                    } else {
-                        Napier.w("[AppStateStore] Failed to load modes: ${it.message}")
-                    }
-                }
-            )
+                )
+            }
+            
+            // Wait for both to complete
+            awaitAll(providerJob, modesJob)
         }
     }
     
@@ -635,12 +776,16 @@ class AppStateStore(
      */
     private fun loadAgents() {
         // Guard: Only load if connected
-        if (!connectionStatus.value.isConnected) {
-            Napier.d("[AppStateStore] Skipping loadAgents() - not connected")
+        val isConnected = connectionStatus.value.isConnected
+        Napier.i("[AppStateStore] loadAgents() called - isConnected: $isConnected")
+        
+        if (!isConnected) {
+            Napier.w("[AppStateStore] Skipping loadAgents() - not connected")
             return
         }
         
         storeScope.launch {
+            Napier.i("[AppStateStore] Loading agents from server...")
             agentRepository.getAgents().collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
@@ -675,13 +820,11 @@ class AppStateStore(
                         }
                     }
                     is Resource.Error -> {
-                        if (resource.message.contains("Not connected", ignoreCase = true)) {
-                            Napier.d("[AppStateStore] loadAgents skipped - connection lost")
-                        } else {
-                            Napier.w("[AppStateStore] Failed to load agents: ${resource.message}")
-                        }
+                        Napier.e("[AppStateStore] Failed to load agents: ${resource.message}")
                     }
-                    else -> {}
+                    else -> {
+                        Napier.i("[AppStateStore] Agents loading...")
+                    }
                 }
             }
         }

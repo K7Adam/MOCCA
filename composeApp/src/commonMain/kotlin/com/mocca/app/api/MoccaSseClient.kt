@@ -101,52 +101,66 @@ class MoccaSseClient(
     /**
      * Parse raw JSON string into ServerEvent.
      * Based on OpenCode SDK event types.
+     * 
+     * IMPORTANT: OpenCode server sends events with nested structure:
+     * {"payload":{"type":"server.heartbeat","properties":{}}}
+     * 
+     * We need to extract the payload first, then parse the event.
      */
     private fun parseEvent(data: String): ServerEvent {
         val jsonObject = json.decodeFromString<JsonObject>(data)
-        val type = jsonObject["type"]?.jsonPrimitive?.content ?: "unknown"
+        
+        // OpenCode wraps events in a "payload" object
+        // Extract payload if present, otherwise use root object (for backwards compatibility)
+        val payloadObject = jsonObject["payload"] as? JsonObject
+        val eventObject = payloadObject ?: jsonObject
+        
+        val type = eventObject["type"]?.jsonPrimitive?.content ?: "unknown"
+        
+        // Serialize the event object (payload or root) for decoding
+        val eventData = json.encodeToString(JsonObject.serializer(), eventObject)
         
         return when (type) {
             // Connection events
-            "server.connected" -> json.decodeFromString<ServerEvent.Connected>(data)
-            "server.heartbeat" -> json.decodeFromString<ServerEvent.Heartbeat>(data)
+            "server.connected" -> json.decodeFromString<ServerEvent.Connected>(eventData)
+            "server.heartbeat" -> json.decodeFromString<ServerEvent.Heartbeat>(eventData)
             
             // Session events
-            "session.updated" -> json.decodeFromString<ServerEvent.SessionUpdated>(data)
-            "session.deleted" -> json.decodeFromString<ServerEvent.SessionDeleted>(data)
-            "session.idle" -> json.decodeFromString<ServerEvent.SessionIdle>(data)
-            "session.error" -> json.decodeFromString<ServerEvent.SessionError>(data)
+            "session.updated" -> json.decodeFromString<ServerEvent.SessionUpdated>(eventData)
+            "session.deleted" -> json.decodeFromString<ServerEvent.SessionDeleted>(eventData)
+            "session.idle" -> json.decodeFromString<ServerEvent.SessionIdle>(eventData)
+            "session.error" -> json.decodeFromString<ServerEvent.SessionError>(eventData)
             
             // Message events
-            "message.updated" -> json.decodeFromString<ServerEvent.MessageUpdated>(data)
-            "message.removed" -> json.decodeFromString<ServerEvent.MessageRemoved>(data)
-            "message.part.updated" -> json.decodeFromString<ServerEvent.MessagePartUpdated>(data)
-            "message.part.removed" -> json.decodeFromString<ServerEvent.MessagePartRemoved>(data)
+            "message.updated" -> json.decodeFromString<ServerEvent.MessageUpdated>(eventData)
+            "message.removed" -> json.decodeFromString<ServerEvent.MessageRemoved>(eventData)
+            "message.part.updated" -> json.decodeFromString<ServerEvent.MessagePartUpdated>(eventData)
+            "message.part.removed" -> json.decodeFromString<ServerEvent.MessagePartRemoved>(eventData)
             
             // Permission events (tool approval)
-            "permission.updated" -> json.decodeFromString<ServerEvent.PermissionUpdated>(data)
-            "permission.asked" -> json.decodeFromString<ServerEvent.PermissionAsked>(data)
-            "permission.replied" -> json.decodeFromString<ServerEvent.PermissionReplied>(data)
+            "permission.updated" -> json.decodeFromString<ServerEvent.PermissionUpdated>(eventData)
+            "permission.asked" -> json.decodeFromString<ServerEvent.PermissionAsked>(eventData)
+            "permission.replied" -> json.decodeFromString<ServerEvent.PermissionReplied>(eventData)
             
             // Question events (interactive input)
-            "question.asked" -> json.decodeFromString<ServerEvent.QuestionAsked>(data)
-            "question.replied" -> json.decodeFromString<ServerEvent.QuestionReplied>(data)
+            "question.asked" -> json.decodeFromString<ServerEvent.QuestionAsked>(eventData)
+            "question.replied" -> json.decodeFromString<ServerEvent.QuestionReplied>(eventData)
             
             // File events
-            "file.edited" -> json.decodeFromString<ServerEvent.FileEdited>(data)
-            "file.watcher.updated" -> json.decodeFromString<ServerEvent.FileWatcherUpdated>(data)
+            "file.edited" -> json.decodeFromString<ServerEvent.FileEdited>(eventData)
+            "file.watcher.updated" -> json.decodeFromString<ServerEvent.FileWatcherUpdated>(eventData)
             
             // System events
-            "installation.updated" -> json.decodeFromString<ServerEvent.InstallationUpdated>(data)
-            "lsp.client.diagnostics" -> json.decodeFromString<ServerEvent.LspDiagnostics>(data)
+            "installation.updated" -> json.decodeFromString<ServerEvent.InstallationUpdated>(eventData)
+            "lsp.client.diagnostics" -> json.decodeFromString<ServerEvent.LspDiagnostics>(eventData)
             
             // Log and agent events
-            "log" -> json.decodeFromString<ServerEvent.Log>(data)
-            "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(data)
+            "log" -> json.decodeFromString<ServerEvent.Log>(eventData)
+            "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(eventData)
             
             // Unknown event type
             else -> {
-                Napier.d(">>> Unknown SSE event type: $type")
+                Napier.d(">>> Unknown SSE event type: $type, payload present: ${payloadObject != null}")
                 ServerEvent.Unknown(type = type, rawData = data)
             }
         }

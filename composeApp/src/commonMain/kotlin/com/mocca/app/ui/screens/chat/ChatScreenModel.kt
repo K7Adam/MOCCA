@@ -155,7 +155,12 @@ class ChatScreenModel(
                 configDelegate.recentModels,
                 configDelegate.commands,
                 chatStateStore.todos,
-                appStateStore.userPreferences
+                appStateStore.userPreferences,
+                // CRITICAL: Sync loading states from ChatStateStore
+                chatStateStore.isLoading,
+                chatStateStore.isSending,
+                chatStateStore.isSessionIdle,
+                chatStateStore.error
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 val prefs = args[22] as UserPreferences
@@ -183,7 +188,12 @@ class ChatScreenModel(
                     commands = args[20] as ImmutableList<Command>,
                     todos = (args[21] as List<Todo>).toImmutableList(),
                     showTimestamps = prefs.showTimestamps,
-                    showTokenCounts = prefs.showTokenCounts
+                    showTokenCounts = prefs.showTokenCounts,
+                    // CRITICAL: Sync loading states from ChatStateStore
+                    isLoading = args[23] as Boolean,
+                    isSending = args[24] as Boolean,
+                    isSessionIdle = args[25] as Boolean,
+                    error = args[26] as String?
                 )
             }.collect { newState ->
                 _state.update { newState }
@@ -193,7 +203,8 @@ class ChatScreenModel(
 
     fun loadSession(newSessionId: String) {
         if (_state.value.sessionId == newSessionId && _state.value.messages.isNotEmpty()) return
-        _state.update { it.copy(sessionId = newSessionId, isLoading = true) }
+        // Note: isLoading is now synced from ChatStateStore, no need to set here
+        _state.update { it.copy(sessionId = newSessionId) }
         _inputText.value = ""
         screenModelScope.launch { chatStateStore.loadSession(newSessionId) }
     }
@@ -346,7 +357,7 @@ class ChatScreenModel(
 
     fun refreshData() {
         screenModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            // isLoading is now synced from ChatStateStore
             loadMessages()
             configDelegate.loadConfig()
             configDelegate.loadRecentModels()
@@ -356,7 +367,7 @@ class ChatScreenModel(
 
     fun retry() {
         clearError()
-        screenModelScope.launch { chatStateStore.loadSession(sessionId) }
+        screenModelScope.launch { chatStateStore.loadSession(sessionId, forceReload = true) }
     }
 
     fun clearError() { _state.update { it.copy(error = null) } }

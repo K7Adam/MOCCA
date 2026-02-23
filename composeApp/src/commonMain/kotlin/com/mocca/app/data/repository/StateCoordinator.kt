@@ -214,6 +214,8 @@ class StateCoordinator(
         
         connectionManager.onConnectionEstablished = suspend { 
             Napier.i("[StateCoordinator] Connection established callback - starting and syncing")
+            // Ensure SSE is connected immediately
+            eventStreamRepository.connect()
             start()
             syncFromServer()
         }
@@ -258,6 +260,8 @@ class StateCoordinator(
                 _monitoredSessionIds.update { it + lastSessionId }
                 // Broadcast session change
                 _broadcastEvents.emit(BroadcastEvent.ActiveSessionChanged(lastSessionId))
+                // Connect SSE with session ID
+                eventStreamRepository.connect(coordinatorScope, lastSessionId)
             }
         }
         
@@ -347,9 +351,14 @@ class StateCoordinator(
     private fun startObservingConnection() {
         connectionObserverJob = coordinatorScope.launch {
             connectionManager.status.collect { status ->
-                if (status.isConnected && !_isSyncing.value) {
-                    Napier.i("[StateCoordinator] Connection established - syncing")
-                    syncFromServer()
+                if (status.isConnected) {
+                    // Ensure SSE is connected on every connection restore
+                    eventStreamRepository.connect(coordinatorScope, _activeSessionId.value)
+                    
+                    if (!_isSyncing.value) {
+                        Napier.i("[StateCoordinator] Connection established - syncing")
+                        syncFromServer()
+                    }
                 }
                 // Broadcast connection state changes
                 _broadcastEvents.emit(BroadcastEvent.ConnectionStateChanged(status))
@@ -603,26 +612,31 @@ class StateCoordinator(
             // Force connection check (re-establish SSE if it was broken during background)
             connectionManager.checkConnection()
             
-            // Always force a full sync from server when returning to foreground
-            // Delay slightly to allow connection status to update if it was just checking
-            delay(500L)
-            if (connectionStatus.value.isConnected || _isSyncing.value.not()) {
-                Napier.i("[StateCoordinator] Foreground sync triggered")
-                syncFromServer()
+            // Only sync and refresh status if connected
+            if (connectionStatus.value.isConnected) {
+                if (!_isSyncing.value) {
+                    Napier.i("[StateCoordinator] Foreground sync triggered")
+                    syncFromServer()
+                }
+                // Only refresh session status AFTER confirming connection
+                refreshSessionStatus()
+            } else {
+                Napier.v("[StateCoordinator] Not connected yet - skipping sync, connection observer will handle it")
             }
-            
-            // Refresh session status immediately as well
-            refreshSessionStatus()
         }
     }
     
     /**
      * Sync all state from server.
      * Uses mutex to prevent concurrent sync operations (debounce).
+     * 
+     * IMPORTANT: Does NOT cancel previous sync to allow completion.
+     * Multiple calls are debounced via mutex lock.
      */
     fun syncFromServer() {
-        syncJob?.cancel()
-        syncJob = coordinatorScope.launch {
+        // Don't cancel previous sync - let it complete
+        // The mutex will handle deduplication
+        coordinatorScope.launch {
             // Use mutex to prevent concurrent syncs (debounce)
             if (!syncMutex.tryLock()) {
                 Napier.v("[StateCoordinator] Sync already in progress, skipping")
@@ -638,11 +652,12 @@ class StateCoordinator(
                 _isSyncing.value = true
                 Napier.i("[StateCoordinator] Starting full sync...")
                 
-                // Sync sessions
-                sessionRepository.refreshSessions()
-                
-                // Refresh session status
-                refreshSessionStatus()
+                // Parallelize sync operations
+                coroutineScope {
+                    val sessionsJob = async { sessionRepository.refreshSessions() }
+                    val statusJob = async { refreshSessionStatus() }
+                    awaitAll(sessionsJob, statusJob)
+                }
                 
                 _lastSyncTime.value = Clock.System.now().toEpochMilliseconds()
                 Napier.i("[StateCoordinator] Sync completed successfully")

@@ -142,17 +142,20 @@ class EventStreamRepository(
      */
     fun connect(externalScope: CoroutineScope? = null, sessionId: String? = null) {
         if (connectionJob?.isActive == true) {
-            Napier.i("SSE already connected (job active)")
             if (activeSessionId == sessionId) {
+                Napier.i("SSE already connected to session: $sessionId")
                 return // Already connected to this session
             }
-            Napier.i("Switching session from $activeSessionId to $sessionId")
-            // Don't disconnect fully, just update session tracking
+            Napier.i("Switching SSE session from $activeSessionId to $sessionId")
+            // Clear streaming state when switching sessions
+            setActiveSession(sessionId)
+        } else {
+            setActiveSession(sessionId)
         }
         
-        activeSessionId = sessionId
+        // Add session to monitored set (don't replace - preserve other monitored sessions)
         if (sessionId != null) {
-            monitoredSessionIds.value = setOf(sessionId)
+            monitoredSessionIds.update { it + sessionId }
         }
         autoReconnect = true
         reconnectAttempts = 0
@@ -166,6 +169,24 @@ class EventStreamRepository(
             startLifecycleObserver()
             startPermissionActionObserver()
         }
+    }
+    
+    /**
+     * Set the active session for streaming.
+     * Clears streaming state when switching to a different session.
+     * This ensures streaming text doesn't carry over between sessions.
+     */
+    fun setActiveSession(sessionId: String?) {
+        val previousId = activeSessionId
+        if (previousId != sessionId) {
+            Napier.i("[EventStream] Switching active session: $previousId -> $sessionId")
+            // Clear streaming state when switching sessions
+            _streamingText.value = ""
+            _isThinking.value = false
+            _thinkingContent.value = ""
+            _thinkingStartTime.value = null
+        }
+        activeSessionId = sessionId
     }
     
     /**

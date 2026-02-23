@@ -55,7 +55,8 @@ class RealtimeSyncService(
     private val toolRepository: ToolRepository,
     private val agentRepository: AgentRepository,
     private val commandRepository: CommandRepository,
-    private val providerRepository: ProviderRepository
+    private val providerRepository: ProviderRepository,
+    private val sessionRepository: SessionRepository
 ) {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -164,7 +165,6 @@ class RealtimeSyncService(
             connectionManager.status.collect { status ->
                 if (status.isConnected) {
                     Napier.i("[RealtimeSync] Connection established - silent sync")
-                    delay(500) // Brief delay for connection stabilization
                     performSilentSync("connection")
                 }
             }
@@ -333,6 +333,16 @@ class RealtimeSyncService(
     private suspend fun syncAgentsSilent() {
         try {
             agentRepository.refresh()
+            // Also load modes after agents are loaded
+            sessionRepository.getModes().fold(
+                onSuccess = { modes ->
+                    // Modes are cached in SessionRepository, just log
+                    Napier.v("[RealtimeSync] Modes loaded: ${modes.size}")
+                },
+                onFailure = { error ->
+                    Napier.w("[RealtimeSync] Failed to load modes: ${error.message}")
+                }
+            )
             Napier.v("[RealtimeSync] Agents synced (silent)")
         } catch (e: Exception) {
             Napier.w("[RealtimeSync] Agents sync failed: ${e.message}")
@@ -352,6 +362,9 @@ class RealtimeSyncService(
     
     private suspend fun syncProvidersSilent() {
         try {
+            // Load default config first (sets default model/provider)
+            sessionRepository.loadDefaultConfig()
+            // Then refresh providers list
             providerRepository.refresh()
             Napier.v("[RealtimeSync] Providers synced (silent)")
         } catch (e: Exception) {

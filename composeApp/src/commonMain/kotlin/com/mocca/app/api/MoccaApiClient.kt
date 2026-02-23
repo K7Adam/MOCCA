@@ -76,6 +76,7 @@ class MoccaApiClient(
 
     // Messages
     suspend fun getMessages(sessionId: String): Result<List<MessageResponse>> = safeCall("getMessages") {
+        Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId")
         val response = get("session/$sessionId/message")
         val rawText = response.bodyAsText()
         json.decodeFromString<List<MessageResponse>>(rawText)

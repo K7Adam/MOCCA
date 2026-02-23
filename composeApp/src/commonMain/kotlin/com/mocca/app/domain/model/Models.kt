@@ -808,7 +808,7 @@ data class ServerErrorResponse(
 @Immutable
 @Serializable
 data class Todo(
-    val id: String,
+    val id: String? = null,  // Server may not always include id
     val content: String,
     val status: TodoStatus,
     val priority: TodoPriority,

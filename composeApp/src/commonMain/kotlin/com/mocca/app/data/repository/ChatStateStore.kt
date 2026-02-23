@@ -135,14 +135,17 @@ class ChatStateStore(
     /**
      * Load a session for chat.
      * This sets up message observation and SSE connection via StateCoordinator.
+     * @param sessionId The session ID to load
+     * @param forceReload If true, reload even if session appears already loaded
      */
-    suspend fun loadSession(sessionId: String) {
-        if (_currentSessionId.value == sessionId && _messages.value.isNotEmpty()) {
+    suspend fun loadSession(sessionId: String, forceReload: Boolean = false) {
+        // Skip if already loaded (unless force reload)
+        if (!forceReload && _currentSessionId.value == sessionId && _messages.value.isNotEmpty()) {
             Napier.v("[ChatStateStore] Session $sessionId already loaded")
             return
         }
         
-        Napier.i("[ChatStateStore] Loading session: $sessionId")
+        Napier.i("[ChatStateStore] Loading session: $sessionId (forceReload=$forceReload)")
         _currentSessionId.value = sessionId
         _isLoading.value = true
         _error.value = null
@@ -159,7 +162,6 @@ class ChatStateStore(
             localCache.observeRecentMessages(sessionId, 100).collect { messages ->
                 _messages.value = messages
                 _isLoading.value = false
-                Napier.v("[ChatStateStore] Messages updated: ${messages.size}")
             }
         }
         
@@ -168,6 +170,9 @@ class ChatStateStore(
         
         // Load todos
         loadTodos(sessionId)
+        
+        // Fetch messages from server to populate cache
+        reloadMessages(sessionId)
     }
     
     /**
@@ -300,15 +305,24 @@ class ChatStateStore(
      */
     private fun reloadMessages(sessionId: String) {
         storeScope.launch {
+            Napier.i("[ChatStateStore] Fetching messages for session: $sessionId")
             sessionRepository.getMessages(sessionId, 100).collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
+                        Napier.i("[ChatStateStore] Fetched ${resource.data.size} messages for session: $sessionId")
                         // DB observer will update _messages
                     }
                     is Resource.Error -> {
-                        _error.value = resource.message
+                        Napier.e("[ChatStateStore] Failed to fetch messages: ${resource.message}")
+                        // Only set error if we have no cached data
+                        if (_messages.value.isEmpty()) {
+                            _error.value = resource.message
+                            _isLoading.value = false
+                        }
                     }
-                    else -> {}
+                    is Resource.Loading -> {
+                        // Loading state handled by DB observer
+                    }
                 }
             }
         }
@@ -507,6 +521,16 @@ class ChatStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     fun clearError() { _error.value = null }
+    
+    /**
+     * Retry loading the current session.
+     * Uses forceReload=true to bypass the early return check.
+     */
+    suspend fun retryLoad() {
+        val sessionId = _currentSessionId.value ?: return
+        clearError()
+        loadSession(sessionId, forceReload = true)
+    }
     
     fun dispose() {
         messageObserverJob?.cancel()
