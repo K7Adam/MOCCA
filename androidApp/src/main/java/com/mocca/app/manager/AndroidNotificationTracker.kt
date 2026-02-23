@@ -1,16 +1,17 @@
 package com.mocca.app.manager
 
 import android.content.Context
+import android.content.Intent
 import com.mocca.app.domain.manager.NotificationTracker
 import com.mocca.app.domain.manager.TodoProgressInfo
 import com.mocca.app.service.ActiveSessionService
-import com.mocca.app.service.ActiveSessionService.ProgressInfo
 import com.mocca.app.service.ActiveSessionService.TodoInfo
 
 /**
  * Android implementation of NotificationTracker.
- * Delegates calls to the ActiveSessionService to manage foreground services
- * and system notifications.
+ * 
+ * Uses intent-based communication with ActiveSessionService to ensure
+ * all notification state is managed by the service.
  */
 class AndroidNotificationTracker(private val context: Context) : NotificationTracker {
 
@@ -76,15 +77,15 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
         totalCount: Int,
         completedCount: Int
     ) {
-        val progressInfo = ProgressInfo(
-            sessionTitle = sessionTitle,
-            toolTitle = toolTitle,
-            modelName = modelName,
+        // Use intent-based update
+        sendUpdateIntent(
+            sessionId = sessionId,
+            title = sessionTitle,
+            currentTask = toolTitle,
+            todos = emptyList(),
             elapsedSeconds = elapsedSeconds,
-            totalCount = totalCount,
-            completedCount = completedCount
+            modelName = modelName
         )
-        ActiveSessionService.updateProgressNotification(context, progressInfo)
     }
 
     override fun updateProgressNotificationWithTodos(
@@ -111,14 +112,39 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
                 }
             )
         }
-        
-        ActiveSessionService.updateProgressNotificationWithTodos(
-            context,
-            sessionTitle,
-            currentTask,
-            todoInfos,
-            elapsedSeconds,
-            modelName
+
+        sendUpdateIntent(
+            sessionId = sessionId,
+            title = sessionTitle,
+            currentTask = currentTask,
+            todos = todoInfos,
+            elapsedSeconds = elapsedSeconds,
+            modelName = modelName
         )
+    }
+
+    private fun sendUpdateIntent(
+        sessionId: String,
+        title: String,
+        currentTask: String?,
+        todos: List<TodoInfo>,
+        elapsedSeconds: Long,
+        modelName: String
+    ) {
+        val intent = Intent(context, ActiveSessionService::class.java).apply {
+            action = "com.mocca.app.action.UPDATE_SESSION"
+            putExtra("sessionId", sessionId)
+            putExtra("title", title)
+            putExtra("currentTask", currentTask)
+            putExtra("elapsedSeconds", elapsedSeconds)
+            putExtra("modelName", modelName)
+            putExtra("todoCount", todos.size)
+            todos.forEachIndexed { index, todo ->
+                putExtra("todo_${index}_content", todo.content)
+                putExtra("todo_${index}_status", todo.status)
+                putExtra("todo_${index}_priority", todo.priority)
+            }
+        }
+        context.startForegroundService(intent)
     }
 }
