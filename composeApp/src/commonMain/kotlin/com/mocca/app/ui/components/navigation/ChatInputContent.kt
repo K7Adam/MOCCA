@@ -722,22 +722,10 @@ fun ChatInputContent(
                 }
             } else {
                 // ABORT button - agent running state
-                // Pulsing animation to indicate active agent
-                val infiniteTransition = rememberInfiniteTransition(label = "abortPulse")
-                val pulseAlpha by infiniteTransition.animateFloat(
-                    initialValue = 0.7f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(600, easing = LinearEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "alpha"
-                )
-                
                 Box(
                     modifier = Modifier
                         .height(NavConstants.SendButtonHeight)
-                        .background(AppColors.error.copy(alpha = pulseAlpha), AppShapes.pill)
+                        .background(AppColors.error, AppShapes.pill)
                         .clickable(onClick = onAbortClick)
                         .padding(horizontal = AppSpacing.md),
                     contentAlignment = Alignment.Center
