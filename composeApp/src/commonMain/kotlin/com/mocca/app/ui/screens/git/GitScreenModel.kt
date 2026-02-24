@@ -71,7 +71,7 @@ class GitScreenModel(
     
     fun loadStatus() {
         screenModelScope.launch {
-            gitRepository.getStatus().collect { resource ->
+            gitRepository.getStatus(_currentSessionId).collect { resource ->
                 _uiState.update { state ->
                     when (resource) {
                         is Resource.Loading -> state.copy(

@@ -43,7 +43,7 @@ class GitDiffScreenModel(
                         is Resource.Success -> {
                             val fileDiffs = resource.data
                             // Filter to the specific file path
-                            val targetDiffs = fileDiffs.filter { it.path == path }
+                            val targetDiffs = fileDiffs.filter { it.file == path }
                             if (targetDiffs.isNotEmpty()) {
                                 val diff = fileDiffsToGitDiff(targetDiffs)
                                 state.copy(
@@ -53,7 +53,7 @@ class GitDiffScreenModel(
                                 )
                             } else {
                                 // Try partial match (file might be in subdirectory)
-                                val partialDiffs = fileDiffs.filter { it.path.endsWith(path) || path.endsWith(it.path) }
+                                val partialDiffs = fileDiffs.filter { it.file.endsWith(path) || path.endsWith(it.file) }
                                 if (partialDiffs.isNotEmpty()) {
                                     val diff = fileDiffsToGitDiff(partialDiffs)
                                     state.copy(isLoading = false, diff = diff, error = null)
@@ -83,62 +83,102 @@ class GitDiffScreenModel(
     }
 
     /**
-     * Converts OpenCode FileDiff (from /session/:id/diff) to GitDiff
-     * for display by GitDiffScreen UI components.
+     * Converts OpenCode FileDiff (from /session/:id/diff) to GitDiff.
+     * 
+     * The OpenCode SDK FileDiff has { file, before, after, additions, deletions }.
+     * We generate diff hunks by comparing the before/after content line-by-line.
      */
     private fun fileDiffsToGitDiff(fileDiffs: List<FileDiff>): GitDiff {
         val files = fileDiffs.map { fileDiff ->
+            val beforeLines = fileDiff.before.lines()
+            val afterLines = fileDiff.after.lines()
+            
+            // Generate a simple diff by comparing lines
+            val diffLines = mutableListOf<GitDiffLine>()
+            val maxLines = maxOf(beforeLines.size, afterLines.size)
             var additions = 0
             var deletions = 0
-            val hunks = fileDiff.hunks.map { hunk ->
-                var oldLine = hunk.oldStart
-                var newLine = hunk.newStart
-                val lines = hunk.lines.map { rawLine ->
-                    when {
-                        rawLine.startsWith("+") -> {
-                            additions++
-                            GitDiffLine(
-                                type = DiffLineType.ADDITION,
-                                content = rawLine.substring(1),
-                                oldLineNumber = null,
-                                newLineNumber = newLine++
-                            )
-                        }
-                        rawLine.startsWith("-") -> {
-                            deletions++
-                            GitDiffLine(
-                                type = DiffLineType.DELETION,
-                                content = rawLine.substring(1),
-                                oldLineNumber = oldLine++,
-                                newLineNumber = null
-                            )
-                        }
-                        else -> {
-                            val content = if (rawLine.startsWith(" ")) rawLine.substring(1) else rawLine
-                            GitDiffLine(
-                                type = DiffLineType.CONTEXT,
-                                content = content,
-                                oldLineNumber = oldLine++,
-                                newLineNumber = newLine++
-                            )
-                        }
+            
+            // Simple line-by-line comparison
+            var i = 0
+            while (i < maxLines) {
+                val oldLine = beforeLines.getOrNull(i)
+                val newLine = afterLines.getOrNull(i)
+                
+                when {
+                    oldLine == null && newLine != null -> {
+                        // Added line
+                        additions++
+                        diffLines.add(GitDiffLine(
+                            type = DiffLineType.ADDITION,
+                            content = newLine,
+                            oldLineNumber = null,
+                            newLineNumber = i + 1
+                        ))
+                    }
+                    oldLine != null && newLine == null -> {
+                        // Deleted line
+                        deletions++
+                        diffLines.add(GitDiffLine(
+                            type = DiffLineType.DELETION,
+                            content = oldLine,
+                            oldLineNumber = i + 1,
+                            newLineNumber = null
+                        ))
+                    }
+                    oldLine != newLine -> {
+                        // Modified line: show as deletion + addition
+                        deletions++
+                        additions++
+                        diffLines.add(GitDiffLine(
+                            type = DiffLineType.DELETION,
+                            content = oldLine ?: "",
+                            oldLineNumber = i + 1,
+                            newLineNumber = null
+                        ))
+                        diffLines.add(GitDiffLine(
+                            type = DiffLineType.ADDITION,
+                            content = newLine ?: "",
+                            oldLineNumber = null,
+                            newLineNumber = i + 1
+                        ))
+                    }
+                    else -> {
+                        // Context line (unchanged)
+                        diffLines.add(GitDiffLine(
+                            type = DiffLineType.CONTEXT,
+                            content = oldLine ?: "",
+                            oldLineNumber = i + 1,
+                            newLineNumber = i + 1
+                        ))
                     }
                 }
-                GitDiffHunk(
-                    oldStart = hunk.oldStart,
-                    oldLines = hunk.oldLines,
-                    newStart = hunk.newStart,
-                    newLines = hunk.newLines,
-                    header = "@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@",
-                    lines = lines
-                )
+                i++
             }
+            
+            // Use the API-provided counts if available, fallback to computed
+            val finalAdditions = if (fileDiff.additions > 0) fileDiff.additions else additions
+            val finalDeletions = if (fileDiff.deletions > 0) fileDiff.deletions else deletions
+            
+            val hunk = GitDiffHunk(
+                oldStart = 1,
+                oldLines = beforeLines.size,
+                newStart = 1,
+                newLines = afterLines.size,
+                header = "@@ -1,${beforeLines.size} +1,${afterLines.size} @@",
+                lines = diffLines
+            )
+            
             GitDiffFile(
-                path = fileDiff.path,
-                status = GitFileStatus.MODIFIED,
-                additions = additions,
-                deletions = deletions,
-                hunks = hunks
+                path = fileDiff.file,
+                status = when {
+                    fileDiff.before.isEmpty() -> GitFileStatus.ADDED
+                    fileDiff.after.isEmpty() -> GitFileStatus.DELETED
+                    else -> GitFileStatus.MODIFIED
+                },
+                additions = finalAdditions,
+                deletions = finalDeletions,
+                hunks = listOf(hunk)
             )
         }
         return GitDiff(

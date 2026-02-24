@@ -103,19 +103,7 @@ class DashboardScreenModel(
             get() = (commands as? Resource.Success)?.data?.size ?: 0
         
         val gitBranch: String
-            get() = (vcsInfo as? Resource.Success)?.data?.branch ?: "unknown"
-        
-        val gitDirty: Boolean
-            get() = (vcsInfo as? Resource.Success)?.data?.dirty ?: false
-        
-        val gitAhead: Int
-            get() = (vcsInfo as? Resource.Success)?.data?.ahead ?: 0
-        
-        val gitBehind: Int
-            get() = (vcsInfo as? Resource.Success)?.data?.behind ?: 0
-        
-        val gitChangeCount: Int
-            get() = (vcsInfo as? Resource.Success)?.data?.changeCount ?: 0
+            get() = (vcsInfo as? Resource.Success)?.data?.branch?.ifBlank { null } ?: "unknown"
         
         val activeLspServers: ImmutableList<LspStatus>
             get() = ((lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()).toImmutableList()

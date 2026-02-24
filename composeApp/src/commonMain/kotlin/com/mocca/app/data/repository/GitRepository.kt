@@ -44,32 +44,76 @@ class GitRepository(
     }.flowOn(Dispatchers.Default)
 
     /**
-     * Get git status via VCS endpoint.
-     * Converts VcsInfo to GitStatusResponse for backwards compatibility.
+     * Get git status using /vcs for branch name and shell commands for rich status data.
+     * The /vcs endpoint only returns { branch: string }, so we use:
+     * - `git status --porcelain=v1` for staged/unstaged/untracked files
+     * - `git rev-list --left-right --count HEAD...@{u}` for ahead/behind counts
      */
-    fun getStatus(): Flow<Resource<GitStatusResponse>> = flow {
+    fun getStatus(sessionId: String? = null): Flow<Resource<GitStatusResponse>> = flow {
         emit(Resource.Loading())
         val cached = localCache.getGitStatus()
         if (cached != null) {
             emit(Resource.Loading(cached))
         }
 
-        Napier.d("$TAG: Fetching git status via VCS endpoint...")
-        apiClient.getVcsInfo().fold(
-            onSuccess = { vcsInfo ->
+        Napier.d("$TAG: Fetching git status...")
+        
+        // Get branch name from /vcs endpoint (no session needed)
+        val branch = apiClient.getVcsInfo().getOrNull()?.branch?.ifBlank { null } ?: "unknown"
+        
+        if (sessionId == null) {
+            // Minimal status when no session available — branch only
+            val status = GitStatusResponse(branch = branch)
+            localCache.saveGitStatus(status)
+            emit(Resource.Success(status))
+            return@flow
+        }
+        
+        // Get full status via shell
+        apiClient.executeShell(sessionId, "git status --porcelain=v1").fold(
+            onSuccess = { output ->
+                val staged = mutableListOf<GitFileChange>()
+                val unstaged = mutableListOf<GitFileChange>()
+                val untracked = mutableListOf<String>()
+                
+                output.lines().filter { it.length >= 3 }.forEach { line ->
+                    val index = line[0]   // staged status character
+                    val worktree = line[1] // unstaged status character
+                    val filePath = line.substring(3).trim()
+                    
+                    if (index == '?' && worktree == '?') {
+                        untracked.add(filePath)
+                    } else {
+                        if (index != ' ' && index != '?') {
+                            staged.add(GitFileChange(path = filePath, status = parseGitStatusChar(index)))
+                        }
+                        if (worktree != ' ' && worktree != '?') {
+                            unstaged.add(GitFileChange(path = filePath, status = parseGitStatusChar(worktree)))
+                        }
+                    }
+                }
+                
+                // Get ahead/behind counts
+                val (ahead, behind) = getAheadBehind(sessionId)
+                
                 val status = GitStatusResponse(
-                    branch = vcsInfo.branch ?: "unknown",
-                    clean = !vcsInfo.dirty,
-                    ahead = vcsInfo.ahead,
-                    behind = vcsInfo.behind
+                    branch = branch,
+                    staged = staged,
+                    unstaged = unstaged,
+                    untracked = untracked,
+                    clean = staged.isEmpty() && unstaged.isEmpty() && untracked.isEmpty(),
+                    ahead = ahead,
+                    behind = behind
                 )
                 localCache.saveGitStatus(status)
-                Napier.d("$TAG: Git status fetched: branch=${status.branch}")
+                Napier.d("$TAG: Git status: branch=$branch, staged=${staged.size}, unstaged=${unstaged.size}, untracked=${untracked.size}, ahead=$ahead, behind=$behind")
                 emit(Resource.Success(status))
             },
             onFailure = { e ->
-                Napier.e("$TAG: Failed to get git status", e)
-                emit(Resource.Error(e.message ?: "Failed to get Git status", cached, e))
+                Napier.w("$TAG: Shell git status failed, falling back to branch-only: ${e.message}")
+                val status = GitStatusResponse(branch = branch)
+                localCache.saveGitStatus(status)
+                emit(Resource.Success(status))
             }
         )
     }.flowOn(Dispatchers.Default)
@@ -159,10 +203,7 @@ class GitRepository(
     suspend fun refreshStatus(): Result<VcsInfo> {
         return apiClient.getVcsInfo().map { vcsInfo ->
             val status = GitStatusResponse(
-                branch = vcsInfo.branch ?: "unknown",
-                clean = !vcsInfo.dirty,
-                ahead = vcsInfo.ahead,
-                behind = vcsInfo.behind
+                branch = vcsInfo.branch.ifBlank { "unknown" }
             )
             localCache.saveGitStatus(status)
             vcsInfo
@@ -172,15 +213,13 @@ class GitRepository(
     /**
      * Refresh git status from server.
      * Called by RealtimeSyncService during periodic sync.
+     * Uses /vcs for branch (lightweight, no session needed).
      */
     suspend fun refresh() {
         apiClient.getVcsInfo().fold(
             onSuccess = { vcsInfo ->
                 val status = GitStatusResponse(
-                    branch = vcsInfo.branch ?: "unknown",
-                    clean = !vcsInfo.dirty,
-                    ahead = vcsInfo.ahead,
-                    behind = vcsInfo.behind
+                    branch = vcsInfo.branch.ifBlank { "unknown" }
                 )
                 localCache.saveGitStatus(status)
                 Napier.d("[GitRepository] Refreshed VCS info: branch=${vcsInfo.branch}")
@@ -190,6 +229,39 @@ class GitRepository(
                 throw error
             }
         )
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Helpers
+    // ═══════════════════════════════════════════════════════════════════════════════
+    
+    /**
+     * Get ahead/behind counts relative to upstream.
+     */
+    private suspend fun getAheadBehind(sessionId: String): Pair<Int, Int> {
+        return apiClient.executeShell(sessionId, "git rev-list --left-right --count HEAD...@{u} 2>/dev/null || echo '0\t0'")
+            .getOrNull()?.let { output ->
+                val parts = output.trim().split("\\s+".toRegex())
+                Pair(
+                    parts.getOrNull(0)?.toIntOrNull() ?: 0,
+                    parts.getOrNull(1)?.toIntOrNull() ?: 0
+                )
+            } ?: Pair(0, 0)
+    }
+    
+    /**
+     * Parse a git status porcelain character to GitFileStatus.
+     */
+    private fun parseGitStatusChar(c: Char): GitFileStatus {
+        return when (c) {
+            'M' -> GitFileStatus.MODIFIED
+            'A' -> GitFileStatus.ADDED
+            'D' -> GitFileStatus.DELETED
+            'R' -> GitFileStatus.RENAMED
+            'C' -> GitFileStatus.COPIED
+            'U' -> GitFileStatus.UNMERGED
+            else -> GitFileStatus.MODIFIED
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════

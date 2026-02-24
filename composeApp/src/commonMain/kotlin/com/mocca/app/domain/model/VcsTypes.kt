@@ -5,18 +5,15 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 /**
- * Version Control System types.
- * Matches OpenCode server /vcs endpoint response.
+ * Version Control System info from OpenCode server /vcs endpoint.
+ * 
+ * IMPORTANT: The OpenCode SDK only returns { branch: string }.
+ * All other git status data (dirty, ahead, behind, file changes) must be
+ * obtained via shell commands (git status, git rev-list).
  */
 
 @Serializable
 @Immutable
 data class VcsInfo(
-    val type: String = "git",
-    val branch: String? = null,
-    val dirty: Boolean = false,
-    val ahead: Int = 0,
-    val behind: Int = 0,
-    val remote: String? = null,
-    val changeCount: Int = 0
+    val branch: String = ""
 )
