@@ -78,6 +78,39 @@ class OnboardingWizardModel(
             is OnboardingAction.Complete -> completeOnboarding()
             is OnboardingAction.DiscoveryCompleted -> onDiscoveryCompleted(action.result)
             is OnboardingAction.ConnectionResult -> onConnectionResult(action.success, action.error)
+            is OnboardingAction.InitializeSetupMode -> initializeSetupMode(action.error)
+        }
+    }
+
+    private fun initializeSetupMode(error: String?) {
+        _state.update {
+            it.copy(
+                currentStep = OnboardingStep.DISCOVERING,
+                error = error,
+                isLoading = true // Starting discovery immediately
+            )
+        }
+        
+        // Start discovery as if the user clicked "Start"
+        screenModelScope.launch {
+            try {
+                val result = if (serverDiscovery != null) {
+                    serverDiscovery.discoverServers(timeoutMs = 5000)
+                } else {
+                    DiscoveryResult(emptyList(), com.mocca.app.discovery.DiscoveryState.STOPPED)
+                }
+
+                onDiscoveryCompleted(result)
+            } catch (e: Exception) {
+                Napier.e("Discovery failed", e)
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Discovery failed: ${e.message}",
+                        currentStep = OnboardingStep.SELECT_SERVER
+                    )
+                }
+            }
         }
     }
 

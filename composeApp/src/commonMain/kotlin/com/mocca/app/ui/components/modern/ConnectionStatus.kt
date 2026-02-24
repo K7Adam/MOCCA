@@ -45,7 +45,8 @@ import androidx.compose.material3.MaterialTheme
 fun ConnectionStatusBanner(
     status: ConnectionBannerStatus,
     modifier: Modifier = Modifier,
-    onRetryClick: (() -> Unit)? = null
+    onRetryClick: (() -> Unit)? = null,
+    onSetupClick: (() -> Unit)? = null
 ) {
     val (icon, message, backgroundColor, textColor) = when (status) {
         is ConnectionBannerStatus.Disconnected -> 
@@ -120,7 +121,14 @@ fun ConnectionStatusBanner(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
-                if (onRetryClick != null) {
+                
+                if (status is ConnectionBannerStatus.Error && onSetupClick != null) {
+                    MoccaTextButton(
+                        text = "SETUP SERVER",
+                        onClick = onSetupClick,
+                        textColor = AppColors.white
+                    )
+                } else if (onRetryClick != null) {
                     MoccaTextButton(
                         text = "RETRY",
                         onClick = onRetryClick,

@@ -98,4 +98,5 @@ sealed class OnboardingAction {
     data object Complete : OnboardingAction()
     data class DiscoveryCompleted(val result: DiscoveryResult) : OnboardingAction()
     data class ConnectionResult(val success: Boolean, val error: String? = null) : OnboardingAction()
+    data class InitializeSetupMode(val error: String?) : OnboardingAction()
 }

@@ -43,6 +43,7 @@ import com.mocca.app.ui.screens.mcp.McpScreen
 import com.mocca.app.ui.screens.panels.ContextHistoryPanel
 import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
+import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.theme.AppColors
 import org.koin.core.parameter.parametersOf
@@ -217,7 +218,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                             state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
                                             else -> ConnectionBannerStatus.Disconnected()
                                         },
-                                        onRetryClick = { screenModel.retryConnection() }
+                                        onRetryClick = { screenModel.retryConnection() },
+                                        onSetupClick = {
+                                            navigator.push(
+                                                ProgressiveOnboardingScreen(
+                                                    isSetupMode = true,
+                                                    initialError = state.connectionError
+                                                )
+                                            )
+                                        }
                                     )
                                 }
 
@@ -242,7 +251,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                             state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
                                             else -> ConnectionBannerStatus.Disconnected()
                                         },
-                                        onRetryClick = { screenModel.retryConnection() }
+                                        onRetryClick = { screenModel.retryConnection() },
+                                        onSetupClick = {
+                                            navigator.push(
+                                                ProgressiveOnboardingScreen(
+                                                    isSetupMode = true,
+                                                    initialError = state.connectionError
+                                                )
+                                            )
+                                        }
                                     )
                                 }
 

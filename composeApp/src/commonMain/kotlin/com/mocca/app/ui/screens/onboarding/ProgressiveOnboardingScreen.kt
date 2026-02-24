@@ -79,7 +79,10 @@ import kotlinx.coroutines.delay
  * 4. CONNECTING - Attempting connection with progress
  * 5. READY - Success and transition to main app
  */
-class ProgressiveOnboardingScreen : Screen {
+class ProgressiveOnboardingScreen(
+    private val isSetupMode: Boolean = false,
+    private val initialError: String? = null
+) : Screen {
     
     @OptIn(ExperimentalAnimationApi::class)
     @Composable
@@ -92,7 +95,21 @@ class ProgressiveOnboardingScreen : Screen {
         LaunchedEffect(state.isConnected, state.currentStep) {
             if (state.isConnected && state.currentStep == OnboardingStep.READY) {
                 delay(500) // Brief delay for visual feedback
-                navigator.replace(MainScreen())
+                
+                // If we were in setup mode on top of MainScreen, just pop. 
+                // If it's the first screen on app launch, replace with MainScreen.
+                if (isSetupMode) {
+                    navigator.pop()
+                } else {
+                    navigator.replace(MainScreen())
+                }
+            }
+        }
+        
+        // Handle Setup Mode initialization
+        LaunchedEffect(isSetupMode) {
+            if (isSetupMode) {
+                screenModel.onAction(OnboardingAction.InitializeSetupMode(initialError))
             }
         }
         
@@ -178,7 +195,13 @@ class ProgressiveOnboardingScreen : Screen {
                     )
                     
                     OnboardingStep.READY -> ReadyStep(
-                        onContinue = { screenModel.onAction(OnboardingAction.Complete) }
+                        onContinue = { 
+                            if (isSetupMode) {
+                                navigator.pop()
+                            } else {
+                                screenModel.onAction(OnboardingAction.Complete)
+                            }
+                        }
                     )
                 }
             }
