@@ -103,6 +103,11 @@ class StateCoordinator(
     val thinkingContent: StateFlow<String> = eventStreamRepository.thinkingContent
     val thinkingStartTime: StateFlow<Long?> = eventStreamRepository.thinkingStartTime
     
+    // Agent running state - tracked via AgentStatus events
+    // This is the authoritative source for whether an agent is currently working
+    val isAgentRunning: StateFlow<Boolean> = eventStreamRepository.isAgentRunning
+    val runningAgentName: StateFlow<String?> = eventStreamRepository.runningAgentName
+    
     // SSE connection status - indicates if real-time events are being received
     val sseConnectionStatus: StateFlow<ConnectionStatus> = eventStreamRepository.connectionStatus
     

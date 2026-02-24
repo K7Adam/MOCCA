@@ -110,6 +110,15 @@ class EventStreamRepository(
     private val _thinkingStartTime = MutableStateFlow<Long?>(null)
     val thinkingStartTime: StateFlow<Long?> = _thinkingStartTime.asStateFlow()
     
+    // Agent running state tracking (for all agents, not just extended reasoning)
+    // This tracks whether any agent is currently working, used for button state
+    private val _isAgentRunning = MutableStateFlow(false)
+    val isAgentRunning: StateFlow<Boolean> = _isAgentRunning.asStateFlow()
+    
+    // Track which agent is currently running with its name for UI display
+    private val _runningAgentName = MutableStateFlow<String?>(null)
+    val runningAgentName: StateFlow<String?> = _runningAgentName.asStateFlow()
+    
     // Use Lists instead of single values to prevent race condition overwrites
     private val _pendingPermissions = MutableStateFlow<List<PermissionRequest>>(emptyList())
     val pendingPermissions: StateFlow<List<PermissionRequest>> = _pendingPermissions.asStateFlow()
@@ -185,6 +194,9 @@ class EventStreamRepository(
             _isThinking.value = false
             _thinkingContent.value = ""
             _thinkingStartTime.value = null
+            // Clear agent running state
+            _isAgentRunning.value = false
+            _runningAgentName.value = null
         }
         activeSessionId = sessionId
     }
@@ -839,7 +851,37 @@ class EventStreamRepository(
             is ServerEvent.AgentStatus -> {
                 val status = event.properties.status
                 val agentName = event.properties.agentName
+                val sessionId = event.properties.sessionID
                 Napier.i("Agent $agentName: $status${event.properties.message?.let { " - $it" } ?: ""}")
+                
+                // Track agent running state for button control and thinking indicator
+                // Only track if this event is for the active session or a monitored session
+                if (sessionId == activeSessionId || monitoredSessionIds.value.contains(sessionId)) {
+                    when (status) {
+                        "starting", "running" -> {
+                            _isAgentRunning.value = true
+                            _runningAgentName.value = agentName
+                            // Also set isThinking to true for the thinking indicator
+                            // (this is independent of "thinking" type message parts)
+                            _isThinking.value = true
+                            // Also set thinking start time if not already set
+                            if (_thinkingStartTime.value == null) {
+                                _thinkingStartTime.value = System.currentTimeMillis()
+                            }
+                        }
+                        "completed", "error" -> {
+                            // Only clear if this is the currently tracked agent
+                            if (_runningAgentName.value == agentName) {
+                                _isAgentRunning.value = false
+                                _runningAgentName.value = null
+                                // Clear thinking state when agent completes
+                                _isThinking.value = false
+                                _thinkingContent.value = ""
+                                _thinkingStartTime.value = null
+                            }
+                        }
+                    }
+                }
                 
                 // Show completion/error notifications for monitored sessions
                 if (monitoredSessionIds.value.contains(event.properties.sessionID)) {

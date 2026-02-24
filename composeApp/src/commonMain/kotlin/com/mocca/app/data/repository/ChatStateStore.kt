@@ -71,8 +71,32 @@ class ChatStateStore(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
     
+    // Legacy session idle state - kept for event handlers but no longer used for button control
+    // The button now uses the derived isSessionIdle below instead
     private val _isSessionIdle = MutableStateFlow(true)
-    val isSessionIdle: StateFlow<Boolean> = _isSessionIdle.asStateFlow()
+    
+    // Derived session idle state that combines local sending state with agent running state
+    // This is the authoritative state for button control - considers both:
+    // 1. _isSending - local state when user has sent a message
+    // 2. isAgentRunning - state from AgentStatus SSE events via StateCoordinator
+    //
+    // The session is IDLE only when:
+    // - We're not currently sending a message (isSending = false)
+    // - AND no agent is running (isAgentRunning = false)
+    //
+    // This replaces the old logic that relied solely on SessionUpdated/Idle events,
+    // which had race conditions causing the button to incorrectly switch back to SEND.
+    val isSessionIdle: StateFlow<Boolean> = combine(
+        _isSending,
+        stateCoordinator.isAgentRunning
+    ) { isSending, isAgentRunning ->
+        // Session is idle only when not sending AND no agent running
+        !isSending && !isAgentRunning
+    }.stateIn(
+        storeScope,
+        SharingStarted.Eagerly,
+        true
+    )
     
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -84,6 +108,10 @@ class ChatStateStore(
     val streamingText: StateFlow<String> = stateCoordinator.streamingText
     val isThinking: StateFlow<Boolean> = stateCoordinator.isThinking
     val thinkingContent: StateFlow<String> = stateCoordinator.thinkingContent
+    
+    // Agent running state - authoritative source for whether agent is working
+    // This is used for button control (ABORT vs SEND)
+    val isAgentRunning: StateFlow<Boolean> = stateCoordinator.isAgentRunning
     
     private val _thinkingElapsedMs = MutableStateFlow(0L)
     val thinkingElapsedMs: StateFlow<Long> = _thinkingElapsedMs.asStateFlow()
