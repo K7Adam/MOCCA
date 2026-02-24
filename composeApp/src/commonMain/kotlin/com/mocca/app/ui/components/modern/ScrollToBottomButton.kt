@@ -18,8 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.components.glass.liquidGlassButton
-import io.github.fletchmckee.liquid.LiquidState
+import com.mocca.app.ui.components.glass.liquidGlassFab
+import com.mocca.app.ui.components.glass.LiquidBackdrop
+import com.mocca.app.ui.components.glass.glassButton
+import androidx.compose.ui.graphics.layer.GraphicsLayer
 
 /**
  * A pure liquid glass floating button to scroll to the bottom of the chat.
@@ -29,7 +31,9 @@ import io.github.fletchmckee.liquid.LiquidState
  * @param isVisible Whether the button should be visible
  * @param hasNewMessages Whether there are new messages
  * @param onClick Callback when button is clicked
- * @param liquidState Optional LiquidState (unused - kept for API compatibility)
+ * @param backdrop Optional LiquidBackdrop for true liquid glass
+ * @param graphicsLayer Optional GraphicsLayer for luminance sampling
+ * @param luminance Optional Float for luminance adaptation
  * @param modifier Modifier for styling
  */
 @Composable
@@ -37,7 +41,9 @@ fun ScrollToBottomButton(
     isVisible: Boolean,
     hasNewMessages: Boolean,
     onClick: () -> Unit,
-    liquidState: LiquidState? = null,
+    backdrop: LiquidBackdrop? = null,
+    graphicsLayer: GraphicsLayer? = null,
+    luminance: Float? = null,
     modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
@@ -49,7 +55,13 @@ fun ScrollToBottomButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .liquidGlassButton(shape = AppShapes.circle)
+                .then(
+                    if (backdrop != null && graphicsLayer != null && luminance != null) {
+                        Modifier.liquidGlassFab(backdrop, graphicsLayer, luminance)
+                    } else {
+                        Modifier.glassButton(shape = AppShapes.circle)
+                    }
+                )
                 .clickable { onClick() },
             contentAlignment = Alignment.Center
         ) {

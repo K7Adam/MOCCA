@@ -43,6 +43,7 @@ import com.mocca.app.ui.components.PermissionRequestDialog
 import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.PermissionBanner
 import com.mocca.app.ui.components.chat.TodoListPanel
+import com.mocca.app.ui.components.glass.LiquidBackdrop
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
 import kotlinx.coroutines.launch
@@ -195,7 +196,9 @@ fun rememberAutoScrollState(
     val userHasScrolledUp by remember(listState) {
         derivedStateOf {
             if (!enabled) false
-            else listState.firstVisibleItemIndex > BOTTOM_THRESHOLD
+            else {
+                listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 50
+            }
         }
     }
     
@@ -289,7 +292,9 @@ suspend fun LazyListState.scrollToBottom() {
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
-    liquidState: io.github.fletchmckee.liquid.LiquidState? = null,
+    backdrop: LiquidBackdrop? = null,
+    graphicsLayer: androidx.compose.ui.graphics.layer.GraphicsLayer? = null,
+    luminance: Float? = null,
     onScrollDirectionChange: (ScrollDirection) -> Unit = {}
 ) {
     val state by screenModel.state.collectAsState()
@@ -374,8 +379,8 @@ fun ChatContent(
     // Track new messages while scrolled up (for badge indicator)
     var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
 
-    LaunchedEffect(listState.firstVisibleItemIndex) {
-        if (listState.firstVisibleItemIndex <= BOTTOM_THRESHOLD) {
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset <= 50) {
             hasNewMessagesWhileScrolledUp = false
         }
     }
@@ -621,7 +626,9 @@ fun ChatContent(
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 },
-                liquidState = liquidState,
+                backdrop = backdrop,
+                graphicsLayer = graphicsLayer,
+                luminance = luminance,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = AppSpacing.md, bottom = 160.dp)

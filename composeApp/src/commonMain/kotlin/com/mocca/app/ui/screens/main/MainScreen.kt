@@ -233,8 +233,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 // Chat content (input will be disabled based on connection status)
                                 ChatContent(
                                     screenModel = chatScreenModel, 
-                                    liquidState = legacyLiquidState, // Legacy for now
-                                    onScrollDirectionChange = { direction -> scrollDirection = direction }
+                                    backdrop = backdrop,
+                                    graphicsLayer = graphicsLayer,
+                                    luminance = luminanceAnimation.value,
+                                    onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction }
                                 )
                             }
                         } else {
