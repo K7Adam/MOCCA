@@ -37,6 +37,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
+import androidx.compose.ui.window.PopupProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -315,6 +316,7 @@ fun ChatInputContent(
                 DropdownMenu(
                     expanded = showAgentMenu,
                     onDismissRequest = { showAgentMenu = false },
+                    properties = PopupProperties(focusable = false),
                     modifier = Modifier
                         .background(AppColors.surfaceElevated, AppShapes.medium)
                         .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
@@ -372,9 +374,11 @@ fun ChatInputContent(
 
             // Text-triggered suggestions dropdown (typing "/" or "@" in input)
             // Uses DropdownMenu for stable positioning instead of SuggestionPopup
+            // PopupProperties(focusable = false) keeps keyboard open while dropdown is shown
             DropdownMenu(
                 expanded = showTextSuggestions,
                 onDismissRequest = { showTextSuggestions = false },
+                properties = PopupProperties(focusable = false),
                 modifier = Modifier
                     .background(AppColors.surfaceElevated, AppShapes.medium)
                     .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
@@ -518,6 +522,7 @@ fun ChatInputContent(
                     DropdownMenu(
                         expanded = showAgentPalette,
                         onDismissRequest = { showAgentPalette = false },
+                        properties = PopupProperties(focusable = false),
                         modifier = Modifier
                             .background(AppColors.surfaceElevated, AppShapes.medium)
                             .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
@@ -595,6 +600,7 @@ fun ChatInputContent(
                     DropdownMenu(
                         expanded = showCommandPalette,
                         onDismissRequest = { showCommandPalette = false },
+                        properties = PopupProperties(focusable = false),
                         modifier = Modifier
                             .background(AppColors.surfaceElevated, AppShapes.medium)
                             .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
