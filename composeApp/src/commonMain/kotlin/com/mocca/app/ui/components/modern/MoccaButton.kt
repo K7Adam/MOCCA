@@ -75,7 +75,6 @@ fun MoccaButton(
     
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
@@ -152,7 +151,6 @@ fun MoccaOutlinedButton(
     
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .height(height)
             .scale(scale)
             .background(Color.Transparent, AppShapes.pill)

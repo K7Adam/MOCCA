@@ -187,6 +187,7 @@ class SettingsScreen : Screen {
                                                         uriHandler.openUri(url)
                                                     }
                                                 },
+                                                modifier = Modifier.fillMaxWidth(),
                                                 height = AppSpacing.buttonHeightCompact
                                             )
                                             Spacer(modifier = Modifier.height(AppSpacing.sm))
