@@ -72,26 +72,24 @@ class ChatStateStore(
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
     
     // Legacy session idle state - kept for event handlers but no longer used for button control
-    // The button now uses the derived isSessionIdle below instead
+    // The button now uses the server-authoritative runningSessionIds below instead
     private val _isSessionIdle = MutableStateFlow(true)
     
-    // Derived session idle state that combines local sending state with agent running state
-    // This is the authoritative state for button control - considers both:
-    // 1. _isSending - local state when user has sent a message
-    // 2. isAgentRunning - state from AgentStatus SSE events via StateCoordinator
+    // Server-authoritative session idle state based on runningSessionIds from StateCoordinator
+    // This is purely driven by the server's /session/status endpoint which is polled regularly
+    // and updated via SSE events. This replaces the old logic that relied on local _isSending
+    // which had race conditions causing the button to incorrectly switch back to SEND.
     //
     // The session is IDLE only when:
-    // - We're not currently sending a message (isSending = false)
-    // - AND no agent is running (isAgentRunning = false)
+    // - The server reports this session as NOT running (runningSessionIds doesn't contain our sessionId)
     //
-    // This replaces the old logic that relied solely on SessionUpdated/Idle events,
-    // which had race conditions causing the button to incorrectly switch back to SEND.
+    // This is the CORRECT source of truth for button state.
     val isSessionIdle: StateFlow<Boolean> = combine(
-        _isSending,
-        stateCoordinator.isAgentRunning
-    ) { isSending, isAgentRunning ->
-        // Session is idle only when not sending AND no agent running
-        !isSending && !isAgentRunning
+        _currentSessionId,
+        stateCoordinator.runningSessionIds
+    ) { currentSessionId, runningSessionIds ->
+        // Session is idle when it's not in the running set
+        currentSessionId == null || !runningSessionIds.contains(currentSessionId)
     }.stateIn(
         storeScope,
         SharingStarted.Eagerly,
