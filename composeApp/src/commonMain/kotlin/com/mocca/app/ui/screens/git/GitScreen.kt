@@ -75,7 +75,7 @@ class GitScreen : Screen {
                     title = selectedTab.title,
                     onBackClick = { navigator.pop() },
                     modifier = Modifier.glassy(shape = AppShapes.none),
-                    subtitle = "mobile-agent-v2",
+                    subtitle = uiState.currentBranch,
                     subtitleIcon = {
                         Icon(
                             imageVector = Icons.Default.FolderOpen,
@@ -228,19 +228,64 @@ private fun GitStatusSummary(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // ── Status Summary Card ─────────────────────────────────────
         item {
-            Text(
-                text = "Status",
-                style = AppTypography.displaySmall,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.white
-            )
+            Surface(
+                color = AppColors.surfaceElevated,
+                shape = AppShapes.medium,
+                border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.08f))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(Icons.Default.Source, contentDescription = null, tint = AppColors.primary, modifier = Modifier.size(20.dp))
+                            Text(
+                                text = status?.branch ?: "unknown",
+                                style = AppTypography.titleMedium,
+                                color = AppColors.white,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if ((status?.ahead ?: 0) > 0) {
+                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accentGreen.copy(alpha = 0.2f), contentColor = AppColors.accentGreen)
+                            }
+                            if ((status?.behind ?: 0) > 0) {
+                                GodBadge(text = "↓${status?.behind}", containerColor = AppColors.alertRed.copy(alpha = 0.2f), contentColor = AppColors.alertRed)
+                            }
+                        }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text(
+                            text = "${uiState.stagedCount} staged",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.accentGreen.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = "${uiState.unstagedCount} modified",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.statusWaiting.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = "${uiState.untrackedCount} untracked",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.white.copy(alpha = 0.4f)
+                        )
+                    }
+                }
+            }
         }
 
-        // Staged Section
+        // ── Staged Section ──────────────────────────────────────────
         if (status != null && status.staged.isNotEmpty()) {
             item {
                 Row(
@@ -248,37 +293,38 @@ private fun GitStatusSummary(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "STAGED",
-                        style = AppTypography.labelSmall,
-                        color = AppColors.white.copy(alpha = 0.4f),
-                        letterSpacing = 1.sp
-                    )
-                    GodBadge(
-                        text = "${status.staged.size} FILES",
-                        containerColor = AppColors.primary.copy(alpha = 0.2f),
-                        contentColor = AppColors.primary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accentGreen.copy(alpha = 0.15f), contentColor = AppColors.accentGreen)
+                    }
+                    TextButton(onClick = { screenModel.unstageAll() }) {
+                        Text("UNSTAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                    }
                 }
             }
             items(status.staged) { change ->
                 GodListItem(
                     title = change.path.substringAfterLast('/'),
-                    subtitle = "Modified • ${change.status}",
+                    subtitle = change.path.substringBeforeLast('/', "").ifBlank { "/" } + " • ${change.status.name}",
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Add,
+                            imageVector = statusIcon(change.status),
                             contentDescription = null,
-                            tint = AppColors.primary,
+                            tint = AppColors.accentGreen,
                             modifier = Modifier.size(20.dp)
                         )
+                    },
+                    trailing = {
+                        IconButton(onClick = { screenModel.unstageFile(change.path) }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Remove, contentDescription = "Unstage", tint = AppColors.white.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                        }
                     },
                     onClick = { onNavigateToDiff(change.path, true) }
                 )
             }
         }
 
-        // Unstaged Section
+        // ── Unstaged Section ────────────────────────────────────────
         if (status != null && status.unstaged.isNotEmpty()) {
             item {
                 Row(
@@ -286,39 +332,84 @@ private fun GitStatusSummary(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "UNSTAGED",
-                        style = AppTypography.labelSmall,
-                        color = AppColors.white.copy(alpha = 0.4f),
-                        letterSpacing = 1.sp
-                    )
-                    GodBadge(
-                        text = "${status.unstaged.size} FILE",
-                        containerColor = AppColors.white.copy(alpha = 0.1f),
-                        contentColor = AppColors.white.copy(alpha = 0.6f)
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("MODIFIED", style = AppTypography.labelSmall, color = AppColors.statusWaiting.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.unstaged.size}", containerColor = AppColors.statusWaiting.copy(alpha = 0.15f), contentColor = AppColors.statusWaiting)
+                    }
+                    TextButton(onClick = { screenModel.stageAll() }) {
+                        Text("STAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                    }
                 }
             }
             items(status.unstaged) { change ->
                 GodListItem(
                     title = change.path.substringAfterLast('/'),
-                    subtitle = "Modified • ${change.status}",
+                    subtitle = change.path.substringBeforeLast('/', "").ifBlank { "/" } + " • ${change.status.name}",
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.Remove,
+                            imageVector = statusIcon(change.status),
                             contentDescription = null,
-                            tint = AppColors.alertRed,
+                            tint = AppColors.statusWaiting,
                             modifier = Modifier.size(20.dp)
                         )
+                    },
+                    trailing = {
+                        Row {
+                            IconButton(onClick = { screenModel.stageFile(change.path) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            }
+                            IconButton(onClick = { screenModel.discardFile(change.path) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                            }
+                        }
                     },
                     onClick = { onNavigateToDiff(change.path, false) }
                 )
             }
         }
         
+        // ── Untracked Section ───────────────────────────────────────
+        if (status != null && status.untracked.isNotEmpty()) {
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("UNTRACKED", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.untracked.size}", containerColor = AppColors.white.copy(alpha = 0.08f), contentColor = AppColors.white.copy(alpha = 0.5f))
+                    }
+                    TextButton(onClick = { screenModel.stageAll() }) {
+                        Text("STAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                    }
+                }
+            }
+            items(status.untracked) { path ->
+                GodListItem(
+                    title = path.substringAfterLast('/'),
+                    subtitle = path.substringBeforeLast('/', "").ifBlank { "/" } + " • NEW",
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.FiberNew,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.3f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailing = {
+                        IconButton(onClick = { screenModel.stageFile(path) }, modifier = Modifier.size(32.dp)) {
+                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                        }
+                    }
+                )
+            }
+        }
+        
+        // ── Commit Button ───────────────────────────────────────────
         if (uiState.stagedCount > 0) {
             item { 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 GodButton(
                     text = "COMMIT ${uiState.stagedCount} FILES", 
                     onClick = { screenModel.showCommitDialog() }, 
@@ -328,7 +419,56 @@ private fun GitStatusSummary(
             }
         }
         
-        if (status?.clean == true) {
+        // ── Stashes Section ─────────────────────────────────────────
+        if (uiState.stashes.isNotEmpty() || uiState.hasChanges) {
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("STASHES", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f), letterSpacing = 1.sp)
+                        if (uiState.stashes.isNotEmpty()) {
+                            GodBadge(text = "${uiState.stashes.size}", containerColor = AppColors.white.copy(alpha = 0.08f), contentColor = AppColors.white.copy(alpha = 0.5f))
+                        }
+                    }
+                    if (uiState.hasChanges) {
+                        TextButton(onClick = { screenModel.showStashDialog() }) {
+                            Text("STASH CHANGES", style = AppTypography.labelSmall, color = AppColors.primary)
+                        }
+                    }
+                }
+            }
+            items(uiState.stashes.toList()) { stash ->
+                GodListItem(
+                    title = stash.message.ifBlank { "stash@{${stash.index}}" },
+                    subtitle = "stash@{${stash.index}}" + (stash.branch?.let { " on $it" } ?: ""),
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Inventory2,
+                            contentDescription = null,
+                            tint = AppColors.white.copy(alpha = 0.3f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    },
+                    trailing = {
+                        Row {
+                            IconButton(onClick = { screenModel.popStash(stash.index) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            }
+                            IconButton(onClick = { screenModel.dropStash(stash.index) }, modifier = Modifier.size(32.dp)) {
+                                Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    }
+                )
+            }
+        }
+        
+        // ── Clean State ─────────────────────────────────────────────
+        if (status?.clean == true && uiState.stashes.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -339,6 +479,9 @@ private fun GitStatusSummary(
                 }
             }
         }
+        
+        // Bottom padding for floating bar clearance
+        item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 
@@ -347,6 +490,7 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val branches = uiState.branches
     val currentBranch = uiState.currentBranch
     var selectedBranch by remember { mutableStateOf<String?>(null) }
+    var showCreateBranch by remember { mutableStateOf(false) }
     
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -354,15 +498,27 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         val localBranches = branches.filter { !it.remote }
-        if (localBranches.isNotEmpty()) {
-            item {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "LOCAL BRANCHES",
                     style = AppTypography.labelSmall,
-                    color = AppColors.white.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    color = AppColors.white.copy(alpha = 0.4f)
+                )
+                GodButton(
+                    text = "CREATE",
+                    onClick = { showCreateBranch = true },
+                    containerColor = AppColors.white.copy(alpha = 0.05f),
+                    contentColor = AppColors.white,
+                    modifier = Modifier.height(32.dp)
                 )
             }
+        }
+        if (localBranches.isNotEmpty()) {
             items(items = localBranches, key = { "local-${it.name}" }) { branch ->
                 GodListItem(
                     title = branch.name,
@@ -424,6 +580,13 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
             onCheckout = { screenModel.checkout(branch); selectedBranch = null },
             onMerge = { screenModel.merge(branch); selectedBranch = null },
             onRebase = { screenModel.rebase(branch); selectedBranch = null }
+        )
+    }
+    
+    if (showCreateBranch) {
+        CreateBranchDialog(
+            onDismiss = { showCreateBranch = false },
+            onCreate = { name -> screenModel.checkout(name, create = true); showCreateBranch = false }
         )
     }
 }
@@ -576,7 +739,7 @@ private fun LogTimelineItem(
                 )
                 Box(modifier = Modifier.size(4.dp).background(AppColors.white.copy(alpha = 0.2f), AppShapes.circle))
                 Text(
-                    text = "3 min ago", 
+                    text = formatRelativeTime(commit.date), 
                     style = AppTypography.labelSmall,
                     color = AppColors.white.copy(alpha = 0.3f)
                 )
@@ -879,4 +1042,75 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
         },
         shape = AppShapes.dialog
     )
+}
+
+@Composable
+private fun CreateBranchDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit) {
+    var name by remember { mutableStateOf("") }
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = AppColors.surfaceElevated,
+        title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.white) },
+        text = {
+            MoccaInput(
+                value = name,
+                onValueChange = { name = it },
+                label = "BRANCH NAME",
+                placeholder = "feature/new-feature"
+            )
+        },
+        confirmButton = {
+            GodButton(text = "CREATE & CHECKOUT", onClick = { onCreate(name) }, enabled = name.isNotBlank())
+        },
+        dismissButton = {
+            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+        },
+        shape = AppShapes.dialog
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Helper Functions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Maps GitFileStatus to an appropriate Material icon.
+ */
+private fun statusIcon(status: GitFileStatus): androidx.compose.ui.graphics.vector.ImageVector {
+    return when (status) {
+        GitFileStatus.ADDED -> Icons.Default.Add
+        GitFileStatus.MODIFIED -> Icons.Default.Edit
+        GitFileStatus.DELETED -> Icons.Default.Delete
+        GitFileStatus.RENAMED -> Icons.Default.DriveFileRenameOutline
+        GitFileStatus.COPIED -> Icons.Default.ContentCopy
+        GitFileStatus.UNMERGED -> Icons.Default.CallMerge
+        GitFileStatus.UNKNOWN -> Icons.Default.HelpOutline
+    }
+}
+
+/**
+ * Formats an epoch millis timestamp to a human-readable relative time string.
+ */
+private fun formatRelativeTime(epochMillis: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - epochMillis
+    
+    val seconds = diff / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+    val weeks = days / 7
+    val months = days / 30
+    val years = days / 365
+    
+    return when {
+        seconds < 60 -> "just now"
+        minutes < 60 -> "${minutes}m ago"
+        hours < 24 -> "${hours}h ago"
+        days < 7 -> "${days}d ago"
+        weeks < 5 -> "${weeks}w ago"
+        months < 12 -> "${months}mo ago"
+        else -> "${years}y ago"
+    }
 }
