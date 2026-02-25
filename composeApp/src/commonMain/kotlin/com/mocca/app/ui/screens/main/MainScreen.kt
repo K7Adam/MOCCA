@@ -46,6 +46,7 @@ import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 import org.koin.core.parameter.parametersOf
 import androidx.compose.runtime.rememberCoroutineScope
 import com.mocca.app.util.FilePickerHelper
@@ -137,6 +138,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         
         // Track scroll direction for chat input auto-hide
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
+
+        // Scroll-to-bottom button state (lifted from ChatContent for liquid glass)
+        var showScrollToBottom by remember { mutableStateOf(false) }
+        var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
+        var scrollToBottomTrigger by remember { mutableStateOf(0L) }
 
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
@@ -233,7 +239,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 // Chat content (input will be disabled based on connection status)
                                 ChatContent(
                                     screenModel = chatScreenModel, 
-                                    onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction }
+                                    onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction },
+                                    onScrollToBottomStateChange = { show, hasNew ->
+                                        showScrollToBottom = show
+                                        hasNewMessagesWhileScrolledUp = hasNew
+                                    },
+                                    scrollToBottomTrigger = scrollToBottomTrigger
                                 )
                             }
                         } else {
@@ -293,6 +304,24 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
             } // End of Backdrop Source Wrapper Box
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // SCROLL-TO-BOTTOM BUTTON - Same liquid glass as bottom bar
+            // ═══════════════════════════════════════════════════════════════════════
+            // Placed OUTSIDE backdrop source so liquidGlassFab() can safely sample
+            if (panelState.state == PanelState.CENTER && state.currentSessionId != null) {
+                ScrollToBottomButton(
+                    isVisible = showScrollToBottom,
+                    hasNewMessages = hasNewMessagesWhileScrolledUp,
+                    onClick = { scrollToBottomTrigger = System.nanoTime() },
+                    backdrop = backdrop,
+                    graphicsLayer = graphicsLayer,
+                    luminance = luminanceAnimation.value,
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 100.dp) // Positioned just above the floating input bar
+                )
+            }
 
             // ═══════════════════════════════════════════════════════════════════════
             // UNIFIED FLOATING BOTTOM BAR - SimpMusic Style Liquid Glass

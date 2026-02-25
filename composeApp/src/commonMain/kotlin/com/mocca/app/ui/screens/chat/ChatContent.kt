@@ -291,7 +291,9 @@ suspend fun LazyListState.scrollToBottom() {
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
-    onScrollDirectionChange: (ScrollDirection) -> Unit = {}
+    onScrollDirectionChange: (ScrollDirection) -> Unit = {},
+    onScrollToBottomStateChange: (showButton: Boolean, hasNewMessages: Boolean) -> Unit = { _, _ -> },
+    scrollToBottomTrigger: Long = 0L
 ) {
     val state by screenModel.state.collectAsState()
     val inputText by screenModel.inputText.collectAsState()
@@ -390,8 +392,21 @@ fun ChatContent(
         }
     }
 
+    // Report scroll-to-bottom state to parent (MainScreen)
+    LaunchedEffect(showScrollToBottom, hasNewMessagesWhileScrolledUp) {
+        onScrollToBottomStateChange(showScrollToBottom, hasNewMessagesWhileScrolledUp)
+    }
+
     LaunchedEffect(isAtTop) {
         if (isAtTop) screenModel.loadMoreMessages()
+    }
+
+    // Allow parent (MainScreen) to trigger scroll-to-bottom
+    LaunchedEffect(scrollToBottomTrigger) {
+        if (scrollToBottomTrigger > 0L) {
+            listState.animateScrollToBottom()
+            hasNewMessagesWhileScrolledUp = false
+        }
     }
     
     Column(
@@ -615,21 +630,7 @@ fun ChatContent(
                 )
             }
 
-            ScrollToBottomButton(
-                isVisible = showScrollToBottom,
-                hasNewMessages = hasNewMessagesWhileScrolledUp,
-                onClick = {
-                    coroutineScope.launch {
-                        listState.animateScrollToBottom()
-                        hasNewMessagesWhileScrolledUp = false
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = AppSpacing.md, bottom = 160.dp)
-                    .zIndex(10f)
-            )
+            // ScrollToBottomButton removed — now hosted in MainScreen for liquid glass support
             
             // RichChatInput removed - now handled by UnifiedFloatingBottomBar in MainScreen
         }
