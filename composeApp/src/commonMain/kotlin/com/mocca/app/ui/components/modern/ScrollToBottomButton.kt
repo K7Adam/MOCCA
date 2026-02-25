@@ -6,6 +6,7 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -13,37 +14,32 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.components.glass.liquidGlassFab
-import com.mocca.app.ui.components.glass.LiquidBackdrop
 import com.mocca.app.ui.components.glass.glassButton
-import androidx.compose.ui.graphics.layer.GraphicsLayer
 
 /**
- * A pure liquid glass floating button to scroll to the bottom of the chat.
- * No blur, no color - just transparent glass with edge highlights.
- * Includes a new message indicator dot.
+ * A liquid-glass-styled floating action button to scroll to the bottom of the chat.
  *
- * @param isVisible Whether the button should be visible
- * @param hasNewMessages Whether there are new messages
- * @param onClick Callback when button is clicked
- * @param backdrop Optional LiquidBackdrop for true liquid glass
- * @param graphicsLayer Optional GraphicsLayer for luminance sampling
- * @param luminance Optional Float for luminance adaptation
- * @param modifier Modifier for styling
+ * NOTE: This button sits INSIDE the liquidBackdropSource hierarchy in MainScreen.
+ * It therefore CANNOT use backdrop-based glass (liquidGlassFab) — doing so creates
+ * a circular rendering dependency that crashes the Kyant0 library.
+ * Instead, it uses the gradient-glass fallback [glassButton] which produces a
+ * visually consistent frosted-glass pill without backdrop sampling.
+ *
+ * @param isVisible Whether the button should be visible (driven by scroll state)
+ * @param hasNewMessages Whether there are unread messages below the viewport
+ * @param onClick Callback invoked when the user taps the button
+ * @param modifier Modifier for positioning / z-index
  */
 @Composable
 fun ScrollToBottomButton(
     isVisible: Boolean,
     hasNewMessages: Boolean,
     onClick: () -> Unit,
-    backdrop: LiquidBackdrop? = null,
-    graphicsLayer: GraphicsLayer? = null,
-    luminance: Float? = null,
     modifier: Modifier = Modifier
 ) {
     AnimatedVisibility(
@@ -55,14 +51,11 @@ fun ScrollToBottomButton(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .then(
-                    if (backdrop != null && graphicsLayer != null && luminance != null) {
-                        Modifier.liquidGlassFab(backdrop, graphicsLayer, luminance)
-                    } else {
-                        Modifier.glassButton(shape = AppShapes.circle)
-                    }
-                )
-                .clickable { onClick() },
+                .glassButton(shape = AppShapes.circle)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) { onClick() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
