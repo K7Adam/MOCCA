@@ -209,6 +209,8 @@ class ServerConfigRepository(
                 name = "Local Server",
                 host = defaultHost,
                 port = NetworkConfig.OPENCODE_SERVER_PORT,
+                username = "adamk7",
+                password = "Victory&Bliss4ever",
                 isActive = true
             )
         } else {

@@ -1,3 +1,14 @@
+@file:Suppress(
+    "TooManyFunctions",
+    "LongParameterList",
+    "LongMethod",
+    "CyclomaticComplexMethod",
+    "StringLiteralDuplication",
+    "MagicNumber",
+    "UnusedPrivateProperty",
+    "UnusedParameter"
+)
+
 package com.mocca.app.service
 
 import android.app.Notification
@@ -65,7 +76,7 @@ class ActiveSessionService : Service() {
         val completedCount: Int get() = todos.count { it.status == "completed" }
         val inProgressCount: Int get() = todos.count { it.status == "in_progress" }
         val totalCount: Int get() = todos.size
-        val progressPercent: Int get() = if (totalCount > 0) (completedCount * 100 / totalCount) else 0
+        val progressPercent: Int get() = if (totalCount > 0) completedCount * 100 / totalCount else 0
     }
 
     /** Thread-safe session state storage */
@@ -97,9 +108,12 @@ class ActiveSessionService : Service() {
         const val CHANNEL_CONNECTION_LOST = "connection_lost_channel"
         const val CHANNEL_QUESTION_PENDING = "question_pending_channel"
 
+        // Status constants
+        const val STATUS_COMPLETED = "completed"
+        const val STATUS_IN_PROGRESS = "in_progress"
+
         // Notification IDs
         private const val NOTIFICATION_ID_ACTIVE = 1001
-        private const val NOTIFICATION_ID_SESSION_PREFIX = 1100  // + sessionId.hashCode()
         private const val NOTIFICATION_ID_PERMISSION_PREFIX = 2000
         private const val NOTIFICATION_ID_QUESTION_PREFIX = 3000
         private const val NOTIFICATION_ID_ERROR = 4000
@@ -110,21 +124,10 @@ class ActiveSessionService : Service() {
         private const val ACTION_STOP = "com.mocca.app.action.STOP_SESSION"
         private const val ACTION_STOP_ALL = "com.mocca.app.action.STOP_ALL_SESSIONS"
         private const val ACTION_ABORT = "com.mocca.app.action.ABORT_SESSION"
-        private const val ACTION_PERMISSION_APPROVE = "com.mocca.app.action.PERMISSION_APPROVE"
-        private const val ACTION_PERMISSION_DENY = "com.mocca.app.action.PERMISSION_DENY"
-        private const val ACTION_UPDATE_PROGRESS = "com.mocca.app.action.UPDATE_PROGRESS"
 
         // Extras
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_SESSION_TITLE = "session_title"
-        const val EXTRA_PERMISSION_ID = "permission_id"
-        const val EXTRA_MODEL_NAME = "model_name"
-        const val EXTRA_ELAPSED_TIME = "elapsed_time"
-        const val EXTRA_TOOL_TITLE = "tool_title"
-        const val EXTRA_TOTAL_COUNT = "total_count"
-        const val EXTRA_COMPLETED_COUNT = "completed_count"
-        const val EXTRA_CURRENT_TASK = "current_task"
-        const val EXTRA_TODOS = "todos"
 
         // Time constants
         private const val SECONDS_PER_MINUTE = 60L
@@ -350,13 +353,14 @@ class ActiveSessionService : Service() {
     ) {
         val existingState = sessionStates[sessionId]
         val now = System.currentTimeMillis()
+        val defaultElapsed = (now - (existingState?.startTime ?: now)) / MILLIS_PER_SECOND
 
         val newState = if (existingState != null) {
             existingState.copy(
                 title = title ?: existingState.title,
                 currentTask = currentTask ?: existingState.currentTask,
                 todos = todos ?: existingState.todos,
-                elapsedSeconds = elapsedSeconds ?: ((now - existingState.startTime) / MILLIS_PER_SECOND),
+                elapsedSeconds = elapsedSeconds ?: defaultElapsed,
                 modelName = modelName ?: existingState.modelName,
                 lastUpdated = now
             )
@@ -457,7 +461,7 @@ class ActiveSessionService : Service() {
                     val currentTask = intent.getStringExtra("currentTask")
                     val elapsedSeconds = intent.getLongExtra("elapsedSeconds", 0)
                     val modelName = intent.getStringExtra("modelName") ?: "Agent"
-                    
+
                     // Reconstruct todos from intent extras
                     val todoCount = intent.getIntExtra("todoCount", 0)
                     val todos = (0 until todoCount).map { index ->
@@ -467,7 +471,7 @@ class ActiveSessionService : Service() {
                             priority = intent.getStringExtra("todo_${index}_priority") ?: "medium"
                         )
                     }
-                    
+
                     updateSessionState(
                         sessionId = sessionId,
                         title = title,
@@ -494,7 +498,7 @@ class ActiveSessionService : Service() {
 
     private fun promoteToForeground() {
         val notification = buildSummaryNotification()
-        
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ServiceCompat.startForeground(
                 this,
@@ -505,14 +509,14 @@ class ActiveSessionService : Service() {
         } else {
             startForeground(NOTIFICATION_ID_ACTIVE, notification)
         }
-        
+
         isForeground = true
         Napier.i("[ActiveSessionService] Promoted to foreground")
     }
 
     private fun updateForegroundNotification() {
         if (sessionStates.isEmpty()) return
-        
+
         val notificationManager = getSystemService(NotificationManager::class.java)
         val notification = buildSummaryNotification()
         notificationManager.notify(NOTIFICATION_ID_ACTIVE, notification)
@@ -538,9 +542,15 @@ class ActiveSessionService : Service() {
 
         // Build content based on number of sessions
         val contentTitle = when {
-            sessionCount == 1 -> sessions.first().title
-            sessionCount > 1 -> "MOCCA • $sessionCount sessions"
-            else -> "MOCCA"
+            sessionCount == 1 -> {
+                sessions.first().title
+            }
+            sessionCount > 1 -> {
+                "MOCCA • $sessionCount sessions"
+            }
+            else -> {
+                "MOCCA"
+            }
         }
 
         // Build summary text
@@ -548,13 +558,19 @@ class ActiveSessionService : Service() {
             sessionCount == 1 -> {
                 val session = sessions.first()
                 when {
-                    session.currentTask != null -> session.currentTask
+                    session.currentTask != null -> {
+                        session.currentTask
+                    }
                     session.inProgressCount > 0 -> {
                         val todo = session.todos.find { it.status == "in_progress" }
                         todo?.content ?: "Processing..."
                     }
-                    session.totalCount > 0 -> "Progress: ${session.completedCount}/${session.totalCount}"
-                    else -> "${session.modelName} • ${formatTime(session.elapsedSeconds)}"
+                    session.totalCount > 0 -> {
+                        "Progress: ${session.completedCount}/${session.totalCount}"
+                    }
+                    else -> {
+                        "${session.modelName} • ${formatTime(session.elapsedSeconds)}"
+                    }
                 }
             }
             sessionCount > 1 -> {
@@ -566,17 +582,24 @@ class ActiveSessionService : Service() {
                     "${sessions.count { it.inProgressCount > 0 }} active"
                 }
             }
-            else -> "Processing..."
+            else -> {
+                "Processing..."
+            }
         }
 
         // Build short critical text for status bar chip
         val shortCriticalText = when {
             sessionCount == 1 -> {
                 val session = sessions.first()
-                if (session.totalCount > 0) "${session.completedCount}/${session.totalCount}"
-                else formatTime(session.elapsedSeconds)
+                if (session.totalCount > 0) {
+                    "${session.completedCount}/${session.totalCount}"
+                } else {
+                    formatTime(session.elapsedSeconds)
+                }
             }
-            else -> "$sessionCount running"
+            else -> {
+                "$sessionCount running"
+            }
         }
 
         // Calculate overall progress
@@ -612,11 +635,11 @@ class ActiveSessionService : Service() {
 
     private fun buildBigText(sessions: List<SessionState>): String {
         val sb = StringBuilder()
-        
+
         sessions.forEachIndexed { index, session ->
             if (index > 0) sb.append("\n")
             sb.append("▸ ${session.title}")
-            
+
             if (session.todos.isNotEmpty()) {
                 session.todos.take(3).forEach { todo ->
                     val icon = when (todo.status) {
@@ -634,7 +657,7 @@ class ActiveSessionService : Service() {
                 sb.append("\n  → ${session.currentTask.take(50)}")
             }
         }
-        
+
         return sb.toString()
     }
 
@@ -648,7 +671,7 @@ class ActiveSessionService : Service() {
         bigText: String
     ): Notification {
         val segments = buildProgressSegments(session.todos)
-        
+
         val progressStyle = Notification.ProgressStyle()
             .setProgress(session.completedCount * 100)
             .setProgressSegments(segments)

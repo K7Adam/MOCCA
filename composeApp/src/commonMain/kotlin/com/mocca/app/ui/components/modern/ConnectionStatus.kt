@@ -102,6 +102,7 @@ fun ConnectionStatusBanner(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
@@ -119,6 +120,7 @@ fun ConnectionStatusBanner(
             }
             
             Row(
+                modifier = Modifier.padding(start = AppSpacing.sm),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 

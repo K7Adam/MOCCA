@@ -74,21 +74,6 @@ complexity:
     includeStaticDeclarations: false
     includePrivateDeclarations: false
     ignoreOverloaded: false
-  ComplexMethod:
-    active: true
-    threshold: 15
-    ignoreSingleWhenExpression: false
-    ignoreSimpleWhenEntries: false
-    ignoreNestingFunctions: false
-    nestingFunctions:
-      - 'run'
-      - 'with'
-      - 'apply'
-      - 'also'
-      - 'let'
-      - 'launch'
-      - 'async'
-      - 'runBlocking'
   LargeClass:
     active: true
     threshold: 600
@@ -274,9 +259,9 @@ naming:
     active: true
   ObjectPropertyNaming:
     active: true
-    constantPattern: '[A-Za-z][_A-Za-z0-9]*'
-    propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
-    privatePropertyPattern: '(_)?[A-Za-z][_A-Za-z0-9]*'
+    constantPattern: '[A-Za-z][_A-ZaZ0-9]*'
+    propertyPattern: '[A-Za-z][_A-ZaZ0-9]*'
+    privatePropertyPattern: '(_)?[A-Za-z][_A-ZaZ0-9]*'
   PackageNaming:
     active: true
     packagePattern: '[a-z]+(\.[a-z][A-Za-z0-9]*)*'
@@ -284,7 +269,7 @@ naming:
     active: true
     constantPattern: '[A-Z][_A-Z0-9]*'
     propertyPattern: '[A-Za-z][_A-Za-z0-9]*'
-    privatePropertyPattern: '(_)?[A-Za-z][_A-Za-z0-9]*'
+    privatePropertyPattern: '(_)?[A-Za-z][_A-ZaZ0-9]*'
   VariableMaxLength:
     active: true
     maximumVariableNameLength: 64
@@ -345,7 +330,7 @@ potential-bugs:
     active: true
   IgnoredReturnValue:
     active: true
-    restrictToAnnotatedMethods: true
+    restrictToConfig: true
     returnValueAnnotations:
       - 'CheckResult'
       - '*.CheckResult'
@@ -368,11 +353,9 @@ potential-bugs:
     active: true
   LateinitUsage:
     active: false
-    excludeAnnotatedProperties: []
+    ignoreAnnotated: []
     ignoreOnClassesPattern: ''
   MapGetWithNotNullAssertionOperator:
-    active: true
-  MissingWhenCase:
     active: true
   NullCheckOnMutableProperty:
     active: false
@@ -419,7 +402,7 @@ style:
     includeLineWrapping: false
   ForbiddenComment:
     active: true
-    values:
+    comments:
       - 'FIXME:'
       - 'STOPSHIP:'
       - 'TODO:'
@@ -428,10 +411,6 @@ style:
     active: false
   ForbiddenMethodCall:
     active: false
-  ForbiddenPublicDataClass:
-    active: false
-    ignorePackages:
-      - '*.internal'
   ForbiddenVoid:
     active: true
     ignoreOverridden: false
@@ -441,12 +420,8 @@ style:
 
     excludedFunctions:
       - 'describeContents'
-    excludeAnnotatedFunction:
+    ignoreAnnotated:
       - 'dagger.Provides'
-  LibraryCodeMustSpecifyReturnType:
-    active: true
-  LibraryEntitiesShouldNotBePublic:
-    active: true
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 1
@@ -487,8 +462,8 @@ style:
     active: true
   OptionalUnit:
     active: true
-  OptionalWhenBraces:
-    active: false
+  BracesOnWhenStatements:
+    active: true
   PreferToOverPairSyntax:
     active: true
   ProtectedMemberInFinalClass:

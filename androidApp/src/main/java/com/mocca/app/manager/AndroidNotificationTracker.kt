@@ -9,7 +9,7 @@ import com.mocca.app.service.ActiveSessionService.TodoInfo
 
 /**
  * Android implementation of NotificationTracker.
- * 
+ *
  * Uses intent-based communication with ActiveSessionService to ensure
  * all notification state is managed by the service.
  */
@@ -123,6 +123,7 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
         )
     }
 
+    @Suppress("LongParameterList")
     private fun sendUpdateIntent(
         sessionId: String,
         title: String,

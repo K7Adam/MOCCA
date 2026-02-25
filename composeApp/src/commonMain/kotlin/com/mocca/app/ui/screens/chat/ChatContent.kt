@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -236,12 +235,6 @@ fun AutoScrollEffect(
     enabled: Boolean = true
 ) {
     val coroutineScope = rememberCoroutineScope()
-    val scrollAnimationSpec = remember {
-        tween<Int>(
-            durationMillis = 300,
-            easing = FastOutSlowInEasing
-        )
-    }
     
     var lastMessageCount by remember { mutableStateOf(messageCount) }
     var wasStreaming by remember { mutableStateOf(false) }
@@ -300,19 +293,15 @@ fun ChatContent(
     val streamingText by screenModel.streamingText.collectAsState()
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
     
-    val sessionTitle by remember(state.session) {
-        derivedStateOf {
-            state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
-        }
+    val sessionTitle = remember(state.session) {
+        state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
     }
     
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
     
-    val commands = state.commands
     var showShareDialog by remember { mutableStateOf(false) }
     
     // Track scroll direction for dock auto-hide

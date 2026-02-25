@@ -32,8 +32,12 @@ class PermissionActionReceiver : BroadcastReceiver() {
         }
 
         val isApproved = when (intent.action) {
-            ACTION_PERMISSION_APPROVE -> true
-            ACTION_PERMISSION_DENY -> false
+            ACTION_PERMISSION_APPROVE -> {
+                true
+            }
+            ACTION_PERMISSION_DENY -> {
+                false
+            }
             else -> {
                 Napier.w("[PermissionActionReceiver] Unknown action: ${intent.action}")
                 return
