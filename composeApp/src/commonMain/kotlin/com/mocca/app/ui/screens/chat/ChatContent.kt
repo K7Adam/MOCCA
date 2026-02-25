@@ -370,9 +370,12 @@ fun ChatContent(
     }
 
     // Show scroll-to-bottom button when user has scrolled up
+    // IMPORTANT: Read listState directly — it's a Compose State holder.
+    // Do NOT read autoScrollState here (plain data class = stale closure).
     val showScrollToBottom by remember(listState) {
         derivedStateOf {
-            autoScrollState.userHasScrolledUp
+            listState.firstVisibleItemIndex > 0 ||
+            listState.firstVisibleItemScrollOffset > 50
         }
     }
 
@@ -386,7 +389,7 @@ fun ChatContent(
     }
 
     LaunchedEffect(aggregatedMessages.size) {
-        if (autoScrollState.userHasScrolledUp) {
+        if (listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 50) {
             hasNewMessagesWhileScrolledUp = true
         }
     }
