@@ -117,7 +117,7 @@ object NetworkConfig {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /** OpenCode server default port */
-    const val OPENCODE_SERVER_PORT = 4096
+    const val OPENCODE_SERVER_PORT = 4242
     
     /** Android emulator host IP */
     const val EMULATOR_HOST_IP = "10.0.2.2"
