@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.onboarding
 
 import cafe.adriel.voyager.core.model.ScreenModel
+import com.mocca.app.api.NetworkConfig
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
@@ -271,14 +272,10 @@ class OnboardingWizardModel(
             return
         }
 
-        // Use provided useHttps, or auto-detect Tailscale (.ts.net) if not specified
-        val isTailscale = host.endsWith(".ts.net")
-        val effectiveUseHttps = if (useHttps) true else isTailscale
-        val effectivePort = when {
-            useHttps && port == 4096 -> 443  // User toggled HTTPS on, use 443
-            !useHttps && port == 443 -> 4096  // User toggled HTTPS off, use 4096
-            else -> port
-        }
+        // Respect user-provided useHttps explicitly instead of auto-detecting Tailscale here.
+        // Tailscale securely encrypts traffic under its own overlay without needing HTTPS/443.
+        val effectiveUseHttps = useHttps
+        val effectivePort = port
         
         Napier.i("[OnboardingWizard] Effective settings - useHttps: $effectiveUseHttps, port: $effectivePort")
 
@@ -287,7 +284,7 @@ class OnboardingWizardModel(
             name = "OpenCode ($host)",
             host = host,
             port = effectivePort,
-            username = username.ifBlank { "opencode" },
+            username = username.ifBlank { NetworkConfig.DEFAULT_USERNAME },
             password = password,
             isActive = true,
             useHttps = effectiveUseHttps

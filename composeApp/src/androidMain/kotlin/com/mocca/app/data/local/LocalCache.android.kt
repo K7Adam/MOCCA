@@ -15,6 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Android implementation using SQLDelight for persistent storage.
@@ -36,8 +39,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     private val json = Json { ignoreUnknownKeys = true }
     
     // In-memory Git status cache (not persisted)
-    @Volatile
-    private var cachedGitStatus: GitStatusResponse? = null
+    private val _cachedGitStatus = MutableStateFlow<GitStatusResponse?>(null)
 
     // ==================== Sessions ====================
 
@@ -398,14 +400,16 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     
     // ==================== Git Status (In-Memory) ====================
     
-    override fun getGitStatus(): GitStatusResponse? = cachedGitStatus
+    override fun getGitStatus(): GitStatusResponse? = _cachedGitStatus.value
+    
+    override fun observeGitStatus(): StateFlow<GitStatusResponse?> = _cachedGitStatus.asStateFlow()
     
     override fun saveGitStatus(status: GitStatusResponse) {
-        cachedGitStatus = status
+        _cachedGitStatus.value = status
     }
     
     override fun clearGitStatus() {
-        cachedGitStatus = null
+        _cachedGitStatus.value = null
     }
 
     // ==================== Agents ====================

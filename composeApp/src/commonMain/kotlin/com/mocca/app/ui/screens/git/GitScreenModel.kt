@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.GitRepository
 import com.mocca.app.data.repository.SessionRepository
+import com.mocca.app.data.repository.StateCoordinator
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.*
@@ -16,12 +17,12 @@ import kotlinx.coroutines.launch
 
 /**
  * Screen model for Git operations screen.
- * Uses SessionRepository to obtain a sessionId for shell-based git operations.
+ * Uses StateCoordinator to observe the active session ID for shell-based git operations.
  * All git write/read operations are routed through OpenCode's built-in endpoints.
  */
 class GitScreenModel(
     private val gitRepository: GitRepository,
-    private val sessionRepository: SessionRepository
+    private val stateCoordinator: StateCoordinator
 ) : ScreenModel {
     
     // UI State
@@ -36,22 +37,33 @@ class GitScreenModel(
     private var _currentSessionId: String? = null
     
     init {
-        fetchSessionId()
-        loadStatus()
-        loadStashes()
+        observeActiveSession()
     }
     
     /**
-     * Fetch first available session ID for git operations.
-     * Continuously observed so it updates when sessions change.
+     * Reactively observe the globally active Session ID.
+     * When it becomes available or changes, automatically load Git status.
      */
-    private fun fetchSessionId() {
+    private fun observeActiveSession() {
         screenModelScope.launch {
-            sessionRepository.getSessions().collect { resource ->
-                if (resource is Resource.Success) {
-                    _currentSessionId = resource.data.firstOrNull()?.id
+            stateCoordinator.activeSessionId
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collectLatest { sessionId ->
+                    Napier.i("[GitScreenModel] Active session ID received ($sessionId), loading Git status...")
+                    _currentSessionId = sessionId
+                    // If we already had an active tab, refresh its data with the new session
+                    when (_selectedTab.value) {
+                        GitTab.STATUS -> loadStatus()
+                        GitTab.LOG -> loadLog()
+                        GitTab.BRANCHES -> loadBranches()
+                        GitTab.STASHES -> loadStashes() // We load this preemptively below anyway, but it ensures UI stays in sync
+                        else -> {
+                            loadStatus()
+                        }
+                    }
+                    loadStashes() // Preemptively load stashes for the counter icon
                 }
-            }
         }
     }
     
@@ -66,6 +78,7 @@ class GitScreenModel(
             GitTab.LOG -> loadLog()
             GitTab.REMOTES -> loadRemotes()
             GitTab.TAGS -> loadTags()
+            GitTab.STASHES -> loadStashes()
         }
     }
     
@@ -455,5 +468,5 @@ data class GitUiState(
 }
 
 enum class GitTab(val title: String) {
-    STATUS("Status"), BRANCHES("Branches"), LOG("Log"), REMOTES("Remotes"), TAGS("Tags")
+    STATUS("Status"), BRANCHES("Branches"), LOG("Log"), REMOTES("Remotes"), TAGS("Tags"), STASHES("Stashes")
 }

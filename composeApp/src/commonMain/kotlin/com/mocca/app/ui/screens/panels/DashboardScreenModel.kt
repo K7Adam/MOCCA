@@ -65,6 +65,9 @@ class DashboardScreenModel(
         // VCS/Git info (from AppStateStore - auto-updated)
         val vcsInfo: Resource<VcsInfo> = Resource.Loading(),
         
+        // Full Git Status (from AppStateStore - auto-updated)
+        val gitStatus: GitStatusResponse? = null,
+        
         // MCP servers (from AppStateStore - auto-updated)
         val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading(),
         
@@ -103,7 +106,10 @@ class DashboardScreenModel(
             get() = (commands as? Resource.Success)?.data?.size ?: 0
         
         val gitBranch: String
-            get() = (vcsInfo as? Resource.Success)?.data?.branch?.ifBlank { null } ?: "unknown"
+            get() = gitStatus?.branch ?: (vcsInfo as? Resource.Success)?.data?.branch?.ifBlank { null } ?: "unknown"
+            
+        val changedFilesCount: Int
+            get() = gitStatus?.let { it.staged.size + it.unstaged.size + it.untracked.size } ?: 0
         
         val activeLspServers: ImmutableList<LspStatus>
             get() = ((lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()).toImmutableList()
@@ -227,6 +233,13 @@ class DashboardScreenModel(
         screenModelScope.launch {
             appStateStore.vcsInfo.collect { vcsInfo ->
                 _state.update { it.copy(vcsInfo = vcsInfo) }
+            }
+        }
+
+        // Observe Git status (full status including changed file counts)
+        screenModelScope.launch {
+            appStateStore.gitStatus.collect { gitStatus ->
+                _state.update { it.copy(gitStatus = gitStatus) }
             }
         }
         

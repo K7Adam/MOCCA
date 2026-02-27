@@ -244,7 +244,7 @@ val screenModelModule = module {
     factory {
         GitScreenModel(
             gitRepository = get(),
-            sessionRepository = get()
+            stateCoordinator = get()
         )
     }
     

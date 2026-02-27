@@ -65,7 +65,7 @@ class ServerConfigRepository(
                 // clear the config to force reconfiguration via onboarding
                 val defaultHost = getPlatformDefaultHost()
                 val isPhysicalDevice = defaultHost.isEmpty()
-                val isUsingEmulatorIp = config.host == "10.0.2.2"
+                val isUsingEmulatorIp = config.host == NetworkConfig.DEFAULT_HOST_IP || config.host == "10.0.2.2"
                 
                 if (isPhysicalDevice && isUsingEmulatorIp) {
                     Napier.i("Detected physical device with emulator IP config - clearing to force onboarding")
@@ -196,21 +196,21 @@ class ServerConfigRepository(
 
     /**
      * Create a default server configuration.
-     * - Android emulator: Uses 10.0.2.2 to reach host machine's localhost.
+     * - Android emulator: Uses NetworkConfig.DEFAULT_HOST_IP.
      * - Physical devices: Returns null — onboarding must be completed first.
      */
     fun createDefaultConfig(): ServerConfig? {
         val defaultHost = getPlatformDefaultHost()
         
         return if (defaultHost.isNotEmpty()) {
-            // Android emulator - use 10.0.2.2
+            // Android emulator defaults
             ServerConfig(
                 id = "default",
                 name = "Local Server",
                 host = defaultHost,
                 port = NetworkConfig.OPENCODE_SERVER_PORT,
-                username = "adamk7",
-                password = "Victory&Bliss4ever",
+                username = NetworkConfig.DEFAULT_USERNAME,
+                password = NetworkConfig.DEFAULT_PASSWORD,
                 isActive = true
             )
         } else {
@@ -242,7 +242,7 @@ class ServerConfigRepository(
     /**
      * Create a LAN connection configuration.
      * @param lanIp The LAN IP address (e.g., "192.168.1.100")
-     * @param port The port number (default 4096)
+     * @param port The port number (default 4242)
      */
     fun createLanConfig(
         lanIp: String,

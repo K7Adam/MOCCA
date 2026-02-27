@@ -1,5 +1,7 @@
 package com.mocca.app.ui.screens.onboarding
 
+import com.mocca.app.api.NetworkConfig
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.fadeIn
@@ -364,7 +366,7 @@ private fun SetupChecklist() {
         ChecklistItem(
             number = "2",
             text = "Start the OpenCode server",
-            subtext = "opencode serve --port 4096"
+            subtext = "opencode serve --port 4242"
         )
         
         ChecklistItem(
@@ -489,21 +491,14 @@ private fun SelectServerStep(
 ) {
     var showManualEntry by remember { mutableStateOf(true) } // Expanded by default for dev
     // TEMPORARY PREFILLS
-    var manualHost by remember { mutableStateOf("omen.tail0b932a.ts.net") }
-    var manualPort by remember { mutableStateOf("443") }
-    var manualUsername by remember { mutableStateOf("adamk7") }
-    var manualPassword by remember { mutableStateOf("Victory&Bliss4ever") }
-    var useHttps by remember { mutableStateOf(true) }
+    var manualHost by remember { mutableStateOf(NetworkConfig.DEFAULT_HOST_IP) }
+    var manualPort by remember { mutableStateOf(NetworkConfig.OPENCODE_SERVER_PORT.toString()) }
+    var manualUsername by remember { mutableStateOf(NetworkConfig.DEFAULT_USERNAME) }
+    var manualPassword by remember { mutableStateOf(NetworkConfig.DEFAULT_PASSWORD) }
+    var useHttps by remember { mutableStateOf(false) }
     
-    // Auto-detect Tailscale (.ts.net) and set HTTPS + port 443
-    LaunchedEffect(manualHost) {
-        val isTailscale = manualHost.trim().endsWith(".ts.net")
-        if (isTailscale && !useHttps) {
-            useHttps = true
-            if (manualPort == "4096") manualPort = "443"
-        }
-    }
-    
+    // Removed: Auto-detect Tailscale (.ts.net) and set HTTPS + port 443
+    // Tailscale encrypts its overlay network, so HTTP on 4242 works safely without TLS.
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -603,7 +598,7 @@ private fun SelectServerStep(
                 value = manualHost,
                 onValueChange = { manualHost = it },
                 label = "Host",
-                placeholder = "192.168.1.42 or mydevice.ts.net"
+                placeholder = NetworkConfig.DEFAULT_HOST_IP
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -612,7 +607,7 @@ private fun SelectServerStep(
                 value = manualPort,
                 onValueChange = { manualPort = it },
                 label = "Port",
-                placeholder = "4096"
+                placeholder = "4242"
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -621,7 +616,7 @@ private fun SelectServerStep(
                 value = manualUsername,
                 onValueChange = { manualUsername = it },
                 label = "Username",
-                placeholder = "opencode"
+                placeholder = NetworkConfig.DEFAULT_USERNAME
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -652,10 +647,10 @@ private fun SelectServerStep(
                     checked = useHttps,
                     onCheckedChange = { 
                         useHttps = it
-                        if (it && manualPort == "4096") {
+                        if (it && manualPort == "4242") {
                             manualPort = "443"
                         } else if (!it && manualPort == "443") {
-                            manualPort = "4096"
+                            manualPort = "4242"
                         }
                     }
                 )
@@ -663,7 +658,7 @@ private fun SelectServerStep(
             
             // Show effective URL preview
             val effectiveProtocol = if (useHttps) "https" else "http"
-            val effectivePort = manualPort.toIntOrNull() ?: 4096
+            val effectivePort = manualPort.toIntOrNull() ?: 4242
             Text(
                 text = "$effectiveProtocol://${manualHost.trim()}:$effectivePort",
                 style = AppTypography.bodySmall,
@@ -678,8 +673,8 @@ private fun SelectServerStep(
                 onClick = {
                     onManualConnect(
                         manualHost.trim(),
-                        manualPort.trim().toIntOrNull() ?: 4096,
-                        manualUsername.trim().ifBlank { "opencode" },
+                        manualPort.trim().toIntOrNull() ?: 4242,
+                        manualUsername.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
                         manualPassword,
                         useHttps
                     )
@@ -907,8 +902,8 @@ private fun CredentialDialog(
     onConfirm: (username: String, password: String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var username by remember { mutableStateOf("adamk7") } // TEMPORARY
-    var password by remember { mutableStateOf("Victory&Bliss4ever") } // TEMPORARY
+    var username by remember { mutableStateOf(NetworkConfig.DEFAULT_USERNAME) }
+    var password by remember { mutableStateOf(NetworkConfig.DEFAULT_PASSWORD) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -935,7 +930,7 @@ private fun CredentialDialog(
                     value = username,
                     onValueChange = { username = it },
                     label = "Username",
-                    placeholder = "opencode"
+                    placeholder = NetworkConfig.DEFAULT_USERNAME
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -953,7 +948,7 @@ private fun CredentialDialog(
                 text = "Connect",
                 onClick = {
                     onConfirm(
-                        username.trim().ifBlank { "opencode" },
+                        username.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
                         password
                     )
                 },

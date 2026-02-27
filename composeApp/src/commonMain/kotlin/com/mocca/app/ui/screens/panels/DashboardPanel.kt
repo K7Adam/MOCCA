@@ -95,7 +95,7 @@ fun DashboardPanel(
         // ─── Git Status ──────────────────────────────────────────────────
         GitStatusModule(
             branchName = state.gitBranch,
-            changedFiles = 0, // Rich file status is on Git screen via shell commands
+            changedFiles = state.changedFilesCount, // Rich file status from global gitStatus
             onExpandClick = onGitClick
         )
         

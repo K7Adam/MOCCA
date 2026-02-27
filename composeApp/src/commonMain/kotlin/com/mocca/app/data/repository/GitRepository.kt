@@ -111,7 +111,7 @@ class GitRepository(
             },
             onFailure = { e ->
                 Napier.w("$TAG: Shell git status failed, falling back to branch-only: ${e.message}")
-                val status = GitStatusResponse(branch = branch)
+                val status = GitStatusResponse(branch = "")
                 localCache.saveGitStatus(status)
                 emit(Resource.Success(status))
             }

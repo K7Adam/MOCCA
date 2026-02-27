@@ -2,6 +2,8 @@
 
 package com.mocca.app.ui.screens.settings
 
+import com.mocca.app.api.NetworkConfig
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -964,11 +966,11 @@ private fun TerminalServerEditDialog(
     onSave: (ServerConfig) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var name by remember { mutableStateOf(server.name.ifBlank { "Omen" }) } // TEMPORARY
-    var host by remember { mutableStateOf(server.host.ifBlank { "omen.tail0b932a.ts.net" }) } // TEMPORARY
-    var port by remember { mutableStateOf(if (server.port == 4096) "443" else server.port.toString()) } // TEMPORARY
-    var username by remember { mutableStateOf(server.username.ifBlank { "adamk7" }) } // TEMPORARY
-    var password by remember { mutableStateOf(server.password.ifBlank { "Victory&Bliss4ever" }) } // TEMPORARY
+    var name by remember { mutableStateOf(server.name.ifBlank { "DigitalOcean OpenCode" }) }
+    var host by remember { mutableStateOf(server.host.ifBlank { NetworkConfig.DEFAULT_HOST_IP }) }
+    var port by remember { mutableStateOf(if (server.port == 0) NetworkConfig.OPENCODE_SERVER_PORT.toString() else server.port.toString()) }
+    var username by remember { mutableStateOf(server.username.ifBlank { NetworkConfig.DEFAULT_USERNAME }) }
+    var password by remember { mutableStateOf(server.password.ifBlank { NetworkConfig.DEFAULT_PASSWORD }) }
     
     val focusManager = LocalFocusManager.current
     
@@ -1003,7 +1005,7 @@ private fun TerminalServerEditDialog(
                     value = host,
                     onValueChange = { host = it },
                     label = "HOST",
-                    placeholder = "10.0.2.2 or mydevice.ts.net",
+                    placeholder = NetworkConfig.DEFAULT_HOST_IP,
                     hint = "Tailscale hostname, LAN IP, or localhost",
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -1015,7 +1017,7 @@ private fun TerminalServerEditDialog(
                     value = port,
                     onValueChange = { port = it },
                     label = "PORT",
-                    placeholder = "4096",
+                    placeholder = "4242",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
@@ -1026,7 +1028,7 @@ private fun TerminalServerEditDialog(
                     value = username,
                     onValueChange = { username = it },
                     label = "USERNAME",
-                    placeholder = "opencode",
+                    placeholder = NetworkConfig.DEFAULT_USERNAME,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
@@ -1046,8 +1048,8 @@ private fun TerminalServerEditDialog(
                             server.copy(
                                 name = name,
                                 host = host,
-                                port = port.toIntOrNull() ?: 4096,
-                                username = username.ifBlank { "opencode" },
+                                port = port.toIntOrNull() ?: 4242,
+                                username = username.ifBlank { NetworkConfig.DEFAULT_USERNAME },
                                 password = password
                             )
                         )
@@ -1063,8 +1065,8 @@ private fun TerminalServerEditDialog(
                         server.copy(
                             name = name,
                             host = host,
-                            port = port.toIntOrNull() ?: 4096,
-                            username = username.ifBlank { "opencode" },
+                            port = port.toIntOrNull() ?: 4242,
+                            username = username.ifBlank { NetworkConfig.DEFAULT_USERNAME },
                             password = password
                         )
                     )

@@ -8,141 +8,154 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.plugins.websocket.webSocket
-import io.ktor.websocket.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
-import com.mocca.app.api.NetworkError
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * OpenCode API Client for REST endpoints.
- * Uses [ApiExecutor] to access the current HttpClient managed by ConnectionManager.
- * Consumers never hold an HttpClient reference directly.
+ * OpenCode API Client for REST endpoints. Uses [ApiExecutor] to access the current HttpClient
+ * managed by ConnectionManager. Consumers never hold an HttpClient reference directly.
  */
 class MoccaApiClient(
-    private val api: ApiExecutor,
-    private val retryPolicy: RetryPolicy = RetryPolicy.Default
+        private val api: ApiExecutor,
+        private val retryPolicy: RetryPolicy = RetryPolicy.Default
 ) {
-    private val json = Json { 
-        ignoreUnknownKeys = true 
+    private val json = Json {
+        ignoreUnknownKeys = true
         isLenient = true
     }
 
+    private val shellMutex = Mutex()
+
     // Health
-    suspend fun getHealth(): Result<AppInfo> = safeCall("getHealth") {
-        get("global/health").body()
-    }
-    
+    suspend fun getHealth(): Result<AppInfo> = safeCall("getHealth") { get("global/health").body() }
+
     /**
-     * @deprecated This endpoint returns HTML, not JSON. Use [getHealth] instead.
-     * The /app endpoint is a frontend route, not a REST API endpoint.
-     * 
+     * @deprecated This endpoint returns HTML, not JSON. Use [getHealth] instead. The /app endpoint
+     * is a frontend route, not a REST API endpoint.
+     *
      * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
      */
     @Deprecated(
-        message = "The /app endpoint returns HTML. Use getHealth() for server status.",
-        replaceWith = ReplaceWith("getHealth()"),
-        level = DeprecationLevel.ERROR
+            message = "The /app endpoint returns HTML. Use getHealth() for server status.",
+            replaceWith = ReplaceWith("getHealth()"),
+            level = DeprecationLevel.ERROR
     )
-    suspend fun getAppInfo(): Result<AppInfo> = Result.failure(
-        NetworkError.ServerError(
-            statusCode = 406,
-            message = "Deprecated: /app returns HTML. Use getHealth() instead."
-        )
-    )
+    suspend fun getAppInfo(): Result<AppInfo> =
+            Result.failure(
+                    NetworkError.ServerError(
+                            statusCode = 406,
+                            message = "Deprecated: /app returns HTML. Use getHealth() instead."
+                    )
+            )
 
     // Sessions
-    suspend fun listSessions(): Result<List<Session>> = safeRequest("listSessions") {
-        get("session")
-    }
+    suspend fun listSessions(): Result<List<Session>> =
+            safeRequest("listSessions") { get("session") }
 
-    suspend fun createSession(): Result<Session> = safeCallNoRetry("createSession") {
-        post("session").body()
-    }
+    suspend fun createSession(): Result<Session> =
+            safeCallNoRetry("createSession") { post("session").body() }
 
-    suspend fun getChildren(sessionId: String): Result<List<Session>> = safeCall("getChildren") {
-        get("session/$sessionId/children").body()
-    }
+    suspend fun getChildren(sessionId: String): Result<List<Session>> =
+            safeCall("getChildren") { get("session/$sessionId/children").body() }
 
-    suspend fun deleteSession(sessionId: String): Result<Unit> = safeCallNoRetry("deleteSession") {
-        delete("session/$sessionId")
-    }
-    
-    suspend fun abortSession(sessionId: String): Result<Boolean> = safeCallNoRetry("abortSession") {
-        post("session/$sessionId/abort").body()
-    }
+    suspend fun deleteSession(sessionId: String): Result<Unit> =
+            safeCallNoRetry("deleteSession") { delete("session/$sessionId") }
+
+    suspend fun abortSession(sessionId: String): Result<Boolean> =
+            safeCallNoRetry("abortSession") { post("session/$sessionId/abort").body() }
 
     // Messages
-    suspend fun getMessages(sessionId: String): Result<List<MessageResponse>> = safeCall("getMessages") {
-        Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId")
-        val response = get("session/$sessionId/message")
-        val rawText = response.bodyAsText()
-        json.decodeFromString<List<MessageResponse>>(rawText)
-    }
+    suspend fun getMessages(sessionId: String): Result<List<MessageResponse>> =
+            safeCall("getMessages") {
+                Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId")
+                val response = get("session/$sessionId/message")
+                val rawText = response.bodyAsText()
+                json.decodeFromString<List<MessageResponse>>(rawText)
+            }
 
     suspend fun chat(
-        sessionId: String,
-        modelId: String,
-        providerId: String,
-        parts: List<ChatPart>,
-        mode: String? = null,
-        variant: String? = null
-    ): Result<AssistantMessageInfo> = safeCallNoRetry("chat") {
-        post("session/$sessionId/message") {
-            contentType(ContentType.Application.Json)
-            setBody(ChatRequest(
-                modelID = modelId,
-                providerID = providerId,
-                parts = parts,
-                mode = mode,
-                variant = variant
-            ))
-        }.body()
-    }
-    
+            sessionId: String,
+            modelId: String,
+            providerId: String,
+            parts: List<ChatPart>,
+            mode: String? = null,
+            variant: String? = null
+    ): Result<AssistantMessageInfo> =
+            safeCallNoRetry("chat") {
+                post("session/$sessionId/message") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                    ChatRequest(
+                                            modelID = modelId,
+                                            providerID = providerId,
+                                            parts = parts,
+                                            mode = mode,
+                                            variant = variant
+                                    )
+                            )
+                        }
+                        .body()
+            }
+
     suspend fun chatAsync(
-        sessionId: String,
-        modelId: String,
-        providerId: String,
-        parts: List<ChatPart>,
-        mode: String? = null,
-        variant: String? = null
-    ): Result<Unit> = safeCallNoRetry("chatAsync") {
-        val response = post("session/$sessionId/prompt_async") {
-            contentType(ContentType.Application.Json)
-            setBody(ChatRequest(
-                modelID = modelId,
-                providerID = providerId,
-                parts = parts,
-                mode = mode,
-                variant = variant
-            ))
-        }
-        if (response.status.value in 200..299) {
-            Unit
-        } else {
-            throw Exception("Unexpected response: ${response.status}")
-        }
-    }
+            sessionId: String,
+            modelId: String,
+            providerId: String,
+            parts: List<ChatPart>,
+            mode: String? = null,
+            variant: String? = null
+    ): Result<Unit> =
+            safeCallNoRetry("chatAsync") {
+                val response =
+                        post("session/$sessionId/prompt_async") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                    ChatRequest(
+                                            modelID = modelId,
+                                            providerID = providerId,
+                                            parts = parts,
+                                            mode = mode,
+                                            variant = variant
+                                    )
+                            )
+                        }
+                if (response.status.value in 200..299) {
+                    Unit
+                } else {
+                    throw Exception("Unexpected response: ${response.status}")
+                }
+            }
 
     // Permissions (legacy)
     suspend fun respondToPermission(
-        sessionId: String,
-        permissionId: String,
-        allow: Boolean,
-        remember: Boolean = false
-    ): Result<Boolean> = safeCallNoRetry("respondToPermission") {
-        post("session/$sessionId/permissions/$permissionId") {
-            contentType(ContentType.Application.Json)
-            setBody(PermissionResponse(
-                response = if (allow) "allow" else "deny",
-                remember = remember
-            ))
-        }.body()
-    }
-    
+            sessionId: String,
+            permissionId: String,
+            allow: Boolean,
+            remember: Boolean = false
+    ): Result<Boolean> =
+            safeCallNoRetry("respondToPermission") {
+                post("session/$sessionId/permissions/$permissionId") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                    PermissionResponse(
+                                            response = if (allow) "allow" else "deny",
+                                            remember = remember
+                                    )
+                            )
+                        }
+                        .body()
+            }
+
     // Permissions
     /**
      * Reply to a permission request using the new permission.reply API.
@@ -151,228 +164,214 @@ class MoccaApiClient(
      * @param message Optional message for rejection
      */
     suspend fun replyToPermission(
-        requestId: String,
-        reply: PermissionResponseType,
-        message: String? = null
-    ): Result<Boolean> = safeCallNoRetry("replyToPermission") {
-        post("permission/$requestId/reply") {
-            contentType(ContentType.Application.Json)
-            setBody(PermissionReplyRequest(
-                requestID = requestId,
-                reply = reply.value,
-                message = message
-            ))
-        }.body()
-    }
-    
-    /**
-     * List all pending permission requests.
-     */
-    suspend fun listPendingPermissions(): Result<List<PermissionRequest>> = safeCall("listPendingPermissions") {
-        get("permission").body()
-    }
-    
+            requestId: String,
+            reply: PermissionResponseType,
+            message: String? = null
+    ): Result<Boolean> =
+            safeCallNoRetry("replyToPermission") {
+                post("permission/$requestId/reply") {
+                            contentType(ContentType.Application.Json)
+                            setBody(
+                                    PermissionReplyRequest(
+                                            requestID = requestId,
+                                            reply = reply.value,
+                                            message = message
+                                    )
+                            )
+                        }
+                        .body()
+            }
+
+    /** List all pending permission requests. */
+    suspend fun listPendingPermissions(): Result<List<PermissionRequest>> =
+            safeCall("listPendingPermissions") { get("permission").body() }
+
     // Questions (matching OpenChamber SDK)
     /**
      * Reply to a question request.
      * @param requestId The question request ID
-     * @param answers Answers as a list of string lists (one list per question, multiple selections if multiple=true)
+     * @param answers Answers as a list of string lists (one list per question, multiple selections
+     * if multiple=true)
      */
-    suspend fun replyToQuestion(
-        requestId: String,
-        answers: List<List<String>>
-    ): Result<Boolean> = safeCallNoRetry("replyToQuestion") {
-        post("question/$requestId/reply") {
-            contentType(ContentType.Application.Json)
-            setBody(QuestionReplyRequest(
-                requestID = requestId,
-                answers = answers
-            ))
-        }.body()
-    }
-    
-    /**
-     * Reject a question request.
-     */
-    suspend fun rejectQuestion(requestId: String): Result<Boolean> = safeCallNoRetry("rejectQuestion") {
-        post("question/$requestId/reject") {
-            contentType(ContentType.Application.Json)
-            setBody(QuestionRejectRequest(requestID = requestId))
-        }.body()
-    }
-    
-    /**
-     * List all pending question requests.
-     */
-    /**
-     * List all pending question requests.
-     */
-    suspend fun listPendingQuestions(): Result<List<QuestionRequest>> = safeCall("listPendingQuestions") {
-        get("question").body()
-    }
+    suspend fun replyToQuestion(requestId: String, answers: List<List<String>>): Result<Boolean> =
+            safeCallNoRetry("replyToQuestion") {
+                post("question/$requestId/reply") {
+                            contentType(ContentType.Application.Json)
+                            setBody(QuestionReplyRequest(requestID = requestId, answers = answers))
+                        }
+                        .body()
+            }
+
+    /** Reject a question request. */
+    suspend fun rejectQuestion(requestId: String): Result<Boolean> =
+            safeCallNoRetry("rejectQuestion") {
+                post("question/$requestId/reject") {
+                            contentType(ContentType.Application.Json)
+                            setBody(QuestionRejectRequest(requestID = requestId))
+                        }
+                        .body()
+            }
+
+    /** List all pending question requests. */
+    /** List all pending question requests. */
+    suspend fun listPendingQuestions(): Result<List<QuestionRequest>> =
+            safeCall("listPendingQuestions") { get("question").body() }
 
     // Session fork/revert (matching OpenChamber SDK)
     /**
-     * Fork a session from a specific message.
-     * Creates a new session with messages up to the specified message.
+     * Fork a session from a specific message. Creates a new session with messages up to the
+     * specified message.
      * @param sessionId The session to fork from
      * @param messageId Optional message ID to fork from (null = current state)
      * @return The new forked session
      */
-    suspend fun forkSession(
-        sessionId: String,
-        messageId: String? = null
-    ): Result<Session> = safeCallNoRetry("forkSession") {
-        post("session/$sessionId/fork") {
-            contentType(ContentType.Application.Json)
-            setBody(ForkSessionRequest(messageID = messageId))
-        }.body()
-    }
-    
+    suspend fun forkSession(sessionId: String, messageId: String? = null): Result<Session> =
+            safeCallNoRetry("forkSession") {
+                post("session/$sessionId/fork") {
+                            contentType(ContentType.Application.Json)
+                            setBody(ForkSessionRequest(messageID = messageId))
+                        }
+                        .body()
+            }
+
     /**
-     * Revert a session to a specific message.
-     * Messages after the specified message are hidden but not deleted.
+     * Revert a session to a specific message. Messages after the specified message are hidden but
+     * not deleted.
      * @param sessionId The session to revert
      * @param messageId The message ID to revert to
      * @param partId Optional part ID for partial revert
      * @return The updated session with revert state
      */
     suspend fun revertSession(
-        sessionId: String,
-        messageId: String,
-        partId: String? = null
-    ): Result<Session> = safeCallNoRetry("revertSession") {
-        post("session/$sessionId/revert") {
-            contentType(ContentType.Application.Json)
-            setBody(RevertSessionRequest(messageID = messageId, partID = partId))
-        }.body()
-    }
-    
+            sessionId: String,
+            messageId: String,
+            partId: String? = null
+    ): Result<Session> =
+            safeCallNoRetry("revertSession") {
+                post("session/$sessionId/revert") {
+                            contentType(ContentType.Application.Json)
+                            setBody(RevertSessionRequest(messageID = messageId, partID = partId))
+                        }
+                        .body()
+            }
+
     /**
      * Unrevert a session - restore all hidden messages.
      * @param sessionId The session to unrevert
      * @return The updated session without revert state
      */
-    suspend fun unrevertSession(sessionId: String): Result<Session> = safeCallNoRetry("unrevertSession") {
-        post("session/$sessionId/unrevert").body()
-    }
-    
-    /**
-     * Update session title.
-     */
-    suspend fun updateSession(sessionId: String, title: String): Result<Session> = safeCallNoRetry("updateSession") {
-        post("session/$sessionId") {
-            contentType(ContentType.Application.Json)
-            setBody(mapOf("title" to title))
-        }.body()
-    }
-    
-    /**
-     * Get session status for all sessions (idle/busy/retry).
-     */
-    suspend fun getSessionStatus(): Result<Map<String, SessionStatusInfo>> = safeCall("getSessionStatus") {
-        get("session/status").body()
-    }
+    suspend fun unrevertSession(sessionId: String): Result<Session> =
+            safeCallNoRetry("unrevertSession") { post("session/$sessionId/unrevert").body() }
+
+    /** Update session title. */
+    suspend fun updateSession(sessionId: String, title: String): Result<Session> =
+            safeCallNoRetry("updateSession") {
+                post("session/$sessionId") {
+                            contentType(ContentType.Application.Json)
+                            setBody(mapOf("title" to title))
+                        }
+                        .body()
+            }
+
+    /** Get session status for all sessions (idle/busy/retry). */
+    suspend fun getSessionStatus(): Result<Map<String, SessionStatusInfo>> =
+            safeCall("getSessionStatus") { get("session/status").body() }
 
     // Config
-    suspend fun getProviders(): Result<List<Provider>> = safeCall("getProviders") {
-        val response: ProvidersResponse = get("config/providers").body()
-        response.providers
-    }
+    suspend fun getProviders(): Result<List<Provider>> =
+            safeCall("getProviders") {
+                val response: ProvidersResponse = get("config/providers").body()
+                response.providers
+            }
 
-    suspend fun getModes(): Result<List<Mode>> = safeCall("getModes") {
-        val config: ConfigResponse = get("config").body()
-        config.modes
-    }
-    
-    suspend fun getConfig(): Result<ConfigResponse> = safeCall("getConfig") {
-        get("config").body()
-    }
-    
+    suspend fun getModes(): Result<List<Mode>> =
+            safeCall("getModes") {
+                val config: ConfigResponse = get("config").body()
+                config.modes
+            }
+
+    suspend fun getConfig(): Result<ConfigResponse> = safeCall("getConfig") { get("config").body() }
+
     // Provider info (from /provider endpoint - different from /config/providers)
-    suspend fun getProviderInfo(): Result<ProviderResponse> = safeCall("getProviderInfo") {
-        get("provider").body()
-    }
-    
-    suspend fun getProvidersConfig(): Result<ProvidersConfig> = safeCall("getProvidersConfig") {
-        get("config/providers").body()
-    }
-    
+    suspend fun getProviderInfo(): Result<ProviderResponse> =
+            safeCall("getProviderInfo") { get("provider").body() }
+
+    suspend fun getProvidersConfig(): Result<ProvidersConfig> =
+            safeCall("getProvidersConfig") { get("config/providers").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // OAUTH / AUTHENTICATION (Priority 1.1, 1.2)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Get available authentication methods for a provider.
      * @param providerId The provider ID (e.g., "anthropic", "openai")
      * @return List of authentication methods (api_key, oauth, etc.)
      */
-    suspend fun getProviderAuthMethods(providerId: String): Result<List<ProviderAuthMethod>> = safeCall("getProviderAuthMethods") {
-        get("provider/$providerId/auth").body()
-    }
-    
+    suspend fun getProviderAuthMethods(providerId: String): Result<List<ProviderAuthMethod>> =
+            safeCall("getProviderAuthMethods") { get("provider/$providerId/auth").body() }
+
     /**
      * Initiate OAuth authorization flow for a provider.
      * @param providerId The provider ID
      * @return Authorization URL and state for OAuth redirect
      */
-    suspend fun authorizeProvider(providerId: String): Result<ProviderAuthAuthorization> = safeCallNoRetry("authorizeProvider") {
-        post("provider/$providerId/authorize").body()
-    }
-    
+    suspend fun authorizeProvider(providerId: String): Result<ProviderAuthAuthorization> =
+            safeCallNoRetry("authorizeProvider") { post("provider/$providerId/authorize").body() }
+
     /**
      * Handle OAuth callback after authorization.
      * @param providerId The provider ID
      * @param code OAuth authorization code
      * @param state OAuth state for verification
      */
-    suspend fun handleOAuthCallback(
-        providerId: String,
-        code: String,
-        state: String
-    ): Result<Unit> = safeCallNoRetry("handleOAuthCallback") {
-        post("provider/$providerId/callback") {
-            contentType(ContentType.Application.Json)
-            setBody(OAuthCallbackRequest(code = code, state = state))
-        }
-        Unit
-    }
-    
+    suspend fun handleOAuthCallback(providerId: String, code: String, state: String): Result<Unit> =
+            safeCallNoRetry("handleOAuthCallback") {
+                post("provider/$providerId/callback") {
+                    contentType(ContentType.Application.Json)
+                    setBody(OAuthCallbackRequest(code = code, state = state))
+                }
+                Unit
+            }
+
     /**
      * Set provider authentication credentials manually (API key).
      * @param providerId The provider ID
      * @param credentials Authentication credentials (API key, etc.)
      */
     suspend fun setProviderAuth(
-        providerId: String,
-        credentials: ProviderCredentials
-    ): Result<Unit> = safeCallNoRetry("setProviderAuth") {
-        post("provider/$providerId/auth") {
-            contentType(ContentType.Application.Json)
-            setBody(credentials)
-        }
-        Unit
-    }
-    
+            providerId: String,
+            credentials: ProviderCredentials
+    ): Result<Unit> =
+            safeCallNoRetry("setProviderAuth") {
+                post("provider/$providerId/auth") {
+                    contentType(ContentType.Application.Json)
+                    setBody(credentials)
+                }
+                Unit
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONFIG WRITE (Priority 1.3)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Update configuration settings.
      * @param update Partial configuration update
      */
-    suspend fun updateConfig(update: ConfigUpdate): Result<ConfigResponse> = safeCallNoRetry("updateConfig") {
-        patch("config") {
-            contentType(ContentType.Application.Json)
-            setBody(update)
-        }.body()
-    }
-    
+    suspend fun updateConfig(update: ConfigUpdate): Result<ConfigResponse> =
+            safeCallNoRetry("updateConfig") {
+                patch("config") {
+                            contentType(ContentType.Application.Json)
+                            setBody(update)
+                        }
+                        .body()
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // COMMAND EXECUTION (Priority 1.4, 1.5)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Execute a slash command.
      * @param sessionId Session to execute command in
@@ -381,22 +380,25 @@ class MoccaApiClient(
      * @param agent Optional agent to use
      */
     suspend fun executeCommand(
-        sessionId: String,
-        command: String,
-        arguments: String? = null,
-        agent: String? = null
-    ): Result<Unit> = safeCallNoRetry("executeCommand") {
-        post("session/$sessionId/command") {
-            contentType(ContentType.Application.Json)
-            setBody(CommandExecutionRequest(
-                command = command, 
-                arguments = arguments,
-                agent = agent
-            ))
-        }
-        Unit
-    }
-    
+            sessionId: String,
+            command: String,
+            arguments: String? = null,
+            agent: String? = null
+    ): Result<Unit> =
+            safeCallNoRetry("executeCommand") {
+                post("session/$sessionId/command") {
+                    contentType(ContentType.Application.Json)
+                    setBody(
+                            CommandExecutionRequest(
+                                    command = command,
+                                    arguments = arguments,
+                                    agent = agent
+                            )
+                    )
+                }
+                Unit
+            }
+
     /**
      * Execute a shell command directly.
      * @param sessionId Session context
@@ -404,348 +406,368 @@ class MoccaApiClient(
      * @param agent Agent to execute with
      */
     suspend fun executeShell(
-        sessionId: String,
-        command: String,
-        agent: String = "build"
-    ): Result<String> = safeCallNoRetry("executeShell") {
-        post("session/$sessionId/shell") {
-            contentType(ContentType.Application.Json)
-            setBody(ShellExecutionRequest(command = command, agent = agent))
-        }.body()
-    }
-    
+            sessionId: String,
+            command: String,
+            agent: String = "build"
+    ): Result<String> =
+        shellMutex.withLock {
+            safeCallNoRetry("executeShell") {
+                val response =
+                        post("session/$sessionId/shell") {
+                            contentType(ContentType.Application.Json)
+                            setBody(ShellExecutionRequest(command = command, agent = agent))
+                        }
+                val rawText = response.bodyAsText()
+                Napier.v("[MoccaApiClient] executeShell raw response (${rawText.length} chars)")
+
+                // Helper to extract output from a parsed JSON string
+                fun extractOutput(jsonStr: String): String? {
+                    try {
+                        val jsonObj = json.parseToJsonElement(jsonStr)
+                        val parts = jsonObj.jsonObject["parts"]?.jsonArray ?: return null
+                        // Find the last part with output (the tool result)
+                        for (i in parts.indices.reversed()) {
+                            val part = parts[i].jsonObject
+                            val state = part["state"]?.jsonObject
+                            val output = state?.get("output")?.jsonPrimitive?.contentOrNull
+                                ?: state?.get("metadata")?.jsonObject?.get("output")?.jsonPrimitive?.contentOrNull
+                            if (output != null) return output
+                        }
+                    } catch (e: Exception) {
+                        // Ignore parse errors for partial/invalid strings
+                    }
+                    return null
+                }
+
+                try {
+                    // The /session/:id/shell endpoint might return an SSE stream (lines starting with "data: ")
+                    // or a plain JSON object. We handle both cases to be robust.
+                    val lines = rawText.split('\n')
+                    val isSse = lines.any { it.trim().startsWith("data: ") }
+                    
+                    if (isSse) {
+                        for (line in lines.reversed()) {
+                            val trimmed = line.trim()
+                            if (trimmed.startsWith("data: ")) {
+                                val jsonStr = trimmed.removePrefix("data: ").trim()
+                                if (jsonStr.isEmpty() || jsonStr == "[DONE]") continue
+                                
+                                extractOutput(jsonStr)?.let {
+                                    Napier.d("[MoccaApiClient] executeShell extracted output from SSE (${it.length} chars)")
+                                    return@safeCallNoRetry it
+                                }
+                            }
+                        }
+                    } else {
+                        // Plain JSON response
+                        extractOutput(rawText)?.let {
+                            Napier.d("[MoccaApiClient] executeShell extracted output from JSON (${it.length} chars)")
+                            return@safeCallNoRetry it
+                        }
+                    }
+                    
+                    // Fallback: if no output found in SSE or plain JSON, return raw text
+                    Napier.w(
+                            "[MoccaApiClient] executeShell: Could not extract output from response, using raw text"
+                    )
+                    rawText
+                } catch (e: Exception) {
+                    // If anything fails entirely, return raw text (backwards compatibility)
+                    Napier.w(
+                            "[MoccaApiClient] executeShell: Unexpected error parsing response, using raw text: ${e.message}"
+                    )
+                    rawText
+                }
+            }
+        }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION TODO (Priority 2.1)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Get todos for a session.
      * @param sessionId Session ID
      */
-    suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> = safeCall("getSessionTodos") {
-        get("session/$sessionId/todo").body()
-    }
-    
+    suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> =
+            safeCall("getSessionTodos") { get("session/$sessionId/todo").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION SHARING (Priority 2.2)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Share a session publicly.
      * @param sessionId Session to share
      * @return Updated session with shareID
      */
-    suspend fun shareSession(sessionId: String): Result<Session> = safeCallNoRetry("shareSession") {
-        post("session/$sessionId/share").body()
-    }
-    
+    suspend fun shareSession(sessionId: String): Result<Session> =
+            safeCallNoRetry("shareSession") { post("session/$sessionId/share").body() }
+
     /**
      * Unshare a session (revoke public access).
      * @param sessionId Session to unshare
      */
-    suspend fun unshareSession(sessionId: String): Result<Session> = safeCallNoRetry("unshareSession") {
-        delete("session/$sessionId/share").body()
-    }
-    
+    suspend fun unshareSession(sessionId: String): Result<Session> =
+            safeCallNoRetry("unshareSession") { delete("session/$sessionId/share").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION SUMMARIZATION (Priority 2.3)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Summarize a session (generate title, summary).
      * @param sessionId Session to summarize
      */
-    suspend fun summarizeSession(sessionId: String): Result<Session> = safeCallNoRetry("summarizeSession") {
-        post("session/$sessionId/summarize").body()
-    }
-    
+    suspend fun summarizeSession(sessionId: String): Result<Session> =
+            safeCallNoRetry("summarizeSession") { post("session/$sessionId/summarize").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION INIT (Priority 2.4)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Initialize a session with system prompts and configuration.
      * @param sessionId Session to initialize
      * @param request Initialization parameters
      */
-    suspend fun initSession(
-        sessionId: String,
-        request: InitSessionRequest
-    ): Result<Session> = safeCallNoRetry("initSession") {
-        post("session/$sessionId/init") {
-            contentType(ContentType.Application.Json)
-            setBody(request)
-        }.body()
-    }
-    
+    suspend fun initSession(sessionId: String, request: InitSessionRequest): Result<Session> =
+            safeCallNoRetry("initSession") {
+                post("session/$sessionId/init") {
+                            contentType(ContentType.Application.Json)
+                            setBody(request)
+                        }
+                        .body()
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // PROJECT MANAGEMENT (Priority 2.5)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
-    /**
-     * List available projects.
-     */
-    suspend fun listProjects(): Result<List<Project>> = safeCall("listProjects") {
-        get("project").body()
-    }
-    
-    /**
-     * Get current active project.
-     */
-    suspend fun getCurrentProject(): Result<Project> = safeCall("getCurrentProject") {
-        get("project/current").body()
-    }
-    
+
+    /** List available projects. */
+    suspend fun listProjects(): Result<List<Project>> =
+            safeCall("listProjects") { get("project").body() }
+
+    /** Get current active project. */
+    suspend fun getCurrentProject(): Result<Project> =
+            safeCall("getCurrentProject") { get("project/current").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // DYNAMIC MCP (Priority 2.6)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Add a new MCP server dynamically.
      * @param name Server name
      * @param config Server configuration
      */
-    suspend fun addMcpServer(name: String, config: McpServerConfig): Result<Unit> = safeCallNoRetry("addMcpServer") {
-        post("mcp") {
-            contentType(ContentType.Application.Json)
-            setBody(McpConfigureRequest(name = name, config = config))
-        }
-        Unit
-    }
-    
+    suspend fun addMcpServer(name: String, config: McpServerConfig): Result<Unit> =
+            safeCallNoRetry("addMcpServer") {
+                post("mcp") {
+                    contentType(ContentType.Application.Json)
+                    setBody(McpConfigureRequest(name = name, config = config))
+                }
+                Unit
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // PATH ENDPOINT (Priority 2.8)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
-    /**
-     * Get current working directory path.
-     */
-    suspend fun getCurrentPath(): Result<PathInfo> = safeCall("getCurrentPath") {
-        get("path").body()
-    }
-    
+
+    /** Get current working directory path. */
+    suspend fun getCurrentPath(): Result<PathInfo> =
+            safeCall("getCurrentPath") { get("path").body() }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // INSTANCE DISPOSAL (Priority 2.9)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
-    /**
-     * Dispose an OpenCode instance gracefully.
-     */
-    suspend fun disposeInstance(): Result<Unit> = safeCallNoRetry("disposeInstance") {
-        post("dispose")
-        Unit
-    }
-    
+
+    /** Dispose an OpenCode instance gracefully. */
+    suspend fun disposeInstance(): Result<Unit> =
+            safeCallNoRetry("disposeInstance") {
+                post("dispose")
+                Unit
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // LOGGING ENDPOINT (Priority 2.10)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
      * Send a log entry to the server.
      * @param entry Log entry to send
      */
-    suspend fun sendLog(entry: LogEntry): Result<Unit> = safeCallNoRetry("sendLog") {
-        post("log") {
-            contentType(ContentType.Application.Json)
-            setBody(entry)
-        }
-        Unit
-    }
-    
+    suspend fun sendLog(entry: LogEntry): Result<Unit> =
+            safeCallNoRetry("sendLog") {
+                post("log") {
+                    contentType(ContentType.Application.Json)
+                    setBody(entry)
+                }
+                Unit
+            }
+
     // ═══════════════════════════════════════════════════════════════════════════════
     // FULL TOOL LIST (Priority 2.11)
     // ═══════════════════════════════════════════════════════════════════════════════
-    
+
     /**
-     * @deprecated This endpoint returns HTML, not JSON. Use [getToolIds] instead.
-     * The /tool endpoint is a frontend route, not a REST API endpoint.
-     * For tool discovery, use getToolIds() which calls /experimental/tool/ids.
-     * 
+     * @deprecated This endpoint returns HTML, not JSON. Use [getToolIds] instead. The /tool
+     * endpoint is a frontend route, not a REST API endpoint. For tool discovery, use getToolIds()
+     * which calls /experimental/tool/ids.
+     *
      * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
      */
     @Deprecated(
-        message = "The /tool endpoint returns HTML. Use getToolIds() for tool discovery.",
-        replaceWith = ReplaceWith("getToolIds()"),
-        level = DeprecationLevel.ERROR
+            message = "The /tool endpoint returns HTML. Use getToolIds() for tool discovery.",
+            replaceWith = ReplaceWith("getToolIds()"),
+            level = DeprecationLevel.ERROR
     )
-    suspend fun getTools(): Result<ToolList> = Result.failure(
-        NetworkError.ServerError(
-            statusCode = 406,
-            message = "Deprecated: /tool returns HTML. Use getToolIds() instead."
-        )
-    )
-    
+    suspend fun getTools(): Result<ToolList> =
+            Result.failure(
+                    NetworkError.ServerError(
+                            statusCode = 406,
+                            message = "Deprecated: /tool returns HTML. Use getToolIds() instead."
+                    )
+            )
+
     // Agents
-    suspend fun getAgents(): Result<List<Agent>> = safeRequest("getAgents") {
-        get("agent")
-    }
-    
+    suspend fun getAgents(): Result<List<Agent>> = safeRequest("getAgents") { get("agent") }
+
     // Tools
-    suspend fun getToolIds(): Result<List<String>> = safeRequest("getToolIds") {
-        get("experimental/tool/ids")
-    }
-    
-    suspend fun getToolSchema(id: String): Result<ToolSchema> = safeRequest("getToolSchema") {
-        get("experimental/tool/$id")
-    }
-    
+    suspend fun getToolIds(): Result<List<String>> =
+            safeRequest("getToolIds") { get("experimental/tool/ids") }
+
+    suspend fun getToolSchema(id: String): Result<ToolSchema> =
+            safeRequest("getToolSchema") { get("experimental/tool/$id") }
+
     // Slash Commands
-    suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") {
-        get("command")
-    }
-    
+    suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") { get("command") }
+
     // Formatters
-    suspend fun getFormatters(): Result<List<FormatterStatus>> = safeRequest("getFormatters") {
-        get("formatter")
-    }
-    
+    suspend fun getFormatters(): Result<List<FormatterStatus>> =
+            safeRequest("getFormatters") { get("formatter") }
+
     // LSP Status
-    suspend fun getLspStatus(): Result<List<LspStatus>> = safeRequest("getLspStatus") {
-        get("lsp")
-    }
-    
+    suspend fun getLspStatus(): Result<List<LspStatus>> = safeRequest("getLspStatus") { get("lsp") }
+
     // VCS Info
-    suspend fun getVcsInfo(): Result<VcsInfo> = safeCall("getVcsInfo") {
-        get("vcs").body()
-    }
-    
+    suspend fun getVcsInfo(): Result<VcsInfo> = safeCall("getVcsInfo") { get("vcs").body() }
+
     // Session Diffs
-    suspend fun getSessionDiffs(sessionId: String): Result<List<FileDiff>> = safeCall("getSessionDiffs") {
-        get("session/$sessionId/diff").body()
-    }
+    suspend fun getSessionDiffs(sessionId: String): Result<List<FileDiff>> =
+            safeCall("getSessionDiffs") { get("session/$sessionId/diff").body() }
 
     // Files
-    suspend fun listFiles(path: String = "."): Result<List<FileInfo>> = safeCall("listFiles") {
-        get("file") {
-            parameter("path", path.ifEmpty { "." })
-        }.body()
-    }
+    suspend fun listFiles(path: String = "."): Result<List<FileInfo>> =
+            safeCall("listFiles") { get("file") { parameter("path", path.ifEmpty { "." }) }.body() }
 
-    suspend fun getFileContent(path: String): Result<FileContent> = safeCall("getFileContent") {
-        get("file/content") {
-            parameter("path", path)
-        }.body()
-    }
-    
-    suspend fun getFileStatus(path: String): Result<FileStatus> = safeCall("getFileStatus") {
-        get("file/status") {
-            parameter("path", path)
-        }.body()
-    }
-    
+    suspend fun getFileContent(path: String): Result<FileContent> =
+            safeCall("getFileContent") { get("file/content") { parameter("path", path) }.body() }
+
+    suspend fun getFileStatus(path: String): Result<FileStatus> =
+            safeCall("getFileStatus") { get("file/status") { parameter("path", path) }.body() }
+
     /**
      * Update file content.
      * @param path Path to the file
      * @param content New file content
      * @return Result indicating success or failure
      */
-    suspend fun updateFile(path: String, content: String): Result<Unit> = safeCallNoRetry("updateFile") {
-        post("file") {
-            contentType(ContentType.Application.Json)
-            setBody(FileUpdateRequest(path = path, content = content))
-        }
-        Unit
-    }
-    
-    // Search
-    suspend fun searchText(query: String, path: String = ""): Result<List<SearchResult>> = safeCall("searchText") {
-        get("find") {
-            parameter("query", query)
-            if (path.isNotEmpty()) {
-                parameter("path", path)
+    suspend fun updateFile(path: String, content: String): Result<Unit> =
+            safeCallNoRetry("updateFile") {
+                post("file") {
+                    contentType(ContentType.Application.Json)
+                    setBody(FileUpdateRequest(path = path, content = content))
+                }
+                Unit
             }
-        }.body()
-    }
 
-    suspend fun findFiles(pattern: String): Result<List<String>> = safeCall("findFiles") {
-        get("find/file") {
-            parameter("pattern", pattern)
-        }.body()
-    }
+    // Search
+    suspend fun searchText(query: String, path: String = ""): Result<List<SearchResult>> =
+            safeCall("searchText") {
+                get("find") {
+                            parameter("query", query)
+                            if (path.isNotEmpty()) {
+                                parameter("path", path)
+                            }
+                        }
+                        .body()
+            }
 
-    suspend fun findSymbols(query: String): Result<List<SymbolResult>> = safeCall("findSymbols") {
-        get("find/symbol") {
-            parameter("query", query)
-        }.body()
-    }
+    suspend fun findFiles(pattern: String): Result<List<String>> =
+            safeCall("findFiles") { get("find/file") { parameter("pattern", pattern) }.body() }
+
+    suspend fun findSymbols(query: String): Result<List<SymbolResult>> =
+            safeCall("findSymbols") { get("find/symbol") { parameter("query", query) }.body() }
 
     // MCP Operations
-    /**
-     * Get status of all MCP servers.
-     * Returns a map of server name to McpServerStatus.
-     */
-    suspend fun getMcpStatus(directory: String? = null): Result<Map<String, McpServerStatus>> = safeRequest("getMcpStatus") {
-        get("mcp") {
-            directory?.let { parameter("directory", it) }
-        }
-    }
-    
-    /**
-     * Connect to an MCP server by name.
-     */
-    suspend fun connectMcp(name: String, directory: String? = null): Result<Unit> = safeCallNoRetry("connectMcp") {
-        post("mcp/connect") {
-            contentType(ContentType.Application.Json)
-            setBody(McpConnectRequest(name = name, directory = directory))
-        }
-        Unit
-    }
-    
-    /**
-     * Disconnect from an MCP server by name.
-     */
-    suspend fun disconnectMcp(name: String, directory: String? = null): Result<Unit> = safeCallNoRetry("disconnectMcp") {
-        post("mcp/disconnect") {
-            contentType(ContentType.Application.Json)
-            setBody(McpConnectRequest(name = name, directory = directory))
-        }
-        Unit
-    }
-    
-    /**
-     * Configure/update an MCP server.
-     */
-    suspend fun configureMcp(name: String, config: McpServerConfig): Result<Unit> = safeCallNoRetry("configureMcp") {
-        post("mcp") {
-            contentType(ContentType.Application.Json)
-            setBody(McpConfigureRequest(name = name, config = config))
-        }
-        Unit
-    }
+    /** Get status of all MCP servers. Returns a map of server name to McpServerStatus. */
+    suspend fun getMcpStatus(directory: String? = null): Result<Map<String, McpServerStatus>> =
+            safeRequest("getMcpStatus") {
+                get("mcp") { directory?.let { parameter("directory", it) } }
+            }
+
+    /** Connect to an MCP server by name. */
+    suspend fun connectMcp(name: String, directory: String? = null): Result<Unit> =
+            safeCallNoRetry("connectMcp") {
+                post("mcp/connect") {
+                    contentType(ContentType.Application.Json)
+                    setBody(McpConnectRequest(name = name, directory = directory))
+                }
+                Unit
+            }
+
+    /** Disconnect from an MCP server by name. */
+    suspend fun disconnectMcp(name: String, directory: String? = null): Result<Unit> =
+            safeCallNoRetry("disconnectMcp") {
+                post("mcp/disconnect") {
+                    contentType(ContentType.Application.Json)
+                    setBody(McpConnectRequest(name = name, directory = directory))
+                }
+                Unit
+            }
+
+    /** Configure/update an MCP server. */
+    suspend fun configureMcp(name: String, config: McpServerConfig): Result<Unit> =
+            safeCallNoRetry("configureMcp") {
+                post("mcp") {
+                    contentType(ContentType.Application.Json)
+                    setBody(McpConfigureRequest(name = name, config = config))
+                }
+                Unit
+            }
 
     // Terminal
-    suspend fun listTerminals(): Result<List<Terminal>> = safeCall("listTerminals") {
-        get("terminal").body()
-    }
+    suspend fun listTerminals(): Result<List<Terminal>> =
+            safeCall("listTerminals") { get("terminal").body() }
 
-    suspend fun createTerminal(): Result<Terminal> = safeCallNoRetry("createTerminal") {
-        post("terminal").body()
-    }
+    suspend fun createTerminal(): Result<Terminal> =
+            safeCallNoRetry("createTerminal") { post("terminal").body() }
 
-    suspend fun resizeTerminal(id: String, cols: Int, rows: Int): Result<Unit> = safeCallNoRetry("resizeTerminal") {
-        post("terminal/$id/resize") {
-            contentType(ContentType.Application.Json)
-            setBody(TerminalResizeRequest(cols, rows))
-        }
-    }
+    suspend fun resizeTerminal(id: String, cols: Int, rows: Int): Result<Unit> =
+            safeCallNoRetry("resizeTerminal") {
+                post("terminal/$id/resize") {
+                    contentType(ContentType.Application.Json)
+                    setBody(TerminalResizeRequest(cols, rows))
+                }
+            }
 
     /**
-     * Connect to a terminal via WebSocket.
-     * Uses ApiExecutor to access the current HttpClient for WebSocket connection.
+     * Connect to a terminal via WebSocket. Uses ApiExecutor to access the current HttpClient for
+     * WebSocket connection.
      */
-    suspend fun connectToTerminal(id: String, block: suspend DefaultClientWebSocketSession.() -> Unit) {
-        api.execute {
-            webSocket("terminal/$id/socket") {
-                block()
-            }
-        }
+    suspend fun connectToTerminal(
+            id: String,
+            block: suspend DefaultClientWebSocketSession.() -> Unit
+    ) {
+        api.execute { webSocket("terminal/$id/socket") { block() } }
     }
 
     // Helpers
     private suspend inline fun <reified T> safeRequest(
-        tag: String = "API",
-        retryable: Boolean = true,
-        crossinline block: suspend HttpClient.() -> HttpResponse
+            tag: String = "API",
+            retryable: Boolean = true,
+            crossinline block: suspend HttpClient.() -> HttpResponse
     ): Result<T> {
         val policy = if (retryable) retryPolicy else RetryPolicy.None
         return withRetry(policy, tag) {
@@ -755,26 +777,30 @@ class MoccaApiClient(
             // 0. Content-Type validation: Detect HTML responses (routing errors)
             val contentType = response.contentType()
             if (contentType != null) {
-                val isHtml = contentType.match(ContentType.Text.Html) ||
-                    contentType.contentType == "text" && contentType.contentSubtype == "html"
+                val isHtml =
+                        contentType.match(ContentType.Text.Html) ||
+                                contentType.contentType == "text" &&
+                                        contentType.contentSubtype == "html"
                 if (isHtml) {
                     Napier.e("$tag: Received HTML instead of JSON. Possible routing error.")
                     throw NetworkError.ServerError(
-                        statusCode = 406, // Not Acceptable
-                        message = "Routing error: Expected JSON but received HTML. " +
-                            "Endpoint may be a frontend route, not a REST API."
+                            statusCode = 406, // Not Acceptable
+                            message =
+                                    "Routing error: Expected JSON but received HTML. " +
+                                            "Endpoint may be a frontend route, not a REST API."
                     )
                 }
             }
 
             // 1. Check for non-success status code
             if (!response.status.isSuccess()) {
-                val message = try {
-                    val error = json.decodeFromString<ServerErrorResponse>(bodyText)
-                    error.message ?: error.name ?: "Server Error: ${response.status}"
-                } catch (e: Exception) {
-                    "Server Error: ${response.status}"
-                }
+                val message =
+                        try {
+                            val error = json.decodeFromString<ServerErrorResponse>(bodyText)
+                            error.message ?: error.name ?: "Server Error: ${response.status}"
+                        } catch (e: Exception) {
+                            "Server Error: ${response.status}"
+                        }
                 throw NetworkError.ServerError(response.status.value, message)
             }
 
@@ -791,8 +817,9 @@ class MoccaApiClient(
                     // If successful and has name/message, treat as error
                     if (errorResponse.name != null || errorResponse.message != null) {
                         throw NetworkError.ServerError(
-                            statusCode = response.status.value,
-                            message = errorResponse.message ?: errorResponse.name ?: "Unknown Server Error"
+                                statusCode = response.status.value,
+                                message = errorResponse.message
+                                                ?: errorResponse.name ?: "Unknown Server Error"
                         )
                     }
                     throw e // Re-throw original if it looked like an error but wasn't conclusive
@@ -801,33 +828,32 @@ class MoccaApiClient(
                     throw e
                 }
             }
-        }.mapError { error ->
+        }
+                .mapError { error -> NetworkError.from(error) }
+    }
+
+    private suspend inline fun <reified T> safeCall(
+            tag: String = "API",
+            retryable: Boolean = true,
+            crossinline block: suspend HttpClient.() -> T
+    ): Result<T> {
+        val policy = if (retryable) retryPolicy else RetryPolicy.None
+        return withRetry(policy, tag) { api.execute { block() } }.mapError { error ->
             NetworkError.from(error)
         }
     }
 
-    private suspend inline fun <reified T> safeCall(
-        tag: String = "API",
-        retryable: Boolean = true,
-        crossinline block: suspend HttpClient.() -> T
-    ): Result<T> {
-        val policy = if (retryable) retryPolicy else RetryPolicy.None
-        return withRetry(policy, tag) {
-            api.execute { block() }
-        }.mapError { error ->
-            NetworkError.from(error)
-        }
-    }
-    
     private suspend inline fun <reified T> safeCallNoRetry(
-        tag: String = "API",
-        crossinline block: suspend HttpClient.() -> T
+            tag: String = "API",
+            crossinline block: suspend HttpClient.() -> T
     ): Result<T> = safeCall(tag, retryable = false, block)
-    
-    private inline fun <T, E : Throwable> Result<T>.mapError(transform: (Throwable) -> E): Result<T> {
+
+    private inline fun <T, E : Throwable> Result<T>.mapError(
+            transform: (Throwable) -> E
+    ): Result<T> {
         return fold(
-            onSuccess = { Result.success(it) },
-            onFailure = { Result.failure(transform(it)) }
+                onSuccess = { Result.success(it) },
+                onFailure = { Result.failure(transform(it)) }
         )
     }
 }

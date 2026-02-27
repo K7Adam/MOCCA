@@ -207,7 +207,7 @@ fun ConnectionHelpInline(
             text = "Common causes:\n" +
                    "• OpenCode server is not running on your computer\n" +
                    "• Device and computer are on different networks\n" +
-                   "• Firewall blocking port 4096",
+                   "• Firewall blocking port 4242",
             style = AppTypography.bodySmall,
             color = AppColors.textSecondary
         )

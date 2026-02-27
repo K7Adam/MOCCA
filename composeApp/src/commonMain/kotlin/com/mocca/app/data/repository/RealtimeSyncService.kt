@@ -1,9 +1,26 @@
 package com.mocca.app.data.repository
 
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.datetime.Clock
+import com.mocca.app.domain.model.*
+import com.mocca.app.api.*
+import com.mocca.app.data.local.*
 
 /**
  * Service for SILENT background synchronization of data that doesn't have SSE events.
@@ -63,6 +80,7 @@ class RealtimeSyncService(
     // Sync configuration - 30 seconds is reasonable for non-SSE data
     private val syncIntervalMs = SYNC_INTERVAL_MS
     private var connectionObserverJob: Job? = null
+    private var sessionObserverJob: Job? = null
     
     // Internal sync state
     private val _isSyncing = MutableStateFlow(false)
@@ -107,6 +125,8 @@ class RealtimeSyncService(
         isStarted = false
         connectionObserverJob?.cancel()
         connectionObserverJob = null
+        sessionObserverJob?.cancel()
+        sessionObserverJob = null
     }
     
     /**
@@ -168,6 +188,23 @@ class RealtimeSyncService(
                     performSilentSync("connection")
                 }
             }
+        }
+        
+        sessionObserverJob?.cancel()
+        sessionObserverJob = serviceScope.launch {
+            stateCoordinator.activeSessionId
+                .filterNotNull()
+                .distinctUntilChanged()
+                .collectLatest { sessionId ->
+                    Napier.i("[RealtimeSync] Active session ID received ($sessionId) - eager silent Git sync")
+                    try {
+                        syncGitSilent()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Napier.w("[RealtimeSync] Eager Git sync failed: ${e.message}")
+                    }
+                }
         }
     }
     
@@ -303,6 +340,18 @@ class RealtimeSyncService(
     private suspend fun syncGitSilent() {
         try {
             gitRepository.refresh()
+            
+            // Also fetch full status if we have an active session
+            stateCoordinator.activeSessionId.value?.let { activeSessionId ->
+                try {
+                    gitRepository.getStatus(activeSessionId)
+                        .filter { it !is com.mocca.app.domain.model.Resource.Loading }
+                        .firstOrNull()
+                } catch (e: Exception) {
+                    Napier.w("[RealtimeSync] Full Git status sync failed: ${e.message}")
+                }
+            }
+            
             Napier.v("[RealtimeSync] Git synced (silent)")
         } catch (e: Exception) {
             Napier.w("[RealtimeSync] Git sync failed: ${e.message}")

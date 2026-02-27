@@ -119,8 +119,14 @@ object NetworkConfig {
     /** OpenCode server default port */
     const val OPENCODE_SERVER_PORT = 4242
     
-    /** Android emulator host IP */
-    const val EMULATOR_HOST_IP = "10.0.2.2"
+    /** OpenCode Server Host (formerly EMULATOR_HOST_IP) */
+    const val DEFAULT_HOST_IP = "100.73.93.117"
+
+    /** OpenCode Default Username */
+    const val DEFAULT_USERNAME = "adamk7"
+
+    /** OpenCode Default Password */
+    const val DEFAULT_PASSWORD = "znvQ1lLbZ4LDvR/ieanta+WSlXP2Mo+feK7Snf+rBZkBur8k+lPmLFDRrX2dumaf"
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CIRCUIT BREAKER

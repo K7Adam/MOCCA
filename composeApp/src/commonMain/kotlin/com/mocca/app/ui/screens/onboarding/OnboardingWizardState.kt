@@ -1,5 +1,7 @@
 package com.mocca.app.ui.screens.onboarding
 
+import com.mocca.app.api.NetworkConfig
+
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -40,8 +42,8 @@ data class OnboardingWizardState(
     
     // Manual entry (fallback)
     val manualHost: String = "",
-    val manualPort: String = "4096",
-    val manualUsername: String = "opencode",
+    val manualPort: String = "4242",
+    val manualUsername: String = NetworkConfig.DEFAULT_USERNAME,
     val manualPassword: String = "",
     
     // Credential prompt (for mDNS-discovered servers without credentials)

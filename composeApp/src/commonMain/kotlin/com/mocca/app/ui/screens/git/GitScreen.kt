@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.automirrored.filled.Undo
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.CallMerge
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -128,6 +130,7 @@ class GitScreen : Screen {
                                 GitTab.LOG -> LogTab(uiState, screenModel)
                                 GitTab.REMOTES -> RemotesTab(uiState, screenModel)
                                 GitTab.TAGS -> TagsTab(uiState, screenModel)
+                                GitTab.STASHES -> StashesTab(uiState, screenModel)
                             }
                         }
                     }
@@ -798,6 +801,18 @@ private fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 }
 
 @Composable
+fun StashesTab(uiState: GitUiState, screenModel: GitScreenModel) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(64.dp), tint = AppColors.primary)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Stashes Not Fully Implemented", fontWeight = FontWeight.Bold, color = AppColors.textSecondary)
+            Text("Counts: ${uiState.stashes.size}", color = AppColors.textSecondary.copy(alpha = 0.7f))
+        }
+    }
+}
+
+@Composable
 private fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val tags = uiState.tags
     LazyColumn(
@@ -1084,8 +1099,8 @@ private fun statusIcon(status: GitFileStatus): androidx.compose.ui.graphics.vect
         GitFileStatus.DELETED -> Icons.Default.Delete
         GitFileStatus.RENAMED -> Icons.Default.DriveFileRenameOutline
         GitFileStatus.COPIED -> Icons.Default.ContentCopy
-        GitFileStatus.UNMERGED -> Icons.Default.CallMerge
-        GitFileStatus.UNKNOWN -> Icons.Default.HelpOutline
+        GitFileStatus.UNMERGED -> Icons.AutoMirrored.Filled.CallMerge
+        GitFileStatus.UNKNOWN -> Icons.AutoMirrored.Filled.HelpOutline
     }
 }
 

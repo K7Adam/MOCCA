@@ -14,7 +14,7 @@ data class DiscoveredServer(
     val name: String,
     val host: String,
     val port: Int,
-    val username: String = "opencode",
+    val username: String = NetworkConfig.DEFAULT_USERNAME,
     val password: String = "",
     val source: DiscoverySource,
     val discoveredAt: Long = System.currentTimeMillis(),
@@ -81,8 +81,8 @@ enum class DiscoverySource {
 data class QrConnectionPayload(
     val host: String,
     val port: Int = NetworkConfig.OPENCODE_SERVER_PORT,
-    val username: String = "opencode",
-    val password: String = "",
+    val username: String = NetworkConfig.DEFAULT_USERNAME,
+    val password: String = NetworkConfig.DEFAULT_PASSWORD,
     val version: String = "1.0",
     val name: String = "OpenCode Server",
     val useHttps: Boolean = false

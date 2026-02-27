@@ -144,6 +144,8 @@ class AppStateStore(
     private val _vcsInfo = MutableStateFlow<Resource<VcsInfo>>(Resource.Loading())
     val vcsInfo: StateFlow<Resource<VcsInfo>> = _vcsInfo.asStateFlow()
     
+    val gitStatus: StateFlow<GitStatusResponse?> = localCache.observeGitStatus()
+    
     // ═══════════════════════════════════════════════════════════════════════════════
     // USER PREFERENCES - Reactive from PreferencesManager
     // ═══════════════════════════════════════════════════════════════════════════════

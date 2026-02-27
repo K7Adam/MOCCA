@@ -1,5 +1,7 @@
 package com.mocca.app.api
 
+import com.mocca.app.api.NetworkConfig
+
 import android.os.Build
 import io.ktor.client.engine.*
 import io.ktor.client.engine.okhttp.*
@@ -44,7 +46,7 @@ fun isEmulator(): Boolean {
 
 /**
  * Platform-specific default host for connecting to OpenCode server.
- * - Android emulator uses 10.0.2.2 to reach host machine's localhost.
+ * - Android emulator uses NetworkConfig.DEFAULT_HOST_IP.
  * - Physical devices default to empty string, prompting user to configure Tailscale IP.
  */
-actual fun getPlatformDefaultHost(): String = if (isEmulator()) "10.0.2.2" else ""
+actual fun getPlatformDefaultHost(): String = if (isEmulator()) NetworkConfig.DEFAULT_HOST_IP else ""

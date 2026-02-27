@@ -642,7 +642,7 @@ class SettingsScreenModel(
             id = now.toString(),
             name = "New Server",
             host = "",
-            port = 4096,
+            port = 4242,
             isActive = false
         )
         _state.value = _state.value.copy(editingServer = newServer)

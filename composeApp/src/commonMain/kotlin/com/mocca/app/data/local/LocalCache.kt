@@ -103,6 +103,7 @@ interface LocalCache {
     
     // Git Status (in-memory cache, not persisted to DB)
     fun getGitStatus(): GitStatusResponse?
+    fun observeGitStatus(): kotlinx.coroutines.flow.StateFlow<GitStatusResponse?>
     fun saveGitStatus(status: GitStatusResponse)
     fun clearGitStatus()
 }
