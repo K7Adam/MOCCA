@@ -139,4 +139,63 @@ class ConfigRepository(
             }
         )
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // GLOBAL CONFIG (GET/PATCH /global/config)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Get global application config from /global/config.
+     * Includes autoshare, autoupdate, telemetry, and experimental flags.
+     */
+    fun getGlobalConfig(): Flow<Resource<GlobalAppConfig>> = flow {
+        emit(Resource.Loading())
+        apiClient.getGlobalConfig().fold(
+            onSuccess = { config ->
+                Napier.i { "Global config loaded" }
+                emit(Resource.Success(config))
+            },
+            onFailure = { error ->
+                Napier.e("Failed to fetch global config", error)
+                emit(Resource.Error(error.message ?: "Failed to fetch global config"))
+            }
+        )
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * Update global application config (autoshare, autoupdate, telemetry, experimental flags).
+     */
+    suspend fun updateGlobalConfig(update: AppConfigUpdate): Resource<GlobalAppConfig> = withContext(Dispatchers.IO) {
+        apiClient.updateGlobalConfig(update).fold(
+            onSuccess = { config ->
+                Napier.i { "Global config updated" }
+                Resource.Success(config)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to update global config", error)
+                Resource.Error(error.message ?: "Failed to update global config")
+            }
+        )
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PROVIDER AUTH REMOVAL (Priority 1.4)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Remove stored authentication credentials for a provider.
+     */
+    suspend fun deleteProviderAuth(providerId: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        apiClient.deleteProviderAuth(providerId).fold(
+            onSuccess = {
+                Napier.i("Provider auth removed for $providerId")
+                Resource.Success(Unit)
+            },
+            onFailure = { error ->
+                Napier.e("Failed to remove auth for $providerId", error)
+                Resource.Error(error.message ?: "Failed to remove auth")
+            }
+        )
+    }
 }
+

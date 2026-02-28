@@ -45,6 +45,7 @@ import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
+import com.mocca.app.ui.screens.terminal.TerminalScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import org.koin.core.parameter.parametersOf
@@ -295,8 +296,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             onGitClick = { navigator.push(GitScreen()) },
                             onFilesClick = { navigator.push(FilesScreen()) },
                             onSkillsClick = { },
-                            onSkillClick = { }
-                            // NOTE: No onRefreshAll - SSE drives all live state
+                            onSkillClick = { },
+                            onTerminalClick = { navigator.push(TerminalScreen()) }
                         )
                     },
                     panelState = panelState.state,
@@ -329,6 +330,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Uses backdrop + luminance for TRUE liquid glass with dynamic adaptation
             // Nav row is ALWAYS visible; only chat input auto-hides on scroll
             val inputText by chatScreenModel.inputText.collectAsState()
+            val shellMode by chatScreenModel.shellMode.collectAsState()
             
             // Chat input auto-hides when scrolling up (reading older messages)
             // Nav row stays visible at all times on all screens
@@ -372,6 +374,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 commands = chatState.commands,
                 onCommandSelected = { cmd -> chatScreenModel.executeCommand(cmd) },
                 onModeSelectedForMention = { mode -> chatScreenModel.selectMode(mode.id) },
+                shellMode = shellMode,
+                onShellModeToggle = { chatScreenModel.toggleShellMode() },
+                planMode = chatState.isPlanMode,
+                onPlanModeToggle = { chatScreenModel.togglePlanMode() },
+                onHistoryUp = { chatScreenModel.navigateHistoryUp() },
+                onHistoryDown = { chatScreenModel.navigateHistoryDown() },
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .navigationBarsPadding()

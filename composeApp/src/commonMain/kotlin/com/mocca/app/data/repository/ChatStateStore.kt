@@ -4,8 +4,10 @@ import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.*
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.datetime.Clock
+
 
 /**
  * Specialized state store for chat screen state.
@@ -98,6 +100,10 @@ class ChatStateStore(
     
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _sessionDisposed = MutableStateFlow<String?>(null)
+    /** Non-null when a server.instance.disposed or global.disposed event was received; contains the reason string. */
+    val sessionDisposed: StateFlow<String?> = _sessionDisposed.asStateFlow()
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // STREAMING STATE - From StateCoordinator
@@ -148,6 +154,10 @@ class ChatStateStore(
     private var messageObserverJob: Job? = null
     private var broadcastObserverJob: Job? = null
     private var todoObserverJob: Job? = null
+
+    // Conflated channel: rapid reloadMessages() calls collapse to one pending reload.
+    // CONFLATED means only the latest value survives — no queue buildup, no concurrent fetches.
+    private val reloadChannel = Channel<String>(Channel.CONFLATED)
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // INITIALIZATION
@@ -156,6 +166,7 @@ class ChatStateStore(
     init {
         Napier.i("[ChatStateStore] Initialized with StateCoordinator")
         observeBroadcastEvents()
+        startReloadConsumer()
     }
     
     /**
@@ -318,6 +329,18 @@ class ChatStateStore(
                 }
             }
             
+            is ServerEvent.ServerInstanceDisposed -> {
+                Napier.w("[ChatStateStore] Server instance disposed: ${event.properties.reason}")
+                _isSessionIdle.value = true
+                _isSending.value = false
+                _sessionDisposed.value = event.properties.reason ?: "Server instance disposed"
+            }
+            is ServerEvent.GlobalDisposed -> {
+                Napier.w("[ChatStateStore] Global disposed: ${event.properties.reason}")
+                _isSessionIdle.value = true
+                _isSending.value = false
+                _sessionDisposed.value = event.properties.reason ?: "Server session ended"
+            }
             else -> { /* Other events handled elsewhere */ }
         }
     }
@@ -328,27 +351,49 @@ class ChatStateStore(
     
     /**
      * Reload messages from server.
+     * Instead of launching a coroutine directly (causing concurrent fetches), we send the sessionId
+     * to the conflated reloadChannel. Channel.CONFLATED means rapid calls collapse — only the last
+     * pending value survives — so we never have multiple concurrent getMessages() in-flight.
      */
     private fun reloadMessages(sessionId: String) {
+        // trySend on a CONFLATED channel never blocks and never fails (replaces pending value).
+        reloadChannel.trySend(sessionId)
+    }
+
+    /**
+     * Single coroutine consumer for the reload channel.
+     * Processes one reload at a time, so we can never have concurrent getMessages() calls.
+     */
+    private fun startReloadConsumer() {
         storeScope.launch {
-            Napier.i("[ChatStateStore] Fetching messages for session: $sessionId")
-            sessionRepository.getMessages(sessionId, 100).collect { resource ->
-                when (resource) {
-                    is Resource.Success -> {
-                        Napier.i("[ChatStateStore] Fetched ${resource.data.size} messages for session: $sessionId")
-                        // DB observer will update _messages
-                    }
-                    is Resource.Error -> {
-                        Napier.e("[ChatStateStore] Failed to fetch messages: ${resource.message}")
-                        // Only set error if we have no cached data
-                        if (_messages.value.isEmpty()) {
-                            _error.value = resource.message
-                            _isLoading.value = false
+            for (sessionId in reloadChannel) {
+                try {
+                    Napier.i("[ChatStateStore] Fetching messages for session: $sessionId")
+                    sessionRepository.getMessages(sessionId, 100).collect { resource ->
+                        when (resource) {
+                            is Resource.Success -> {
+                                Napier.i("[ChatStateStore] Fetched \${resource.data.size} messages for session: $sessionId")
+                                // DB observer will update _messages
+                            }
+                            is Resource.Error -> {
+                                Napier.e("[ChatStateStore] Failed to fetch messages: \${resource.message}")
+                                // Only set error if we have no cached data
+                                if (_messages.value.isEmpty()) {
+                                    _error.value = resource.message
+                                    _isLoading.value = false
+                                }
+                            }
+                            is Resource.Loading -> {
+                                // Loading state handled by DB observer
+                            }
                         }
                     }
-                    is Resource.Loading -> {
-                        // Loading state handled by DB observer
-                    }
+                } catch (e: OutOfMemoryError) {
+                    Napier.e("[ChatStateStore] OOM while fetching messages for $sessionId — skipping", e)
+                    // Don't set error state — cached messages are still shown
+                } catch (e: Exception) {
+                    if (e is CancellationException) throw e
+                    Napier.e("[ChatStateStore] Error fetching messages: \${e.message}", e)
                 }
             }
         }
@@ -437,7 +482,7 @@ class ChatStateStore(
             id = "local-$now",
             sessionId = sessionId,
             role = MessageRole.USER,
-            parts = listOf(MessagePart.Text(text)),
+            parts = listOf(MessagePart.Text(text = text)),
             createdAt = now
         )
         
@@ -484,6 +529,13 @@ class ChatStateStore(
     suspend fun approvePermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
         return sessionRepository.respondToPermission(permission.sessionId, permission.id, true).also {
+            if (it.isSuccess) stateCoordinator.dismissPermission()
+        }
+    }
+
+    suspend fun approvePermissionAlways(): Result<Boolean> {
+        val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
+        return sessionRepository.replyToPermission(permission.id, PermissionResponseType.ALWAYS).also {
             if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }
@@ -547,6 +599,7 @@ class ChatStateStore(
     // ═══════════════════════════════════════════════════════════════════════════════
     
     fun clearError() { _error.value = null }
+    fun clearDisposed() { _sessionDisposed.value = null }
     
     /**
      * Retry loading the current session.
@@ -562,6 +615,7 @@ class ChatStateStore(
         messageObserverJob?.cancel()
         broadcastObserverJob?.cancel()
         todoObserverJob?.cancel()
+        reloadChannel.close()
         storeScope.cancel()
         Napier.i("[ChatStateStore] Disposed")
     }

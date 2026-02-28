@@ -18,10 +18,16 @@ import com.mocca.app.ui.screens.git.GitDiffScreenModel
 import com.mocca.app.ui.screens.git.GitScreenModel
 import com.mocca.app.ui.screens.main.MainScreenModel
 import com.mocca.app.ui.screens.mcp.McpScreenModel
+import com.mocca.app.ui.screens.mcp.McpResourceScreenModel
 import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.sessions.SessionsScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
+import com.mocca.app.ui.screens.terminal.TerminalScreenModel
+import com.mocca.app.ui.screens.worktree.WorktreeScreenModel
+import com.mocca.app.ui.screens.sessions.CrossProjectSessionsScreenModel
+import com.mocca.app.ui.screens.skills.SkillsScreenModel
+import com.mocca.app.ui.screens.settings.FeatureFlagsScreenModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -74,6 +80,9 @@ val commonModule = module {
     singleOf(::FileRepository)
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
+    singleOf(::WorktreeRepository)
+    singleOf(::CrossProjectSessionsRepository)
+    singleOf(::SkillsRepository)
     singleOf(::SettingsRepository)
     singleOf(::PreferencesManager)
     single { ConfigRepository(get()) }
@@ -235,6 +244,7 @@ val screenModelModule = module {
             updateRepository = get(),
             settingsRepository = get(),
             configRepository = get(),
+            projectRepository = get(),
             updateNotifier = get(),
             preferencesManager = get()
         )
@@ -259,6 +269,14 @@ val screenModelModule = module {
     // MCP screen
     factory {
         McpScreenModel(
+            mcpRepository = get()
+        )
+    }
+
+    // MCP Resource screen - parameterized by server name
+    factory { params ->
+        McpResourceScreenModel(
+            serverName = params.get(),
             mcpRepository = get()
         )
     }
@@ -297,6 +315,19 @@ val screenModelModule = module {
             projectRepository = get()
         )
     }
+
+    // Terminal screen
+    factory { TerminalScreenModel(get()) }
+
+    // Worktree screen
+    factoryOf(::WorktreeScreenModel)
+    factoryOf(::CrossProjectSessionsScreenModel)
+
+    // Skills screen
+    factoryOf(::SkillsScreenModel)
+
+    // Feature flags screen
+    factoryOf(::FeatureFlagsScreenModel)
 }
 
 /**

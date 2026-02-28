@@ -22,6 +22,15 @@ class GitRepository(
 ) {
     companion object {
         private const val TAG = "GitRepository"
+        
+        /** Returns true if the shell output indicates git is not available or not in a repo. */
+        internal fun isGitFatalError(output: String): Boolean {
+            val trimmed = output.trim()
+            return trimmed.startsWith("fatal:") ||
+                trimmed.startsWith("error:") ||
+                trimmed.contains("not a git repository") ||
+                trimmed.contains("Not a git repository")
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -72,6 +81,12 @@ class GitRepository(
         // Get full status via shell
         apiClient.executeShell(sessionId, "git status --porcelain=v1").fold(
             onSuccess = { output ->
+                // Guard: treat fatal errors as a not-a-repo signal
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git status returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val staged = mutableListOf<GitFileChange>()
                 val unstaged = mutableListOf<GitFileChange>()
                 val untracked = mutableListOf<String>()
@@ -276,6 +291,11 @@ class GitRepository(
         }
         apiClient.executeShell(sessionId, "git branch -a --format='%(refname:short)|%(HEAD)|%(objectname:short)|%(upstream:short)'").fold(
             onSuccess = { output ->
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git branch returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val branches = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
                     try {
                         val parts = line.trim().removePrefix("'").removeSuffix("'").split("|")
@@ -313,6 +333,11 @@ class GitRepository(
         val branchArg = branch?.let { " $it" } ?: ""
         apiClient.executeShell(sessionId, "git log --format='%H|%h|%s|%an|%ae|%at' -n $count --skip $skip$branchArg").fold(
             onSuccess = { output ->
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git log returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val commits = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
                     try {
                         val parts = line.trim().removePrefix("'").removeSuffix("'").split("|", limit = 6)
@@ -345,6 +370,11 @@ class GitRepository(
         }
         apiClient.executeShell(sessionId, "git remote -v").fold(
             onSuccess = { output ->
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git remote returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val remotesMap = mutableMapOf<String, Pair<String?, String?>>()
                 output.lines().filter { it.isNotBlank() }.forEach { line ->
                     try {
@@ -382,6 +412,11 @@ class GitRepository(
         }
         apiClient.executeShell(sessionId, "git tag --list").fold(
             onSuccess = { output ->
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git tag returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val tags = output.lines().map { it.trim() }.filter { it.isNotBlank() }
                 Napier.d("$TAG: Parsed ${tags.size} tags")
                 emit(Resource.Success(tags))
@@ -401,6 +436,11 @@ class GitRepository(
         }
         apiClient.executeShell(sessionId, "git stash list --format='%gd|%gs'").fold(
             onSuccess = { output ->
+                if (isGitFatalError(output)) {
+                    Napier.w("$TAG: git stash returned fatal error — not a git repository")
+                    emit(Resource.Error("Not a git repository"))
+                    return@fold
+                }
                 val stashes = output.lines().filter { it.isNotBlank() }.mapNotNull { line ->
                     try {
                         val parts = line.trim().removePrefix("'").removeSuffix("'").split("|", limit = 2)

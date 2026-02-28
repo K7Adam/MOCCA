@@ -273,8 +273,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             // This is a simplified approach - in production, we might want to track part indices
             val updatedParts = existingMessage.parts.map { part ->
                 when {
-                    part is MessagePart.Text && content != null -> MessagePart.Text(content)
-                    part is MessagePart.Text && delta != null -> MessagePart.Text(part.text + delta)
+                    part is MessagePart.Text && content != null -> MessagePart.Text(text = content)
+                    part is MessagePart.Text && delta != null -> MessagePart.Text(text = part.text + delta)
                     else -> part
                 }
             }
@@ -775,7 +775,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 json.decodeFromString(ListSerializer(MessagePart.serializer()), parts)
             } catch (e: Exception) {
                 // Fallback for migration or error
-                listOf(MessagePart.Text(parts))
+                listOf(MessagePart.Text(text = parts))
             },
             createdAt = createdAt,
             model = model,

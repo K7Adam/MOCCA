@@ -3,6 +3,7 @@ package com.mocca.app.ui.screens.chat
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,7 +36,10 @@ import androidx.compose.ui.zIndex
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownColor
 import com.mikepenz.markdown.m3.markdownTypography
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import com.mocca.app.domain.model.ConnectionStatus
+import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.PermissionRequestDialog
@@ -47,13 +51,16 @@ import com.mocca.app.ui.theme.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
+import com.mocca.app.ui.screens.files.FilesScreen
+import cafe.adriel.voyager.navigator.LocalNavigator
 
 @Composable
 fun MarkdownText(
     markdown: String,
     style: TextStyle,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFileClick: ((String) -> Unit)? = null
 ) {
     val mdColor = markdownColor(
         text = color,
@@ -75,12 +82,57 @@ fun MarkdownText(
         h6 = AppTypography.labelLarge.copy(color = color, fontWeight = FontWeight.Bold)
     )
 
-    Markdown(
-        content = markdown,
-        colors = mdColor,
-        typography = mdTypography,
-        modifier = modifier
-    )
+    // Pre-process: wrap bare absolute file paths as markdown links so they become tappable
+    val processedMarkdown = remember(markdown, onFileClick) {
+        if (onFileClick == null) markdown
+        else highlightFilePaths(markdown)
+    }
+
+    if (onFileClick != null) {
+        val customUriHandler = remember(onFileClick) {
+            object : UriHandler {
+                override fun openUri(uri: String) {
+                    if (uri.startsWith("file://")) {
+                        onFileClick.invoke(uri.removePrefix("file:///").let {
+                            if (it.startsWith("/")) it else "/$it"
+                        })
+                    }
+                }
+            }
+        }
+        CompositionLocalProvider(LocalUriHandler provides customUriHandler) {
+            Markdown(
+                content = processedMarkdown,
+                colors = mdColor,
+                typography = mdTypography,
+                modifier = modifier
+            )
+        }
+    } else {
+        Markdown(
+            content = processedMarkdown,
+            colors = mdColor,
+            typography = mdTypography,
+            modifier = modifier
+        )
+    }
+}
+
+/** Regex to match bare absolute file paths like /path/to/file.ts or src/foo/bar.kt */
+private val FILE_PATH_REGEX = Regex(
+    """(?<![`\[\(\w])((?:/[\w.@:+\-]{1,}){2,}(?:\.[a-zA-Z]{1,8})|[a-zA-Z][\w.+\-]*/[\w./@:+\-]{3,}(?:\.[a-zA-Z]{1,8}))(?![\]\)])"""
+)
+
+/**
+ * Wraps bare absolute file paths in the markdown text as clickable [path](file:///path) links.
+ * Already-linked text (in []() or `backticks`) is left untouched.
+ */
+private fun highlightFilePaths(markdown: String): String {
+    return markdown.replace(FILE_PATH_REGEX) { mr ->
+        val path = mr.value
+        val url = if (path.startsWith("/")) "file://$path" else "file:///$path"
+        "[$path]($url)"
+    }
 }
 
 @Composable
@@ -292,10 +344,8 @@ fun ChatContent(
     val inputText by screenModel.inputText.collectAsState()
     val streamingText by screenModel.streamingText.collectAsState()
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
-    
-    val sessionTitle = remember(state.session) {
-        state.session?.let { it.title?.uppercase() ?: "SESSION_${it.id.take(8)}" } ?: "NEW_SESSION"
-    }
+    val editingPart by screenModel.editingPart.collectAsState()
+    val showForkDialog by screenModel.showForkDialog.collectAsState()
     
     val listState = rememberLazyListState()
     @Suppress("DEPRECATION")
@@ -303,6 +353,11 @@ fun ChatContent(
     val haptic = LocalHapticFeedback.current
     
     var showShareDialog by remember { mutableStateOf(false) }
+
+    val navigator = LocalNavigator.current
+    val onFileClick: (String) -> Unit = remember(navigator) {
+        { _ -> navigator?.push(FilesScreen()) }
+    }
     
     // Track scroll direction for dock auto-hide
     var previousScrollIndex by remember { mutableStateOf(0) }
@@ -486,6 +541,7 @@ fun ChatContent(
                 PermissionBanner(
                     permission = permission,
                     onApprove = { screenModel.approvePermission() },
+                    onApproveAlways = { screenModel.approvePermissionAlways() },
                     onDeny = { screenModel.denyPermission() },
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -497,6 +553,16 @@ fun ChatContent(
             if (state.session?.isReverted == true) {
                 RevertedSessionBanner(
                     onResume = { screenModel.unrevertSession() }
+                )
+            }
+
+            if (state.sessionDisposed) {
+                SessionDisposedBanner(
+                    reason = state.disposalReason ?: "Server session ended",
+                    onDismiss = { screenModel.dismissDisposal() },
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .zIndex(12f)
                 )
             }
             
@@ -600,10 +666,14 @@ fun ChatContent(
                             message = message,
                             isFirstInGroup = isFirstInGroup,
                             dateHeader = showDateHeader,
-                            onFork = { screenModel.forkSession(message) },
+                            onFork = { screenModel.openForkDialog() },
                             onRevert = { screenModel.revertSession(message) },
                             showTimestamps = state.showTimestamps,
-                            showTokenCounts = state.showTokenCounts
+                            showTokenCounts = state.showTokenCounts,
+                            onDelete = { screenModel.deleteMessage(message) },
+                            onDeletePart = { partId -> screenModel.deleteMessagePart(message, partId) },
+                            onEditPart = { part -> screenModel.showEditPart(message, part) },
+                            onFileClick = onFileClick
                         )
                     }
                 }
@@ -611,6 +681,20 @@ fun ChatContent(
             
             // Permission banner is now handled by sticky PermissionBanner above
             
+            editingPart?.let { (_, part) ->
+                EditMessagePartDialog(
+                    part = part,
+                    onConfirm = { content -> screenModel.commitEditPart(content) },
+                    onDismiss = { screenModel.dismissEditPart() }
+                )
+            }
+            if (showForkDialog) {
+                ForkSessionDialog(
+                    messages = aggregatedMessages,
+                    onFork = { message -> screenModel.forkSession(message) },
+                    onDismiss = { screenModel.dismissForkDialog() }
+                )
+            }
             state.pendingQuestion?.let { question ->
                 QuestionDialog(
                     request = question,
@@ -703,6 +787,58 @@ private fun TerminalErrorOverlay(
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.white)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SessionDisposedBanner(
+    reason: String,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(AppColors.warning.copy(alpha = 0.15f))
+            .border(AppSpacing.borderThin, AppColors.warning.copy(alpha = 0.4f))
+            .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                Icons.Filled.Warning,
+                contentDescription = null,
+                tint = AppColors.warning,
+                modifier = Modifier.size(14.dp)
+            )
+            Column {
+                Text(
+                    text = "SESSION DISPOSED",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.warning,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+                Text(
+                    text = reason,
+                    style = AppTypography.labelExtraSmall,
+                    color = AppColors.textSecondary
+                )
+            }
+        }
+        IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+            Icon(
+                Icons.Filled.Close,
+                contentDescription = "Dismiss",
+                tint = AppColors.textTertiary,
+                modifier = Modifier.size(14.dp)
+            )
         }
     }
 }

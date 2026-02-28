@@ -2,7 +2,9 @@ package com.mocca.app.ui.components.chat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -21,43 +24,70 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
-import com.mocca.app.ui.components.glass.glassFloating
 import com.mocca.app.ui.components.glass.GlassDefaults
+import com.mocca.app.ui.components.glass.glassFloating
 import com.mocca.app.ui.components.modern.MoccaCompactButton
 import com.mocca.app.ui.components.modern.MoccaTextButton
 import com.mocca.app.ui.theme.*
+import kotlinx.coroutines.delay
+
+private const val AUTO_APPROVE_TTL_SECONDS = 30
 
 /**
- * Sticky, glass-morphic permission banner with amber highlight.
- * 
+ * Sticky, glass-morphic permission banner with amber highlight and auto-approve countdown.
+ *
  * Features:
  * - Positioned at top of chat content (sticky)
  * - Glass-morphic styling with amber/warning accent
  * - Collapsible to show just the permission type when not focused
- * - Prominent APPROVE/DENY actions
- * 
- * @param permission The permission request to display
- * @param onApprove Callback when approve button is clicked
- * @param onDeny Callback when deny button is clicked
- * @param modifier Modifier for styling
+ * - Prominent ALLOW / ALWAYS / DENY actions
+ * - Auto-approves after [AUTO_APPROVE_TTL_SECONDS] seconds with animated countdown ring
+ *
+ * @param permission      The permission request to display
+ * @param onApprove       Callback when ALLOW button is clicked (one-time approval)
+ * @param onApproveAlways Callback when ALWAYS button is clicked (persistent approval)
+ * @param onDeny          Callback when DENY button is clicked
+ * @param modifier        Modifier for styling
  */
 @Composable
 fun PermissionBanner(
     permission: PermissionRequest,
     onApprove: () -> Unit,
+    onApproveAlways: () -> Unit,
     onDeny: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(true) }
-    
+    var secondsRemaining by remember(permission.id) { mutableIntStateOf(AUTO_APPROVE_TTL_SECONDS) }
+    var timerActive by remember(permission.id) { mutableStateOf(true) }
+
     // Amber/warning colors for permission highlight
-    val amberAccent = Color(0xFFFFB300)  // Amber
-    val amberBg = Color(0x33FFB300)      // Amber with transparency
-    
+    val amberAccent = Color(0xFFFFB300)
+    val amberBg = Color(0x33FFB300)
+
+    // Countdown: auto-approve after TTL expires
+    LaunchedEffect(permission.id) {
+        while (secondsRemaining > 0 && timerActive) {
+            delay(1000L)
+            secondsRemaining--
+        }
+        if (timerActive && secondsRemaining == 0) {
+            onApprove()
+        }
+    }
+
+    // Animated progress for the countdown ring (1.0 → 0.0)
+    val countdownProgress by animateFloatAsState(
+        targetValue = if (timerActive) secondsRemaining.toFloat() / AUTO_APPROVE_TTL_SECONDS else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "countdown_progress"
+    )
+
     AnimatedVisibility(
         visible = true,
         enter = expandVertically(
@@ -108,7 +138,7 @@ fun PermissionBanner(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Pulsing warning indicator
+                        // Warning indicator
                         Box(
                             modifier = Modifier
                                 .size(20.dp)
@@ -123,8 +153,8 @@ fun PermissionBanner(
                                 modifier = Modifier.size(14.dp)
                             )
                         }
-                        
-                        // Permission type
+
+                        // Permission type label
                         Text(
                             text = permission.permission.uppercase(),
                             style = AppTypography.labelSmall,
@@ -135,16 +165,44 @@ fun PermissionBanner(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
-                    // Right: Expand/collapse icon
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = amberAccent,
-                        modifier = Modifier.size(18.dp)
-                    )
+
+                    // Right: countdown ring + expand/collapse icon
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    ) {
+                        // Countdown ring (only while timer is running)
+                        if (timerActive) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    progress = { countdownProgress },
+                                    modifier = Modifier.fillMaxSize(),
+                                    color = amberAccent,
+                                    trackColor = amberAccent.copy(alpha = 0.2f),
+                                    strokeWidth = 2.dp,
+                                    strokeCap = StrokeCap.Round
+                                )
+                                Text(
+                                    text = secondsRemaining.toString(),
+                                    style = AppTypography.labelExtraSmall,
+                                    color = amberAccent,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "Collapse" else "Expand",
+                            tint = amberAccent,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
-                
+
                 // ═══════════════ EXPANDED CONTENT ═══════════════
                 AnimatedVisibility(
                     visible = isExpanded,
@@ -168,9 +226,9 @@ fun PermissionBanner(
                                 .height(1.dp)
                                 .background(amberAccent.copy(alpha = 0.2f))
                         )
-                        
+
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
-                        
+
                         // Pattern preview (if available)
                         if (permission.patterns.isNotEmpty()) {
                             Text(
@@ -179,7 +237,7 @@ fun PermissionBanner(
                                 color = AppColors.textTertiary
                             )
                             Spacer(modifier = Modifier.height(2.dp))
-                            
+
                             Text(
                                 text = permission.patterns.take(3).joinToString("\n"),
                                 style = AppTypography.labelSmall,
@@ -187,7 +245,7 @@ fun PermissionBanner(
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis
                             )
-                            
+
                             if (permission.patterns.size > 3) {
                                 Text(
                                     text = "+ ${permission.patterns.size - 3} more",
@@ -195,27 +253,45 @@ fun PermissionBanner(
                                     color = AppColors.textTertiary
                                 )
                             }
-                            
+
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                         }
-                        
-                        // Action buttons
+
+                        // Action buttons: [ALLOW] [ALWAYS] ... [DENY]
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // APPROVE button (primary)
+                            // ALLOW once (primary, stops timer)
                             MoccaCompactButton(
                                 text = "ALLOW",
-                                onClick = onApprove,
+                                onClick = {
+                                    timerActive = false
+                                    onApprove()
+                                },
                                 modifier = Modifier.weight(1f)
                             )
-                            
-                            // DENY button (secondary)
+
+                            // ALWAYS allow (secondary accent, stops timer)
+                            MoccaCompactButton(
+                                text = "ALWAYS",
+                                onClick = {
+                                    timerActive = false
+                                    onApproveAlways()
+                                },
+                                modifier = Modifier.weight(1f),
+                                backgroundColor = amberAccent,
+                                textColor = AppColors.background
+                            )
+
+                            // DENY (text button in error color, stops timer)
                             MoccaTextButton(
                                 text = "DENY",
-                                onClick = onDeny,
+                                onClick = {
+                                    timerActive = false
+                                    onDeny()
+                                },
                                 textColor = AppColors.error
                             )
                         }

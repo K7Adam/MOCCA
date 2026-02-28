@@ -115,6 +115,7 @@ class GitScreen : Screen {
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                         when {
                             uiState.isLoading -> LoadingScreen()
+                            uiState.isNotGitRepo -> NotGitRepoScreen()
                             uiState.error != null -> ErrorScreen(
                                 message = uiState.error!!,
                                 onRetry = {
@@ -1127,5 +1128,33 @@ private fun formatRelativeTime(epochMillis: Long): String {
         weeks < 5 -> "${weeks}w ago"
         months < 12 -> "${months}mo ago"
         else -> "${years}y ago"
+    }
+}
+@Composable
+private fun NotGitRepoScreen() {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.FolderOff,
+                contentDescription = null,
+                tint = AppColors.white.copy(alpha = 0.2f),
+                modifier = Modifier.size(64.dp)
+            )
+            Text(
+                text = "NOT A GIT REPOSITORY",
+                style = AppTypography.headlineSmall,
+                color = AppColors.white.copy(alpha = 0.4f),
+                letterSpacing = 1.sp
+            )
+            Text(
+                text = "The server's working directory is not\nunder version control.",
+                style = AppTypography.bodySmall,
+                color = AppColors.white.copy(alpha = 0.25f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
     }
 }

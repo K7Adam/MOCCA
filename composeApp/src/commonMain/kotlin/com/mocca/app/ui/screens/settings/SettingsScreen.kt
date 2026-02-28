@@ -211,6 +211,14 @@ class SettingsScreen : Screen {
                                             enabled = manualKey.isNotBlank(),
                                             height = AppSpacing.buttonHeightSmall
                                         )
+                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                        MoccaCompactButton(
+                                            text = "REMOVE AUTH",
+                                            onClick = { screenModel.removeProviderAuth(providerId) },
+                                            height = AppSpacing.buttonHeightSmall,
+                                            backgroundColor = AppColors.error.copy(alpha = 0.15f),
+                                            textColor = AppColors.error
+                                        )
                                     }
                                 }
                             }
@@ -300,6 +308,71 @@ class SettingsScreen : Screen {
                     }
                 }
                 
+                // ═══════════════════════════════════════════════════════════════════════════
+                // PROJECT SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+                state.currentProject?.let { project ->
+                    item {
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
+                        Text(
+                            text = "PROJECT",
+                            color = AppColors.textSecondary,
+                            style = AppTypography.labelSmall
+                        )
+                    }
+                    item {
+                        ModuleCard(title = "CURRENT PROJECT") {
+                            Column(modifier = Modifier.padding(AppSpacing.sm)) {
+                                ModuleRowItem(
+                                    title = "NAME",
+                                    subtitle = project.displayName,
+                                    isEnabled = true,
+                                    showToggle = false
+                                )
+                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                Text(
+                                    text = "PROJECT PATH",
+                                    color = AppColors.textSecondary,
+                                    style = AppTypography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = AppSpacing.sm)
+                                )
+                                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                                OutlinedTextField(
+                                    value = state.editingProjectPath,
+                                    onValueChange = { screenModel.setEditingProjectPath(it) },
+                                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Uri,
+                                        imeAction = ImeAction.Done
+                                    ),
+                                    keyboardActions = KeyboardActions(
+                                        onDone = { screenModel.saveProjectPath() }
+                                    ),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = AppColors.accentGreen,
+                                        unfocusedBorderColor = AppColors.border,
+                                        cursorColor = AppColors.accentGreen,
+                                        focusedContainerColor = AppColors.background,
+                                        unfocusedContainerColor = AppColors.background
+                                    ),
+                                    shape = AppShapes.medium
+                                )
+                                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                MoccaCompactButton(
+                                    text = "UPDATE PATH",
+                                    onClick = { screenModel.saveProjectPath() },
+                                    enabled = state.editingProjectPath.isNotBlank() &&
+                                        state.editingProjectPath != (project.path ?: project.directory ?: ""),
+                                    height = AppSpacing.buttonHeightSmall
+                                )
+                            }
+                        }
+                    }
+                }
                 // Server Info Section (when connected)
                 state.serverVersion?.let { version ->
                     item {
@@ -786,6 +859,64 @@ class SettingsScreen : Screen {
                         )
                     }
                 }
+                // ═══════════════════════════════════════════════════════════════════════════
+                // SKILLS SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "SKILLS",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+
+                item {
+                    ModuleCard(title = "SERVER SKILLS") {
+                        Text(
+                            text = "View agent skills registered on the OpenCode server.",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.textSecondary
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        MoccaButton(
+                            text = "BROWSE SKILLS",
+                            onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
+                            height = AppSpacing.buttonHeightCompact
+                        )
+                    }
+                }
+
+                // ═══════════════════════════════════════════════════════════════════════════
+                // EXPERIMENTAL SECTION
+                // ═══════════════════════════════════════════════════════════════════════════
+
+                item {
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    Text(
+                        text = "EXPERIMENTAL",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                }
+
+                item {
+                    ModuleCard(title = "FEATURE FLAGS") {
+                        Text(
+                            text = "Manage server-wide experimental feature flags and global config options.",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.textSecondary
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        MoccaButton(
+                            text = "MANAGE FLAGS",
+                            onClick = { navigator.push(FeatureFlagsScreen) },
+                            height = AppSpacing.buttonHeightCompact
+                        )
+                    }
+                }
+
             }
         
             // Edit Server Dialog (Overlay)

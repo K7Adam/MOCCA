@@ -91,6 +91,12 @@ suspend fun <T> withRetry(
                 Napier.d("[$tag] Cancelled")
                 throw e
             }
+            // OutOfMemoryError must never be retried — each retry attempt allocates another
+            // large buffer and makes heap exhaustion worse. Propagate immediately.
+            if (e is OutOfMemoryError) {
+                Napier.e("[$tag] OutOfMemoryError — not retrying", e)
+                return Result.failure(e)
+            }
             
             lastException = e
             

@@ -201,3 +201,55 @@ data class McpServerInfo(
  * MCP state for the entire app - maps server names to their status.
  */
 typealias McpStatusMap = Map<String, McpServerStatus>
+
+/**
+ * Request to start MCP OAuth flow (POST /mcp/:name/auth).
+ */
+@Serializable
+@Immutable
+data class McpAuthRequest(
+    val redirectUri: String? = null
+)
+
+/**
+ * Request for MCP OAuth callback (POST /mcp/:name/auth/callback).
+ */
+@Serializable
+@Immutable
+data class McpAuthCallbackRequest(
+    val code: String,
+    val state: String? = null
+)
+
+/**
+ * MCP OAuth state for UI (NEEDS_AUTH or NEEDS_CLIENT_REGISTRATION flow).
+ */
+@Immutable
+data class McpOAuthState(
+    val serverName: String,
+    val authUrl: String? = null,
+    val isInProgress: Boolean = false,
+    val error: String? = null
+)
+
+/**
+ * Request to add a new MCP server (POST /mcp).
+ */
+@Serializable
+@Immutable
+data class McpAddServerRequest(
+    val name: String,
+    val config: McpServerConfig
+)
+
+/**
+ * Content returned when reading an MCP resource (GET /mcp/:name/resource/:uri).
+ */
+@Serializable
+@Immutable
+data class McpResourceContent(
+    val uri: String,
+    val mimeType: String? = null,
+    val text: String? = null,
+    val blob: String? = null
+)

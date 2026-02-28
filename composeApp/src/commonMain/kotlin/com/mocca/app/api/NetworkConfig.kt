@@ -62,8 +62,8 @@ object NetworkConfig {
     /** Event deduplication TTL (1 minute) */
     const val EVENT_DEDUP_TTL_MS = 60_000L
     
-    /** Streaming text buffer max size before forced flush */
-    const val STREAMING_TEXT_MAX_SIZE = 100_000
+    /** Streaming text buffer max size before forced flush (OOM FIX: reduced from 100K→50K) */
+    const val STREAMING_TEXT_MAX_SIZE = 50_000
     
     // ═══════════════════════════════════════════════════════════════════════════════
     // CONNECTION QUALITY THRESHOLDS

@@ -57,9 +57,9 @@ class MoccaSseClient(
                 Napier.i(">>> Starting to collect from incoming channel...")
                 
                 this.incoming
-                    .buffer(100)
+                    .buffer(32)  // OOM FIX: Reduced from 100→32 to limit SSE buffer memory
                     .collect { sseEvent ->
-                    Napier.i(">>> SSE Event received: id=${sseEvent.id}, event=${sseEvent.event}, data length=${sseEvent.data?.length ?: 0}")
+                    Napier.v(">>> SSE Event received: id=${sseEvent.id}, event=${sseEvent.event}, data length=${sseEvent.data?.length ?: 0}")
                     
                     val data = sseEvent.data
                     if (data.isNullOrBlank()) {
@@ -67,13 +67,13 @@ class MoccaSseClient(
                         return@collect
                     }
                     
-                    Napier.i(">>> Raw SSE Data (${data.length} bytes): ${data.take(150)}...")
+                    Napier.v(">>> Raw SSE Data (${data.length} bytes): ${data.take(150)}...")
                     
                     try {
                         val event = parseEvent(data)
-                        Napier.i(">>> Parsed event type: ${event.type}")
+                        Napier.v(">>> Parsed event type: ${event.type}")
                         send(event)
-                        Napier.i(">>> Event sent to flow successfully")
+                        Napier.v(">>> Event sent to flow successfully")
                     } catch (e: Exception) {
                         Napier.w(">>> Failed to parse SSE event: ${data.take(100)}", e)
                         send(ServerEvent.Unknown(type = "parse_error", rawData = data))
@@ -158,6 +158,48 @@ class MoccaSseClient(
             "log" -> json.decodeFromString<ServerEvent.Log>(eventData)
             "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(eventData)
             
+            
+            // New session lifecycle events
+            "session.created" -> json.decodeFromString<ServerEvent.SessionCreated>(eventData)
+            "session.status" -> json.decodeFromString<ServerEvent.SessionStatus>(eventData)
+            "session.diff" -> json.decodeFromString<ServerEvent.SessionDiff>(eventData)
+            "session.compacted" -> json.decodeFromString<ServerEvent.SessionCompacted>(eventData)
+            
+            // Todo events
+            "todo.updated" -> json.decodeFromString<ServerEvent.TodoUpdated>(eventData)
+            
+            // Question events (extended)
+            "question.rejected" -> json.decodeFromString<ServerEvent.QuestionRejected>(eventData)
+            
+            // Streaming delta events
+            "message.part.delta" -> json.decodeFromString<ServerEvent.MessagePartDelta>(eventData)
+            
+            // PTY / terminal events
+            "pty.created" -> json.decodeFromString<ServerEvent.PtyCreated>(eventData)
+            "pty.updated" -> json.decodeFromString<ServerEvent.PtyUpdated>(eventData)
+            "pty.exited" -> json.decodeFromString<ServerEvent.PtyExited>(eventData)
+            "pty.deleted" -> json.decodeFromString<ServerEvent.PtyDeleted>(eventData)
+            
+            // Project / VCS events
+            "project.updated" -> json.decodeFromString<ServerEvent.ProjectUpdated>(eventData)
+            "vcs.branch.updated" -> json.decodeFromString<ServerEvent.VcsBranchUpdated>(eventData)
+            
+            // File and LSP events (extended)
+            "file.updated" -> json.decodeFromString<ServerEvent.FileUpdated>(eventData)
+            "lsp.updated" -> json.decodeFromString<ServerEvent.LspUpdated>(eventData)
+            
+            // MCP events (extended)
+            "mcp.tools.changed" -> json.decodeFromString<ServerEvent.McpToolsChanged>(eventData)
+            "mcp.browser.open.failed" -> json.decodeFromString<ServerEvent.McpBrowserOpenFailed>(eventData)
+            
+            // Worktree events
+            "worktree.ready" -> json.decodeFromString<ServerEvent.WorktreeReady>(eventData)
+            "worktree.failed" -> json.decodeFromString<ServerEvent.WorktreeFailed>(eventData)
+            
+            // Installation and disposal events
+            "installation.update.available" -> json.decodeFromString<ServerEvent.InstallationUpdateAvailable>(eventData)
+            "server.instance.disposed" -> json.decodeFromString<ServerEvent.ServerInstanceDisposed>(eventData)
+            "global.disposed" -> json.decodeFromString<ServerEvent.GlobalDisposed>(eventData)
             // Unknown event type
             else -> {
                 Napier.d(">>> Unknown SSE event type: $type, payload present: ${payloadObject != null}")

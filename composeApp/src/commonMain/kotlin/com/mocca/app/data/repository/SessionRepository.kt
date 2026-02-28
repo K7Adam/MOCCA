@@ -21,7 +21,9 @@ class SessionRepository(
     private val apiClient: MoccaApiClient,
     private val localCache: LocalCache
 ) {
-    private val memoryCache = mutableMapOf<String, List<Message>>()
+    // OOM FIX: LRU eviction — keep max 3 sessions in memory cache
+    private val memoryCacheMaxSize = 3
+    private val memoryCache = linkedMapOf<String, List<Message>>()
     private val cacheMutex = Mutex()
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -221,7 +223,15 @@ class SessionRepository(
         // 2. DB Observer - reactive updates from local cache
         val dbJob = launch {
             localCache.observeRecentMessages(sessionId, limit).collect { messages ->
-                cacheMutex.withLock { memoryCache[sessionId] = messages }
+                cacheMutex.withLock {
+                    memoryCache[sessionId] = messages
+                    // OOM FIX: Evict oldest entries when cache exceeds max size
+                    while (memoryCache.size > memoryCacheMaxSize) {
+                        val oldestKey = memoryCache.keys.first()
+                        memoryCache.remove(oldestKey)
+                        Napier.d("[SessionRepository] Evicted session $oldestKey from memory cache (size=${memoryCache.size})")
+                    }
+                }
                 send(Resource.Success(messages))
             }
         }
@@ -331,7 +341,7 @@ class SessionRepository(
             id = "local-$now",
             sessionId = sessionId,
             role = MessageRole.USER,
-            parts = listOf(MessagePart.Text(text)),
+            parts = listOf(MessagePart.Text(text = text)),
             createdAt = now
         )
     }
@@ -456,6 +466,51 @@ class SessionRepository(
             }
         }
     }
+
+    /**
+     * Delete a single message from a session.
+     * Removes from local cache on success.
+     */
+    suspend fun deleteMessage(sessionId: String, messageId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        apiClient.deleteMessage(sessionId, messageId).also { result ->
+            result.onSuccess {
+                localCache.deleteMessage(messageId)
+                Napier.i("Message deleted: $messageId from session $sessionId")
+            }
+        }
+    }
+
+    /**
+     * Delete a single part from a message.
+     */
+    suspend fun deleteMessagePart(sessionId: String, messageId: String, partId: String): Result<Unit> = withContext(Dispatchers.IO) {
+        apiClient.deleteMessagePart(sessionId, messageId, partId).also { result ->
+            result.onSuccess {
+                Napier.i("Message part deleted: $partId from message $messageId")
+            }
+        }
+    }
+
+    /**
+     * Edit the content of a specific message part.
+     * @param sessionId The session containing the message
+     * @param messageId The message containing the part
+     * @param partId The part to patch
+     * @param content The new content
+     */
+    suspend fun patchMessagePart(
+        sessionId: String,
+        messageId: String,
+        partId: String,
+        content: String
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        apiClient.patchMessagePart(sessionId, messageId, partId, content).also { result ->
+            result.onSuccess {
+                Napier.i("Message part patched: $partId in message $messageId")
+            }
+        }
+    }
+
     
     /**
      * Update session title.
@@ -467,7 +522,7 @@ class SessionRepository(
             }
         }
     }
-    
+
     /**
      * Get session status for all sessions.
      */

@@ -12,6 +12,7 @@ import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.data.repository.PreferencesManager
+import com.mocca.app.data.repository.ProjectRepository
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.data.repository.SettingsRepository
 import com.mocca.app.data.repository.UpdateNotifier
@@ -55,6 +56,9 @@ data class SettingsState(
     val providerAuthMethods: Map<String, ImmutableList<ProviderAuthMethod>> = emptyMap(),
     val selectedProviderId: String? = null,
     val authLoading: Boolean = false,
+    // Current Project
+    val currentProject: Project? = null,
+    val editingProjectPath: String = "",
     // Server Config (fetched from /config endpoint)
     val serverConfig: ConfigResponse? = null,
     val serverDefaultProvider: String? = null,
@@ -76,7 +80,8 @@ class SettingsScreenModel(
     private val settingsRepository: SettingsRepository,
     private val configRepository: ConfigRepository,
     private val updateNotifier: UpdateNotifier,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val projectRepository: ProjectRepository
 ) : ScreenModel {
     
     private val _state = MutableStateFlow(SettingsState())
@@ -91,6 +96,7 @@ class SettingsScreenModel(
         // Load remote config if connected
         loadRemoteConfig()
         loadServerConfig()
+        loadCurrentProject()
     }
     
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -445,6 +451,24 @@ class SettingsScreenModel(
         }
     }
 
+    fun removeProviderAuth(providerId: String) {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            when (val result = configRepository.deleteProviderAuth(providerId)) {
+                is Resource.Success -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Auth removed for $providerId")
+                    // Also clear cached auth methods for this provider
+                    val updatedMethods = _state.value.providerAuthMethods - providerId
+                    _state.value = _state.value.copy(providerAuthMethods = updatedMethods.toImmutableMap())
+                }
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Failed to remove auth: ${result.message}")
+                }
+                else -> {}
+            }
+        }
+    }
+
     fun updateRemoteConfig(update: ConfigUpdate) {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, message = "Updating config...")
@@ -763,4 +787,56 @@ class SettingsScreenModel(
     fun clearMessage() {
         _state.value = _state.value.copy(message = null)
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PROJECT
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    private fun loadCurrentProject() {
+        screenModelScope.launch {
+            projectRepository.getCurrentProject().collect { resource ->
+                when (resource) {
+                    is Resource.Success -> {
+                        val project = resource.data
+                        _state.value = _state.value.copy(
+                            currentProject = project,
+                            editingProjectPath = project.path ?: project.directory ?: ""
+                        )
+                    }
+                    is Resource.Error -> {
+                        Napier.e("Failed to load current project: ${resource.message}")
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun setEditingProjectPath(path: String) {
+        _state.value = _state.value.copy(editingProjectPath = path)
+    }
+
+    fun saveProjectPath() {
+        val projectId = _state.value.currentProject?.id ?: return
+        val newPath = _state.value.editingProjectPath.trim()
+        if (newPath.isEmpty()) return
+        screenModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            when (val result = projectRepository.updateProject(projectId, newPath)) {
+                is Resource.Success -> {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        currentProject = result.data,
+                        editingProjectPath = result.data.path ?: result.data.directory ?: newPath,
+                        message = "Project path updated"
+                    )
+                }
+                is Resource.Error -> {
+                    _state.value = _state.value.copy(isLoading = false, message = "Failed to update path: ${result.message}")
+                }
+                else -> {}
+            }
+        }
+    }
+
 }

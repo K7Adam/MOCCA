@@ -33,6 +33,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.domain.model.McpServerConfig
+import com.mocca.app.domain.model.McpOAuthState
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -189,7 +190,12 @@ class McpScreen : Screen {
                     server = state.selectedServer!!,
                     onDismiss = { screenModel.closeServerDetails() },
                     onConnect = { screenModel.connect(state.selectedServer!!.name) },
-                    onDisconnect = { screenModel.disconnect(state.selectedServer!!.name) }
+                    onDisconnect = { screenModel.disconnect(state.selectedServer!!.name) },
+                    onStartOAuth = { screenModel.startOAuthFlow(state.selectedServer!!.name) },
+                    onViewResources = {
+                        screenModel.closeServerDetails()
+                        navigator.push(McpResourceScreen(state.selectedServer!!.name))
+                    }
                 )
             }
             
@@ -201,6 +207,16 @@ class McpScreen : Screen {
                         screenModel.addServer(name, config)
                         showAddDialog = false
                     }
+                )
+            }
+
+            // OAuth Dialog
+            if (state.showOAuthDialog && state.pendingOAuth != null) {
+                McpOAuthDialog(
+                    oauthState = state.pendingOAuth!!,
+                    isInProgress = state.isOAuthInProgress,
+                    onSubmitCode = { code -> screenModel.submitOAuthCode(code) },
+                    onDismiss = { screenModel.dismissOAuthDialog() }
                 )
             }
         }
@@ -373,7 +389,9 @@ private fun McpServerDetailsDialog(
     server: McpServerInfo,
     onDismiss: () -> Unit,
     onConnect: () -> Unit,
-    onDisconnect: () -> Unit
+    onDisconnect: () -> Unit,
+    onStartOAuth: () -> Unit,
+    onViewResources: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -581,30 +599,45 @@ private fun McpServerDetailsDialog(
             )
             
             // Footer actions
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(AppSpacing.md),
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
-                MoccaOutlinedButton(
-                    text = "CLOSE",
-                    onClick = onDismiss,
-                    modifier = Modifier.weight(1f)
-                )
-                
-                if (server.isConnected) {
-                    MoccaButton(
-                        text = "DISCONNECT",
-                        onClick = onDisconnect,
+                // Resources button (only when connected and has resources)
+                if (server.isConnected && server.resourceCount > 0) {
+                    MoccaOutlinedButton(
+                        text = "VIEW_RESOURCES (${server.resourceCount})",
+                        onClick = onViewResources,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
+                    MoccaOutlinedButton(
+                        text = "CLOSE",
+                        onClick = onDismiss,
                         modifier = Modifier.weight(1f)
                     )
-                } else {
-                    MoccaButton(
-                        text = "CONNECT",
-                        onClick = onConnect,
-                        modifier = Modifier.weight(1f)
-                    )
+                    if (server.isConnected) {
+                        MoccaButton(
+                            text = "DISCONNECT",
+                            onClick = onDisconnect,
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else if (server.status.needsAuth) {
+                        MoccaButton(
+                            text = "AUTHORIZE",
+                            onClick = onStartOAuth,
+                            modifier = Modifier.weight(1f)
+                        )
+                    } else {
+                        MoccaButton(
+                            text = "CONNECT",
+                            onClick = onConnect,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }

@@ -93,13 +93,15 @@ class GitScreenModel(
                         )
                         is Resource.Success -> state.copy(
                             isLoading = false,
+                            isNotGitRepo = false,
                             status = resource.data,
                             error = null
                         )
                         is Resource.Error -> state.copy(
                             isLoading = false,
+                            isNotGitRepo = resource.message == "Not a git repository",
                             status = resource.data ?: state.status,
-                            error = resource.message
+                            error = if (resource.message == "Not a git repository") null else resource.message
                         )
                     }
                 }
@@ -444,6 +446,7 @@ class GitScreenModel(
 
 data class GitUiState(
     val isLoading: Boolean = false,
+    val isNotGitRepo: Boolean = false,
     val error: String? = null,
     val warningMessage: String? = null,
     val operationResult: String? = null,

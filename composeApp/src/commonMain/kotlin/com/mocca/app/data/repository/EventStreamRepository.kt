@@ -86,12 +86,12 @@ class EventStreamRepository(
     private val _connectionStatus = MutableStateFlow<ConnectionStatus>(ConnectionStatus.Disconnected())
     val connectionStatus: StateFlow<ConnectionStatus> = _connectionStatus.asStateFlow()
     
-    // IMPROVED: Increased buffer capacity, changed overflow strategy to SUSPEND
+    // OOM FIX: Reduced buffer from 2048→64, changed overflow to DROP_OLDEST to prevent memory exhaustion
     // REPLAY=1 is CRITICAL: Ensures the last event (like SessionIdle) is not missed if collector reconnects
     private val _events = MutableSharedFlow<ServerEvent>(
         replay = 1,
-        extraBufferCapacity = 2048,
-        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.SUSPEND
+        extraBufferCapacity = 64,
+        onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST
     )
     val events: SharedFlow<ServerEvent> = _events.asSharedFlow()
     
@@ -126,7 +126,7 @@ class EventStreamRepository(
     // Backwards-compatible accessor for first pending permission
     val pendingPermission: StateFlow<PermissionRequest?> = _pendingPermissions
         .map { it.firstOrNull() }
-        .stateIn(CoroutineScope(SupervisorJob()), SharingStarted.Eagerly, null)
+        .stateIn(repositoryScope, SharingStarted.Eagerly, null)
     
     private val _pendingQuestions = MutableStateFlow<List<QuestionRequest>>(emptyList())
     val pendingQuestions: StateFlow<List<QuestionRequest>> = _pendingQuestions.asStateFlow()
@@ -134,7 +134,7 @@ class EventStreamRepository(
     // Backwards-compatible accessor for first pending question
     val pendingQuestion: StateFlow<QuestionRequest?> = _pendingQuestions
         .map { it.firstOrNull() }
-        .stateIn(CoroutineScope(SupervisorJob()), SharingStarted.Eagerly, null)
+        .stateIn(repositoryScope, SharingStarted.Eagerly, null)
     
     // Track active sessions for filtering
     private var activeSessionId: String? = null
@@ -672,7 +672,7 @@ class EventStreamRepository(
                 qualityTracker.recordLatency(System.currentTimeMillis() - lastEventTime)
                 
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
-                Napier.i(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
+                Napier.v(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
                 
                 // Handle thinking state for extended reasoning models (Claude/o1)
                 if (part.type == "thinking") {
@@ -687,6 +687,10 @@ class EventStreamRepository(
                                     _thinkingContent.value = part.text
                                 } else if (delta != null) {
                                     _thinkingContent.value += delta
+                                    // OOM FIX: Cap thinking content to prevent unbounded memory growth
+                                    if (_thinkingContent.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
+                                        _thinkingContent.value = _thinkingContent.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                                    }
                                 } else if (!part.text.isNullOrEmpty()) {
                                     _thinkingContent.value = part.text
                                 }
@@ -695,7 +699,7 @@ class EventStreamRepository(
                             if (_thinkingStartTime.value == null) {
                                 _thinkingStartTime.value = System.currentTimeMillis()
                             }
-                            Napier.i(">>> Thinking state updated")
+                            Napier.v(">>> Thinking state updated")
                         }
                     }
                 }
@@ -729,7 +733,7 @@ class EventStreamRepository(
                                 }
                             }
                             
-                            Napier.i(">>> Streaming text updated: ...${_streamingText.value.takeLast(50)}")
+                            Napier.v(">>> Streaming text updated: ...${_streamingText.value.takeLast(50)}")
                         } else {
                             Napier.w(">>> Session ID mismatch: event.sessionID=${part.sessionID}, activeSessionId=$activeSessionId")
                         }
@@ -849,7 +853,7 @@ class EventStreamRepository(
             }
             
             is ServerEvent.AgentStatus -> {
-                val status = event.properties.status
+                val status = event.properties.statusString()
                 val agentName = event.properties.agentName
                 val sessionId = event.properties.sessionID
                 Napier.i("Agent $agentName: $status${event.properties.message?.let { " - $it" } ?: ""}")
@@ -900,10 +904,31 @@ class EventStreamRepository(
             }
             
             is ServerEvent.Heartbeat -> {
-                // Heartbeat events are used to keep the connection alive
-                // No action needed, just acknowledge receipt
                 Napier.v("Heartbeat received")
             }
+            // New event types - log and ignore
+            is ServerEvent.SessionCreated -> Napier.d("Session created: ${event.properties.info.id}")
+            is ServerEvent.SessionStatus -> Napier.d("Session status: ${event.properties.sessionID}")
+            is ServerEvent.SessionDiff -> Napier.d("Session diff: ${event.properties.sessionID}")
+            is ServerEvent.SessionCompacted -> Napier.d("Session compacted: ${event.properties.sessionID}")
+            is ServerEvent.TodoUpdated -> Napier.d("Todo updated")
+            is ServerEvent.QuestionRejected -> Napier.d("Question rejected: ${event.properties.requestID}")
+            is ServerEvent.MessagePartDelta -> Napier.v("MessagePartDelta received")
+            is ServerEvent.PtyCreated -> Napier.d("PTY created: ${event.properties.ptyID}")
+            is ServerEvent.PtyUpdated -> Napier.d("PTY updated")
+            is ServerEvent.PtyExited -> Napier.d("PTY exited")
+            is ServerEvent.PtyDeleted -> Napier.d("PTY deleted")
+            is ServerEvent.ProjectUpdated -> Napier.d("Project updated")
+            is ServerEvent.VcsBranchUpdated -> Napier.d("VCS branch updated")
+            is ServerEvent.FileUpdated -> Napier.d("File updated: ${event.properties.path}")
+            is ServerEvent.LspUpdated -> Napier.d("LSP updated")
+            is ServerEvent.McpToolsChanged -> Napier.d("MCP tools changed")
+            is ServerEvent.McpBrowserOpenFailed -> Napier.d("MCP browser open failed")
+            is ServerEvent.WorktreeReady -> Napier.d("Worktree ready: ${event.properties.id}")
+            is ServerEvent.WorktreeFailed -> Napier.d("Worktree failed: ${event.properties.id}")
+            is ServerEvent.InstallationUpdateAvailable -> Napier.i("Installation update available: ${event.properties.version}")
+            is ServerEvent.ServerInstanceDisposed -> Napier.i("Server instance disposed")
+            is ServerEvent.GlobalDisposed -> Napier.i("Global disposed")
             
             is ServerEvent.Unknown -> {
                 Napier.w("Unknown event type: ${event.type}")

@@ -165,6 +165,15 @@ fun UnifiedFloatingBottomBar(
     commands: List<Command> = emptyList(),
     onCommandSelected: (Command) -> Unit = {},
     onModeSelectedForMention: (Mode) -> Unit = {},
+    // Shell mode
+    shellMode: Boolean = false,
+    onShellModeToggle: () -> Unit = {},
+    // Plan mode
+    planMode: Boolean = false,
+    onPlanModeToggle: () -> Unit = {},
+    // Prompt history navigation
+    onHistoryUp: () -> Unit = {},
+    onHistoryDown: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Determine if chat input should be shown:
@@ -296,6 +305,12 @@ fun UnifiedFloatingBottomBar(
                     commands = commands,
                     onCommandSelected = onCommandSelected,
                     onModeSelectedForMention = onModeSelectedForMention,
+                    shellMode = shellMode,
+                    onShellModeToggle = onShellModeToggle,
+                    planMode = planMode,
+                    onPlanModeToggle = onPlanModeToggle,
+                    onHistoryUp = onHistoryUp,
+                    onHistoryDown = onHistoryDown,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

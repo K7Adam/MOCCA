@@ -190,7 +190,6 @@ class GitDiffScreenModel(
 }
 
 @Immutable
-
 data class GitDiffUiState(
     val isLoading: Boolean = false,
     val error: String? = null,

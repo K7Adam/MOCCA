@@ -80,6 +80,11 @@ class MoccaApiClient(
                 Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId")
                 val response = get("session/$sessionId/message")
                 val rawText = response.bodyAsText()
+                // OOM guard: if the response is extremely large, parse cautiously.
+                // A normal 100-message response is ~200-500KB. Anything over 20MB is pathological.
+                if (rawText.length > 20_000_000) {
+                    Napier.w("[MoccaApiClient] getMessages response very large (\${rawText.length} chars) for $sessionId")
+                }
                 json.decodeFromString<List<MessageResponse>>(rawText)
             }
 
@@ -762,6 +767,204 @@ class MoccaApiClient(
     ) {
         api.execute { webSocket("terminal/$id/socket") { block() } }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // GLOBAL CONFIG (GET/PATCH /global/config)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Get global (cross-instance) application configuration. */
+    suspend fun getGlobalConfig(): Result<GlobalAppConfig> =
+        safeCall("getGlobalConfig") { get("global/config").body() }
+
+    /** Update global (cross-instance) application configuration. */
+    suspend fun updateGlobalConfig(update: AppConfigUpdate): Result<GlobalAppConfig> =
+        safeCallNoRetry("updateGlobalConfig") {
+            patch("global/config") {
+                contentType(ContentType.Application.Json)
+                setBody(update)
+            }.body()
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SKILLS
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** List available skills registered on the server. */
+    suspend fun listSkills(): Result<List<SkillInfo>> =
+        safeCall("listSkills") { get("skill").body() }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PROVIDER AUTH REMOVAL
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Remove stored authentication credentials for a provider. */
+    suspend fun deleteProviderAuth(providerId: String): Result<Unit> =
+        safeCallNoRetry("deleteProviderAuth") {
+            delete("provider/$providerId/auth")
+            Unit
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SESSION MESSAGE MANAGEMENT
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Delete a message from a session. */
+    suspend fun deleteMessage(sessionId: String, messageId: String): Result<Unit> =
+        safeCallNoRetry("deleteMessage") {
+            delete("session/$sessionId/message/$messageId")
+            Unit
+        }
+
+    /** Delete a specific part from a session message. */
+    suspend fun deleteMessagePart(sessionId: String, messageId: String, partId: String): Result<Unit> =
+        safeCallNoRetry("deleteMessagePart") {
+            delete("session/$sessionId/message/$messageId/part/$partId")
+            Unit
+        }
+
+    /** Patch/edit the content of a specific message part. */
+    suspend fun patchMessagePart(
+        sessionId: String,
+        messageId: String,
+        partId: String,
+        content: String
+    ): Result<Unit> =
+        safeCallNoRetry("patchMessagePart") {
+            patch("session/$sessionId/message/$messageId/part/$partId") {
+                contentType(ContentType.Application.Json)
+                setBody(mapOf("content" to content))
+            }
+            Unit
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // PROJECT UPDATE
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Update a project's settings. */
+    suspend fun updateProject(projectId: String, update: ProjectUpdateRequest): Result<Project> =
+        safeCallNoRetry("updateProject") {
+            patch("project/$projectId") {
+                contentType(ContentType.Application.Json)
+                setBody(update)
+            }.body()
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // TERMINAL UPDATE / DELETE
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Update terminal properties (title, dimensions). */
+    suspend fun updateTerminal(id: String, update: PtyUpdateRequest): Result<Terminal> =
+        safeCallNoRetry("updateTerminal") {
+            patch("terminal/$id") {
+                contentType(ContentType.Application.Json)
+                setBody(update)
+            }.body()
+        }
+
+    /** Delete (close) a terminal session. */
+    suspend fun deleteTerminal(id: String): Result<Unit> =
+        safeCallNoRetry("deleteTerminal") {
+            delete("terminal/$id")
+            Unit
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MCP OAUTH
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** Start MCP OAuth authentication flow for a server. */
+    suspend fun startMcpAuth(name: String, request: McpAuthRequest): Result<McpOAuthState> =
+        safeCallNoRetry("startMcpAuth") {
+            post("mcp/auth/$name") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        }
+
+    /** Handle MCP OAuth callback after authorization redirect. */
+    suspend fun handleMcpAuthCallback(
+        name: String,
+        request: McpAuthCallbackRequest
+    ): Result<Unit> =
+        safeCallNoRetry("handleMcpAuthCallback") {
+            post("mcp/auth/$name/callback") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            Unit
+        }
+
+    /** Delete an MCP server configuration. */
+    suspend fun deleteMcpServer(name: String): Result<Unit> =
+        safeCallNoRetry("deleteMcpServer") {
+            delete("mcp/$name")
+            Unit
+        }
+
+    /** Add a new MCP server using a full server configuration request. */
+    suspend fun addMcpServerConfig(request: McpAddServerRequest): Result<Unit> =
+        safeCallNoRetry("addMcpServerConfig") {
+            post("mcp") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }
+            Unit
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // WORKTREES (EXPERIMENTAL)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** List all worktrees for the current project. */
+    suspend fun listWorktrees(): Result<List<WorktreeInfo>> =
+        safeCall("listWorktrees") { get("experimental/worktree").body() }
+
+    /** Create a new worktree. */
+    suspend fun createWorktree(request: WorktreeCreateRequest): Result<WorktreeInfo> =
+        safeCallNoRetry("createWorktree") {
+            post("experimental/worktree") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        }
+
+    /** Delete a worktree by ID. */
+    suspend fun deleteWorktree(id: String): Result<Unit> =
+        safeCallNoRetry("deleteWorktree") {
+            delete("experimental/worktree/$id")
+            Unit
+        }
+
+    /** Reset a worktree to a clean state. */
+    suspend fun resetWorktree(id: String, request: WorktreeResetRequest): Result<WorktreeInfo> =
+        safeCallNoRetry("resetWorktree") {
+            post("experimental/worktree/$id/reset") {
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // CROSS-PROJECT SESSIONS (EXPERIMENTAL)
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** List sessions across all projects. */
+    suspend fun listCrossProjectSessions(): Result<List<CrossProjectSession>> =
+        safeCall("listCrossProjectSessions") { get("experimental/session").body() }
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MCP RESOURCES
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    /** List resources exposed by an MCP server. */
+    suspend fun listMcpResources(name: String): Result<List<McpResource>> =
+        safeCall("listMcpResources") { get("mcp/$name/resource").body() }
+
+    /** Read the content of a specific MCP resource. */
+    suspend fun readMcpResource(name: String, uri: String): Result<McpResourceContent> =
+        safeCall("readMcpResource") { get("mcp/$name/resource/$uri").body() }
 
     // Helpers
     private suspend inline fun <reified T> safeRequest(

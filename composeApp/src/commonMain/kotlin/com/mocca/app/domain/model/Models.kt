@@ -21,7 +21,8 @@ data class Session(
     val parentID: String? = null,
     @SerialName("parentId")
     val parentId: String? = null,
-    val summary: SessionSummary? = null,
+    // summary can be a SessionSummary object or null depending on server version
+    val summary: JsonElement? = null,
     val permission: List<SessionPermission>? = null, // Tool permissions
     val revert: SessionRevertInfo? = null, // Revert state for undo/redo
     @SerialName("shareID")
@@ -34,6 +35,12 @@ data class Session(
     val effectiveParentID: String? get() = parentID ?: parentId
     val isReverted: Boolean get() = revert != null
     val isShared: Boolean get() = shareID != null
+
+    /** Extract files count from summary JsonElement, regardless of server shape. */
+    val summaryFiles: Int get() {
+        val obj = summary as? kotlinx.serialization.json.JsonObject ?: return 0
+        return (obj["files"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.toIntOrNull() ?: 0
+    }
 }
 
 @Serializable
@@ -100,7 +107,8 @@ data class MessageInfo(
     // For assistant messages
     val cost: Double? = null,
     val tokens: TokenUsage? = null,
-    val system: List<String>? = null,
+    // system can be a string or List<String> depending on server version - use JsonElement to handle both
+    val system: JsonElement? = null,
     val error: JsonElement? = null
 ) {
     /**
@@ -359,7 +367,7 @@ data class Message(
                 role = response.info.role,
                 parts = response.parts.mapNotNull { part ->
                     when (part.type) {
-                        "text" -> part.text?.let { MessagePart.Text(it) }
+                        "text" -> part.text?.let { MessagePart.Text(id = part.id, text = it) }
                         "thinking" -> part.text?.let { 
                             MessagePart.Thinking(
                                 content = it,
@@ -406,7 +414,7 @@ data class Message(
 sealed interface MessagePart {
     @Serializable
     @Immutable
-    data class Text(val text: String) : MessagePart
+    data class Text(val id: String = "", val text: String) : MessagePart
 
     @Serializable
     @Immutable
@@ -1031,3 +1039,36 @@ data class SessionRunningState(
         }
     }
 }
+
+/**
+ * Request to update a PTY/terminal (PUT /pty/:ptyID).
+ */
+@Serializable
+@Immutable
+data class PtyUpdateRequest(
+    val title: String? = null,
+    val cols: Int? = null,
+    val rows: Int? = null
+)
+
+/**
+ * Request to update a project (PATCH /project/:projectID).
+ */
+@Serializable
+@Immutable
+data class ProjectUpdateRequest(
+    val path: String? = null
+)
+
+/**
+ * Cross-project session from GET /experimental/session.
+ */
+@Serializable
+@Immutable
+data class CrossProjectSession(
+    val id: String,
+    val projectID: String,
+    val projectPath: String? = null,
+    val title: String? = null,
+    val createdAt: Long? = null
+)

@@ -5,6 +5,8 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Server-Sent Events from OpenCode server.
@@ -183,6 +185,183 @@ sealed interface ServerEvent {
     ) : ServerEvent
     
     @Serializable
+    @SerialName("session.created")
+    @Immutable
+    data class SessionCreated(
+        override val type: String = "session.created",
+        val properties: SessionCreatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("session.status")
+    @Immutable
+    data class SessionStatus(
+        override val type: String = "session.status",
+        val properties: SessionStatusProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("session.diff")
+    @Immutable
+    data class SessionDiff(
+        override val type: String = "session.diff",
+        val properties: SessionDiffProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("session.compacted")
+    @Immutable
+    data class SessionCompacted(
+        override val type: String = "session.compacted",
+        val properties: SessionCompactedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("todo.updated")
+    @Immutable
+    data class TodoUpdated(
+        override val type: String = "todo.updated",
+        val properties: TodoUpdatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("question.rejected")
+    @Immutable
+    data class QuestionRejected(
+        override val type: String = "question.rejected",
+        val properties: QuestionRejectedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("message.part.delta")
+    @Immutable
+    data class MessagePartDelta(
+        override val type: String = "message.part.delta",
+        val properties: MessagePartDeltaProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("pty.created")
+    @Immutable
+    data class PtyCreated(
+        override val type: String = "pty.created",
+        val properties: PtyEventProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("pty.updated")
+    @Immutable
+    data class PtyUpdated(
+        override val type: String = "pty.updated",
+        val properties: PtyEventProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("pty.exited")
+    @Immutable
+    data class PtyExited(
+        override val type: String = "pty.exited",
+        val properties: PtyExitedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("pty.deleted")
+    @Immutable
+    data class PtyDeleted(
+        override val type: String = "pty.deleted",
+        val properties: PtyEventProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("project.updated")
+    @Immutable
+    data class ProjectUpdated(
+        override val type: String = "project.updated",
+        val properties: ProjectUpdatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("vcs.branch.updated")
+    @Immutable
+    data class VcsBranchUpdated(
+        override val type: String = "vcs.branch.updated",
+        val properties: VcsBranchUpdatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("file.updated")
+    @Immutable
+    data class FileUpdated(
+        override val type: String = "file.updated",
+        val properties: FileUpdatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("lsp.updated")
+    @Immutable
+    data class LspUpdated(
+        override val type: String = "lsp.updated",
+        val properties: LspUpdatedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("mcp.tools.changed")
+    @Immutable
+    data class McpToolsChanged(
+        override val type: String = "mcp.tools.changed",
+        val properties: McpToolsChangedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("mcp.browser.open.failed")
+    @Immutable
+    data class McpBrowserOpenFailed(
+        override val type: String = "mcp.browser.open.failed",
+        val properties: McpBrowserOpenFailedProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("worktree.ready")
+    @Immutable
+    data class WorktreeReady(
+        override val type: String = "worktree.ready",
+        val properties: WorktreeEventProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("worktree.failed")
+    @Immutable
+    data class WorktreeFailed(
+        override val type: String = "worktree.failed",
+        val properties: WorktreeEventProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("installation.update.available")
+    @Immutable
+    data class InstallationUpdateAvailable(
+        override val type: String = "installation.update.available",
+        val properties: InstallationUpdateAvailableProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("server.instance.disposed")
+    @Immutable
+    data class ServerInstanceDisposed(
+        override val type: String = "server.instance.disposed",
+        val properties: DisposalProperties
+    ) : ServerEvent
+
+    @Serializable
+    @SerialName("global.disposed")
+    @Immutable
+    data class GlobalDisposed(
+        override val type: String = "global.disposed",
+        val properties: DisposalProperties
+    ) : ServerEvent
+
+
+    @Serializable
     @Immutable
     data class Unknown(
         override val type: String,
@@ -218,10 +397,17 @@ data class LogProperties(
 data class AgentStatusProperties(
     val sessionID: String,
     val agentName: String,
-    val status: String, // "starting", "running", "completed", "error"
+    // status can be a string ("starting", "running", "completed", "error") or an object in newer server versions
+    val status: JsonElement? = null,
     val message: String? = null,
     val timestamp: Long? = null
-)
+) {
+    /** Extract status string regardless of whether server sends a string or an object with a 'value' field. */
+    fun statusString(): String = when (val s = status) {
+        is JsonPrimitive -> s.content
+        else -> s?.toString()?.trim('"') ?: "unknown"
+    }
+}
 
 @Serializable
 @Immutable
@@ -608,4 +794,151 @@ enum class PermissionResponseType(val value: String) {
     ALWAYS("always"),
     REJECT("reject")
 }
+
+// ==== New SSE Event Properties ====
+
+@Serializable
+@Immutable
+data class SessionCreatedProperties(
+    val info: Session
+)
+
+@Serializable
+@Immutable
+data class SessionStatusProperties(
+    val sessionID: String,
+    // status can be a string or object in newer server versions
+    val status: JsonElement? = null
+) {
+    fun statusString(): String = when (val s = status) {
+        is JsonPrimitive -> s.content
+        else -> s?.toString()?.trim('"') ?: "idle"
+    }
+}
+
+@Serializable
+@Immutable
+data class SessionDiffProperties(
+    val sessionID: String,
+    val added: Int = 0,
+    val removed: Int = 0
+)
+
+@Serializable
+@Immutable
+data class SessionCompactedProperties(
+    val sessionID: String
+)
+
+@Serializable
+@Immutable
+data class TodoUpdatedProperties(
+    val sessionID: String,
+    val todo: TodoItem
+)
+
+@Serializable
+@Immutable
+data class TodoItem(
+    val id: String,
+    val title: String,
+    val description: String? = null,
+    val status: String = "pending", // "pending", "in_progress", "completed", "cancelled"
+    val priority: String = "medium"
+)
+
+@Serializable
+@Immutable
+data class QuestionRejectedProperties(
+    val sessionID: String,
+    val requestID: String
+)
+
+@Serializable
+@Immutable
+data class MessagePartDeltaProperties(
+    val sessionID: String,
+    val messageID: String,
+    val partID: String,
+    val delta: String
+)
+
+@Serializable
+@Immutable
+data class PtyEventProperties(
+    val ptyID: String,
+    val sessionID: String? = null,
+    val title: String? = null
+)
+
+@Serializable
+@Immutable
+data class PtyExitedProperties(
+    val ptyID: String,
+    val exitCode: Int = 0
+)
+
+@Serializable
+@Immutable
+data class ProjectUpdatedProperties(
+    val projectID: String,
+    val path: String? = null
+)
+
+@Serializable
+@Immutable
+data class VcsBranchUpdatedProperties(
+    val branch: String,
+    val projectID: String? = null
+)
+
+@Serializable
+@Immutable
+data class FileUpdatedProperties(
+    val path: String,
+    val event: String = "change" // "change", "rename"
+)
+
+@Serializable
+@Immutable
+data class LspUpdatedProperties(
+    val serverID: String,
+    val status: String
+)
+
+@Serializable
+@Immutable
+data class McpToolsChangedProperties(
+    val serverName: String,
+    val toolCount: Int = 0
+)
+
+@Serializable
+@Immutable
+data class McpBrowserOpenFailedProperties(
+    val serverName: String,
+    val error: String? = null
+)
+
+@Serializable
+@Immutable
+data class WorktreeEventProperties(
+    val id: String,
+    val path: String? = null,
+    val error: String? = null
+)
+
+@Serializable
+@Immutable
+data class InstallationUpdateAvailableProperties(
+    val version: String,
+    val releaseUrl: String? = null
+)
+
+@Serializable
+@Immutable
+data class DisposalProperties(
+    val reason: String? = null,
+    val timestamp: Long? = null
+)
 

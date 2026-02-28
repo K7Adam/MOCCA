@@ -46,7 +46,10 @@ data class ChatState(
     val showTodoPanel: Boolean = false,
     val maxTokens: Int = 0,
     val showTimestamps: Boolean = true,
-    val showTokenCounts: Boolean = true
+    val showTokenCounts: Boolean = true,
+    val isPlanMode: Boolean = false,
+    val sessionDisposed: Boolean = false,
+    val disposalReason: String? = null
 ) {
     val totalInputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.input ?: 0 } }
     val totalOutputTokens: Int by lazy { messages.filter { it.role == MessageRole.ASSISTANT }.sumOf { it.tokens?.output ?: 0 } }
@@ -113,6 +116,48 @@ class ChatScreenModel(
     private val _inputText = MutableStateFlow("")
     val inputText: StateFlow<String> = _inputText.asStateFlow()
 
+    private val _shellMode = MutableStateFlow(false)
+    val shellMode: StateFlow<Boolean> = _shellMode.asStateFlow()
+
+    private val _promptHistory = MutableStateFlow<List<String>>(emptyList())
+    val promptHistory: StateFlow<List<String>> = _promptHistory.asStateFlow()
+    private val _historyIndex = MutableStateFlow(-1)
+
+    /** Holds the (Message, MessagePart) being edited; null when no edit dialog is open. */
+    private val _editingPart = MutableStateFlow<Pair<Message, MessagePart>?>(null)
+    val editingPart: StateFlow<Pair<Message, MessagePart>?> = _editingPart.asStateFlow()
+
+    /** True when the fork-from-message dialog should be shown. */
+    private val _showForkDialog = MutableStateFlow(false)
+    val showForkDialog: StateFlow<Boolean> = _showForkDialog.asStateFlow()
+
+    fun togglePlanMode() {
+        val newModeId = if (_state.value.isPlanMode) null else "plan"
+        configDelegate.selectMode(newModeId)
+    }
+
+    fun toggleShellMode() { _shellMode.value = !_shellMode.value }
+
+    fun navigateHistoryUp() {
+        val history = _promptHistory.value
+        if (history.isEmpty()) return
+        val newIndex = (_historyIndex.value + 1).coerceAtMost(history.size - 1)
+        _historyIndex.value = newIndex
+        _inputText.value = history[newIndex]
+    }
+
+    fun navigateHistoryDown() {
+        val idx = _historyIndex.value
+        if (idx <= 0) {
+            _historyIndex.value = -1
+            _inputText.value = ""
+            return
+        }
+        val newIndex = idx - 1
+        _historyIndex.value = newIndex
+        _inputText.value = _promptHistory.value[newIndex]
+    }
+
     private val _navigationEvent = MutableSharedFlow<String>()
     val navigationEvent: SharedFlow<String> = _navigationEvent.asSharedFlow()
 
@@ -160,7 +205,8 @@ class ChatScreenModel(
                 chatStateStore.isLoading,
                 chatStateStore.isSending,
                 chatStateStore.isSessionIdle,
-                chatStateStore.error
+                chatStateStore.error,
+                chatStateStore.sessionDisposed
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 val prefs = args[22] as UserPreferences
@@ -182,6 +228,7 @@ class ChatScreenModel(
                     selectedVariantId = args[13] as String?,
                     modes = args[14] as ImmutableList<Mode>,
                     selectedModeId = args[15] as String?,
+                    isPlanMode = (args[15] as String?) == "plan",
                     modelName = args[16] as String,
                     agentName = args[17] as String,
                     maxTokens = args[18] as Int,
@@ -194,7 +241,9 @@ class ChatScreenModel(
                     isLoading = args[23] as Boolean,
                     isSending = args[24] as Boolean,
                     isSessionIdle = args[25] as Boolean,
-                    error = args[26] as String?
+                    error = args[26] as String?,
+                    sessionDisposed = (args[27] as String?) != null,
+                    disposalReason = args[27] as String?
                 )
             }.collect { newState ->
                 _state.update { newState }
@@ -245,8 +294,13 @@ class ChatScreenModel(
     }
 
     fun sendMessage() {
-        val text = _inputText.value.trim()
-        if (text.isEmpty()) return
+        val rawText = _inputText.value.trim()
+        if (rawText.isEmpty()) return
+        // Prepend '!' prefix when shell mode is active
+        val text = if (_shellMode.value && !rawText.startsWith("!")) "!$rawText" else rawText
+        // Push to prompt history (most-recent first, cap at 50)
+        _promptHistory.value = (listOf(rawText) + _promptHistory.value).take(50)
+        _historyIndex.value = -1
         
         if (text.startsWith("/")) {
             val parts = text.drop(1).split(" ", limit = 2)
@@ -281,7 +335,7 @@ class ChatScreenModel(
             )
             
             if (result.isFailure) {
-                _inputText.value = text // Restore text on failure
+                _inputText.value = rawText // Restore original text on failure
             }
         }
     }
@@ -292,6 +346,10 @@ class ChatScreenModel(
 
     fun approvePermission() {
         screenModelScope.launch { chatStateStore.approvePermission() }
+    }
+
+    fun approvePermissionAlways() {
+        screenModelScope.launch { chatStateStore.approvePermissionAlways() }
     }
 
     fun denyPermission() {
@@ -308,7 +366,16 @@ class ChatScreenModel(
         screenModelScope.launch { chatStateStore.rejectQuestion() }
     }
 
+    fun openForkDialog() {
+        _showForkDialog.value = true
+    }
+
+    fun dismissForkDialog() {
+        _showForkDialog.value = false
+    }
+
     fun forkSession(m: Message) {
+        _showForkDialog.value = false
         screenModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             sessionRepository.forkFromMessage(sessionId, m.id).onSuccess {
@@ -325,6 +392,40 @@ class ChatScreenModel(
                 _state.update { it.copy(isLoading = false) }
                 loadMessages()
             }
+        }
+    }
+
+    fun deleteMessage(m: Message) {
+        screenModelScope.launch {
+            sessionRepository.deleteMessage(sessionId, m.id)
+        }
+    }
+
+    fun deleteMessagePart(m: Message, partId: String) {
+        screenModelScope.launch {
+            sessionRepository.deleteMessagePart(sessionId, m.id, partId)
+        }
+    }
+
+    fun showEditPart(message: Message, part: MessagePart) {
+        _editingPart.value = Pair(message, part)
+    }
+
+    fun dismissEditPart() {
+        _editingPart.value = null
+    }
+
+    fun commitEditPart(content: String) {
+        val (message, part) = _editingPart.value ?: return
+        val partId = when (part) {
+            is MessagePart.Text -> part.id
+            is MessagePart.ToolInvocation -> part.id
+            is MessagePart.ToolResult -> part.id
+            else -> return
+        }
+        _editingPart.value = null
+        screenModelScope.launch {
+            sessionRepository.patchMessagePart(sessionId, message.id, partId, content)
         }
     }
 
@@ -372,6 +473,7 @@ class ChatScreenModel(
     }
 
     fun clearError() { _state.update { it.copy(error = null) } }
+    fun dismissDisposal() = chatStateStore.clearDisposed()
     
     override fun onDispose() {
         // StateCoordinator manages SSE lifecycle, no need to disconnect here

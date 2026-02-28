@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -40,9 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import coil3.compose.AsyncImage
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
@@ -52,12 +58,56 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.domain.model.ToolState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material.icons.filled.Build
 
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Terminal
 import com.mocca.app.domain.model.SessionStatus
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+
+// ---------------------------------------------------------------------------
+// Tool grouping helpers
+// ---------------------------------------------------------------------------
+
+private sealed class PartGroup {
+    data class Single(val part: MessagePart) : PartGroup()
+    data class ToolGroup(val tools: List<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>) : PartGroup()
+}
+
+private fun groupParts(parts: List<MessagePart>): List<PartGroup> {
+    val result = mutableListOf<PartGroup>()
+    val toolBuffer = mutableListOf<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>() 
+    val partsList = parts.toList()
+    var i = 0
+    while (i < partsList.size) {
+        val part = partsList[i]
+        if (part is MessagePart.ToolInvocation) {
+            val nextPart = partsList.getOrNull(i + 1)
+            val toolResult = if (nextPart is MessagePart.ToolResult) { i++; nextPart } else null
+            toolBuffer.add(Pair(part, toolResult))
+        } else {
+            if (toolBuffer.isNotEmpty()) {
+                result.add(PartGroup.ToolGroup(toolBuffer.toList()))
+                toolBuffer.clear()
+            }
+            result.add(PartGroup.Single(part))
+        }
+        i++
+    }
+    if (toolBuffer.isNotEmpty()) {
+        result.add(PartGroup.ToolGroup(toolBuffer.toList()))
+    }
+    return result
+}
 
 /**
  * Modern Glassmorphic message bubble.
@@ -72,6 +122,7 @@ import com.mocca.app.domain.model.SessionStatus
  * @param showTimestamps Whether to show timestamps in the message header
  * @param showTokenCounts Whether to show token counts (for assistant messages)
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBubble(
     message: Message,
@@ -81,9 +132,15 @@ fun MessageBubble(
     onFork: () -> Unit = {},
     onRevert: () -> Unit = {},
     showTimestamps: Boolean = true,
-    showTokenCounts: Boolean = true
+    showTokenCounts: Boolean = true,
+    onDelete: () -> Unit = {},
+    onDeletePart: (String) -> Unit = {},
+    onEditPart: (MessagePart) -> Unit = {},
+    onFileClick: ((String) -> Unit)? = null
 ) {
     val isUser = message.role == MessageRole.USER
+    val haptic = LocalHapticFeedback.current
+    var showContextMenu by remember { mutableStateOf(false) }
     
     Column(
         modifier = modifier
@@ -184,35 +241,51 @@ fun MessageBubble(
                     color = borderColor,
                     shape = shape
                 )
+                .combinedClickable(
+                    onClick = {},
+                    onLongClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showContextMenu = true
+                    }
+                )
         ) {
             Column(
                 modifier = Modifier.padding(AppSpacing.md)
             ) {
-                message.parts.forEach { part ->
-                    when (part) {
-                        is MessagePart.Text -> {
-                            MarkdownText(
-                                markdown = part.text,
-                                style = AppTypography.bodyMedium,
-                                color = AppColors.white
-                            )
+                val partGroups = remember(message.parts) { groupParts(message.parts) }
+                partGroups.forEach { group ->
+                    when (group) {
+                        is PartGroup.Single -> when (val part = group.part) {
+                            is MessagePart.Text -> {
+                                MarkdownText(
+                                    markdown = part.text,
+                                    style = AppTypography.bodyMedium,
+                                    color = AppColors.white,
+                                    onFileClick = onFileClick
+                                )
+                            }
+                            is MessagePart.Reasoning -> {
+                                ModernReasoningBlock(part)
+                            }
+                            is MessagePart.ToolInvocation -> {
+                                RichToolCard(part)
+                            }
+                            is MessagePart.ToolResult -> {
+                                ModernToolResultBlock(part)
+                            }
+                            is MessagePart.File -> {
+                                ModernFileBlock(part)
+                            }
+                            is MessagePart.SubTask -> {
+                                ModernSubTaskBlock(part)
+                            }
+                            is MessagePart.Thinking -> {
+                                ModernThinkingBlock(part)
+                            }
                         }
-                        is MessagePart.Reasoning -> {
-                            ModernReasoningBlock(part)
+                        is PartGroup.ToolGroup -> {
+                            ContextToolGroup(tools = group.tools)
                         }
-                        is MessagePart.ToolInvocation -> {
-                            RichToolCard(part)
-                        }
-                        is MessagePart.ToolResult -> {
-                            ModernToolResultBlock(part)
-                        }
-                        is MessagePart.File -> {
-                            ModernFileBlock(part)
-                        }
-                        is MessagePart.SubTask -> {
-                            ModernSubTaskBlock(part)
-                        }
-                        is MessagePart.Thinking -> { }
                     }
                     Spacer(modifier = Modifier.height(AppSpacing.xs))
                 }
@@ -263,9 +336,41 @@ fun MessageBubble(
                 }
             }
         }
-    }
-}
 
+        DropdownMenu(
+            expanded = showContextMenu,
+            onDismissRequest = { showContextMenu = false },
+            modifier = Modifier.background(AppColors.surfaceElevated, AppShapes.medium)
+        ) {
+            DropdownMenuItem(
+                text = { Text("FORK FROM HERE", style = AppTypography.labelSmall, color = AppColors.textSecondary) },
+                onClick = { onFork(); showContextMenu = false }
+            )
+            DropdownMenuItem(
+                text = { Text("REVERT TO HERE", style = AppTypography.labelSmall, color = AppColors.textSecondary) },
+                onClick = { onRevert(); showContextMenu = false }
+            )
+            // EDIT PART — only shown for messages with editable (Text) parts
+            val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+            if (textParts.isNotEmpty()) {
+                HorizontalDivider(color = AppColors.border.copy(alpha = 0.3f))
+                textParts.forEachIndexed { index, textPart ->
+                    val label = if (textParts.size > 1) "EDIT PART ${index + 1}" else "EDIT PART"
+                    DropdownMenuItem(
+                        text = { Text(label, style = AppTypography.labelSmall, color = AppColors.textSecondary) },
+                        onClick = { onEditPart(textPart); showContextMenu = false }
+                    )
+                }
+            }
+            HorizontalDivider(color = AppColors.border.copy(alpha = 0.3f))
+            DropdownMenuItem(
+                text = { Text("DELETE MESSAGE", style = AppTypography.labelSmall, color = AppColors.error) },
+                onClick = { onDelete(); showContextMenu = false }
+            )
+        }
+    }
+
+}
 /**
  * Format token count for display (e.g., 1.2K, 15K)
  */
@@ -499,6 +604,68 @@ fun ModernReasoningBlock(part: MessagePart.Reasoning) {
 }
 
 @Composable
+fun ModernThinkingBlock(part: MessagePart.Thinking) {
+    var expanded by remember { mutableStateOf(false) }
+    val durationText = part.durationMs?.let { ms ->
+        when {
+            ms < 1000 -> "${ms}ms"
+            ms < 60000 -> "${ms / 1000}.${(ms % 1000) / 100}s"
+            else -> "${ms / 60000}m ${(ms % 60000) / 1000}s"
+        }
+    }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.statusThinking.copy(alpha = 0.3f), AppShapes.medium)
+            .background(AppColors.background.copy(alpha = 0.3f), AppShapes.medium)
+            .padding(AppSpacing.sm)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Lightbulb,
+                contentDescription = null,
+                tint = AppColors.statusThinking,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            Text(
+                text = if (durationText != null) "THINKING [$durationText]" else "THINKING",
+                color = AppColors.statusThinking,
+                style = AppTypography.labelExtraSmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = AppColors.textSecondary,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+        AnimatedVisibility(visible = expanded) {
+            Column {
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = AppSpacing.sm),
+                    thickness = AppSpacing.borderThin,
+                    color = AppColors.statusThinking.copy(alpha = 0.2f)
+                )
+                Text(
+                    text = part.content,
+                    color = AppColors.textTertiary,
+                    style = AppTypography.bodySmall
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun ModernToolResultBlock(part: MessagePart.ToolResult) {
     var expanded by remember { mutableStateOf(false) }
     
@@ -542,28 +709,194 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// ContextToolGroup — collapsible card grouping consecutive tool calls
+// ---------------------------------------------------------------------------
+
 @Composable
-fun ModernFileBlock(part: MessagePart.File) {
-    Row(
+fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>) {
+    if (tools.isEmpty()) return
+
+    val hasRunning = tools.any { it.first.state == ToolState.RUNNING }
+    val errorCount = tools.count { it.first.state == ToolState.ERROR }
+    val completedCount = tools.count { it.first.state == ToolState.COMPLETED }
+
+    // Auto-expand when any tool is running; collapse when everything is done and count >= 2
+    var expanded by remember(hasRunning) { mutableStateOf(hasRunning || tools.size == 1) }
+
+    val accentColor = when {
+        hasRunning -> AppColors.statusWaiting
+        errorCount > 0 -> AppColors.error
+        else -> AppColors.textTertiary
+    }
+    val borderColor = accentColor.copy(alpha = 0.35f)
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.medium)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
-            .padding(AppSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically
+            .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
+            .background(LiquidGlassDefaults.tintPrimary.copy(alpha = 0.6f), AppShapes.medium)
     ) {
-        Icon(
-            imageVector = Icons.Default.Description,
-            contentDescription = null,
-            tint = AppColors.textSecondary,
-            modifier = Modifier.size(12.dp)
-        )
-        Spacer(modifier = Modifier.width(AppSpacing.sm))
-        Text(
-            text = part.filename ?: "ATTACHMENT",
-            color = AppColors.textSecondary,
-            style = AppTypography.bodySmall
-        )
+        // Header row — always visible
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { expanded = !expanded }
+                .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Build,
+                contentDescription = null,
+                tint = accentColor,
+                modifier = Modifier.size(12.dp)
+            )
+            Text(
+                text = "${tools.size} TOOLS",
+                style = AppTypography.labelExtraSmall,
+                fontWeight = FontWeight.Bold,
+                color = accentColor,
+                modifier = Modifier.weight(1f)
+            )
+            // Status badges
+            if (hasRunning) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(10.dp),
+                    strokeWidth = 1.5.dp,
+                    color = AppColors.statusWaiting
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
+            }
+            if (completedCount > 0) {
+                Text(
+                    text = "\u2713 $completedCount",
+                    style = AppTypography.labelExtraSmall,
+                    color = AppColors.accentGreen
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
+            }
+            if (errorCount > 0) {
+                Text(
+                    text = "\u2717 $errorCount",
+                    style = AppTypography.labelExtraSmall,
+                    color = AppColors.error
+                )
+                Spacer(modifier = Modifier.width(AppSpacing.xs))
+            }
+            Icon(
+                imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = null,
+                tint = AppColors.textTertiary,
+                modifier = Modifier.size(14.dp)
+            )
+        }
+
+        // Expanded tool cards
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                modifier = Modifier.padding(
+                    start = AppSpacing.sm,
+                    end = AppSpacing.sm,
+                    bottom = AppSpacing.sm
+                ),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            ) {
+                HorizontalDivider(color = borderColor.copy(alpha = 0.4f))
+                tools.forEach { (invocation, _) ->
+                    RichToolCard(invocation)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ModernFileBlock(part: MessagePart.File) {
+    val isImage = part.mediaType.startsWith("image/")
+    var showPreview by remember { mutableStateOf(false) }
+
+    if (isImage && part.url != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+                .clickable { showPreview = true }
+                .padding(AppSpacing.xxs)
+        ) {
+            coil3.compose.AsyncImage(
+                model = part.url,
+                contentDescription = part.filename,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 240.dp)
+                    .clip(AppShapes.medium),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
+            if (part.filename != null) {
+                Text(
+                    text = part.filename,
+                    style = AppTypography.labelExtraSmall,
+                    color = AppColors.textTertiary,
+                    modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
+                )
+            }
+        }
+        if (showPreview) {
+            androidx.compose.ui.window.Dialog(
+                onDismissRequest = { showPreview = false },
+                properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AppColors.background.copy(alpha = 0.95f))
+                        .clickable { showPreview = false },
+                    contentAlignment = Alignment.Center
+                ) {
+                    coil3.compose.AsyncImage(
+                        model = part.url,
+                        contentDescription = part.filename,
+                        modifier = Modifier
+                            .fillMaxWidth(0.95f)
+                            .clip(AppShapes.card),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Fit
+                    )
+                    Text(
+                        text = "TAP TO CLOSE",
+                        style = AppTypography.labelExtraSmall,
+                        color = AppColors.textTertiary,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = AppSpacing.xl)
+                    )
+                }
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+                .padding(AppSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Description,
+                contentDescription = null,
+                tint = AppColors.textSecondary,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            Text(
+                text = part.filename ?: "ATTACHMENT",
+                color = AppColors.textSecondary,
+                style = AppTypography.bodySmall
+            )
+        }
     }
 }
 

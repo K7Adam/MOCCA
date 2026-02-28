@@ -126,3 +126,43 @@ enum class ConnectionQuality {
     OFFLINE,
     UNKNOWN
 }
+
+/**
+ * Global application configuration (GET/PATCH /global/config).
+ * Distinct from per-instance config at GET/PATCH /config.
+ */
+@Serializable
+@Immutable
+data class GlobalAppConfig(
+    val autoshare: Boolean? = null,
+    val autoupdate: Boolean? = null,
+    val telemetry: Boolean? = null,
+    val theme: String? = null,
+    val experimental: Map<String, Boolean>? = null
+)
+
+/**
+ * Partial update for global config (PATCH /global/config).
+ */
+@Serializable
+@Immutable
+data class AppConfigUpdate(
+    val autoshare: Boolean? = null,
+    val autoupdate: Boolean? = null,
+    val telemetry: Boolean? = null,
+    val theme: String? = null
+)
+
+/**
+ * Feature flags parsed from server config or env vars.
+ * Used to gate experimental features in the UI.
+ */
+@Immutable
+data class FeatureFlags(
+    val experimentalWorktrees: Boolean = false,
+    val experimentalPlanMode: Boolean = false,
+    val experimentalExa: Boolean = false,
+    val experimentalLsp: Boolean = false,
+    val disableTerminals: Boolean = false,
+    val disableFileBrowser: Boolean = false
+)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -53,12 +54,19 @@ import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.domain.model.mergeCommands
+import com.mocca.app.ui.components.modern.CommandPaletteOverlay
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 
 /**
  * Chat input content component - the content that appears ABOVE the persistent nav row.
@@ -130,6 +138,15 @@ fun ChatInputContent(
     commands: List<Command>,
     onCommandSelected: (Command) -> Unit,
     onModeSelectedForMention: (Mode) -> Unit,
+    // Shell mode
+    shellMode: Boolean = false,
+    onShellModeToggle: () -> Unit = {},
+    // Plan mode
+    planMode: Boolean = false,
+    onPlanModeToggle: () -> Unit = {},
+    // Prompt history navigation
+    onHistoryUp: () -> Unit = {},
+    onHistoryDown: () -> Unit = {},
     modifier: Modifier = Modifier,
     alpha: Float = 1f
 ) {
@@ -472,6 +489,14 @@ fun ChatInputContent(
             }
         }
 
+        // ═══════════════ ATTACHMENT PREVIEW STRIP ═══════════════
+        if (attachedFiles.isNotEmpty()) {
+            AttachmentPreviewStrip(
+                files = attachedFiles,
+                onRemove = onRemoveAttachment
+            )
+        }
+
         // ═══════════════ ACTION TOOLBAR (Cleaner, Grouped) ═══════════════
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
@@ -596,56 +621,108 @@ fun ChatInputContent(
                         )
                     }
                     
-                    // Command dropdown menu (stable positioning)
-                    DropdownMenu(
-                        expanded = showCommandPalette,
-                        onDismissRequest = { showCommandPalette = false },
-                        properties = PopupProperties(focusable = false),
-                        modifier = Modifier
-                            .background(AppColors.surfaceElevated, AppShapes.medium)
-                            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
-                    ) {
-                        if (mergedCommands.isEmpty()) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        "No commands available",
-                                        style = AppTypography.labelSmall,
-                                        color = AppColors.textTertiary
-                                    )
-                                },
-                                onClick = { showCommandPalette = false }
-                            )
-                        } else {
-                            mergedCommands.forEach { cmd ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(
-                                                "/${cmd.name}",
-                                                style = AppTypography.labelSmall,
-                                                color = AppColors.accentGreen
-                                            )
-                                            cmd.description?.let { desc ->
-                                                Text(
-                                                    desc,
-                                                    style = AppTypography.labelSmall,
-                                                    color = AppColors.textTertiary,
-                                                    maxLines = 1
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onClick = {
-                                        onCommandSelected(cmd)
-                                        showCommandPalette = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    // Command palette overlay — full-screen modal
+                    // (triggered by showCommandPalette, replaces the old DropdownMenu)
                 }
             }
+
+                // ! shell mode button
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = if (shellMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .then(
+                            if (shellMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onShellModeToggle
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "!",
+                        color = if (shellMode) AppColors.accentGreen else AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // P plan mode button
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = if (planMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .then(
+                            if (planMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onPlanModeToggle
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "P",
+                        color = if (planMode) AppColors.accentGreen else AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // History up button
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onHistoryUp
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "\u2191",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // History down button
+                Box(
+                    modifier = Modifier
+                        .size(NavConstants.ActionButtonSize)
+                        .background(
+                            color = AppColors.surface.copy(alpha = 0.3f),
+                            shape = AppShapes.pill
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = onHistoryDown
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "\u2193",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
 
             // Subtle separator
             VerticalDivider(
@@ -778,5 +855,96 @@ fun ChatInputContent(
             onVariantSelected = onVariantSelected,
             onDismiss = { showVariantSelector = false }
         )
+    }
+
+    // Full-screen command palette overlay (triggered by / button)
+    if (showCommandPalette) {
+        CommandPaletteOverlay(
+            commands = mergedCommands,
+            modes = modes,
+            onCommandSelected = { cmd ->
+                onCommandSelected(cmd)
+                showCommandPalette = false
+            },
+            onModeSelected = { mode ->
+                onModeSelectedForMention(mode)
+                showCommandPalette = false
+            },
+            onDismiss = { showCommandPalette = false }
+        )
+    }
+}
+
+@Composable
+private fun AttachmentPreviewStrip(
+    files: List<AttachedFile>,
+    onRemove: (AttachedFile) -> Unit
+) {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        items(files, key = { it.id }) { file ->
+            AttachmentPreviewChip(file = file, onRemove = { onRemove(file) })
+        }
+    }
+}
+
+@Composable
+private fun AttachmentPreviewChip(
+    file: AttachedFile,
+    onRemove: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(AppShapes.medium)
+            .border(
+                AppSpacing.borderThin,
+                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.border,
+                AppShapes.medium
+            )
+            .background(AppColors.surface, AppShapes.medium)
+    ) {
+        if (file.isImage && file.dataUrl != null) {
+            AsyncImage(
+                model = file.dataUrl,
+                contentDescription = file.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                imageVector = Icons.Default.AttachFile,
+                contentDescription = null,
+                tint = AppColors.textSecondary,
+                modifier = Modifier
+                    .size(24.dp)
+                    .align(Alignment.Center)
+            )
+        }
+        // Remove button overlay
+        Box(
+            modifier = Modifier
+                .size(16.dp)
+                .align(Alignment.TopEnd)
+                .clip(CircleShape)
+                .background(AppColors.error)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onRemove
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove attachment",
+                tint = AppColors.white,
+                modifier = Modifier.size(10.dp)
+            )
+        }
     }
 }

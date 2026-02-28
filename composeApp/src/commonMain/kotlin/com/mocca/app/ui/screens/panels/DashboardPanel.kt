@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -43,7 +44,8 @@ fun DashboardPanel(
     onGitClick: () -> Unit = {},
     onMcpConfigClick: () -> Unit = {},
     onSkillsClick: () -> Unit = {},
-    onSkillClick: (String) -> Unit = {}
+    onSkillClick: (String) -> Unit = {},
+    onTerminalClick: () -> Unit = {}
     // NOTE: onRefreshAll removed - SSE drives all live state, no manual refresh needed
 ) {
     val state by screenModel.state.collectAsState()
@@ -124,6 +126,12 @@ fun DashboardPanel(
                 onClick = onSettingsClick,
                 contentDescription = "Settings",
                 iconColor = AppColors.white
+            )
+            MoccaIconButton(
+                icon = Icons.Default.Terminal,
+                onClick = onTerminalClick,
+                contentDescription = "Terminal",
+                iconColor = AppColors.accentGreen
             )
         }
         

@@ -39,6 +39,9 @@ logcat_*.txt
 robust_test_log.txt
 window_dump.xml
 
+# Local build scripts
+mbuild.sh
+
 # OS Specific
 .DS_Store
 Thumbs.db

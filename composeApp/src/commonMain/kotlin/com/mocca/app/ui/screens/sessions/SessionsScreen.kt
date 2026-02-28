@@ -411,14 +411,12 @@ private fun MoccaSessionCard(
                         style = AppTypography.labelExtraSmall,
                         color = AppColors.grey
                     )
-                    session.summary?.let { summary ->
-                        if (summary.files > 0) {
-                            Text(
-                                text = "• ${summary.files}F",
-                                style = AppTypography.labelExtraSmall,
-                                color = AppColors.greyLight
-                            )
-                        }
+                    if (session.summaryFiles > 0) {
+                        Text(
+                            text = "\u2022 ${session.summaryFiles}F",
+                            style = AppTypography.labelExtraSmall,
+                            color = AppColors.greyLight
+                        )
                     }
                 }
             }

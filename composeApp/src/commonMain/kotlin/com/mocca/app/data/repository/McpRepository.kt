@@ -6,6 +6,11 @@ import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.McpServerStatus
 import com.mocca.app.domain.model.McpConnectionStatus
 import com.mocca.app.domain.model.Resource
+import com.mocca.app.domain.model.McpAuthRequest
+import com.mocca.app.domain.model.McpAuthCallbackRequest
+import com.mocca.app.domain.model.McpResourceContent
+import com.mocca.app.domain.model.McpResource
+import com.mocca.app.domain.model.McpOAuthState
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -199,12 +204,36 @@ class McpRepository(
     fun getServer(name: String): McpServerInfo? = _mcpServers.value[name]
     
     /**
+     * Start MCP OAuth authentication flow for a server.
+     */
+    suspend fun startOAuthFlow(serverName: String): Result<McpOAuthState> =
+        apiClient.startMcpAuth(serverName, McpAuthRequest())
+
+    /**
+     * Handle MCP OAuth callback (submit the authorization code).
+     */
+    suspend fun handleOAuthCallback(serverName: String, code: String): Result<Unit> =
+        apiClient.handleMcpAuthCallback(serverName, McpAuthCallbackRequest(code = code))
+
+    /**
      * Clear cached data.
      */
     fun clearCache() {
         _mcpServers.value = emptyMap()
         _error.value = null
     }
+
+    /**
+     * List MCP resources for a given server.
+     */
+    suspend fun listResources(serverName: String): Result<List<McpResource>> =
+        apiClient.listMcpResources(serverName)
+
+    /**
+     * Read a specific MCP resource by URI.
+     */
+    suspend fun readResource(serverName: String, uri: String): Result<McpResourceContent> =
+        apiClient.readMcpResource(serverName, uri)
     
     /**
      * Update server status optimistically for better UX.
