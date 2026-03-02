@@ -44,6 +44,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+import com.mocca.app.ui.components.modern.ShimmerTheme
+import com.mocca.app.ui.components.modern.shimmer
 /**
  * Modern thinking indicator for AI reasoning.
  */
@@ -51,8 +53,26 @@ import com.mocca.app.ui.theme.AppTypography
 fun ModernThinkingIndicator(
     thinkingContent: String = "",
     elapsedMs: Long = 0,
+    isCompleted: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    if (isCompleted) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = AppSpacing.xs, horizontal = AppSpacing.sm)
+        ) {
+            Text(
+                text = "⟡ THOUGHT FOR ${formatThinkingDuration(elapsedMs).uppercase()}",
+                color = AppColors.textSecondary,
+                style = AppTypography.labelExtraSmall,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        return
+    }
+
     val infiniteTransition = rememberInfiniteTransition(label = "thinking")
     val pulseAlpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
@@ -124,6 +144,13 @@ private fun ExpandableThinkingPreview(content: String) {
             .padding(start = AppSpacing.xl) // Indent from icon
             .clip(AppShapes.medium)
             .background(AppColors.surfaceVariant.copy(alpha = 0.3f), AppShapes.medium)
+            .shimmer(
+                enabled = true,
+                theme = ShimmerTheme(
+                    baseColor = AppColors.statusThinking.copy(alpha = 0.1f),
+                    highlightColor = AppColors.statusThinking.copy(alpha = 0.4f)
+                )
+            )
             .border(
                 width = AppSpacing.borderThin,
                 color = AppColors.statusThinking.copy(alpha = 0.2f),
