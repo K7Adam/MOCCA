@@ -306,6 +306,10 @@ fun RichChatInput(
                 }
                 showSuggestions = false
             }
+            SuggestionType.MENTION -> {
+                // Mention selection is handled by ChatInputContent's own DropdownMenu
+                showSuggestions = false
+            }
         }
     }
     
