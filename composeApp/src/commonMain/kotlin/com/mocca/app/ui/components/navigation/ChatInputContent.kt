@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
@@ -248,10 +249,11 @@ fun ChatInputContent(
                         tint = AppColors.textSecondary
                     )
                     Text(
-                        text = modelName.take(10).uppercase(),
+                        text = modelName.uppercase(),
                         color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                         style = AppTypography.labelSmall,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -285,10 +287,11 @@ fun ChatInputContent(
                             tint = AppColors.textTertiary
                         )
                         Text(
-                            text = (selectedVariantId ?: "DEF").take(5).uppercase(),
+                            text = (selectedVariantId ?: "DEF").uppercase(),
                             color = AppColors.textSecondary,
                             style = AppTypography.labelSmall,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -327,10 +330,11 @@ fun ChatInputContent(
                             tint = AppColors.textTertiary
                         )
                         Text(
-                            text = agentName.take(8).uppercase(),
+                            text = agentName.uppercase(),
                             color = AppColors.textTertiary,
                             style = AppTypography.labelSmall,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
