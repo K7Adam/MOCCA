@@ -593,7 +593,7 @@ fun ChatContent(
                 val displayMessages by remember(aggregatedMessages) {
                     derivedStateOf {
                         aggregatedMessages.filter { msg ->
-                            msg.role == MessageRole.USER || msg.parts.isNotEmpty()
+                            msg.isDisplayable()
                         }
                     }
                 }
