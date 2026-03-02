@@ -913,7 +913,28 @@ class EventStreamRepository(
             is ServerEvent.SessionCompacted -> Napier.d("Session compacted: ${event.properties.sessionID}")
             is ServerEvent.TodoUpdated -> Napier.d("Todo updated")
             is ServerEvent.QuestionRejected -> Napier.d("Question rejected: ${event.properties.requestID}")
-            is ServerEvent.MessagePartDelta -> Napier.v("MessagePartDelta received")
+            is ServerEvent.MessagePartDelta -> {
+                val props = event.properties
+                if (monitoredSessionIds.value.contains(props.sessionID)) {
+                    if (props.sessionID == activeSessionId) {
+                        streamingTextMutex.withLock {
+                            if (_isThinking.value) {
+                                _thinkingContent.value += props.delta
+                                if (_thinkingContent.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
+                                    _thinkingContent.value = _thinkingContent.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                                }
+                            } else {
+                                _streamingText.value += props.delta
+                                if (_streamingText.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
+                                    Napier.w("[EventStream] Streaming text exceeded max size, truncating")
+                                    _streamingText.value = _streamingText.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                                }
+                            }
+                        }
+                        Napier.v(">>> MessagePartDelta processed: len=${props.delta.length}")
+                    }
+                }
+            }
             is ServerEvent.PtyCreated -> Napier.d("PTY created: ${event.properties.ptyID}")
             is ServerEvent.PtyUpdated -> Napier.d("PTY updated")
             is ServerEvent.PtyExited -> Napier.d("PTY exited")

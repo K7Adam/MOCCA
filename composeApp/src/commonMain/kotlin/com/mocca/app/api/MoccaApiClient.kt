@@ -314,7 +314,7 @@ class MoccaApiClient(
      * @return List of authentication methods (api_key, oauth, etc.)
      */
     suspend fun getProviderAuthMethods(providerId: String): Result<List<ProviderAuthMethod>> =
-            safeCall("getProviderAuthMethods") { get("provider/$providerId/auth").body() }
+            safeRequest("getProviderAuthMethods") { get("provider/$providerId/auth") }
 
     /**
      * Initiate OAuth authorization flow for a provider.
