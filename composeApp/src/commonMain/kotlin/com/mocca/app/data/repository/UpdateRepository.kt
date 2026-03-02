@@ -73,8 +73,8 @@ class UpdateRepository(
                     return UpdateCheckResult.Error("No releases found in repository")
                 }
                 
-                val remoteTag = latestRelease.tagName.removePrefix("v")
-                val currentTag = currentVersion.removePrefix("v")
+                val remoteTag = normalizeVersionTag(latestRelease.tagName)
+                val currentTag = normalizeVersionTag(currentVersion)
                 
                 Napier.d("Latest release on GitHub: $remoteTag, Current: $currentTag", tag = "UpdateRepository")
                 
@@ -274,23 +274,49 @@ class UpdateRepository(
         val buildNumber: Int? = null  // null if no build suffix
     )
     
+    /**
+     * Normalizes a version tag by stripping the "v" prefix and handling
+     * malformed CI tags (e.g. "v-build.166" where VERSION_NAME was missing).
+     * 
+     * Examples:
+     *   "v1.0.0-build.166" → "1.0.0-build.166"
+     *   "v-build.166"      → "build.166"  (malformed — no base version)
+     *   "1.0.0-build.166"  → "1.0.0-build.166"
+     *   "1.0.0"            → "1.0.0"
+     */
+    private fun normalizeVersionTag(tag: String): String {
+        return tag
+            .removePrefix("v")
+            .removePrefix("V")
+            .trimStart('-')  // handle malformed "v-build.N" → "-build.N" → "build.N"
+    }
+    
     private fun parseVersion(version: String): ParsedVersion {
-        // Check for -build.N suffix
+        // Check for -build.N suffix (e.g. "1.0.0-build.166")
         val buildMatch = Regex("^(.+)-build\\.(\\d+)$").find(version)
-        
-        return if (buildMatch != null) {
+        if (buildMatch != null) {
             val base = buildMatch.groupValues[1]
             val buildNum = buildMatch.groupValues[2].toInt()
-            ParsedVersion(
+            return ParsedVersion(
                 baseVersion = base.split(".").mapNotNull { it.toIntOrNull() },
                 buildNumber = buildNum
             )
-        } else {
-            // No build suffix, just parse base version
-            ParsedVersion(
-                baseVersion = version.split(".").mapNotNull { it.toIntOrNull() },
-                buildNumber = null
+        }
+        
+        // Check for build-only format (e.g. "build.166" from malformed tags)
+        val buildOnlyMatch = Regex("^build\\.(\\d+)$").find(version)
+        if (buildOnlyMatch != null) {
+            val buildNum = buildOnlyMatch.groupValues[1].toInt()
+            return ParsedVersion(
+                baseVersion = emptyList(),
+                buildNumber = buildNum
             )
         }
+        
+        // No build suffix, just parse base version
+        return ParsedVersion(
+            baseVersion = version.split(".").mapNotNull { it.toIntOrNull() },
+            buildNumber = null
+        )
     }
 }
