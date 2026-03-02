@@ -165,7 +165,7 @@ private fun AgentHeader(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = appVersion.ifEmpty { "--" },
+                text = appVersion.ifEmpty { "--" }.uppercase(),
                 color = AppColors.textTertiary,
                 style = AppTypography.bodySmall
             )

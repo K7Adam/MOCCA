@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
@@ -242,10 +243,11 @@ fun ChatInputContent(
                         tint = AppColors.textSecondary
                     )
                     Text(
-                        text = modelName.take(10).uppercase(),
+                        text = modelName.uppercase(),
                         color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                         style = AppTypography.labelSmall,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -793,7 +795,8 @@ fun ChatInputContent(
                             text = "SEND",
                             color = if (canSend) AppColors.background else AppColors.grey,
                             style = AppTypography.labelSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
                         )
                     }
                 }
@@ -821,7 +824,8 @@ fun ChatInputContent(
                             text = "ABORT",
                             color = AppColors.white,
                             style = AppTypography.labelSmall,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
                         )
                     }
                 }

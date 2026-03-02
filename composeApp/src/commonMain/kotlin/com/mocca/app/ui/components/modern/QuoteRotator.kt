@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.SizeTransform
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import kotlinx.coroutines.delay
 
 /**
@@ -106,7 +107,7 @@ fun QuoteRotator(
                 Text(
                     text = loadingText,
                     color = AppColors.statusWaiting,
-                    style = MaterialTheme.typography.labelMedium,
+                    style = AppTypography.labelMedium,
                     textAlign = TextAlign.Center
                 )
             }
@@ -121,15 +122,16 @@ fun QuoteRotator(
             AnimatedContent(
                 targetState = currentIndex,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(fadeInDurationMs)) togetherWith
-                        fadeOut(animationSpec = tween(fadeOutDurationMs))
+                    (fadeIn(animationSpec = tween(fadeInDurationMs)) togetherWith
+                        fadeOut(animationSpec = tween(fadeOutDurationMs)))
+                        .using(SizeTransform(clip = true))
                 },
                 label = "quoteAnimation"
             ) { index ->
                 Text(
                     text = quotes.getOrElse(index) { "" },
                     color = textColor,
-                    style = MaterialTheme.typography.headlineLarge,
+                    style = AppTypography.headlineLarge,
                     textAlign = TextAlign.Center
                 )
             }
@@ -141,7 +143,7 @@ fun QuoteRotator(
             Text(
                 text = metaText.uppercase(),
                 color = AppColors.greyDark,
-                style = MaterialTheme.typography.labelSmall,
+                style = AppTypography.labelSmall,
                 textAlign = TextAlign.Center
             )
         }
@@ -176,7 +178,7 @@ fun AsciiGlobe(
     Text(
         text = asciiArt,
         color = color,
-        style = MaterialTheme.typography.bodySmall,
+        style = AppTypography.bodySmall,
         modifier = modifier,
         textAlign = TextAlign.Center
     )
@@ -202,7 +204,7 @@ fun AsciiTerminal(
     Text(
         text = asciiArt,
         color = color,
-        style = MaterialTheme.typography.bodySmall,
+        style = AppTypography.bodySmall,
         modifier = modifier,
         textAlign = TextAlign.Center
     )
@@ -219,7 +221,7 @@ fun DecorativeBrackets(
     Text(
         text = "[[ ]]",
         color = color,
-        style = MaterialTheme.typography.displayLarge,
+        style = AppTypography.displayLarge,
         modifier = modifier,
         textAlign = TextAlign.Center
     )
