@@ -311,10 +311,8 @@ class ChatStateStore(
             is ServerEvent.MessageUpdated -> {
                 val msgSessionId = event.properties.info.sessionID
                 if (msgSessionId == currentId) {
+                    // DB observer will pick this up
                     _isSending.value = false
-                    // Reload messages immediately so persisted message appears
-                    // before streaming text is cleared (fixes streaming→persisted gap)
-                    reloadMessages(currentId)
                 }
             }
             

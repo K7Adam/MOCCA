@@ -48,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
@@ -68,12 +67,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.input.TransformedText
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.text.SpanStyle
 
 /**
  * Chat input content component - the content that appears ABOVE the persistent nav row.
@@ -249,11 +242,10 @@ fun ChatInputContent(
                         tint = AppColors.textSecondary
                     )
                     Text(
-                        text = modelName.uppercase(),
+                        text = modelName.take(10).uppercase(),
                         color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
                         style = AppTypography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        maxLines = 1
                     )
                 }
             }
@@ -287,11 +279,10 @@ fun ChatInputContent(
                             tint = AppColors.textTertiary
                         )
                         Text(
-                            text = (selectedVariantId ?: "DEF").uppercase(),
+                            text = (selectedVariantId ?: "DEF").take(5).uppercase(),
                             color = AppColors.textSecondary,
                             style = AppTypography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 1
                         )
                     }
                 }
@@ -330,11 +321,10 @@ fun ChatInputContent(
                             tint = AppColors.textTertiary
                         )
                         Text(
-                            text = agentName.uppercase(),
+                            text = agentName.take(8).uppercase(),
                             color = AppColors.textTertiary,
                             style = AppTypography.labelSmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            maxLines = 1
                         )
                     }
                 }
@@ -377,28 +367,6 @@ fun ChatInputContent(
             val interactionSource = remember { MutableInteractionSource() }
             isInputFocused = interactionSource.collectIsFocusedAsState().value
 
-            val mentionRegex = remember { Regex("@[\\w.-]+") }
-            val visualTransformation = remember {
-                VisualTransformation { text ->
-                    val annotatedString = buildAnnotatedString {
-                        var currentIndex = 0
-                        val matches = mentionRegex.findAll(text.text)
-                        for (match in matches) {
-                            append(text.text.substring(currentIndex, match.range.first))
-                            withStyle(style = SpanStyle(
-                                color = AppColors.accentGreen,
-                                background = AppColors.accentGreen.copy(alpha = 0.15f)
-                            )) {
-                                append(match.value)
-                            }
-                            currentIndex = match.range.last + 1
-                        }
-                        append(text.text.substring(currentIndex))
-                    }
-                    TransformedText(annotatedString, OffsetMapping.Identity)
-                }
-            }
-
             BasicTextField(
                 value = inputText,
                 onValueChange = handleValueChange,
@@ -406,7 +374,6 @@ fun ChatInputContent(
                 enabled = inputEnabled,
                 textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
                 cursorBrush = SolidColor(AppColors.accentGreen),
-                visualTransformation = visualTransformation,
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
                     Box {

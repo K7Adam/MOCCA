@@ -408,46 +408,6 @@ data class Message(
             )
         }
     }
-
-    /**
-     * Whether this message should be displayed in the chat UI.
-     * Filters out:
-     * - SYSTEM role messages (internal server messages)
-     * - User messages containing system-reminder XML tags
-     * - User messages containing OMO_INTERNAL_INITIATOR markers
-     * - User messages that are "tool was executed by the user" notifications
-     * - Assistant messages with no displayable parts
-     */
-    fun isDisplayable(): Boolean {
-        // Never show SYSTEM messages
-        if (role == MessageRole.SYSTEM) return false
-
-        // Assistant messages: must have at least one part
-        if (role == MessageRole.ASSISTANT) return parts.isNotEmpty()
-
-        // User messages: check for internal/system content
-        if (role == MessageRole.USER) {
-            val textContent = parts.filterIsInstance<MessagePart.Text>()
-                .joinToString("\n") { it.text }
-
-            // Empty user messages with no parts shouldn't be hidden
-            // (they might be optimistic messages), but empty text is fine to show
-            if (textContent.isBlank()) return true
-
-            // Filter system-reminder XML tags and OMO internal markers
-            if (textContent.contains("<system-reminder>") ||
-                textContent.contains("</system-reminder>") ||
-                textContent.contains("<!-- OMO_INTERNAL_INITIATOR -->") ||
-                textContent.contains("OMO_INTERNAL_INITIATOR")) return false
-
-            // Filter "tool was executed by the user" noise from server
-            if (textContent.contains("The following tool was executed by the user")) return false
-
-            return true
-        }
-
-        return true
-    }
 }
 
 @Serializable

@@ -44,8 +44,7 @@ data class SuggestionItem(
 
 enum class SuggestionType {
     COMMAND, // Slash command
-    MODE,    // @mention (legacy)
-    MENTION  // @mention for files/agents
+    MODE     // @mention
 }
 
 /**
@@ -127,7 +126,6 @@ private fun SuggestionRow(
                 text = when (item.type) {
                     SuggestionType.COMMAND -> "/"
                     SuggestionType.MODE -> "@"
-                    SuggestionType.MENTION -> "@"
                 },
                 style = AppTypography.labelMedium,
                 color = AppColors.accentGreen,

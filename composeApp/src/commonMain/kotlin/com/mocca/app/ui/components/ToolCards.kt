@@ -283,20 +283,6 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
     }
 }
 
-@Composable
-private fun ShowDuration(richState: RichToolState) {
-    val durationMs = when (richState) {
-        is RichToolState.Completed -> richState.durationMs
-        is RichToolState.Error -> richState.durationMs
-        else -> return
-    }
-    Text(
-        text = formatDuration(durationMs),
-        style = AppTypography.labelSmall,
-        color = AppColors.grey
-    )
-}
-
 // ===== Tool-specific cards =====
 
 @Composable
@@ -1004,6 +990,23 @@ private fun ErrorBlock(error: String) {
 }
 
 @Composable
+private fun ShowDuration(richState: RichToolState) {
+    val duration = when (richState) {
+        is RichToolState.Completed -> richState.durationMs
+        is RichToolState.Error -> richState.durationMs
+        else -> null
+    }
+    
+    if (duration != null && duration > 0) {
+        Text(
+            text = formatDuration(duration),
+            style = AppTypography.labelSmall,
+            color = AppColors.grey.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
 private fun DiffView(oldText: String, newText: String) {
     Column(
         modifier = Modifier
@@ -1409,7 +1412,7 @@ private fun detectLanguageFromPath(path: String): String {
 private fun formatDuration(ms: Long): String {
     return when {
         ms < 1000 -> "${ms}ms"
-        ms < 60000 -> "${ms / 1000}.${(ms % 1000) / 100}s"
+        ms < 60000 -> "${ms / 1000.0}s".take(5)
         else -> "${ms / 60000}m ${(ms % 60000) / 1000}s"
     }
 }
