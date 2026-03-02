@@ -407,6 +407,7 @@ data class Message(
                 metadata = null
             )
         }
+    }
 
     /**
      * Whether this message should be displayed in the chat UI.

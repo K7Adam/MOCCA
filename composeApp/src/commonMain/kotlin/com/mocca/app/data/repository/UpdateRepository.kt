@@ -256,11 +256,11 @@ class UpdateRepository(
         }
         
         // If base versions are equal, compare build numbers
-        // A version WITH a build number is considered newer than one WITHOUT
+        // A version WITHOUT a build number is a release — it's newer than a CI build WITH one
         if (remoteParsed.buildNumber != null && currentParsed.buildNumber == null) {
-            return true
-        } else if (remoteParsed.buildNumber == null && currentParsed.buildNumber != null) {
             return false
+        } else if (remoteParsed.buildNumber == null && currentParsed.buildNumber != null) {
+            return true
         } else if (remoteParsed.buildNumber != null) {
             // Both have build numbers (since currentParsed.buildNumber != null is implied here)
             return remoteParsed.buildNumber > (currentParsed.buildNumber ?: 0)
