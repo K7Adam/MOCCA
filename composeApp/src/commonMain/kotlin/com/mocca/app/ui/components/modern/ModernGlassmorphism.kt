@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppAnimations
+import com.mocca.app.ui.theme.AppShapes
 import io.github.fletchmckee.liquid.LiquidState
 import io.github.fletchmckee.liquid.liquid
 import io.github.fletchmckee.liquid.rememberLiquidState
@@ -168,6 +170,21 @@ object LiquidGlassDefaults {
     // ═════════════════════════════════════════════════════════════════════════
 
     /** Default contrast */
+    const val contrastDefault: Float = 1.1f
+
+    /** High contrast */
+    const val contrastHigh: Float = 1.2f
+}
+
+/**
+ * Spring animation presets for glass component interactions.
+ * Uses 2025-2026 best practices with bouncy springs for modern tactile feel.
+ */
+object GlassAnimationPresets {
+    val pressSpring = AppAnimations.SpringBouncy
+    val releaseSpring = AppAnimations.SpringSmooth
+    val hoverSpring = AppAnimations.SpringResponsive
+}
     const val contrastDefault: Float = 1.1f
 
     /** High contrast */
