@@ -122,7 +122,7 @@ class TerminalScreen : Screen {
                         )
                     }
                     state.activeTab != null -> {
-                        val currentTab = state.activeTab
+                        val currentTab = state.activeTab!!
                         TerminalContent(
                             tab = currentTab,
                             currentCols = state.cols,

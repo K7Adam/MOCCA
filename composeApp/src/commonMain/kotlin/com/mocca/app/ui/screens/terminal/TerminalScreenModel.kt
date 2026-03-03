@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
@@ -70,7 +71,7 @@ class TerminalScreenModel(
     override fun onDispose() {
         receiveJobs.values.forEach { it.cancel() }
         receiveJobs.clear()
-        wsSessions.values.forEach { it.close() }
+        wsSessions.values.forEach { it.cancel() }
         wsSessions.clear()
         super.onDispose()
     }
