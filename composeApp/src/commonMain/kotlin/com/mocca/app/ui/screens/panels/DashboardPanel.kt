@@ -15,6 +15,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
+import com.mocca.app.ui.theme.AppAnimations
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -52,6 +55,11 @@ fun DashboardPanel(
     val scrollState = rememberScrollState()
     
     Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(AppSpacing.lg)
+            .animateContentSize(animationSpec = AppAnimations.SpringBouncy)
+            .verticalScroll(scrollState),
         modifier = modifier
             .fillMaxSize()
             .padding(AppSpacing.lg)

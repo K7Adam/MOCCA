@@ -168,6 +168,28 @@ fun StatusDot(
         contentAlignment = Alignment.Center
     ) {
         if (showGlow) {
+            val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "dotPulse")
+            val alpha by infiniteTransition.animateFloat(
+                initialValue = 0.1f,
+                targetValue = 0.4f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(1500, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dotPulseAlpha"
+            )
+            // Subtle glow/outer ring
+            Box(
+                modifier = Modifier
+                    .size(size + 4.dp)
+                    .background(color.copy(alpha = alpha), CircleShape)
+            )
+        }
+        // Core dot
+        modifier = modifier.size(size),
+        contentAlignment = Alignment.Center
+    ) {
+        if (showGlow) {
             // Subtle glow/outer ring
             Box(
                 modifier = Modifier

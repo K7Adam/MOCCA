@@ -190,7 +190,12 @@ fun UnifiedFloatingBottomBar(
     }
     
     // Premium smooth height animation with low bouncy spring
+    // Premium smooth height animation with bouncy spring
     val animatedHeight by animateDpAsState(
+        targetValue = targetHeight,
+        animationSpec = com.mocca.app.ui.theme.AppAnimations.SpringBouncy,
+        label = "bottomBarHeight"
+    )
         targetValue = targetHeight,
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioLowBouncy,
