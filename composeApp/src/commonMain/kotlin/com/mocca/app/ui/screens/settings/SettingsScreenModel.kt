@@ -751,12 +751,6 @@ class SettingsScreenModel(
                 Napier.w("Server ${server.name} connection failed: ${e.message}")
                 ServerConnectionStatus.FAILED
             }
-            
-            _state.value = _state.value.copy(
-                connectionStatuses = _state.value.connectionStatuses + (server.id to status)
-            )
-        }
-    }
     
     fun checkAllServers() {
         screenModelScope.launch {
