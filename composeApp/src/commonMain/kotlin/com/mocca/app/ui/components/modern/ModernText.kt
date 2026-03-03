@@ -230,7 +230,7 @@ fun TypewriterCycleText(
     texts: List<String>,
     modifier: Modifier = Modifier,
     color: Color = AppColors.white,
-    style: TextStyle = MaterialTheme.typography.headlineMedium,
+    style: TextStyle = AppTypography.headlineMedium,
     typingDelayMs: Long = 80L,
     eraseDelayMs: Long = 40L,
     pauseDelayMs: Long = 2000L,
@@ -349,19 +349,19 @@ fun ConsoleLogLine(
             Text(
                 text = prefixText,
                 color = prefixColor,
-                style = MaterialTheme.typography.bodySmall,
+                style = AppTypography.bodySmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = " > ",
                 color = AppColors.grey,
-                style = MaterialTheme.typography.bodySmall
+                style = AppTypography.bodySmall
             )
         }
         Text(
             text = message,
             color = textColor,
-            style = MaterialTheme.typography.bodySmall
+            style = AppTypography.bodySmall
         )
     }
 }

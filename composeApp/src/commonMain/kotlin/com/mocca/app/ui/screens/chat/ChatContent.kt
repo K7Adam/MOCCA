@@ -663,6 +663,12 @@ fun ChatContent(
                         }
 
                         MessageBubble(
+                        MessageBubble(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = null, 
+                                fadeOutSpec = null,
+                                placementSpec = AppAnimations.SpringBouncy
+                            ),
                             message = message,
                             isFirstInGroup = isFirstInGroup,
                             dateHeader = showDateHeader,

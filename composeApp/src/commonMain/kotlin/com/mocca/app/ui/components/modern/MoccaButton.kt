@@ -157,6 +157,10 @@ fun MoccaOutlinedButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "buttonScale"
+    )
         targetValue = if (isPressed) 0.98f else 1f,
         animationSpec = tween(100),
         label = "buttonScale"
@@ -223,6 +227,10 @@ fun MoccaCompactButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "buttonScale"
+    )
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(100),
         label = "buttonScale"
@@ -331,6 +339,10 @@ fun MoccaIconButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "iconButtonScale"
+    )
         targetValue = if (isPressed) 0.9f else 1f,
         animationSpec = tween(100),
         label = "iconButtonScale"
@@ -388,6 +400,10 @@ fun MoccaIconButtonGlass(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.85f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "iconButtonScale"
+    )
         targetValue = if (isPressed) 0.9f else 1f,
         animationSpec = tween(100),
         label = "iconButtonScale"
@@ -438,6 +454,10 @@ fun MoccaFab(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "fabScale"
+    )
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(100),
         label = "fabScale"
@@ -479,6 +499,10 @@ fun MoccaFabGlass(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "fabScale"
+    )
         targetValue = if (isPressed) 0.95f else 1f,
         animationSpec = tween(100),
         label = "fabScale"

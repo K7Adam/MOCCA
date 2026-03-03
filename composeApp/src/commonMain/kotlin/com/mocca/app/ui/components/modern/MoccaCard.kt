@@ -20,6 +20,13 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.components.modern.shimmer
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 
 /**
  * Modern MOCCA card containers with rounded corners.
@@ -42,6 +49,7 @@ fun MoccaCard(
     borderWidth: Dp = AppSpacing.borderThin,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
+    isLoading: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
@@ -49,9 +57,17 @@ fun MoccaCard(
             .clip(shape)
             .background(backgroundColor, shape)
             .border(borderWidth, borderColor, shape)
-            .padding(contentPadding),
-        content = content
-    )
+            .then(if (isLoading) Modifier.shimmer() else Modifier)
+            .padding(contentPadding)
+    ) {
+        AnimatedVisibility(
+            visible = !isLoading,
+            enter = fadeIn(tween(300)) + expandVertically(),
+            exit = fadeOut(tween(200)) + shrinkVertically()
+        ) {
+            Column(content = content)
+        }
+    }
 }
 
 /**
