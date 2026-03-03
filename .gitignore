@@ -46,3 +46,6 @@ mbuild.sh
 .DS_Store
 Thumbs.db
 nul
+
+# Agent work artifacts
+.sisyphus/
