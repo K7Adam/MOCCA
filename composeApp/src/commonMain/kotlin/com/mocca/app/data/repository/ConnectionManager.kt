@@ -380,6 +380,7 @@ class ConnectionManager(
             ConnectionStatus.Connecting
         }
 
+        reconnectJob?.cancel()
         reconnectJob = scope.launch {
             val delayMs = calculateBackoff(consecutiveFailures)
             Napier.i("[ConnectionManager] Reconnecting in ${delayMs}ms (attempt $consecutiveFailures/$MAX_RECONNECT_ATTEMPTS)")
