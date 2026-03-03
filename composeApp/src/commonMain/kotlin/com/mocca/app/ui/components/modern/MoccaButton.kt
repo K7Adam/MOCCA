@@ -34,6 +34,11 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.AppAnimations
+import com.mocca.app.ui.components.glass.glassyFab
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.components.glass.glassyFab
 
 object MoccaButtonDefaults {
@@ -62,6 +67,18 @@ fun MoccaButton(
     showArrow: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "buttonScale"
+    )
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1f,
+        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        label = "buttonScale"
+    )
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.98f else 1f,
