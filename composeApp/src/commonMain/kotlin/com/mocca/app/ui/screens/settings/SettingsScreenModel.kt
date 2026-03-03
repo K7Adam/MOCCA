@@ -731,29 +731,26 @@ class SettingsScreenModel(
                     }
                 }
                 
-                val response = testClient.get("${server.baseUrl.trimEnd('/')}/global/health")
-                testClient.close()
-                
-                if (response.status.value in 200..299) {
-                    Napier.i("Server ${server.name} connection successful")
-                    ServerConnectionStatus.CONNECTED
-                } else if (response.status.value == 401) {
-                    Napier.w("Server ${server.name} auth failed (401)")
-                    ServerConnectionStatus.FAILED
-                } else {
-                    Napier.w("Server ${server.name} returned status ${response.status}")
-                    ServerConnectionStatus.FAILED
+                try {
+                    val response = testClient.get("${server.baseUrl.trimEnd('/')}/global/health")
+                    
+                    if (response.status.value in 200..299) {
+                        Napier.i("Server ${server.name} connection successful")
+                        ServerConnectionStatus.CONNECTED
+                    } else if (response.status.value == 401) {
+                        Napier.w("Server ${server.name} auth failed (401)")
+                        ServerConnectionStatus.FAILED
+                    } else {
+                        Napier.w("Server ${server.name} returned status ${response.status}")
+                        ServerConnectionStatus.FAILED
+                    }
+                } finally {
+                    testClient.close()
                 }
             } catch (e: Exception) {
                 Napier.w("Server ${server.name} connection failed: ${e.message}")
                 ServerConnectionStatus.FAILED
             }
-            
-            _state.value = _state.value.copy(
-                connectionStatuses = _state.value.connectionStatuses + (server.id to status)
-            )
-        }
-    }
     
     fun checkAllServers() {
         screenModelScope.launch {
