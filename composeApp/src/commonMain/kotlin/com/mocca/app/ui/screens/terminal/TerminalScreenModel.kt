@@ -70,7 +70,7 @@ class TerminalScreenModel(
     override fun onDispose() {
         receiveJobs.values.forEach { it.cancel() }
         receiveJobs.clear()
-        // Jobs are already cancelled above; WS connections close when their coroutines end
+        wsSessions.values.forEach { it.close() }
         wsSessions.clear()
         super.onDispose()
     }
