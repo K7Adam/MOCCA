@@ -122,11 +122,12 @@ class TerminalScreen : Screen {
                         )
                     }
                     state.activeTab != null -> {
+                        val currentTab = state.activeTab
                         TerminalContent(
-                            tab = state.activeTab!!,
+                            tab = currentTab,
                             currentCols = state.cols,
                             currentRows = state.rows,
-                            onInput = { input -> screenModel.sendInput(state.activeTab!!.terminal.id, input) },
+                            onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
                             onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
                             modifier = Modifier
                                 .fillMaxWidth()
