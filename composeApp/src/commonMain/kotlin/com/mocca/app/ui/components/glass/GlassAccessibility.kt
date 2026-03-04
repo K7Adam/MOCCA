@@ -246,7 +246,7 @@ fun rememberContrastAdjustedTextColor(
                 }
             }
             luminance > 0.5 -> {
-                androidx.compose.ui.graphics.Color(0xFF1A1A1A) // Dark text
+                androidx.compose.ui.graphics.Color(0xFF16171E) // Dark navy text
             }
             else -> {
                 androidx.compose.ui.graphics.Color.White // White text

@@ -139,93 +139,91 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "CONFIGURE PROVIDERS") {
-                        val commonProviders = listOf("anthropic", "openai", "github")
+                    SettingsCard(title = "CONFIGURE PROVIDERS") { val commonProviders = listOf("anthropic", "openai", "github")
+                    
+                    commonProviders.forEach { providerId ->
+                        var isExpanded by remember { mutableStateOf(false) }
+                        var manualKey by remember { mutableStateOf("") }
                         
-                        commonProviders.forEach { providerId ->
-                            var isExpanded by remember { mutableStateOf(false) }
-                            var manualKey by remember { mutableStateOf("") }
-                            
-                            // Header row
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable { 
-                                        isExpanded = !isExpanded
-                                        if (isExpanded) {
-                                            screenModel.loadAuthMethods(providerId)
-                                        }
-                                    }
-                                    .padding(vertical = AppSpacing.sm),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = providerId.uppercase(),
-                                    color = AppColors.white,
-                                    style = AppTypography.bodyMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = if (isExpanded) "[-]" else "[+]",
-                                    color = AppColors.textTertiary,
-                                    style = AppTypography.labelSmall
-                                )
-                            }
-                            
-                            if (isExpanded) {
-                                Column(modifier = Modifier.padding(start = AppSpacing.md, bottom = AppSpacing.md)) {
-                                    val methods = state.providerAuthMethods[providerId]
-                                    
-                                    if (state.authLoading && state.selectedProviderId == providerId) {
-                                        Text("Loading auth methods...", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                                    } else {
-                                        // OAuth Button
-                                        if (methods?.any { it.type == "oauth" } == true) {
-                                            MoccaButton(
-                                                text = "CONNECT (OAUTH)",
-                                                onClick = { 
-                                                    screenModel.startOAuth(providerId) { url ->
-                                                        uriHandler.openUri(url)
-                                                    }
-                                                },
-                                                modifier = Modifier.fillMaxWidth(),
-                                                height = AppSpacing.buttonHeightCompact
-                                            )
-                                            Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                            Text("- OR -", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                                            Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                        }
-                                        
-                                        // Manual Key Input
-                                        MoccaInput(
-                                            value = manualKey,
-                                            onValueChange = { manualKey = it },
-                                            placeholder = "API KEY",
-                                            label = null
-                                        )
-                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                        MoccaCompactButton(
-                                            text = "SAVE KEY",
-                                            onClick = { screenModel.setManualKey(providerId, manualKey) },
-                                            enabled = manualKey.isNotBlank(),
-                                            height = AppSpacing.buttonHeightSmall
-                                        )
-                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                        MoccaCompactButton(
-                                            text = "REMOVE AUTH",
-                                            onClick = { screenModel.removeProviderAuth(providerId) },
-                                            height = AppSpacing.buttonHeightSmall,
-                                            backgroundColor = AppColors.error.copy(alpha = 0.15f),
-                                            textColor = AppColors.error
-                                        )
+                        // Header row
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { 
+                                    isExpanded = !isExpanded
+                                    if (isExpanded) {
+                                        screenModel.loadAuthMethods(providerId)
                                     }
                                 }
-                            }
-                            
-                            HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                .padding(vertical = AppSpacing.sm),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = providerId.uppercase(),
+                                color = AppColors.white,
+                                style = AppTypography.bodyMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = if (isExpanded) "[-]" else "[+]",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
+                            )
                         }
-                    }
+                        
+                        if (isExpanded) {
+                            Column(modifier = Modifier.padding(start = AppSpacing.md, bottom = AppSpacing.md)) {
+                                val methods = state.providerAuthMethods[providerId]
+                                
+                                if (state.authLoading && state.selectedProviderId == providerId) {
+                                    Text("Loading auth methods...", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                } else {
+                                    // OAuth Button
+                                    if (methods?.any { it.type == "oauth" } == true) {
+                                        MoccaButton(
+                                            text = "CONNECT (OAUTH)",
+                                            onClick = { 
+                                                screenModel.startOAuth(providerId) { url ->
+                                                    uriHandler.openUri(url)
+                                                }
+                                            },
+                                            modifier = Modifier.fillMaxWidth(),
+                                            height = AppSpacing.buttonHeightCompact
+                                        )
+                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                        Text("- OR -", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                    }
+                                    
+                                    // Manual Key Input
+                                    MoccaInput(
+                                        value = manualKey,
+                                        onValueChange = { manualKey = it },
+                                        placeholder = "API KEY",
+                                        label = null
+                                    )
+                                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                    MoccaCompactButton(
+                                        text = "SAVE KEY",
+                                        onClick = { screenModel.setManualKey(providerId, manualKey) },
+                                        enabled = manualKey.isNotBlank(),
+                                        height = AppSpacing.buttonHeightSmall
+                                    )
+                                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                                    MoccaCompactButton(
+                                        text = "REMOVE AUTH",
+                                        onClick = { screenModel.removeProviderAuth(providerId) },
+                                        height = AppSpacing.buttonHeightSmall,
+                                        backgroundColor = AppColors.error.copy(alpha = 0.15f),
+                                        textColor = AppColors.error
+                                    )
+                                }
+                            }
+                        }
+                        
+                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    } }
                 }
 
                 // App Configuration Section
@@ -239,73 +237,71 @@ class SettingsScreen : Screen {
                 }
 
                 item {
-                    ModuleCard(title = "GLOBAL DEFAULTS") {
-                        val defaultProvider = state.serverDefaultProvider ?: "Not set"
-                        val defaultModel = state.serverDefaultModel ?: "Not set"
-
-                        // Display current defaults from server
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "DEFAULT PROVIDER",
-                                    color = AppColors.textTertiary,
-                                    style = AppTypography.labelSmall
-                                )
-                                Text(
-                                    text = defaultProvider.uppercase(),
-                                    color = if (state.serverDefaultProvider != null) AppColors.statusOnline else AppColors.textSecondary,
-                                    style = AppTypography.bodyMedium
-                                )
-                            }
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "DEFAULT MODEL",
-                                    color = AppColors.textTertiary,
-                                    style = AppTypography.labelSmall
-                                )
-                                Text(
-                                    text = defaultModel,
-                                    color = if (state.serverDefaultModel != null) AppColors.statusOnline else AppColors.textSecondary,
-                                    style = AppTypography.bodySmall
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(AppSpacing.md))
-
-                        // Show available modes from server
-                        if (state.serverModes.isNotEmpty()) {
+                    SettingsCard(title = "GLOBAL DEFAULTS") { val defaultProvider = state.serverDefaultProvider ?: "Not set"
+                    val defaultModel = state.serverDefaultModel ?: "Not set"
+                    
+                    // Display current defaults from server
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "AVAILABLE MODES",
+                                text = "DEFAULT PROVIDER",
                                 color = AppColors.textTertiary,
                                 style = AppTypography.labelSmall
                             )
-                            Spacer(modifier = Modifier.height(AppSpacing.xs))
                             Text(
-                                text = state.serverModes.joinToString(", ") { it.name },
-                                color = AppColors.textSecondary,
-                                style = AppTypography.labelSmall
+                                text = defaultProvider.uppercase(),
+                                color = if (state.serverDefaultProvider != null) AppColors.statusOnline else AppColors.textSecondary,
+                                style = AppTypography.bodyMedium
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(AppSpacing.lg))
-
-                        // Info note about server-side configuration
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "DEFAULT MODEL",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
+                            )
+                            Text(
+                                text = defaultModel,
+                                color = if (state.serverDefaultModel != null) AppColors.statusOnline else AppColors.textSecondary,
+                                style = AppTypography.bodySmall
+                            )
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    
+                    // Show available modes from server
+                    if (state.serverModes.isNotEmpty()) {
                         Text(
-                            text = "Provider and model are configured on the OpenCode server.",
+                            text = "AVAILABLE MODES",
                             color = AppColors.textTertiary,
                             style = AppTypography.labelSmall
                         )
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
-                            text = "Update these settings via /config command in OpenCode.",
-                            color = AppColors.textTertiary,
+                            text = state.serverModes.joinToString(", ") { it.name },
+                            color = AppColors.textSecondary,
                             style = AppTypography.labelSmall
                         )
                     }
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.lg))
+                    
+                    // Info note about server-side configuration
+                    Text(
+                        text = "Provider and model are configured on the OpenCode server.",
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelSmall
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.xs))
+                    Text(
+                        text = "Update these settings via /config command in OpenCode.",
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelSmall
+                    ) }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -321,69 +317,61 @@ class SettingsScreen : Screen {
                         )
                     }
                     item {
-                        ModuleCard(title = "CURRENT PROJECT") {
-                            Column(modifier = Modifier.padding(AppSpacing.sm)) {
-                                ModuleRowItem(
-                                    title = "NAME",
-                                    subtitle = project.displayName,
-                                    isEnabled = true,
-                                    showToggle = false
-                                )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                Text(
-                                    text = "PROJECT PATH",
-                                    color = AppColors.textSecondary,
-                                    style = AppTypography.labelSmall,
-                                    modifier = Modifier.padding(horizontal = AppSpacing.sm)
-                                )
-                                Spacer(modifier = Modifier.height(AppSpacing.xs))
-                                OutlinedTextField(
-                                    value = state.editingProjectPath,
-                                    onValueChange = { screenModel.setEditingProjectPath(it) },
-                                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    singleLine = true,
-                                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
-                                    keyboardOptions = KeyboardOptions(
-                                        keyboardType = KeyboardType.Uri,
-                                        imeAction = ImeAction.Done
-                                    ),
-                                    keyboardActions = KeyboardActions(
-                                        onDone = { screenModel.saveProjectPath() }
-                                    ),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = AppColors.accentGreen,
-                                        unfocusedBorderColor = AppColors.border,
-                                        cursorColor = AppColors.accentGreen,
-                                        focusedContainerColor = AppColors.background,
-                                        unfocusedContainerColor = AppColors.background
-                                    ),
-                                    shape = AppShapes.medium
-                                )
-                                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                MoccaCompactButton(
-                                    text = "UPDATE PATH",
-                                    onClick = { screenModel.saveProjectPath() },
-                                    enabled = state.editingProjectPath.isNotBlank() &&
-                                        state.editingProjectPath != (project.path ?: project.directory ?: ""),
-                                    height = AppSpacing.buttonHeightSmall
-                                )
-                            }
-                        }
+                        SettingsCard(title = "CURRENT PROJECT") { Column(modifier = Modifier.padding(AppSpacing.sm)) {
+                            SettingsRowItem(title = "NAME",
+                            subtitle = project.displayName,
+                            isEnabled = true,
+                            showToggle = false)
+                            HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            Text(
+                                text = "PROJECT PATH",
+                                color = AppColors.textSecondary,
+                                style = AppTypography.labelSmall,
+                                modifier = Modifier.padding(horizontal = AppSpacing.sm)
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.xs))
+                            OutlinedTextField(
+                                value = state.editingProjectPath,
+                                onValueChange = { screenModel.setEditingProjectPath(it) },
+                                placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
+                                modifier = Modifier.fillMaxWidth(),
+                                singleLine = true,
+                                textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Uri,
+                                    imeAction = ImeAction.Done
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onDone = { screenModel.saveProjectPath() }
+                                ),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = AppColors.primary,
+                                    unfocusedBorderColor = AppColors.border,
+                                    cursorColor = AppColors.primary,
+                                    focusedContainerColor = AppColors.background,
+                                    unfocusedContainerColor = AppColors.background
+                                ),
+                                shape = AppShapes.medium
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.sm))
+                            MoccaCompactButton(
+                                text = "UPDATE PATH",
+                                onClick = { screenModel.saveProjectPath() },
+                                enabled = state.editingProjectPath.isNotBlank() &&
+                                    state.editingProjectPath != (project.path ?: project.directory ?: ""),
+                                height = AppSpacing.buttonHeightSmall
+                            )
+                        } }
                     }
                 }
                 // Server Info Section (when connected)
                 state.serverVersion?.let { version ->
                     item {
-                        ModuleCard(title = "OPENCODE SERVER INFO") {
-                            ModuleRowItem(
-                                title = "SERVER VERSION",
-                                subtitle = version,
-                                isEnabled = true,
-                                showToggle = false
-                            )
-                        }
+                        SettingsCard(title = "OPENCODE SERVER INFO") { SettingsRowItem(title = "SERVER VERSION",
+                        subtitle = version,
+                        isEnabled = true,
+                        showToggle = false) }
                     }
                 }
                 
@@ -401,98 +389,86 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "DISPLAY") {
-                        // Show Token Counts
-                        ModuleRowItem(
-                            title = "SHOW TOKEN COUNTS",
-                            subtitle = "Display input/output tokens in chat",
-                            isEnabled = state.preferences.showTokenCounts,
-                            onToggle = { screenModel.setShowTokenCounts(!state.preferences.showTokenCounts) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Show Timestamps
-                        ModuleRowItem(
-                            title = "SHOW TIMESTAMPS",
-                            subtitle = "Display message timestamps",
-                            isEnabled = state.preferences.showTimestamps,
-                            onToggle = { screenModel.setShowTimestamps(!state.preferences.showTimestamps) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Compact Mode
-                        ModuleRowItem(
-                            title = "COMPACT MODE",
-                            subtitle = "Reduced padding for higher density",
-                            isEnabled = state.preferences.compactMode,
-                            onToggle = { screenModel.setCompactMode(!state.preferences.compactMode) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Hide API Keys
-                        ModuleRowItem(
-                            title = "HIDE API KEYS",
-                            subtitle = "Mask sensitive keys in settings",
-                            isEnabled = state.preferences.hideApiKeys,
-                            onToggle = { screenModel.setHideApiKeys(!state.preferences.hideApiKeys) }
-                        )
-                    }
+                    SettingsCard(title = "DISPLAY") { // Show Token Counts
+                    SettingsRowItem(title = "SHOW TOKEN COUNTS",
+                    subtitle = "Display input/output tokens in chat",
+                    isEnabled = state.preferences.showTokenCounts,
+                    onToggle = { screenModel.setShowTokenCounts(!state.preferences.showTokenCounts) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Show Timestamps
+                    SettingsRowItem(title = "SHOW TIMESTAMPS",
+                    subtitle = "Display message timestamps",
+                    isEnabled = state.preferences.showTimestamps,
+                    onToggle = { screenModel.setShowTimestamps(!state.preferences.showTimestamps) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Compact Mode
+                    SettingsRowItem(title = "COMPACT MODE",
+                    subtitle = "Reduced padding for higher density",
+                    isEnabled = state.preferences.compactMode,
+                    onToggle = { screenModel.setCompactMode(!state.preferences.compactMode) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Hide API Keys
+                    SettingsRowItem(title = "HIDE API KEYS",
+                    subtitle = "Mask sensitive keys in settings",
+                    isEnabled = state.preferences.hideApiKeys,
+                    onToggle = { screenModel.setHideApiKeys(!state.preferences.hideApiKeys) }) }
                 }
                 
                 // Font Scale Slider
                 item {
-                    ModuleCard(title = "FONT SIZE") {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "TEXT SCALE",
-                                    color = AppColors.textPrimary,
-                                    style = AppTypography.bodyMedium
-                                )
-                                Text(
-                                    text = "${state.preferences.fontScalePercent}%",
-                                    color = AppColors.accentGreen,
-                                    style = AppTypography.labelMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                            
-                            Spacer(modifier = Modifier.height(AppSpacing.sm))
-                            
-                            // Font scale slider
-                            var sliderValue by remember { mutableStateOf(state.preferences.fontScale) }
-                            
-                            androidx.compose.material3.Slider(
-                                value = sliderValue,
-                                onValueChange = { sliderValue = it },
-                                onValueChangeFinished = { screenModel.setFontScale(sliderValue) },
-                                valueRange = 0.8f..1.4f,
-                                steps = 5,
-                                colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = AppColors.accentGreen,
-                                    activeTrackColor = AppColors.accentGreen,
-                                    inactiveTrackColor = AppColors.greyDark
-                                )
+                    SettingsCard(title = "FONT SIZE") { Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "TEXT SCALE",
+                                color = AppColors.textPrimary,
+                                style = AppTypography.bodyMedium
                             )
-                            
-                            // Labels
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text("Small", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                                Text("Default", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                                Text("Large", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                            }
+                            Text(
+                                text = "${state.preferences.fontScalePercent}%",
+                                color = AppColors.primary,
+                                style = AppTypography.labelMedium,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
-                    }
+                        
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        
+                        // Font scale slider
+                        var sliderValue by remember { mutableStateOf(state.preferences.fontScale) }
+                        
+                        androidx.compose.material3.Slider(
+                            value = sliderValue,
+                            onValueChange = { sliderValue = it },
+                            onValueChangeFinished = { screenModel.setFontScale(sliderValue) },
+                            valueRange = 0.8f..1.4f,
+                            steps = 5,
+                            colors = androidx.compose.material3.SliderDefaults.colors(
+                                thumbColor = AppColors.primary,
+                                activeTrackColor = AppColors.primary,
+                                inactiveTrackColor = AppColors.greyDark
+                            )
+                        )
+                        
+                        // Labels
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text("Small", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                            Text("Default", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                            Text("Large", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                        }
+                    } }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -509,35 +485,27 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "MESSAGING") {
-                        // Auto Scroll
-                        ModuleRowItem(
-                            title = "AUTO SCROLL",
-                            subtitle = "Scroll to bottom on new messages",
-                            isEnabled = state.preferences.autoScroll,
-                            onToggle = { screenModel.setAutoScroll(!state.preferences.autoScroll) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Confirm Delete
-                        ModuleRowItem(
-                            title = "CONFIRM DELETE",
-                            subtitle = "Ask before deleting sessions",
-                            isEnabled = state.preferences.confirmDelete,
-                            onToggle = { screenModel.setConfirmDelete(!state.preferences.confirmDelete) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Show Thinking Blocks
-                        ModuleRowItem(
-                            title = "SHOW THINKING",
-                            subtitle = "Display AI reasoning blocks",
-                            isEnabled = state.preferences.showThinkingBlocks,
-                            onToggle = { screenModel.setShowThinkingBlocks(!state.preferences.showThinkingBlocks) }
-                        )
-                    }
+                    SettingsCard(title = "MESSAGING") { // Auto Scroll
+                    SettingsRowItem(title = "AUTO SCROLL",
+                    subtitle = "Scroll to bottom on new messages",
+                    isEnabled = state.preferences.autoScroll,
+                    onToggle = { screenModel.setAutoScroll(!state.preferences.autoScroll) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Confirm Delete
+                    SettingsRowItem(title = "CONFIRM DELETE",
+                    subtitle = "Ask before deleting sessions",
+                    isEnabled = state.preferences.confirmDelete,
+                    onToggle = { screenModel.setConfirmDelete(!state.preferences.confirmDelete) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Show Thinking Blocks
+                    SettingsRowItem(title = "SHOW THINKING",
+                    subtitle = "Display AI reasoning blocks",
+                    isEnabled = state.preferences.showThinkingBlocks,
+                    onToggle = { screenModel.setShowThinkingBlocks(!state.preferences.showThinkingBlocks) }) }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -554,35 +522,27 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "ALERTS") {
-                        // Permission Notifications
-                        ModuleRowItem(
-                            title = "PERMISSION REQUESTS",
-                            subtitle = "Alert when AI needs approval",
-                            isEnabled = state.preferences.notifyPermissions,
-                            onToggle = { screenModel.setNotifyPermissions(!state.preferences.notifyPermissions) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Session Complete
-                        ModuleRowItem(
-                            title = "SESSION COMPLETE",
-                            subtitle = "Alert when AI finishes task",
-                            isEnabled = state.preferences.notifySessionComplete,
-                            onToggle = { screenModel.setNotifySessionComplete(!state.preferences.notifySessionComplete) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Connection Lost
-                        ModuleRowItem(
-                            title = "CONNECTION LOST",
-                            subtitle = "Alert on server disconnect",
-                            isEnabled = state.preferences.notifyConnectionLost,
-                            onToggle = { screenModel.setNotifyConnectionLost(!state.preferences.notifyConnectionLost) }
-                        )
-                    }
+                    SettingsCard(title = "ALERTS") { // Permission Notifications
+                    SettingsRowItem(title = "PERMISSION REQUESTS",
+                    subtitle = "Alert when AI needs approval",
+                    isEnabled = state.preferences.notifyPermissions,
+                    onToggle = { screenModel.setNotifyPermissions(!state.preferences.notifyPermissions) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Session Complete
+                    SettingsRowItem(title = "SESSION COMPLETE",
+                    subtitle = "Alert when AI finishes task",
+                    isEnabled = state.preferences.notifySessionComplete,
+                    onToggle = { screenModel.setNotifySessionComplete(!state.preferences.notifySessionComplete) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Connection Lost
+                    SettingsRowItem(title = "CONNECTION LOST",
+                    subtitle = "Alert on server disconnect",
+                    isEnabled = state.preferences.notifyConnectionLost,
+                    onToggle = { screenModel.setNotifyConnectionLost(!state.preferences.notifyConnectionLost) }) }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -599,33 +559,27 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "NETWORK") {
-                        // Auto Reconnect
-                        ModuleRowItem(
-                            title = "AUTO RECONNECT",
-                            subtitle = "Reconnect when connection drops",
-                            isEnabled = state.preferences.autoReconnect,
-                            onToggle = { screenModel.setAutoReconnect(!state.preferences.autoReconnect) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Data Saver Mode
-                        ModuleRowItem(
-                            title = "DATA SAVER",
-                            subtitle = "Reduce background network usage",
-                            isEnabled = state.preferences.dataSaverMode,
-                            onToggle = { screenModel.setDataSaverMode(!state.preferences.dataSaverMode) }
-                        )
-                        
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                        
-                        Text(
-                            text = "Data Saver disables background sync and reduces network calls.",
-                            color = AppColors.textTertiary,
-                            style = AppTypography.labelSmall
-                        )
-                    }
+                    SettingsCard(title = "NETWORK") { // Auto Reconnect
+                    SettingsRowItem(title = "AUTO RECONNECT",
+                    subtitle = "Reconnect when connection drops",
+                    isEnabled = state.preferences.autoReconnect,
+                    onToggle = { screenModel.setAutoReconnect(!state.preferences.autoReconnect) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Data Saver Mode
+                    SettingsRowItem(title = "DATA SAVER",
+                    subtitle = "Reduce background network usage",
+                    isEnabled = state.preferences.dataSaverMode,
+                    onToggle = { screenModel.setDataSaverMode(!state.preferences.dataSaverMode) })
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    
+                    Text(
+                        text = "Data Saver disables background sync and reduces network calls.",
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelSmall
+                    ) }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -642,84 +596,76 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "SECURITY") {
-                        // Screen Security
-                        ModuleRowItem(
-                            title = "SCREEN SECURITY",
-                            subtitle = "Prevent screenshots",
-                            isEnabled = state.preferences.screenSecurity,
-                            onToggle = { screenModel.setScreenSecurity(!state.preferences.screenSecurity) }
-                        )
-                        
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Clear Cache on Exit
-                        ModuleRowItem(
-                            title = "CLEAR CACHE ON EXIT",
-                            subtitle = "Remove local data when app closes",
-                            isEnabled = state.preferences.clearCacheOnExit,
-                            onToggle = { screenModel.setClearCacheOnExit(!state.preferences.clearCacheOnExit) }
-                        )
-                    }
+                    SettingsCard(title = "SECURITY") { // Screen Security
+                    SettingsRowItem(title = "SCREEN SECURITY",
+                    subtitle = "Prevent screenshots",
+                    isEnabled = state.preferences.screenSecurity,
+                    onToggle = { screenModel.setScreenSecurity(!state.preferences.screenSecurity) })
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Clear Cache on Exit
+                    SettingsRowItem(title = "CLEAR CACHE ON EXIT",
+                    subtitle = "Remove local data when app closes",
+                    isEnabled = state.preferences.clearCacheOnExit,
+                    onToggle = { screenModel.setClearCacheOnExit(!state.preferences.clearCacheOnExit) }) }
                 }
                 
                 // Data Management
                 item {
-                    ModuleCard(title = "DATA") {
-                        // Clear Cache Button
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "CLEAR ALL CACHE",
-                                    color = AppColors.textPrimary,
-                                    style = AppTypography.bodyMedium
-                                )
-                                Text(
-                                    text = "Remove cached sessions and messages",
-                                    color = AppColors.textTertiary,
-                                    style = AppTypography.labelSmall
-                                )
-                            }
-                            
-                            MoccaOutlinedButton(
-                                text = "CLEAR",
-                                onClick = { screenModel.showClearCacheDialog() },
-                                height = AppSpacing.buttonHeightSmall
+                    SettingsCard(title = "DATA") { // Clear Cache Button
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "CLEAR ALL CACHE",
+                                color = AppColors.textPrimary,
+                                style = AppTypography.bodyMedium
+                            )
+                            Text(
+                                text = "Remove cached sessions and messages",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
                             )
                         }
                         
-                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
-                        
-                        // Reset Preferences
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "RESET PREFERENCES",
-                                    color = AppColors.textPrimary,
-                                    style = AppTypography.bodyMedium
-                                )
-                                Text(
-                                    text = "Restore all settings to defaults",
-                                    color = AppColors.textTertiary,
-                                    style = AppTypography.labelSmall
-                                )
-                            }
-                            
-                            MoccaOutlinedButton(
-                                text = "RESET",
-                                onClick = { screenModel.resetPreferencesToDefaults() },
-                                height = AppSpacing.buttonHeightSmall
-                            )
-                        }
+                        MoccaOutlinedButton(
+                            text = "CLEAR",
+                            onClick = { screenModel.showClearCacheDialog() },
+                            height = AppSpacing.buttonHeightSmall
+                        )
                     }
+                    
+                    HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                    
+                    // Reset Preferences
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "RESET PREFERENCES",
+                                color = AppColors.textPrimary,
+                                style = AppTypography.bodyMedium
+                            )
+                            Text(
+                                text = "Restore all settings to defaults",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
+                            )
+                        }
+                        
+                        MoccaOutlinedButton(
+                            text = "RESET",
+                            onClick = { screenModel.resetPreferencesToDefaults() },
+                            height = AppSpacing.buttonHeightSmall
+                        )
+                    } }
                 }
                 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -737,127 +683,125 @@ class SettingsScreen : Screen {
                 }
                 
                 item {
-                    ModuleCard(title = "GITHUB AUTO UPDATE") {
-                        // Token status indicator
-                        val tokenStatus = state.githubTokenStatus
-                        val statusColor = when {
-                            tokenStatus?.isValid == true -> AppColors.statusOnline
-                            tokenStatus?.isMissing == true -> AppColors.textSecondary
-                            tokenStatus?.isError == true -> AppColors.error
-                            state.githubToken.isBlank() -> AppColors.textSecondary
-                            else -> AppColors.textSecondary
-                        }
-                        
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "Token Status:",
-                                color = AppColors.textSecondary,
-                                style = AppTypography.labelSmall
-                            )
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .background(statusColor, CircleShape)
-                                )
-                                Text(
-                                    text = when {
-                                        state.isValidatingToken -> "Validating..."
-                                        tokenStatus?.isValid == true -> "Valid"
-                                        tokenStatus?.isMissing == true -> "Not Set"
-                                        tokenStatus?.isError == true -> "Invalid"
-                                        state.githubToken.isBlank() -> "Not Set"
-                                        else -> "Unknown"
-                                    },
-                                    color = statusColor,
-                                    style = AppTypography.labelSmall
-                                )
-                            }
-                        }
-                        
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                        
+                    SettingsCard(title = "GITHUB AUTO UPDATE") { // Token status indicator
+                    val tokenStatus = state.githubTokenStatus
+                    val statusColor = when {
+                        tokenStatus?.isValid == true -> AppColors.statusOnline
+                        tokenStatus?.isMissing == true -> AppColors.textSecondary
+                        tokenStatus?.isError == true -> AppColors.error
+                        state.githubToken.isBlank() -> AppColors.textSecondary
+                        else -> AppColors.textSecondary
+                    }
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
+                            text = "Token Status:",
                             color = AppColors.textSecondary,
                             style = AppTypography.labelSmall
                         )
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                        
-                        // GitHub PAT input
-                        var tokenInput by remember { mutableStateOf(state.githubToken) }
-                        
-                        MoccaInput(
-                            value = tokenInput,
-                            onValueChange = { tokenInput = it },
-                            label = "GITHUB PAT",
-                            placeholder = "ghp_... or github_pat_..."
-                        )
-                        
-                        Spacer(modifier = Modifier.height(AppSpacing.md))
-                        
-                        // Action buttons
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                         ) {
-                            MoccaOutlinedButton(
-                                text = "SAVE",
-                                onClick = { screenModel.saveGitHubToken(tokenInput) },
-                                enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken && !state.isValidatingToken,
-                                modifier = Modifier.weight(1f),
-                                height = AppSpacing.buttonHeightCompact
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(statusColor, CircleShape)
                             )
-                            
-                            MoccaOutlinedButton(
-                                text = "VALIDATE",
-                                onClick = { screenModel.validateGitHubToken() },
-                                enabled = state.githubToken.isNotBlank() && !state.isValidatingToken && !state.isLoading,
-                                modifier = Modifier.weight(1f),
-                                height = AppSpacing.buttonHeightCompact
-                            )
-                            
-                            MoccaButton(
-                                text = "CHECK UPDATES",
-                                onClick = { screenModel.checkForUpdates() },
-                                enabled = !state.isLoading && !state.isValidatingToken,
-                                modifier = Modifier.weight(1.2f),
-                                height = AppSpacing.buttonHeightCompact
-                            )
-                        }
-                        
-                        // Show message if any
-                        state.message?.let { message ->
-                            Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
-                                text = message,
-                                color = when {
-                                    message.contains("failed", ignoreCase = true) || 
-                                    message.contains("error", ignoreCase = true) ||
-                                    message.contains("invalid", ignoreCase = true) -> AppColors.error
-                                    message.contains("valid", ignoreCase = true) ||
-                                    message.contains("available", ignoreCase = true) -> AppColors.statusOnline
-                                    else -> AppColors.textSecondary
+                                text = when {
+                                    state.isValidatingToken -> "Validating..."
+                                    tokenStatus?.isValid == true -> "Valid"
+                                    tokenStatus?.isMissing == true -> "Not Set"
+                                    tokenStatus?.isError == true -> "Invalid"
+                                    state.githubToken.isBlank() -> "Not Set"
+                                    else -> "Unknown"
                                 },
+                                color = statusColor,
                                 style = AppTypography.labelSmall
                             )
                         }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    
+                    Text(
+                        text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
+                        color = AppColors.textSecondary,
+                        style = AppTypography.labelSmall
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    
+                    // GitHub PAT input
+                    var tokenInput by remember { mutableStateOf(state.githubToken) }
+                    
+                    MoccaInput(
+                        value = tokenInput,
+                        onValueChange = { tokenInput = it },
+                        label = "GITHUB PAT",
+                        placeholder = "ghp_... or github_pat_..."
+                    )
+                    
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    
+                    // Action buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                    ) {
+                        MoccaOutlinedButton(
+                            text = "SAVE",
+                            onClick = { screenModel.saveGitHubToken(tokenInput) },
+                            enabled = tokenInput.isNotBlank() && tokenInput != state.githubToken && !state.isValidatingToken,
+                            modifier = Modifier.weight(1f),
+                            height = AppSpacing.buttonHeightCompact
+                        )
                         
-                        // Help text
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        MoccaOutlinedButton(
+                            text = "VALIDATE",
+                            onClick = { screenModel.validateGitHubToken() },
+                            enabled = state.githubToken.isNotBlank() && !state.isValidatingToken && !state.isLoading,
+                            modifier = Modifier.weight(1f),
+                            height = AppSpacing.buttonHeightCompact
+                        )
+                        
+                        MoccaButton(
+                            text = "CHECK UPDATES",
+                            onClick = { screenModel.checkForUpdates() },
+                            enabled = !state.isLoading && !state.isValidatingToken,
+                            modifier = Modifier.weight(1.2f),
+                            height = AppSpacing.buttonHeightCompact
+                        )
+                    }
+                    
+                    // Show message if any
+                    state.message?.let { message ->
+                        Spacer(modifier = Modifier.height(AppSpacing.md))
                         Text(
-                            text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
-                            color = AppColors.textTertiary,
+                            text = message,
+                            color = when {
+                                message.contains("failed", ignoreCase = true) || 
+                                message.contains("error", ignoreCase = true) ||
+                                message.contains("invalid", ignoreCase = true) -> AppColors.error
+                                message.contains("valid", ignoreCase = true) ||
+                                message.contains("available", ignoreCase = true) -> AppColors.statusOnline
+                                else -> AppColors.textSecondary
+                            },
                             style = AppTypography.labelSmall
                         )
                     }
+                    
+                    // Help text
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    Text(
+                        text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
+                        color = AppColors.textTertiary,
+                        style = AppTypography.labelSmall
+                    ) }
                 }
                 // ═══════════════════════════════════════════════════════════════════════════
                 // SKILLS SECTION
@@ -873,19 +817,17 @@ class SettingsScreen : Screen {
                 }
 
                 item {
-                    ModuleCard(title = "SERVER SKILLS") {
-                        Text(
-                            text = "View agent skills registered on the OpenCode server.",
-                            style = AppTypography.labelSmall,
-                            color = AppColors.textSecondary
-                        )
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                        MoccaButton(
-                            text = "BROWSE SKILLS",
-                            onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
-                            height = AppSpacing.buttonHeightCompact
-                        )
-                    }
+                    SettingsCard(title = "SERVER SKILLS") { Text(
+                        text = "View agent skills registered on the OpenCode server.",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    MoccaButton(
+                        text = "BROWSE SKILLS",
+                        onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
+                        height = AppSpacing.buttonHeightCompact
+                    ) }
                 }
 
                 // ═══════════════════════════════════════════════════════════════════════════
@@ -902,19 +844,17 @@ class SettingsScreen : Screen {
                 }
 
                 item {
-                    ModuleCard(title = "FEATURE FLAGS") {
-                        Text(
-                            text = "Manage server-wide experimental feature flags and global config options.",
-                            style = AppTypography.labelSmall,
-                            color = AppColors.textSecondary
-                        )
-                        Spacer(modifier = Modifier.height(AppSpacing.sm))
-                        MoccaButton(
-                            text = "MANAGE FLAGS",
-                            onClick = { navigator.push(FeatureFlagsScreen) },
-                            height = AppSpacing.buttonHeightCompact
-                        )
-                    }
+                    SettingsCard(title = "FEATURE FLAGS") { Text(
+                        text = "Manage server-wide experimental feature flags and global config options.",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.sm))
+                    MoccaButton(
+                        text = "MANAGE FLAGS",
+                        onClick = { navigator.push(FeatureFlagsScreen) },
+                        height = AppSpacing.buttonHeightCompact
+                    ) }
                 }
 
             }
@@ -979,14 +919,14 @@ private fun TerminalServerCard(
     onDelete: () -> Unit,
     onCheckConnection: () -> Unit
 ) {
-    val borderColor = if (isActive) AppColors.statusOnline else null
+    val borderColor = if (isActive) AppColors.primary else null
     
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .liquidGlassCard(
                 shape = AppShapes.card,
-                tint = if (isActive) AppColors.accentGreen.copy(alpha = 0.08f) else AppColors.liquidGlassTint
+                tint = if (isActive) AppColors.primary.copy(alpha = 0.08f) else AppColors.liquidGlassTint
             )
             .then(
                 if (borderColor != null) {
@@ -999,12 +939,12 @@ private fun TerminalServerCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onActivate)
-                .background(if (isActive) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent)
+                .background(if (isActive) AppColors.primary.copy(alpha = 0.1f) else Color.Transparent)
                 .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatusDot(
-                color = if (isActive) AppColors.statusOnline else AppColors.grey,
+                color = if (isActive) AppColors.primary else AppColors.grey,
                 size = 12.dp
             )
             Spacer(modifier = Modifier.width(AppSpacing.md))
@@ -1012,7 +952,7 @@ private fun TerminalServerCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name.uppercase(),
-                    color = if (isActive) AppColors.statusOnline else AppColors.white,
+                    color = if (isActive) AppColors.primary else AppColors.white,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -1026,7 +966,7 @@ private fun TerminalServerCard(
             if (isActive) {
                 Text(
                     text = "SELECTED",
-                    color = AppColors.statusOnline,
+                    color = AppColors.primary,
                     style = AppTypography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -1213,4 +1153,85 @@ private fun TerminalServerEditDialog(
             )
         }
     )
+}
+
+@Composable
+private fun SettingsCard(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(AppShapes.card)
+            .background(AppColors.surfaceVariant, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+    ) {
+        Text(
+            text = title.uppercase(),
+            color = AppColors.primary,
+            style = AppTypography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(
+                horizontal = AppSpacing.cardPadding,
+                vertical = AppSpacing.md
+            )
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = AppSpacing.cardPadding)
+                .padding(bottom = AppSpacing.cardPadding),
+            content = content
+        )
+    }
+}
+
+@Composable
+private fun SettingsRowItem(
+    title: String,
+    subtitle: String,
+    isEnabled: Boolean,
+    showToggle: Boolean = true,
+    onToggle: ((Boolean) -> Unit)? = null,
+    onClick: (() -> Unit)? = null
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
+            )
+            .padding(vertical = AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                color = if (isEnabled) AppColors.textPrimary else AppColors.textSecondary,
+                style = AppTypography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = subtitle,
+                color = AppColors.textTertiary,
+                style = AppTypography.bodySmall
+            )
+        }
+        if (showToggle && onToggle != null) {
+            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = onToggle,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AppColors.background,
+                    checkedTrackColor = AppColors.primary,
+                    checkedBorderColor = AppColors.primary,
+                    uncheckedThumbColor = AppColors.textSecondary,
+                    uncheckedTrackColor = AppColors.surfaceVariant,
+                    uncheckedBorderColor = AppColors.border
+                )
+            )
+        }
+    }
 }

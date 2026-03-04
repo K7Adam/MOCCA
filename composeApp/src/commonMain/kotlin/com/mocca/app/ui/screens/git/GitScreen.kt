@@ -187,7 +187,7 @@ private fun GitFloatingBar(
 ) {
     Surface(
         modifier = Modifier.padding(bottom = 16.dp),
-        color = AppColors.surfaceElevated,
+        color = AppColors.surfaceVariant,
         shape = AppShapes.pill,
         border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)),
         shadowElevation = 8.dp
@@ -237,7 +237,7 @@ private fun GitStatusSummary(
         // ── Status Summary Card ─────────────────────────────────────
         item {
             Surface(
-                color = AppColors.surfaceElevated,
+                color = AppColors.surfaceVariant,
                 shape = AppShapes.medium,
                 border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.08f))
             ) {
@@ -261,7 +261,7 @@ private fun GitStatusSummary(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if ((status?.ahead ?: 0) > 0) {
-                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accentGreen.copy(alpha = 0.2f), contentColor = AppColors.accentGreen)
+                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.primary.copy(alpha = 0.2f), contentColor = AppColors.primary)
                             }
                             if ((status?.behind ?: 0) > 0) {
                                 GodBadge(text = "↓${status?.behind}", containerColor = AppColors.alertRed.copy(alpha = 0.2f), contentColor = AppColors.alertRed)
@@ -272,7 +272,7 @@ private fun GitStatusSummary(
                         Text(
                             text = "${uiState.stagedCount} staged",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen.copy(alpha = 0.8f)
+                            color = AppColors.primary.copy(alpha = 0.8f)
                         )
                         Text(
                             text = "${uiState.unstagedCount} modified",
@@ -298,8 +298,8 @@ private fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f), letterSpacing = 1.sp)
-                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accentGreen.copy(alpha = 0.15f), contentColor = AppColors.accentGreen)
+                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.primary.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.primary.copy(alpha = 0.15f), contentColor = AppColors.primary)
                     }
                     TextButton(onClick = { screenModel.unstageAll() }) {
                         Text("UNSTAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
@@ -314,7 +314,7 @@ private fun GitStatusSummary(
                         Icon(
                             imageVector = statusIcon(change.status),
                             contentDescription = null,
-                            tint = AppColors.accentGreen,
+                            tint = AppColors.primary,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -360,7 +360,7 @@ private fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.stageFile(change.path) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.discardFile(change.path) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
@@ -403,7 +403,7 @@ private fun GitStatusSummary(
                     },
                     trailing = {
                         IconButton(onClick = { screenModel.stageFile(path) }, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                         }
                     }
                 )
@@ -460,7 +460,7 @@ private fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.popStash(stash.index) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.primary.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.dropStash(stash.index) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
@@ -531,14 +531,14 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         Icon(
                             imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
                             contentDescription = null,
-                            tint = if (branch.name == currentBranch) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            tint = if (branch.name == currentBranch) AppColors.primary else AppColors.white.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
                     trailing = {
                         if (branch.ahead > 0 || branch.behind > 0) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
+                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.primary)
                                 if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.alertRed)
                             }
                         }
@@ -646,7 +646,7 @@ private fun LogTimelineItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(AppColors.surfaceElevated, AppShapes.circle)
+                    .background(AppColors.surfaceVariant, AppShapes.circle)
                     .border(BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)), AppShapes.circle),
                 contentAlignment = Alignment.Center
             ) {
@@ -849,7 +849,7 @@ private fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Label,
                         contentDescription = null,
-                        tint = AppColors.accentGreen.copy(alpha = 0.6f)
+                        tint = AppColors.primary.copy(alpha = 0.6f)
                     )
                 },
                 trailing = {
@@ -908,7 +908,7 @@ private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
             contentAlignment = Alignment.BottomCenter
         ) {
             Surface(
-                color = if (toastIsWarning) AppColors.error else AppColors.accentGreen,
+                color = if (toastIsWarning) AppColors.error else AppColors.primary,
                 shape = AppShapes.pill,
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {
@@ -939,7 +939,7 @@ private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
 private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout: () -> Unit, onMerge: () -> Unit, onRebase: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -964,7 +964,7 @@ private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout
 private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> Unit, onCommit: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(
@@ -988,7 +988,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
 private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit, onCreate: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(
@@ -1015,7 +1015,7 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -1041,7 +1041,7 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -1066,7 +1066,7 @@ private fun CreateBranchDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceVariant,
         title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(

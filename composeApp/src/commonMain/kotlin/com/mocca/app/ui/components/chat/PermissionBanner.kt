@@ -67,8 +67,8 @@ fun PermissionBanner(
     var timerActive by remember(permission.id) { mutableStateOf(true) }
 
     // Amber/warning colors for permission highlight
-    val amberAccent = Color(0xFFFFB300)
-    val amberBg = Color(0x33FFB300)
+    val amberAccent = AppColors.warning
+    val amberBg = AppColors.warning.copy(alpha = 0.2f)
 
     // Countdown: auto-approve after TTL expires
     LaunchedEffect(permission.id) {

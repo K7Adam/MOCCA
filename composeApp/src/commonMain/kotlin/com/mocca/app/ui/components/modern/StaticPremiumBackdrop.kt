@@ -23,7 +23,7 @@ fun StaticPremiumBackdrop(modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         drawRect(
             brush = Brush.radialGradient(
-                colors = listOf(Color(0xFF001413), AppColors.background),
+                colors = listOf(AppColors.surfaceContainer, AppColors.background),
                 center = Offset(size.width / 2f, size.height / 2f),
                 radius = size.maxDimension * 0.75f
             )

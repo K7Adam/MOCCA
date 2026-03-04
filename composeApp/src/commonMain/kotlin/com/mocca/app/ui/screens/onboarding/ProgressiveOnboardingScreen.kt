@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -36,6 +37,8 @@ import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -133,7 +136,7 @@ class ProgressiveOnboardingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(AppColors.background)
+                .background(Brush.verticalGradient(listOf(AppColors.background, AppColors.surfaceVariant)))
                 .padding(horizontal = AppSpacing.screenPaddingHorizontal)
         ) {
             // Progress indicator
@@ -240,7 +243,7 @@ private fun WizardProgressIndicator(
             
             val color = when {
                 isCompleted -> AppColors.statusOnline
-                isCurrent -> AppColors.accentGreen
+                isCurrent -> AppColors.primary
                 else -> AppColors.border
             }
             
@@ -280,7 +283,7 @@ private fun WelcomeStep(
             Icon(
                 imageVector = Icons.Default.SettingsEthernet,
                 contentDescription = null,
-                tint = AppColors.accentGreen,
+                tint = AppColors.primary,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -311,13 +314,11 @@ private fun WelcomeStep(
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         
         // Primary action: QR Scan
-        MoccaButton(
-            text = "Scan QR Code",
-            onClick = onScanQr,
-            icon = Icons.Default.QrCodeScanner,
-            showArrow = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        MoccaButton(text = "Scan QR Code",
+        onClick = onScanQr,
+        icon = Icons.Default.QrCodeScanner,
+        showArrow = true,
+        modifier = Modifier.fillMaxWidth(), backgroundColor = AppColors.buttonBackground)
         
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
@@ -391,14 +392,14 @@ private fun ChecklistItem(
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background(AppColors.accentGreen.copy(alpha = 0.2f), CircleShape)
-                .border(AppSpacing.borderThin, AppColors.accentGreen, CircleShape),
+                .background(AppColors.primary.copy(alpha = 0.2f), CircleShape)
+                .border(AppSpacing.borderThin, AppColors.primary, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = number,
                 style = AppTypography.labelMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -439,14 +440,14 @@ private fun DiscoveringStep(
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.fillMaxSize(),
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 strokeWidth = 3.dp
             )
             
             Icon(
                 imageVector = Icons.Default.Wifi,
                 contentDescription = null,
-                tint = AppColors.accentGreen,
+                tint = AppColors.primary,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -563,7 +564,7 @@ private fun SelectServerStep(
                     Text(
                         text = "Scan again",
                         style = AppTypography.bodyMedium,
-                        color = AppColors.accentGreen,
+                        color = AppColors.primary,
                         modifier = Modifier.clickable(onClick = onRetry)
                     )
                 }
@@ -573,12 +574,10 @@ private fun SelectServerStep(
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         
         // QR scan button
-        MoccaButton(
-            text = "Scan QR Code",
-            onClick = onScanQr,
-            icon = Icons.Default.QrCodeScanner,
-            modifier = Modifier.fillMaxWidth()
-        )
+        MoccaButton(text = "Scan QR Code",
+        onClick = onScanQr,
+        icon = Icons.Default.QrCodeScanner,
+        modifier = Modifier.fillMaxWidth(), backgroundColor = AppColors.buttonBackground)
         
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
@@ -594,40 +593,84 @@ private fun SelectServerStep(
             )
         } else {
             // Manual entry form — Host / Port / Username / Password
-            MoccaInput(
+            OutlinedTextField(
                 value = manualHost,
                 onValueChange = { manualHost = it },
-                label = "Host",
-                placeholder = NetworkConfig.DEFAULT_HOST_IP
+                label = { Text("Host", color = AppColors.textSecondary) },
+                placeholder = { Text(NetworkConfig.DEFAULT_HOST_IP, color = AppColors.textTertiary) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppColors.primary,
+                    unfocusedBorderColor = AppColors.border,
+                    focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                    cursorColor = AppColors.primary,
+                    focusedTextColor = AppColors.textPrimary,
+                    unfocusedTextColor = AppColors.textPrimary
+                ),
+                shape = AppShapes.medium,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            MoccaInput(
+            OutlinedTextField(
                 value = manualPort,
                 onValueChange = { manualPort = it },
-                label = "Port",
-                placeholder = "4242"
+                label = { Text("Port", color = AppColors.textSecondary) },
+                placeholder = { Text("4242", color = AppColors.textTertiary) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppColors.primary,
+                    unfocusedBorderColor = AppColors.border,
+                    focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                    cursorColor = AppColors.primary,
+                    focusedTextColor = AppColors.textPrimary,
+                    unfocusedTextColor = AppColors.textPrimary
+                ),
+                shape = AppShapes.medium,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            MoccaInput(
+            OutlinedTextField(
                 value = manualUsername,
                 onValueChange = { manualUsername = it },
-                label = "Username",
-                placeholder = NetworkConfig.DEFAULT_USERNAME
+                label = { Text("Username", color = AppColors.textSecondary) },
+                placeholder = { Text(NetworkConfig.DEFAULT_USERNAME, color = AppColors.textTertiary) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppColors.primary,
+                    unfocusedBorderColor = AppColors.border,
+                    focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                    cursorColor = AppColors.primary,
+                    focusedTextColor = AppColors.textPrimary,
+                    unfocusedTextColor = AppColors.textPrimary
+                ),
+                shape = AppShapes.medium,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            MoccaInput(
+            OutlinedTextField(
                 value = manualPassword,
                 onValueChange = { manualPassword = it },
-                label = "Password",
-                placeholder = "Leave empty if none",
+                label = { Text("Password", color = AppColors.textSecondary) },
+                placeholder = { Text("Leave empty if none", color = AppColors.textTertiary) },
                 visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = AppColors.primary,
+                    unfocusedBorderColor = AppColors.border,
+                    focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                    unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                    cursorColor = AppColors.primary,
+                    focusedTextColor = AppColors.textPrimary,
+                    unfocusedTextColor = AppColors.textPrimary
+                ),
+                shape = AppShapes.medium,
+                modifier = Modifier.fillMaxWidth()
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -662,26 +705,24 @@ private fun SelectServerStep(
             Text(
                 text = "$effectiveProtocol://${manualHost.trim()}:$effectivePort",
                 style = AppTypography.bodySmall,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 modifier = Modifier.padding(vertical = AppSpacing.sm)
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
             
-            MoccaButton(
-                text = "Connect",
-                onClick = {
-                    onManualConnect(
-                        manualHost.trim(),
-                        manualPort.trim().toIntOrNull() ?: 4242,
-                        manualUsername.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
-                        manualPassword,
-                        useHttps
-                    )
-                },
-                enabled = manualHost.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
-            )
+            MoccaButton(text = "Connect",
+            onClick = {
+                onManualConnect(
+                    manualHost.trim(),
+                    manualPort.trim().toIntOrNull() ?: 4242,
+                    manualUsername.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
+                    manualPassword,
+                    useHttps
+                )
+            },
+            enabled = manualHost.isNotBlank(),
+            modifier = Modifier.fillMaxWidth(), backgroundColor = AppColors.buttonBackground)
         }
     }
 }
@@ -700,8 +741,8 @@ private fun ServerListItem(
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
     }
     
-    val borderColor = if (isSelected) AppColors.accentGreen else AppColors.border
-    val backgroundColor = if (isSelected) AppColors.accentGreen.copy(alpha = 0.1f) else AppColors.surfaceVariant
+    val borderColor = if (isSelected) AppColors.primary else AppColors.border
+    val backgroundColor = if (isSelected) AppColors.primary.copy(alpha = 0.1f) else AppColors.surfaceVariant
     
     Row(
         modifier = Modifier
@@ -716,7 +757,7 @@ private fun ServerListItem(
         Icon(
             imageVector = sourceIcon,
             contentDescription = null,
-            tint = if (isSelected) AppColors.accentGreen else AppColors.textSecondary,
+            tint = if (isSelected) AppColors.primary else AppColors.textSecondary,
             modifier = Modifier.size(24.dp)
         )
         
@@ -726,7 +767,7 @@ private fun ServerListItem(
             Text(
                 text = server.name,
                 style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.accentGreen else AppColors.white,
+                color = if (isSelected) AppColors.primary else AppColors.white,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             
@@ -741,7 +782,7 @@ private fun ServerListItem(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = "Selected",
-                tint = AppColors.accentGreen,
+                tint = AppColors.primary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -759,7 +800,7 @@ private fun ConnectingStep(
         verticalArrangement = Arrangement.Center
     ) {
         CircularProgressIndicator(
-            color = AppColors.accentGreen,
+            color = AppColors.primary,
             strokeWidth = 3.dp,
             modifier = Modifier.size(64.dp)
         )
@@ -844,12 +885,10 @@ private fun ReadyStep(
         
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
         
-        MoccaButton(
-            text = "Get Started",
-            onClick = onContinue,
-            showArrow = true,
-            modifier = Modifier.fillMaxWidth()
-        )
+        MoccaButton(text = "Get Started",
+        onClick = onContinue,
+        showArrow = true,
+        modifier = Modifier.fillMaxWidth(), backgroundColor = AppColors.buttonBackground)
     }
 }
 
@@ -889,7 +928,7 @@ private fun ErrorMessage(
         Text(
             text = "Retry",
             style = AppTypography.labelSmall,
-            color = AppColors.accentGreen,
+            color = AppColors.primary,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onRetry)
         )
@@ -926,34 +965,54 @@ private fun CredentialDialog(
                 
                 Spacer(modifier = Modifier.height(AppSpacing.lg))
                 
-                MoccaInput(
+                OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = "Username",
-                    placeholder = NetworkConfig.DEFAULT_USERNAME
+                    label = { Text("Username", color = AppColors.textSecondary) },
+                    placeholder = { Text(NetworkConfig.DEFAULT_USERNAME, color = AppColors.textTertiary) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppColors.primary,
+                        unfocusedBorderColor = AppColors.border,
+                        focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                        unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                        cursorColor = AppColors.primary,
+                        focusedTextColor = AppColors.textPrimary,
+                        unfocusedTextColor = AppColors.textPrimary
+                    ),
+                    shape = AppShapes.medium,
+                    modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 
-                MoccaInput(
+                OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = "Password",
-                    placeholder = "Enter server password"
+                    label = { Text("Password", color = AppColors.textSecondary) },
+                    placeholder = { Text("Enter server password", color = AppColors.textTertiary) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AppColors.primary,
+                        unfocusedBorderColor = AppColors.border,
+                        focusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.5f),
+                        unfocusedContainerColor = AppColors.surfaceVariant.copy(alpha = 0.3f),
+                        cursorColor = AppColors.primary,
+                        focusedTextColor = AppColors.textPrimary,
+                        unfocusedTextColor = AppColors.textPrimary
+                    ),
+                    shape = AppShapes.medium,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            MoccaButton(
-                text = "Connect",
-                onClick = {
-                    onConfirm(
-                        username.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
-                        password
-                    )
-                },
-                height = AppSpacing.buttonHeightCompact
-            )
+            MoccaButton(text = "Connect",
+            onClick = {
+                onConfirm(
+                    username.trim().ifBlank { NetworkConfig.DEFAULT_USERNAME },
+                    password
+                )
+            },
+            height = AppSpacing.buttonHeightCompact, backgroundColor = AppColors.buttonBackground)
         },
         dismissButton = {
             Text(

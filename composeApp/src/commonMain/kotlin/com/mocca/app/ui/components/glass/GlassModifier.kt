@@ -127,8 +127,8 @@ fun Modifier.liquidGlassFab(
 fun Modifier.glassy(
     shape: Shape,
     borderWidth: Dp = 0.5.dp,
-    backgroundColor: Color = Color(0x80000000),
-    borderColor: Color = Color(0x40FFFFFF)
+    backgroundColor: Color = Color(0x800D0E12),
+    borderColor: Color = Color(0x40A0A3B5)
 ): Modifier = this.then(
     Modifier
         .clip(shape)
@@ -150,8 +150,8 @@ fun Modifier.glassFloating(
 ): Modifier = glassy(
     shape = shape,
     borderWidth = 0.75.dp,
-    backgroundColor = Color(0x40000000), // 25% dark
-    borderColor = Color(0x40FFFFFF)
+    backgroundColor = Color(0x400D0E12), // 25% dark navy
+    borderColor = Color(0x40A0A3B5)
 )
 
 /**
@@ -166,8 +166,8 @@ fun Modifier.glassButton(
 ): Modifier = glassy(
     shape = shape,
     borderWidth = 1.dp,
-    backgroundColor = Color(0x40000000),
-    borderColor = Color(0x50FFFFFF)
+    backgroundColor = Color(0x400D0E12),
+    borderColor = Color(0x50A0A3B5)
 )
 
 /**

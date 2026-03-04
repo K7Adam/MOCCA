@@ -19,10 +19,10 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 
 object GlassmorphicDefaults {
-    val BackgroundColor: Color = Color(0x99000000)
-    val BorderColor: Color = Color(0x4000D9A5)
-    val HighlightColor: Color = Color(0x33FFFFFF)
-    val ShadowColor: Color = Color(0x40000000)
+    val BackgroundColor: Color = Color(0x990D0E12)
+    val BorderColor: Color = Color(0x407C5CFC)
+    val HighlightColor: Color = Color(0x33A0A3B5)
+    val ShadowColor: Color = Color(0x400D0E12)
     val BorderWidth: Dp = 1.dp
     val ContentPadding: Dp = AppSpacing.md
     val Shape: Shape = AppShapes.rounded2xl
@@ -79,7 +79,7 @@ fun Modifier.glassyMint(
 
 @Composable
 fun Modifier.glassyBackground(alpha: Float = 0.6f): Modifier = this.then(
-    Modifier.background(Color.Black.copy(alpha = alpha))
+    Modifier.background(AppColors.background.copy(alpha = alpha))
 )
 
 @Composable
@@ -87,8 +87,8 @@ fun Modifier.glassyWithBlur(
     shape: Shape = AppShapes.rounded2xl,
     blurRadius: Dp = 8.dp,
     borderWidth: Dp = 1.dp,
-    backgroundColor: Color = Color(0x99000000),
-    borderColor: Color = Color(0x4000D9A5)
+    backgroundColor: Color = Color(0x990D0E12),
+    borderColor: Color = Color(0x407C5CFC)
 ): Modifier = this
     .clip(shape)
     .blur(blurRadius)
@@ -142,5 +142,5 @@ fun Modifier.glassyFab(
     borderAlpha: Float = 0.3f
 ): Modifier = this
     .clip(shape)
-    .background(Color.Black.copy(alpha = backgroundAlpha))
+    .background(AppColors.background.copy(alpha = backgroundAlpha))
     .border(1.5.dp, AppColors.accentGreen.copy(alpha = borderAlpha), shape)

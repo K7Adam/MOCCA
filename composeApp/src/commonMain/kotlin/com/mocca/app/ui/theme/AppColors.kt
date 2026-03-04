@@ -5,213 +5,211 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
- * MOCCA Color Palette - Terminal Theme
- * Pitch Black OLED theme with Mint Green accents
+ * MOCCA Color Palette — Nebula Dark
+ *
+ * Rich dark navy-charcoal surfaces with Electric Violet accents.
+ * Warm off-white text with subtle purple undertone.
+ * Designed for readability, depth, and modern AI-companion aesthetics.
  */
 @Immutable
 object AppColors {
     // ═══════════════════════════════════════════════════════════════════════════
-    // BACKGROUNDS (Pitch Black for OLED)
+    // BACKGROUNDS — Rich dark navy-charcoal (NOT pure black)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Main app background - Pure black for OLED */
-    val background = Color(0xFF000000)
+    /** Main app background — deep navy-charcoal */
+    val background = Color(0xFF0D0E12)
 
-    /** Near-black background variant */
-    val backgroundVariant = Color(0xFF0A0A0A)
+    /** Background variant — slightly lighter for layering */
+    val backgroundVariant = Color(0xFF111218)
 
     /** Slightly elevated surface */
-    val surface = Color(0xFF121212)
+    val surface = Color(0xFF16171E)
 
     /** Surface variant */
-    val surfaceVariant = Color(0xFF1A1A1A)
+    val surfaceVariant = Color(0xFF1C1D26)
 
     /** Surface container */
-    val surfaceContainer = Color(0xFF1E1E1E)
+    val surfaceContainer = Color(0xFF21222D)
 
-    /** Surface elevated */
-    val surfaceElevated = Color(0xFF252525)
+    /** Surface elevated — highest non-modal elevation */
+    val surfaceElevated = Color(0xFF282A36)
 
     /** Card background */
-    val cardBackground = Color(0xFF1A1A1A)
+    val cardBackground = Color(0xFF1C1D26)
 
-    /** Card highlight */
-    val cardHighlight = Color(0xFF252525)
+    /** Card highlight — hover/pressed state */
+    val cardHighlight = Color(0xFF282A36)
 
     /** Module/tool card background */
-    val moduleBackground = Color(0xFF1E1E1E)
+    val moduleBackground = Color(0xFF21222D)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // PRIMARY CONTENT
+    // TEXT — Warm off-whites with purple undertone
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val white = Color(0xFFFFFFFF)
-    val textPrimary = Color(0xFFFFFFFF)
-    val whiteDim = Color(0xFFB0B0B0)
-    val textSecondary = Color(0xFFB0B0B0)
-    val whiteMuted = Color(0xFF808080)
-    val textTertiary = Color(0xFF808080)
-    val textPlaceholder = Color(0xFF666666)
+    val white = Color(0xFFECEDF3)
+    val textPrimary = Color(0xFFECEDF3)
+    val whiteDim = Color(0xFFA0A3B5)
+    val textSecondary = Color(0xFFA0A3B5)
+    val whiteMuted = Color(0xFF6C6F82)
+    val textTertiary = Color(0xFF6C6F82)
+    val textPlaceholder = Color(0xFF545670)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // GREY SCALE
+    // GREY SCALE — Navy-tinted greys
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val greyDark = Color(0xFF333333)
-    val grey = Color(0xFF666666)
-    val greyLight = Color(0xFF999999)
-    val greyExtraLight = Color(0xFFB0B0B0)
-    val border = Color(0xFF333333)
-    val borderLight = Color(0xFF444444)
-    val borderWhite = Color(0xFFFFFFFF)
+    val greyDark = Color(0xFF2E3042)
+    val grey = Color(0xFF545670)
+    val greyLight = Color(0xFF8385A0)
+    val greyExtraLight = Color(0xFFA0A3B5)
+    val border = Color(0xFF2E3042)
+    val borderLight = Color(0xFF3A3D52)
+    val borderWhite = Color(0xFFECEDF3)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ACCENT COLORS (Mint Green Terminal Theme)
+    // ACCENT COLORS — Electric Violet
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Primary accent - Mint Green */
-    val accentGreen = Color(0xFF00D9A5)
-    
-    /** Accent variant - Bright Mint */
-    val accentGreenBright = Color(0xFF00FFB3)
+    /** Primary accent — Electric Violet */
+    val accentGreen = Color(0xFF7C5CFC)
 
-    /** Terminal green */
-    val accentGreenTerminal = Color(0xFF00D9A5)
+    /** Accent variant — Bright Violet */
+    val accentGreenBright = Color(0xFFA78BFA)
+
+    /** Terminal accent — kept name for compat */
+    val accentGreenTerminal = Color(0xFF7C5CFC)
 
     /** Indicator */
-    val greenIndicator = Color(0xFF00D9A5)
-    val emerald = Color(0xFF00D9A5)
+    val greenIndicator = Color(0xFF7C5CFC)
+    val emerald = Color(0xFF7C5CFC)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // BUTTON COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val buttonBackground = Color(0xFF00D9A5)
-    val buttonText = Color(0xFF000000)
-    val buttonSecondary = Color(0xFF1E1E1E)
-    val sendButton = Color(0xFF00D9A5)
+    val buttonBackground = Color(0xFF7C5CFC)
+    val buttonText = Color(0xFFFFFFFF)
+    val buttonSecondary = Color(0xFF21222D)
+    val sendButton = Color(0xFF7C5CFC)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // STATUS COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val statusOnline = Color(0xFF00D9A5)
-    val statusOffline = Color(0xFFFF4444)
-    val statusWaiting = Color(0xFFFFAA00)
-    val statusThinking = Color(0xFF00D9A5)
-    val statusProcessing = Color(0xFF00D9A5)
-    val success = Color(0xFF00D9A5)
-    val error = Color(0xFFFF4444)
-    val warning = Color(0xFFFFAA00)
+    val statusOnline = Color(0xFF34D399)
+    val statusOffline = Color(0xFFF87171)
+    val statusWaiting = Color(0xFFFBBF24)
+    val statusThinking = Color(0xFFA78BFA)
+    val statusProcessing = Color(0xFF7C5CFC)
+    val success = Color(0xFF34D399)
+    val error = Color(0xFFF87171)
+    val warning = Color(0xFFFBBF24)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // ALERT COLORS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val alertRed = Color(0xFFFF4444)
-    val alertRedDim = Color(0x33FF4444)
-    val alertBorderStart = Color(0xFFFF4444)
-    val alertBorderEnd = Color(0xFFFFAA00)
+    val alertRed = Color(0xFFF87171)
+    val alertRedDim = Color(0x33F87171)
+    val alertBorderStart = Color(0xFFF87171)
+    val alertBorderEnd = Color(0xFFFBBF24)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SECONDARY ACCENTS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val primary = Color(0xFF00D9A5)
-    val primaryDim = Color(0xFF1E1E1E)
+    val primary = Color(0xFF7C5CFC)
+    val primaryDim = Color(0xFF21222D)
     val fileTsx = Color(0xFF61DAFB)
-    val fileCss = Color(0xFFBB86FC)
-    val fileJson = Color(0xFFFF5252)
+    val fileCss = Color(0xFFA78BFA)
+    val fileJson = Color(0xFFF87171)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // CODE COLORS
+    // CODE COLORS — One Dark Pro inspired
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val diffAddition = Color(0x1A00D9A5)
-    val diffDeletion = Color(0x1AFF4444)
-    val diffAdditionText = Color(0xFF00D9A5)
-    val diffDeletionText = Color(0xFFFF4444)
+    val diffAddition = Color(0x1A34D399)
+    val diffDeletion = Color(0x1AF87171)
+    val diffAdditionText = Color(0xFF34D399)
+    val diffDeletionText = Color(0xFFF87171)
     val syntaxKeyword = Color(0xFFC586C0)
-    val syntaxFunction = Color(0xFFDCDCAA)
+    val syntaxFunction = Color(0xFF61DAFB)
     val syntaxString = Color(0xFFCE9178)
-    val syntaxType = Color(0xFFBF5AF2)
+    val syntaxType = Color(0xFFA78BFA)
     val syntaxComment = Color(0xFF6A9955)
     val syntaxPunctuation = Color(0xFFD4D4D4)
-    val lineNumbers = Color(0xFF808080)
+    val lineNumbers = Color(0xFF6C6F82)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BADGE/GLASS
+    // BADGE / GLASS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    val badgeBackground = Color(0xFF252525)
-    val badgeText = Color(0xFFFFFFFF)
-    val activeIndicator = Color(0xFF00D9A5)
+    val badgeBackground = Color(0xFF282A36)
+    val badgeText = Color(0xFFECEDF3)
+    val activeIndicator = Color(0xFF7C5CFC)
 
-    val glassBackground = Color(0x4D1A1A1A) // 30% Opacity for true glass look
-    val glassBorder = Color(0x33FFFFFF)     // Subtle white border
-    val scrim = Color(0xCC000000)
-    val inputGlow = Color(0x4000D9A5)
+    val glassBackground = Color(0x4D16171E)
+    val glassBorder = Color(0x33A0A3B5)
+    val scrim = Color(0xCC0D0E12)
+    val inputGlow = Color(0x407C5CFC)
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // LIQUID GLASS (iOS 26 inspired - 2024/2025 design)
-    // COLORLESS GLASS - depth from geometry, not color fills
+    // LIQUID GLASS — Recolored for Nebula Dark
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Primary glass tints - very subtle for text contrast only
-    /** Liquid glass primary tint - 25% dark for text legibility */
-    val liquidGlassTint = Color(0x40000000)
+    /** Liquid glass primary tint — navy-dark for legibility */
+    val liquidGlassTint = Color(0x400D0E12)
 
-    /** Liquid glass secondary tint - for layered effects */
-    val liquidGlassTintSecondary = Color(0x33000000)
+    /** Liquid glass secondary tint — layered effects */
+    val liquidGlassTintSecondary = Color(0x3316171E)
 
-    /** Liquid glass light tint - for elevated elements */
-    val liquidGlassTintLight = Color(0x26000000)
+    /** Liquid glass light tint — elevated elements */
+    val liquidGlassTintLight = Color(0x261C1D26)
 
-    // Specular highlights - simulate light source (pure white)
-    /** Top edge specular highlight - pure white */
-    val liquidGlassSpecular = Color(0x33FFFFFF)
+    /** Top edge specular highlight */
+    val liquidGlassSpecular = Color(0x33A0A3B5)
 
-    /** Inner specular glow - subtle white */
-    val liquidGlassSpecularInner = Color(0x14FFFFFF)
+    /** Inner specular glow */
+    val liquidGlassSpecularInner = Color(0x14A0A3B5)
 
-    /** Refraction accent - mint green glow */
-    val liquidGlassRefraction = Color(0x3300D9A5)
+    /** Refraction accent — violet glow */
+    val liquidGlassRefraction = Color(0x337C5CFC)
 
-    // Border colors - gradient edges for depth (white-based)
-    /** Primary border - white with 20% opacity */
-    val liquidGlassBorder = Color(0x33FFFFFF)
+    /** Primary border — off-white with 20% opacity */
+    val liquidGlassBorder = Color(0x33A0A3B5)
 
-    /** Border highlight - top edge brighter */
-    val liquidGlassBorderHighlight = Color(0x4DFFFFFF)
+    /** Border highlight — top edge brighter */
+    val liquidGlassBorderHighlight = Color(0x4DA0A3B5)
 
-    /** Border shadow - bottom edge darker */
-    val liquidGlassBorderShadow = Color(0x1AFFFFFF)
+    /** Border shadow — bottom edge darker */
+    val liquidGlassBorderShadow = Color(0x1AA0A3B5)
 
-    // Legacy support - updated values for colorless glass
-    /** Premium glass background - 25% dark for text contrast */
-    val glassPremium = Color(0x40000000)
+    /** Premium glass background */
+    val glassPremium = Color(0x400D0E12)
 
-    /** Premium glass border - subtle white glow */
-    val glassBorderPremium = Color(0x33FFFFFF)
+    /** Premium glass border */
+    val glassBorderPremium = Color(0x33A0A3B5)
 
-    /** Premium glass mint glow - for focused state */
-    val glassGlowMint = Color(0x3300D9A5)
+    /** Premium glass glow — violet for focused state */
+    val glassGlowMint = Color(0x337C5CFC)
 
-    // Noise texture alpha (for glass grain effect)
-    const val liquidGlassNoiseFactor = 0.12f
+    /** Noise texture alpha */
+    const val liquidGlassNoiseFactor = 0.10f
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SHIMMER COLORS (Loading Animation)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Shimmer base color - dark gray for loading placeholders */
-    val shimmerBase = Color(0xFF1A1A1A)
+    /** Shimmer base */
+    val shimmerBase = Color(0xFF1C1D26)
 
-    /** Shimmer highlight color - subtle white for sweep effect */
-    val shimmerHighlight = Color(0xFF333333)
+    /** Shimmer highlight */
+    val shimmerHighlight = Color(0xFF2E3042)
 
-    /** Shimmer accent - optional mint tint for branded shimmer */
-    val shimmerAccent = Color(0x1500D9A5)
+    /** Shimmer accent — violet tint */
+    val shimmerAccent = Color(0x157C5CFC)
 }
 
 /**

@@ -17,8 +17,8 @@ import androidx.compose.ui.unit.dp
  * 5. INNER SHADOW — soft shadow at the bottom edge (depth cue)
  * 6. EDGE STROKE — thin, translucent 1dp border that separates glass from content
  * 
- * These tokens are designed for MOCCA's Pitch Black OLED-friendly theme
- * with Mint Green accent (#00D9A5).
+ * These tokens are designed for MOCCA's Nebula Dark theme
+ * with Electric Violet accent (#7C5CFC).
  */
 object GlassTokens {
     
@@ -55,51 +55,51 @@ object GlassTokens {
     val tintDarkOverlayLight: Color = Color.Transparent
     
     /** Mint accent tint - subtle brand color */
-    val tintMintAccent: Color = Color(0x1A00D9A5) // Mint 10% alpha
+    val tintMintAccent: Color = Color(0x1A7C5CFC) // Violet 10% alpha
     
     /** Primary tint - very subtle dark for text contrast on glass */
-    val tintPrimary: Color = Color(0x40000000) // 25% dark for text legibility
+    val tintPrimary: Color = Color(0x400D0E12) // 25% dark navy for text legibility
     
     /** Secondary tint - for layered elements */
-    val tintSecondary: Color = Color(0x33000000) // 20% dark
+    val tintSecondary: Color = Color(0x3316171E) // 20% navy surface
     
     /** Light tint - for active/highlighted surfaces */
-    val tintLight: Color = Color(0x26000000) // 15% dark
+    val tintLight: Color = Color(0x261C1D26) // 15% surface variant
     
     // ═══════════════════════════════════════════════════════════════════════════
     // SPECULAR HIGHLIGHTS - GEOMETRY-BASED DEPTH
     // ═══════════════════════════════════════════════════════════════════════════
     
     /** Top edge specular highlight - pure white for light source */
-    val highlightTopDark: Color = Color(0x33FFFFFF) // White 20% alpha
+    val highlightTopDark: Color = Color(0x33A0A3B5) // Off-white 20% alpha
     
     /** Top edge specular highlight - light mode */
-    val highlightTopLight: Color = Color(0x4DFFFFFF) // White 30% alpha
+    val highlightTopLight: Color = Color(0x4DA0A3B5) // Off-white 30% alpha
     
     /** Inner specular glow - subtle white */
-    val specularInnerDark: Color = Color(0x14FFFFFF) // White 8% alpha
+    val specularInnerDark: Color = Color(0x14A0A3B5) // Off-white 8% alpha
     
     /** Inner specular glow - light mode */
-    val specularInnerLight: Color = Color(0x1AFFFFFF) // White 10% alpha
+    val specularInnerLight: Color = Color(0x1AA0A3B5) // Off-white 10% alpha
     
     /** Refraction accent - mint green glow */
-    val refractionAccent: Color = Color(0x3300D9A5) // Mint 20% alpha
+    val refractionAccent: Color = Color(0x337C5CFC) // Violet 20% alpha
     
     // ═══════════════════════════════════════════════════════════════════════════
     // EDGE STROKE / BORDER
     // ═══════════════════════════════════════════════════════════════════════════
     
     /** Standard border - dark mode */
-    val strokeColorDark: Color = Color(0x26FFFFFF) // White 15% alpha
+    val strokeColorDark: Color = Color(0x26A0A3B5) // Off-white 15% alpha
     
     /** Standard border - light mode */
-    val strokeColorLight: Color = Color(0x4DFFFFFF) // White 30% alpha
+    val strokeColorLight: Color = Color(0x4DA0A3B5) // Off-white 30% alpha
     
     /** Border highlight - top edge brighter */
-    val borderHighlight: Color = Color(0x66FFFFFF) // White 40% alpha
+    val borderHighlight: Color = Color(0x66A0A3B5) // Off-white 40% alpha
     
     /** Border shadow - bottom edge darker */
-    val borderShadow: Color = Color(0x1AFFFFFF) // White 10% alpha
+    val borderShadow: Color = Color(0x1AA0A3B5) // Off-white 10% alpha
     
     /** Border width */
     val strokeWidth: Dp = 1.dp
@@ -112,10 +112,10 @@ object GlassTokens {
     // ═══════════════════════════════════════════════════════════════════════════
     
     /** Inner shadow color - very subtle for depth cue */
-    val shadowColorDark: Color = Color(0x1A000000) // Black 10% alpha
+    val shadowColorDark: Color = Color(0x1A0D0E12) // Navy 10% alpha
     
     /** Inner shadow color - light mode */
-    val shadowColorLight: Color = Color(0x14000000) // Black 8% alpha
+    val shadowColorLight: Color = Color(0x140D0E12) // Navy 8% alpha
     
     /** Inner shadow blur radius */
     val shadowBlur: Dp = 8.dp
@@ -227,10 +227,10 @@ object GlassTokens {
     const val minContrastRatio: Float = 4.5f
     
     /** Fallback solid background when transparency reduced */
-    val fallbackSolidBackgroundDark: Color = Color(0xFF1A1A1A)
+    val fallbackSolidBackgroundDark: Color = Color(0xFF1C1D26)
     
     /** Fallback solid background - light mode */
-    val fallbackSolidBackgroundLight: Color = Color(0xFFF5F5F5)
+    val fallbackSolidBackgroundLight: Color = Color(0xFFF0F0F5)
 }
 
 /**

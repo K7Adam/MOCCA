@@ -165,7 +165,7 @@ private fun BaseToolCard(
                     Text(
                         text = title,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey,
+                        color = AppColors.statusProcessing,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -185,7 +185,7 @@ private fun BaseToolCard(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse" else "Expand",
                     modifier = Modifier.size(18.dp),
-                    tint = AppColors.grey
+                    tint = AppColors.statusProcessing
                 )
             }
             
@@ -210,7 +210,7 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
             Text(
                 text = "Pending",
                 style = AppTypography.labelSmall,
-                color = AppColors.grey
+                color = AppColors.statusProcessing
             )
         }
         ToolState.RUNNING -> {
@@ -258,7 +258,7 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accentGreen
+                    tint = AppColors.statusOnline
                 )
             }
         }
@@ -319,12 +319,12 @@ fun BashToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Folder,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.statusProcessing
                     )
                     Text(
                         text = workdir,
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -375,12 +375,12 @@ fun EditToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.statusProcessing
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey,
+                        color = AppColors.statusProcessing,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -416,14 +416,14 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Visibility,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.statusOnline,
         modifier = modifier,
         headerExtra = {
             // Show line range if specified
             if (limit != null || offset != null) {
                 Surface(
                     shape = AppShapes.medium,
-                    color = AppColors.surfaceVariant
+                    color = AppColors.surfaceElevated
                 ) {
                     Text(
                         text = buildString {
@@ -435,7 +435,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         },
                         style = AppTypography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -452,12 +452,12 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.statusProcessing
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -505,7 +505,7 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Pattern:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                     Text(
                         text = pattern,
@@ -524,12 +524,12 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "In:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                     Text(
                         text = path,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -572,7 +572,7 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Search:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                     Text(
                         text = pattern,
@@ -592,12 +592,12 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Files:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                     Text(
                         text = include,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -666,12 +666,12 @@ fun WriteToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifie
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.statusProcessing
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -702,7 +702,7 @@ fun TodoToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = part.title ?: "Task List",
         icon = Icons.Default.Checklist,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.statusOnline,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -758,7 +758,7 @@ fun WebFetchToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modi
                 Text(
                     text = "Format: $format",
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey
+                    color = AppColors.statusProcessing
                 )
             }
             
@@ -791,13 +791,13 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: subagentType ?: part.title,
         icon = Icons.Default.AccountTree,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.statusOnline,
         modifier = modifier,
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
                 Surface(
                     shape = AppShapes.medium,
-                    color = AppColors.surfaceVariant
+                    color = AppColors.surfaceElevated
                 ) {
                     Text(
                         text = subagentType,
@@ -837,9 +837,9 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         title = part.title,
         icon = Icons.Default.Build,
         iconTint = when (part.state) {
-            ToolState.PENDING -> AppColors.grey
+            ToolState.PENDING -> AppColors.statusProcessing
             ToolState.RUNNING -> AppColors.statusWaiting
-            ToolState.COMPLETED -> AppColors.accentGreen
+            ToolState.COMPLETED -> AppColors.statusOnline
             ToolState.ERROR -> AppColors.error
         },
         modifier = modifier
@@ -904,7 +904,7 @@ private fun CodeBlock(
                 Text(
                     text = label,
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey,
+                    color = AppColors.statusProcessing,
                     modifier = Modifier.padding(bottom = AppSpacing.xs)
                 )
             } else {
@@ -933,20 +933,20 @@ private fun CodeBlock(
                         imageVector = if (isCopied) Icons.Default.Check else Icons.Default.ContentCopy,
                         contentDescription = "Copy",
                         modifier = Modifier.size(12.dp),
-                        tint = if (isCopied) AppColors.accentGreen else AppColors.textTertiary
+                        tint = if (isCopied) AppColors.statusOnline else AppColors.textTertiary
                     )
                 }
                 Text(
                     text = if (copied) "COPIED" else "COPY",
                     style = AppTypography.labelExtraSmall,
-                    color = if (copied) AppColors.accentGreen else AppColors.textTertiary
+                    color = if (copied) AppColors.statusOnline else AppColors.textTertiary
                 )
             }
         }
         
         Surface(
             shape = AppShapes.medium,
-            color = AppColors.surfaceVariant.copy(alpha = 0.5f),
+            color = AppColors.surfaceElevated.copy(alpha = 0.5f),
             modifier = Modifier.fillMaxWidth()
         ) {
             val scrollState = rememberScrollState()
@@ -1001,7 +1001,7 @@ private fun ShowDuration(richState: RichToolState) {
         Text(
             text = formatDuration(duration),
             style = AppTypography.labelSmall,
-            color = AppColors.grey.copy(alpha = 0.7f)
+            color = AppColors.statusProcessing.copy(alpha = 0.7f)
         )
     }
 }
@@ -1078,12 +1078,12 @@ private fun FileListView(output: String) {
         Text(
             text = "Found $fileCount file${if (fileCount != 1) "s" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.grey
+            color = AppColors.statusProcessing
         )
         
         Surface(
             shape = AppShapes.medium,
-            color = AppColors.surfaceVariant.copy(alpha = 0.3f),
+            color = AppColors.surfaceElevated.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -1119,7 +1119,7 @@ private fun FileListView(output: String) {
                     Text(
                         text = "... and ${fileCount - 50} more",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
             }
@@ -1136,12 +1136,12 @@ private fun GrepResultsView(output: String) {
         Text(
             text = "Found $totalMatches match${if (totalMatches != 1) "es" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.grey
+            color = AppColors.statusProcessing
         )
         
         Surface(
             shape = AppShapes.medium,
-            color = AppColors.surfaceVariant.copy(alpha = 0.3f),
+            color = AppColors.surfaceElevated.copy(alpha = 0.3f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -1167,7 +1167,7 @@ private fun GrepResultsView(output: String) {
                                 Text(
                                     text = ":${parts[1]}",
                                     style = AppTypography.labelSmall,
-                                    color = AppColors.grey
+                                    color = AppColors.statusProcessing
                                 )
                             }
                         }
@@ -1209,7 +1209,7 @@ private fun TodoListView(output: String) {
                 Text(
                     text = "Total: ${todos.size}",
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey
+                    color = AppColors.statusProcessing
                 )
                 if (inProgress.isNotEmpty()) {
                     Text(
@@ -1222,7 +1222,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = "Done: ${completed.size}",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accentGreen
+                        color = AppColors.statusOnline
                     )
                 }
             }
@@ -1244,7 +1244,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = if (showCompleted) "Hide completed (${completed.size})" else "Show completed (${completed.size})",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.statusProcessing
                     )
                 }
                 if (showCompleted) {
@@ -1310,7 +1310,7 @@ private fun TodoItemRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accentGreen
+                    tint = AppColors.statusOnline
                 )
             }
             else -> {
@@ -1327,7 +1327,7 @@ private fun TodoItemRow(
             text = todo.content,
             style = AppTypography.bodySmall,
             color = if (isCompleted) 
-                AppColors.grey 
+                AppColors.statusProcessing 
             else 
                 AppColors.white
         )

@@ -7,6 +7,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +60,7 @@ import com.mocca.app.ui.components.RichToolCard
 import com.mocca.app.ui.screens.chat.MarkdownText
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppAnimations
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.domain.model.ToolState
@@ -209,31 +214,56 @@ fun MessageBubble(
         val shape = if (isUser) {
             RoundedCornerShape(
                 topStart = 16.dp,
-                topEnd = 2.dp,
-                bottomEnd = 16.dp,
+                topEnd = 16.dp,
+                bottomEnd = 4.dp,
                 bottomStart = 16.dp
             )
         } else {
             RoundedCornerShape(
-                topStart = 2.dp,
+                topStart = 16.dp,
                 topEnd = 16.dp,
                 bottomEnd = 16.dp,
-                bottomStart = 16.dp
+                bottomStart = 4.dp
             )
         }
 
         val bubbleColor = remember(isUser) {
-            // Use LiquidGlass tints for consistent glass effect with good contrast
-            if (isUser) LiquidGlassDefaults.tintSecondary else LiquidGlassDefaults.tintPrimary
+            if (isUser) AppColors.primary.copy(alpha = 0.15f) else AppColors.surfaceVariant
         }
         val borderColor = remember(isUser) {
-            // Use LiquidGlass borders for consistent edge styling
-            if (isUser) LiquidGlassDefaults.borderPrimary.copy(alpha = 0.4f) else LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
+            if (isUser) AppColors.primary.copy(alpha = 0.3f) else AppColors.surfaceVariant.copy(alpha = 0.5f)
+        }
+
+        val entranceState = remember { MutableTransitionState(false) }
+        entranceState.targetState = true
+        val transition = updateTransition(entranceState, label = "bubbleEntrance")
+        
+        val scale by transition.animateFloat(
+            transitionSpec = { AppAnimations.SpringResponsive },
+            label = "bubbleScale"
+        ) { state ->
+            if (state) 1f else 0.95f
+        }
+        
+        val alpha by transition.animateFloat(
+            transitionSpec = { tween(300) },
+            label = "bubbleAlpha"
+        ) { state ->
+            if (state) 1f else 0f
         }
 
         Box(
             modifier = Modifier
                 .fillMaxWidth(if (isUser) 0.85f else 1f)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    this.alpha = alpha
+                    transformOrigin = androidx.compose.ui.graphics.TransformOrigin(
+                        if (isUser) 1f else 0f, 
+                        1f
+                    )
+                }
                 .clip(shape)
                 .background(bubbleColor, shape)
                 .border(
@@ -260,7 +290,7 @@ fun MessageBubble(
                                 MarkdownText(
                                     markdown = part.text,
                                     style = AppTypography.bodyMedium,
-                                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                                     onFileClick = onFileClick
                                 )
                             }
@@ -947,20 +977,20 @@ fun ModernStreamingMessage(
         
         // Content Box
         val shape = RoundedCornerShape(
-            topStart = 2.dp,
+            topStart = 16.dp,
             topEnd = 16.dp,
             bottomEnd = 16.dp,
-            bottomStart = 16.dp
+            bottomStart = 4.dp
         )
         
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .background(AppColors.surfaceContainer.copy(alpha = 0.9f), shape)
+                .background(AppColors.surfaceVariant.copy(alpha = 0.9f), shape)
                 .border(
                     width = AppSpacing.borderThin,
-                    color = AppColors.accentGreen.copy(alpha = 0.3f),
+                    color = AppColors.primary.copy(alpha = 0.3f),
                     shape = shape
                 )
         ) {
@@ -971,7 +1001,7 @@ fun ModernStreamingMessage(
                     MarkdownText(
                         markdown = text,
                         style = AppTypography.bodyMedium,
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                     Text(
                         text = "█",

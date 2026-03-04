@@ -65,7 +65,7 @@ fun GodHeader(
                     onClick = onBackClick,
                     modifier = Modifier
                         .size(40.dp)
-                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
+                        .background(AppColors.primary, AppShapes.circle)
                 ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -126,7 +126,7 @@ fun GodCard(
         modifier = modifier.fillMaxWidth(),
         color = backgroundColor,
         shape = shape,
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, AppColors.primary)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -201,7 +201,7 @@ fun GodListItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(AppColors.surfaceElevated, AppShapes.large),
+                    .background(AppColors.surfaceVariant, AppShapes.large),
                 contentAlignment = Alignment.Center
             ) {
                 icon()

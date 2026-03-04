@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Mocca" parent="android:Theme.Material.NoActionBar">
-        <!-- Black window background to match app theme -->
-        <item name="android:windowBackground">@android:color/black</item>
+        <!-- Rich dark navy background to match Nebula Dark theme -->
+        <item name="android:windowBackground">#0D0E12</item>
         <!-- Transparent system bars for proper edge-to-edge display -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>

@@ -254,7 +254,7 @@ private fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
                 Text(
                     text = file.path,
                     color = AppColors.white,
-                    style = AppTypography.labelMedium,
+                    style = AppTypography.code,
                     modifier = Modifier.weight(1f),
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1
