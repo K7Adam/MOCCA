@@ -22,9 +22,6 @@ import com.mocca.app.domain.model.QuestionRequest
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassThemeTokens
-
 /**
  * Dialog for handling interactive questions from OpenCode.
  * Supports single/multiple choice and free text input.

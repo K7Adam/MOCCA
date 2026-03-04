@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppTypography
 
 /**
@@ -50,7 +49,7 @@ fun GodHeader(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .glassy(shape = com.mocca.app.ui.theme.AppShapes.none)
+            .background(AppColors.surfaceContainer, AppShapes.none)
     ) {
         Row(
             modifier = Modifier
@@ -144,7 +143,7 @@ fun GodButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = AppColors.accentGreen,
+    containerColor: Color = AppColors.accent,
     contentColor: Color = AppColors.background,
     icon: (@Composable () -> Unit)? = null,
     enabled: Boolean = true

@@ -234,7 +234,7 @@ private fun ConversationHistorySection(
                 // Grouped session view
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(top = AppSpacing.topBarHeight, bottom = AppSpacing.bottomBarClearance),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(
@@ -258,7 +258,7 @@ private fun ConversationHistorySection(
                 // Flat session view (fallback)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(top = AppSpacing.topBarHeight, bottom = AppSpacing.bottomBarClearance),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     items(
@@ -422,7 +422,7 @@ private fun NewSessionButton(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "New session",
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))

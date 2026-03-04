@@ -32,7 +32,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.domain.model.McpResource
 import com.mocca.app.domain.model.McpResourceContent
-import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -77,7 +76,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .glassy(shape = AppShapes.none),
+                        .background(AppColors.surfaceContainer, AppShapes.none),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     MoccaIconButton(

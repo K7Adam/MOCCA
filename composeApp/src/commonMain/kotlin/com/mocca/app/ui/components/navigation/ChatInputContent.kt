@@ -346,7 +346,7 @@ fun ChatInputContent(
                                 Text(
                                     mode.name.uppercase(),
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
                                 )
                             },
                             onClick = {
@@ -375,7 +375,7 @@ fun ChatInputContent(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = inputEnabled,
                 textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accent),
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
                     Box {
@@ -423,7 +423,7 @@ fun ChatInputContent(
                                         Text(
                                             "/${cmd.name}",
                                             style = AppTypography.labelSmall,
-                                            color = AppColors.accentGreen
+                                            color = AppColors.accent
                                         )
                                         cmd.description?.let { desc ->
                                             Text(
@@ -463,7 +463,7 @@ fun ChatInputContent(
                                         Text(
                                             mode.name.uppercase(),
                                             style = AppTypography.labelSmall,
-                                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                            color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
                                         )
                                         mode.description?.let { desc ->
                                             Text(
@@ -524,11 +524,11 @@ fun ChatInputContent(
                         modifier = Modifier
                             .size(NavConstants.ActionButtonSize)
                             .background(
-                                color = if (showAgentPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                                color = if (showAgentPalette) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                                 shape = AppShapes.pill
                             )
                             .then(
-                                if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                                if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
                             )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -539,7 +539,7 @@ fun ChatInputContent(
                     ) {
                         Text(
                             text = "@",
-                            color = if (showAgentPalette) AppColors.accentGreen else AppColors.textSecondary,
+                            color = if (showAgentPalette) AppColors.accent else AppColors.textSecondary,
                             style = AppTypography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -573,7 +573,7 @@ fun ChatInputContent(
                                             Text(
                                                 mode.name.uppercase(),
                                                 style = AppTypography.labelSmall,
-                                                color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                                color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
                                             )
                                             mode.description?.let { desc ->
                                                 Text(
@@ -602,11 +602,11 @@ fun ChatInputContent(
                         modifier = Modifier
                             .size(NavConstants.ActionButtonSize)
                             .background(
-                                color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                                color = if (showCommandPalette) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                                 shape = AppShapes.pill
                             )
                             .then(
-                                if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                                if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
                             )
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
@@ -617,7 +617,7 @@ fun ChatInputContent(
                     ) {
                         Text(
                             text = "/",
-                            color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                            color = if (showCommandPalette) AppColors.accent else AppColors.textSecondary,
                             style = AppTypography.labelMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -633,11 +633,11 @@ fun ChatInputContent(
                     modifier = Modifier
                         .size(NavConstants.ActionButtonSize)
                         .background(
-                            color = if (shellMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                            color = if (shellMode) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                             shape = AppShapes.pill
                         )
                         .then(
-                            if (shellMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                            if (shellMode) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -648,7 +648,7 @@ fun ChatInputContent(
                 ) {
                     Text(
                         text = "!",
-                        color = if (shellMode) AppColors.accentGreen else AppColors.textSecondary,
+                        color = if (shellMode) AppColors.accent else AppColors.textSecondary,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -659,11 +659,11 @@ fun ChatInputContent(
                     modifier = Modifier
                         .size(NavConstants.ActionButtonSize)
                         .background(
-                            color = if (planMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                            color = if (planMode) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                             shape = AppShapes.pill
                         )
                         .then(
-                            if (planMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                            if (planMode) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
                         )
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -674,7 +674,7 @@ fun ChatInputContent(
                 ) {
                     Text(
                         text = "P",
-                        color = if (planMode) AppColors.accentGreen else AppColors.textSecondary,
+                        color = if (planMode) AppColors.accent else AppColors.textSecondary,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -769,7 +769,7 @@ fun ChatInputContent(
                         .height(NavConstants.SendButtonHeight)
                         .then(
                             if (canSend) {
-                                Modifier.background(AppColors.accentGreen, AppShapes.pill)
+                                Modifier.background(AppColors.accent, AppShapes.pill)
                             } else {
                                 Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
                             }
@@ -907,7 +907,7 @@ private fun AttachmentPreviewChip(
             .clip(AppShapes.medium)
             .border(
                 AppSpacing.borderThin,
-                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.border,
+                if (file.isImage) AppColors.accent.copy(alpha = 0.4f) else AppColors.border,
                 AppShapes.medium
             )
             .background(AppColors.surface, AppShapes.medium)

@@ -115,7 +115,7 @@ fun StatusBadge(
     showDot: Boolean = true
 ) {
     val (dotColor, textColor) = when (status) {
-        ModernStatus.ONLINE -> AppColors.accentGreen to AppColors.accentGreen
+        ModernStatus.ONLINE -> AppColors.accent to AppColors.accent
         ModernStatus.OFFLINE -> AppColors.statusOffline to AppColors.statusOffline
         ModernStatus.WAITING -> AppColors.statusWaiting to AppColors.statusWaiting
         ModernStatus.IDLE -> AppColors.textTertiary to AppColors.textTertiary
@@ -270,15 +270,15 @@ fun TerminalConnectedBadge(
     Row(
         modifier = modifier
             .clip(shape)
-            .background(AppColors.accentGreen.copy(alpha = 0.15f), shape)
+            .background(AppColors.accent.copy(alpha = 0.15f), shape)
             .padding(horizontal = AppSpacing.badgePaddingHorizontal, vertical = AppSpacing.badgePaddingVertical),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
-        StatusDot(color = AppColors.accentGreen, size = AppSpacing.statusDotSizeSmall)
+        StatusDot(color = AppColors.accent, size = AppSpacing.statusDotSizeSmall)
         Text(
             text = "CONNECTED",
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )

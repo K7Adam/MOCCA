@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.clip
-import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -59,7 +58,7 @@ class McpScreen : Screen {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .glassy(shape = AppShapes.none),
+                        .background(AppColors.surfaceContainer, AppShapes.none),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     MoccaIconButton(

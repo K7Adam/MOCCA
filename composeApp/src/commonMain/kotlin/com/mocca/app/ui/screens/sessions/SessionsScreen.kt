@@ -27,7 +27,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.components.glass.glassy
+import androidx.compose.material3.Surface
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,11 +76,10 @@ class SessionsScreen : Screen {
                 .navigationBarsPadding()
         ) {
             // Terminal Header Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .glassy(shape = AppShapes.none)
-                    .padding(AppSpacing.md),
+                Surface(
+                    color = AppColors.surfaceContainer,
+                    shape = AppShapes.none,
+                    modifier = Modifier.fillMaxWidth()
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -510,7 +509,7 @@ private fun ModernSearchBar(
                 textStyle = AppTypography.labelSmall.copy(
                     color = AppColors.white
                 ),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accent),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),

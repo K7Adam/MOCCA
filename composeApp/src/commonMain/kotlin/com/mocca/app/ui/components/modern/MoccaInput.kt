@@ -68,9 +68,6 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.components.glass.glassy
-import com.mocca.app.ui.components.glass.glassyMint
-
 /**
  * Modern MOCCA input components with pill-shaped design.
  * Based on UI overhaul designs - 32dp rounded corners, clean aesthetic.
@@ -131,7 +128,7 @@ fun MoccaInput(
                 if (showPrompt) {
                     Text(
                         text = "> ",
-                        color = AppColors.accentGreen,
+                        color = AppColors.accent,
                         style = AppTypography.bodyMedium
                     )
                 }
@@ -146,7 +143,7 @@ fun MoccaInput(
                         color = AppColors.white
                     ),
                     visualTransformation = visualTransformation,
-                    cursorBrush = SolidColor(AppColors.accentGreen),
+                    cursorBrush = SolidColor(AppColors.accent),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     decorationBox = { innerTextField ->
@@ -312,7 +309,7 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .glassyMint(
+            .background(AppColors.surfaceContainer, AppShapes.rounded2xl)
                 shape = AppShapes.rounded2xl,
                 backgroundAlpha = 0.6f,
                 borderAlpha = 0.25f
@@ -449,7 +446,7 @@ fun RichChatInput(
                 textStyle = AppTypography.bodyMedium.copy(
                     color = AppColors.white
                 ),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accent),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,
                 decorationBox = { innerTextField ->
@@ -538,7 +535,7 @@ fun RichChatInput(
                                 Text(
                                     mode.name.uppercase(), 
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
                                 ) 
                             },
                             onClick = {
@@ -568,7 +565,7 @@ fun RichChatInput(
                 onClick = onSendClick,
                 enabled = enabled && value.isNotBlank(),
                 icon = Icons.AutoMirrored.Filled.Send,
-                backgroundColor = AppColors.accentGreen,
+                backgroundColor = AppColors.accent,
                 textColor = AppColors.background
             )
         }
@@ -687,7 +684,7 @@ fun CommandLineInput(
             textStyle = AppTypography.bodyMedium.copy(
                 color = AppColors.white
             ),
-            cursorBrush = SolidColor(AppColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.accent),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             decorationBox = { innerTextField ->
@@ -741,7 +738,7 @@ fun CommandLineInput(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = AppSpacing.fabSize,
-            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.greyDark,
+            backgroundColor = if (value.isNotBlank()) AppColors.accent else AppColors.greyDark,
             iconColor = if (value.isNotBlank()) AppColors.background else AppColors.textTertiary
         )
     }
@@ -779,7 +776,7 @@ fun GlassChatInput(
         modifier = modifier
             .fillMaxWidth()
             .clip(AppShapes.pill)
-            .glassyMint(
+            .background(AppColors.surfaceContainer, AppShapes.pill)
                 shape = AppShapes.pill,
                 backgroundAlpha = if (isFocused) 0.7f else 0.6f,
                 borderAlpha = if (isFocused) 0.5f else 0.3f
@@ -805,7 +802,7 @@ fun GlassChatInput(
             textStyle = AppTypography.bodyMedium.copy(
                 color = AppColors.white
             ),
-            cursorBrush = SolidColor(AppColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.accent),
             interactionSource = interactionSource,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
             keyboardActions = KeyboardActions(onSend = { if (value.isNotBlank()) onSendClick() }),
@@ -832,7 +829,7 @@ fun GlassChatInput(
                     .size(GlassInputDefaults.MinHeight - 8.dp)
                     .clip(CircleShape)
                     .background(
-                        color = if (canSend) AppColors.accentGreen else AppColors.surface.copy(alpha = 0.5f),
+                        color = if (canSend) AppColors.accent else AppColors.surface.copy(alpha = 0.5f),
                         shape = CircleShape
                     )
                     .clickable(
@@ -872,7 +869,7 @@ fun GlassChatInputWithActions(
         modifier = modifier
             .fillMaxWidth()
             .clip(AppShapes.rounded2xl)
-            .glassyMint(
+            .background(AppColors.surfaceContainer, AppShapes.rounded2xl)
                 shape = AppShapes.rounded2xl,
                 backgroundAlpha = if (isFocused) 0.7f else 0.6f,
                 borderAlpha = if (isFocused) 0.5f else 0.3f
@@ -900,7 +897,7 @@ fun GlassChatInputWithActions(
                     Icon(
                         imageVector = Icons.Default.AttachFile,
                         contentDescription = "Attach",
-                        tint = if (attachmentCount > 0) AppColors.accentGreen else AppColors.textSecondary,
+                        tint = if (attachmentCount > 0) AppColors.accent else AppColors.textSecondary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -921,7 +918,7 @@ fun GlassChatInputWithActions(
                 textStyle = AppTypography.bodyMedium.copy(
                     color = AppColors.white
                 ),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accent),
                 interactionSource = interactionSource,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                 keyboardActions = KeyboardActions(onSend = { if (value.isNotBlank()) onSendClick() }),
@@ -947,7 +944,7 @@ fun GlassChatInputWithActions(
                     .height(36.dp)
                     .clip(AppShapes.pill)
                     .background(
-                        color = if (canSend) AppColors.accentGreen else AppColors.surface.copy(alpha = 0.5f),
+                        color = if (canSend) AppColors.accent else AppColors.surface.copy(alpha = 0.5f),
                         shape = AppShapes.pill
                     )
                     .clickable(

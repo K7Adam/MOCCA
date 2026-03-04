@@ -240,7 +240,7 @@ private fun WizardProgressIndicator(
             
             val color = when {
                 isCompleted -> AppColors.statusOnline
-                isCurrent -> AppColors.accentGreen
+                isCurrent -> AppColors.accent
                 else -> AppColors.border
             }
             
@@ -280,7 +280,7 @@ private fun WelcomeStep(
             Icon(
                 imageVector = Icons.Default.SettingsEthernet,
                 contentDescription = null,
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -391,14 +391,14 @@ private fun ChecklistItem(
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background(AppColors.accentGreen.copy(alpha = 0.2f), CircleShape)
-                .border(AppSpacing.borderThin, AppColors.accentGreen, CircleShape),
+                .background(AppColors.accent.copy(alpha = 0.2f), CircleShape)
+                .border(AppSpacing.borderThin, AppColors.accent, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = number,
                 style = AppTypography.labelMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -439,14 +439,14 @@ private fun DiscoveringStep(
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.fillMaxSize(),
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 strokeWidth = 3.dp
             )
             
             Icon(
                 imageVector = Icons.Default.Wifi,
                 contentDescription = null,
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(48.dp)
             )
         }
@@ -563,7 +563,7 @@ private fun SelectServerStep(
                     Text(
                         text = "Scan again",
                         style = AppTypography.bodyMedium,
-                        color = AppColors.accentGreen,
+                        color = AppColors.accent,
                         modifier = Modifier.clickable(onClick = onRetry)
                     )
                 }
@@ -662,7 +662,7 @@ private fun SelectServerStep(
             Text(
                 text = "$effectiveProtocol://${manualHost.trim()}:$effectivePort",
                 style = AppTypography.bodySmall,
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 modifier = Modifier.padding(vertical = AppSpacing.sm)
             )
             
@@ -700,8 +700,8 @@ private fun ServerListItem(
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
     }
     
-    val borderColor = if (isSelected) AppColors.accentGreen else AppColors.border
-    val backgroundColor = if (isSelected) AppColors.accentGreen.copy(alpha = 0.1f) else AppColors.surfaceVariant
+    val borderColor = if (isSelected) AppColors.accent else AppColors.border
+    val backgroundColor = if (isSelected) AppColors.accent.copy(alpha = 0.1f) else AppColors.surfaceVariant
     
     Row(
         modifier = Modifier
@@ -716,7 +716,7 @@ private fun ServerListItem(
         Icon(
             imageVector = sourceIcon,
             contentDescription = null,
-            tint = if (isSelected) AppColors.accentGreen else AppColors.textSecondary,
+            tint = if (isSelected) AppColors.accent else AppColors.textSecondary,
             modifier = Modifier.size(24.dp)
         )
         
@@ -726,7 +726,7 @@ private fun ServerListItem(
             Text(
                 text = server.name,
                 style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.accentGreen else AppColors.white,
+                color = if (isSelected) AppColors.accent else AppColors.white,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             
@@ -741,7 +741,7 @@ private fun ServerListItem(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = "Selected",
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -759,7 +759,7 @@ private fun ConnectingStep(
         verticalArrangement = Arrangement.Center
     ) {
         CircularProgressIndicator(
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             strokeWidth = 3.dp,
             modifier = Modifier.size(64.dp)
         )
@@ -889,7 +889,7 @@ private fun ErrorMessage(
         Text(
             text = "Retry",
             style = AppTypography.labelSmall,
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onRetry)
         )

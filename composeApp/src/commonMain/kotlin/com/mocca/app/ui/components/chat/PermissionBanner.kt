@@ -29,8 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.glassFloating
+import androidx.compose.material3.Surface
 import com.mocca.app.ui.components.modern.MoccaCompactButton
 import com.mocca.app.ui.components.modern.MoccaTextButton
 import com.mocca.app.ui.theme.*
@@ -39,12 +38,7 @@ import kotlinx.coroutines.delay
 private const val AUTO_APPROVE_TTL_SECONDS = 30
 
 /**
- * Sticky, glass-morphic permission banner with amber highlight and auto-approve countdown.
- *
- * Features:
- * - Positioned at top of chat content (sticky)
- * - Glass-morphic styling with amber/warning accent
- * - Collapsible to show just the permission type when not focused
+ * Surface styling with amber/warning accent
  * - Prominent ALLOW / ALWAYS / DENY actions
  * - Auto-approves after [AUTO_APPROVE_TTL_SECONDS] seconds with animated countdown ring
  *
@@ -98,23 +92,17 @@ fun PermissionBanner(
         ),
         modifier = modifier
     ) {
-        // Glass-morphic container with amber border
-        Box(
+        Surface(
+            color = AppColors.surfaceContainer,
+            shape = AppShapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.xs)
-                .glassFloating(
-                    shape = AppShapes.medium,
-                    tokens = GlassDefaults.tokens(),
-                    reducedTransparency = true
-                )
                 .border(
                     width = 1.5.dp,
                     color = amberAccent.copy(alpha = 0.6f),
                     shape = AppShapes.medium
                 )
-                .clip(AppShapes.medium)
-        ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

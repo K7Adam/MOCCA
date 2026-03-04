@@ -105,7 +105,7 @@ fun LiquidGlassDebugOverlay(
             // Header
             Text(
                 text = "🧪 LIQUID GLASS DEBUG",
-                color = com.mocca.app.ui.theme.AppColors.accentGreen,
+                color = com.mocca.app.ui.theme.AppColors.accent,
                 fontSize = 12.sp
             )
             
@@ -171,7 +171,7 @@ private fun DebugRow(
         )
         Text(
             text = value,
-            color = com.mocca.app.ui.theme.AppColors.accentGreen,
+            color = com.mocca.app.ui.theme.AppColors.accent,
             fontSize = 10.sp
         )
     }
@@ -238,7 +238,7 @@ fun LiquidGlassDebugPanel(
     ) {
         Text(
             text = "🎛️ GLASS TOKENS",
-            color = com.mocca.app.ui.theme.AppColors.accentGreen,
+            color = com.mocca.app.ui.theme.AppColors.accent,
             fontSize = 14.sp
         )
         

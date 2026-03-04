@@ -64,14 +64,14 @@ class TerminalScreen : Screen {
                             if (state.isCreatingTab) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.accent,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "New terminal",
-                                    tint = AppColors.accentGreen,
+                                    tint = AppColors.accent,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -102,7 +102,7 @@ class TerminalScreen : Screen {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator(
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.accent,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(Modifier.height(12.dp))
@@ -216,7 +216,7 @@ private fun TerminalTabItem(
         // Status indicator dot
         val dotColor = when {
             tab.isConnecting -> AppColors.textSecondary
-            tab.isConnected -> AppColors.accentGreen
+            tab.isConnected -> AppColors.accent
             tab.error != null -> AppColors.error
             else -> AppColors.textTertiary
         }
@@ -274,7 +274,7 @@ private fun TerminalContent(
         fontFamily = FontFamily.Monospace,
         fontSize = 13.sp,
         lineHeight = 18.sp,
-        color = AppColors.accentGreen
+        color = AppColors.accent
     )
 
     Column(modifier = modifier.background(AppColors.background)) {
@@ -382,7 +382,7 @@ private fun TerminalInputBar(
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 14.sp,
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 fontWeight = FontWeight.Bold
             )
         )
@@ -399,7 +399,7 @@ private fun TerminalInputBar(
                 fontSize = 13.sp,
                 color = AppColors.white
             ),
-            cursorBrush = SolidColor(AppColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.accent),
             singleLine = true,
             enabled = isEnabled
         )
@@ -418,7 +418,7 @@ private fun TerminalInputBar(
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
-                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accentGreen else AppColors.textTertiary,
+                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accent else AppColors.textTertiary,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -459,7 +459,7 @@ private fun TerminalEmptyState(
                 enabled = !isCreating,
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.accentGreen,
+                    containerColor = AppColors.accent,
                     contentColor = AppColors.background
                 )
             ) {

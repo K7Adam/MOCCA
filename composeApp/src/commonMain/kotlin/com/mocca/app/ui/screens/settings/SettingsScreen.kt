@@ -34,9 +34,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 
 import androidx.compose.foundation.shape.CircleShape
-import com.mocca.app.ui.components.glass.glassy
-import com.mocca.app.ui.components.glass.liquidGlassHeader
-import com.mocca.app.ui.components.glass.liquidGlassCard
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
@@ -73,7 +70,7 @@ class SettingsScreen : Screen {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .liquidGlassHeader(shape = AppShapes.none)
+                .background(AppColors.surfaceContainer, AppShapes.none)
                     .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -353,9 +350,9 @@ class SettingsScreen : Screen {
                                         onDone = { screenModel.saveProjectPath() }
                                     ),
                                     colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = AppColors.accentGreen,
+                                        focusedBorderColor = AppColors.accent,
                                         unfocusedBorderColor = AppColors.border,
-                                        cursorColor = AppColors.accentGreen,
+                                        cursorColor = AppColors.accent,
                                         focusedContainerColor = AppColors.background,
                                         unfocusedContainerColor = AppColors.background
                                     ),
@@ -458,7 +455,7 @@ class SettingsScreen : Screen {
                                 )
                                 Text(
                                     text = "${state.preferences.fontScalePercent}%",
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.accent,
                                     style = AppTypography.labelMedium,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -476,8 +473,8 @@ class SettingsScreen : Screen {
                                 valueRange = 0.8f..1.4f,
                                 steps = 5,
                                 colors = androidx.compose.material3.SliderDefaults.colors(
-                                    thumbColor = AppColors.accentGreen,
-                                    activeTrackColor = AppColors.accentGreen,
+                                    thumbColor = AppColors.accent,
+                                    activeTrackColor = AppColors.accent,
                                     inactiveTrackColor = AppColors.greyDark
                                 )
                             )
@@ -984,10 +981,7 @@ private fun TerminalServerCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .liquidGlassCard(
-                shape = AppShapes.card,
-                tint = if (isActive) AppColors.accentGreen.copy(alpha = 0.08f) else AppColors.liquidGlassTint
-            )
+            .background(AppColors.surfaceContainerHigh, AppShapes.card)
             .then(
                 if (borderColor != null) {
                     Modifier.border(AppSpacing.borderThin, borderColor, AppShapes.card)

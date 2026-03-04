@@ -338,7 +338,7 @@ fun ChatInputBar(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = inputEnabled,
                 textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.accent),
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
                     Box {
@@ -402,11 +402,11 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(ActionToolbarHeight)
                     .background(
-                        color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                        color = if (showCommandPalette) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                         shape = AppShapes.pill
                     )
                     .then(
-                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
+                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
                     )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -418,7 +418,7 @@ fun ChatInputBar(
             ) {
                 Text(
                     text = "/",
-                    color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                    color = if (showCommandPalette) AppColors.accent else AppColors.textSecondary,
                     style = AppTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -494,7 +494,7 @@ fun ChatInputBar(
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
-                            tint = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+                            tint = if (isSelected) AppColors.accent else AppColors.textTertiary,
                             modifier = Modifier.size(16.dp)
                         )
                         
@@ -505,7 +505,7 @@ fun ChatInputBar(
                             modifier = Modifier
                                 .size(if (isSelected) 4.dp else 3.dp)
                                 .background(
-                                    color = if (isSelected) AppColors.accentGreen else AppColors.textTertiary.copy(alpha = 0.4f),
+                                    color = if (isSelected) AppColors.accent else AppColors.textTertiary.copy(alpha = 0.4f),
                                     shape = RoundedCornerShape(50)
                                 )
                         )
@@ -523,7 +523,7 @@ fun ChatInputBar(
                         IntOffset(xOffsetPx.roundToInt(), 0)
                     }
                     .background(
-                        color = AppColors.accentGreen.copy(alpha = 0.6f),
+                        color = AppColors.accent.copy(alpha = 0.6f),
                         shape = RoundedCornerShape(1.dp)
                     )
             )
@@ -619,7 +619,7 @@ fun AgentSelectorBottomSheet(
                     Text(
                         text = "// AVAILABLE",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accentGreen,
+                        color = AppColors.accent,
                         modifier = Modifier.padding(start = AppSpacing.sm, top = AppSpacing.sm, bottom = AppSpacing.xs)
                     )
                 }
@@ -633,7 +633,7 @@ fun AgentSelectorBottomSheet(
                                 onModeSelected(mode.id)
                                 onDismiss()
                             }
-                            .background(if (isSelected) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.background)
+                            .background(if (isSelected) AppColors.accent.copy(alpha = 0.2f) else AppColors.background)
                             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -641,11 +641,11 @@ fun AgentSelectorBottomSheet(
                         Text(
                             text = "> ${mode.name.uppercase()}",
                             style = AppTypography.bodySmall,
-                            color = if (isSelected) AppColors.accentGreen else AppColors.white
+                            color = if (isSelected) AppColors.accent else AppColors.white
                         )
                         
                         if (isSelected) {
-                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accent, modifier = Modifier.size(16.dp))
                         }
                     }
                 }

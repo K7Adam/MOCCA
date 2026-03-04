@@ -31,7 +31,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.components.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
@@ -76,7 +75,7 @@ class GitScreen : Screen {
                 GodHeader(
                     title = selectedTab.title,
                     onBackClick = { navigator.pop() },
-                    modifier = Modifier.glassy(shape = AppShapes.none),
+                    modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none),
                     subtitle = uiState.currentBranch,
                     subtitleIcon = {
                         Icon(
@@ -109,7 +108,7 @@ class GitScreen : Screen {
             GitTabsNavigation(
                                 selectedTab,
                                 onTabSelected = { screenModel.selectTab(it) },
-                                modifier = Modifier.glassy(shape = AppShapes.none)
+                                modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none)
                             )                    
                     // Main Content
                     Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -261,7 +260,7 @@ private fun GitStatusSummary(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if ((status?.ahead ?: 0) > 0) {
-                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accentGreen.copy(alpha = 0.2f), contentColor = AppColors.accentGreen)
+                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accent.copy(alpha = 0.2f), contentColor = AppColors.accent)
                             }
                             if ((status?.behind ?: 0) > 0) {
                                 GodBadge(text = "↓${status?.behind}", containerColor = AppColors.alertRed.copy(alpha = 0.2f), contentColor = AppColors.alertRed)
@@ -272,7 +271,7 @@ private fun GitStatusSummary(
                         Text(
                             text = "${uiState.stagedCount} staged",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen.copy(alpha = 0.8f)
+                            color = AppColors.accent.copy(alpha = 0.8f)
                         )
                         Text(
                             text = "${uiState.unstagedCount} modified",
@@ -298,8 +297,8 @@ private fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f), letterSpacing = 1.sp)
-                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accentGreen.copy(alpha = 0.15f), contentColor = AppColors.accentGreen)
+                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accent.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accent.copy(alpha = 0.15f), contentColor = AppColors.accent)
                     }
                     TextButton(onClick = { screenModel.unstageAll() }) {
                         Text("UNSTAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
@@ -314,7 +313,7 @@ private fun GitStatusSummary(
                         Icon(
                             imageVector = statusIcon(change.status),
                             contentDescription = null,
-                            tint = AppColors.accentGreen,
+                            tint = AppColors.accent,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -360,7 +359,7 @@ private fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.stageFile(change.path) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.discardFile(change.path) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
@@ -403,7 +402,7 @@ private fun GitStatusSummary(
                     },
                     trailing = {
                         IconButton(onClick = { screenModel.stageFile(path) }, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                         }
                     }
                 )
@@ -460,7 +459,7 @@ private fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.popStash(stash.index) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.dropStash(stash.index) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
@@ -485,7 +484,7 @@ private fun GitStatusSummary(
         }
         
         // Bottom padding for floating bar clearance
-        item { Spacer(modifier = Modifier.height(80.dp)) }
+        item { Spacer(modifier = Modifier.height(AppSpacing.bottomBarClearance)) }
     }
 }
 
@@ -531,14 +530,14 @@ private fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         Icon(
                             imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
                             contentDescription = null,
-                            tint = if (branch.name == currentBranch) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            tint = if (branch.name == currentBranch) AppColors.accent else AppColors.white.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
                     trailing = {
                         if (branch.ahead > 0 || branch.behind > 0) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
+                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accent)
                                 if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.alertRed)
                             }
                         }
@@ -672,7 +671,7 @@ private fun LogTimelineItem(
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(80.dp)
+                        .height(AppSpacing.bottomBarClearance)
                         .background(AppColors.white.copy(alpha = 0.1f))
                 )
             }
@@ -849,7 +848,7 @@ private fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Label,
                         contentDescription = null,
-                        tint = AppColors.accentGreen.copy(alpha = 0.6f)
+                        tint = AppColors.accent.copy(alpha = 0.6f)
                     )
                 },
                 trailing = {
@@ -904,11 +903,11 @@ private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 100.dp),
+                .padding(bottom = AppSpacing.bottomBarExpandedMinHeight),
             contentAlignment = Alignment.BottomCenter
         ) {
             Surface(
-                color = if (toastIsWarning) AppColors.error else AppColors.accentGreen,
+                color = if (toastIsWarning) AppColors.error else AppColors.accent,
                 shape = AppShapes.pill,
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {

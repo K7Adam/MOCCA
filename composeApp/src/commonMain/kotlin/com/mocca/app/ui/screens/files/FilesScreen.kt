@@ -34,7 +34,6 @@ import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
-import com.mocca.app.ui.components.glass.glassy
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -56,7 +55,7 @@ class FilesScreen : Screen {
                 GodHeader(
                     title = "Files",
                     onBackClick = { navigator.pop() },
-                    modifier = Modifier.glassy(shape = AppShapes.none),
+                    modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none),
                     subtitle = "mobile-agent-v2",
                     subtitleIcon = {
                         Icon(
@@ -85,7 +84,7 @@ class FilesScreen : Screen {
             pathHistory = state.pathHistory,
             canNavigateUp = state.pathHistory.size > 1,
             onNavigateUp = { screenModel.navigateUp() },
-            modifier = Modifier.glassy(shape = AppShapes.none)
+            modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none)
         )
                 
                 // Content
@@ -156,7 +155,7 @@ private fun GodBreadcrumbBar(
                 Icons.Default.Home,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = AppColors.accentGreen
+                tint = AppColors.accent
             )
             
             pathHistory.lastOrNull()?.let { path ->
@@ -216,7 +215,7 @@ private fun GodFilesList(
                         Icon(
                             imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
                             contentDescription = null,
-                            tint = if (file.isDirectory) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            tint = if (file.isDirectory) AppColors.accent else AppColors.white.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -260,7 +259,7 @@ private fun GodFileViewer(
                 Icon(
                     getFileIcon(fileName),
                     contentDescription = null,
-                    tint = AppColors.accentGreen,
+                    tint = AppColors.accent,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))

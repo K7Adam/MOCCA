@@ -226,8 +226,8 @@ fun ModernToggle(
         enabled = enabled,
         colors = SwitchDefaults.colors(
             checkedThumbColor = AppColors.background,
-            checkedTrackColor = AppColors.accentGreen,
-            checkedBorderColor = AppColors.accentGreen,
+            checkedTrackColor = AppColors.accent,
+            checkedBorderColor = AppColors.accent,
             uncheckedThumbColor = AppColors.white,
             uncheckedTrackColor = AppColors.surfaceVariant,
             uncheckedBorderColor = AppColors.border,
@@ -362,7 +362,7 @@ fun GitStatusModule(
                     .background(AppColors.border.copy(alpha=0.3f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                StatusDot(color = AppColors.accentGreen)
+                StatusDot(color = AppColors.accent)
                 Text(
                     text = branchName.uppercase(),
                     color = AppColors.white,

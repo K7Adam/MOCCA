@@ -121,7 +121,7 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
         DiagnosticStatus.PASS -> Icons.Default.CheckCircle to AppColors.statusOnline
         DiagnosticStatus.FAIL -> Icons.Default.Error to AppColors.statusOffline
         DiagnosticStatus.WARNING -> Icons.Default.Info to AppColors.statusWaiting
-        DiagnosticStatus.CHECKING -> Icons.Default.Refresh to AppColors.accentGreen
+        DiagnosticStatus.CHECKING -> Icons.Default.Refresh to AppColors.accent
     }
     
     Row(
@@ -226,7 +226,7 @@ fun ConnectionHelpInline(
             MoccaTextButton(
                 text = "RETRY",
                 onClick = onRetry,
-                textColor = AppColors.accentGreen
+                textColor = AppColors.accent
             )
         }
     }

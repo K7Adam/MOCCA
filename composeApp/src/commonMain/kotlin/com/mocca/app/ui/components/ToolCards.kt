@@ -258,7 +258,7 @@ private fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accentGreen
+                    tint = AppColors.accent
                 )
             }
         }
@@ -416,7 +416,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Visibility,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.accent,
         modifier = modifier,
         headerExtra = {
             // Show line range if specified
@@ -702,7 +702,7 @@ fun TodoToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = part.title ?: "Task List",
         icon = Icons.Default.Checklist,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.accent,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -791,7 +791,7 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: subagentType ?: part.title,
         icon = Icons.Default.AccountTree,
-        iconTint = AppColors.accentGreen,
+        iconTint = AppColors.accent,
         modifier = modifier,
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
@@ -839,7 +839,7 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         iconTint = when (part.state) {
             ToolState.PENDING -> AppColors.grey
             ToolState.RUNNING -> AppColors.statusWaiting
-            ToolState.COMPLETED -> AppColors.accentGreen
+            ToolState.COMPLETED -> AppColors.accent
             ToolState.ERROR -> AppColors.error
         },
         modifier = modifier
@@ -933,13 +933,13 @@ private fun CodeBlock(
                         imageVector = if (isCopied) Icons.Default.Check else Icons.Default.ContentCopy,
                         contentDescription = "Copy",
                         modifier = Modifier.size(12.dp),
-                        tint = if (isCopied) AppColors.accentGreen else AppColors.textTertiary
+                        tint = if (isCopied) AppColors.accent else AppColors.textTertiary
                     )
                 }
                 Text(
                     text = if (copied) "COPIED" else "COPY",
                     style = AppTypography.labelExtraSmall,
-                    color = if (copied) AppColors.accentGreen else AppColors.textTertiary
+                    color = if (copied) AppColors.accent else AppColors.textTertiary
                 )
             }
         }
@@ -1222,7 +1222,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = "Done: ${completed.size}",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accentGreen
+                        color = AppColors.accent
                     )
                 }
             }
@@ -1310,7 +1310,7 @@ private fun TodoItemRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accentGreen
+                    tint = AppColors.accent
                 )
             }
             else -> {

@@ -28,17 +28,12 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.domain.model.Todo
 import com.mocca.app.domain.model.TodoStatus
-import com.mocca.app.ui.components.glass.glassFloating
-import com.mocca.app.ui.components.glass.GlassDefaults
+import androidx.compose.material3.Surface
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
 
 /**
- * Glass-morphic todo strip that is sticky at the top of the chat content.
- * 
- * Features:
- * - Collapsible with compact/expanded modes
- * - Glass-morphic styling with subtle blur effect
+ * Surface with surfaceContainer background.
  * - Shows progress count when collapsed
  * - Smooth spring animations for expand/collapse
  *
@@ -75,18 +70,9 @@ fun TodoListPanel(
         ),
         modifier = modifier
     ) {
-        // Glass-morphic container
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.xs)
-                .glassFloating(
-                    shape = AppShapes.medium,
-                    tokens = GlassDefaults.tokens(),
-                    reducedTransparency = true
-                )
-                .clip(AppShapes.medium)
-        ) {
+        Surface(
+            color = AppColors.surfaceContainer,
+            shape = AppShapes.medium
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -119,7 +105,7 @@ fun TodoListPanel(
                             Text(
                                 text = "$completedCount",
                                 style = AppTypography.labelExtraSmall,
-                                color = AppColors.accentGreen,
+                                color = AppColors.accent,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -133,8 +119,8 @@ fun TodoListPanel(
                             },
                             style = AppTypography.labelExtraSmall,
                             color = when {
-                                inProgressCount > 0 -> AppColors.accentGreen
-                                completedCount == totalCount && totalCount > 0 -> AppColors.accentGreen
+                                inProgressCount > 0 -> AppColors.accent
+                                completedCount == totalCount && totalCount > 0 -> AppColors.accent
                                 else -> AppColors.textTertiary
                             },
                             fontWeight = FontWeight.Medium
@@ -193,8 +179,8 @@ private fun TodoItem(todo: Todo) {
     val statusColor by animateColorAsState(
         targetValue = when (todo.status) {
             TodoStatus.PENDING -> AppColors.grey
-            TodoStatus.IN_PROGRESS -> AppColors.accentGreen
-            TodoStatus.COMPLETED -> AppColors.accentGreen
+            TodoStatus.IN_PROGRESS -> AppColors.accent
+            TodoStatus.COMPLETED -> AppColors.accent
             TodoStatus.CANCELLED -> AppColors.greyDark
         },
         label = "statusColor"

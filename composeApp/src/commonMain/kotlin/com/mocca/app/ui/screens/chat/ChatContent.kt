@@ -64,16 +64,16 @@ fun MarkdownText(
 ) {
     val mdColor = markdownColor(
         text = color,
-        codeText = AppColors.accentGreen,
+        codeText = AppColors.accent,
         codeBackground = AppColors.backgroundVariant,
-        inlineCodeText = AppColors.accentGreen,
+        inlineCodeText = AppColors.accent,
         inlineCodeBackground = AppColors.backgroundVariant,
-        linkText = AppColors.accentGreen
+        linkText = AppColors.accent
     )
     
     val mdTypography = markdownTypography(
         text = style,
-        code = style.copy(fontSize = 12.sp, color = AppColors.accentGreen, fontFamily = FontFamily.Monospace),
+        code = style.copy(fontSize = 12.sp, color = AppColors.accent, fontFamily = FontFamily.Monospace),
         h1 = AppTypography.headlineMedium.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
         h2 = AppTypography.headlineSmall.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
         h3 = AppTypography.titleLarge.copy(color = color, fontWeight = FontWeight.Bold),
@@ -186,7 +186,7 @@ private fun ModernBootSequence() {
                 Text(
                     text = line,
                     style = AppTypography.labelExtraSmall,
-                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textTertiary,
+                    color = if (index == lines.size - 1) AppColors.accent else AppColors.textTertiary,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )
@@ -605,8 +605,8 @@ fun ChatContent(
                         .fillMaxSize()
                         .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                     contentPadding = PaddingValues(
-                        top = 80.dp,
-                        bottom = 160.dp // Space for unified floating bottom bar
+                        top = AppSpacing.bottomBarClearance,
+                        bottom = AppSpacing.bottomBarExpandedMinHeight // Space for unified floating bottom bar
                     ),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
@@ -747,7 +747,7 @@ private fun RevertedSessionBanner(onResume: () -> Unit) {
                 MoccaTextButton(
                     text = "RESUME LATEST",
                     onClick = onResume,
-                    textColor = AppColors.accentGreen
+                    textColor = AppColors.accent
                 )
             }
         }

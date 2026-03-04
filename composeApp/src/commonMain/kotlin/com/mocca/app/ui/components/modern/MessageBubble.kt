@@ -157,7 +157,7 @@ fun MessageBubble(
         if (isFirstInGroup) {
             val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
             val label = if (isUser) "USER" else "AGENT"
-            val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
+            val color = if (isUser) AppColors.textSecondary else AppColors.accent
             val timeText = remember(message.createdAt) { formatTime(message.createdAt) }
 
             Row(
@@ -317,7 +317,7 @@ fun MessageBubble(
                             if (tokens.output > 0) {
                                 Text(
                                     text = "OUT: ${formatTokenCount(tokens.output)}",
-                                    color = AppColors.accentGreen.copy(alpha = 0.7f),
+                                    color = AppColors.accent.copy(alpha = 0.7f),
                                     style = AppTypography.labelExtraSmall,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -326,7 +326,7 @@ fun MessageBubble(
                                 Spacer(modifier = Modifier.width(AppSpacing.sm))
                                 Text(
                                     text = "REASON: ${formatTokenCount(tokens.reasoning)}",
-                                    color = AppColors.accentGreen.copy(alpha = 0.5f),
+                                    color = AppColors.accent.copy(alpha = 0.5f),
                                     style = AppTypography.labelExtraSmall,
                                     fontWeight = FontWeight.Medium
                                 )
@@ -387,7 +387,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
     var expanded by remember { mutableStateOf(part.status == SessionStatus.RUNNING) }
     
     val statusColor = when (part.status) {
-        SessionStatus.RUNNING -> AppColors.accentGreen
+        SessionStatus.RUNNING -> AppColors.accent
         SessionStatus.COMPLETED -> AppColors.grey
         SessionStatus.ERROR -> AppColors.error
         SessionStatus.IDLE -> AppColors.textTertiary
@@ -502,7 +502,7 @@ fun ModernSubMessage(message: Message) {
         if (!isUser) {
             Text(
                 text = "•", 
-                color = AppColors.accentGreen, 
+                color = AppColors.accent, 
                 style = AppTypography.bodySmall,
                 modifier = Modifier.padding(end = 4.dp)
             )
@@ -536,7 +536,7 @@ fun ModernSubMessage(message: Message) {
                         Text(
                             text = "{ ${part.title} }",
                              style = AppTypography.labelExtraSmall,
-                            color = AppColors.accentGreen
+                            color = AppColors.accent
                         )
                     }
                     else -> {}
@@ -773,7 +773,7 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
                 Text(
                     text = "\u2713 $completedCount",
                     style = AppTypography.labelExtraSmall,
-                    color = AppColors.accentGreen
+                    color = AppColors.accent
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.xs))
             }
@@ -933,13 +933,13 @@ fun ModernStreamingMessage(
             Icon(
                 imageVector = Icons.Default.SmartToy,
                 contentDescription = null,
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(10.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             Text(
                 text = "AGENT STREAMING...",
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -960,7 +960,7 @@ fun ModernStreamingMessage(
                 .background(AppColors.surfaceContainer.copy(alpha = 0.9f), shape)
                 .border(
                     width = AppSpacing.borderThin,
-                    color = AppColors.accentGreen.copy(alpha = 0.3f),
+                    color = AppColors.accent.copy(alpha = 0.3f),
                     shape = shape
                 )
         ) {
@@ -975,7 +975,7 @@ fun ModernStreamingMessage(
                     )
                     Text(
                         text = "█",
-                        color = AppColors.accentGreen.copy(alpha = cursorAlpha),
+                        color = AppColors.accent.copy(alpha = cursorAlpha),
                         style = AppTypography.bodyMedium,
                         modifier = Modifier.padding(start = 2.dp)
                     )

@@ -31,7 +31,7 @@ fun StaticPremiumBackdrop(modifier: Modifier = Modifier) {
         drawPoints(
             points = noiseOffsets,
             pointMode = PointMode.Points,
-            color = AppColors.accentGreen.copy(alpha = 0.04f),
+            color = AppColors.accent.copy(alpha = 0.04f),
             strokeWidth = 1f
         )
     }

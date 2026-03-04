@@ -31,11 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.ConnectionQuality
-import com.mocca.app.ui.components.glass.GlassAppBar
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassThemeTokens
-import com.mocca.app.ui.components.glass.glassyAppBar
-import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -135,76 +130,51 @@ fun ModernTopBarGlass(
     tokens: GlassThemeTokens = GlassDefaults.tokens(),
     actions: @Composable RowScope.() -> Unit = {}
 ) {
-    GlassAppBar(
-        title = {
-            Text(
-                text = title.uppercase(),
-                color = AppColors.white,
-                style = AppTypography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        modifier = modifier,
-        navigationIcon = {
-            if (navigationIcon != null && onNavigationClick != null) {
-                MoccaIconButton(
-                    icon = navigationIcon,
-                    onClick = onNavigationClick,
-                    iconColor = AppColors.white
-                )
-            }
-        },
-        actions = actions,
-        tokens = tokens
-    )
-}
-
-@Composable
+    androidx.compose.material3.Surface(
+        color = AppColors.surfaceContainer,
+        shape = AppShapes.none,
 fun ModernTopBarSimpleGlass(
     title: String,
     modifier: Modifier = Modifier,
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
     showDivider: Boolean = true,
-    actions: @Composable RowScope.() -> Unit = {}
-) {
-    Box(
         modifier = modifier
-            .fillMaxWidth()
-            .glassyAppBar(hasBottomBorder = showDivider)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(AppSpacing.topBarHeight)
-                .padding(horizontal = AppSpacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        Column {
             Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(AppSpacing.topBarHeight)
+                    .padding(horizontal = AppSpacing.lg),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (navigationIcon != null && onNavigationClick != null) {
-                    MoccaIconButton(
-                        icon = navigationIcon,
-                        onClick = onNavigationClick,
-                        iconColor = AppColors.white
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                ) {
+                    if (navigationIcon != null && onNavigationClick != null) {
+                        MoccaIconButton(
+                            icon = navigationIcon,
+                            onClick = onNavigationClick,
+                            iconColor = AppColors.white
+                        )
+                    }
+                    
+                    Text(
+                        text = title.uppercase(),
+                        color = AppColors.white,
+                        style = AppTypography.headlineSmall,
+                        fontWeight = FontWeight.Bold
                     )
                 }
                 
-                Text(
-                    text = title.uppercase(),
-                    color = AppColors.white,
-                    style = AppTypography.headlineSmall,
-                    fontWeight = FontWeight.Bold
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = actions
                 )
             }
-            
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions
-            )
         }
     }
 }

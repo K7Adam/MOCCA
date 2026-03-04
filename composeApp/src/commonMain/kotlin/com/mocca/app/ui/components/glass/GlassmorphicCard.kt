@@ -75,7 +75,7 @@ fun Modifier.glassyMint(
 ): Modifier = this
     .clip(shape)
     .glassyBackground(alpha = backgroundAlpha)
-    .border(borderWidth, AppColors.accentGreen.copy(alpha = borderAlpha), shape)
+    .border(borderWidth, AppColors.accent.copy(alpha = borderAlpha), shape)
 
 @Composable
 fun Modifier.glassyBackground(alpha: Float = 0.6f): Modifier = this.then(
@@ -124,7 +124,7 @@ fun Modifier.glassyAppBar(
                 brush = Brush.verticalGradient(
                     colors = listOf(
                         Color.Transparent,
-                        AppColors.accentGreen.copy(alpha = 0.15f)
+                        AppColors.accent.copy(alpha = 0.15f)
                     )
                 ),
                 shape = AppShapes.none
@@ -143,4 +143,4 @@ fun Modifier.glassyFab(
 ): Modifier = this
     .clip(shape)
     .background(Color.Black.copy(alpha = backgroundAlpha))
-    .border(1.5.dp, AppColors.accentGreen.copy(alpha = borderAlpha), shape)
+    .border(1.5.dp, AppColors.accent.copy(alpha = borderAlpha), shape)
