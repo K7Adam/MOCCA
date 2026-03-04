@@ -127,7 +127,6 @@ fun ModernTopBarGlass(
     modifier: Modifier = Modifier,
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
-    tokens: GlassThemeTokens = GlassDefaults.tokens(),
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     androidx.compose.material3.Surface(

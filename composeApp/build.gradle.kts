@@ -101,11 +101,7 @@ kotlin {
             implementation(libs.paging.common)
             implementation(libs.paging.compose)
 
-            // Haze - Blur effects for liquid glass UI
-            implementation(libs.haze)
             
-            // Liquid - True liquid glass with lens refraction
-            implementation(libs.liquid)
         }
 
         androidMain.dependencies {
@@ -122,8 +118,6 @@ kotlin {
             implementation(compose.preview)
             implementation(libs.kotlinx.serialization.json)
             
-            // Backdrop - Kyant0's Liquid Glass library (Android-only, requires API 31+)
-            implementation(libs.backdrop)
             
             // ML Kit for QR code scanning
             implementation("com.google.mlkit:barcode-scanning:17.2.0")

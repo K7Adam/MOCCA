@@ -42,7 +42,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.components.modern.LiquidGlassDefaults
 import kotlinx.serialization.json.*
 
 /**
@@ -91,16 +90,16 @@ private fun BaseToolCard(
     var expanded by remember { mutableStateOf(false) }
     
     val backgroundColor = when (state) {
-        ToolState.PENDING -> LiquidGlassDefaults.tintSecondary
+        ToolState.PENDING -> AppColors.surfaceContainerHigh.copy(alpha = 0.8f)
         ToolState.RUNNING -> AppColors.statusWaiting.copy(alpha = 0.15f)
-        ToolState.COMPLETED -> LiquidGlassDefaults.tintPrimary.copy(alpha = 0.9f)
+        ToolState.COMPLETED -> AppColors.success.copy(alpha = 0.15f)
         ToolState.ERROR -> AppColors.error.copy(alpha = 0.2f)
     }
     
     val borderColor = when (state) {
-        ToolState.PENDING -> LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
+        ToolState.PENDING -> AppColors.surfaceContainerHigh.copy(alpha = 0.3f)
         ToolState.RUNNING -> AppColors.statusWaiting.copy(alpha = 0.5f)
-        ToolState.COMPLETED -> LiquidGlassDefaults.borderPrimary.copy(alpha = 0.4f)
+        ToolState.COMPLETED -> AppColors.success.copy(alpha = 0.4f)
         ToolState.ERROR -> AppColors.error.copy(alpha = 0.5f)
     }
     

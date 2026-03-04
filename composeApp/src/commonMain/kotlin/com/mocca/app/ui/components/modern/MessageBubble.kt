@@ -224,11 +224,11 @@ fun MessageBubble(
 
         val bubbleColor = remember(isUser) {
             // Use LiquidGlass tints for consistent glass effect with good contrast
-            if (isUser) LiquidGlassDefaults.tintSecondary else LiquidGlassDefaults.tintPrimary
+            if (isUser) AppColors.surfaceContainerHigh else AppColors.surfaceContainer
         }
         val borderColor = remember(isUser) {
             // Use LiquidGlass borders for consistent edge styling
-            if (isUser) LiquidGlassDefaults.borderPrimary.copy(alpha = 0.4f) else LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
+            if (isUser) AppColors.borderLight.copy(alpha = 0.4f) else AppColors.border.copy(alpha = 0.3f)
         }
 
         Box(
@@ -736,7 +736,7 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
             .fillMaxWidth()
             .clip(AppShapes.medium)
             .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
-            .background(LiquidGlassDefaults.tintPrimary.copy(alpha = 0.6f), AppShapes.medium)
+            .background(AppColors.surfaceContainerHigh.copy(alpha = 0.6f), AppShapes.medium)
     ) {
         // Header row — always visible
         Row(

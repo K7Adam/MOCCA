@@ -157,8 +157,8 @@ fun MoccaSectionCard(
 fun MoccaSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    backgroundColor: Color = LiquidGlassDefaults.tintSecondary,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
+    backgroundColor: Color = AppColors.surfaceContainerHigh,
+    borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
     activeIndicatorColor: Color = AppColors.accent,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
@@ -170,7 +170,7 @@ fun MoccaSessionCard(
             .fillMaxWidth()
             .clip(shape)
             .background(
-                if (isActive) LiquidGlassDefaults.tintLight else backgroundColor, 
+                if (isActive) AppColors.surfaceContainerHighest else backgroundColor,
                 shape
             )
             .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
@@ -216,8 +216,8 @@ fun ModuleToolCard(
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = AppColors.glassBackground,
-    borderColor: Color = AppColors.glassBorder,
+    backgroundColor: Color = AppColors.surfaceContainerHigh,
+    borderColor: Color = AppColors.border,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit

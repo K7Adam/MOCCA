@@ -157,17 +157,17 @@ private fun StackedChildPreview(
                     .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            LiquidGlassDefaults.refractionAccent
+                            AppColors.accent
                         } else {
-                            LiquidGlassDefaults.tintSecondary
+                            AppColors.surfaceContainerHigh
                         }
                     )
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            LiquidGlassDefaults.refractionAccent
+                            AppColors.accent
                         } else {
-                            LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
+                            AppColors.border.copy(alpha = 0.3f)
                         },
                         shape = AppShapes.small
                     )
@@ -219,18 +219,18 @@ fun GroupedSessionCard(
             val parentModifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.sessionCard)
-                .background(LiquidGlassDefaults.tintSecondary, AppShapes.sessionCard)
+                .background(AppColors.surfaceContainerHigh, AppShapes.sessionCard)
             
             val borderModifier = if (isRunning) {
                 parentModifier.border(
                     width = 1.dp,
-                    color = LiquidGlassDefaults.refractionAccent,
+                    color = AppColors.accent,
                     shape = AppShapes.sessionCard
                 )
             } else {
                 parentModifier.border(
                     width = AppSpacing.borderThin,
-                    color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
+                    color = AppColors.border.copy(alpha = 0.3f),
                     shape = AppShapes.sessionCard
                 )
             }

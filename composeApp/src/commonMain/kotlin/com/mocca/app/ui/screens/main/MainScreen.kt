@@ -128,9 +128,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .statusBarsPadding()
         ) {
-            // NEW: Wrapper box to capture EVERYTHING (ASCII + Panels) for the glass blur
             Box(modifier = Modifier.fillMaxSize()) {
-                StaticPremiumBackdrop(modifier = Modifier.fillMaxSize())
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════
