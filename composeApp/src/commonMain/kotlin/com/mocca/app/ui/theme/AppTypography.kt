@@ -108,7 +108,7 @@ object AppTypography {
     val titleMedium = TextStyle(
         fontFamily = displayFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 14.sp,
+        fontSize = 15.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.sp
     )
@@ -117,7 +117,7 @@ object AppTypography {
     val titleSmall = TextStyle(
         fontFamily = displayFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
+        fontSize = 13.sp,
         lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
@@ -126,12 +126,12 @@ object AppTypography {
     // BODY STYLES (Content text)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Large body - Primary content text */
+    /** Large body - Primary content text (chat messages, main content) */
     val bodyLarge = TextStyle(
         fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
+        fontSize = 16.sp,
+        lineHeight = 24.sp,
         letterSpacing = 0.sp
     )
 
@@ -139,8 +139,8 @@ object AppTypography {
     val bodyMedium = TextStyle(
         fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
+        fontSize = 15.sp,
+        lineHeight = 22.sp,
         letterSpacing = 0.sp
     )
 
@@ -148,8 +148,8 @@ object AppTypography {
     val bodySmall = TextStyle(
         fontFamily = bodyFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
 
@@ -161,8 +161,8 @@ object AppTypography {
     val labelLarge = TextStyle(
         fontFamily = displayFamily,
         fontWeight = FontWeight.Bold,
-        fontSize = 14.sp,
-        lineHeight = 18.sp,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.5.sp
     )
 
@@ -228,8 +228,8 @@ object AppTypography {
     val code = TextStyle(
         fontFamily = monoFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.sp
     )
 
@@ -237,8 +237,8 @@ object AppTypography {
     val codeSmall = TextStyle(
         fontFamily = monoFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.sp
     )
 

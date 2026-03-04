@@ -8,12 +8,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 
 /**
- * MOCCA App Theme - Modern dark theme with accent colors.
+ * MOCCA App Theme — Neutral monochrome soft dark.
  *
  * Features:
- * - Pitch black (#000000) OLED-friendly background
- * - Mint green accent colors (#00D9A5)
- * - Modern rounded corners (16dp-32dp)
+ * - Soft dark (#1A1A1A) background
+ * - Desaturated cool gray-blue accent (#8B9DC3)
+ * - M3 tonal surface elevation hierarchy
+ * - Modern rounded corners (12dp-24dp)
  * - Extended colors for app-specific elements
  */
 
@@ -22,21 +23,21 @@ import androidx.compose.runtime.ReadOnlyComposable
 // ═══════════════════════════════════════════════════════════════════════════════
 
 private val AppColorScheme: ColorScheme = darkColorScheme(
-    // Primary - Off-white for main interactive elements (buttons)
-    primary = AppColors.buttonBackground,
+    // Primary — accent color for main interactive elements
+    primary = AppColors.accent,
     onPrimary = AppColors.buttonText,
-    primaryContainer = AppColors.surfaceContainer,
-    onPrimaryContainer = AppColors.white,
+    primaryContainer = AppColors.surfaceContainerHigh,
+    onPrimaryContainer = AppColors.textPrimary,
 
-    // Secondary - Accent green for status/success
-    secondary = AppColors.accentGreen,
+    // Secondary — accent for status/emphasis
+    secondary = AppColors.accent,
     onSecondary = AppColors.background,
     secondaryContainer = AppColors.surfaceContainer,
-    onSecondaryContainer = AppColors.accentGreen,
+    onSecondaryContainer = AppColors.accent,
 
-    // Tertiary - Blue for git/tabs
+    // Tertiary
     tertiary = AppColors.primary,
-    onTertiary = AppColors.white,
+    onTertiary = AppColors.textPrimary,
     tertiaryContainer = AppColors.primaryDim,
     onTertiaryContainer = AppColors.primary,
 
@@ -46,22 +47,29 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     errorContainer = AppColors.alertRedDim,
     onErrorContainer = AppColors.error,
 
-    // Background - Pure black
+    // Background
     background = AppColors.background,
     onBackground = AppColors.textPrimary,
 
-    // Surface - Slightly elevated black
+    // Surface — M3 tonal elevation hierarchy
     surface = AppColors.surface,
     onSurface = AppColors.textPrimary,
     surfaceVariant = AppColors.surfaceVariant,
     onSurfaceVariant = AppColors.textSecondary,
-    surfaceTint = AppColors.white,
+    surfaceTint = AppColors.accent,
+    surfaceBright = AppColors.surfaceBright,
+    surfaceDim = AppColors.surfaceDim,
+    surfaceContainer = AppColors.surfaceContainer,
+    surfaceContainerHigh = AppColors.surfaceContainerHigh,
+    surfaceContainerHighest = AppColors.surfaceContainerHighest,
+    surfaceContainerLow = AppColors.surfaceContainerLow,
+    surfaceContainerLowest = AppColors.surfaceContainerLowest,
 
-    // Outline - For borders
+    // Outline
     outline = AppColors.border,
     outlineVariant = AppColors.borderLight,
 
-    // Inverse colors (for contrast elements like snackbars)
+    // Inverse (for contrast elements like snackbars)
     inverseSurface = AppColors.white,
     inverseOnSurface = AppColors.background,
     inversePrimary = AppColors.greyDark,
@@ -78,8 +86,8 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
  * MOCCA App Theme.
  *
  * Features:
- * - Pitch black (#000000) background
- * - Mint green accents
+ * - Soft dark (#1A1A1A) background
+ * - Desaturated cool gray-blue accent
  * - Modern rounded corners
  * - Extended colors for app-specific elements
  */
