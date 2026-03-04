@@ -51,7 +51,6 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.roundToInt
 
-import com.mocca.app.ui.components.glass.glassy
 import androidx.compose.foundation.layout.navigationBarsPadding
 
 /**
@@ -97,12 +96,12 @@ val defaultBottomNavItems = listOf(
 )
 
 /**
- * Ultra-modern, animated bottom navigation bar with glassmorphic design.
+ * Modern animated bottom navigation bar.
  *
  * Features:
  * - Real-time synchronization with panel state via dragProgress
  * - Animated indicator that follows swipe gesture in real-time
- * - Glassmorphic terminal aesthetic
+ * - Clean dark terminal aesthetic
  * - Bidirectional sync with swipe navigation
  * - Smooth color and scale animations
  *
@@ -134,7 +133,7 @@ fun MoccaBottomNavigation(
             .widthIn(min = 280.dp, max = 360.dp)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
             .navigationBarsPadding()
-            .glassy(shape = AppShapes.rounded2xl)
+            .background(AppColors.surfaceContainer, AppShapes.rounded2xl)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm),
         contentAlignment = Alignment.Center
     ) {
@@ -213,7 +212,7 @@ fun MoccaBottomNavigation(
                             IntOffset(xOffsetPx.roundToInt(), 0)
                         }
                         .background(
-                            color = AppColors.accentGreen,
+                            color = AppColors.accent,
                             shape = RoundedCornerShape(2.dp)
                         )
                 )
@@ -241,13 +240,13 @@ private fun BottomNavItemComponent(
 
     // Animated color transition based on selection
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accent else AppColors.textTertiary,
         animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accent else AppColors.textTertiary,
         animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         label = "textColor"
     )

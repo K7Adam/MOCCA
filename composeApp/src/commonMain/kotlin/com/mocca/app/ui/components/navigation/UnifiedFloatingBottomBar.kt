@@ -23,24 +23,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.layer.GraphicsLayer
+
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassThemeTokens
-import com.mocca.app.ui.components.glass.LiquidBackdrop
-import com.mocca.app.ui.components.glass.glassy
-import com.mocca.app.ui.components.glass.liquidGlassNavBar
-import com.mocca.app.ui.components.glass.rememberLuminanceTextColor
-import com.mocca.app.ui.components.modern.LiquidGlassDefaults
-import com.mocca.app.ui.components.modern.liquidGlassFloating
+
+
 import com.mocca.app.ui.navigation.PanelState
+import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import io.github.fletchmckee.liquid.LiquidState
+import androidx.compose.material3.Surface
 
 /**
  * Sealed class representing the current mode of the unified bottom bar.
@@ -62,23 +57,20 @@ sealed class BottomBarMode {
  * 
  * Structure:
  * ```
- * LiquidGlassContainer
+ * LiquidContainer
  * ├── AnimatedVisibility (ChatInputContent - controlled by isChatInputVisible)
  * └── PersistentNavRow (ALWAYS VISIBLE - NEVER HIDDEN)
  * ```
  *
- * GLASS EFFECT PRIORITY:
- * 1. **Backdrop + Luminance** (NEW - SimpMusic style): True liquid glass with dynamic adaptation
- * 2. **LiquidState** (Legacy): io.github.fletchmckee.liquid library
- * 3. **Glassy** (Fallback): Simple gradient-based glass
+ * Clean M3 Surface with surfaceContainer color.
  *
  * Features:
  * - Fluid spring-based animations for mode transitions
- * - Single glassy container for cohesive premium look
+ * - Single surface container for cohesive premium look
  * - Nav buttons NEVER change size or position
  * - Nav row is ALWAYS visible across all screens
  * - Integrated navigation indicator visible in both modes
- * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
+ * - Dynamic spring-based animations with smooth transitions
  * - Luminance adaptation for dynamic brightness/contrast (when using backdrop)
  * - Auto-hide only affects chat input field, not navigation
  *
@@ -87,13 +79,7 @@ sealed class BottomBarMode {
  * @param isChatInputVisible Whether the chat input is visible (auto-hide support) - ONLY affects chat input, nav row stays visible
  * @param onItemClick Callback when a navigation item is clicked
  * 
- * GLASS EFFECT PARAMETERS (use ONE of these):
- * @param backdrop LiquidBackdrop for new SimpMusic-style liquid glass (recommended)
- * @param graphicsLayer GraphicsLayer for luminance sampling (required with backdrop)
- * @param luminance Current luminance value 0f-1f (required with backdrop)
- * @param liquidState Legacy LiquidState for io.github.fletchmckee.liquid library
- * @param glassTokens Theme tokens for fallback glassy effect
- * 
+ * @param modifier Modifier for styling
  * @param inputText Current input text (ChatInput mode only)
  * @param onInputTextChange Callback when input text changes
  * @param onSendClick Callback when send button is clicked
@@ -125,14 +111,8 @@ fun UnifiedFloatingBottomBar(
     dragProgress: Float,
     isChatInputVisible: Boolean = true,
     onItemClick: (PanelState) -> Unit,
-    // NEW: SimpMusic-style liquid glass with luminance adaptation
-    backdrop: LiquidBackdrop? = null,
-    graphicsLayer: GraphicsLayer? = null,
-    luminance: Float = 0f,
-    // Legacy: io.github.fletchmckee.liquid library
-    liquidState: LiquidState? = null,
-    // Fallback: Simple glass tokens
-    glassTokens: GlassThemeTokens = GlassDefaults.tokens(),
+    // Chat input parameters
+
     // Chat input parameters
     inputText: String = "",
     onInputTextChange: (String) -> Unit = {},
@@ -204,12 +184,7 @@ fun UnifiedFloatingBottomBar(
     // Labels help users understand navigation options in all modes
     val showLabels = true
     
-    // Determine text color based on luminance (for backdrop mode)
-    val textColor = if (backdrop != null && graphicsLayer != null) {
-        rememberLuminanceTextColor(luminance)
-    } else {
-        Color.White
-    }
+
     
     Box(
         modifier = modifier
@@ -218,45 +193,16 @@ fun UnifiedFloatingBottomBar(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        // Determine which glass effect to use (priority order)
+        // Surface container for the bottom bar
         @Suppress("DEPRECATION")
-        val containerModifier = when {
-            // PRIORITY 1: SimpMusic-style backdrop with luminance adaptation
-            backdrop != null && graphicsLayer != null -> {
-                Modifier
-                    .fillMaxWidth()
-                    .height(animatedHeight)
-                    .liquidGlassNavBar(
-                        backdrop = backdrop,
-                        layer = graphicsLayer,
-                        luminance = luminance
-                    )
-            }
-            
-            // PRIORITY 2: Legacy liquid library
-            liquidState != null -> {
-                Modifier
-                    .fillMaxWidth()
-                    .height(animatedHeight)
-                    .liquidGlassFloating(
-                        liquidState = liquidState,
-                        shape = AppShapes.rounded2xl,
-                        tint = LiquidGlassDefaults.tintSemiDark
-                    )
-            }
-            
-            // PRIORITY 3: Simple gradient-based glass
-            else -> {
-                Modifier
-                    .fillMaxWidth()
-                    .height(animatedHeight)
-                    .glassy(shape = AppShapes.rounded2xl)
-            }
-        }
+        val containerModifier = Modifier
+            .fillMaxWidth()
+            .height(animatedHeight)
         
-        Column(
+        Surface(
             modifier = containerModifier,
-            horizontalAlignment = Alignment.CenterHorizontally
+            color = AppColors.surfaceContainer,
+            shape = AppShapes.rounded2xl
         ) {
             // ═══════════════ CHAT INPUT CONTENT (Can auto-hide) ═══════════════
             // AnimatedVisibility allows the chat input to hide while nav row stays visible

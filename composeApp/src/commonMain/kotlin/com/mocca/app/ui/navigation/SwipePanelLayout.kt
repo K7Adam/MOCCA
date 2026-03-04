@@ -1,5 +1,7 @@
 package com.mocca.app.ui.navigation
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -36,16 +38,15 @@ enum class PanelState {
 
 /**
  * Custom swipe panel layout with three panels: left, center, right.
- * Optimized for quick, responsive navigation with minimal swipe distance.
+ * Optimized for responsive navigation with balanced swipe distance.
  *
  * Best Practices Applied:
- * - Low positionalThreshold (20%) - Only need to swipe 20% of screen width
- * - Low velocityThreshold (50dp) - Quick flicks trigger navigation immediately
- * - Fast snap animation (200ms) - Immediate feedback on release
- * - Velocity-based navigation - Fling gestures work naturally
+ * - Positional threshold (33%) — balanced sensitivity: not too eager, not too sluggish
+ * - Velocity threshold (100dp) — moderate flick speed triggers navigation
+ * - Spring physics snap animation — natural, bouncy panel settle
+ * - Velocity-based navigation — fling gestures work naturally
  * - Real-time progress reporting for external indicator sync
  */
-@Suppress("DEPRECATION")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun SwipePanelLayout(
@@ -55,9 +56,9 @@ fun SwipePanelLayout(
     modifier: Modifier = Modifier,
     useFullWidthPanels: Boolean = true,
     panelWidth: Dp = 300.dp,
-    positionalThresholdFraction: Float = 0.2f, // 20% - very easy to trigger
-    velocityThresholdDp: Dp = 50.dp, // Low velocity = responsive flicks
-    animationDurationMs: Int = 200, // Fast snap animation
+    positionalThresholdFraction: Float = 0.33f, // 33% — balanced trigger distance
+    velocityThresholdDp: Dp = 100.dp, // Moderate velocity = intentional flicks
+    animationDurationMs: Int = 200, // Fallback for non-spring animations
     panelState: PanelState = PanelState.CENTER,
     onPanelStateChange: (PanelState) -> Unit = {},
     onDragProgressChange: (Float) -> Unit = {} // Real-time progress callback: 0.0 (right) -> 0.5 (center) -> 1.0 (left)
@@ -75,18 +76,16 @@ fun SwipePanelLayout(
         // Calculate velocity threshold in pixels
         val velocityThresholdPx = with(density) { velocityThresholdDp.toPx() }
         
-        // Initialize state with optimized thresholds for quick, responsive swiping
-        // Using deprecated constructor because new API doesn't expose threshold configuration
+        // Initialize state with spring physics for natural, bouncy panel snapping
         val state = remember(effectivePanelWidthPx) {
             AnchoredDraggableState(
                 initialValue = panelState,
-                // Low positional threshold = easy to trigger with short swipes
                 positionalThreshold = { distance -> distance * positionalThresholdFraction },
-                // Low velocity threshold = quick flicks work even without reaching positional threshold
                 velocityThreshold = { velocityThresholdPx },
-                // Fast, responsive snap animation
-                snapAnimationSpec = tween(durationMillis = animationDurationMs),
-                // Smooth decay for natural feeling
+                snapAnimationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
                 decayAnimationSpec = androidx.compose.animation.core.exponentialDecay(),
                 confirmValueChange = { true }
             )

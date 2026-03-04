@@ -49,7 +49,7 @@ fun UnifiedStatusIndicator(
         UnifiedSystemStatus.AGENT_ONLY -> 
             Triple(Icons.Default.Warning, AppColors.statusWaiting, "Git Unavailable")
         UnifiedSystemStatus.CONNECTING -> 
-            Triple(Icons.Default.Refresh, AppColors.accentGreen, "Connecting...")
+            Triple(Icons.Default.Refresh, AppColors.accent, "Connecting...")
         UnifiedSystemStatus.DEGRADED -> 
             Triple(Icons.Default.Warning, AppColors.statusWaiting, "Degraded")
         UnifiedSystemStatus.OFFLINE -> 
@@ -142,7 +142,7 @@ fun SystemStatusCard(
             MoccaTextButton(
                 text = "REFRESH",
                 onClick = onRefresh,
-                textColor = AppColors.accentGreen
+                textColor = AppColors.accent
             )
         }
     }
@@ -156,7 +156,7 @@ private fun ComponentStatusRow(
 ) {
     val (indicatorColor, statusText) = when (status) {
         is ServerComponentStatus.Connected -> AppColors.statusOnline to "Connected"
-        is ServerComponentStatus.Connecting -> AppColors.accentGreen to "Connecting..."
+        is ServerComponentStatus.Connecting -> AppColors.accent to "Connecting..."
         is ServerComponentStatus.Error -> AppColors.statusOffline to status.message
         is ServerComponentStatus.Unknown -> AppColors.grey to "Unknown"
     }

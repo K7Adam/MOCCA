@@ -22,9 +22,6 @@ import com.mocca.app.domain.model.QuestionRequest
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassThemeTokens
-
 /**
  * Dialog for handling interactive questions from OpenCode.
  * Supports single/multiple choice and free text input.
@@ -110,11 +107,11 @@ fun QuestionDialog(
                         if (question.options.isNotEmpty()) {
                             Surface(
         shape = AppShapes.dialog,
-                                // Glass-like translucent background
-                                color = com.mocca.app.ui.theme.AppColors.liquidGlassTintSecondary, // 19% black, translucent
+                                // Translucent background
+                                color = AppColors.surfaceContainerHigh, // Translucent surface
                                 border = BorderStroke(
                                     1.dp, 
-                                    com.mocca.app.ui.theme.AppColors.liquidGlassSpecular // Glass border - white 25%
+                                    AppColors.border // Border
                                 )
                             ) {
                                 Column {
@@ -232,8 +229,8 @@ fun QuestionDialog(
             }
         },
         shape = AppShapes.medium,
-        // Glass-like translucent container
-        containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark for glass effect
+                            // Translucent container
+        containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark surface
         titleContentColor = AppColors.white,
         textContentColor = AppColors.whiteDim,
         iconContentColor = AppColors.white

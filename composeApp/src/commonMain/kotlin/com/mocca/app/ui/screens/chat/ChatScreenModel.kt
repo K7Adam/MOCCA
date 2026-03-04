@@ -178,38 +178,38 @@ class ChatScreenModel(
     private fun syncDelegates() {
         screenModelScope.launch {
             combine(
-                chatStateStore.messages,
-                chatStateStore.childSessions,
-                chatStateStore.childMessages,
-                chatStateStore.childStreamingText,
-                chatStateStore.isThinking,
-                chatStateStore.thinkingContent,
-                chatStateStore.thinkingElapsedMs,
-                chatStateStore.pendingPermission,
-                chatStateStore.pendingQuestion,
-                stateCoordinator.connectionStatus,
-                configDelegate.providerInfo,
-                configDelegate.selectedProviderId,
-                configDelegate.selectedModelId,
-                configDelegate.selectedVariantId,
-                configDelegate.modes,
-                configDelegate.selectedModeId,
-                configDelegate.modelName,
-                configDelegate.agentName,
-                configDelegate.maxTokens,
-                configDelegate.recentModels,
-                configDelegate.commands,
-                chatStateStore.todos,
-                appStateStore.userPreferences,
-                // CRITICAL: Sync loading states from ChatStateStore
-                chatStateStore.isLoading,
-                chatStateStore.isSending,
-                chatStateStore.isSessionIdle,
-                chatStateStore.error,
-                chatStateStore.sessionDisposed
+                flows = listOf(
+                    chatStateStore.messages,
+                    chatStateStore.childSessions,
+                    chatStateStore.childMessages,
+                    chatStateStore.childStreamingText,
+                    chatStateStore.isThinking,
+                    chatStateStore.thinkingContent,
+                    chatStateStore.thinkingElapsedMs,
+                    chatStateStore.pendingPermission,
+                    chatStateStore.pendingQuestion,
+                    stateCoordinator.connectionStatus,
+                    configDelegate.providerInfo,
+                    configDelegate.selectedProviderId,
+                    configDelegate.selectedModelId,
+                    configDelegate.selectedVariantId,
+                    configDelegate.modes,
+                    configDelegate.selectedModeId,
+                    configDelegate.modelName,
+                    configDelegate.agentName,
+                    configDelegate.maxTokens,
+                    configDelegate.recentModels,
+                    configDelegate.commands,
+                    chatStateStore.todos,
+                    appStateStore.userPreferences,
+                    // CRITICAL: Sync loading states from ChatStateStore
+                    chatStateStore.isLoading,
+                    chatStateStore.isSending,
+                    chatStateStore.isSessionIdle,
+                    chatStateStore.error,
+                    chatStateStore.sessionDisposed
+                )
             ) { args ->
-                @Suppress("UNCHECKED_CAST")
-                val prefs = args[22] as UserPreferences
                 @Suppress("UNCHECKED_CAST")
                 _state.value.copy(
                     messages = (args[0] as List<Message>).toImmutableList(),
@@ -235,8 +235,8 @@ class ChatScreenModel(
                     recentModels = args[19] as ImmutableList<RecentModel>,
                     commands = args[20] as ImmutableList<Command>,
                     todos = (args[21] as List<Todo>).toImmutableList(),
-                    showTimestamps = prefs.showTimestamps,
-                    showTokenCounts = prefs.showTokenCounts,
+                    showTimestamps = (args[22] as UserPreferences).showTimestamps,
+                    showTokenCounts = (args[22] as UserPreferences).showTokenCounts,
                     // CRITICAL: Sync loading states from ChatStateStore
                     isLoading = args[23] as Boolean,
                     isSending = args[24] as Boolean,

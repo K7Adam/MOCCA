@@ -52,10 +52,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RUNNING SESSION INDICATOR
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Pulsing indicator for running/active sessions.
  * Shows a mint green dot with "LIVE" or "PROCESSING" label.
@@ -101,13 +97,13 @@ fun RunningSessionIndicator(
                 modifier = Modifier
                     .size((8 * pulseScale).dp)
                     .alpha(pulseAlpha * 0.5f)
-                    .background(AppColors.accentGreen, CircleShape)
+                    .background(AppColors.accent, CircleShape)
             )
             // Core dot
             Box(
                 modifier = Modifier
                     .size(8.dp)
-                    .background(AppColors.accentGreen, CircleShape)
+                    .background(AppColors.accent, CircleShape)
             )
         }
         
@@ -115,17 +111,13 @@ fun RunningSessionIndicator(
         Text(
             text = statusLabel,
             style = AppTypography.labelSmall,
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             fontWeight = FontWeight.Bold,
             fontSize = 10.sp,
             letterSpacing = 1.sp
         )
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// STACKED CHILD PREVIEW
-// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Visual stack of child session cards behind parent.
@@ -157,17 +149,17 @@ private fun StackedChildPreview(
                     .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            LiquidGlassDefaults.refractionAccent
+                            AppColors.accent
                         } else {
-                            LiquidGlassDefaults.tintSecondary
+                            AppColors.surfaceContainerHigh
                         }
                     )
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            LiquidGlassDefaults.refractionAccent
+                            AppColors.accent
                         } else {
-                            LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f)
+                            AppColors.border.copy(alpha = 0.3f)
                         },
                         shape = AppShapes.small
                     )
@@ -175,10 +167,6 @@ private fun StackedChildPreview(
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// GROUPED SESSION CARD
-// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Card component for displaying a session group with parent-child hierarchy.
@@ -219,18 +207,18 @@ fun GroupedSessionCard(
             val parentModifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.sessionCard)
-                .background(LiquidGlassDefaults.tintSecondary, AppShapes.sessionCard)
+                .background(AppColors.surfaceContainerHigh, AppShapes.sessionCard)
             
             val borderModifier = if (isRunning) {
                 parentModifier.border(
                     width = 1.dp,
-                    color = LiquidGlassDefaults.refractionAccent,
+                    color = AppColors.accent,
                     shape = AppShapes.sessionCard
                 )
             } else {
                 parentModifier.border(
                     width = AppSpacing.borderThin,
-                    color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
+                    color = AppColors.border.copy(alpha = 0.3f),
                     shape = AppShapes.sessionCard
                 )
             }
@@ -241,7 +229,7 @@ fun GroupedSessionCard(
                         if (isActive) {
                             Modifier.drawBehind {
                                 drawRect(
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.accent,
                                     topLeft = Offset(0f, 0f),
                                     size = androidx.compose.ui.geometry.Size(
                                         AppSpacing.activeIndicatorWidth.toPx(),
@@ -305,7 +293,7 @@ fun GroupedSessionCard(
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
-                                        .background(AppColors.accentGreen, CircleShape)
+                                        .background(AppColors.accent, CircleShape)
                                 )
                             }
                         }
@@ -348,10 +336,6 @@ fun GroupedSessionCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CHILD SESSION CARD
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Compact card for child/sub sessions.
  */
@@ -367,12 +351,12 @@ private fun ChildSessionCard(
             .fillMaxWidth()
             .clip(AppShapes.medium)
             .background(
-                if (isRunning) AppColors.accentGreen.copy(alpha = 0.1f)
+                if (isRunning) AppColors.accent.copy(alpha = 0.1f)
                 else AppColors.surfaceVariant
             )
             .border(
                 width = 1.dp,
-                color = if (isRunning) AppColors.accentGreen.copy(alpha = 0.3f)
+                color = if (isRunning) AppColors.accent.copy(alpha = 0.3f)
                 else AppColors.border,
                 shape = AppShapes.medium
             )

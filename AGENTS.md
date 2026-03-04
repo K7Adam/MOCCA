@@ -5,7 +5,7 @@
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
 
 ## OVERVIEW
-Android client for OpenCode AI agent. Pitch Black OLED UI, offline-first architecture, single-server HTTP Basic Auth connection.
+Android client for OpenCode AI agent. Neutral monochrome soft dark UI, offline-first architecture, single-server HTTP Basic Auth connection.
 
 ## STRUCTURE
 ```
@@ -36,7 +36,7 @@ MOCCA/
 | Skill | Use When |
 |-------|----------|
 | `kotlin-best-practices` | KMP architecture, MVI, DI patterns |
-| `taste-skill-compose` | UI/UX design, animations, theming, liquid glass |
+| `taste-skill-compose` | UI/UX design, animations, theming, M3 design |
 | `android-mcp` | Device automation, ADB commands |
 
 **See `.opencode/skills/` for detailed skill documentation.**
@@ -51,8 +51,8 @@ MOCCA/
 - **Architecture**: MVI (ScreenModel → StateFlow → UI)
 - **Offline-First**: Repositories return `Flow<Resource<T>>`
 - **Paths**: ALWAYS absolute paths
-- **Theme**: Pitch Black (`#000000`), Mint Green (`#00D9A5`), rounded corners
-- **Glass Effects**: Use [AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass) (`io.github.kyant0:backdrop`) for liquid glass UI
+- **Theme**: Soft Dark (`#1A1A1A`), neutral monochrome palette with subtle cool accent (`#8B9DC3`), rounded corners
+- **Surface Design**: Clean Material 3 Surface components with tonal elevation for depth
 
 ## ANTI-PATTERNS (STRICT)
 - NEVER use `RectangleShape` for interactive elements

@@ -40,7 +40,7 @@ fun PermissionRequestDialog(
             Icon(
                 Icons.Default.Warning,
                 contentDescription = null,
-                tint = AppColors.accentGreen
+                tint = AppColors.accent
             )
         },
         title = {

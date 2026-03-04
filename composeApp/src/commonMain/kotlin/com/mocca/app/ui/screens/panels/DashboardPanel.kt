@@ -135,14 +135,14 @@ fun DashboardPanel(
                 icon = Icons.Default.Terminal,
                 onClick = onTerminalClick,
                 contentDescription = "Terminal",
-                iconColor = AppColors.accentGreen
+                iconColor = AppColors.accent
             )
         }
         
         Spacer(modifier = Modifier.weight(1f))
         
         // Bottom padding for floating bottom bar clearance
-        Spacer(modifier = Modifier.height(80.dp))
+        Spacer(modifier = Modifier.height(AppSpacing.bottomBarClearance))
     }
 }
 
@@ -166,7 +166,7 @@ private fun WorkspaceModule(
                     val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
                     if (active != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusDot(color = AppColors.accentGreen)
+                            StatusDot(color = AppColors.accent)
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(active.displayName.uppercase(), color = AppColors.white, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
@@ -219,7 +219,7 @@ private fun CapabilitiesModule(
                 when (tools) {
                     is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accent, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = tools.data.take(3).joinToString("\n") { "• $it" }
                         if (preview.isNotEmpty()) {
                             Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)
@@ -236,7 +236,7 @@ private fun CapabilitiesModule(
                 when (commands) {
                     is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${commands.data.size} AVAILABLE", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${commands.data.size} AVAILABLE", color = AppColors.accent, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = commands.data.take(3).joinToString("\n") { "• /${it.name}" }
                         if (preview.isNotEmpty()) {
                             Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)

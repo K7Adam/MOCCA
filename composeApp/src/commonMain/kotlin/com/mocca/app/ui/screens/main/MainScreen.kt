@@ -18,19 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.ui.graphics.rememberGraphicsLayer
+
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.BottomBarMode
 import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
-import com.mocca.app.ui.components.glass.rememberLiquidBackdrop
-import com.mocca.app.ui.components.glass.rememberLuminanceAnimation
-import com.mocca.app.ui.components.glass.liquidBackdropSource
-import com.mocca.app.ui.components.modern.*
-import com.mocca.app.ui.components.modern.rememberLiquidGlassState
-import com.mocca.app.ui.components.modern.liquidGlassSource
+
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
@@ -54,16 +49,15 @@ import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
+import com.mocca.app.ui.components.modern.ConnectionBannerStatus
+import com.mocca.app.ui.components.modern.ConnectionStatusBanner
+import com.mocca.app.ui.components.modern.QuoteRotator
+import com.mocca.app.ui.components.modern.UpdateDialog
 
 /**
  * Main screen with swipe panel navigation.
  * Shows chat content in center, context/history on left, dashboard on right.
  * 
- * GLASS EFFECT: Uses Kyant0/backdrop library for TRUE Liquid Glass with:
- * - Lens refraction (optical distortion)
- * - Blur (frosted glass)
- * - Vibrancy (saturation boost)
- * - Luminance adaptation (dynamic brightness/contrast based on background)
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
@@ -117,22 +111,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         
         val panelState = rememberPanelState()
         
-        // ═══════════════════════════════════════════════════════════════════════
-        // TRUE LIQUID GLASS - SimpMusic Style (Kyant0/backdrop)
-        // ═══════════════════════════════════════════════════════════════════════
-        
-        // Create backdrop that captures background content
-        val backdrop = rememberLiquidBackdrop(backgroundColor = AppColors.background)
-        
-        // Graphics layer for luminance sampling
-        val graphicsLayer = rememberGraphicsLayer()
-        
-        // Luminance detection with dynamic adaptation
-        val luminanceAnimation = rememberLuminanceAnimation(graphicsLayer)
-        
-        // Legacy: Keep for backward compatibility with ChatContent
-        @Suppress("DEPRECATION")
-        val legacyLiquidState = rememberLiquidGlassState()
 
         // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
         var dragProgress by remember { mutableFloatStateOf(0.5f) }
@@ -140,7 +118,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Track scroll direction for chat input auto-hide
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
 
-        // Scroll-to-bottom button state (lifted from ChatContent for liquid glass)
+        // State for scroll-to-bottom button (reported by ChatContent)
         var showScrollToBottom by remember { mutableStateOf(false) }
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
@@ -158,19 +136,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .background(AppColors.background)
                 .statusBarsPadding()
         ) {
-            // NEW: Wrapper box to capture EVERYTHING (ASCII + Panels) for the glass blur
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .liquidBackdropSource(backdrop)
-            ) {
-                StaticPremiumBackdrop(modifier = Modifier.fillMaxSize())
-                
+            Box(modifier = Modifier.fillMaxSize()) {
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════
                 SwipePanelLayout(
-                        modifier = Modifier, // backdrop source moved to parent Box
+                    modifier = Modifier,
                         leftPanel = {
                         ContextHistoryPanel(
                             sessions = state.sessions,
@@ -300,30 +271,14 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onPanelStateChange = { panelState.state = it },
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
-            } // End of Backdrop Source Wrapper Box
+            } // End of content wrapper
+
+
 
             // ═══════════════════════════════════════════════════════════════════════
-            // SCROLL-TO-BOTTOM BUTTON - Same liquid glass as bottom bar
+            // UNIFIED FLOATING BOTTOM BAR
             // ═══════════════════════════════════════════════════════════════════════
-            // Placed OUTSIDE backdrop source so liquidGlassFab() can safely sample
-            if (panelState.state == PanelState.CENTER && state.currentSessionId != null) {
-                ScrollToBottomButton(
-                    isVisible = showScrollToBottom,
-                    hasNewMessages = hasNewMessagesWhileScrolledUp,
-                    onClick = { scrollToBottomTrigger = System.nanoTime() },
-                    backdrop = backdrop,
-                    graphicsLayer = graphicsLayer,
-                    luminance = luminanceAnimation.value,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 100.dp) // Positioned just above the floating input bar
-                )
-            }
-
-            // ═══════════════════════════════════════════════════════════════════════
-            // UNIFIED FLOATING BOTTOM BAR - SimpMusic Style Liquid Glass
-            // ═══════════════════════════════════════════════════════════════════════
-            // Uses backdrop + luminance for TRUE liquid glass with dynamic adaptation
+            // Surface-based bottom bar with dynamic adaptation
             // Nav row is ALWAYS visible; only chat input auto-hides on scroll
             val inputText by chatScreenModel.inputText.collectAsState()
             val shellMode by chatScreenModel.shellMode.collectAsState()
@@ -333,17 +288,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             val isChatInputVisible = scrollDirection != ScrollDirection.UP
             
             UnifiedFloatingBottomBar(
-                mode = when (panelState.state) {
-                    PanelState.CENTER -> BottomBarMode.ChatInput
-                    else -> BottomBarMode.Navigation
-                },
+                mode = BottomBarMode.ChatInput,
                 dragProgress = dragProgress,
                 isChatInputVisible = isChatInputVisible,
-                onItemClick = { newState -> panelState.state = newState },
-                // NEW: SimpMusic-style liquid glass with luminance adaptation
-                backdrop = backdrop,
-                graphicsLayer = graphicsLayer,
-                luminance = luminanceAnimation.value,
+                onItemClick = { panelState.state = it },
                 // Chat input parameters
                 inputText = inputText,
                 onInputTextChange = { chatScreenModel.updateInputText(it) },

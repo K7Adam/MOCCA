@@ -280,7 +280,7 @@ private fun ScanningOverlay() {
                 .clip(AppShapes.card)
                 .border(
                     width = 2.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     shape = AppShapes.card
                 )
         ) {
@@ -339,7 +339,7 @@ private fun ScanningCorners() {
                 .padding(4.dp)
                 .border(
                     width = 3.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     shape = AppShapes.extraSmall
                 )
         )
@@ -351,7 +351,7 @@ private fun ScanningCorners() {
                 .padding(4.dp)
                 .border(
                     width = 3.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     shape = AppShapes.extraSmall
                 )
         )
@@ -363,7 +363,7 @@ private fun ScanningCorners() {
                 .padding(4.dp)
                 .border(
                     width = 3.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     shape = AppShapes.extraSmall
                 )
         )
@@ -375,7 +375,7 @@ private fun ScanningCorners() {
                 .padding(4.dp)
                 .border(
                     width = 3.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     shape = AppShapes.extraSmall
                 )
         )
@@ -389,7 +389,7 @@ private fun ScanningLine() {
         modifier = Modifier
             .fillMaxWidth()
             .height(2.dp)
-            .background(AppColors.accentGreen)
+            .background(AppColors.accent)
     )
 }
 
@@ -438,7 +438,7 @@ private fun PermissionDeniedView(
         Box(
             modifier = Modifier
                 .clip(AppShapes.pill)
-                .background(AppColors.accentGreen)
+                .background(AppColors.accent)
                 .clickable(onClick = onRequestPermission)
                 .padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md)
         ) {
@@ -508,7 +508,7 @@ private fun QrSuccessView(
         val displayCode = if (code.length > 50) code.take(50) + "..." else code
         Text(
             text = displayCode,
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             style = AppTypography.bodySmall,
             textAlign = TextAlign.Center
         )
@@ -519,7 +519,7 @@ private fun QrSuccessView(
         Box(
             modifier = Modifier
                 .clip(AppShapes.pill)
-                .background(AppColors.accentGreen)
+                .background(AppColors.accent)
                 .clickable(onClick = onConfirm)
                 .padding(horizontal = AppSpacing.xl, vertical = AppSpacing.md)
         ) {

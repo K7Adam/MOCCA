@@ -97,7 +97,7 @@ fun VariantSelectorDialog(
                         Text(
                             text = "// AVAILABLE",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen,
+                            color = AppColors.accent,
                             modifier = Modifier.padding(
                                 start = AppSpacing.sm,
                                 top = AppSpacing.sm,
@@ -117,7 +117,7 @@ fun VariantSelectorDialog(
                                 }
                                 .background(
                                     if (isSelected) 
-                                        AppColors.accentGreen.copy(alpha = 0.2f) 
+                                        AppColors.accent.copy(alpha = 0.2f) 
                                     else 
                                         AppColors.background
                                 )
@@ -131,14 +131,14 @@ fun VariantSelectorDialog(
                             Text(
                                 text = "> ${variantId.uppercase()}",
                                 style = AppTypography.bodySmall,
-                                color = if (isSelected) AppColors.accentGreen else AppColors.white
+                                color = if (isSelected) AppColors.accent else AppColors.white
                             )
                             
                             if (isSelected) {
                                 Icon(
                                     Icons.Default.Check,
                                     contentDescription = "Selected",
-                                    tint = AppColors.accentGreen,
+                                    tint = AppColors.accent,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }

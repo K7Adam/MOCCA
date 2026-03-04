@@ -32,14 +32,14 @@ fun ModernProcessingIndicator() {
         CircularProgressIndicator(
             modifier = Modifier.size(12.dp),
             strokeWidth = 1.5.dp,
-            color = AppColors.accentGreen
+            color = AppColors.accent
         )
         
         Spacer(modifier = Modifier.width(AppSpacing.sm))
         
         Text(
             text = "PROCESSING...",
-            color = AppColors.accentGreen,
+            color = AppColors.accent,
             style = AppTypography.labelExtraSmall,
             fontWeight = FontWeight.Bold
         )

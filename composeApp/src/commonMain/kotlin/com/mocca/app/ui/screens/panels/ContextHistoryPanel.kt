@@ -1,10 +1,7 @@
 package com.mocca.app.ui.screens.panels
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,11 +26,9 @@ import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ripple
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -47,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
-import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
@@ -128,9 +122,6 @@ fun ContextHistoryPanel(
     }
 }
 
-/**
- * Agent header with icon and version.
- */
 @Composable
 private fun AgentHeader(
     agentName: String = "--",
@@ -140,7 +131,6 @@ private fun AgentHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-        // Terminal/monitor icon (rounded)
         Box(
             modifier = Modifier
                 .size(48.dp)
@@ -173,10 +163,6 @@ private fun AgentHeader(
     }
 }
 
-/**
- * Conversation history list with new session button.
- * Supports both flat session list and grouped sessions.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ConversationHistorySection(
@@ -194,11 +180,9 @@ private fun ConversationHistorySection(
     onGroupExpandToggle: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Use grouped sessions if available, otherwise fall back to flat list
     val useGroupedView = sessionGroups.isNotEmpty()
     
     Column(modifier = modifier) {
-        // Section header with running count
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -210,8 +194,6 @@ private fun ConversationHistorySection(
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
-            
-            // Show running session count if any
             if (runningSessionIds.isNotEmpty()) {
                 RunningSessionIndicator(
                     isRunning = true,
@@ -222,19 +204,16 @@ private fun ConversationHistorySection(
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        // Session list with NEW SESSION button overlaid at top
         Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            // Session list with pull-to-refresh
             PullToRefreshBox(
                 isRefreshing = isRefreshing,
                 onRefresh = onRefresh,
                 modifier = Modifier.fillMaxSize()
             ) {
             if (useGroupedView) {
-                // Grouped session view
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(top = AppSpacing.topBarHeight, bottom = AppSpacing.bottomBarClearance),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     items(
@@ -258,7 +237,7 @@ private fun ConversationHistorySection(
                 // Flat session view (fallback)
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(top = 56.dp, bottom = 80.dp),
+                    contentPadding = PaddingValues(top = AppSpacing.topBarHeight, bottom = AppSpacing.bottomBarClearance),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
                     items(
@@ -270,82 +249,57 @@ private fun ConversationHistorySection(
                         val isActive = session.id == currentSessionId
                         val isRunning = runningSessionIds.contains(session.id)
                         
-                        androidx.compose.animation.AnimatedVisibility(
-                            visible = true,
-                            enter = if (isNewSession) {
-                                expandVertically(
-                                    animationSpec = tween(200),
-                                    expandFrom = Alignment.Top
-                                ) + fadeIn(animationSpec = tween(200))
-                            } else {
-                                fadeIn(animationSpec = tween(0))
-                            }
+                        MoccaSessionCard(
+                            isActive = isActive,
+                            modifier = Modifier.clickable { onSessionClick(session) }
                         ) {
-                            MoccaSessionCard(
-                                isActive = isActive,
-                                modifier = Modifier.clickable { onSessionClick(session) }
-                            ) {
+                            Column(modifier = Modifier.fillMaxWidth()) {
                                 Row(
-                                    verticalAlignment = Alignment.Top,
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Row(
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text(
-                                                text = "#${formatSessionId(session.id)}",
-                                                color = if (isActive) AppColors.white else AppColors.textSecondary,
-                                                style = AppTypography.labelSmall,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                            
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                if (isRunning) {
-                                                    RunningSessionIndicator(
-                                                        isRunning = true,
-                                                        statusLabel = "LIVE"
-                                                    )
-                                                }
-                                                
-                                                if (isLoading) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(12.dp),
-                                                        strokeWidth = 2.dp,
-                                                        color = AppColors.statusWaiting
-                                                    )
-                                                } else {
-                                                    Text(
-                                                        text = formatTimeAgo(session.updatedAt),
-                                                        color = AppColors.textTertiary,
-                                                        style = AppTypography.labelSmall
-                                                    )
-                                                }
-                                            }
+                                    Text(
+                                        text = "#${formatSessionId(session.id)}",
+                                        color = if (isActive) AppColors.white else AppColors.textSecondary,
+                                        style = AppTypography.labelSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        if (isRunning) {
+                                            RunningSessionIndicator(isRunning = true, statusLabel = "LIVE")
                                         }
-                                        
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        
-                                        Text(
-                                            text = session.title ?: "Untitled Session",
-                                            color = if (isActive) AppColors.white else AppColors.textTertiary,
-                                            style = AppTypography.bodySmall,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
+                                        if (isLoading) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(12.dp),
+                                                strokeWidth = 2.dp,
+                                                color = AppColors.statusWaiting
+                                            )
+                                        } else {
+                                            Text(
+                                                text = formatTimeAgo(session.updatedAt),
+                                                color = AppColors.textTertiary,
+                                                style = AppTypography.labelSmall
+                                            )
+                                        }
                                     }
                                 }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = session.title ?: "Untitled Session",
+                                    color = if (isActive) AppColors.white else AppColors.textTertiary,
+                                    style = AppTypography.bodySmall,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
-                    }
                 }
             }
             }
+
             
             // Floating NEW SESSION button with gradient fade at top
             Box(
@@ -373,11 +327,10 @@ private fun ConversationHistorySection(
         }
     }
 }
+}
 
-/**
- * New session button at top of list with loading state.
- * Modern pill/rounded card style.
- */
+
+
 @Composable
 private fun NewSessionButton(
     onClick: () -> Unit,
@@ -422,7 +375,7 @@ private fun NewSessionButton(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "New session",
-                tint = AppColors.accentGreen,
+                tint = AppColors.accent,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -435,17 +388,6 @@ private fun NewSessionButton(
         }
     }
 }
+private fun formatSessionId(id: String): String = "SESS-${id.take(3).uppercase()}"
 
-/**
- * Format session ID for display (first 6 chars uppercase).
- */
-private fun formatSessionId(id: String): String {
-    return "SESS-${id.take(3).uppercase()}"
-}
-
-/**
- * Format timestamp as relative time.
- */
-private fun formatTimeAgo(timestamp: Long): String {
-    return com.mocca.app.util.TimeFormatter.formatTimeAgo(timestamp)
-}
+private fun formatTimeAgo(timestamp: Long): String = com.mocca.app.util.TimeFormatter.formatTimeAgo(timestamp)

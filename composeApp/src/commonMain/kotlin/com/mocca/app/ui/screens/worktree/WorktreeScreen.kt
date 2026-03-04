@@ -79,13 +79,13 @@ object WorktreeScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { screenModel.load() },
-                    iconColor = AppColors.accentGreen
+                    iconColor = AppColors.accent
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.xs))
                 MoccaIconButton(
                     icon = Icons.Default.Add,
                     onClick = { screenModel.showCreateDialog() },
-                    iconColor = AppColors.accentGreen
+                    iconColor = AppColors.accent
                 )
             }
 
@@ -159,10 +159,6 @@ object WorktreeScreen : Screen {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Worktree card
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun WorktreeCard(
     worktree: WorktreeInfo,
@@ -228,7 +224,7 @@ private fun WorktreeCard(
                 Text(
                     text = "SESSION: $sid",
                     style = AppTypography.monoLabel,
-                    color = AppColors.accentGreen,
+                    color = AppColors.accent,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -271,10 +267,6 @@ private fun WorktreeCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Empty state
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun WorktreeEmptyState(onCreateClick: () -> Unit) {
     Column(
@@ -304,10 +296,6 @@ private fun WorktreeEmptyState(onCreateClick: () -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Create dialog
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun WorktreeCreateDialog(
     isCreating: Boolean,
@@ -329,7 +317,7 @@ private fun WorktreeCreateDialog(
             Text(
                 text = "NEW WORKTREE",
                 style = AppTypography.labelLarge,
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 fontWeight = FontWeight.Bold
             )
 
@@ -355,11 +343,11 @@ private fun WorktreeCreateDialog(
                     if (!isCreating) onCreate(branchInput)
                 }),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AppColors.accentGreen,
+                    focusedBorderColor = AppColors.accent,
                     unfocusedBorderColor = AppColors.border,
                     focusedTextColor = AppColors.white,
                     unfocusedTextColor = AppColors.white,
-                    cursorColor = AppColors.accentGreen,
+                    cursorColor = AppColors.accent,
                     focusedContainerColor = AppColors.background,
                     unfocusedContainerColor = AppColors.background
                 ),
@@ -393,7 +381,7 @@ private fun WorktreeCreateDialog(
                         modifier = Modifier
                             .size(32.dp)
                             .align(Alignment.CenterVertically),
-                        color = AppColors.accentGreen,
+                        color = AppColors.accent,
                         strokeWidth = 2.dp
                     )
                 } else {

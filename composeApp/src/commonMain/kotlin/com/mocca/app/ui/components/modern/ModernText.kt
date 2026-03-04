@@ -31,7 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 
 /**
- * Modern Glassmorphic text components.
+ * Modern styled text components.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -85,7 +85,7 @@ fun ModernHeader(
             Box(
                 modifier = Modifier
                     .size(width = 3.dp, height = 18.dp)
-                    .background(AppColors.accentGreen)
+                    .background(AppColors.accent)
             )
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -109,8 +109,8 @@ fun ModernHeader(
                 .background(
                     brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
                         colors = listOf(
-                            AppColors.accentGreen.copy(alpha = 0.5f),
-                            AppColors.accentGreen.copy(alpha = 0.1f),
+                            AppColors.accent.copy(alpha = 0.5f),
+                            AppColors.accent.copy(alpha = 0.1f),
                             Color.Transparent
                         )
                     )
@@ -333,7 +333,7 @@ fun ConsoleLogLine(
     showPrefix: Boolean = true
 ) {
     val (prefixText, prefixColor) = when (status) {
-        ConsoleLogStatus.DONE -> "[DONE]" to AppColors.accentGreen
+        ConsoleLogStatus.DONE -> "[DONE]" to AppColors.accent
         ConsoleLogStatus.WAIT -> "[WAIT]" to AppColors.statusWaiting
         ConsoleLogStatus.ERROR -> "[ERROR]" to AppColors.error
         ConsoleLogStatus.INFO -> "[INFO]" to AppColors.greyLight

@@ -29,7 +29,7 @@ OpenCode Server (HTTP Basic Auth)
 - `ApiExecutor` — interface for HTTP requests (consumers never hold HttpClient)
 - `ConnectionStatus` — real-time connection state for UI
 
-**UI Theme:** Pitch Black OLED with liquid glass effects via [AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass)
+**UI Theme:** Neutral monochrome soft dark with clean Material 3 Surface components
 
 ## Quick Start
 
@@ -148,7 +148,7 @@ adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 - **Architecture**: MVI (ScreenModel → StateFlow → UI)
 - **Offline-First**: Repositories return `Flow<Resource<T>>`
 - **Paths**: ALWAYS use absolute paths
-- **Theme**: Pitch Black (`#000000`) OLED aesthetic, rounded corners, mint accents
+- **Theme**: Soft Dark (`#1A1A1A`) with neutral palette, rounded corners, subtle cool accent
 
 ### Anti-Patterns (STRICT)
 

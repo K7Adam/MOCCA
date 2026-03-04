@@ -6,11 +6,14 @@ import androidx.compose.ui.unit.dp
 /**
  * MOCCA Spacing tokens for consistent layout.
  * 4dp/8dp base grid system with comfortable touch targets.
+ *
+ * Base scale (monotonically increasing):
+ *   xxs=2 < xs=4 < sm=8 < md=12 < lg=16 < xl=24 < xxl=32 < xxxl=48
  */
 object AppSpacing {
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BASE SPACING SCALE (4dp/8dp grid)
+    // BASE SPACING SCALE (4dp/8dp grid — monotonically increasing)
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** 2dp - Minimal gap (micro adjustments) */
@@ -26,25 +29,35 @@ object AppSpacing {
     val md: Dp = 12.dp
 
     /** 16dp - Comfortable (card padding, section gaps) */
-    val lg: Dp = 12.dp
-
-    /** 20dp - Relaxed (between major sections) */
-    val lgPlus: Dp = 16.dp
+    val lg: Dp = 16.dp
 
     /** 24dp - Spacious (screen sections) */
-    val xl: Dp = 20.dp
+    val xl: Dp = 24.dp
 
     /** 32dp - Very spacious (major divisions) */
-    val xxl: Dp = 24.dp
+    val xxl: Dp = 32.dp
 
-    /** 40dp - Hero spacing */
-    val xxxl: Dp = 32.dp
+    /** 48dp - Hero spacing */
+    val xxxl: Dp = 48.dp
 
-    /** 48dp - Extra large spacing */
-    val xxxxl: Dp = 40.dp
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SEMANTIC SPACING — Named tokens for common use cases
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    /** 64dp - Maximum spacing */
-    val max: Dp = 48.dp
+    /** Clearance above bottom navigation bar for scrollable content */
+    val bottomBarClearance: Dp = 80.dp
+
+    /** Standard screen edge padding (horizontal) */
+    val screenPadding: Dp = 16.dp
+
+    /** Standard card internal padding */
+    val cardPaddingDefault: Dp = 16.dp
+
+    /** Vertical gap between major content sections */
+    val sectionGapDefault: Dp = 24.dp
+
+    /** Vertical spacing between items in a list */
+    val listItemSpacing: Dp = 8.dp
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SCREEN PADDING

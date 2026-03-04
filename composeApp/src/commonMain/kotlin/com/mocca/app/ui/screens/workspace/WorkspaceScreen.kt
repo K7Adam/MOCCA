@@ -107,17 +107,17 @@ private fun DashboardContent(sessionId: String) {
             ) {
                 // MCP Server Status (1x1)
                 GodModuleCard(
-                    modifier = Modifier.weight(1f).height(160.dp),
+                    modifier = Modifier.weight(1f).height(AppSpacing.moduleCardHeight),
                     title = "MCP SERVER",
                     icon = Icons.Default.Dns,
                     status = "Online",
                     subtitle = "12ms latency",
-                    statusColor = AppColors.accentGreen
+                    statusColor = AppColors.accent
                 )
                 
                 // Skills (1x1)
                 GodModuleCard(
-                    modifier = Modifier.weight(1f).height(160.dp),
+                    modifier = Modifier.weight(1f).height(AppSpacing.moduleCardHeight),
                     title = "SKILLS",
                     icon = Icons.Default.Extension,
                     content = {
@@ -158,7 +158,7 @@ private fun DashboardContent(sessionId: String) {
         // Git Activity (2x1)
         item {
             GodModuleCard(
-                modifier = Modifier.fillMaxWidth().height(180.dp),
+                modifier = Modifier.fillMaxWidth().height(AppSpacing.moduleCardHeight + 20.dp), // Slightly taller variant
                 title = "GIT ACTIVITY",
                 icon = Icons.Default.Commit,
                 subtitle = "main • Last commit 2m ago",
@@ -219,7 +219,7 @@ private fun GodModuleCard(
                                 .size(10.dp)
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
-                                .background(AppColors.accentGreen, AppShapes.circle)
+                                .background(AppColors.accent, AppShapes.circle)
                                 .border(2.dp, AppColors.surfaceVariant, AppShapes.circle)
                         )
                     }
@@ -254,7 +254,7 @@ private fun GodModuleCard(
                 Text(
                     text = subtitle,
                     style = if (title == "MCP SERVER") AppTypography.codeSmall else AppTypography.bodySmall,
-                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f)
+                    color = if (title == "MCP SERVER") AppColors.accent else AppColors.white.copy(alpha = 0.4f)
                 )
             }
             

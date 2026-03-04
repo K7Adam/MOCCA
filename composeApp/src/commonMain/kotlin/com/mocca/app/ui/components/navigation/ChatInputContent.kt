@@ -1,44 +1,9 @@
 package com.mocca.app.ui.components.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.Tune
-import androidx.compose.ui.draw.alpha
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDivider
-import androidx.compose.ui.window.PopupProperties
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,10 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
@@ -59,15 +20,7 @@ import com.mocca.app.ui.components.modern.CommandPaletteOverlay
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
 import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import coil3.compose.AsyncImage
 
 /**
  * Chat input content component - the content that appears ABOVE the persistent nav row.
@@ -162,7 +115,6 @@ fun ChatInputContent(
     
     // Manual palette triggers (for / and @ buttons)
     var showCommandPalette by remember { mutableStateOf(false) }
-    var showAgentPalette by remember { mutableStateOf(false) }
 
     // Merge API commands with built-in commands
     val mergedCommands = remember(commands) { mergeCommands(commands) }
@@ -207,289 +159,37 @@ fun ChatInputContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // ═══════════════ STATUS BAR (Premium Pill Chips) ═══════════════
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(NavConstants.StatusBarHeight)
-                .padding(horizontal = AppSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-        ) {
-            // Model selector - styled as pill chip
-            Box(
-                modifier = Modifier
-                    .height(NavConstants.StatusBarChipHeight)
-                    .background(
-                        color = AppColors.surface.copy(alpha = 0.5f),
-                        shape = AppShapes.pill
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        color = AppColors.border.copy(alpha = 0.3f),
-                        shape = AppShapes.pill
-                    )
-                    .clickable(enabled = providerResponse != null) { showModelSelector = true }
-                    .padding(horizontal = AppSpacing.sm),
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.SmartToy,
-                        contentDescription = null,
-                        modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                        tint = AppColors.textSecondary
-                    )
-                    Text(
-                        text = modelName.uppercase(),
-                        color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
-                        style = AppTypography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            // Variant selector (if available) - pill chip
-            if (variants.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .height(NavConstants.StatusBarChipHeight)
-                        .background(
-                            color = AppColors.surface.copy(alpha = 0.5f),
-                            shape = AppShapes.pill
-                        )
-                        .border(
-                            width = 0.5.dp,
-                            color = AppColors.border.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .clickable { showVariantSelector = true }
-                        .padding(horizontal = AppSpacing.sm),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = null,
-                            modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                            tint = AppColors.textTertiary
-                        )
-                        Text(
-                            text = (selectedVariantId ?: "DEF").take(5).uppercase(),
-                            color = AppColors.textSecondary,
-                            style = AppTypography.labelSmall,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
-
-            // Spacer to push agent selector to the right
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Agent selector - pill chip with dropdown
-            Box {
-                var showAgentMenu by remember { mutableStateOf(false) }
-                Box(
-                    modifier = Modifier
-                        .height(NavConstants.StatusBarChipHeight)
-                        .background(
-                            color = AppColors.surface.copy(alpha = 0.5f),
-                            shape = AppShapes.pill
-                        )
-                        .border(
-                            width = 0.5.dp,
-                            color = AppColors.border.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .clickable { showAgentMenu = true }
-                        .padding(horizontal = AppSpacing.sm),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                            tint = AppColors.textTertiary
-                        )
-                        Text(
-                            text = agentName.take(8).uppercase(),
-                            color = AppColors.textTertiary,
-                            style = AppTypography.labelSmall,
-                            maxLines = 1
-                        )
-                    }
-                }
-                
-                // Themed dropdown menu
-                DropdownMenu(
-                    expanded = showAgentMenu,
-                    onDismissRequest = { showAgentMenu = false },
-                    properties = PopupProperties(focusable = false),
-                    modifier = Modifier
-                        .background(AppColors.surfaceElevated, AppShapes.medium)
-                        .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
-                ) {
-                    modes.forEach { mode ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    mode.name.uppercase(),
-                                    style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
-                                )
-                            },
-                            onClick = {
-                                onModeSelected(mode.id)
-                                showAgentMenu = false
-                            }
-                        )
-                    }
-                }
-            }
-        }
+        ChatInputStatusBar(
+            modelName = modelName,
+            agentName = agentName,
+            providerResponse = providerResponse,
+            onModelSelectorClick = { showModelSelector = true },
+            variants = variants,
+            selectedVariantId = selectedVariantId,
+            onVariantSelectorClick = { showVariantSelector = true },
+            modes = modes,
+            selectedModeId = selectedModeId,
+            onModeSelected = onModeSelected
+        )
 
         // ═══════════════ INPUT AREA ═══════════════
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = NavConstants.InputFieldMinHeight, max = NavConstants.InputFieldMaxHeight)
-                .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.sm)
-        ) {
-            val interactionSource = remember { MutableInteractionSource() }
-            isInputFocused = interactionSource.collectIsFocusedAsState().value
-
-            BasicTextField(
-                value = inputText,
-                onValueChange = handleValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = inputEnabled,
-                textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                cursorBrush = SolidColor(AppColors.accentGreen),
-                interactionSource = interactionSource,
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (inputText.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = AppColors.textPlaceholder,
-                                style = AppTypography.bodyMedium
-                            )
-                        }
-                        innerTextField()
-                    }
-                }
-            )
-
-            // Text-triggered suggestions dropdown (typing "/" or "@" in input)
-            // Uses DropdownMenu for stable positioning instead of SuggestionPopup
-            // PopupProperties(focusable = false) keeps keyboard open while dropdown is shown
-            DropdownMenu(
-                expanded = showTextSuggestions,
-                onDismissRequest = { showTextSuggestions = false },
-                properties = PopupProperties(focusable = false),
-                modifier = Modifier
-                    .background(AppColors.surfaceElevated, AppShapes.medium)
-                    .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
-            ) {
-                if (isCommandSuggestion) {
-                    // Command suggestions (triggered by "/")
-                    if (filteredCommands.isEmpty()) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    "No commands match \"$suggestionQuery\"",
-                                    style = AppTypography.labelSmall,
-                                    color = AppColors.textTertiary
-                                )
-                            },
-                            onClick = { showTextSuggestions = false }
-                        )
-                    } else {
-                        filteredCommands.forEach { cmd ->
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(
-                                            "/${cmd.name}",
-                                            style = AppTypography.labelSmall,
-                                            color = AppColors.accentGreen
-                                        )
-                                        cmd.description?.let { desc ->
-                                            Text(
-                                                desc,
-                                                style = AppTypography.labelSmall,
-                                                color = AppColors.textTertiary,
-                                                maxLines = 1
-                                            )
-                                        }
-                                    }
-                                },
-                                onClick = {
-                                    onCommandSelected(cmd)
-                                    showTextSuggestions = false
-                                }
-                            )
-                        }
-                    }
-                } else {
-                    // Mode/Agent suggestions (triggered by "@")
-                    if (filteredModes.isEmpty()) {
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    "No agents match \"$suggestionQuery\"",
-                                    style = AppTypography.labelSmall,
-                                    color = AppColors.textTertiary
-                                )
-                            },
-                            onClick = { showTextSuggestions = false }
-                        )
-                    } else {
-                        filteredModes.forEach { mode ->
-                            DropdownMenuItem(
-                                text = {
-                                    Column {
-                                        Text(
-                                            mode.name.uppercase(),
-                                            style = AppTypography.labelSmall,
-                                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
-                                        )
-                                        mode.description?.let { desc ->
-                                            Text(
-                                                desc,
-                                                style = AppTypography.labelSmall,
-                                                color = AppColors.textTertiary,
-                                                maxLines = 1
-                                            )
-                                        }
-                                    }
-                                },
-                                onClick = {
-                                    onModeSelectedForMention(mode)
-                                    // Remove the @ and any partial query from input
-                                    val lastAt = inputText.lastIndexOf('@')
-                                    if (lastAt != -1) {
-                                        onInputTextChange(inputText.substring(0, lastAt))
-                                    }
-                                    showTextSuggestions = false
-                                }
-                            )
-                        }
-                    }
-                }
-            }
-        }
+        ChatInputTextFieldArea(
+            inputText = inputText,
+            onValueChange = handleValueChange,
+            inputEnabled = inputEnabled,
+            placeholder = placeholder,
+            onInputFocusChanged = { isInputFocused = it },
+            showTextSuggestions = showTextSuggestions,
+            onDismissSuggestions = { showTextSuggestions = false },
+            isCommandSuggestion = isCommandSuggestion,
+            suggestionQuery = suggestionQuery,
+            filteredCommands = filteredCommands,
+            filteredModes = filteredModes,
+            selectedModeId = selectedModeId,
+            onCommandSelected = onCommandSelected,
+            onModeSelectedForMention = onModeSelectedForMention,
+            onInputTextChange = onInputTextChange
+        )
 
         // ═══════════════ ATTACHMENT PREVIEW STRIP ═══════════════
         if (attachedFiles.isNotEmpty()) {
@@ -505,332 +205,25 @@ fun ChatInputContent(
             color = AppColors.border.copy(alpha = 0.3f)
         )
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(NavConstants.ActionToolbarHeight)
-                .padding(horizontal = AppSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // LEFT GROUP: Quick actions (@ and /)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
-            ) {
-                // @ mention button - opens agent palette via DropdownMenu
-                Box {
-                    // Anchor for dropdown
-                    Box(
-                        modifier = Modifier
-                            .size(NavConstants.ActionButtonSize)
-                            .background(
-                                color = if (showAgentPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                                shape = AppShapes.pill
-                            )
-                            .then(
-                                if (showAgentPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                            )
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { showAgentPalette = !showAgentPalette }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "@",
-                            color = if (showAgentPalette) AppColors.accentGreen else AppColors.textSecondary,
-                            style = AppTypography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    // Agent dropdown menu (stable positioning)
-                    DropdownMenu(
-                        expanded = showAgentPalette,
-                        onDismissRequest = { showAgentPalette = false },
-                        properties = PopupProperties(focusable = false),
-                        modifier = Modifier
-                            .background(AppColors.surfaceElevated, AppShapes.medium)
-                            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
-                    ) {
-                        if (modes.isEmpty()) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        "No agents available",
-                                        style = AppTypography.labelSmall,
-                                        color = AppColors.textTertiary
-                                    )
-                                },
-                                onClick = { showAgentPalette = false }
-                            )
-                        } else {
-                            modes.forEach { mode ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(
-                                                mode.name.uppercase(),
-                                                style = AppTypography.labelSmall,
-                                                color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
-                                            )
-                                            mode.description?.let { desc ->
-                                                Text(
-                                                    desc,
-                                                    style = AppTypography.labelSmall,
-                                                    color = AppColors.textTertiary,
-                                                    maxLines = 1
-                                                )
-                                            }
-                                        }
-                                    },
-                                    onClick = {
-                                        onModeSelectedForMention(mode)
-                                        showAgentPalette = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // / command button - opens command palette via DropdownMenu
-                Box {
-                    // Anchor for dropdown
-                    Box(
-                        modifier = Modifier
-                            .size(NavConstants.ActionButtonSize)
-                            .background(
-                                color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                                shape = AppShapes.pill
-                            )
-                            .then(
-                                if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                            )
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                                onClick = { showCommandPalette = !showCommandPalette }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "/",
-                            color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
-                            style = AppTypography.labelMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    // Command palette overlay — full-screen modal
-                    // (triggered by showCommandPalette, replaces the old DropdownMenu)
-                }
-            }
-
-                // ! shell mode button
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = if (shellMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .then(
-                            if (shellMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onShellModeToggle
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "!",
-                        color = if (shellMode) AppColors.accentGreen else AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // P plan mode button
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = if (planMode) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .then(
-                            if (planMode) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onPlanModeToggle
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "P",
-                        color = if (planMode) AppColors.accentGreen else AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // History up button
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onHistoryUp
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "\u2191",
-                        color = AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                // History down button
-                Box(
-                    modifier = Modifier
-                        .size(NavConstants.ActionButtonSize)
-                        .background(
-                            color = AppColors.surface.copy(alpha = 0.3f),
-                            shape = AppShapes.pill
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = onHistoryDown
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "\u2193",
-                        color = AppColors.textSecondary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-            // Subtle separator
-            VerticalDivider(
-                modifier = Modifier
-                    .height(16.dp)
-                    .padding(horizontal = AppSpacing.xs),
-                thickness = AppSpacing.borderThin,
-                color = AppColors.border.copy(alpha = 0.5f)
-            )
-
-            // CENTER: Attachment button
-            Box(
-                modifier = Modifier
-                    .size(NavConstants.ActionButtonSize)
-                    .background(
-                        color = AppColors.surface.copy(alpha = 0.3f),
-                        shape = AppShapes.pill
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onAttachClick
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AttachFile,
-                    contentDescription = "Attach file",
-                    tint = AppColors.textSecondary,
-                    modifier = Modifier.size(NavConstants.ActionIconSize)
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // RIGHT: Send/Abort button (transforms based on agent state)
-            if (isSessionIdle) {
-                // SEND button - normal state
-                val canSend = inputEnabled && inputText.isNotBlank()
-                Box(
-                    modifier = Modifier
-                        .height(NavConstants.SendButtonHeight)
-                        .then(
-                            if (canSend) {
-                                Modifier.background(AppColors.accentGreen, AppShapes.pill)
-                            } else {
-                                Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
-                            }
-                        )
-                        .clickable(
-                            enabled = canSend,
-                            onClick = onSendClick
-                        )
-                        .padding(horizontal = AppSpacing.md),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = null,
-                            tint = if (canSend) AppColors.background else AppColors.grey,
-                            modifier = Modifier.size(NavConstants.SendIconSize)
-                        )
-                        Text(
-                            text = "SEND",
-                            color = if (canSend) AppColors.background else AppColors.grey,
-                            style = AppTypography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                    }
-                }
-            } else {
-                // ABORT button - agent running state
-                Box(
-                    modifier = Modifier
-                        .height(NavConstants.SendButtonHeight)
-                        .background(AppColors.error, AppShapes.pill)
-                        .clickable(onClick = onAbortClick)
-                        .padding(horizontal = AppSpacing.md),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = null,
-                            tint = AppColors.white,
-                            modifier = Modifier.size(NavConstants.SendIconSize)
-                        )
-                        Text(
-                            text = "ABORT",
-                            color = AppColors.white,
-                            style = AppTypography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
-        }
+        ChatInputActionToolbar(
+            inputText = inputText,
+            inputEnabled = inputEnabled,
+            isSessionIdle = isSessionIdle,
+            onSendClick = onSendClick,
+            onAbortClick = onAbortClick,
+            onAttachClick = onAttachClick,
+            modes = modes,
+            selectedModeId = selectedModeId,
+            onModeSelectedForMention = onModeSelectedForMention,
+            showCommandPalette = showCommandPalette,
+            onCommandPaletteToggle = { showCommandPalette = !showCommandPalette },
+            shellMode = shellMode,
+            onShellModeToggle = onShellModeToggle,
+            planMode = planMode,
+            onPlanModeToggle = onPlanModeToggle,
+            onHistoryUp = onHistoryUp,
+            onHistoryDown = onHistoryDown
+        )
 
         // Subtle divider before nav row
         HorizontalDivider(
@@ -876,79 +269,5 @@ fun ChatInputContent(
             },
             onDismiss = { showCommandPalette = false }
         )
-    }
-}
-
-@Composable
-private fun AttachmentPreviewStrip(
-    files: List<AttachedFile>,
-    onRemove: (AttachedFile) -> Unit
-) {
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
-    ) {
-        items(files, key = { it.id }) { file ->
-            AttachmentPreviewChip(file = file, onRemove = { onRemove(file) })
-        }
-    }
-}
-
-@Composable
-private fun AttachmentPreviewChip(
-    file: AttachedFile,
-    onRemove: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(AppShapes.medium)
-            .border(
-                AppSpacing.borderThin,
-                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.border,
-                AppShapes.medium
-            )
-            .background(AppColors.surface, AppShapes.medium)
-    ) {
-        if (file.isImage && file.dataUrl != null) {
-            AsyncImage(
-                model = file.dataUrl,
-                contentDescription = file.name,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            Icon(
-                imageVector = Icons.Default.AttachFile,
-                contentDescription = null,
-                tint = AppColors.textSecondary,
-                modifier = Modifier
-                    .size(24.dp)
-                    .align(Alignment.Center)
-            )
-        }
-        // Remove button overlay
-        Box(
-            modifier = Modifier
-                .size(16.dp)
-                .align(Alignment.TopEnd)
-                .clip(CircleShape)
-                .background(AppColors.error)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onRemove
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Remove attachment",
-                tint = AppColors.white,
-                modifier = Modifier.size(10.dp)
-            )
-        }
     }
 }

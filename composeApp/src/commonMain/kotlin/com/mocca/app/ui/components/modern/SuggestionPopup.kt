@@ -49,7 +49,7 @@ enum class SuggestionType {
 
 /**
  * Popup showing suggestions for commands or mentions.
- * Premium styled with glass border and consistent theming.
+ * Premium styled with subtle border and consistent theming.
  * 
  * IMPORTANT: This popup is triggered by the "/" and "@" buttons in the chat input.
  * It must be positioned above the input field at the bottom of the screen.
@@ -117,7 +117,7 @@ private fun SuggestionRow(
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = AppColors.accentGreen.copy(alpha = 0.1f),
+                    color = AppColors.accent.copy(alpha = 0.1f),
                     shape = AppShapes.small
                 ),
             contentAlignment = Alignment.Center
@@ -128,7 +128,7 @@ private fun SuggestionRow(
                     SuggestionType.MODE -> "@"
                 },
                 style = AppTypography.labelMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.accent,
                 fontWeight = FontWeight.Bold
             )
         }

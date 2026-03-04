@@ -5,7 +5,7 @@
 **Relevant Skills:** `taste-skill-compose` (UI/UX), `kotlin-best-practices` (MVI architecture)
 
 ## OVERVIEW
-The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a **Compact Modern Glassmorphic** aesthetic.
+The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a **Compact Modern M3 Surface-based** design aesthetic with neutral monochrome palette.
 
 ## NAVIGATION
 - **Voyager Stack**: The app uses `Navigator` for screen transitions. Access it via `LocalNavigator.currentOrThrow`.

@@ -31,13 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock as KtClock
 
-enum class ServerConnectionStatus {
-    UNKNOWN,
-    CHECKING,
-    CONNECTED,
-    FAILED
-}
-
 @Immutable
 
 data class SettingsState(

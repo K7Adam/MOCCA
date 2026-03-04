@@ -95,14 +95,14 @@ fun MoccaCardElevated(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATUS MONITOR CARD (Glass effect with rounded corners)
+// STATUS MONITOR CARD (Rounded container with elevated surface)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Status monitor card with glassmorphic effect.
+ * Status monitor card with elevated surface design.
  * Used on onboarding screen for the hero status section.
  * 
- * Modern design: 24dp rounded corners, subtle glass background, soft border.
+ * Modern design: 24dp rounded corners, subtle surface elevation, soft border.
  */
 @Composable
 fun StatusMonitorCard(
@@ -138,7 +138,7 @@ fun StatusMonitorCard(
 @Composable
 fun MoccaSectionCard(
     modifier: Modifier = Modifier,
-    leftBorderColor: Color = AppColors.accentGreen,
+    leftBorderColor: Color = AppColors.accent,
     leftBorderWidth: Dp = AppSpacing.borderStandard,
     backgroundColor: Color = AppColors.surfaceVariant,
     contentPadding: Dp = AppSpacing.lg,
@@ -173,9 +173,9 @@ fun MoccaSectionCard(
 fun MoccaSessionCard(
     modifier: Modifier = Modifier,
     isActive: Boolean = false,
-    backgroundColor: Color = LiquidGlassDefaults.tintSecondary,
-    borderColor: Color = LiquidGlassDefaults.borderPrimary.copy(alpha = 0.3f),
-    activeIndicatorColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.surfaceContainerHigh,
+    borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
+    activeIndicatorColor: Color = AppColors.accent,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.sessionCard,
@@ -186,7 +186,7 @@ fun MoccaSessionCard(
             .fillMaxWidth()
             .clip(shape)
             .background(
-                if (isActive) LiquidGlassDefaults.tintLight else backgroundColor, 
+                if (isActive) AppColors.surfaceContainerHighest else backgroundColor,
                 shape
             )
             .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
@@ -223,17 +223,17 @@ fun ModuleToolCard(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GLASS CARD (Glassmorphic effect)
+// SURFACE CARD (Semi-transparent overlay container)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Glass card with semi-transparent background for overlay effects.
+ * Surface card with semi-transparent background for overlay effects.
  */
 @Composable
-fun GlassCard(
+fun SurfaceCard(
     modifier: Modifier = Modifier,
-    backgroundColor: Color = AppColors.glassBackground,
-    borderColor: Color = AppColors.glassBorder,
+    backgroundColor: Color = AppColors.surfaceContainerHigh,
+    borderColor: Color = AppColors.border,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit

@@ -31,17 +31,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.ConnectionQuality
-import com.mocca.app.ui.components.glass.GlassAppBar
-import com.mocca.app.ui.components.glass.GlassDefaults
-import com.mocca.app.ui.components.glass.GlassThemeTokens
-import com.mocca.app.ui.components.glass.glassyAppBar
-import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.AppColors
 
 /**
- * Modern Glassmorphic Top Bar and Divider components.
+ * Modern Top Bar and Divider components.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -111,103 +107,6 @@ fun ModernTopBar(
     }
 }
 
-/**
- * Glass-styled top bar using the new Liquid Glass design system.
- * 
- * Features:
- * - Glass material background with refraction and blur effects
- * - Optimized for framing UI (not dense scrollable content)
- * - API 33+ full AGSL shader, API 31-32 blur fallback
- * 
- * @param title Title text to display
- * @param modifier Modifier for the top bar
- * @param navigationIcon Optional navigation icon
- * @param onNavigationClick Callback for navigation icon click
- * @param tokens Glass theme tokens for customization
- * @param actions Additional action buttons
- */
-@Composable
-fun ModernTopBarGlass(
-    title: String,
-    modifier: Modifier = Modifier,
-    navigationIcon: ImageVector? = null,
-    onNavigationClick: (() -> Unit)? = null,
-    tokens: GlassThemeTokens = GlassDefaults.tokens(),
-    actions: @Composable RowScope.() -> Unit = {}
-) {
-    GlassAppBar(
-        title = {
-            Text(
-                text = title.uppercase(),
-                color = AppColors.white,
-                style = AppTypography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        modifier = modifier,
-        navigationIcon = {
-            if (navigationIcon != null && onNavigationClick != null) {
-                MoccaIconButton(
-                    icon = navigationIcon,
-                    onClick = onNavigationClick,
-                    iconColor = AppColors.white
-                )
-            }
-        },
-        actions = actions,
-        tokens = tokens
-    )
-}
-
-@Composable
-fun ModernTopBarSimpleGlass(
-    title: String,
-    modifier: Modifier = Modifier,
-    navigationIcon: ImageVector? = null,
-    onNavigationClick: (() -> Unit)? = null,
-    showDivider: Boolean = true,
-    actions: @Composable RowScope.() -> Unit = {}
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .glassyAppBar(hasBottomBorder = showDivider)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(AppSpacing.topBarHeight)
-                .padding(horizontal = AppSpacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
-            ) {
-                if (navigationIcon != null && onNavigationClick != null) {
-                    MoccaIconButton(
-                        icon = navigationIcon,
-                        onClick = onNavigationClick,
-                        iconColor = AppColors.white
-                    )
-                }
-                
-                Text(
-                    text = title.uppercase(),
-                    color = AppColors.white,
-                    style = AppTypography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions
-            )
-        }
-    }
-}
 
 /**
  * Simple status line for top of screen (like onboarding).
@@ -377,7 +276,7 @@ fun ConnectionQualityIndicator(
     quality: ConnectionQuality,
     modifier: Modifier = Modifier
 ) {
-    val (icon, color, description) = when (quality) {
+    val triple: Triple<ImageVector, Color, String> = when (quality) {
         ConnectionQuality.EXCELLENT -> Triple(
             Icons.Filled.NetworkWifi,
             AppColors.success,
@@ -409,6 +308,7 @@ fun ConnectionQualityIndicator(
             "UNKNOWN"
         )
     }
+    val (icon, color, description) = triple
     
     Row(
         modifier = modifier,

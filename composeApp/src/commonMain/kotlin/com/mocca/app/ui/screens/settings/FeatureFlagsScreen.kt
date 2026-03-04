@@ -17,12 +17,6 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.data.repository.ConfigRepository
-import com.mocca.app.domain.model.AppConfigUpdate
-import com.mocca.app.domain.model.GlobalAppConfig
-import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.components.modern.ModernHeader
 import com.mocca.app.ui.components.modern.ModuleCard
@@ -31,108 +25,6 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-
-// ═══════════════════════════════════════════════════════════════════════
-// UI STATE
-// ═══════════════════════════════════════════════════════════════════════
-
-data class FeatureFlagsUiState(
-    val isLoading: Boolean = true,
-    val config: GlobalAppConfig? = null,
-    val isSaving: Boolean = false,
-    val error: String? = null,
-    val saveError: String? = null,
-    val successMessage: String? = null
-)
-
-// ═══════════════════════════════════════════════════════════════════════
-// SCREEN MODEL
-// ═══════════════════════════════════════════════════════════════════════
-
-class FeatureFlagsScreenModel(
-    private val configRepository: ConfigRepository
-) : ScreenModel {
-
-    private val _uiState = MutableStateFlow(FeatureFlagsUiState())
-    val uiState: StateFlow<FeatureFlagsUiState> = _uiState.asStateFlow()
-
-    init {
-        loadGlobalConfig()
-    }
-
-    fun loadGlobalConfig() {
-        screenModelScope.launch {
-            configRepository.getGlobalConfig().collect { resource ->
-                when (resource) {
-                    is Resource.Loading -> _uiState.value = _uiState.value.copy(
-                        isLoading = true,
-                        error = null
-                    )
-                    is Resource.Success -> _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        config = resource.data,
-                        error = null
-                    )
-                    is Resource.Error -> _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        error = resource.message
-                    )
-                }
-            }
-        }
-    }
-
-    fun setAutoshare(enabled: Boolean) {
-        val current = _uiState.value.config ?: return
-        _uiState.value = _uiState.value.copy(
-            config = current.copy(autoshare = enabled)
-        )
-        saveGlobalConfig(AppConfigUpdate(autoshare = enabled))
-    }
-
-    fun setAutoupdate(enabled: Boolean) {
-        val current = _uiState.value.config ?: return
-        _uiState.value = _uiState.value.copy(
-            config = current.copy(autoupdate = enabled)
-        )
-        saveGlobalConfig(AppConfigUpdate(autoupdate = enabled))
-    }
-
-    fun setTelemetry(enabled: Boolean) {
-        val current = _uiState.value.config ?: return
-        _uiState.value = _uiState.value.copy(
-            config = current.copy(telemetry = enabled)
-        )
-        saveGlobalConfig(AppConfigUpdate(telemetry = enabled))
-    }
-
-    fun clearMessages() {
-        _uiState.value = _uiState.value.copy(saveError = null, successMessage = null)
-    }
-
-    private fun saveGlobalConfig(update: AppConfigUpdate) {
-        screenModelScope.launch {
-            _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
-            val result = configRepository.updateGlobalConfig(update)
-            when (result) {
-                is Resource.Success -> _uiState.value = _uiState.value.copy(
-                    isSaving = false,
-                    config = result.data,
-                    successMessage = "Saved"
-                )
-                is Resource.Error -> _uiState.value = _uiState.value.copy(
-                    isSaving = false,
-                    saveError = result.message
-                )
-                is Resource.Loading -> Unit
-            }
-        }
-    }
-}
 
 // ═══════════════════════════════════════════════════════════════════════
 // SCREEN
@@ -198,13 +90,13 @@ object FeatureFlagsScreen : Screen {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(AppShapes.medium)
-                        .background(AppColors.accentGreen.copy(alpha = 0.12f))
-                        .border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.medium)
+                        .background(AppColors.accent.copy(alpha = 0.12f))
+                        .border(AppSpacing.borderThin, AppColors.accent, AppShapes.medium)
                         .padding(AppSpacing.md)
                 ) {
                     Text(
                         text = uiState.successMessage!!,
-                        color = AppColors.accentGreen,
+                        color = AppColors.accent,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -213,7 +105,7 @@ object FeatureFlagsScreen : Screen {
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = AppColors.accentGreen)
+                    CircularProgressIndicator(color = AppColors.accent)
                 }
             } else {
                 LazyColumn(
@@ -368,7 +260,7 @@ object FeatureFlagsScreen : Screen {
                                 ) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(14.dp),
-                                        color = AppColors.accentGreen,
+                                        color = AppColors.accent,
                                         strokeWidth = 2.dp
                                     )
                                     Text(
@@ -441,12 +333,12 @@ private fun ExperimentalFlagRow(
             modifier = Modifier
                 .clip(AppShapes.pill)
                 .background(
-                    if (enabled) AppColors.accentGreen.copy(alpha = 0.15f)
+                    if (enabled) AppColors.accent.copy(alpha = 0.15f)
                     else AppColors.border
                 )
                 .border(
                     AppSpacing.borderThin,
-                    if (enabled) AppColors.accentGreen.copy(alpha = 0.5f)
+                    if (enabled) AppColors.accent.copy(alpha = 0.5f)
                     else AppColors.borderLight,
                     AppShapes.pill
                 )
@@ -455,7 +347,7 @@ private fun ExperimentalFlagRow(
             Text(
                 text = if (enabled) "ON" else "OFF",
                 style = AppTypography.labelSmall,
-                color = if (enabled) AppColors.accentGreen else AppColors.textTertiary,
+                color = if (enabled) AppColors.accent else AppColors.textTertiary,
                 fontWeight = FontWeight.Bold
             )
         }

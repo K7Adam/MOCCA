@@ -33,8 +33,6 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.theme.AppAnimations
-import com.mocca.app.ui.components.glass.glassyFab
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
@@ -52,7 +50,7 @@ fun MoccaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.accent,
     textColor: Color = AppColors.background,
     disabledBackgroundColor: Color = AppColors.greyDark,
     disabledTextColor: Color = AppColors.grey,
@@ -128,7 +126,7 @@ fun MoccaOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    borderColor: Color = AppColors.accentGreen,
+    borderColor: Color = AppColors.accent,
     textColor: Color = AppColors.white,
     disabledBorderColor: Color = AppColors.greyDark,
     disabledTextColor: Color = AppColors.grey,
@@ -159,7 +157,7 @@ fun MoccaOutlinedButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.15f)),
+                        indication = ripple(color = AppColors.accent.copy(alpha = 0.15f)),
                         onClick = onClick
                     )
                 } else {
@@ -197,7 +195,7 @@ fun MoccaCompactButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.accent,
     textColor: Color = AppColors.background,
     height: Dp = MoccaButtonDefaults.HeightCompact,
     paddingHorizontal: Dp = MoccaButtonDefaults.PaddingHorizontal,
@@ -253,277 +251,5 @@ fun MoccaCompactButton(
                 fontWeight = FontWeight.SemiBold
             )
         }
-    }
-}
-
-@Composable
-fun TabPillButton(
-    text: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    activeBackgroundColor: Color = AppColors.accentGreen,
-    activeTextColor: Color = AppColors.background,
-    inactiveBackgroundColor: Color = Color.Transparent,
-    inactiveBorderColor: Color = AppColors.accentGreen.copy(alpha = 0.4f),
-    inactiveTextColor: Color = AppColors.textSecondary
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    
-    Box(
-        modifier = modifier
-            .height(MoccaButtonDefaults.HeightCompact)
-            .then(
-                if (isSelected) {
-                    Modifier.background(activeBackgroundColor, AppShapes.pill)
-                } else {
-                    Modifier
-                        .background(inactiveBackgroundColor, AppShapes.pill)
-                        .border(AppSpacing.borderThin, inactiveBorderColor, AppShapes.pill)
-                }
-            )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.15f)),
-                onClick = onClick
-            )
-            .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text.uppercase(),
-            color = if (isSelected) activeTextColor else inactiveTextColor,
-            style = AppTypography.labelSmall,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun MoccaIconButton(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null,
-    enabled: Boolean = true,
-    backgroundColor: Color = Color.Transparent,
-    iconColor: Color = AppColors.white,
-    borderColor: Color? = null,
-    size: Dp = AppSpacing.iconButtonSizeCompact
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.85f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "iconButtonScale"
-    )
-    
-    val tintColor = if (enabled) iconColor else AppColors.grey
-    
-    Box(
-        modifier = modifier
-            .size(size)
-            .scale(scale)
-            .background(backgroundColor, AppShapes.circle)
-            .then(
-                if (borderColor != null) {
-                    Modifier.border(AppSpacing.borderThin, borderColor, AppShapes.circle)
-                } else {
-                    Modifier
-                }
-            )
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(
-                            bounded = true,
-                            color = AppColors.accentGreen.copy(alpha = 0.15f)
-                        ),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = tintColor,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-fun MoccaIconButtonGlass(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null,
-    enabled: Boolean = true,
-    iconColor: Color = AppColors.accentGreen,
-    size: Dp = AppSpacing.iconButtonSizeCompact
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.85f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "iconButtonScale"
-    )
-    
-    val tintColor = if (enabled) iconColor else AppColors.grey
-    
-    Box(
-        modifier = modifier
-            .size(size)
-            .scale(scale)
-            .glassyFab(shape = AppShapes.circle)
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(
-                            bounded = true,
-                            color = Color.White.copy(alpha = 0.1f)
-                        ),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = tintColor,
-            modifier = Modifier.size(20.dp)
-        )
-    }
-}
-
-@Composable
-fun MoccaFab(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null,
-    backgroundColor: Color = AppColors.accentGreen,
-    iconColor: Color = AppColors.background,
-    size: Dp = AppSpacing.fabSize
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "fabScale"
-    )
-    
-    Box(
-        modifier = modifier
-            .size(size)
-            .scale(scale)
-            .background(backgroundColor, AppShapes.circle)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(
-                    bounded = true,
-                    color = Color.Black.copy(alpha = 0.15f)
-                ),
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = iconColor,
-            modifier = Modifier.size(22.dp)
-        )
-    }
-}
-
-@Composable
-fun MoccaFabGlass(
-    icon: ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    contentDescription: String? = null,
-    iconColor: Color = AppColors.accentGreen,
-    size: Dp = AppSpacing.fabSize
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "fabScale"
-    )
-    
-    Box(
-        modifier = modifier
-            .size(size)
-            .scale(scale)
-            .glassyFab()
-            .clickable(
-                interactionSource = interactionSource,
-                indication = ripple(
-                    bounded = true,
-                    color = Color.White.copy(alpha = 0.1f)
-                ),
-                onClick = onClick
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = contentDescription,
-            tint = iconColor,
-            modifier = Modifier.size(22.dp)
-        )
-    }
-}
-
-@Composable
-fun MoccaTextButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    textColor: Color = AppColors.greyLight
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val color = if (enabled) textColor else AppColors.greyDark
-    
-    Box(
-        modifier = modifier
-            .height(MoccaButtonDefaults.HeightCompact)
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(bounded = true, color = AppColors.accentGreen.copy(alpha = 0.1f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
-            )
-            .padding(horizontal = AppSpacing.sm),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text.uppercase(),
-            color = color,
-            style = AppTypography.labelSmall,
-            fontWeight = FontWeight.Medium
-        )
     }
 }
