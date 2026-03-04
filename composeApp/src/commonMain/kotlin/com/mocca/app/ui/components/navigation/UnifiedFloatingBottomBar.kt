@@ -188,8 +188,8 @@ fun UnifiedFloatingBottomBar(
     
     Box(
         modifier = modifier
-            .widthIn(min = 320.dp, max = 440.dp)
-            .padding(horizontal = AppSpacing.screenPaddingHorizontal)
+            .fillMaxWidth()
+            .padding(horizontal = AppSpacing.screenPaddingHorizontalCompact)
             .navigationBarsPadding()
             .imePadding()
     ) {
