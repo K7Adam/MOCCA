@@ -907,7 +907,7 @@ private fun CredentialDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         shape = AppShapes.dialog,
         title = {
             Text(

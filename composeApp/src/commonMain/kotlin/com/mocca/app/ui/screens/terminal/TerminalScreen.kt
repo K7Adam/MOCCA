@@ -193,7 +193,7 @@ private fun TerminalTabItem(
     onClosed: () -> Unit
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (isActive) AppColors.surfaceElevated else Color.Transparent,
+        targetValue = if (isActive) AppColors.surfaceContainerHigh else Color.Transparent,
         animationSpec = tween(150),
         label = "tabBg"
     )

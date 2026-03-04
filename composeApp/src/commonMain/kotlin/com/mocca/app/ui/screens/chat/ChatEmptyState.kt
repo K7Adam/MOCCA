@@ -1,0 +1,83 @@
+package com.mocca.app.ui.screens.chat
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppTypography
+
+@Composable
+internal fun EmptySessionState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 48.dp)
+        ) {
+            ModernBootSequence()
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "MOCCA_AI_v2",
+                style = AppTypography.headlineMedium,
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 4.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "SYSTEM READY // SELECT_MODEL",
+                style = AppTypography.labelExtraSmall,
+                color = AppColors.textTertiary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                letterSpacing = 1.sp
+            )
+        }
+    }
+}
+
+@Composable
+internal fun ModernBootSequence() {
+    val lines = listOf(
+        "MOCCA_OS_BOOT",
+        "NETWORK_UPLINK_SECURED",
+        "RESOURCES_MAXIMIZED"
+    )
+    
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        lines.forEachIndexed { index, line ->
+            var visible by remember { mutableStateOf(false) }
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.delay(index * 120L)
+                visible = true
+            }
+            if (visible) {
+                Text(
+                    text = line,
+                    style = AppTypography.labelExtraSmall,
+                    color = if (index == lines.size - 1) AppColors.accent else AppColors.textTertiary,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+        }
+    }
+}

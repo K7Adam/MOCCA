@@ -186,7 +186,7 @@ private fun GitFloatingBar(
 ) {
     Surface(
         modifier = Modifier.padding(bottom = 16.dp),
-        color = AppColors.surfaceElevated,
+        color = AppColors.surfaceContainerHigh,
         shape = AppShapes.pill,
         border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)),
         shadowElevation = 8.dp
@@ -236,7 +236,7 @@ private fun GitStatusSummary(
         // ── Status Summary Card ─────────────────────────────────────
         item {
             Surface(
-                color = AppColors.surfaceElevated,
+                color = AppColors.surfaceContainerHigh,
                 shape = AppShapes.medium,
                 border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.08f))
             ) {
@@ -645,7 +645,7 @@ private fun LogTimelineItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(AppColors.surfaceElevated, AppShapes.circle)
+                    .background(AppColors.surfaceContainerHigh, AppShapes.circle)
                     .border(BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)), AppShapes.circle),
                 contentAlignment = Alignment.Center
             ) {
@@ -938,7 +938,7 @@ private fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
 private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout: () -> Unit, onMerge: () -> Unit, onRebase: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -963,7 +963,7 @@ private fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckout
 private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> Unit, onCommit: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(
@@ -987,7 +987,7 @@ private fun TerminalCommitDialog(message: String, onMessageChange: (String) -> U
 private fun CreateStashDialog(message: String, onMessageChange: (String) -> Unit, onCreate: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(
@@ -1014,7 +1014,7 @@ private fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -1040,7 +1040,7 @@ private fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             Column {
@@ -1065,7 +1065,7 @@ private fun CreateBranchDialog(onDismiss: () -> Unit, onCreate: (String) -> Unit
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = AppColors.surfaceElevated,
+        containerColor = AppColors.surfaceContainerHigh,
         title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.white) },
         text = {
             MoccaInput(
