@@ -49,12 +49,16 @@ import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
+import com.mocca.app.ui.components.modern.ConnectionBannerStatus
+import com.mocca.app.ui.components.modern.ConnectionStatusBanner
+import com.mocca.app.ui.components.modern.QuoteRotator
+import com.mocca.app.ui.components.modern.UpdateDialog
 
 /**
  * Main screen with swipe panel navigation.
  * Shows chat content in center, context/history on left, dashboard on right.
  * 
- * Clean M3 Surface design with surfaceContainer backgrounds.
+ */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
     @Composable
@@ -272,9 +276,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
 
             // ═══════════════════════════════════════════════════════════════════════
-            // UNIFIED FLOATING BOTTOM BAR - SimpMusic Style Liquid Glass
+            // UNIFIED FLOATING BOTTOM BAR
             // ═══════════════════════════════════════════════════════════════════════
-            // Uses backdrop + luminance for TRUE liquid glass with dynamic adaptation
+            // Surface-based bottom bar with dynamic adaptation
             // Nav row is ALWAYS visible; only chat input auto-hides on scroll
             val inputText by chatScreenModel.inputText.collectAsState()
             val shellMode by chatScreenModel.shellMode.collectAsState()

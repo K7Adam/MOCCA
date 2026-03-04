@@ -57,20 +57,20 @@ sealed class BottomBarMode {
  * 
  * Structure:
  * ```
- * LiquidGlassContainer
+ * LiquidContainer
  * ├── AnimatedVisibility (ChatInputContent - controlled by isChatInputVisible)
  * └── PersistentNavRow (ALWAYS VISIBLE - NEVER HIDDEN)
  * ```
  *
- * GLASS EFFECT: Clean M3 Surface with surfaceContainer color.
+ * Clean M3 Surface with surfaceContainer color.
  *
  * Features:
  * - Fluid spring-based animations for mode transitions
- * - Single glassy container for cohesive premium look
+ * - Single surface container for cohesive premium look
  * - Nav buttons NEVER change size or position
  * - Nav row is ALWAYS visible across all screens
  * - Integrated navigation indicator visible in both modes
- * - TRUE Liquid Glass effect with lens refraction, chromatic aberration
+ * - Dynamic spring-based animations with smooth transitions
  * - Luminance adaptation for dynamic brightness/contrast (when using backdrop)
  * - Auto-hide only affects chat input field, not navigation
  *
@@ -111,7 +111,7 @@ fun UnifiedFloatingBottomBar(
     dragProgress: Float,
     isChatInputVisible: Boolean = true,
     onItemClick: (PanelState) -> Unit,
-    // NEW: SimpMusic-style liquid glass with luminance adaptation
+    // Chat input parameters
 
     // Chat input parameters
     inputText: String = "",
@@ -192,7 +192,7 @@ fun UnifiedFloatingBottomBar(
             .navigationBarsPadding()
             .imePadding()
     ) {
-        // Determine which glass effect to use (priority order)
+        // Surface container for the bottom bar
         @Suppress("DEPRECATION")
         val containerModifier = Modifier
             .fillMaxWidth()

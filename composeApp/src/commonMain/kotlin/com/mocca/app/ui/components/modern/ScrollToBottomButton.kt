@@ -44,6 +44,7 @@ fun ScrollToBottomButton(
             color = AppColors.surfaceContainer,
             shape = AppShapes.circle,
             modifier = Modifier.size(48.dp)
+        ) {
 
             Box(
                 modifier = Modifier
@@ -53,25 +54,27 @@ fun ScrollToBottomButton(
                         indication = null
                     ) { onClick() },
                 contentAlignment = Alignment.Center
-            Icon(
-                imageVector = Icons.Default.ArrowDownward,
-                contentDescription = "Scroll to bottom",
-                tint = AppColors.white,
-                modifier = Modifier.size(20.dp)
-            )
-
-            if (hasNewMessages) {
-                // New message badge (mint green dot)
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .align(Alignment.TopEnd)
-                        .offset(x = (-4).dp, y = 4.dp)
-                        .clip(AppShapes.circle)
-                        .background(AppColors.accent)
-                        .border(2.dp, AppColors.background, AppShapes.circle)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDownward,
+                    contentDescription = "Scroll to bottom",
+                    tint = AppColors.white,
+                    modifier = Modifier.size(20.dp)
                 )
+
+                if (hasNewMessages) {
+                    // New message badge (mint green dot)
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-4).dp, y = 4.dp)
+                            .clip(AppShapes.circle)
+                            .background(AppColors.accent)
+                            .border(2.dp, AppColors.background, AppShapes.circle)
+                    )
+                }
             }
-        }
+    }
     }
 }

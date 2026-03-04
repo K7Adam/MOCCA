@@ -49,6 +49,9 @@ object AppColors {
     /** Surface variant — for differentiated areas */
     val surfaceVariant = Color(0xFF272727)
 
+    /** Surface elevated — for dropdown menus and overlays */
+    val surfaceElevated = Color(0xFF2D2D2D)
+
     /** Card background */
     val cardBackground = Color(0xFF202020)
 

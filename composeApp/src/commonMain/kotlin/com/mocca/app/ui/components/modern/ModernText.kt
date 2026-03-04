@@ -31,7 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import kotlinx.coroutines.delay
 
 /**
- * Modern Glassmorphic text components.
+ * Modern styled text components.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════

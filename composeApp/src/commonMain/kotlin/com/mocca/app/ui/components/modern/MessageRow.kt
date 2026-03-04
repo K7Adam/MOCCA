@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
+import com.mocca.app.domain.model.TokenUsage
 import com.mocca.app.ui.components.RichToolCard
 import com.mocca.app.ui.components.modern.message.ContextToolGroup
 import com.mocca.app.ui.components.modern.message.DateSeparator
@@ -290,7 +291,7 @@ private fun RenderPartGroup(group: PartGroup, onFileClick: ((String) -> Unit)?) 
 }
 
 @Composable
-private fun TokenCountFooter(tokens: Message.TokenInfo) {
+private fun TokenCountFooter(tokens: TokenUsage) {
     if (tokens.input <= 0 && tokens.output <= 0) return
 
     Spacer(modifier = Modifier.height(AppSpacing.xs))

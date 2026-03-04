@@ -103,6 +103,7 @@ fun PermissionBanner(
                     color = amberAccent.copy(alpha = 0.6f),
                     shape = AppShapes.medium
                 )
+                ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

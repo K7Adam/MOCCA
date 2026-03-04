@@ -96,12 +96,12 @@ val defaultBottomNavItems = listOf(
 )
 
 /**
- * Ultra-modern, animated bottom navigation bar with glassmorphic design.
+ * Modern animated bottom navigation bar.
  *
  * Features:
  * - Real-time synchronization with panel state via dragProgress
  * - Animated indicator that follows swipe gesture in real-time
- * - Glassmorphic terminal aesthetic
+ * - Clean dark terminal aesthetic
  * - Bidirectional sync with swipe navigation
  * - Smooth color and scale animations
  *

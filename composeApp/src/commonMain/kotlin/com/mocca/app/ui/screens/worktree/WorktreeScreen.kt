@@ -159,10 +159,6 @@ object WorktreeScreen : Screen {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Worktree card
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun WorktreeCard(
     worktree: WorktreeInfo,
@@ -271,10 +267,6 @@ private fun WorktreeCard(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Empty state
-// ─────────────────────────────────────────────────────────────────────────────
-
 @Composable
 private fun WorktreeEmptyState(onCreateClick: () -> Unit) {
     Column(
@@ -303,10 +295,6 @@ private fun WorktreeEmptyState(onCreateClick: () -> Unit) {
         )
     }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Create dialog
-// ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
 private fun WorktreeCreateDialog(

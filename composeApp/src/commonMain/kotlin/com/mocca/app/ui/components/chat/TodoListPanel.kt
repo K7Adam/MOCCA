@@ -53,7 +53,7 @@ fun TodoListPanel(
     val inProgressCount = todos.count { it.status == TodoStatus.IN_PROGRESS }
     val totalCount = todos.size
     
-    // Animated corner radius for glass effect
+    // Animated corner radius for smooth expansion
     val cornerRadius by animateDpAsState(
         targetValue = if (isExpanded) 16.dp else 12.dp,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
@@ -73,6 +73,7 @@ fun TodoListPanel(
         Surface(
             color = AppColors.surfaceContainer,
             shape = AppShapes.medium
+        ) {
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {

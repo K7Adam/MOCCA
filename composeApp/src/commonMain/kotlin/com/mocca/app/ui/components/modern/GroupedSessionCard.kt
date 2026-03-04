@@ -52,10 +52,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// RUNNING SESSION INDICATOR
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Pulsing indicator for running/active sessions.
  * Shows a mint green dot with "LIVE" or "PROCESSING" label.
@@ -123,10 +119,6 @@ fun RunningSessionIndicator(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// STACKED CHILD PREVIEW
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /**
  * Visual stack of child session cards behind parent.
  * Shows 1-3 stacked cards with decreasing offset.
@@ -175,10 +167,6 @@ private fun StackedChildPreview(
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// GROUPED SESSION CARD
-// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Card component for displaying a session group with parent-child hierarchy.
@@ -347,10 +335,6 @@ fun GroupedSessionCard(
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CHILD SESSION CARD
-// ═══════════════════════════════════════════════════════════════════════════════
 
 /**
  * Compact card for child/sub sessions.

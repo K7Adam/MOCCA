@@ -31,13 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.datetime.Clock as KtClock
 
-enum class ServerConnectionStatus {
-    UNKNOWN,
-    CHECKING,
-    CONNECTED,
-    FAILED
-}
-
 @Immutable
 
 data class SettingsState(
@@ -751,6 +744,12 @@ class SettingsScreenModel(
                 Napier.w("Server ${server.name} connection failed: ${e.message}")
                 ServerConnectionStatus.FAILED
             }
+            
+            _state.value = _state.value.copy(
+                connectionStatuses = _state.value.connectionStatuses + (server.id to status)
+            )
+        }
+    }
     
     fun checkAllServers() {
         screenModelScope.launch {

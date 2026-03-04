@@ -79,14 +79,14 @@ fun MoccaCardElevated(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// STATUS MONITOR CARD (Glass effect with rounded corners)
+// STATUS MONITOR CARD (Rounded container with elevated surface)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Status monitor card with glassmorphic effect.
+ * Status monitor card with elevated surface design.
  * Used on onboarding screen for the hero status section.
  * 
- * Modern design: 24dp rounded corners, subtle glass background, soft border.
+ * Modern design: 24dp rounded corners, subtle surface elevation, soft border.
  */
 @Composable
 fun StatusMonitorCard(
@@ -207,14 +207,14 @@ fun ModuleToolCard(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// GLASS CARD (Glassmorphic effect)
+// SURFACE CARD (Semi-transparent overlay container)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Glass card with semi-transparent background for overlay effects.
+ * Surface card with semi-transparent background for overlay effects.
  */
 @Composable
-fun GlassCard(
+fun SurfaceCard(
     modifier: Modifier = Modifier,
     backgroundColor: Color = AppColors.surfaceContainerHigh,
     borderColor: Color = AppColors.border,

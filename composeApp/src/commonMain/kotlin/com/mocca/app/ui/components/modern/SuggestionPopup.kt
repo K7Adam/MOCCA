@@ -49,7 +49,7 @@ enum class SuggestionType {
 
 /**
  * Popup showing suggestions for commands or mentions.
- * Premium styled with glass border and consistent theming.
+ * Premium styled with subtle border and consistent theming.
  * 
  * IMPORTANT: This popup is triggered by the "/" and "@" buttons in the chat input.
  * It must be positioned above the input field at the bottom of the screen.

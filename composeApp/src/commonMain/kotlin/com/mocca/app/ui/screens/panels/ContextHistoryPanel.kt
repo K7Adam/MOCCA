@@ -327,6 +327,9 @@ private fun ConversationHistorySection(
         }
     }
 }
+}
+
+
 
 @Composable
 private fun NewSessionButton(

@@ -107,11 +107,11 @@ fun QuestionDialog(
                         if (question.options.isNotEmpty()) {
                             Surface(
         shape = AppShapes.dialog,
-                                // Glass-like translucent background
+                                // Translucent background
                                 color = AppColors.surfaceContainerHigh, // Translucent surface
                                 border = BorderStroke(
                                     1.dp, 
-                                    AppColors.border // Glass border
+                                    AppColors.border // Border
                                 )
                             ) {
                                 Column {
@@ -229,8 +229,8 @@ fun QuestionDialog(
             }
         },
         shape = AppShapes.medium,
-        // Glass-like translucent container
-        containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark for glass effect
+                            // Translucent container
+        containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark surface
         titleContentColor = AppColors.white,
         textContentColor = AppColors.whiteDim,
         iconContentColor = AppColors.white
