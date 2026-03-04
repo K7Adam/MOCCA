@@ -299,7 +299,7 @@ private fun ConversationHistorySection(
                 }
             }
             }
-            }
+
             
             // Floating NEW SESSION button with gradient fade at top
             Box(
