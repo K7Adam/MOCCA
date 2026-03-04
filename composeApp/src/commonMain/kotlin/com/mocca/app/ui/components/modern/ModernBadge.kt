@@ -186,18 +186,6 @@ fun StatusDot(
             )
         }
         // Core dot
-        modifier = modifier.size(size),
-        contentAlignment = Alignment.Center
-    ) {
-        if (showGlow) {
-            // Subtle glow/outer ring
-            Box(
-                modifier = Modifier
-                    .size(size + 2.dp)
-                    .background(color.copy(alpha = 0.2f), CircleShape)
-            )
-        }
-        // Core dot
         Box(
             modifier = Modifier
                 .size(size)

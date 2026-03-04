@@ -22,7 +22,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
-import com.mocca.app.ui.theme.AppAnimations
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -111,11 +112,11 @@ fun MoccaInput(
     
     val animatedBorderColor by animateColorAsState(
         targetValue = if (isFocused) AppColors.accentGreen else borderColor,
-        animationSpec = AppAnimations.springDamping()
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
     )
     val animatedBorderWidth by animateDpAsState(
         targetValue = if (isFocused) 2.dp else borderWidth,
-        animationSpec = AppAnimations.springDamping()
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
     )
     
     Column(modifier = modifier) {

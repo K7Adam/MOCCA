@@ -1,7 +1,6 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,10 +35,6 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.AppAnimations
 import com.mocca.app.ui.components.glass.glassyFab
-import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.components.glass.glassyFab
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
@@ -71,18 +66,6 @@ fun MoccaButton(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "buttonScale"
-    )
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "buttonScale"
-    )
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = tween(100),
         label = "buttonScale"
     )
     
@@ -161,10 +144,6 @@ fun MoccaOutlinedButton(
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
         label = "buttonScale"
     )
-        targetValue = if (isPressed) 0.98f else 1f,
-        animationSpec = tween(100),
-        label = "buttonScale"
-    )
     
     val brdColor = if (enabled) borderColor else disabledBorderColor
     val txtColor = if (enabled) textColor else disabledTextColor
@@ -229,10 +208,6 @@ fun MoccaCompactButton(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.94f else 1f,
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "buttonScale"
-    )
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(100),
         label = "buttonScale"
     )
     
@@ -343,10 +318,6 @@ fun MoccaIconButton(
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
         label = "iconButtonScale"
     )
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = tween(100),
-        label = "iconButtonScale"
-    )
     
     val tintColor = if (enabled) iconColor else AppColors.grey
     
@@ -404,10 +375,6 @@ fun MoccaIconButtonGlass(
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
         label = "iconButtonScale"
     )
-        targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = tween(100),
-        label = "iconButtonScale"
-    )
     
     val tintColor = if (enabled) iconColor else AppColors.grey
     
@@ -458,10 +425,6 @@ fun MoccaFab(
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
         label = "fabScale"
     )
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(100),
-        label = "fabScale"
-    )
     
     Box(
         modifier = modifier
@@ -501,10 +464,6 @@ fun MoccaFabGlass(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "fabScale"
-    )
-        targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(100),
         label = "fabScale"
     )
     

@@ -57,11 +57,9 @@ fun Modifier.glassSpringPress(): Modifier {
         label = "glassPressScale"
     )
     
-    return this
-        .interactionSource(interactionSource)
-        .then(
-            if (scale != 1f) Modifier.scale(scale) else Modifier
-        )
+    return this.then(
+        if (scale != 1f) Modifier.scale(scale) else Modifier
+    )
 }
 
 /**

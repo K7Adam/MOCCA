@@ -663,11 +663,10 @@ fun ChatContent(
                         }
 
                         MessageBubble(
-                        MessageBubble(
                             modifier = Modifier.animateItem(
                                 fadeInSpec = null, 
                                 fadeOutSpec = null,
-                                placementSpec = AppAnimations.SpringBouncy
+                                placementSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
                             ),
                             message = message,
                             isFirstInGroup = isFirstInGroup,
