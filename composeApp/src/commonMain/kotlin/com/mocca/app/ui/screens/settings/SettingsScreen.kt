@@ -138,29 +138,37 @@ class SettingsScreen : Screen {
                         )
                     }
                     
-                    Spacer(modifier = Modifier.height(AppSpacing.lg))
-                    
-                    // Info note about server-side configuration
-                    Text(
-                        text = "Provider and model are configured on the OpenCode server.",
-                        color = AppColors.textTertiary,
-                        style = AppTypography.labelSmall
-                    )
-                    Spacer(modifier = Modifier.height(AppSpacing.xs))
-                    Text(
-                        text = "Update these settings via /config command in OpenCode.",
-                        color = AppColors.textTertiary,
-                        style = AppTypography.labelSmall
-                    ) }
+                    item {
+                        Column {
+                            Spacer(modifier = Modifier.height(AppSpacing.lg))
+                            
+                            // Info note about server-side configuration
+                            Text(
+                                text = "Provider and model are configured on the OpenCode server.",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.xs))
+                            Text(
+                                text = "Update these settings via /config command in OpenCode.",
+                                color = AppColors.textTertiary,
+                                style = AppTypography.labelSmall
+                            )
+                        }
+                    }
                 }
                 
                 // Server Info Section
                 state.serverVersion?.let { version ->
                     item {
-                        SettingsCard(title = "OPENCODE SERVER INFO") { SettingsRowItem(title = "SERVER VERSION",
-                        subtitle = version,
-                        isEnabled = true,
-                        showToggle = false) }
+                        ModuleCard(title = "OPENCODE SERVER INFO") {
+                            ModuleRowItem(
+                                title = "SERVER VERSION",
+                                subtitle = version,
+                                isEnabled = true,
+                                showToggle = false
+                            )
+                        }
                     }
                 }
                 

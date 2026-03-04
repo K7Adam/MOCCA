@@ -108,7 +108,7 @@ fun MoccaInput(
     val isFocused by interactionSource.collectIsFocusedAsState()
     
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (isFocused) AppColors.accentGreen else borderColor,
+        targetValue = if (isFocused) AppColors.accent else borderColor,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
     )
     val animatedBorderWidth by animateDpAsState(

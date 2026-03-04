@@ -33,6 +33,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.AppAnimations
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
