@@ -114,6 +114,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Track scroll direction for chat input auto-hide
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
 
+        // State for scroll-to-bottom button (reported by ChatContent)
+        var showScrollToBottom by remember { mutableStateOf(false) }
+        var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
+        var scrollToBottomTrigger by remember { mutableStateOf(0L) }
 
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
@@ -279,7 +283,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Nav row stays visible at all times on all screens
             val isChatInputVisible = scrollDirection != ScrollDirection.UP
             
-
+            UnifiedFloatingBottomBar(
+                mode = BottomBarMode.ChatInput,
+                dragProgress = dragProgress,
+                isChatInputVisible = isChatInputVisible,
+                onItemClick = { panelState.state = it },
                 // Chat input parameters
                 inputText = inputText,
                 onInputTextChange = { chatScreenModel.updateInputText(it) },

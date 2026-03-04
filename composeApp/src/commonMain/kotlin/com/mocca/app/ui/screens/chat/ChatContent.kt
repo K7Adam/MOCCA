@@ -22,6 +22,7 @@ import com.mocca.app.ui.components.QuestionDialog
 import com.mocca.app.ui.components.chat.PermissionBanner
 import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
+import com.mocca.app.ui.components.modern.message.*
 import com.mocca.app.ui.theme.*
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.screens.files.FilesScreen
@@ -105,10 +106,7 @@ fun ChatContent(
             totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
         }
     }
-
-    // Show scroll-to-bottom button when user has scrolled up
-    // IMPORTANT: Read listState directly — it's a Compose State holder.
-    // Do NOT read autoScrollState here (plain data class = stale closure).
+    // Show scroll-to-bottom button when user has scrolled up (read listState directly, not autoScrollState)
     val showScrollToBottom by remember(listState) {
         derivedStateOf {
             listState.firstVisibleItemIndex > 0 ||
@@ -357,7 +355,7 @@ fun ChatContent(
                             if (nextDate != currentDate) currentDate else null
                         }
 
-                        MessageBubble(
+                        MessageRow(
                             message = message,
                             isFirstInGroup = isFirstInGroup,
                             dateHeader = showDateHeader,
@@ -397,11 +395,6 @@ fun ChatContent(
                     onReject = { screenModel.rejectQuestion() }
                 )
             }
-
-            // ScrollToBottomButton removed — now hosted in MainScreen for liquid glass support
-            
-            // RichChatInput removed - now handled by UnifiedFloatingBottomBar in MainScreen
         }
     }
 }
-

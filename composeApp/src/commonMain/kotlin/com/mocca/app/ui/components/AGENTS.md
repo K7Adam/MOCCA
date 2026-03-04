@@ -1,45 +1,23 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
-**Scope:** Shared UI components & Modern Glassmorphic Design System
+**Scope:** Shared UI components & Modern M3 Surface Design System
 
 ## RELEVANT SKILLS
-- **taste-skill-compose** — UI/UX design rules, animations, theming, glass effects
+- **taste-skill-compose** — UI/UX design rules, animations, theming, M3 Surface components
 
 ## OVERVIEW
-Shared UI library implementing the **Modern Glassmorphic Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Pitch Black" aesthetic.
+Shared UI library implementing the **Modern M3 Surface Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Soft Dark" aesthetic with neutral monochrome palette.
 
-## LIQUID GLASS EFFECTS
-**REQUIRED**: Use [AndroidLiquidGlass](https://github.com/Kyant0/AndroidLiquidGlass) for glassmorphic UI effects.
-
-**Dependency**: `io.github.kyant0:backdrop`
-**Docs**: https://kyant.gitbook.io/backdrop
-
-**Example Components:**
-- `LiquidButton` — Glass button with refractive effects
-- `LiquidToggle` — Glass toggle switch
-- `LiquidSlider` — Glass slider control
-- `LiquidBottomTabs` — Glass bottom navigation
-
-**Integration:**
-```kotlin
-// In build.gradle.kts
-implementation("io.github.kyant0:backdrop:1.0.6")
-
-// Usage
-Backdrop(
-    specular = 0.5f,
-    refract = 0.3f,
-    // ... glass parameters
-) {
-    // Content
-}
-```
+## SURFACE-BASED COMPONENTS
+- Use M3 Surface with tonalElevation for depth
+- Card components use surface container hierarchy (surface, surfaceContainer, surfaceContainerHigh)
+- NO blur effects, NO glassmorphism, NO backdrop sampling
 
 ## THEME RULES
 The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (pastel colors, elevation shadows).
 
 - **Theme Composable**: Use `AppTheme { ... }` as the root of all screens.
-- **Background**: **Pitch Black** (`#000000`) is mandatory for all primary backgrounds.
+- **Background**: **Soft Dark** (`#1A1A1A`) is the base background for all primary screens.
 - **Corners**: Rounded corners (12dp-32dp) for interactive elements (buttons, inputs, cards).
 - **Typography**: Use `AppTypography` for all text styles.
     - Use `AppTypography.bodyMedium` for standard text.
@@ -51,7 +29,7 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 - `MoccaButton`: Pill-shaped button with `accentGreen` background and black text.
 - `MoccaInput`: Solid black background with rounded corners and subtle border.
 - `MoccaCard`: Rounded container with `surfaceContainer` background and 16dp corners.
-- `ModernBadge`: Glassmorphic "USER" or "AGENT" tags.
+- `ModernBadge`: Surface-based "USER" or "AGENT" tags with tonal elevation.
 - `ModernTopBar`: Compact top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
 
 ### 2. Common Layouts (`CommonComponents.kt`)

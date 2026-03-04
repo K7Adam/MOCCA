@@ -33,9 +33,10 @@ import androidx.compose.material.icons.filled.Undo
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 
+@Deprecated("Use MessageRow from modern package", replaceWith = ReplaceWith("MessageRow"))
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MessageBubble(
+fun LegacyMessageBubble(
     message: Message,
     onFork: ((Message) -> Unit)? = null,
     onRevert: ((Message) -> Unit)? = null

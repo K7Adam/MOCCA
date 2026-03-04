@@ -337,7 +337,7 @@ fun ChatInputContent(
                     onDismissRequest = { showAgentMenu = false },
                     properties = PopupProperties(focusable = false),
                     modifier = Modifier
-                        .background(AppColors.surfaceElevated, AppShapes.medium)
+                        .background(AppColors.surfaceContainerHigh, AppShapes.medium)
                         .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
                 ) {
                     modes.forEach { mode ->
@@ -399,7 +399,7 @@ fun ChatInputContent(
                 onDismissRequest = { showTextSuggestions = false },
                 properties = PopupProperties(focusable = false),
                 modifier = Modifier
-                    .background(AppColors.surfaceElevated, AppShapes.medium)
+                    .background(AppColors.surfaceContainerHigh, AppShapes.medium)
                     .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
             ) {
                 if (isCommandSuggestion) {
@@ -551,7 +551,7 @@ fun ChatInputContent(
                         onDismissRequest = { showAgentPalette = false },
                         properties = PopupProperties(focusable = false),
                         modifier = Modifier
-                            .background(AppColors.surfaceElevated, AppShapes.medium)
+                            .background(AppColors.surfaceContainerHigh, AppShapes.medium)
                             .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
                     ) {
                         if (modes.isEmpty()) {

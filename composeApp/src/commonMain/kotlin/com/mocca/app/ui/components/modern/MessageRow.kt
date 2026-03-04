@@ -52,10 +52,6 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
-// ---------------------------------------------------------------------------
-// Tool grouping helpers
-// ---------------------------------------------------------------------------
-
 private sealed class PartGroup {
     data class Single(val part: MessagePart) : PartGroup()
     data class ToolGroup(val tools: List<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>) : PartGroup()
@@ -101,10 +97,6 @@ private fun formatTokenCount(count: Int): String {
 private fun formatTime(timestamp: Long): String {
     return com.mocca.app.util.TimeFormatter.formatTime(timestamp)
 }
-
-// ---------------------------------------------------------------------------
-// MessageRow — full-width layout for AI, tinted surface for user
-// ---------------------------------------------------------------------------
 
 /**
  * Modern message row replacing the old bubble layout.
@@ -187,10 +179,6 @@ fun MessageRow(
     }
 }
 
-// ---------------------------------------------------------------------------
-// Message header
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Boolean) {
     val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
@@ -226,10 +214,6 @@ private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Bool
     }
 }
 
-// ---------------------------------------------------------------------------
-// User message — tinted surface, 85% width
-// ---------------------------------------------------------------------------
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserMessageContent(
@@ -256,10 +240,6 @@ private fun UserMessageContent(
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Agent message — full-width, no background
-// ---------------------------------------------------------------------------
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -288,10 +268,6 @@ private fun AgentMessageContent(
     }
 }
 
-// ---------------------------------------------------------------------------
-// Part group dispatcher
-// ---------------------------------------------------------------------------
-
 @Composable
 private fun RenderPartGroup(group: PartGroup, onFileClick: ((String) -> Unit)?) {
     when (group) {
@@ -312,10 +288,6 @@ private fun RenderPartGroup(group: PartGroup, onFileClick: ((String) -> Unit)?) 
         is PartGroup.ToolGroup -> ContextToolGroup(tools = group.tools)
     }
 }
-
-// ---------------------------------------------------------------------------
-// Token count footer
-// ---------------------------------------------------------------------------
 
 @Composable
 private fun TokenCountFooter(tokens: Message.TokenInfo) {
@@ -357,10 +329,6 @@ private fun TokenCountFooter(tokens: Message.TokenInfo) {
         }
     }
 }
-
-// ---------------------------------------------------------------------------
-// Context menu
-// ---------------------------------------------------------------------------
 
 @Composable
 private fun MessageContextMenu(
