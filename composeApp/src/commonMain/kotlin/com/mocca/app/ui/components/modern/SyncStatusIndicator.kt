@@ -61,7 +61,7 @@ fun SyncStatusIndicator(
         )
         is GlobalSyncState.Syncing -> Triple(
             Icons.Default.Refresh,
-            AppColors.accent,
+            AppColors.accentGreen,
             if (globalSyncState.progress > 0) "SYNCING..." else null
         )
         is GlobalSyncState.Fresh -> Triple(
@@ -235,7 +235,7 @@ fun SyncStatusCard(
                 MoccaTextButton(
                     text = "REFRESH",
                     onClick = onRefreshClick,
-                    textColor = if (hasError) AppColors.error else AppColors.accent
+                    textColor = if (hasError) AppColors.error else AppColors.accentGreen
                 )
             }
         }
@@ -257,7 +257,7 @@ fun SyncStatusDot(
 ) {
     val color = when (globalSyncState) {
         is GlobalSyncState.NotSynced -> AppColors.grey
-        is GlobalSyncState.Syncing -> AppColors.accent
+        is GlobalSyncState.Syncing -> AppColors.accentGreen
         is GlobalSyncState.Fresh -> AppColors.statusOnline
         is GlobalSyncState.Partial -> AppColors.statusWaiting
         is GlobalSyncState.Failed -> AppColors.statusOffline

@@ -219,8 +219,8 @@ fun ModernToggle(
         enabled = enabled,
         colors = SwitchDefaults.colors(
             checkedThumbColor = AppColors.background,
-            checkedTrackColor = AppColors.accent,
-            checkedBorderColor = AppColors.accent,
+            checkedTrackColor = AppColors.accentGreen,
+            checkedBorderColor = AppColors.accentGreen,
             uncheckedThumbColor = AppColors.white,
             uncheckedTrackColor = AppColors.surfaceVariant,
             uncheckedBorderColor = AppColors.border,

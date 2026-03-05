@@ -164,13 +164,13 @@ private fun PersistentNavItem(
 
     // Animated color transition
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accent else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
         animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accent else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
         animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
         label = "textColor"
     )
@@ -245,7 +245,7 @@ private fun PersistentNavItem(
                         .size(6.dp)
                         .scale(pulseScale)
                         .background(
-                            color = AppColors.accent.copy(alpha = pulseAlpha),
+                            color = AppColors.accentGreen.copy(alpha = pulseAlpha),
                             shape = RoundedCornerShape(50)
                         )
                 )

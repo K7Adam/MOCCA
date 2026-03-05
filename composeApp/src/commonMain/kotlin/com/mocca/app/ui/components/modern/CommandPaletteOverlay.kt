@@ -138,7 +138,7 @@ fun CommandPaletteOverlay(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
-                        tint = AppColors.accent,
+                        tint = AppColors.accentGreen,
                         modifier = Modifier.size(18.dp)
                     )
                     BasicTextField(
@@ -148,7 +148,7 @@ fun CommandPaletteOverlay(
                             .weight(1f)
                             .focusRequester(focusRequester),
                         textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                        cursorBrush = SolidColor(AppColors.accent),
+                        cursorBrush = SolidColor(AppColors.accentGreen),
                         singleLine = true,
                         decorationBox = { inner ->
                             Box {
@@ -334,7 +334,7 @@ private fun CommandPaletteItem(
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = AppColors.accent.copy(alpha = 0.15f),
+                    color = AppColors.accentGreen.copy(alpha = 0.15f),
                     shape = AppShapes.small
                 ),
             contentAlignment = Alignment.Center
@@ -342,7 +342,7 @@ private fun CommandPaletteItem(
             Text(
                 text = prefix,
                 style = AppTypography.labelSmall,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
         }

@@ -142,7 +142,7 @@ private fun AgentHeader(
             Icon(
                 imageVector = Icons.Default.Computer,
                 contentDescription = null,
-                tint = AppColors.white,
+                tint = AppColors.textPrimary,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -150,7 +150,7 @@ private fun AgentHeader(
         Column {
             Text(
                 text = agentName.uppercase(),
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -260,7 +260,7 @@ private fun ConversationHistorySection(
                                 ) {
                                     Text(
                                         text = "#${formatSessionId(session.id)}",
-                                        color = if (isActive) AppColors.white else AppColors.textSecondary,
+                                        color = if (isActive) AppColors.textPrimary else AppColors.textSecondary,
                                         style = AppTypography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -289,7 +289,7 @@ private fun ConversationHistorySection(
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = session.title ?: "Untitled Session",
-                                    color = if (isActive) AppColors.white else AppColors.textTertiary,
+                                    color = if (isActive) AppColors.textPrimary else AppColors.textTertiary,
                                     style = AppTypography.bodySmall,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
@@ -351,7 +351,7 @@ private fun NewSessionButton(
             .clickable(
                 enabled = !isLoading,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
+                indication = ripple(color = AppColors.textPrimary.copy(alpha = 0.1f)),
                 onClick = onClick
             )
             .padding(AppSpacing.md),
@@ -375,13 +375,13 @@ private fun NewSessionButton(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "New session",
-                tint = AppColors.accent,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "NEW SESSION",
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

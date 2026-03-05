@@ -52,6 +52,7 @@ import kotlinx.coroutines.launch
 import com.mocca.app.ui.components.modern.ConnectionBannerStatus
 import com.mocca.app.ui.components.modern.ConnectionStatusBanner
 import com.mocca.app.ui.components.modern.QuoteRotator
+import com.mocca.app.ui.components.modern.ScrollToBottomButton
 import com.mocca.app.ui.components.modern.UpdateDialog
 
 /**
@@ -286,6 +287,24 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Chat input auto-hides when scrolling up (reading older messages)
             // Nav row stays visible at all times on all screens
             val isChatInputVisible = scrollDirection != ScrollDirection.UP
+
+            // Scroll-to-bottom button overlay
+            ScrollToBottomButton(
+                isVisible = showScrollToBottom,
+                hasNewMessages = hasNewMessagesWhileScrolledUp,
+                onClick = {
+                    scrollToBottomTrigger += 1L
+                    showScrollToBottom = false
+                    hasNewMessagesWhileScrolledUp = false
+                },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    // We use ChatInputModeMinHeight to clear the bottom bar
+                    .padding(
+                        bottom = com.mocca.app.ui.components.navigation.NavConstants.ChatInputModeMinHeight + AppSpacing.sm,
+                        end = AppSpacing.lg
+                    )
+            )
             
             UnifiedFloatingBottomBar(
                 mode = BottomBarMode.ChatInput,

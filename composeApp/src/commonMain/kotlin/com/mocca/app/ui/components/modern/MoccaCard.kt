@@ -138,7 +138,7 @@ fun StatusMonitorCard(
 @Composable
 fun MoccaSectionCard(
     modifier: Modifier = Modifier,
-    leftBorderColor: Color = AppColors.accent,
+    leftBorderColor: Color = AppColors.accentGreen,
     leftBorderWidth: Dp = AppSpacing.borderStandard,
     backgroundColor: Color = AppColors.surfaceVariant,
     contentPadding: Dp = AppSpacing.lg,
@@ -175,7 +175,7 @@ fun MoccaSessionCard(
     isActive: Boolean = false,
     backgroundColor: Color = AppColors.surfaceContainerHigh,
     borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
-    activeIndicatorColor: Color = AppColors.accent,
+    activeIndicatorColor: Color = AppColors.accentGreen,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.sessionCard,

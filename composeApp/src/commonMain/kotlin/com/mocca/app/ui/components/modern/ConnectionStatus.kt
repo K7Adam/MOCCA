@@ -213,11 +213,11 @@ fun SseStatusIndicator(
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xxs)
     ) {
         StatusDot(
-            color = if (isConnected) AppColors.accent else AppColors.statusOffline
+            color = if (isConnected) AppColors.accentGreen else AppColors.statusOffline
         )
         Text(
             text = if (isConnected) "SSE" else "POLL",
-            color = if (isConnected) AppColors.accent else AppColors.statusOffline,
+            color = if (isConnected) AppColors.accentGreen else AppColors.statusOffline,
             style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold
         )
@@ -241,7 +241,7 @@ fun CombinedConnectionIndicator(
     ) {
         // HTTP connection status
         if (isHttpConnected) {
-            StatusDot(color = AppColors.accent)
+            StatusDot(color = AppColors.accentGreen)
             Text(
                 text = serverName?.uppercase() ?: "ONLINE",
                 color = AppColors.textSecondary,

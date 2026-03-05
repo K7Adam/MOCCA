@@ -236,8 +236,8 @@ fun ChatInputBar(
                 onValueChange = handleValueChange,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = inputEnabled,
-                textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                cursorBrush = SolidColor(AppColors.accent),
+                textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+                cursorBrush = SolidColor(AppColors.accentGreen),
                 interactionSource = interactionSource,
                 decorationBox = { innerTextField ->
                     Box {
@@ -301,11 +301,11 @@ fun ChatInputBar(
                 modifier = Modifier
                     .size(ActionToolbarHeight)
                     .background(
-                        color = if (showCommandPalette) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                        color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                         shape = AppShapes.pill
                     )
                     .then(
-                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
+                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
                     )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
@@ -317,7 +317,7 @@ fun ChatInputBar(
             ) {
                 Text(
                     text = "/",
-                    color = if (showCommandPalette) AppColors.accent else AppColors.textSecondary,
+                    color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
                     style = AppTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )

@@ -95,14 +95,14 @@ internal fun ChecklistItem(
         Box(
             modifier = Modifier
                 .size(28.dp)
-                .background(AppColors.accent.copy(alpha = 0.2f), CircleShape)
-                .border(AppSpacing.borderThin, AppColors.accent, CircleShape),
+                .background(AppColors.accentGreen.copy(alpha = 0.2f), CircleShape)
+                .border(AppSpacing.borderThin, AppColors.accentGreen, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = number,
                 style = AppTypography.labelMedium,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -140,8 +140,8 @@ internal fun ServerListItem(
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
     }
     
-    val borderColor = if (isSelected) AppColors.accent else AppColors.border
-    val backgroundColor = if (isSelected) AppColors.accent.copy(alpha = 0.1f) else AppColors.surfaceVariant
+    val borderColor = if (isSelected) AppColors.accentGreen else AppColors.border
+    val backgroundColor = if (isSelected) AppColors.accentGreen.copy(alpha = 0.1f) else AppColors.surfaceVariant
     
     Row(
         modifier = Modifier
@@ -156,7 +156,7 @@ internal fun ServerListItem(
         Icon(
             imageVector = sourceIcon,
             contentDescription = null,
-            tint = if (isSelected) AppColors.accent else AppColors.textSecondary,
+            tint = if (isSelected) AppColors.accentGreen else AppColors.textSecondary,
             modifier = Modifier.size(24.dp)
         )
         
@@ -166,7 +166,7 @@ internal fun ServerListItem(
             Text(
                 text = server.name,
                 style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.accent else AppColors.white,
+                color = if (isSelected) AppColors.accentGreen else AppColors.white,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             
@@ -181,7 +181,7 @@ internal fun ServerListItem(
             Icon(
                 imageVector = Icons.Default.CheckCircle,
                 contentDescription = "Selected",
-                tint = AppColors.accent,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -224,7 +224,7 @@ internal fun ErrorMessage(
         Text(
             text = "Retry",
             style = AppTypography.labelSmall,
-            color = AppColors.accent,
+            color = AppColors.accentGreen,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable(onClick = onRetry)
         )

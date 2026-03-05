@@ -124,7 +124,7 @@ internal fun SelectServerStep(
                     Text(
                         text = "Scan again",
                         style = AppTypography.bodyMedium,
-                        color = AppColors.accent,
+                        color = AppColors.accentGreen,
                         modifier = Modifier.clickable(onClick = onRetry)
                     )
                 }
@@ -223,7 +223,7 @@ internal fun SelectServerStep(
             Text(
                 text = "$effectiveProtocol://${manualHost.trim()}:$effectivePort",
                 style = AppTypography.bodySmall,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 modifier = Modifier.padding(vertical = AppSpacing.sm)
             )
             

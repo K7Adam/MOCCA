@@ -71,13 +71,13 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = AppColors.white
+                        iconColor = AppColors.textPrimary
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.md))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "MCP_RESOURCES",
-                            color = AppColors.white,
+                            color = AppColors.textPrimary,
                             style = AppTypography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
@@ -224,7 +224,7 @@ private fun McpResourceItem(
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = resource.name,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.bodySmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -295,7 +295,7 @@ private fun McpResourceContentPanel(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = resource.name.uppercase(),
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -353,7 +353,7 @@ private fun McpResourceContentPanel(
                         SelectionContainer {
                             Text(
                                 text = content.text ?: "(binary content — ${content.mimeType ?: "unknown mime type"})",
-                                color = if (content.text != null) AppColors.white else AppColors.grey,
+                                color = if (content.text != null) AppColors.textPrimary else AppColors.grey,
                                 style = AppTypography.codeSmall,
                                 modifier = Modifier
                                     .fillMaxSize()

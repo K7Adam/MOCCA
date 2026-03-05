@@ -99,6 +99,9 @@ object AppColors {
 
     /** Indicator color */
     val indicator = Color(0xFF8B9DC3)
+    
+    // Legacy aliases for compatibility
+    val accentGreen = Color(0xFF4CAF50)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // BUTTON COLORS
@@ -210,6 +213,7 @@ data class ExtendedAppColors(
     val greyLight: Color = AppColors.greyLight,
     val accent: Color = AppColors.accent,
     val accentBright: Color = AppColors.accentBright,
+    val accentGreen: Color = AppColors.accentGreen,
     val primary: Color = AppColors.primary,
     val primaryDim: Color = AppColors.primaryDim,
     val alertRed: Color = AppColors.alertRed,

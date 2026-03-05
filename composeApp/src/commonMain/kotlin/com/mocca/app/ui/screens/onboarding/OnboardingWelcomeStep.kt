@@ -50,7 +50,7 @@ internal fun WelcomeStep(
             Icon(
                 imageVector = Icons.Default.SettingsEthernet,
                 contentDescription = null,
-                tint = AppColors.accent,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(48.dp)
             )
         }

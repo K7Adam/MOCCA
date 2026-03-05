@@ -117,7 +117,7 @@ private fun SuggestionRow(
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = AppColors.accent.copy(alpha = 0.1f),
+                    color = AppColors.accentGreen.copy(alpha = 0.1f),
                     shape = AppShapes.small
                 ),
             contentAlignment = Alignment.Center
@@ -128,7 +128,7 @@ private fun SuggestionRow(
                     SuggestionType.MODE -> "@"
                 },
                 style = AppTypography.labelMedium,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
         }

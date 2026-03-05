@@ -86,13 +86,13 @@ internal fun CodeBlock(
                         imageVector = if (isCopied) Icons.Default.Check else Icons.Default.ContentCopy,
                         contentDescription = "Copy",
                         modifier = Modifier.size(12.dp),
-                        tint = if (isCopied) AppColors.accent else AppColors.textTertiary
+                        tint = if (isCopied) AppColors.accentGreen else AppColors.textTertiary
                     )
                 }
                 Text(
                     text = if (copied) "COPIED" else "COPY",
                     style = AppTypography.labelExtraSmall,
-                    color = if (copied) AppColors.accent else AppColors.textTertiary
+                    color = if (copied) AppColors.accentGreen else AppColors.textTertiary
                 )
             }
         }

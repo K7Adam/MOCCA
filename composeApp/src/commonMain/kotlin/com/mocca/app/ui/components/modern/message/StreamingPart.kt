@@ -70,13 +70,13 @@ fun ModernStreamingMessage(
             Icon(
                 imageVector = Icons.Default.SmartToy,
                 contentDescription = null,
-                tint = AppColors.accent,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(10.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             Text(
                 text = "AGENT STREAMING...",
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -96,7 +96,7 @@ fun ModernStreamingMessage(
                 )
                 Text(
                     text = "█",
-                    color = AppColors.accent.copy(alpha = cursorAlpha),
+                    color = AppColors.accentGreen.copy(alpha = cursorAlpha),
                     style = AppTypography.bodyMedium,
                     modifier = Modifier.padding(start = 2.dp)
                 )

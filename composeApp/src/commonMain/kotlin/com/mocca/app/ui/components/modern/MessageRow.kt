@@ -184,7 +184,7 @@ fun MessageRow(
 private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Boolean) {
     val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
     val label = if (isUser) "USER" else "AGENT"
-    val color = if (isUser) AppColors.textSecondary else AppColors.accent
+    val color = if (isUser) AppColors.textSecondary else AppColors.accentGreen
     val timeText = remember(createdAt) { formatTime(createdAt) }
 
     Row(
@@ -314,7 +314,7 @@ private fun TokenCountFooter(tokens: TokenUsage) {
         if (tokens.output > 0) {
             Text(
                 text = "OUT: ${formatTokenCount(tokens.output)}",
-                color = AppColors.accent.copy(alpha = 0.7f),
+                color = AppColors.accentGreen.copy(alpha = 0.7f),
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -323,7 +323,7 @@ private fun TokenCountFooter(tokens: TokenUsage) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "REASON: ${formatTokenCount(tokens.reasoning)}",
-                color = AppColors.accent.copy(alpha = 0.5f),
+                color = AppColors.accentGreen.copy(alpha = 0.5f),
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Medium
             )

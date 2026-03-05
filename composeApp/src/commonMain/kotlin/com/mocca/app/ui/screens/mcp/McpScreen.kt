@@ -52,7 +52,7 @@ class McpScreen : Screen {
                     MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = AppColors.white
+                        iconColor = AppColors.textPrimary
                     )
                     
                     Spacer(modifier = Modifier.width(AppSpacing.md))

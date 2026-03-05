@@ -69,7 +69,7 @@ internal fun RevertedSessionBanner(onResume: () -> Unit) {
                 MoccaTextButton(
                     text = "RESUME LATEST",
                     onClick = onResume,
-                    textColor = AppColors.accent
+                    textColor = AppColors.accentGreen
                 )
             }
         }

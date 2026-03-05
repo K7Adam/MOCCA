@@ -24,16 +24,16 @@ import androidx.compose.runtime.ReadOnlyComposable
 
 private val AppColorScheme: ColorScheme = darkColorScheme(
     // Primary — accent color for main interactive elements
-    primary = AppColors.accent,
+    primary = AppColors.accentGreen,
     onPrimary = AppColors.buttonText,
     primaryContainer = AppColors.surfaceContainerHigh,
     onPrimaryContainer = AppColors.textPrimary,
 
     // Secondary — accent for status/emphasis
-    secondary = AppColors.accent,
+    secondary = AppColors.accentGreen,
     onSecondary = AppColors.background,
     secondaryContainer = AppColors.surfaceContainer,
-    onSecondaryContainer = AppColors.accent,
+    onSecondaryContainer = AppColors.accentGreen,
 
     // Tertiary
     tertiary = AppColors.primary,
@@ -56,7 +56,7 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     onSurface = AppColors.textPrimary,
     surfaceVariant = AppColors.surfaceVariant,
     onSurfaceVariant = AppColors.textSecondary,
-    surfaceTint = AppColors.accent,
+    surfaceTint = AppColors.accentGreen,
     surfaceBright = AppColors.surfaceBright,
     surfaceDim = AppColors.surfaceDim,
     surfaceContainer = AppColors.surfaceContainer,

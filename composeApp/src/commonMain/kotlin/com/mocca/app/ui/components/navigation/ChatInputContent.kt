@@ -155,7 +155,7 @@ fun ChatInputContent(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+            .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // ═══════════════ STATUS BAR (Premium Pill Chips) ═══════════════

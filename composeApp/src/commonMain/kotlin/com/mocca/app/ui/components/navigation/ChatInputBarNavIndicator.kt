@@ -101,7 +101,7 @@ internal fun ChatInputBarNavIndicator(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.label,
-                        tint = if (isSelected) AppColors.accent else AppColors.textTertiary,
+                        tint = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
                         modifier = Modifier.size(16.dp)
                     )
 
@@ -112,7 +112,7 @@ internal fun ChatInputBarNavIndicator(
                         modifier = Modifier
                             .size(if (isSelected) 4.dp else 3.dp)
                             .background(
-                                color = if (isSelected) AppColors.accent else AppColors.textTertiary.copy(alpha = 0.4f),
+                                color = if (isSelected) AppColors.accentGreen else AppColors.textTertiary.copy(alpha = 0.4f),
                                 shape = RoundedCornerShape(50)
                             )
                     )
@@ -130,7 +130,7 @@ internal fun ChatInputBarNavIndicator(
                     IntOffset(xOffsetPx.roundToInt(), 0)
                 }
                 .background(
-                    color = AppColors.accent.copy(alpha = 0.6f),
+                    color = AppColors.accentGreen.copy(alpha = 0.6f),
                     shape = RoundedCornerShape(1.dp)
                 )
         )

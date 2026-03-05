@@ -57,14 +57,14 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         Icon(
                             imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
                             contentDescription = null,
-                            tint = if (branch.name == currentBranch) AppColors.accent else AppColors.white.copy(alpha = 0.4f),
+                            tint = if (branch.name == currentBranch) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
                     trailing = {
                         if (branch.ahead > 0 || branch.behind > 0) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accent)
+                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
                                 if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.alertRed)
                             }
                         }

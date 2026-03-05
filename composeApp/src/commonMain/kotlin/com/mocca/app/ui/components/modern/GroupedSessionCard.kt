@@ -97,13 +97,13 @@ fun RunningSessionIndicator(
                 modifier = Modifier
                     .size((8 * pulseScale).dp)
                     .alpha(pulseAlpha * 0.5f)
-                    .background(AppColors.accent, CircleShape)
+                    .background(AppColors.accentGreen, CircleShape)
             )
             // Core dot
             Box(
                 modifier = Modifier
                     .size(8.dp)
-                    .background(AppColors.accent, CircleShape)
+                    .background(AppColors.accentGreen, CircleShape)
             )
         }
         
@@ -111,7 +111,7 @@ fun RunningSessionIndicator(
         Text(
             text = statusLabel,
             style = AppTypography.labelSmall,
-            color = AppColors.accent,
+            color = AppColors.accentGreen,
             fontWeight = FontWeight.Bold,
             fontSize = 10.sp,
             letterSpacing = 1.sp
@@ -149,7 +149,7 @@ private fun StackedChildPreview(
                     .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accent
+                            AppColors.accentGreen
                         } else {
                             AppColors.surfaceContainerHigh
                         }
@@ -157,7 +157,7 @@ private fun StackedChildPreview(
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accent
+                            AppColors.accentGreen
                         } else {
                             AppColors.border.copy(alpha = 0.3f)
                         },
@@ -212,7 +212,7 @@ fun GroupedSessionCard(
             val borderModifier = if (isRunning) {
                 parentModifier.border(
                     width = 1.dp,
-                    color = AppColors.accent,
+                    color = AppColors.accentGreen,
                     shape = AppShapes.sessionCard
                 )
             } else {
@@ -229,7 +229,7 @@ fun GroupedSessionCard(
                         if (isActive) {
                             Modifier.drawBehind {
                                 drawRect(
-                                    color = AppColors.accent,
+                                    color = AppColors.accentGreen,
                                     topLeft = Offset(0f, 0f),
                                     size = androidx.compose.ui.geometry.Size(
                                         AppSpacing.activeIndicatorWidth.toPx(),
@@ -293,7 +293,7 @@ fun GroupedSessionCard(
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
-                                        .background(AppColors.accent, CircleShape)
+                                        .background(AppColors.accentGreen, CircleShape)
                                 )
                             }
                         }
@@ -351,12 +351,12 @@ private fun ChildSessionCard(
             .fillMaxWidth()
             .clip(AppShapes.medium)
             .background(
-                if (isRunning) AppColors.accent.copy(alpha = 0.1f)
+                if (isRunning) AppColors.accentGreen.copy(alpha = 0.1f)
                 else AppColors.surfaceVariant
             )
             .border(
                 width = 1.dp,
-                color = if (isRunning) AppColors.accent.copy(alpha = 0.3f)
+                color = if (isRunning) AppColors.accentGreen.copy(alpha = 0.3f)
                 else AppColors.border,
                 shape = AppShapes.medium
             )

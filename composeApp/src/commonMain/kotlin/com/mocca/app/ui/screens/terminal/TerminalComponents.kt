@@ -97,7 +97,7 @@ internal fun TerminalTabItem(
         // Status indicator dot
         val dotColor = when {
             tab.isConnecting -> AppColors.textSecondary
-            tab.isConnected -> AppColors.accent
+            tab.isConnected -> AppColors.accentGreen
             tab.error != null -> AppColors.error
             else -> AppColors.textTertiary
         }
@@ -155,7 +155,7 @@ internal fun TerminalContent(
         fontFamily = FontFamily.Monospace,
         fontSize = 13.sp,
         lineHeight = 18.sp,
-        color = AppColors.accent
+        color = AppColors.accentGreen
     )
 
     Column(modifier = modifier.background(AppColors.background)) {
@@ -263,7 +263,7 @@ internal fun TerminalInputBar(
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 14.sp,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
         )
@@ -280,7 +280,7 @@ internal fun TerminalInputBar(
                 fontSize = 13.sp,
                 color = AppColors.white
             ),
-            cursorBrush = SolidColor(AppColors.accent),
+            cursorBrush = SolidColor(AppColors.accentGreen),
             singleLine = true,
             enabled = isEnabled
         )
@@ -299,7 +299,7 @@ internal fun TerminalInputBar(
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
-                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accent else AppColors.textTertiary,
+                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accentGreen else AppColors.textTertiary,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -340,7 +340,7 @@ internal fun TerminalEmptyState(
                 enabled = !isCreating,
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.accent,
+                    containerColor = AppColors.accentGreen,
                     contentColor = AppColors.background
                 )
             ) {

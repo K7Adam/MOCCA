@@ -48,8 +48,8 @@ fun AgentSelectorBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = AppColors.background,
-        contentColor = AppColors.white,
-        scrimColor = Color.Black.copy(alpha = 0.5f),
+        contentColor = AppColors.textPrimary,
+        scrimColor = AppColors.scrim,
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
         shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     ) {
@@ -70,7 +70,7 @@ fun AgentSelectorBottomSheet(
                 Text(
                     text = "// SELECT AGENT",
                     style = AppTypography.titleMedium,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 MoccaIconButton(
@@ -93,7 +93,7 @@ fun AgentSelectorBottomSheet(
                     Text(
                         text = "// AVAILABLE",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accent,
+                        color = AppColors.accentGreen,
                         modifier = Modifier.padding(start = AppSpacing.sm, top = AppSpacing.sm, bottom = AppSpacing.xs)
                     )
                 }
@@ -107,7 +107,7 @@ fun AgentSelectorBottomSheet(
                                 onModeSelected(mode.id)
                                 onDismiss()
                             }
-                            .background(if (isSelected) AppColors.accent.copy(alpha = 0.2f) else AppColors.background)
+                            .background(if (isSelected) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.background)
                             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -115,11 +115,11 @@ fun AgentSelectorBottomSheet(
                         Text(
                             text = "> ${mode.name.uppercase()}",
                             style = AppTypography.bodySmall,
-                            color = if (isSelected) AppColors.accent else AppColors.white
+                            color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary
                         )
                         
                         if (isSelected) {
-                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accent, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
                         }
                     }
                 }

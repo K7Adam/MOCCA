@@ -277,7 +277,7 @@ internal fun ModernSearchBar(
                 textStyle = AppTypography.labelSmall.copy(
                     color = AppColors.white
                 ),
-                cursorBrush = SolidColor(AppColors.accent),
+                cursorBrush = SolidColor(AppColors.accentGreen),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),

@@ -39,14 +39,14 @@ internal fun DiscoveringStep(
         ) {
             CircularProgressIndicator(
                 modifier = Modifier.fillMaxSize(),
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 strokeWidth = 3.dp
             )
             
             Icon(
                 imageVector = Icons.Default.Wifi,
                 contentDescription = null,
-                tint = AppColors.accent,
+                tint = AppColors.accentGreen,
                 modifier = Modifier.size(48.dp)
             )
         }

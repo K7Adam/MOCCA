@@ -200,7 +200,7 @@ fun ContextWindowBar(
             val progressColor = when {
                 usagePercent > 0.8f -> AppColors.error
                 usagePercent > 0.6f -> AppColors.warning
-                else -> AppColors.accent
+                else -> AppColors.accentGreen
             }
             
             Box(
@@ -211,7 +211,7 @@ fun ContextWindowBar(
                     .background(
                         Brush.horizontalGradient(
                             colors = listOf(
-                                AppColors.accent,
+                                AppColors.accentGreen,
                                 progressColor
                             )
                         ),

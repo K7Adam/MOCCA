@@ -27,7 +27,7 @@ fun TodoToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = part.title ?: "Task List",
         icon = Icons.Default.Checklist,
-        iconTint = AppColors.accent,
+        iconTint = AppColors.accentGreen,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -116,7 +116,7 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = description ?: subagentType ?: part.title,
         icon = Icons.Default.AccountTree,
-        iconTint = AppColors.accent,
+        iconTint = AppColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             if (!subagentType.isNullOrBlank()) {
@@ -164,7 +164,7 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         iconTint = when (part.state) {
             ToolState.PENDING -> AppColors.grey
             ToolState.RUNNING -> AppColors.statusWaiting
-            ToolState.COMPLETED -> AppColors.accent
+            ToolState.COMPLETED -> AppColors.accentGreen
             ToolState.ERROR -> AppColors.error
         },
         modifier = modifier
@@ -236,7 +236,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = "Done: ${completed.size}",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accent
+                        color = AppColors.accentGreen
                     )
                 }
             }
@@ -324,7 +324,7 @@ private fun TodoItemRow(
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accent
+                    tint = AppColors.accentGreen
                 )
             }
             else -> {

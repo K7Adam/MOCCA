@@ -55,7 +55,7 @@ fun UpdateDialog(
             // Header (always visible, not scrollable)
             Text(
                 text = "UPDATE AVAILABLE",
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -131,7 +131,7 @@ fun UpdateDialog(
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
                                     contentDescription = "Copy Logs",
-                                    tint = AppColors.accent,
+                                    tint = AppColors.accentGreen,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -190,7 +190,7 @@ fun UpdateDialog(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Downloading... ${(progress * 100).toInt()}%",
-                            color = AppColors.accent,
+                            color = AppColors.accentGreen,
                             style = AppTypography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -206,7 +206,7 @@ fun UpdateDialog(
                                 modifier = Modifier
                                     .fillMaxWidth(progress)
                                     .fillMaxHeight()
-                                    .background(AppColors.accent, AppShapes.pill)
+                                    .background(AppColors.accentGreen, AppShapes.pill)
                             )
                         }
                     }

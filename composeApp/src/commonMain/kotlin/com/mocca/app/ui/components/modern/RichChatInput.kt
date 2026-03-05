@@ -246,7 +246,7 @@ fun RichChatInput(
                     },
                 enabled = enabled,
                 textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-                cursorBrush = SolidColor(AppColors.accent),
+                cursorBrush = SolidColor(AppColors.accentGreen),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,
                 decorationBox = { innerTextField ->
@@ -307,7 +307,7 @@ fun RichChatInput(
                                 Text(
                                     mode.name.uppercase(),
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
                                 )
                             },
                             onClick = {
@@ -331,7 +331,7 @@ fun RichChatInput(
                 onClick = onSendClick,
                 enabled = enabled && value.isNotBlank(),
                 icon = Icons.AutoMirrored.Filled.Send,
-                backgroundColor = AppColors.accent,
+                backgroundColor = AppColors.accentGreen,
                 textColor = AppColors.background
             )
         }

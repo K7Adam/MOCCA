@@ -61,7 +61,7 @@ internal fun GitStatusSummary(
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             if ((status?.ahead ?: 0) > 0) {
-                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accent.copy(alpha = 0.2f), contentColor = AppColors.accent)
+                                GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accentGreen.copy(alpha = 0.2f), contentColor = AppColors.accentGreen)
                             }
                             if ((status?.behind ?: 0) > 0) {
                                 GodBadge(text = "↓${status?.behind}", containerColor = AppColors.alertRed.copy(alpha = 0.2f), contentColor = AppColors.alertRed)
@@ -72,7 +72,7 @@ internal fun GitStatusSummary(
                         Text(
                             text = "${uiState.stagedCount} staged",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accent.copy(alpha = 0.8f)
+                            color = AppColors.accentGreen.copy(alpha = 0.8f)
                         )
                         Text(
                             text = "${uiState.unstagedCount} modified",
@@ -98,8 +98,8 @@ internal fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accent.copy(alpha = 0.6f), letterSpacing = 1.sp)
-                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accent.copy(alpha = 0.15f), contentColor = AppColors.accent)
+                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f), letterSpacing = 1.sp)
+                        GodBadge(text = "${status.staged.size}", containerColor = AppColors.accentGreen.copy(alpha = 0.15f), contentColor = AppColors.accentGreen)
                     }
                     TextButton(onClick = { screenModel.unstageAll() }) {
                         Text("UNSTAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
@@ -114,7 +114,7 @@ internal fun GitStatusSummary(
                         Icon(
                             imageVector = statusIcon(change.status),
                             contentDescription = null,
-                            tint = AppColors.accent,
+                            tint = AppColors.accentGreen,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -160,7 +160,7 @@ internal fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.stageFile(change.path) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.discardFile(change.path) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
@@ -203,7 +203,7 @@ internal fun GitStatusSummary(
                     },
                     trailing = {
                         IconButton(onClick = { screenModel.stageFile(path) }, modifier = Modifier.size(32.dp)) {
-                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                            Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                         }
                     }
                 )
@@ -260,7 +260,7 @@ internal fun GitStatusSummary(
                     trailing = {
                         Row {
                             IconButton(onClick = { screenModel.popStash(stash.index) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accent.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.dropStash(stash.index) }, modifier = Modifier.size(32.dp)) {
                                 Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))

@@ -55,7 +55,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
                     subtitle = if (selectedIndex == 0) null else "SESSION: $sessionId",
                     actions = {
                         IconButton(onClick = { /* Settings */ }) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.white.copy(alpha = 0.5f))
+                            Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.textPrimary.copy(alpha = 0.5f))
                         }
                     }
                 )
@@ -112,7 +112,7 @@ private fun DashboardContent(sessionId: String) {
                     icon = Icons.Default.Dns,
                     status = "Online",
                     subtitle = "12ms latency",
-                    statusColor = AppColors.accent
+                    statusColor = AppColors.accentGreen
                 )
                 
                 // Skills (1x1)
@@ -129,14 +129,14 @@ private fun DashboardContent(sessionId: String) {
                                 Box(
                                     modifier = Modifier
                                         .size(28.dp)
-                                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.medium)
-                                        .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.medium),
+                                        .background(AppColors.surfaceVariant, AppShapes.medium)
+                                        .border(1.dp, AppColors.border, AppShapes.medium),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = if (it == 0) Icons.Default.Code else if (it == 1) Icons.Default.Terminal else Icons.Default.Dataset,
                                         contentDescription = null,
-                                        tint = AppColors.white.copy(alpha = 0.7f),
+                                        tint = AppColors.textPrimary.copy(alpha = 0.7f),
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -144,10 +144,10 @@ private fun DashboardContent(sessionId: String) {
                             Box(
                                 modifier = Modifier
                                     .size(28.dp)
-                                    .background(AppColors.white.copy(alpha = 0.05f), AppShapes.medium),
+                                    .background(AppColors.surfaceVariant, AppShapes.medium),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("+3", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f), fontSize = 10.sp)
+                                Text("+3", style = AppTypography.labelSmall, color = AppColors.textPrimary.copy(alpha = 0.4f), fontSize = 10.sp)
                             }
                         }
                     }
@@ -167,11 +167,11 @@ private fun DashboardContent(sessionId: String) {
                         Text(
                             text = "feat: modular grid",
                             style = AppTypography.monoLabel,
-                            color = AppColors.white.copy(alpha = 0.7f),
+                            color = AppColors.textPrimary.copy(alpha = 0.7f),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .background(AppColors.surfaceContainer, AppShapes.small)
-                                .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.small)
+                                .border(1.dp, AppColors.border, AppShapes.small)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                         // TODO: Add SVG-like path drawing for git graph
@@ -190,14 +190,14 @@ private fun GodModuleCard(
     modifier: Modifier = Modifier,
     status: String? = null,
     subtitle: String? = null,
-    statusColor: Color = AppColors.white,
+    statusColor: Color = AppColors.textPrimary,
     content: @Composable (ColumnScope.() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,
         color = AppColors.surfaceVariant,
         shape = RoundedCornerShape(32.dp),
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, AppColors.border)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -208,18 +208,18 @@ private fun GodModuleCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .background(AppColors.white.copy(alpha = 0.05f), AppShapes.circle)
-                        .border(1.dp, AppColors.white.copy(alpha = 0.05f), AppShapes.circle),
+                        .background(AppColors.surfaceVariant, AppShapes.circle)
+                        .border(1.dp, AppColors.border, AppShapes.circle),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, contentDescription = null, tint = AppColors.white, modifier = Modifier.size(20.dp))
+                    Icon(icon, contentDescription = null, tint = AppColors.textPrimary, modifier = Modifier.size(20.dp))
                     if (status == "Online") {
                         Box(
                             modifier = Modifier
                                 .size(10.dp)
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
-                                .background(AppColors.accent, AppShapes.circle)
+                                .background(AppColors.accentGreen, AppShapes.circle)
                                 .border(2.dp, AppColors.surfaceVariant, AppShapes.circle)
                         )
                     }
@@ -227,7 +227,7 @@ private fun GodModuleCard(
                 Icon(
                     Icons.Default.DragIndicator,
                     contentDescription = null,
-                    tint = AppColors.white.copy(alpha = 0.1f),
+                    tint = AppColors.textPrimary.copy(alpha = 0.1f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -237,7 +237,7 @@ private fun GodModuleCard(
             Text(
                 text = title,
                 style = AppTypography.labelSmall,
-                color = AppColors.white.copy(alpha = 0.4f),
+                color = AppColors.textPrimary.copy(alpha = 0.4f),
                 letterSpacing = 1.sp
             )
             
@@ -245,7 +245,7 @@ private fun GodModuleCard(
                 Text(
                     text = status,
                     style = AppTypography.titleLarge,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -254,7 +254,7 @@ private fun GodModuleCard(
                 Text(
                     text = subtitle,
                     style = if (title == "MCP SERVER") AppTypography.codeSmall else AppTypography.bodySmall,
-                    color = if (title == "MCP SERVER") AppColors.accent else AppColors.white.copy(alpha = 0.4f)
+                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.textPrimary.copy(alpha = 0.4f)
                 )
             }
             
@@ -278,7 +278,7 @@ private fun GodBottomNavBar(
     Surface(
         color = AppColors.background.copy(alpha = 0.9f),
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.05f))
+        border = BorderStroke(1.dp, AppColors.border)
     ) {
         Row(
             modifier = Modifier
@@ -301,14 +301,14 @@ private fun GodBottomNavBar(
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.label,
-                        tint = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.3f),
+                        tint = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = item.label,
                         style = AppTypography.labelSmall,
-                        color = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.3f),
+                        color = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                         fontSize = 9.sp
                     )

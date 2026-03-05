@@ -143,7 +143,7 @@ fun GodButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = AppColors.accent,
+    containerColor: Color = AppColors.accentGreen,
     contentColor: Color = AppColors.background,
     icon: (@Composable () -> Unit)? = null,
     enabled: Boolean = true

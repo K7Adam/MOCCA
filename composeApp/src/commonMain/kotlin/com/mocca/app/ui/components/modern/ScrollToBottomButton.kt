@@ -70,7 +70,7 @@ fun ScrollToBottomButton(
                             .align(Alignment.TopEnd)
                             .offset(x = (-4).dp, y = 4.dp)
                             .clip(AppShapes.circle)
-                            .background(AppColors.accent)
+                            .background(AppColors.accentGreen)
                             .border(2.dp, AppColors.background, AppShapes.circle)
                     )
                 }

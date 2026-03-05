@@ -207,7 +207,7 @@ private fun WizardProgressIndicator(
             
             val color = when {
                 isCompleted -> AppColors.statusOnline
-                isCurrent -> AppColors.accent
+                isCurrent -> AppColors.accentGreen
                 else -> AppColors.border
             }
             

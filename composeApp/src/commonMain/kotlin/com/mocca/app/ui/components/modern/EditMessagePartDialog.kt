@@ -53,7 +53,7 @@ fun EditMessagePartDialog(
             Text(
                 text = "EDIT PART",
                 style = AppTypography.labelLarge,
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(AppSpacing.md))

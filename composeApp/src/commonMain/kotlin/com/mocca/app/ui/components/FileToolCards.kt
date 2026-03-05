@@ -27,7 +27,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Visibility,
-        iconTint = AppColors.accent,
+        iconTint = AppColors.accentGreen,
         modifier = modifier,
         headerExtra = {
             // Show line range if specified

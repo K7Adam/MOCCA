@@ -40,10 +40,10 @@ fun TabPillButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    activeBackgroundColor: Color = AppColors.accent,
+    activeBackgroundColor: Color = AppColors.accentGreen,
     activeTextColor: Color = AppColors.background,
     inactiveBackgroundColor: Color = Color.Transparent,
-    inactiveBorderColor: Color = AppColors.accent.copy(alpha = 0.4f),
+    inactiveBorderColor: Color = AppColors.accentGreen.copy(alpha = 0.4f),
     inactiveTextColor: Color = AppColors.textSecondary
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -62,7 +62,7 @@ fun TabPillButton(
             )
             .clickable(
                 interactionSource = interactionSource,
-                indication = ripple(color = AppColors.accent.copy(alpha = 0.15f)),
+                indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.15f)),
                 onClick = onClick
             )
             .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
@@ -117,7 +117,7 @@ fun MoccaIconButton(
                         interactionSource = interactionSource,
                         indication = ripple(
                             bounded = true,
-                            color = AppColors.accent.copy(alpha = 0.15f)
+                            color = AppColors.accentGreen.copy(alpha = 0.15f)
                         ),
                         onClick = onClick
                     )
@@ -142,7 +142,7 @@ fun MoccaFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    backgroundColor: Color = AppColors.accent,
+    backgroundColor: Color = AppColors.accentGreen,
     iconColor: Color = AppColors.background,
     size: Dp = AppSpacing.fabSize
 ) {
@@ -196,7 +196,7 @@ fun MoccaTextButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(bounded = true, color = AppColors.accent.copy(alpha = 0.1f)),
+                        indication = ripple(bounded = true, color = AppColors.accentGreen.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
                 } else {

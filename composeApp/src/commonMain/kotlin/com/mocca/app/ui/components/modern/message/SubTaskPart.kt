@@ -52,7 +52,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
     var expanded by remember { mutableStateOf(part.status == SessionStatus.RUNNING) }
 
     val statusColor = when (part.status) {
-        SessionStatus.RUNNING -> AppColors.accent
+        SessionStatus.RUNNING -> AppColors.accentGreen
         SessionStatus.COMPLETED -> AppColors.grey
         SessionStatus.ERROR -> AppColors.error
         SessionStatus.IDLE -> AppColors.textTertiary
@@ -167,7 +167,7 @@ fun ModernSubMessage(message: Message) {
         if (!isUser) {
             Text(
                 text = "•",
-                color = AppColors.accent,
+                color = AppColors.accentGreen,
                 style = AppTypography.bodySmall,
                 modifier = Modifier.padding(end = 4.dp)
             )
@@ -201,7 +201,7 @@ fun ModernSubMessage(message: Message) {
                         Text(
                             text = "{ ${part.title} }",
                             style = AppTypography.labelExtraSmall,
-                            color = AppColors.accent
+                            color = AppColors.accentGreen
                         )
                     }
                     else -> {}

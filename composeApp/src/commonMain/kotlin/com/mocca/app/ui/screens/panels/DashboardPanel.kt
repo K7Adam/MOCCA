@@ -129,13 +129,13 @@ fun DashboardPanel(
                 icon = Icons.Default.Settings,
                 onClick = onSettingsClick,
                 contentDescription = "Settings",
-                iconColor = AppColors.white
+                iconColor = AppColors.textPrimary
             )
             MoccaIconButton(
                 icon = Icons.Default.Terminal,
                 onClick = onTerminalClick,
                 contentDescription = "Terminal",
-                iconColor = AppColors.accent
+                iconColor = AppColors.accentGreen
             )
         }
         
@@ -166,10 +166,10 @@ private fun WorkspaceModule(
                     val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
                     if (active != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusDot(color = AppColors.accent)
+                            StatusDot(color = AppColors.accentGreen)
                             Spacer(Modifier.width(8.dp))
                             Column {
-                                Text(active.displayName.uppercase(), color = AppColors.white, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
+                                Text(active.displayName.uppercase(), color = AppColors.textPrimary, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
                                 Text(active.path ?: active.directory ?: "/", color = AppColors.textSecondary, style = AppTypography.labelSmall)
                             }
                         }
@@ -191,7 +191,7 @@ private fun WorkspaceModule(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text("${agents.data.size} ACTIVE AGENTS", color = AppColors.textSecondary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                         }
-                        Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 2)
+                        Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 2)
                     } else {
                         Text("NO AGENTS ONLINE", color = AppColors.textTertiary, style = AppTypography.labelMedium)
                     }
@@ -219,10 +219,10 @@ private fun CapabilitiesModule(
                 when (tools) {
                     is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accent, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = tools.data.take(3).joinToString("\n") { "• $it" }
                         if (preview.isNotEmpty()) {
-                            Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)
+                            Text(preview, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
                     is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
@@ -236,10 +236,10 @@ private fun CapabilitiesModule(
                 when (commands) {
                     is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${commands.data.size} AVAILABLE", color = AppColors.accent, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${commands.data.size} AVAILABLE", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = commands.data.take(3).joinToString("\n") { "• /${it.name}" }
                         if (preview.isNotEmpty()) {
-                            Text(preview, color = AppColors.white, style = AppTypography.bodySmall, maxLines = 3)
+                            Text(preview, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
                     is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)

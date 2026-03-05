@@ -96,7 +96,7 @@ fun AppearanceSection(
                     )
                     Text(
                         text = "${preferences.fontScalePercent}%",
-                        color = AppColors.accent,
+                        color = AppColors.accentGreen,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -114,8 +114,8 @@ fun AppearanceSection(
                     valueRange = 0.8f..1.4f,
                     steps = 5,
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = AppColors.accent,
-                        activeTrackColor = AppColors.accent,
+                        thumbColor = AppColors.accentGreen,
+                        activeTrackColor = AppColors.accentGreen,
                         inactiveTrackColor = AppColors.greyDark
                     )
                 )

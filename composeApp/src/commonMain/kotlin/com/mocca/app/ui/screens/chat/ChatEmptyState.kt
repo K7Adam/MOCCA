@@ -73,7 +73,7 @@ internal fun ModernBootSequence() {
                 Text(
                     text = line,
                     style = AppTypography.labelExtraSmall,
-                    color = if (index == lines.size - 1) AppColors.accent else AppColors.textTertiary,
+                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textTertiary,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp
                 )

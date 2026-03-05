@@ -44,14 +44,14 @@ class TerminalScreen : Screen {
                             if (state.isCreatingTab) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = AppColors.accent,
+                                    color = AppColors.accentGreen,
                                     strokeWidth = 2.dp
                                 )
                             } else {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "New terminal",
-                                    tint = AppColors.accent,
+                                    tint = AppColors.accentGreen,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -82,7 +82,7 @@ class TerminalScreen : Screen {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 CircularProgressIndicator(
-                                    color = AppColors.accent,
+                                    color = AppColors.accentGreen,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(Modifier.height(12.dp))

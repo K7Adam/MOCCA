@@ -74,9 +74,9 @@ fun ProjectSection(
                         onDone = { onSaveProjectPath() }
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AppColors.accent,
+                        focusedBorderColor = AppColors.accentGreen,
                         unfocusedBorderColor = AppColors.border,
-                        cursorColor = AppColors.accent,
+                        cursorColor = AppColors.accentGreen,
                         focusedContainerColor = AppColors.background,
                         unfocusedContainerColor = AppColors.background
                     ),

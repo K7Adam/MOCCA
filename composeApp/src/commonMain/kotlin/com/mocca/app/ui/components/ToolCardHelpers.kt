@@ -213,7 +213,7 @@ internal fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
                     Icons.Default.Check,
                     contentDescription = null,
                     modifier = Modifier.size(14.dp),
-                    tint = AppColors.accent
+                    tint = AppColors.accentGreen
                 )
             }
         }

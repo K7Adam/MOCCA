@@ -51,7 +51,7 @@ fun MoccaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accent,
+    backgroundColor: Color = AppColors.accentGreen,
     textColor: Color = AppColors.background,
     disabledBackgroundColor: Color = AppColors.greyDark,
     disabledTextColor: Color = AppColors.grey,
@@ -127,7 +127,7 @@ fun MoccaOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    borderColor: Color = AppColors.accent,
+    borderColor: Color = AppColors.accentGreen,
     textColor: Color = AppColors.white,
     disabledBorderColor: Color = AppColors.greyDark,
     disabledTextColor: Color = AppColors.grey,
@@ -158,7 +158,7 @@ fun MoccaOutlinedButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.accent.copy(alpha = 0.15f)),
+                        indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.15f)),
                         onClick = onClick
                     )
                 } else {
@@ -196,7 +196,7 @@ fun MoccaCompactButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accent,
+    backgroundColor: Color = AppColors.accentGreen,
     textColor: Color = AppColors.background,
     height: Dp = MoccaButtonDefaults.HeightCompact,
     paddingHorizontal: Dp = MoccaButtonDefaults.PaddingHorizontal,

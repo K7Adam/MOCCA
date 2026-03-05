@@ -114,7 +114,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.Label,
                         contentDescription = null,
-                        tint = AppColors.accent.copy(alpha = 0.6f)
+                        tint = AppColors.accentGreen.copy(alpha = 0.6f)
                     )
                 },
                 trailing = {

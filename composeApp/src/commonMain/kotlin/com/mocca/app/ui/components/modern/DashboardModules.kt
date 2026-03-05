@@ -120,7 +120,7 @@ fun GitStatusModule(
                     .background(AppColors.border.copy(alpha=0.3f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                StatusDot(color = AppColors.accent)
+                StatusDot(color = AppColors.accentGreen)
                 Text(
                     text = branchName.uppercase(),
                     color = AppColors.white,

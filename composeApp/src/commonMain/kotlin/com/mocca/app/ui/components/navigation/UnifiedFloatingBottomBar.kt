@@ -281,7 +281,7 @@ fun UnifiedFloatingBottomBar(
                     isAgentRunning = !isSessionIdle, // Show indicator when agent is running
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
+                        .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
                 )
             }
         }

@@ -299,7 +299,8 @@ fun ChatContent(
                         .padding(horizontal = AppSpacing.screenPaddingHorizontal),
                     contentPadding = PaddingValues(
                         top = AppSpacing.bottomBarClearance,
-                        bottom = AppSpacing.bottomBarExpandedMinHeight // Space for unified floating bottom bar
+                        // Add extra clearance to ensure the last message clears the compact floating bottom bar (170dp min height)
+                        bottom = AppSpacing.bottomBarExpandedMinHeight + 56.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {

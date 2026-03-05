@@ -52,7 +52,7 @@ internal fun ChatInputTextFieldArea(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = NavConstants.InputFieldMinHeight, max = NavConstants.InputFieldMaxHeight)
-            .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.sm)
+            .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.xs)
     ) {
         val interactionSource = remember { MutableInteractionSource() }
         onInputFocusChanged(interactionSource.collectIsFocusedAsState().value)
@@ -63,7 +63,7 @@ internal fun ChatInputTextFieldArea(
             modifier = Modifier.fillMaxWidth(),
             enabled = inputEnabled,
             textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
-            cursorBrush = SolidColor(AppColors.accent),
+            cursorBrush = SolidColor(AppColors.accentGreen),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
                 Box {
@@ -138,7 +138,7 @@ private fun CommandSuggestionItems(
                         Text(
                             "/${cmd.name}",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accent
+                            color = AppColors.accentGreen
                         )
                         cmd.description?.let { desc ->
                             Text(
@@ -188,7 +188,7 @@ private fun ModeSuggestionItems(
                         Text(
                             mode.name.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
+                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
                         )
                         mode.description?.let { desc ->
                             Text(

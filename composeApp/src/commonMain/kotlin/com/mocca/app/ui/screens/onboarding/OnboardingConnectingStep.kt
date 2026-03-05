@@ -29,7 +29,7 @@ internal fun ConnectingStep(
         verticalArrangement = Arrangement.Center
     ) {
         CircularProgressIndicator(
-            color = AppColors.accent,
+            color = AppColors.accentGreen,
             strokeWidth = 3.dp,
             modifier = Modifier.size(64.dp)
         )

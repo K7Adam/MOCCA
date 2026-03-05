@@ -177,11 +177,11 @@ private fun ToggleActionButton(
         modifier = Modifier
             .size(NavConstants.ActionButtonSize)
             .background(
-                color = if (isActive) AppColors.accent.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
+                color = if (isActive) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
                 shape = AppShapes.pill
             )
             .then(
-                if (isActive) Modifier.border(AppSpacing.borderThin, AppColors.accent, AppShapes.pill) else Modifier
+                if (isActive) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
             )
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -192,7 +192,7 @@ private fun ToggleActionButton(
     ) {
         Text(
             text = text,
-            color = if (isActive) AppColors.accent else AppColors.textSecondary,
+            color = if (isActive) AppColors.accentGreen else AppColors.textSecondary,
             style = AppTypography.labelMedium,
             fontWeight = FontWeight.Bold
         )
@@ -243,7 +243,7 @@ private fun AgentMentionButton(
                                 Text(
                                     mode.name.uppercase(),
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accent else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
                                 )
                                 mode.description?.let { desc ->
                                     Text(
@@ -276,7 +276,7 @@ private fun SendButton(
             .height(NavConstants.SendButtonHeight)
             .then(
                 if (canSend) {
-                    Modifier.background(AppColors.accent, AppShapes.pill)
+                    Modifier.background(AppColors.accentGreen, AppShapes.pill)
                 } else {
                     Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
                 }

@@ -108,7 +108,7 @@ fun MoccaInput(
     val isFocused by interactionSource.collectIsFocusedAsState()
     
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (isFocused) AppColors.accent else borderColor,
+        targetValue = if (isFocused) AppColors.accentGreen else borderColor,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
     )
     val animatedBorderWidth by animateDpAsState(
@@ -144,7 +144,7 @@ fun MoccaInput(
                 if (showPrompt) {
                     Text(
                         text = "> ",
-                        color = AppColors.accent,
+                        color = AppColors.accentGreen,
                         style = AppTypography.bodyMedium
                     )
                 }
@@ -159,7 +159,7 @@ fun MoccaInput(
                         color = AppColors.white
                     ),
                     visualTransformation = visualTransformation,
-                    cursorBrush = SolidColor(AppColors.accent),
+                    cursorBrush = SolidColor(AppColors.accentGreen),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     interactionSource = interactionSource,
@@ -239,7 +239,7 @@ fun CommandLineInput(
             textStyle = AppTypography.bodyMedium.copy(
                 color = AppColors.white
             ),
-            cursorBrush = SolidColor(AppColors.accent),
+            cursorBrush = SolidColor(AppColors.accentGreen),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             decorationBox = { innerTextField ->
@@ -293,7 +293,7 @@ fun CommandLineInput(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = AppSpacing.fabSize,
-            backgroundColor = if (value.isNotBlank()) AppColors.accent else AppColors.greyDark,
+            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.greyDark,
             iconColor = if (value.isNotBlank()) AppColors.background else AppColors.textTertiary
         )
     }
