@@ -12,14 +12,15 @@ import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.ServerConfig
 
 /**
- * Steps in the progressive onboarding wizard.
+ * Steps in the progressive onboarding wizard (simplified 3-step flow).
  */
 enum class OnboardingStep {
+    /** Welcome screen with branding and setup checklist */
     WELCOME,
-    DISCOVERING,
-    SELECT_SERVER,
-    CONNECTING,
-    READY
+    /** Server connection — discovery + manual entry in one screen */
+    CONNECT,
+    /** Active connection attempt with staged progress */
+    CONNECTING
 }
 
 /**
@@ -35,10 +36,13 @@ data class OnboardingWizardState(
     val discoveredServers: ImmutableList<DiscoveredServer> = persistentListOf(),
     val savedServers: ImmutableList<ServerConfig> = persistentListOf(),
     val selectedServer: DiscoveredServer? = null,
+    val isDiscovering: Boolean = false,
     
     // Connection state
     val connectionProgress: String = "",
+    val connectionStage: ConnectionStage = ConnectionStage.SAVING_CONFIG,
     val isConnected: Boolean = false,
+    val isSuccess: Boolean = false,
     
     // Manual entry (fallback)
     val manualHost: String = "",
@@ -48,15 +52,16 @@ data class OnboardingWizardState(
     
     // Credential prompt (for mDNS-discovered servers without credentials)
     val needsCredentials: Boolean = false,
-    val credentialServer: DiscoveredServer? = null
+    val credentialServer: DiscoveredServer? = null,
+    
+    // Manual entry expansion state
+    val showManualEntry: Boolean = false
 ) {
     val canProceed: Boolean
         get() = when (currentStep) {
             OnboardingStep.WELCOME -> true
-            OnboardingStep.DISCOVERING -> discoveredServers.isNotEmpty() || savedServers.isNotEmpty()
-            OnboardingStep.SELECT_SERVER -> selectedServer != null
+            OnboardingStep.CONNECT -> selectedServer != null
             OnboardingStep.CONNECTING -> isConnected
-            OnboardingStep.READY -> true
         }
     
     val hasServers: Boolean
@@ -79,6 +84,18 @@ data class OnboardingWizardState(
 }
 
 /**
+ * Connection stages for the staged progress indicator.
+ */
+enum class ConnectionStage {
+    SAVING_CONFIG,
+    RESOLVING_SERVER,
+    AUTHENTICATING,
+    TESTING_API,
+    CONNECTED,
+    FAILED
+}
+
+/**
  * Actions that can be performed in the onboarding wizard.
  */
 sealed class OnboardingAction {
@@ -92,6 +109,7 @@ sealed class OnboardingAction {
         val useHttps: Boolean = false
     ) : OnboardingAction()
     data class CredentialsProvided(val username: String, val password: String) : OnboardingAction()
+    data object GoToConnect : OnboardingAction()
     data object GoToManualEntry : OnboardingAction()
     data object Connect : OnboardingAction()
     data object RetryConnection : OnboardingAction()

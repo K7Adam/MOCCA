@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SettingsEthernet
 import androidx.compose.material.icons.filled.Wifi
@@ -75,8 +74,8 @@ internal fun SetupChecklist() {
         
         ChecklistItem(
             number = "3",
-            text = "Scan the QR code with this app",
-            subtext = "Point camera at the code on your screen"
+            text = "Connect from this app",
+            subtext = "Auto-discover or enter server details manually"
         )
     }
 }
@@ -134,7 +133,6 @@ internal fun ServerListItem(
 ) {
     val sourceIcon = when (server.source) {
         DiscoverySource.MDNS -> Icons.Default.Wifi
-        DiscoverySource.QR_CODE -> Icons.Default.QrCodeScanner
         DiscoverySource.SAVED -> Icons.Default.Check
         DiscoverySource.MANUAL -> Icons.Default.SettingsEthernet
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
@@ -238,7 +236,7 @@ internal fun CredentialDialog(
     onDismiss: () -> Unit
 ) {
     var username by remember { mutableStateOf(NetworkConfig.DEFAULT_USERNAME) }
-    var password by remember { mutableStateOf(NetworkConfig.DEFAULT_PASSWORD) }
+    var password by remember { mutableStateOf("") }
     
     AlertDialog(
         onDismissRequest = onDismiss,

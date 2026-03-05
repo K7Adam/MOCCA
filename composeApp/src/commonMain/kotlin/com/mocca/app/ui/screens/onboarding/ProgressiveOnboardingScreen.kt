@@ -1,14 +1,16 @@
 package com.mocca.app.ui.screens.onboarding
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,56 +19,78 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
-import kotlinx.coroutines.delay
+import com.mocca.app.ui.theme.AppTypography
+import org.koin.compose.koinInject
+import com.mocca.app.data.repository.ConnectionManager
+import com.mocca.app.data.repository.ServerConfigRepository
+import com.mocca.app.discovery.ServerDiscovery
 
 /**
- * Progressive onboarding screen with wizard-style flow.
- * 
- * Flow:
- * 1. WELCOME - Intro and quick start options
- * 2. DISCOVERING - Auto-scanning for OpenCode servers
- * 3. SELECT_SERVER - Choose from discovered/saved servers or manual entry
- * 4. CONNECTING - Attempting connection with progress
- * 5. READY - Success and transition to main app
+ * Progressive Onboarding Screen — 3-step wizard.
+ *
+ * Flow: WELCOME → CONNECT → CONNECTING (auto-nav to MainScreen on success)
+ *
+ * @param isSetupMode When true, this screen was pushed from MainScreen for re-setup.
+ *                    On completion, pops back instead of replacing.
+ * @param connectionError Optional error message to display from a failed connection.
  */
 class ProgressiveOnboardingScreen(
     private val isSetupMode: Boolean = false,
-    private val initialError: String? = null
+    private val connectionError: String? = null
 ) : Screen {
-    
-    @OptIn(ExperimentalAnimationApi::class)
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val screenModel = koinScreenModel<OnboardingWizardModel>()
+
+        val serverConfigRepository = koinInject<ServerConfigRepository>()
+        val connectionManager = koinInject<ConnectionManager>()
+        val serverDiscovery = koinInject<ServerDiscovery>()
+
+        val screenModel = rememberScreenModel {
+            OnboardingWizardModel(serverConfigRepository, connectionManager, serverDiscovery)
+        }
+
         val state by screenModel.state.collectAsState()
-        
-        // Navigate to main screen when connected
-        LaunchedEffect(state.isConnected, state.currentStep) {
-            if (state.isConnected && state.currentStep == OnboardingStep.READY) {
-                delay(500) // Brief delay for visual feedback
-                
-                // If we were in setup mode on top of MainScreen, just pop. 
-                // If it's the first screen on app launch, replace with MainScreen.
+
+        // Initialize setup mode if needed
+        LaunchedEffect(isSetupMode) {
+            if (isSetupMode) {
+                screenModel.onAction(OnboardingAction.InitializeSetupMode(connectionError))
+            }
+        }
+
+        // Auto-navigate on success
+        LaunchedEffect(state.isSuccess) {
+            if (state.isSuccess) {
                 if (isSetupMode) {
                     navigator.pop()
                 } else {
@@ -74,153 +98,210 @@ class ProgressiveOnboardingScreen(
                 }
             }
         }
-        
-        // Handle Setup Mode initialization
-        LaunchedEffect(isSetupMode) {
-            if (isSetupMode) {
-                screenModel.onAction(OnboardingAction.InitializeSetupMode(initialError))
-            }
-        }
-        
-        // Credential dialog for mDNS-discovered servers
+
+        // Credential dialog
         if (state.needsCredentials && state.credentialServer != null) {
             CredentialDialog(
                 serverName = state.credentialServer!!.name,
                 onConfirm = { username, password ->
-                    screenModel.onAction(
-                        OnboardingAction.CredentialsProvided(username, password)
-                    )
+                    screenModel.onAction(OnboardingAction.CredentialsProvided(username, password))
                 },
                 onDismiss = {
                     screenModel.onAction(OnboardingAction.Back)
                 }
             )
         }
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(AppColors.background, AppColors.surfaceVariant)))
-                .padding(horizontal = AppSpacing.screenPaddingHorizontal)
+                .background(AppColors.background)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            // Progress indicator
-            WizardProgressIndicator(
+            // Step indicator
+            WizardStepIndicator(
                 currentStep = state.currentStep,
-                modifier = Modifier.padding(top = AppSpacing.screenPaddingTop)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = AppSpacing.screenPaddingHorizontal,
+                        vertical = AppSpacing.lg
+                    )
             )
-            
-            Spacer(modifier = Modifier.height(AppSpacing.lg))
-            
-            // Main content with animations
+
+            // Step content with animated transitions
             AnimatedContent(
                 targetState = state.currentStep,
                 transitionSpec = {
-                    slideInHorizontally { width -> width } + fadeIn() togetherWith
-                    slideOutHorizontally { width -> -width } + fadeOut()
+                    val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                    (slideInHorizontally(
+                        animationSpec = tween(300),
+                        initialOffsetX = { fullWidth -> direction * fullWidth }
+                    ) + fadeIn(animationSpec = tween(300)))
+                        .togetherWith(
+                            slideOutHorizontally(
+                                animationSpec = tween(300),
+                                targetOffsetX = { fullWidth -> -direction * fullWidth }
+                            ) + fadeOut(animationSpec = tween(300))
+                        )
                 },
-                modifier = Modifier.weight(1f)
+                label = "onboardingStep"
             ) { step ->
                 when (step) {
-                    OnboardingStep.WELCOME -> WelcomeStep(
-                        onScanQr = { 
-                            navigator.push(QrScannerScreen { discoveredServer ->
-                                screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
-                            })
+                    OnboardingStep.WELCOME -> OnboardingWelcomeStep(
+                        onAutoDiscover = {
+                            screenModel.onAction(OnboardingAction.GoToConnect)
                         },
-                        onStartDiscovery = { screenModel.onAction(OnboardingAction.StartDiscovery) },
-                        onManualEntry = { 
+                        onManualEntry = {
                             screenModel.onAction(OnboardingAction.GoToManualEntry)
                         }
                     )
-                    
-                    OnboardingStep.DISCOVERING -> DiscoveringStep(
-                        isLoading = state.isLoading,
-                        onCancel = { screenModel.onAction(OnboardingAction.Back) }
-                    )
-                    
-                    OnboardingStep.SELECT_SERVER -> SelectServerStep(
-                        servers = state.allServers,
-                        selectedServer = state.selectedServer,
+                    OnboardingStep.CONNECT -> OnboardingConnectStep(
+                        discoveredServers = state.allServers,
+                        isDiscovering = state.isDiscovering,
+                        showManualEntry = state.showManualEntry,
                         error = state.error,
+                        selectedServer = state.selectedServer,
                         onServerSelected = { server ->
                             screenModel.onAction(OnboardingAction.ServerSelected(server))
-                        },
-                        onScanQr = { 
-                            navigator.push(QrScannerScreen { discoveredServer ->
-                                screenModel.onAction(OnboardingAction.ServerSelected(discoveredServer))
-                            })
                         },
                         onManualConnect = { host, port, username, password, useHttps ->
                             screenModel.onAction(
                                 OnboardingAction.ManualConnect(host, port, username, password, useHttps)
                             )
                         },
-                        onRetry = { screenModel.onAction(OnboardingAction.StartDiscovery) }
+                        onRefreshDiscovery = {
+                            screenModel.onAction(OnboardingAction.StartDiscovery)
+                        },
+                        onToggleManualEntry = {
+                            screenModel.onAction(OnboardingAction.GoToManualEntry)
+                        },
+                        onBack = {
+                            screenModel.onAction(OnboardingAction.Back)
+                        }
                     )
-                    
-                    OnboardingStep.CONNECTING -> ConnectingStep(
-                        progress = state.connectionProgress,
-                        onCancel = { screenModel.onAction(OnboardingAction.Back) }
-                    )
-                    
-                    OnboardingStep.READY -> ReadyStep(
-                        onContinue = { 
-                            if (isSetupMode) {
-                                navigator.pop()
-                            } else {
-                                screenModel.onAction(OnboardingAction.Complete)
-                            }
+                    OnboardingStep.CONNECTING -> OnboardingConnectingStep(
+                        connectionStage = state.connectionStage,
+                        connectionProgress = state.connectionProgress,
+                        error = state.error,
+                        isSuccess = state.isSuccess,
+                        onRetry = {
+                            screenModel.onAction(OnboardingAction.RetryConnection)
+                        },
+                        onBack = {
+                            screenModel.onAction(OnboardingAction.Back)
                         }
                     )
                 }
             }
-            
-            // Bottom error message
-            if (state.error != null) {
-                ErrorMessage(
-                    message = state.error!!,
-                    onRetry = { screenModel.onAction(OnboardingAction.RetryConnection) },
-                    modifier = Modifier.padding(bottom = AppSpacing.lg)
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Step Indicator — labeled circles connected by lines
+// ═══════════════════════════════════════════════════════════════════════════════
+
+private val stepLabels = listOf("Welcome", "Connect", "Connecting")
+
+@Composable
+private fun WizardStepIndicator(
+    currentStep: OnboardingStep,
+    modifier: Modifier = Modifier
+) {
+    val currentIndex = currentStep.ordinal
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        OnboardingStep.entries.forEachIndexed { index, step ->
+            val isActive = index == currentIndex
+            val isComplete = index < currentIndex
+
+            // Step circle
+            StepCircle(
+                label = stepLabels.getOrElse(index) { "" },
+                isActive = isActive,
+                isComplete = isComplete,
+                stepNumber = index + 1
+            )
+
+            // Connecting line (except after last step)
+            if (index < OnboardingStep.entries.size - 1) {
+                HorizontalDivider(
+                    modifier = Modifier.width(32.dp),
+                    thickness = 2.dp,
+                    color = if (index < currentIndex) AppColors.accentGreen else AppColors.border
                 )
             }
-            
-            Spacer(modifier = Modifier.height(AppSpacing.screenPaddingBottom))
         }
     }
 }
 
 @Composable
-private fun WizardProgressIndicator(
-    currentStep: OnboardingStep,
-    modifier: Modifier = Modifier
+private fun StepCircle(
+    label: String,
+    isActive: Boolean,
+    isComplete: Boolean,
+    stepNumber: Int
 ) {
-    val steps = OnboardingStep.values()
-    val currentIndex = steps.indexOf(currentStep)
-    
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
+    val scale by animateFloatAsState(
+        targetValue = if (isActive) 1.1f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "stepScale"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
-        steps.forEachIndexed { index, step ->
-            val isCompleted = index < currentIndex
-            val isCurrent = index == currentIndex
-            
-            val color = when {
-                isCompleted -> AppColors.statusOnline
-                isCurrent -> AppColors.accentGreen
-                else -> AppColors.border
-            }
-            
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(color)
-            )
-            
-            if (index < steps.size - 1) {
-                Spacer(modifier = Modifier.width(4.dp))
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .scale(scale)
+                .background(
+                    when {
+                        isComplete -> AppColors.accentGreen
+                        isActive -> AppColors.accent
+                        else -> AppColors.surfaceVariant
+                    },
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isComplete) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Complete",
+                    tint = AppColors.white,
+                    modifier = Modifier.size(16.dp)
+                )
+            } else {
+                Text(
+                    text = "$stepNumber",
+                    style = AppTypography.labelSmall,
+                    color = if (isActive) AppColors.white else AppColors.textTertiary,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
+
+        Text(
+            text = label,
+            style = AppTypography.labelSmall,
+            color = when {
+                isComplete -> AppColors.accentGreen
+                isActive -> AppColors.accent
+                else -> AppColors.textTertiary
+            },
+            textAlign = TextAlign.Center,
+            fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal
+        )
     }
 }

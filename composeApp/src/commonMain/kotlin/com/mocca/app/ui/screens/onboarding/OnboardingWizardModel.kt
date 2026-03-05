@@ -10,7 +10,6 @@ import com.mocca.app.discovery.ServerDiscovery
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
-import com.mocca.app.domain.model.QrConnectionPayload
 import com.mocca.app.domain.model.ServerConfig
 import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.toImmutableList
@@ -24,12 +23,10 @@ import kotlinx.coroutines.launch
 /**
  * ScreenModel for the progressive onboarding wizard.
  *
- * Features:
- * - Step-based wizard flow (Welcome → Discovery → Selection → Connection → Ready)
- * - Automatic server discovery via mDNS
- * - QR code scanning for instant pairing
- * - Manual entry with Host/Port/Username/Password
- * - Robust connection via ConnectionManager.connect() (no race conditions)
+ * Simplified 3-step flow:
+ * - WELCOME: Brand intro + setup checklist
+ * - CONNECT: Auto-discovery (background) + server list + manual entry
+ * - CONNECTING: Staged progress with auto-navigation on success
  */
 class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
@@ -42,17 +39,13 @@ class OnboardingWizardModel(
 
     init {
         loadSavedServers()
-        // Auto-start discovery if available
-        if (serverDiscovery != null) {
-            startDiscovery()
-        }
     }
 
     private fun loadSavedServers() {
         screenModelScope.launch {
             try {
                 val saved = serverConfigRepository.getAllServers()
-                    .filter { it.host.isNotBlank() } // Filter out invalid configs (BUG 5 safety)
+                    .filter { it.host.isNotBlank() }
                 _state.update { it.copy(savedServers = saved.toImmutableList()) }
                 Napier.d("Loaded ${saved.size} saved servers")
             } catch (e: Exception) {
@@ -71,6 +64,7 @@ class OnboardingWizardModel(
             is OnboardingAction.CredentialsProvided -> onCredentialsProvided(
                 action.username, action.password
             )
+            is OnboardingAction.GoToConnect -> goToConnect()
             is OnboardingAction.GoToManualEntry -> goToManualEntry()
             is OnboardingAction.Connect -> connect()
             is OnboardingAction.RetryConnection -> retryConnection()
@@ -86,13 +80,13 @@ class OnboardingWizardModel(
     private fun initializeSetupMode(error: String?) {
         _state.update {
             it.copy(
-                currentStep = OnboardingStep.DISCOVERING,
+                currentStep = OnboardingStep.CONNECT,
                 error = error,
-                isLoading = true // Starting discovery immediately
+                isDiscovering = true
             )
         }
         
-        // Start discovery as if the user clicked "Start"
+        // Start discovery in background
         screenModelScope.launch {
             try {
                 val result = if (serverDiscovery != null) {
@@ -100,15 +94,13 @@ class OnboardingWizardModel(
                 } else {
                     DiscoveryResult(emptyList(), com.mocca.app.discovery.DiscoveryState.STOPPED)
                 }
-
                 onDiscoveryCompleted(result)
             } catch (e: Exception) {
                 Napier.e("Discovery failed", e)
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = "Discovery failed: ${e.message}",
-                        currentStep = OnboardingStep.SELECT_SERVER
+                        isDiscovering = false,
+                        error = "Discovery failed: ${e.message}"
                     )
                 }
             }
@@ -116,14 +108,13 @@ class OnboardingWizardModel(
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // Discovery
+    // Discovery (runs in background on CONNECT step)
     // ═══════════════════════════════════════════════════════════════════════════════
 
     private fun startDiscovery() {
         _state.update {
             it.copy(
-                currentStep = OnboardingStep.DISCOVERING,
-                isLoading = true,
+                isDiscovering = true,
                 error = null
             )
         }
@@ -135,15 +126,13 @@ class OnboardingWizardModel(
                 } else {
                     DiscoveryResult(emptyList(), com.mocca.app.discovery.DiscoveryState.STOPPED)
                 }
-
                 onDiscoveryCompleted(result)
             } catch (e: Exception) {
                 Napier.e("Discovery failed", e)
                 _state.update {
                     it.copy(
-                        isLoading = false,
-                        error = "Discovery failed: ${e.message}",
-                        currentStep = OnboardingStep.SELECT_SERVER
+                        isDiscovering = false,
+                        error = "Discovery failed: ${e.message}"
                     )
                 }
             }
@@ -156,44 +145,15 @@ class OnboardingWizardModel(
         _state.update {
             it.copy(
                 discoveredServers = result.servers.toImmutableList(),
-                isLoading = false,
-                currentStep = OnboardingStep.SELECT_SERVER
+                isDiscovering = false
             )
         }
 
-        // Auto-proceed if we have exactly one server with credentials
+        // Auto-select and connect if exactly one server with credentials
         if (result.servers.size == 1) {
             val server = result.servers.first()
             if (server.password.isNotBlank()) {
                 selectServer(server)
-            }
-            // If no credentials, let user tap to trigger credential prompt
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // QR Code
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    fun onQrCodeScanned(qrContent: String) {
-        Napier.d("QR code scanned: $qrContent")
-
-        val payload = QrConnectionPayload.fromJson(qrContent)
-            ?: QrConnectionPayload.fromUrl(qrContent)
-
-        if (payload != null) {
-            val discovered = payload.toDiscoveredServer()
-            _state.update {
-                it.copy(
-                    discoveredServers = (it.discoveredServers + discovered).toImmutableList(),
-                    selectedServer = discovered
-                )
-            }
-            // QR codes include credentials → connect directly
-            selectServer(discovered)
-        } else {
-            _state.update {
-                it.copy(error = "Invalid QR code format")
             }
         }
     }
@@ -216,7 +176,7 @@ class OnboardingWizardModel(
             return
         }
 
-        // Server has credentials (QR, saved, or manual) → connect directly
+        // Server has credentials (saved, or manual) → connect directly
         _state.update {
             it.copy(
                 selectedServer = server,
@@ -224,6 +184,7 @@ class OnboardingWizardModel(
                 credentialServer = null,
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
+                connectionStage = ConnectionStage.SAVING_CONFIG,
                 connectionProgress = "Connecting to ${server.name}...",
                 error = null
             )
@@ -246,6 +207,7 @@ class OnboardingWizardModel(
                 credentialServer = null,
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
+                connectionStage = ConnectionStage.SAVING_CONFIG,
                 connectionProgress = "Connecting to ${withCreds.name}...",
                 error = null
             )
@@ -254,10 +216,64 @@ class OnboardingWizardModel(
         connectWithConfig(withCreds.toServerConfig())
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // Navigation
+    // ═══════════════════════════════════════════════════════════════════════════════
+
+    private fun goToConnect() {
+        _state.update {
+            it.copy(
+                currentStep = OnboardingStep.CONNECT,
+                error = null
+            )
+        }
+        // Start discovery in background when entering Connect step
+        startDiscovery()
+    }
+
     private fun goToManualEntry() {
         _state.update {
-            it.copy(currentStep = OnboardingStep.SELECT_SERVER, error = null)
+            it.copy(
+                currentStep = OnboardingStep.CONNECT,
+                showManualEntry = true,
+                error = null
+            )
         }
+    }
+
+    private fun goBack() {
+        val currentStep = _state.value.currentStep
+        val previousStep = when (currentStep) {
+            OnboardingStep.CONNECT -> OnboardingStep.WELCOME
+            OnboardingStep.CONNECTING -> OnboardingStep.CONNECT
+            else -> currentStep
+        }
+
+        _state.update {
+            it.copy(
+                currentStep = previousStep,
+                error = null,
+                isLoading = false,
+                needsCredentials = false,
+                credentialServer = null,
+                isSuccess = false,
+                connectionStage = ConnectionStage.SAVING_CONFIG
+            )
+        }
+    }
+
+    private fun skipOnboarding() {
+        _state.update {
+            it.copy(
+                isConnected = true,
+                isSuccess = true,
+                currentStep = OnboardingStep.CONNECTING
+            )
+        }
+    }
+
+    private fun completeOnboarding() {
+        // Navigation to MainScreen is handled by observing isSuccess in the UI
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -272,8 +288,6 @@ class OnboardingWizardModel(
             return
         }
 
-        // Respect user-provided useHttps explicitly instead of auto-detecting Tailscale here.
-        // Tailscale securely encrypts traffic under its own overlay without needing HTTPS/443.
         val effectiveUseHttps = useHttps
         val effectivePort = port
         
@@ -289,8 +303,6 @@ class OnboardingWizardModel(
             isActive = true,
             useHttps = effectiveUseHttps
         )
-        
-        Napier.i("[OnboardingWizard] ServerConfig created - baseUrl: ${config.baseUrl}")
 
         val discovered = DiscoveredServer(
             name = config.name,
@@ -308,6 +320,7 @@ class OnboardingWizardModel(
                 selectedServer = discovered,
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
+                connectionStage = ConnectionStage.SAVING_CONFIG,
                 connectionProgress = "Connecting to $protocol://$host:$effectivePort...",
                 error = null
             )
@@ -317,44 +330,57 @@ class OnboardingWizardModel(
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // Connection (Core fix for BUG 2 — no more race condition)
+    // Connection (with staged progress)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Connect using ConnectionManager.connect() directly.
-     *
-     * This avoids the race condition where checkConnection() reads _activeConfig.value
-     * before the async observeActiveServer() has propagated the new config.
-     *
-     * ConnectionManager.connect(config) directly:
-     * 1. Sets _activeConfig.value = config
-     * 2. Creates a new HttpClient with auth
-     * 3. Calls setActiveServer() to persist
-     * 4. Runs checkConnection() internally
-     */
     private fun connectWithConfig(config: ServerConfig) {
         Napier.i("[OnboardingWizard] connectWithConfig starting for: ${config.baseUrl}")
         screenModelScope.launch {
             try {
+                // Stage 1: Save config
                 _state.update {
-                    it.copy(connectionProgress = "Saving server configuration...")
+                    it.copy(
+                        connectionStage = ConnectionStage.SAVING_CONFIG,
+                        connectionProgress = "Saving server configuration..."
+                    )
                 }
-
-                // 1. Save to DB first
                 Napier.i("[OnboardingWizard] Saving server config to DB...")
                 serverConfigRepository.saveServer(config)
                 Napier.i("[OnboardingWizard] Server config saved")
 
-                // 2. Connect DIRECTLY — this sets _activeConfig, creates client, runs health check
-                _state.update { it.copy(connectionProgress = "Connecting to ${config.name}...") }
+                // Stage 2: Resolve server
+                delay(300) // Brief pause for animation
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.RESOLVING_SERVER,
+                        connectionProgress = "Resolving server..."
+                    )
+                }
+
+                // Stage 3: Authenticate
+                delay(300)
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.AUTHENTICATING,
+                        connectionProgress = "Authenticating..."
+                    )
+                }
+                
                 Napier.i("[OnboardingWizard] Calling connectionManager.connect()...")
                 connectionManager.connect(config)
                 Napier.i("[OnboardingWizard] connectionManager.connect() returned")
 
-                // 3. Poll connection status with timeout
+                // Stage 4: Test API
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.TESTING_API,
+                        connectionProgress = "Testing API connection..."
+                    )
+                }
+
+                // Poll connection status with timeout
                 val maxAttempts = 15  // 15 * 500ms = 7.5s timeout
                 var attempts = 0
-                Napier.i("[OnboardingWizard] Starting connection status polling (max $maxAttempts attempts)")
                 while (attempts < maxAttempts) {
                     delay(500)
                     val status = connectionManager.status.value
@@ -379,13 +405,7 @@ class OnboardingWizardModel(
                             return@launch
                         }
                         else -> {
-                            // Still connecting/reconnecting — keep polling
                             attempts++
-                            _state.update {
-                                it.copy(
-                                    connectionProgress = "Connecting... (${attempts}s)"
-                                )
-                            }
                         }
                     }
                 }
@@ -406,9 +426,6 @@ class OnboardingWizardModel(
         }
     }
 
-    /**
-     * Simple connect using currently selected server.
-     */
     private fun connect() {
         val selected = _state.value.selectedServer
         if (selected != null) {
@@ -419,7 +436,7 @@ class OnboardingWizardModel(
     }
 
     // ═══════════════════════════════════════════════════════════════════════════════
-    // Connection Result Handling
+    // Connection Result — success shows brief animation then auto-completes
     // ═══════════════════════════════════════════════════════════════════════════════
 
     private fun onConnectionResult(success: Boolean, error: String?) {
@@ -428,16 +445,23 @@ class OnboardingWizardModel(
                 it.copy(
                     isConnected = true,
                     isLoading = false,
-                    currentStep = OnboardingStep.READY,
+                    connectionStage = ConnectionStage.CONNECTED,
+                    connectionProgress = "Connected!",
                     error = null
                 )
+            }
+            // Auto-navigate after success animation
+            screenModelScope.launch {
+                delay(1200) // Brief celebration
+                _state.update { it.copy(isSuccess = true) }
             }
         } else {
             _state.update {
                 it.copy(
                     isLoading = false,
+                    connectionStage = ConnectionStage.FAILED,
                     error = error ?: "Connection failed",
-                    currentStep = OnboardingStep.SELECT_SERVER
+                    currentStep = OnboardingStep.CONNECT
                 )
             }
         }
@@ -445,47 +469,9 @@ class OnboardingWizardModel(
 
     private fun retryConnection() {
         _state.update {
-            it.copy(error = null, isLoading = true)
+            it.copy(error = null, isLoading = true, connectionStage = ConnectionStage.SAVING_CONFIG)
         }
         connect()
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // Navigation
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    private fun goBack() {
-        val currentStep = _state.value.currentStep
-        val previousStep = when (currentStep) {
-            OnboardingStep.DISCOVERING -> OnboardingStep.WELCOME
-            OnboardingStep.SELECT_SERVER -> OnboardingStep.WELCOME
-            OnboardingStep.CONNECTING -> OnboardingStep.SELECT_SERVER
-            OnboardingStep.READY -> OnboardingStep.CONNECTING
-            else -> currentStep
-        }
-
-        _state.update {
-            it.copy(
-                currentStep = previousStep,
-                error = null,
-                isLoading = false,
-                needsCredentials = false,
-                credentialServer = null
-            )
-        }
-    }
-
-    private fun skipOnboarding() {
-        _state.update {
-            it.copy(
-                isConnected = true,
-                currentStep = OnboardingStep.READY
-            )
-        }
-    }
-
-    private fun completeOnboarding() {
-        // Navigation to MainScreen is handled by observing isConnected in the UI
     }
 
     fun reset() {

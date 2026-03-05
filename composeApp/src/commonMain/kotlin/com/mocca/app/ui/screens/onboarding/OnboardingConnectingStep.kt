@@ -1,63 +1,270 @@
 package com.mocca.app.ui.screens.onboarding
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.components.modern.MoccaButton
+import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+/**
+ * Connecting step — staged progress visualization with auto-navigation on success.
+ */
 @Composable
-internal fun ConnectingStep(
-    progress: String,
-    onCancel: () -> Unit
+internal fun OnboardingConnectingStep(
+    connectionStage: ConnectionStage,
+    connectionProgress: String,
+    error: String?,
+    isSuccess: Boolean,
+    onRetry: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val successScale by animateFloatAsState(
+        targetValue = if (connectionStage == ConnectionStage.CONNECTED) 1f else 0.5f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "successScale"
+    )
+
     Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CircularProgressIndicator(
-            color = AppColors.accentGreen,
-            strokeWidth = 3.dp,
-            modifier = Modifier.size(64.dp)
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.xxl))
-        
-        Text(
-            text = "Connecting...",
-            style = AppTypography.headlineSmall,
-            color = AppColors.white
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.md))
-        
-        Text(
-            text = progress,
-            style = AppTypography.bodyMedium,
-            color = AppColors.textSecondary,
-            textAlign = TextAlign.Center
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.xxl))
-        
-        Text(
-            text = "Cancel",
-            style = AppTypography.bodyMedium,
-            color = AppColors.textSecondary,
-            modifier = Modifier.clickable(onClick = onCancel)
-        )
+        Spacer(modifier = Modifier.weight(0.2f))
+
+        if (connectionStage == ConnectionStage.CONNECTED) {
+            // ── Success state ──────────────────────────────────────────────
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Connected",
+                tint = AppColors.accentGreen,
+                modifier = Modifier
+                    .size(80.dp)
+                    .scale(successScale)
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+            Text(
+                text = "Connected!",
+                style = AppTypography.headlineMedium,
+                color = AppColors.accentGreen,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+            Text(
+                text = "Launching MOCCA...",
+                style = AppTypography.bodyMedium,
+                color = AppColors.textSecondary,
+                textAlign = TextAlign.Center
+            )
+
+        } else if (connectionStage == ConnectionStage.FAILED) {
+            // ── Error state ──────────────────────────────────────────────
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Failed",
+                tint = AppColors.alertRed,
+                modifier = Modifier.size(64.dp)
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+            Text(
+                text = "Connection Failed",
+                style = AppTypography.headlineMedium,
+                color = AppColors.alertRed,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            if (error != null) {
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Text(
+                    text = error,
+                    style = AppTypography.bodyMedium,
+                    color = AppColors.textSecondary,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+            MoccaButton(
+                text = "Try Again",
+                onClick = onRetry,
+                modifier = Modifier.fillMaxWidth(0.6f)
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+
+            MoccaOutlinedButton(
+                text = "Go Back",
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth(0.6f)
+            )
+
+        } else {
+            // ── Connecting state with staged progress ─────────────────────
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                strokeWidth = 3.dp,
+                color = AppColors.accent
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.xxl))
+
+            Text(
+                text = "Connecting...",
+                style = AppTypography.headlineMedium,
+                color = AppColors.white,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.xxxl))
+
+            // Staged progress items
+            Column(
+                modifier = Modifier.fillMaxWidth(0.8f),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+            ) {
+                StageItem(
+                    label = "Saving configuration...",
+                    isComplete = connectionStage.ordinal > ConnectionStage.SAVING_CONFIG.ordinal,
+                    isActive = connectionStage == ConnectionStage.SAVING_CONFIG,
+                    index = 0
+                )
+                StageItem(
+                    label = "Resolving server...",
+                    isComplete = connectionStage.ordinal > ConnectionStage.RESOLVING_SERVER.ordinal,
+                    isActive = connectionStage == ConnectionStage.RESOLVING_SERVER,
+                    index = 1
+                )
+                StageItem(
+                    label = "Authenticating...",
+                    isComplete = connectionStage.ordinal > ConnectionStage.AUTHENTICATING.ordinal,
+                    isActive = connectionStage == ConnectionStage.AUTHENTICATING,
+                    index = 2
+                )
+                StageItem(
+                    label = "Testing API connection...",
+                    isComplete = connectionStage.ordinal > ConnectionStage.TESTING_API.ordinal,
+                    isActive = connectionStage == ConnectionStage.TESTING_API,
+                    index = 3
+                )
+            }
+
+            Spacer(modifier = Modifier.height(AppSpacing.xxl))
+
+            MoccaOutlinedButton(
+                text = "Cancel",
+                onClick = onBack
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+/**
+ * Individual stage item in the connection progress.
+ */
+@Composable
+private fun StageItem(
+    label: String,
+    isComplete: Boolean,
+    isActive: Boolean,
+    index: Int
+) {
+    AnimatedVisibility(
+        visible = true,
+        enter = fadeIn(animationSpec = tween(300, delayMillis = index * 100)) +
+                slideInVertically(
+                    animationSpec = tween(300, delayMillis = index * 100),
+                    initialOffsetY = { it / 4 }
+                )
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        ) {
+            when {
+                isComplete -> {
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = "Done",
+                        tint = AppColors.accentGreen,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                isActive -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = AppColors.accent
+                    )
+                }
+                else -> {
+                    Spacer(modifier = Modifier.size(20.dp))
+                }
+            }
+
+            Text(
+                text = label,
+                style = AppTypography.bodyMedium,
+                color = when {
+                    isComplete -> AppColors.accentGreen
+                    isActive -> AppColors.white
+                    else -> AppColors.textTertiary
+                },
+                fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
+                modifier = Modifier.alpha(
+                    when {
+                        isComplete -> 0.7f
+                        isActive -> 1f
+                        else -> 0.4f
+                    }
+                )
+            )
+        }
     }
 }

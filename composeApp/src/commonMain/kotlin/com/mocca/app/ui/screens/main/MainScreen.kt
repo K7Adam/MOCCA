@@ -198,7 +198,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                             navigator.push(
                                                 ProgressiveOnboardingScreen(
                                                     isSetupMode = true,
-                                                    initialError = state.connectionError
+                                                    connectionError = state.connectionError
                                                 )
                                             )
                                         }
@@ -235,7 +235,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                             navigator.push(
                                                 ProgressiveOnboardingScreen(
                                                     isSetupMode = true,
-                                                    initialError = state.connectionError
+                                                    connectionError = state.connectionError
                                                 )
                                             )
                                         }

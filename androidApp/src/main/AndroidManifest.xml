@@ -13,10 +13,7 @@
     <!-- Android 16 Live Notification promotion permission -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
     
-    <!-- Camera permission for QR code scanning -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-feature android:name="android.hardware.camera" android:required="false" />
-    
+
     <!-- Multicast permission for mDNS discovery -->
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
