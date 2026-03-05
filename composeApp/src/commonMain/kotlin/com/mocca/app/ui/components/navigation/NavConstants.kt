@@ -56,6 +56,7 @@ object NavConstants {
     val NavigationModeHeight = 68.dp
     
     /** Chat input mode minimum height (expanded) - includes nav row, adjusted for touch-optimized sizes */
+    val ChatInputModeMinHeight = 210.dp
     val ChatInputModeMinHeight = 176.dp
     
     // ═══════════════════════════════════════════════════════════════════════════

@@ -10,8 +10,10 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
@@ -204,78 +206,84 @@ fun UnifiedFloatingBottomBar(
             color = AppColors.surfaceContainer,
             shape = AppShapes.rounded2xl
         ) {
-            // ═══════════════ CHAT INPUT CONTENT (Can auto-hide) ═══════════════
-            // AnimatedVisibility allows the chat input to hide while nav row stays visible
-            // This is the KEY fix: nav row is ALWAYS rendered below this
-            AnimatedVisibility(
-                visible = showChatInput,
-                enter = expandVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    )
-                ) + fadeIn(
-                    animationSpec = tween(220, easing = FastOutSlowInEasing)
-                ),
-                exit = shrinkVertically(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessMediumLow
-                    )
-                ) + fadeOut(
-                    animationSpec = tween(150, easing = FastOutSlowInEasing)
-                )
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Bottom
             ) {
-                ChatInputContent(
-                    inputText = inputText,
-                    onInputTextChange = onInputTextChange,
-                    onSendClick = onSendClick,
-                    inputEnabled = inputEnabled,
-                    placeholder = placeholder,
-                    isSessionIdle = isSessionIdle,
-                    onAbortClick = onAbortClick,
-                    modelName = modelName,
-                    agentName = agentName,
-                    providerResponse = providerResponse,
-                    selectedProviderId = selectedProviderId,
-                    selectedModelId = selectedModelId,
-                    onModelSelected = onModelSelected,
-                    variants = variants,
-                    selectedVariantId = selectedVariantId,
-                    onVariantSelected = onVariantSelected,
-                    modes = modes,
-                    selectedModeId = selectedModeId,
-                    onModeSelected = onModeSelected,
-                    attachedFiles = attachedFiles,
-                    onRemoveAttachment = onRemoveAttachment,
-                    onAttachClick = onAttachClick,
-                    commands = commands,
-                    onCommandSelected = onCommandSelected,
-                    onModeSelectedForMention = onModeSelectedForMention,
-                    shellMode = shellMode,
-                    onShellModeToggle = onShellModeToggle,
-                    planMode = planMode,
-                    onPlanModeToggle = onPlanModeToggle,
-                    onHistoryUp = onHistoryUp,
-                    onHistoryDown = onHistoryDown,
-                    modifier = Modifier.fillMaxWidth()
+                // ═══════════════ CHAT INPUT CONTENT (Can auto-hide) ═══════════════
+                // AnimatedVisibility allows the chat input to hide while nav row stays visible
+                // This is the KEY fix: nav row is ALWAYS rendered below this
+                AnimatedVisibility(
+                    visible = showChatInput,
+                    modifier = Modifier.weight(1f),
+                    enter = expandVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeIn(
+                        animationSpec = tween(220, easing = FastOutSlowInEasing)
+                    ),
+                    exit = shrinkVertically(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessMediumLow
+                        )
+                    ) + fadeOut(
+                        animationSpec = tween(150, easing = FastOutSlowInEasing)
+                    )
+                ) {
+                    ChatInputContent(
+                        inputText = inputText,
+                        onInputTextChange = onInputTextChange,
+                        onSendClick = onSendClick,
+                        inputEnabled = inputEnabled,
+                        placeholder = placeholder,
+                        isSessionIdle = isSessionIdle,
+                        onAbortClick = onAbortClick,
+                        modelName = modelName,
+                        agentName = agentName,
+                        providerResponse = providerResponse,
+                        selectedProviderId = selectedProviderId,
+                        selectedModelId = selectedModelId,
+                        onModelSelected = onModelSelected,
+                        variants = variants,
+                        selectedVariantId = selectedVariantId,
+                        onVariantSelected = onVariantSelected,
+                        modes = modes,
+                        selectedModeId = selectedModeId,
+                        onModeSelected = onModeSelected,
+                        attachedFiles = attachedFiles,
+                        onRemoveAttachment = onRemoveAttachment,
+                        onAttachClick = onAttachClick,
+                        commands = commands,
+                        onCommandSelected = onCommandSelected,
+                        onModeSelectedForMention = onModeSelectedForMention,
+                        shellMode = shellMode,
+                        onShellModeToggle = onShellModeToggle,
+                        planMode = planMode,
+                        onPlanModeToggle = onPlanModeToggle,
+                        onHistoryUp = onHistoryUp,
+                        onHistoryDown = onHistoryDown,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                
+                // ═══════════════ PERSISTENT NAV ROW (ALWAYS VISIBLE!) ═══════════════
+                // This nav row is ALWAYS visible with SAME SIZE and SAME POSITION
+                // It NEVER hides - only the chat input above it can hide
+                // Icons are always 22dp, touch targets always 48dp
+                // Only the labels show/hide based on mode
+                PersistentNavRow(
+                    dragProgress = dragProgress,
+                    onItemClick = onItemClick,
+                    showLabels = showLabels,
+                    isAgentRunning = !isSessionIdle, // Show indicator when agent is running
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
                 )
             }
-            
-            // ═══════════════ PERSISTENT NAV ROW (ALWAYS VISIBLE!) ═══════════════
-            // This nav row is ALWAYS visible with SAME SIZE and SAME POSITION
-            // It NEVER hides - only the chat input above it can hide
-            // Icons are always 22dp, touch targets always 48dp
-            // Only the labels show/hide based on mode
-            PersistentNavRow(
-                dragProgress = dragProgress,
-                onItemClick = onItemClick,
-                showLabels = showLabels,
-                isAgentRunning = !isSessionIdle, // Show indicator when agent is running
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
-            )
         }
     }
 }
