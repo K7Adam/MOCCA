@@ -289,6 +289,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             val isChatInputVisible = scrollDirection != ScrollDirection.UP
 
             // Scroll-to-bottom button overlay
+            // Dynamically positioned above the bottom bar based on its current height
+            val bottomBarHeight = if (isChatInputVisible) {
+                com.mocca.app.ui.components.navigation.NavConstants.ChatInputModeMinHeight
+            } else {
+                com.mocca.app.ui.components.navigation.NavConstants.NavigationModeHeight
+            }
             ScrollToBottomButton(
                 isVisible = showScrollToBottom,
                 hasNewMessages = hasNewMessagesWhileScrolledUp,
@@ -298,12 +304,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     hasNewMessagesWhileScrolledUp = false
                 },
                 modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    // We use ChatInputModeMinHeight to clear the bottom bar
-                    .padding(
-                        bottom = com.mocca.app.ui.components.navigation.NavConstants.ChatInputModeMinHeight + AppSpacing.sm,
-                        end = AppSpacing.lg
-                    )
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+                    .padding(bottom = bottomBarHeight + AppSpacing.sm)
             )
             
             UnifiedFloatingBottomBar(
