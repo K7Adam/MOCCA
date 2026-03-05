@@ -5,6 +5,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
 import androidx.compose.foundation.gestures.Orientation
@@ -79,17 +80,19 @@ fun SwipePanelLayout(
         // Initialize state with spring physics for natural, bouncy panel snapping
         val state = remember(effectivePanelWidthPx) {
             AnchoredDraggableState(
-                initialValue = panelState,
-                positionalThreshold = { distance -> distance * positionalThresholdFraction },
-                velocityThreshold = { velocityThresholdPx },
-                snapAnimationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness = Spring.StiffnessMediumLow
-                ),
-                decayAnimationSpec = androidx.compose.animation.core.exponentialDecay(),
-                confirmValueChange = { true }
+                initialValue = panelState
             )
         }
+        
+        // Create fling behavior with animation specs and thresholds (Separated from state in Compose 1.7+)
+        val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
+            state = state,
+            positionalThreshold = { distance -> distance * positionalThresholdFraction },
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            )
+        )
         
         // Update anchors when panel width changes
         val anchors = DraggableAnchors {
@@ -136,7 +139,8 @@ fun SwipePanelLayout(
                 .fillMaxSize()
                 .anchoredDraggable(
                     state = state,
-                    orientation = Orientation.Horizontal
+                    orientation = Orientation.Horizontal,
+                    flingBehavior = flingBehavior
                 )
         ) {
             // Get current offset (safely handle NaN during init)
