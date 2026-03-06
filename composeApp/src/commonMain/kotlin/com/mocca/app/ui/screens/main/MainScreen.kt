@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -123,6 +124,17 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         var showScrollToBottom by remember { mutableStateOf(false) }
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
+
+        // Reset chat-specific state when navigating away from the chat (CENTER) panel.
+        // This prevents the scroll-to-bottom button from leaking to side panels and
+        // ensures the chat input compacts properly on panel changes.
+        LaunchedEffect(panelState.state) {
+            if (panelState.state != PanelState.CENTER) {
+                scrollDirection = ScrollDirection.IDLE
+                showScrollToBottom = false
+                hasNewMessagesWhileScrolledUp = false
+            }
+        }
 
         // PERFORMANCE FIX: BackHandler to close panels before exiting app
         BackHandler(enabled = panelState.state != PanelState.CENTER) {
@@ -286,7 +298,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             
             // Chat input auto-hides when scrolling up (reading older messages)
             // Nav row stays visible at all times on all screens
-            val isChatInputVisible = scrollDirection != ScrollDirection.UP
+            val isChatInputVisible = panelState.state == PanelState.CENTER && scrollDirection != ScrollDirection.UP
 
             // Scroll-to-bottom button overlay
             // Dynamically positioned above the bottom bar based on its current height
@@ -296,7 +308,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 com.mocca.app.ui.components.navigation.NavConstants.NavigationModeHeight
             }
             ScrollToBottomButton(
-                isVisible = showScrollToBottom,
+                isVisible = showScrollToBottom && panelState.state == PanelState.CENTER,
                 hasNewMessages = hasNewMessagesWhileScrolledUp,
                 onClick = {
                     scrollToBottomTrigger += 1L

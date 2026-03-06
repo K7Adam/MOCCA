@@ -3,6 +3,9 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,8 +39,36 @@ fun ScrollToBottomButton(
 ) {
     AnimatedVisibility(
         visible = isVisible,
-        enter = fadeIn() + scaleIn(),
-        exit = fadeOut() + scaleOut(),
+        enter = slideInVertically(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            initialOffsetY = { it / 2 }
+        ) + fadeIn(
+            animationSpec = tween(220)
+        ) + scaleIn(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            initialScale = 0.8f
+        ),
+        exit = slideOutVertically(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            targetOffsetY = { it / 2 }
+        ) + fadeOut(
+            animationSpec = tween(150)
+        ) + scaleOut(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            targetScale = 0.8f
+        ),
         modifier = modifier
     ) {
         androidx.compose.material3.Surface(
