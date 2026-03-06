@@ -76,7 +76,8 @@ data class OnboardingWizardState(
                     port = config.port,
                     username = config.username,
                     password = config.password,
-                    source = com.mocca.app.domain.model.DiscoverySource.SAVED
+                    source = com.mocca.app.domain.model.DiscoverySource.SAVED,
+                    useHttps = config.useHttps
                 )
             }
             return (savedAsDiscovered + discoveredServers).distinctBy { it.baseUrl }.toImmutableList()

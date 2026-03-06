@@ -44,8 +44,15 @@ class OnboardingWizardModel(
     private fun loadSavedServers() {
         screenModelScope.launch {
             try {
-                val saved = serverConfigRepository.getAllServers()
+                var saved = serverConfigRepository.getAllServers()
                     .filter { it.host.isNotBlank() }
+                
+                // Add default emulator server if missing, ensuring emulator developers always have a quick option
+                val defaultConfig = serverConfigRepository.createDefaultConfig()
+                if (defaultConfig != null && saved.none { it.host == defaultConfig.host && it.port == defaultConfig.port }) {
+                    saved = listOf(defaultConfig) + saved
+                }
+                
                 _state.update { it.copy(savedServers = saved.toImmutableList()) }
                 Napier.d("Loaded ${saved.size} saved servers")
             } catch (e: Exception) {
