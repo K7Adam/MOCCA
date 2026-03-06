@@ -32,6 +32,9 @@ class ServerConfigRepository(
     private val _activeServer = MutableStateFlow<ServerConfig?>(null)
     val activeServer: StateFlow<ServerConfig?> = _activeServer.asStateFlow()
 
+    private val _isLoaded = MutableStateFlow(false)
+    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
+
     init {
         loadActiveServer()
     }
@@ -79,6 +82,8 @@ class ServerConfigRepository(
                 // Set default config (null for physical devices)
                 val default = createDefaultConfig()
                 _activeServer.value = default
+            } finally {
+                _isLoaded.value = true
             }
         }
     }
