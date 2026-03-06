@@ -45,10 +45,10 @@ data class OnboardingWizardState(
     val isSuccess: Boolean = false,
     
     // Manual entry (fallback)
-    val manualHost: String = "",
-    val manualPort: String = "4242",
+    val manualHost: String = NetworkConfig.DEFAULT_HOST_IP,
+    val manualPort: String = NetworkConfig.OPENCODE_SERVER_PORT.toString(),
     val manualUsername: String = NetworkConfig.DEFAULT_USERNAME,
-    val manualPassword: String = "",
+    val manualPassword: String = NetworkConfig.DEFAULT_PASSWORD,
     
     // Credential prompt (for mDNS-discovered servers without credentials)
     val needsCredentials: Boolean = false,
