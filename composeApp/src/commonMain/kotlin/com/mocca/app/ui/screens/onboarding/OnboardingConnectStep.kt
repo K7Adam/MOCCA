@@ -76,10 +76,10 @@ internal fun OnboardingConnectStep(
     val scrollState = rememberScrollState()
 
     // Manual entry fields
-    var host by remember { mutableStateOf("") }
-    var port by remember { mutableStateOf("4242") }
+    var host by remember { mutableStateOf(NetworkConfig.DEFAULT_HOST_IP) }
+    var port by remember { mutableStateOf(NetworkConfig.OPENCODE_SERVER_PORT.toString()) }
     var username by remember { mutableStateOf(NetworkConfig.DEFAULT_USERNAME) }
-    var password by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf(NetworkConfig.DEFAULT_PASSWORD) }
     var useHttps by remember { mutableStateOf(false) }
 
     // Scanning animation
