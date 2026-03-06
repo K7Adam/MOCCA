@@ -309,8 +309,16 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     .padding(bottom = bottomBarHeight + AppSpacing.sm)
             )
             
+            // Determine bottom bar mode based on current panel
+            // Chat input should only be expanded on the chat screen (CENTER panel)
+            val bottomBarMode = if (panelState.state == PanelState.CENTER) {
+                BottomBarMode.ChatInput
+            } else {
+                BottomBarMode.Navigation
+            }
+
             UnifiedFloatingBottomBar(
-                mode = BottomBarMode.ChatInput,
+                mode = bottomBarMode,
                 dragProgress = dragProgress,
                 isChatInputVisible = isChatInputVisible,
                 onItemClick = { panelState.state = it },
