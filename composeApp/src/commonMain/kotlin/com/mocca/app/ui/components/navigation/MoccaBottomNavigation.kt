@@ -154,6 +154,11 @@ fun MoccaBottomNavigation(
                     Box(
                         modifier = Modifier
                             .weight(1f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null, // No ripple for cleaner look
+                                onClick = { onItemClick(item.panelState) }
+                            )
                             .onGloballyPositioned { coords ->
                                 // Calculate the center of this item relative to the parent Row
                                 // parentLayoutCoordinates gives us Row's position
@@ -172,8 +177,7 @@ fun MoccaBottomNavigation(
                         BottomNavItemComponent(
                             item = item,
                             isSelected = isSelected,
-                            proximity = proximity,
-                            onClick = { onItemClick(item.panelState) }
+                            proximity = proximity
                         )
                     }
                 }
@@ -233,10 +237,8 @@ fun MoccaBottomNavigation(
 private fun BottomNavItemComponent(
     item: BottomNavItem,
     isSelected: Boolean,
-    proximity: Float,
-    onClick: () -> Unit
+    proximity: Float
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
 
     // Animated color transition based on selection
     val iconColor by animateColorAsState(
@@ -267,11 +269,6 @@ private fun BottomNavItemComponent(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null, // No ripple for cleaner look
-                onClick = onClick
-            )
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
             .scale(scale)
     ) {

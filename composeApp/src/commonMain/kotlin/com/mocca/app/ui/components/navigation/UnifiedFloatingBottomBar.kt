@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -200,6 +202,17 @@ fun UnifiedFloatingBottomBar(
         val containerModifier = Modifier
             .fillMaxWidth()
             .height(animatedHeight)
+            // INVISIBLE GESTURE SHIELD:
+            // Intercept slight horizontal/vertical finger rolls (wiggles)
+            // so they are NOT stolen by the underlying SwipePanelLayout's anchoredDraggable.
+            .draggable(
+                state = rememberDraggableState { },
+                orientation = androidx.compose.foundation.gestures.Orientation.Horizontal
+            )
+            .draggable(
+                state = rememberDraggableState { },
+                orientation = androidx.compose.foundation.gestures.Orientation.Vertical
+            )
         
         Surface(
             modifier = containerModifier,
@@ -279,9 +292,7 @@ fun UnifiedFloatingBottomBar(
                     onItemClick = onItemClick,
                     showLabels = showLabels,
                     isAgentRunning = !isSessionIdle, // Show indicator when agent is running
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
+                    modifier = Modifier.fillMaxWidth() // Removed internal horizontal/vertical padding to extend touch targets to the pill's edge
                 )
             }
         }

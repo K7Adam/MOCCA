@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -90,7 +91,9 @@ fun PersistentNavRow(
     ) {
         // Navigation items row - ALWAYS same size and position
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f), // Allow the row to take all available space above the indicator
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
@@ -100,7 +103,13 @@ fun PersistentNavRow(
 
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .weight(1f) // 1/3 width
+                        .fillMaxHeight() // Fill available height in the row
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null, // No ripple for cleaner look
+                            onClick = { onItemClick(item.panelState) }
+                        )
                         .onGloballyPositioned { coords ->
                             val center = coords.size.width / 2f
                             if (index == 0) firstItemCenterPx = coords.localToRoot(
@@ -121,7 +130,6 @@ fun PersistentNavRow(
                         isSelected = isSelected,
                         proximity = proximity,
                         showLabel = showLabels,
-                        onClick = { onItemClick(item.panelState) },
                         isAgentRunning = isAgentRunning && item.targetProgress == 0.5f // Show indicator only on CHAT tab
                     )
                 }
@@ -157,11 +165,8 @@ private fun PersistentNavItem(
     isSelected: Boolean,
     proximity: Float,
     showLabel: Boolean,
-    onClick: () -> Unit,
     isAgentRunning: Boolean = false
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-
     // Animated color transition
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
@@ -194,11 +199,6 @@ private fun PersistentNavItem(
             .defaultMinSize(
                 minWidth = NavConstants.TouchTargetMinWidth,
                 minHeight = NavConstants.TouchTargetMinHeight
-            )
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null, // No ripple for cleaner look
-                onClick = onClick
             )
             .padding(
                 horizontal = NavConstants.NavItemPaddingHorizontal,

@@ -63,7 +63,7 @@ object NavConstants {
     // ═══════════════════════════════════════════════════════════════════════════
     
     /** Height of the persistent nav row (icons + labels/indicator) */
-    val NavRowHeight = 48.dp
+    val NavRowHeight = 68.dp
     
     /** Height of nav indicator section */
     val NavIndicatorSectionHeight = 10.dp
