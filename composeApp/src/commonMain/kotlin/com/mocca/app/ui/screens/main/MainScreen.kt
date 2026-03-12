@@ -56,7 +56,11 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.components.modern.ConnectionBannerStatus
 import com.mocca.app.ui.components.modern.ConnectionStatusBanner
+import com.mocca.app.ui.components.modern.ModernTopBar
 import com.mocca.app.ui.components.modern.QuoteRotator
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import com.mocca.app.ui.components.modern.ScrollToBottomButton
 import com.mocca.app.ui.components.modern.UpdateDialog
 
@@ -187,6 +191,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         // Show ChatContent if session is selected (input disabled when not connected)
                         if (state.currentSessionId != null) {
                             Column(modifier = Modifier.fillMaxSize()) {
+                                val currentSession = state.sessions.find { it.id == state.currentSessionId }
+                                ModernTopBar(
+                                    title = currentSession?.title ?: "Chat",
+                                    sessionId = state.currentSessionId
+                                )
+
                                 // Connection status banner at top when not connected
                                 if (!state.isConnected) {
                                     ConnectionStatusBanner(
@@ -323,6 +333,25 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 BottomBarMode.Navigation
             }
 
+            val sharedTransitionScope = LocalSharedTransitionScope.current
+            val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
+            val bottomBarModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                with(sharedTransitionScope) {
+                    Modifier
+                        .align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .sharedBounds(
+                            rememberSharedContentState(key = "bottom_bar"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                }
+            } else {
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .navigationBarsPadding()
+            }
+
             UnifiedFloatingBottomBar(
                 mode = bottomBarMode,
                 dragProgress = dragProgress,
@@ -360,9 +389,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 onPlanModeToggle = { chatScreenModel.togglePlanMode() },
                 onHistoryUp = { chatScreenModel.navigateHistoryUp() },
                 onHistoryDown = { chatScreenModel.navigateHistoryDown() },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
+                modifier = bottomBarModifier
             )
         }
     }

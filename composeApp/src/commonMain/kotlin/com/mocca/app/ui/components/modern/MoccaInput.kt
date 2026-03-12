@@ -72,6 +72,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.innerShadow
 /**
  * Modern MOCCA input components with pill-shaped design.
  * Based on UI overhaul designs - 32dp rounded corners, clean aesthetic.
@@ -134,6 +135,7 @@ fun MoccaInput(
                 .height(AppSpacing.inputHeight)
                 .clip(shape)
                 .background(backgroundColor, shape)
+                .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 6.dp)
                 .border(animatedBorderWidth, animatedBorderColor, shape)
                 .padding(horizontal = AppSpacing.inputPaddingHorizontal)
         ) {
@@ -226,6 +228,7 @@ fun CommandLineInput(
             .fillMaxWidth()
             .clip(shape)
             .background(AppColors.surfaceContainer, shape)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 6.dp)
             .border(AppSpacing.borderThin, AppColors.border, shape)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically

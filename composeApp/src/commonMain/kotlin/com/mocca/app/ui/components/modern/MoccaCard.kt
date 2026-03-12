@@ -21,6 +21,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.components.modern.shimmer
+import com.mocca.app.ui.theme.innerShadow
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -55,6 +56,7 @@ fun MoccaCard(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.2f), blur = 8.dp)
             .border(borderWidth, borderColor, shape)
             .then(if (isLoading) Modifier.shimmer() else Modifier)
             .padding(contentPadding)
@@ -87,6 +89,7 @@ fun MoccaCardElevated(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.3f), blur = 12.dp)
             .border(borderWidth, borderColor, shape)
             .padding(contentPadding),
         content = content

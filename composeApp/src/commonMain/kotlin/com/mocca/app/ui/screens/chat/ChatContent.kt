@@ -233,34 +233,54 @@ fun ChatContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            // Hero Moment: Connection Success
+            // Hero Moment: Connection Success & Completion State
             val isConnected = state.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected
-            var showHeroMoment by remember { mutableStateOf(false) }
+            var showConnectionHero by remember { mutableStateOf(false) }
             LaunchedEffect(isConnected) {
                 if (isConnected) {
-                    showHeroMoment = true
+                    showConnectionHero = true
                     kotlinx.coroutines.delay(2000)
-                    showHeroMoment = false
+                    showConnectionHero = false
+                }
+            }
+
+            var wasNotIdle by remember { mutableStateOf(false) }
+            var showCompletionHero by remember { mutableStateOf(false) }
+            LaunchedEffect(state.isSessionIdle) {
+                if (!state.isSessionIdle) {
+                    wasNotIdle = true
+                } else if (wasNotIdle && state.isSessionIdle) {
+                    wasNotIdle = false
+                    showCompletionHero = true
+                    kotlinx.coroutines.delay(2000)
+                    showCompletionHero = false
                 }
             }
 
             androidx.compose.animation.AnimatedVisibility(
-                visible = showHeroMoment,
+                visible = showConnectionHero || showCompletionHero,
                 enter = fadeIn() + scaleIn(initialScale = 0.8f),
                 exit = fadeOut() + scaleOut(targetScale = 1.2f),
                 modifier = Modifier.align(Alignment.Center).zIndex(100f)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
-                        .background(AppColors.accentGreen.copy(alpha = 0.2f), AppShapes.pill)
-                        .border(2.dp, AppColors.accentGreen, AppShapes.pill),
+                        .background(
+                            if (showConnectionHero) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.accent.copy(alpha = 0.2f),
+                            AppShapes.pill
+                        )
+                        .border(
+                            2.dp,
+                            if (showConnectionHero) AppColors.accentGreen else AppColors.accent,
+                            AppShapes.pill
+                        )
+                        .padding(horizontal = 32.dp, vertical = 24.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "CONNECTED",
+                        text = if (showConnectionHero) "CONNECTED" else "COMPLETED",
                         style = AppTypography.labelLarge,
-                        color = AppColors.accentGreen,
+                        color = if (showConnectionHero) AppColors.accentGreen else AppColors.accent,
                         fontWeight = FontWeight.Bold
                     )
                 }
