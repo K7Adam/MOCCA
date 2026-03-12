@@ -45,6 +45,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.BottomBarMode
 import com.mocca.app.ui.components.navigation.UnifiedFloatingBottomBar
+import com.mocca.app.ui.components.navigation.NavConstants
+import com.mocca.app.ui.theme.AppShapes
 
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
@@ -322,9 +324,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Action FAB Menu overlay
             // Dynamically positioned above the bottom bar based on its current height
             val bottomBarHeight = if (isChatInputVisible) {
-                com.mocca.app.ui.components.navigation.NavConstants.ChatInputModeMinHeight
+                NavConstants.ChatInputModeMinHeight
             } else {
-                com.mocca.app.ui.components.navigation.NavConstants.NavigationModeHeight
+                NavConstants.NavigationModeHeight
             }
             
             var fabMenuExpanded by remember { mutableStateOf(false) }
@@ -405,9 +407,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                                 .size(10.dp)
                                                 .align(Alignment.TopEnd)
                                                 .offset(x = (-4).dp, y = 4.dp)
-                                                .clip(com.mocca.app.ui.theme.AppShapes.circle)
+                                                .clip(AppShapes.circle)
                                                 .background(AppColors.accentGreen)
-                                                .border(2.dp, AppColors.surfaceContainer, com.mocca.app.ui.theme.AppShapes.circle)
+                                                .border(2.dp, AppColors.surfaceContainer, AppShapes.circle)
                                         )
                                     }
                                 }

@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -33,6 +32,7 @@ import com.mocca.app.ui.components.chat.TodoListPanel
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.components.modern.message.*
 import com.mocca.app.ui.theme.*
+import com.mocca.app.util.TimeFormatter
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.screens.files.FilesScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -423,10 +423,10 @@ fun ChatContent(
                             (message.createdAt - prevMessage.createdAt) > 300_000
                         
                         val showDateHeader = if (nextMessage == null) {
-                            com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                            TimeFormatter.formatDate(message.createdAt)
                         } else {
-                            val nextDate = com.mocca.app.util.TimeFormatter.formatDate(nextMessage.createdAt)
-                            val currentDate = com.mocca.app.util.TimeFormatter.formatDate(message.createdAt)
+                            val nextDate = TimeFormatter.formatDate(nextMessage.createdAt)
+                            val currentDate = TimeFormatter.formatDate(message.createdAt)
                             if (nextDate != currentDate) currentDate else null
                         }
 

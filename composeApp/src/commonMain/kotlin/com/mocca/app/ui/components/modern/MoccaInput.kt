@@ -118,7 +118,6 @@ fun MoccaInput(
     )
     
     Column(modifier = modifier) {
-        // Label (uppercase, subtle)
         if (label != null) {
             Text(
                 text = label.uppercase(),
@@ -128,7 +127,6 @@ fun MoccaInput(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
         }
         
-        // Input field with rounded corners
         Box(
             modifier = Modifier
                 .fillMaxWidth()
