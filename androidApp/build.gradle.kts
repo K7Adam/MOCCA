@@ -76,9 +76,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.napier)
 
-    implementation(compose.runtime)
-    implementation(compose.foundation)
-    implementation(compose.material3)
-    implementation(compose.ui)
-    implementation(compose.components.resources)
+    implementation(libs.compose.foundation)
+    implementation(libs.compose.material3.expressive)
+    implementation(libs.compose.ui.graphics)
 }

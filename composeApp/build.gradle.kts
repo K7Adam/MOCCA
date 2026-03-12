@@ -47,15 +47,16 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             // Compose
-            implementation(compose.runtime)
+            implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
+            implementation(libs.compose.ui.graphics)
             implementation(libs.compose.material3.expressive)
             implementation(libs.graphics.shapes)
-            implementation(compose.ui)
+            implementation(libs.compose.ui)
             implementation(libs.compose.ui.text)
-            implementation(compose.materialIconsExtended)
-            implementation(compose.components.resources)
-            implementation(compose.components.uiToolingPreview)
+            implementation(libs.compose.material.icons.extended)
+            implementation(libs.compose.components.resources)
+            implementation(libs.compose.components.uiToolingPreview)
 
             // Ktor Client
             implementation(libs.ktor.client.core)
@@ -125,7 +126,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.androidx.lifecycle.process)
-            implementation(compose.preview)
+            implementation(libs.compose.components.uiToolingPreview)
             implementation(libs.kotlinx.serialization.json)
             
             
