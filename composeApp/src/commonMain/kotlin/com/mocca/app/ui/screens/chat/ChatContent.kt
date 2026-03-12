@@ -39,6 +39,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
+enum class HeroMomentType { NONE, CONNECTED, COMPLETED }
+
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
@@ -101,6 +103,35 @@ fun ChatContent(
     // Auto-scroll state management
     val autoScrollState = rememberAutoScrollState(listState = listState)
     
+    // ─── Hero Moments ─────────────────────────────────────────────────────────
+    var currentHeroMoment by remember { mutableStateOf(HeroMomentType.NONE) }
+
+    // Hero Moment: Connection Success
+    val isConnected = state.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected
+    var lastConnectionState by remember { mutableStateOf(isConnected) }
+    
+    LaunchedEffect(isConnected) {
+        if (isConnected && !lastConnectionState) {
+            currentHeroMoment = HeroMomentType.CONNECTED
+            kotlinx.coroutines.delay(3000)
+            currentHeroMoment = HeroMomentType.NONE
+        }
+        lastConnectionState = isConnected
+    }
+
+    // Hero Moment: Completion State
+    var wasNotIdle by remember { mutableStateOf(false) }
+    LaunchedEffect(state.isSessionIdle) {
+        if (!state.isSessionIdle) {
+            wasNotIdle = true
+        } else if (wasNotIdle && state.isSessionIdle) {
+            wasNotIdle = false
+            currentHeroMoment = HeroMomentType.COMPLETED
+            kotlinx.coroutines.delay(3000)
+            currentHeroMoment = HeroMomentType.NONE
+        }
+    }
+
     // Apply auto-scroll effect - respects user scroll position
     AutoScrollEffect(
         listState = listState,
@@ -232,54 +263,32 @@ fun ChatContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            // Hero Moment: Connection Success & Completion State
-            val isConnected = state.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected
-            var showConnectionHero by remember { mutableStateOf(false) }
-            LaunchedEffect(isConnected) {
-                if (isConnected) {
-                    showConnectionHero = true
-                    kotlinx.coroutines.delay(2000)
-                    showConnectionHero = false
-                }
-            }
-
-            var wasNotIdle by remember { mutableStateOf(false) }
-            var showCompletionHero by remember { mutableStateOf(false) }
-            LaunchedEffect(state.isSessionIdle) {
-                if (!state.isSessionIdle) {
-                    wasNotIdle = true
-                } else if (wasNotIdle && state.isSessionIdle) {
-                    wasNotIdle = false
-                    showCompletionHero = true
-                    kotlinx.coroutines.delay(2000)
-                    showCompletionHero = false
-                }
-            }
-
+            // ─── Expressive Chained Hero Moment ───────────────────────────────────
             androidx.compose.animation.AnimatedVisibility(
-                visible = showConnectionHero || showCompletionHero,
-                enter = fadeIn() + scaleIn(initialScale = 0.8f),
-                exit = fadeOut() + scaleOut(targetScale = 1.2f),
+                visible = currentHeroMoment != HeroMomentType.NONE,
+                enter = fadeIn(MaterialTheme.motionScheme.fastSpatialSpec()) + 
+                        scaleIn(initialScale = 0.5f, animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
+                exit = fadeOut(MaterialTheme.motionScheme.slowSpatialSpec()) + 
+                       scaleOut(targetScale = 1.5f, animationSpec = MaterialTheme.motionScheme.slowSpatialSpec()),
                 modifier = Modifier.align(Alignment.Center).zIndex(100f)
             ) {
-                Box(
-                    modifier = Modifier
-                        .background(
-                            if (showConnectionHero) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.accent.copy(alpha = 0.2f),
-                            AppShapes.pill
-                        )
-                        .border(
-                            2.dp,
-                            if (showConnectionHero) AppColors.accentGreen else AppColors.accent,
-                            AppShapes.pill
-                        )
-                        .padding(horizontal = 32.dp, vertical = 24.dp),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(contentAlignment = Alignment.Center) {
+                    // Background Kinetic Shape
+                    val shape = if (currentHeroMoment == HeroMomentType.CONNECTED) AppShapes.flower else AppShapes.gem
+                    val color = if (currentHeroMoment == HeroMomentType.CONNECTED) AppColors.accentGreen else AppColors.accent
+                    
+                    Box(
+                        modifier = Modifier
+                            .size(240.dp)
+                            .background(color.copy(alpha = 0.15f), shape)
+                            .border(2.dp, color.copy(alpha = 0.3f), shape)
+                    )
+                    
+                    // Reveal Text with Emphasized Typography
                     Text(
-                        text = if (showConnectionHero) "CONNECTED" else "COMPLETED",
-                        style = AppTypography.labelLarge,
-                        color = if (showConnectionHero) AppColors.accentGreen else AppColors.accent,
+                        text = if (currentHeroMoment == HeroMomentType.CONNECTED) "CONNECTED" else "COMPLETED",
+                        style = AppTypography.displayLargeEmphasized,
+                        color = color,
                         fontWeight = FontWeight.Bold
                     )
                 }
