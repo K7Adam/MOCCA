@@ -1,5 +1,6 @@
 package com.mocca.app.ui.theme
 
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Shapes
@@ -20,28 +21,28 @@ object AppShapes {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** No rounding - for specific elements that need sharp corners */
-    val none: Shape = RoundedCornerShape(0.dp)
+    val none: CornerBasedShape = RoundedCornerShape(0.dp)
 
     /** Extra small - 4dp - for inline code, small badges */
-    val extraSmall: Shape = RoundedCornerShape(4.dp)
+    val extraSmall: CornerBasedShape = RoundedCornerShape(4.dp)
 
     /** Small - 8dp - for chips, small cards */
-    val small: Shape = RoundedCornerShape(8.dp)
+    val small: CornerBasedShape = RoundedCornerShape(8.dp)
 
     /** Medium - 12dp - for cards, containers */
-    val medium: Shape = RoundedCornerShape(12.dp)
+    val medium: CornerBasedShape = RoundedCornerShape(12.dp)
 
     /** Large - 16dp - for prominent cards, inputs */
-    val large: Shape = RoundedCornerShape(16.dp)
+    val large: CornerBasedShape = RoundedCornerShape(16.dp)
 
     /** Extra large - 24dp - for modal cards, large containers */
-    val extraLarge: Shape = RoundedCornerShape(24.dp)
+    val extraLarge: CornerBasedShape = RoundedCornerShape(24.dp)
 
     /** XXL - 28dp - for module cards per design specs */
-    val xxl: Shape = RoundedCornerShape(28.dp)
+    val xxl: CornerBasedShape = RoundedCornerShape(28.dp)
 
     /** 2XL - 32dp - for floating inputs, pill containers */
-    val rounded2xl: Shape = RoundedCornerShape(32.dp)
+    val rounded2xl: CornerBasedShape = RoundedCornerShape(32.dp)
 
     // ═══════════════════════════════════════════════════════════════════════════
     // EXPRESSIVE SHAPES (M3 Expressive Library - 35 shapes)
@@ -140,5 +141,5 @@ fun appShapes(): Shapes = Shapes(
     small = AppShapes.small,
     medium = AppShapes.medium,
     large = AppShapes.large,
-    extraLarge = AppShapes.gem // Hero moment shape for XL
+    extraLarge = AppShapes.extraLarge
 )

@@ -36,6 +36,16 @@ object AppTypography {
             Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
         )
 
+    /** Variable Display family for Emphasized styles (Weight, XTRA, Slant) */
+    val displayEmphasized: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(
+                FontVariation.weight(800),
+                FontVariation.Setting("XTRA", 400f),
+                FontVariation.Setting("slnt", -10f)
+            ))
+        )
+
     val displaySemiBold: FontFamily
         @Composable get() = FontFamily(
             Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(FontVariation.weight(600)))
@@ -63,6 +73,15 @@ object AppTypography {
     val displayLarge: TextStyle
         @Composable get() = TextStyle(
             fontFamily = displayBold,
+            fontSize = 32.sp,
+            lineHeight = 38.sp,
+            letterSpacing = (-1.0).sp
+        )
+
+    /** Hero/display text - Emphasized using variable axes */
+    val displayLargeEmphasized: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayEmphasized,
             fontSize = 32.sp,
             lineHeight = 38.sp,
             letterSpacing = (-1.0).sp
@@ -134,6 +153,15 @@ object AppTypography {
     val titleMedium: TextStyle
         @Composable get() = TextStyle(
             fontFamily = displaySemiBold,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.sp
+        )
+
+    /** Medium title - Emphasized list items / critical info */
+    val titleMediumEmphasized: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayEmphasized,
             fontSize = 15.sp,
             lineHeight = 20.sp,
             letterSpacing = 0.sp
