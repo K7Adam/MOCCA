@@ -17,8 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.SplitButtonLayout
@@ -52,7 +53,6 @@ object MoccaButtonDefaults {
     val SpacingIcon: Dp = 6.dp
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MoccaButton(
     text: String,
@@ -135,7 +135,7 @@ fun MoccaButton(
 /**
  * Material 3 Expressive Split Button for Mocca.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun MoccaSplitButton(
     text: String,
@@ -152,10 +152,10 @@ fun MoccaSplitButton(
     SplitButtonLayout(
         modifier = modifier,
         leadingButton = {
-            SplitButtonDefaults.FilledLeadingButton(
+            SplitButtonDefaults.LeadingButton(
                 onClick = onPrimaryClick,
                 enabled = enabled,
-                colors = SplitButtonDefaults.filledLeadingButtonColors(
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                     containerColor = backgroundColor,
                     contentColor = textColor
                 )
@@ -176,11 +176,11 @@ fun MoccaSplitButton(
             }
         },
         trailingButton = {
-            SplitButtonDefaults.FilledTrailingButton(
+            SplitButtonDefaults.TrailingButton(
                 checked = checked,
                 onCheckedChange = { onCheckedChange?.invoke(it) ?: onTrailingClick() },
                 enabled = enabled,
-                colors = SplitButtonDefaults.filledTrailingButtonColors(
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                     containerColor = backgroundColor,
                     contentColor = textColor
                 )

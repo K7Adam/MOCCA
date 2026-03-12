@@ -1,11 +1,11 @@
 package com.mocca.app.ui
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,10 +21,8 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,9 +45,10 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun App() {
     AppTheme {
@@ -90,7 +89,7 @@ fun App() {
  * Brief branded splash shown while the server config loads from the database.
  * Matches the onboarding's visual language for a seamless transition.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 private fun SplashScreen() {
     val infiniteTransition = rememberInfiniteTransition(label = "splash")
@@ -98,7 +97,7 @@ private fun SplashScreen() {
         initialValue = 0.5f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = LinearEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "breatheAlpha"

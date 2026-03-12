@@ -511,7 +511,6 @@ class SessionRepository(
         }
     }
 
-    
     /**
      * Update session title.
      */

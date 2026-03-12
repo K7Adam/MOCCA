@@ -1,11 +1,11 @@
 package com.mocca.app.ui.screens.onboarding
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +31,8 @@ import com.mocca.app.ui.components.modern.MoccaButton
 import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
 
 /**

@@ -55,14 +55,13 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 
 /**
  * Chat input bar reconstructed with Material 3 Expressive HorizontalFloatingToolbar.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun ChatInputBar(
     inputText: String,
@@ -191,8 +190,7 @@ fun ChatInputBar(
     ) {
         HorizontalFloatingToolbar(
             expanded = expanded,
-            containerColor = AppColors.surface,
-            contentColor = AppColors.white,
+            colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
             shape = AppShapes.extraLarge,
             modifier = Modifier.fillMaxWidth()
         ) {

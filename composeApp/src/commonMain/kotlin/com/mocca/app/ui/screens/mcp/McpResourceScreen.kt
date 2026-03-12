@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
@@ -43,7 +42,6 @@ import org.koin.core.parameter.parametersOf
  */
 data class McpResourceScreen(val serverName: String) : Screen {
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -263,7 +261,6 @@ private fun McpResourceItem(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun McpResourceContentPanel(
     resource: McpResource,

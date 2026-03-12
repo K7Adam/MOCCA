@@ -1,5 +1,7 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,10 +26,10 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.getValue
 
 /**
@@ -148,7 +150,6 @@ enum class ModernStatus {
     IDLE
 }
 
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // STATUS DOT
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -173,7 +174,7 @@ fun StatusDot(
                 initialValue = 0.1f,
                 targetValue = 0.4f,
                 animationSpec = infiniteRepeatable(
-                    animation = tween(1500, easing = LinearEasing),
+                    animation = tween(2000, easing = LinearEasing),
                     repeatMode = RepeatMode.Reverse
                 ),
                 label = "dotPulseAlpha"

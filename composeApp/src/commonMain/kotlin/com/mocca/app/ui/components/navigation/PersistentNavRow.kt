@@ -1,16 +1,13 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -53,6 +50,8 @@ import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import kotlin.math.abs
 
 /**
@@ -170,13 +169,13 @@ private fun PersistentNavItem(
     // Animated color transition
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )
 
@@ -184,10 +183,7 @@ private fun PersistentNavItem(
     val targetScale = 1.0f + (proximity * 0.12f)
     val scale by animateFloatAsState(
         targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "scale"
     )
 
@@ -223,7 +219,7 @@ private fun PersistentNavItem(
                     initialValue = 0.8f,
                     targetValue = 1.2f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(500, easing = LinearEasing),
+                        animation = tween(2000, easing = LinearEasing),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseScale"
@@ -232,7 +228,7 @@ private fun PersistentNavItem(
                     initialValue = 0.6f,
                     targetValue = 1f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(500, easing = LinearEasing),
+                        animation = tween(2000, easing = LinearEasing),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseAlpha"

@@ -360,7 +360,6 @@ sealed interface ServerEvent {
         val properties: DisposalProperties
     ) : ServerEvent
 
-
     @Serializable
     @Immutable
     data class Unknown(

@@ -419,7 +419,7 @@ class ConnectionManager(
         // This avoids re-encoding on every HTTP request
         val authHeader = if (config.hasCredentials) {
             val credentials = "${config.username}:${config.password}"
-            @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+            
             val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
             "Basic $encoded"
         } else null

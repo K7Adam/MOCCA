@@ -1,7 +1,8 @@
 package com.mocca.app.ui.screens.terminal
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -77,12 +77,12 @@ internal fun TerminalTabItem(
 ) {
     val bgColor by animateColorAsState(
         targetValue = if (isActive) AppColors.surfaceContainerHigh else Color.Transparent,
-        animationSpec = tween(150),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "tabBg"
     )
     val textColor by animateColorAsState(
         targetValue = if (isActive) AppColors.white else AppColors.textSecondary,
-        animationSpec = tween(150),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "tabText"
     )
 
@@ -312,7 +312,6 @@ internal fun TerminalInputBar(
 // EMPTY STATE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun TerminalEmptyState(
     isCreating: Boolean,

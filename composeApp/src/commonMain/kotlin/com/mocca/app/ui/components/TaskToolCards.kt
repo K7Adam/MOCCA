@@ -1,5 +1,7 @@
 package com.mocca.app.ui.components
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,6 +20,8 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import kotlinx.serialization.json.*
 
 @Composable
@@ -305,7 +309,7 @@ private fun TodoItemRow(
                     initialValue = 0.5f,
                     targetValue = 1f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(800),
+                        animation = tween(2000, easing = LinearEasing),
                         repeatMode = RepeatMode.Reverse
                     )
                 )

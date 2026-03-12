@@ -4,7 +4,6 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -28,6 +27,8 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 
 /**
@@ -304,7 +305,7 @@ fun BlinkingCursor(
         initialValue = 1f,
         targetValue = 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(blinkDurationMs),
+            animation = tween(800, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "cursorAlpha"

@@ -1,11 +1,11 @@
 package com.mocca.app.ui.components.modern
 
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppSpacing
 
 /**
@@ -84,10 +87,7 @@ fun Modifier.shimmer(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = theme.durationMs,
-                easing = theme.easing
-            ),
+            animation = tween(1000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
         ),
         label = "shimmer_progress"

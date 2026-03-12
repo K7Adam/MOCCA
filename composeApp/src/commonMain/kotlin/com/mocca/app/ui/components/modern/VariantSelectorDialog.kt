@@ -25,7 +25,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Terminal-styled variant selection dialog.
  * Shows available variants for the selected model.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun VariantSelectorDialog(
     variants: List<String>,

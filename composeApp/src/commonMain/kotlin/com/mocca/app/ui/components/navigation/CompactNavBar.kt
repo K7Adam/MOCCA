@@ -1,11 +1,9 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -172,13 +170,13 @@ private fun CompactNavItem(
     // Animated color transition
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
-        animationSpec = tween(durationMillis = 150, easing = FastOutSlowInEasing),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )
 
@@ -186,10 +184,7 @@ private fun CompactNavItem(
     val targetScale = 1.0f + (proximity * 0.12f)
     val scale by animateFloatAsState(
         targetValue = targetScale,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "scale"
     )
 

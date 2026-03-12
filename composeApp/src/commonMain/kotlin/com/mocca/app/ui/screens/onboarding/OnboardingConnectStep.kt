@@ -1,12 +1,12 @@
 package com.mocca.app.ui.screens.onboarding
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,7 +30,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Switch
@@ -55,12 +54,14 @@ import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Connect step — unified screen for server discovery (background) + server list + manual entry.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 internal fun OnboardingConnectStep(
     discoveredServers: ImmutableList<DiscoveredServer>,
@@ -90,7 +91,7 @@ internal fun OnboardingConnectStep(
         initialValue = 0.4f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = LinearEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scanAlpha"

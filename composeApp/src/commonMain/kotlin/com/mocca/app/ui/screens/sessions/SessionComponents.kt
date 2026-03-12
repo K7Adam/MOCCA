@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
@@ -42,7 +41,6 @@ import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ModernConnectionProgressContent(
     message: String,
@@ -221,7 +219,6 @@ internal fun ModernStatusChip(status: SessionStatus) {
         )
     }
 }
-
 
 internal fun formatTime(timestamp: Long): String {
     return try {

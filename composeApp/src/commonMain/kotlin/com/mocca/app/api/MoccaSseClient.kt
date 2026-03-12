@@ -157,8 +157,7 @@ class MoccaSseClient(
             // Log and agent events
             "log" -> json.decodeFromString<ServerEvent.Log>(eventData)
             "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(eventData)
-            
-            
+
             // New session lifecycle events
             "session.created" -> json.decodeFromString<ServerEvent.SessionCreated>(eventData)
             "session.status" -> json.decodeFromString<ServerEvent.SessionStatus>(eventData)

@@ -1,10 +1,9 @@
 package com.mocca.app.ui.components.chat
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -16,7 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +44,7 @@ private const val AUTO_APPROVE_TTL_SECONDS = 30
  * @param onDeny          Callback when DENY button is clicked
  * @param modifier        Modifier for styling
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun PermissionBanner(
     permission: PermissionRequest,
@@ -77,17 +75,17 @@ fun PermissionBanner(
     // Animated progress for the countdown ring (1.0 → 0.0)
     val countdownProgress by animateFloatAsState(
         targetValue = if (timerActive) secondsRemaining.toFloat() / AUTO_APPROVE_TTL_SECONDS else 0f,
-        animationSpec = tween(durationMillis = 300),
+        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
         label = "countdown_progress"
     )
 
     AnimatedVisibility(
         visible = true,
         enter = expandVertically(
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         ),
         exit = shrinkVertically(
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         ),
         modifier = modifier
     ) {
@@ -191,10 +189,10 @@ fun PermissionBanner(
                 AnimatedVisibility(
                     visible = isExpanded,
                     enter = expandVertically(
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ),
                     exit = shrinkVertically(
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     )
                 ) {
                     Column(

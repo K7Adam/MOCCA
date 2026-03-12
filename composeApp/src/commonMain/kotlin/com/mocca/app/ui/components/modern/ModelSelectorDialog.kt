@@ -29,7 +29,7 @@ import kotlinx.serialization.json.JsonObject
  * Terminal-styled model selection dialog.
  * Shows available providers and their models for selection.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun ModelSelectorDialog(
     providerResponse: ProviderResponse,

@@ -1,6 +1,5 @@
 package com.mocca.app.ui.components.modern
 
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.runtime.Composable
@@ -57,7 +55,7 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 /**
  * Modern Top Bar reconstructed as an Expressive Morphing Floating Toolbar.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
+
 @Composable
 fun ModernTopBar(
     title: String,
@@ -83,8 +81,7 @@ fun ModernTopBar(
         HorizontalFloatingToolbar(
             expanded = expanded,
             modifier = Modifier.padding(horizontal = AppSpacing.md),
-            containerColor = AppColors.surface,
-            contentColor = AppColors.white,
+            colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
             shape = AppShapes.pill,
         ) {
             Row(
@@ -129,7 +126,6 @@ fun ModernTopBar(
         }
     }
 }
-
 
 /**
  * Simple status line for top of screen (like onboarding).

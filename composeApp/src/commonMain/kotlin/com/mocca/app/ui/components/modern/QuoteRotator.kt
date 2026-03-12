@@ -1,8 +1,9 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 
 /**
@@ -60,7 +61,7 @@ val defaultQuotes = listOf(
  * Rotating quote display with fade animation.
  * Centers content and rotates through quotes.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun QuoteRotator(
     quotes: List<String> = defaultQuotes,
@@ -90,12 +91,11 @@ fun QuoteRotator(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
 
-        
         // Loading indicator (shown under ASCII art when loading)
         AnimatedVisibility(
             visible = isLoading,
-            enter = fadeIn(animationSpec = tween(200)),
-            exit = fadeOut(animationSpec = tween(200))
+            enter = fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(1000))
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -117,14 +117,14 @@ fun QuoteRotator(
         // Rotating quote with fade animation (only show when NOT loading)
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(animationSpec = tween(200)),
-            exit = fadeOut(animationSpec = tween(200))
+            enter = fadeIn(animationSpec = tween(1000)),
+            exit = fadeOut(animationSpec = tween(1000))
         ) {
             AnimatedContent(
                 targetState = currentIndex,
                 transitionSpec = {
-                    (fadeIn(animationSpec = tween(fadeInDurationMs)) togetherWith
-                        fadeOut(animationSpec = tween(fadeOutDurationMs)))
+                    (fadeIn(animationSpec = tween(1000)) togetherWith
+                        fadeOut(animationSpec = tween(1000)))
                         .using(SizeTransform(clip = true))
                 },
                 label = "quoteAnimation"

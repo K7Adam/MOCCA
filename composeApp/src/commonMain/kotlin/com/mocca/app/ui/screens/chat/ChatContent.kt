@@ -1,13 +1,15 @@
 package com.mocca.app.ui.screens.chat
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -37,7 +39,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
@@ -243,7 +244,7 @@ fun ChatContent(
                 }
             }
 
-            AnimatedVisibility(
+            androidx.compose.animation.AnimatedVisibility(
                 visible = showHeroMoment,
                 enter = fadeIn() + scaleIn(initialScale = 0.8f),
                 exit = fadeOut() + scaleOut(targetScale = 1.2f),

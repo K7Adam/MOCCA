@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
@@ -31,8 +30,7 @@ import mocca.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 class SessionsScreen : Screen {
-    
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

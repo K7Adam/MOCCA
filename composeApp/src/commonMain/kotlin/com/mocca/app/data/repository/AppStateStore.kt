@@ -275,7 +275,7 @@ class AppStateStore(
      * PERFORMANCE: Uses debounce(50ms) to batch rapid DB updates into single emission.
      * This prevents UI churn when multiple sessions are inserted in quick succession.
      */
-    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    
     private fun observeLocalCache() {
         // Observe sessions from DB with debounce to batch rapid updates
         storeScope.launch {

@@ -1,5 +1,7 @@
 package com.mocca.app.ui.components
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.*
@@ -10,7 +12,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +28,8 @@ import com.mocca.app.domain.model.ToolState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import kotlinx.serialization.json.*
 
 /**
@@ -92,7 +95,7 @@ internal fun BaseToolCard(
                             initialValue = 0.3f,
                             targetValue = 1f,
                             animationSpec = infiniteRepeatable(
-                                animation = tween(600),
+                                animation = tween(2000, easing = LinearEasing),
                                 repeatMode = RepeatMode.Reverse
                             )
                         )
@@ -160,7 +163,6 @@ internal fun BaseToolCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
     when (state) {

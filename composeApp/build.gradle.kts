@@ -21,7 +21,15 @@ composeCompiler {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
+        freeCompilerArgs.addAll(
+            "-Xexpect-actual-classes",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3Api",
+            "-opt-in=androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
+            "-opt-in=androidx.compose.animation.ExperimentalSharedTransitionApi",
+            "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
+            "-opt-in=kotlin.io.encoding.ExperimentalEncodingApi",
+            "-opt-in=kotlinx.coroutines.FlowPreview"
+        )
     }
 
     androidLibrary {

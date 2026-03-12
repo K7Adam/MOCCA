@@ -1,10 +1,9 @@
 package com.mocca.app.ui.screens.onboarding
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
@@ -51,6 +50,7 @@ import com.mocca.app.ui.theme.AppTypography
 import org.koin.compose.koinInject
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
+import androidx.compose.animation.core.tween
 import com.mocca.app.discovery.ServerDiscovery
 
 /**
@@ -136,14 +136,14 @@ class ProgressiveOnboardingScreen(
                 transitionSpec = {
                     val direction = if (targetState.ordinal > initialState.ordinal) 1 else -1
                     (slideInHorizontally(
-                        animationSpec = tween(300),
+                        animationSpec = tween(400),
                         initialOffsetX = { fullWidth -> direction * fullWidth }
-                    ) + fadeIn(animationSpec = tween(300)))
+                    ) + fadeIn(animationSpec = tween(1000)))
                         .togetherWith(
                             slideOutHorizontally(
-                                animationSpec = tween(300),
+                                animationSpec = tween(400),
                                 targetOffsetX = { fullWidth -> -direction * fullWidth }
-                            ) + fadeOut(animationSpec = tween(300))
+                            ) + fadeOut(animationSpec = tween(1000))
                         )
                 },
                 label = "onboardingStep"
@@ -250,10 +250,7 @@ private fun StepCircle(
 ) {
     val scale by animateFloatAsState(
         targetValue = if (isActive) 1.1f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
-        ),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "stepScale"
     )
 

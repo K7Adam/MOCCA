@@ -1,10 +1,9 @@
 package com.mocca.app.ui.screens.onboarding
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
@@ -41,7 +39,7 @@ import com.mocca.app.ui.theme.AppTypography
 /**
  * Connecting step — staged progress visualization with auto-navigation on success.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 internal fun OnboardingConnectingStep(
     connectionStage: ConnectionStage,
@@ -54,10 +52,7 @@ internal fun OnboardingConnectingStep(
 ) {
     val successScale by animateFloatAsState(
         targetValue = if (connectionStage == ConnectionStage.CONNECTED) 1f else 0.5f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "successScale"
     )
 
@@ -209,7 +204,7 @@ internal fun OnboardingConnectingStep(
 /**
  * Individual stage item in the connection progress.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 private fun StageItem(
     label: String,
@@ -219,9 +214,9 @@ private fun StageItem(
 ) {
     AnimatedVisibility(
         visible = true,
-        enter = fadeIn(animationSpec = tween(300, delayMillis = index * 100)) +
+        enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()) +
                 slideInVertically(
-                    animationSpec = tween(300, delayMillis = index * 100),
+                    animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
                     initialOffsetY = { it / 4 }
                 )
     ) {

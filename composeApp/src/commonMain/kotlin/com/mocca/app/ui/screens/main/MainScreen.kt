@@ -1,6 +1,9 @@
 package com.mocca.app.ui.screens.main
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.runtime.CompositionLocalProvider
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,7 +67,7 @@ import com.mocca.app.ui.components.modern.UpdateDialog
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
+    
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -127,15 +130,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
-// ...
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-// ...
         // Reset chat-specific state
         LaunchedEffect(panelState.state) {
             if (panelState.state != PanelState.CENTER) {
@@ -149,15 +143,7 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
             CompositionLocalProvider(
                 LocalNavAnimatedVisibilityScope provides this
             ) {
-                // Main content wrapped in Box
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AppColors.background)
-                        .statusBarsPadding()
-                ) {
-// ... rest of the content
-            Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(AppColors.background).statusBarsPadding()) {
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════
@@ -292,7 +278,7 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
                     onPanelStateChange = { panelState.state = it },
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
-            } // End of content wrapper
+            // End of content wrapper
 
 
 
@@ -380,4 +366,6 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
             )
         }
     }
+}
+}
 }

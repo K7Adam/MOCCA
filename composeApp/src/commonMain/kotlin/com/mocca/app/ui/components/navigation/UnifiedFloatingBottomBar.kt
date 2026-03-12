@@ -1,11 +1,9 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,7 +31,6 @@ import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
 import com.mocca.app.domain.model.ProviderResponse
-
 
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
@@ -177,17 +174,13 @@ fun UnifiedFloatingBottomBar(
     // Premium smooth height animation with bouncy spring
     val animatedHeight by animateDpAsState(
         targetValue = targetHeight,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioLowBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
+        animationSpec = MaterialTheme.motionScheme.slowSpatialSpec(),
         label = "bottomBarHeight"
     )
     
     // Determine if we should show labels - ALWAYS show labels for better UX
     // Labels help users understand navigation options in all modes
     val showLabels = true
-    
 
     
     Box(
@@ -230,20 +223,14 @@ fun UnifiedFloatingBottomBar(
                     visible = showChatInput,
                     modifier = Modifier.weight(1f),
                     enter = expandVertically(
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ) + fadeIn(
-                        animationSpec = tween(220, easing = FastOutSlowInEasing)
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ),
                     exit = shrinkVertically(
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMediumLow
-                        )
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ) + fadeOut(
-                        animationSpec = tween(150, easing = FastOutSlowInEasing)
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
                     )
                 ) {
                     ChatInputContent(

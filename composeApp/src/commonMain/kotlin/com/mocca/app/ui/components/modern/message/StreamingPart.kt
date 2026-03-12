@@ -1,10 +1,11 @@
 package com.mocca.app.ui.components.modern.message
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.screens.chat.MarkdownText
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
 
 // ---------------------------------------------------------------------------
@@ -50,7 +53,7 @@ fun ModernStreamingMessage(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(500),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "cursorAlpha"

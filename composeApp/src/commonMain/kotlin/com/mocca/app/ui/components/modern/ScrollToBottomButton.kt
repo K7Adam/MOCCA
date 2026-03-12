@@ -2,10 +2,9 @@
 
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.*
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,33 +39,21 @@ fun ScrollToBottomButton(
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
             initialOffsetY = { it / 2 }
         ) + fadeIn(
-            animationSpec = tween(220)
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         ) + scaleIn(
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
             initialScale = 0.8f
         ),
         exit = slideOutVertically(
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
             targetOffsetY = { it / 2 }
         ) + fadeOut(
-            animationSpec = tween(150)
+            animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
         ) + scaleOut(
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
             targetScale = 0.8f
         ),
         modifier = modifier

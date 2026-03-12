@@ -22,7 +22,6 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.components.modern.shimmer
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.expandVertically
@@ -62,8 +61,8 @@ fun MoccaCard(
     ) {
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(tween(300)) + expandVertically(),
-            exit = fadeOut(tween(200)) + shrinkVertically()
+            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandVertically(),
+            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + shrinkVertically()
         ) {
             Column(content = content)
         }

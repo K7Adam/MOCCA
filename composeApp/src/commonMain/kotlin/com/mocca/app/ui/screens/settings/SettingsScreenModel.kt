@@ -479,7 +479,6 @@ class SettingsScreenModel(
         }
     }
 
-    
     fun checkForUpdates() {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, message = "Checking for updates...")
@@ -710,7 +709,7 @@ class SettingsScreenModel(
                     defaultRequest {
                         if (server.hasCredentials) {
                             val credentials = "${server.username}:${server.password}"
-                            @OptIn(kotlin.io.encoding.ExperimentalEncodingApi::class)
+                            
                             val encoded = kotlin.io.encoding.Base64.Default.encode(credentials.encodeToByteArray())
                             header(io.ktor.http.HttpHeaders.Authorization, "Basic $encoded")
                         }

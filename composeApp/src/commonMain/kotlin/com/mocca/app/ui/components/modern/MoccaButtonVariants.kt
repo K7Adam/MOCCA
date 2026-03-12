@@ -1,7 +1,8 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -93,7 +94,7 @@ fun MoccaIconButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.9f else 1f,
-        animationSpec = tween(100),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconButtonScale"
     )
     
@@ -150,7 +151,7 @@ fun MoccaFab(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.95f else 1f,
-        animationSpec = tween(100),
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "fabScale"
     )
     

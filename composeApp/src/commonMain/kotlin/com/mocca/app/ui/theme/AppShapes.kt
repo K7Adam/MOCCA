@@ -1,7 +1,6 @@
 package com.mocca.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.toShape
@@ -13,7 +12,7 @@ import androidx.compose.ui.unit.dp
  * MOCCA Shapes - Modern rounded corners and expressive shapes design system.
  * Features standard rounded aesthetic (16dp-32dp) and M3 Expressive shape library.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 object AppShapes {
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -135,7 +134,7 @@ object AppShapes {
 /**
  * Creates Material3 Shapes with modern rounded corners and expressive extensions.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 fun appShapes(): Shapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(8.dp),

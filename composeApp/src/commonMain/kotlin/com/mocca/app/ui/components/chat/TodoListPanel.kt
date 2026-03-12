@@ -1,10 +1,10 @@
 package com.mocca.app.ui.components.chat
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
@@ -56,17 +56,17 @@ fun TodoListPanel(
     // Animated corner radius for smooth expansion
     val cornerRadius by animateDpAsState(
         targetValue = if (isExpanded) 16.dp else 12.dp,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
         label = "cornerRadius"
     )
     
     AnimatedVisibility(
         visible = isVisible && todos.isNotEmpty(),
         enter = expandVertically(
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         ),
         exit = shrinkVertically(
-            animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         ),
         modifier = modifier
     ) {
@@ -141,10 +141,10 @@ fun TodoListPanel(
                 AnimatedVisibility(
                     visible = isExpanded,
                     enter = expandVertically(
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ),
                     exit = shrinkVertically(
-                        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy)
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     )
                 ) {
                     Column(

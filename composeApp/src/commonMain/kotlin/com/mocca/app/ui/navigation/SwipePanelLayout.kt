@@ -1,9 +1,7 @@
 package com.mocca.app.ui.navigation
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
 import androidx.compose.foundation.gestures.AnchoredDraggableState
@@ -48,7 +46,7 @@ enum class PanelState {
  * - Velocity-based navigation — fling gestures work naturally
  * - Real-time progress reporting for external indicator sync
  */
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun SwipePanelLayout(
     leftPanel: @Composable () -> Unit,
@@ -88,10 +86,7 @@ fun SwipePanelLayout(
         val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
             state = state,
             positionalThreshold = { distance -> distance * positionalThresholdFraction },
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
+            animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
         )
         
         // Update anchors when panel width changes

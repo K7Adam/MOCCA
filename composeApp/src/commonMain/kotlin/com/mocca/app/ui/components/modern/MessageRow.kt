@@ -1,6 +1,5 @@
 package com.mocca.app.ui.components.modern
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -106,7 +105,7 @@ private fun formatTime(timestamp: Long): String {
  * - User messages: subtle surfaceContainerHigh tint, 85% width, end-aligned
  * - Max nesting depth: 3-4 levels
  */
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun MessageRow(
     message: Message,
@@ -215,7 +214,6 @@ private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Bool
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun UserMessageContent(
     message: Message,
@@ -242,7 +240,6 @@ private fun UserMessageContent(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AgentMessageContent(
     message: Message,

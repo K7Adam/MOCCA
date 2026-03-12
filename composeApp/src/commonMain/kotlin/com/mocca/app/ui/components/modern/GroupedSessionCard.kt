@@ -1,13 +1,12 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -53,12 +52,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
 /**
  * Card component for displaying a session group with parent-child hierarchy.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+
 @Composable
 fun GroupedSessionCard(
     group: SessionGroup,
@@ -245,7 +246,7 @@ fun RunningSessionIndicator(
         initialValue = 0.4f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
@@ -255,7 +256,7 @@ fun RunningSessionIndicator(
         initialValue = 1f,
         targetValue = 1.3f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
@@ -341,7 +342,7 @@ private fun StackedChildPreview(
 /**
  * Compact card for child/sub sessions.
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
+
 @Composable
 private fun ChildSessionCard(
     session: Session,

@@ -26,7 +26,6 @@ import com.mocca.app.ui.components.RichToolCard
 import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.material.icons.filled.CallSplit
 import androidx.compose.material.icons.filled.Undo
@@ -34,7 +33,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 
 @Deprecated("Use MessageRow from modern package", replaceWith = ReplaceWith("MessageRow"))
-@OptIn(ExperimentalFoundationApi::class)
+
 @Composable
 fun LegacyMessageBubble(
     message: Message,
@@ -195,9 +194,7 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
     }
 }
 
-
 // ToolInvocationBlock removed, replaced by RichToolCard
-
 
 @Composable
 fun ToolResultBlock(part: MessagePart.ToolResult) {

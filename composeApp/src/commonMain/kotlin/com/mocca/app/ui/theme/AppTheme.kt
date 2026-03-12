@@ -1,7 +1,6 @@
 package com.mocca.app.ui.theme
 
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
@@ -95,7 +94,7 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
  * - Extended colors for app-specific elements
  * - Material 3 Expressive Motion
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun AppTheme(
     content: @Composable () -> Unit

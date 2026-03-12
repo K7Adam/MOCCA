@@ -1,11 +1,11 @@
 package com.mocca.app.ui.components.modern
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -19,6 +19,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import com.mocca.app.data.GlobalActivityManager
 import com.mocca.app.ui.theme.AppColors
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import org.koin.compose.koinInject
 
 /**
@@ -41,7 +43,7 @@ fun GlobalActivityIndicator(
         initialValue = 0.3f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 600, easing = LinearEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "activity_alpha"
@@ -75,7 +77,7 @@ fun CompactActivityIndicator(
         initialValue = 0.4f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 400, easing = LinearEasing),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "compact_activity_alpha"

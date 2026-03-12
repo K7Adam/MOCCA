@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.*
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -90,7 +89,6 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
 // ContextToolGroup — collapsible card grouping consecutive tool calls
 // ---------------------------------------------------------------------------
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>) {
     if (tools.isEmpty()) return

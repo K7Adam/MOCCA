@@ -18,12 +18,11 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 /**
  * Modern processing indicator using M3 Expressive path-morphing LoadingIndicator.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+
 @Composable
 fun ModernProcessingIndicator() {
     Row(

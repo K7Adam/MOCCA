@@ -1,11 +1,12 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.material3.MaterialTheme
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -42,6 +43,8 @@ import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
 
 /**
@@ -58,7 +61,7 @@ fun ModernThinkingIndicator(
         initialValue = 0.3f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000),
+            animation = tween(2000, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseAlpha"
@@ -135,7 +138,7 @@ private fun ExpandableThinkingPreview(content: String) {
         AnimatedContent(
             targetState = displayContent,
             transitionSpec = {
-                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+                fadeIn(animationSpec = tween(1000)) togetherWith fadeOut(animationSpec = tween(1000))
             },
             label = "thinkingContent"
         ) { text ->

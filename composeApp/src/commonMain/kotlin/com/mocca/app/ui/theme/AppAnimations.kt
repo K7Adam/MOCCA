@@ -6,12 +6,10 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 object AppAnimations {
     const val DurationFast = 150
     const val DurationMedium = 300
@@ -103,15 +101,12 @@ object AppEasing {
     val Smooth = tween<Float>(durationMillis = 300, easing = FastOutSlowInEasing)
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun rememberDefaultSpatialSpec() = AppAnimations.spatialDefault
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun rememberFastSpatialSpec() = AppAnimations.spatialFast
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun rememberDefaultEffectsSpec() = AppAnimations.effectsDefault
 
