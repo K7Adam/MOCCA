@@ -220,7 +220,8 @@ private fun UserMessageContent(
     onFileClick: ((String) -> Unit)?,
     onLongClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(topStart = 16.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp)
+    // Content Grouping: Sharp top-right for User
+    val shape = RoundedCornerShape(topStart = 24.dp, topEnd = 2.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
 
     Box(
         modifier = Modifier
@@ -247,21 +248,28 @@ private fun AgentMessageContent(
     onFileClick: ((String) -> Unit)?,
     onLongClick: () -> Unit
 ) {
-    Column(
+    // Content Grouping: Sharp top-left for Agent
+    val shape = RoundedCornerShape(topStart = 2.dp, topEnd = 24.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(shape)
+            .background(AppColors.surfaceContainerLow.copy(alpha = 0.5f), shape)
             .combinedClickable(onClick = {}, onLongClick = onLongClick)
-            .padding(horizontal = AppSpacing.lg)
+            .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.md)
     ) {
-        val partGroups = remember(message.parts) { groupParts(message.parts) }
-        partGroups.forEach { group ->
-            RenderPartGroup(group = group, onFileClick = onFileClick)
-            Spacer(modifier = Modifier.height(AppSpacing.xs))
-        }
+        Column {
+            val partGroups = remember(message.parts) { groupParts(message.parts) }
+            partGroups.forEach { group ->
+                RenderPartGroup(group = group, onFileClick = onFileClick)
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
+            }
 
-        // Token count footer
-        if (showTokenCounts && message.tokens != null) {
-            TokenCountFooter(tokens = message.tokens)
+            // Token count footer
+            if (showTokenCounts && message.tokens != null) {
+                TokenCountFooter(tokens = message.tokens)
+            }
         }
     }
 }

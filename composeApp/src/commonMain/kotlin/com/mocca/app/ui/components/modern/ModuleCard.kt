@@ -34,6 +34,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+import com.mocca.app.ui.theme.innerShadow
+
 /**
  * Module card components for the right swipe dashboard panel.
  * Modern design: Rounded cards, clean headers.
@@ -46,7 +48,7 @@ import com.mocca.app.ui.theme.AppTypography
 /**
  * Module card for the modular dashboard.
  * Contains a header with icon and optional action button, plus content area.
- * 28dp rounded corners.
+ * Now using M3 Expressive Gem shape and inner shadow.
  */
 @Composable
 fun ModuleCard(
@@ -59,9 +61,10 @@ fun ModuleCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(AppShapes.moduleCard)
-            .background(AppColors.moduleBackground, AppShapes.moduleCard)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.moduleCard)
+            .clip(AppShapes.large)
+            .background(AppColors.moduleBackground, AppShapes.large)
+            .innerShadow(AppShapes.large, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
+            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.3f), AppShapes.large)
     ) {
         // Header
         Row(

@@ -134,11 +134,11 @@ object AppShapes {
 /**
  * Creates Material3 Shapes with modern rounded corners and expressive extensions.
  */
-
+@Composable
 fun appShapes(): Shapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(24.dp)
+    extraSmall = AppShapes.extraSmall,
+    small = AppShapes.small,
+    medium = AppShapes.medium,
+    large = AppShapes.large,
+    extraLarge = AppShapes.gem // Hero moment shape for XL
 )
