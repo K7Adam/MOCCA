@@ -52,13 +52,12 @@ fun ChatContent(
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
     val editingPart by screenModel.editingPart.collectAsState()
     val showForkDialog by screenModel.showForkDialog.collectAsState()
-    
+    val showShareDialog by screenModel.showShareDialog.collectAsState()
+
     val listState = rememberLazyListState()
     @Suppress("DEPRECATION")
     val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
-    
-    var showShareDialog by remember { mutableStateOf(false) }
 
     val navigator = LocalNavigator.current
     val onFileClick: (String) -> Unit = remember(navigator) {
@@ -169,7 +168,7 @@ fun ChatContent(
             val shareUrl = if (isShared) "https://opencode.dev/s/${state.session?.shareID}" else ""
             
             AlertDialog(
-                onDismissRequest = { showShareDialog = false },
+                onDismissRequest = { screenModel.dismissShareDialog() },
                 containerColor = AppColors.surfaceContainerHigh,
                 shape = AppShapes.dialog,
                 title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.white) },
@@ -195,7 +194,7 @@ fun ChatContent(
                             text = "COPY LINK",
                             onClick = { 
                                 clipboard.setText(AnnotatedString(shareUrl))
-                                showShareDialog = false
+                                screenModel.dismissShareDialog()
                             }
                         )
                     } else {
@@ -213,14 +212,14 @@ fun ChatContent(
                             text = "UNSHARE",
                             onClick = { 
                                 screenModel.unshareSession()
-                                showShareDialog = false
+                                screenModel.dismissShareDialog()
                             },
                             textColor = AppColors.alertRed
                         )
                     } else {
                         MoccaTextButton(
                             text = "CANCEL",
-                            onClick = { showShareDialog = false }
+                            onClick = { screenModel.dismissShareDialog() }
                         )
                     }
                 }

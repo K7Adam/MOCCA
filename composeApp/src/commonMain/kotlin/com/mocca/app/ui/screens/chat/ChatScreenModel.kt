@@ -130,6 +130,9 @@ class ChatScreenModel(
     /** True when the fork-from-message dialog should be shown. */
     private val _showForkDialog = MutableStateFlow(false)
     val showForkDialog: StateFlow<Boolean> = _showForkDialog.asStateFlow()
+    
+    private val _showShareDialog = MutableStateFlow(false)
+    val showShareDialog: StateFlow<Boolean> = _showShareDialog.asStateFlow()
 
     fun togglePlanMode() {
         val newModeId = if (_state.value.isPlanMode) null else "plan"
@@ -372,6 +375,14 @@ class ChatScreenModel(
 
     fun dismissForkDialog() {
         _showForkDialog.value = false
+    }
+
+    fun openShareDialog() {
+        _showShareDialog.value = true
+    }
+
+    fun dismissShareDialog() {
+        _showShareDialog.value = false
     }
 
     fun forkSession(m: Message) {

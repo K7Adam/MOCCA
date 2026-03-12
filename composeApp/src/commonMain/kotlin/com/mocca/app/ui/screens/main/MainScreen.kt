@@ -24,6 +24,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.FloatingActionButtonMenu
+import androidx.compose.material3.FloatingActionButtonMenuItem
+import androidx.compose.material3.ToggleFloatingActionButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -304,26 +319,106 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // Nav row stays visible at all times on all screens
             val isChatInputVisible = panelState.state == PanelState.CENTER && scrollDirection != ScrollDirection.UP
 
-            // Scroll-to-bottom button overlay
+            // Action FAB Menu overlay
             // Dynamically positioned above the bottom bar based on its current height
             val bottomBarHeight = if (isChatInputVisible) {
                 com.mocca.app.ui.components.navigation.NavConstants.ChatInputModeMinHeight
             } else {
                 com.mocca.app.ui.components.navigation.NavConstants.NavigationModeHeight
             }
-            ScrollToBottomButton(
-                isVisible = showScrollToBottom && panelState.state == PanelState.CENTER,
-                hasNewMessages = hasNewMessagesWhileScrolledUp,
-                onClick = {
-                    scrollToBottomTrigger += 1L
-                    showScrollToBottom = false
-                    hasNewMessagesWhileScrolledUp = false
-                },
+            
+            var fabMenuExpanded by remember { mutableStateOf(false) }
+            
+            androidx.compose.animation.AnimatedVisibility(
+                visible = panelState.state == PanelState.CENTER,
+                enter = androidx.compose.animation.fadeIn(
+                    animationSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec()
+                ) + androidx.compose.animation.scaleIn(
+                    animationSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec(),
+                    initialScale = 0.8f
+                ),
+                exit = androidx.compose.animation.fadeOut(
+                    animationSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec()
+                ) + androidx.compose.animation.scaleOut(
+                    animationSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastSpatialSpec(),
+                    targetScale = 0.8f
+                ),
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                    .align(Alignment.BottomEnd)
                     .navigationBarsPadding()
-                    .padding(bottom = bottomBarHeight + AppSpacing.sm)
-            )
+                    .padding(bottom = bottomBarHeight + AppSpacing.sm, end = AppSpacing.md)
+            ) {
+                FloatingActionButtonMenu(
+                    expanded = fabMenuExpanded,
+                    button = {
+                        ToggleFloatingActionButton(
+                            checked = fabMenuExpanded,
+                            onCheckedChange = { fabMenuExpanded = it },
+                            containerColor = { AppColors.surfaceContainerHigh }
+                        ) {
+                            androidx.compose.animation.AnimatedContent(
+                                targetState = fabMenuExpanded, 
+                                label = "fabIcon"
+                            ) { expanded ->
+                                if (expanded) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Close Menu",
+                                        tint = AppColors.textPrimary
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = "Open Menu",
+                                        tint = AppColors.textPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    FloatingActionButtonMenuItem(
+                        onClick = {
+                            fabMenuExpanded = false
+                            chatScreenModel.openShareDialog()
+                        },
+                        icon = { Icon(Icons.Default.Share, contentDescription = "Share") },
+                        text = { Text("Share Session") },
+                        containerColor = AppColors.surfaceContainer,
+                        contentColor = AppColors.textPrimary
+                    )
+
+                    if (showScrollToBottom) {
+                        FloatingActionButtonMenuItem(
+                            onClick = {
+                                fabMenuExpanded = false
+                                scrollToBottomTrigger += 1L
+                                showScrollToBottom = false
+                                hasNewMessagesWhileScrolledUp = false
+                            },
+                            icon = { 
+                                Box {
+                                    Icon(Icons.Default.ArrowDownward, contentDescription = "Scroll to Bottom")
+                                    if (hasNewMessagesWhileScrolledUp) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(10.dp)
+                                                .align(Alignment.TopEnd)
+                                                .offset(x = (-4).dp, y = 4.dp)
+                                                .clip(com.mocca.app.ui.theme.AppShapes.circle)
+                                                .background(AppColors.accentGreen)
+                                                .border(2.dp, AppColors.surfaceContainer, com.mocca.app.ui.theme.AppShapes.circle)
+                                        )
+                                    }
+                                }
+                            },
+                            text = { Text("Scroll to Bottom") },
+                            containerColor = AppColors.surfaceContainer,
+                            contentColor = AppColors.textPrimary
+                        )
+                    }
+                }
+            }
             
             // Determine bottom bar mode based on current panel
             // Chat input should only be expanded on the chat screen (CENTER panel)
