@@ -252,10 +252,10 @@ private fun WorktreeCard(
 
         // Delete button
         if (isDeleting) {
-            CircularProgressIndicator(
+            LoadingIndicator(
                 modifier = Modifier.size(20.dp),
                 color = AppColors.statusOffline,
-                strokeWidth = 2.dp
+                polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
             )
         } else {
             MoccaIconButton(
@@ -377,12 +377,12 @@ private fun WorktreeCreateDialog(
                 }
 
                 if (isCreating) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier
                             .size(32.dp)
                             .align(Alignment.CenterVertically),
                         color = AppColors.accentGreen,
-                        strokeWidth = 2.dp
+                        polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
                     )
                 } else {
                     MoccaButton(

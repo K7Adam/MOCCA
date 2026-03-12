@@ -10,12 +10,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -31,23 +32,6 @@ import kotlinx.datetime.Clock
 
 /**
  * Sync status indicator for showing data freshness.
- * 
- * DESIGN PHILOSOPHY:
- * - Background sync is SILENT - no UI indication
- * - Only manual refresh shows visual feedback
- * - Only errors/warnings are prominently displayed
- * - Connection status is separate from data freshness
- * 
- * This prevents the "flickering every 5 seconds" UX issue.
- */
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMPACT INLINE INDICATOR - Minimal, non-intrusive
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Minimal sync status indicator for headers.
- * Shows only errors prominently, success is subtle.
  */
 @Composable
 fun SyncStatusIndicator(
@@ -85,18 +69,6 @@ fun SyncStatusIndicator(
         )
     }
 
-    // Animate rotation for syncing state
-    val infiniteTransition = rememberInfiniteTransition(label = "sync_rotation")
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation"
-    )
-
     val isSyncing = globalSyncState is GlobalSyncState.Syncing
     val isError = globalSyncState is GlobalSyncState.Failed
 
@@ -115,14 +87,20 @@ fun SyncStatusIndicator(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier
-                .size(14.dp)
-                .then(if (isSyncing) Modifier.rotate(rotation) else Modifier)
-        )
+        if (isSyncing) {
+            LoadingIndicator(
+                modifier = Modifier.size(14.dp),
+                color = color,
+                polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
+            )
+        } else {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(14.dp)
+            )
+        }
         // Only show label when there's meaningful content
         if (showLabel && label != null) {
             Text(

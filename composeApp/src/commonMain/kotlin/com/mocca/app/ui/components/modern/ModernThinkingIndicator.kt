@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,17 +58,6 @@ fun ModernThinkingIndicator(
     elapsedMs: Long = 0,
     modifier: Modifier = Modifier
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "thinking")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -76,19 +67,11 @@ fun ModernThinkingIndicator(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = AppSpacing.xxs, start = AppSpacing.sm)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .clip(CircleShape)
-                    .border(1.dp, AppColors.statusThinking.copy(alpha = 0.4f), CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(AppColors.statusThinking.copy(alpha = pulseAlpha), CircleShape)
-                )
-            }
+            LoadingIndicator(
+                modifier = Modifier.size(14.dp),
+                color = AppColors.statusThinking,
+                polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
+            )
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             

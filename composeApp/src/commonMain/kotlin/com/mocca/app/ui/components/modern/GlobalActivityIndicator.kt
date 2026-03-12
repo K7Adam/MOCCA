@@ -2,10 +2,8 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.material3.MaterialTheme
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
@@ -38,26 +36,12 @@ fun GlobalActivityIndicator(
     
     if (!isActive) return
     
-    val infiniteTransition = rememberInfiniteTransition(label = "activity_pulse")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "activity_alpha"
-    )
-    
-    Box(
+    LoadingIndicator(
         modifier = modifier
             .padding(8.dp)
-            .size(8.dp)
-            .alpha(alpha)
-            .background(
-                color = AppColors.accentGreen,
-                shape = CircleShape
-            )
+            .size(8.dp),
+        color = AppColors.accentGreen,
+        polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
     )
 }
 
@@ -72,24 +56,9 @@ fun CompactActivityIndicator(
 ) {
     if (!isActive) return
     
-    val infiniteTransition = rememberInfiniteTransition(label = "compact_activity_pulse")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "compact_activity_alpha"
-    )
-    
-    Box(
-        modifier = modifier
-            .size(6.dp)
-            .alpha(alpha)
-            .background(
-                color = AppColors.accentGreen,
-                shape = CircleShape
-            )
+    LoadingIndicator(
+        modifier = modifier.size(6.dp),
+        color = AppColors.accentGreen,
+        polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
     )
 }
