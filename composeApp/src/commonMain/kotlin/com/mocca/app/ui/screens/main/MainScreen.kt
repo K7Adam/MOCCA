@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -63,6 +64,7 @@ import com.mocca.app.ui.components.modern.UpdateDialog
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
     
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

@@ -4,12 +4,19 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import mocca.composeapp.generated.resources.Res
+import mocca.composeapp.generated.resources.space_grotesk_regular
+import mocca.composeapp.generated.resources.jetbrains_mono_regular
+import org.jetbrains.compose.resources.Font
 
 /**
  * MOCCA Typography - System fonts with variable weights.
  * Modern design language using Space Grotesk aesthetic.
+ * 
+ * Note: Uses Variable Font Axes (wght) for emphasized hierarchy.
  */
 object AppTypography {
 
@@ -17,110 +24,129 @@ object AppTypography {
     // FONT FAMILIES
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Display font - System Sans Serif (mimics Space Grotesk) */
-    val displayFamily = FontFamily.SansSerif
+    /** Base Display font - Space Grotesk */
+    val displayFamily: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.space_grotesk_regular)
+        )
+
+    /** Variable Display families for different weights */
+    val displayBold: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(FontVariation.weight(700)))
+        )
+
+    val displaySemiBold: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(FontVariation.weight(600)))
+        )
+
+    val displayMedium: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.space_grotesk_regular, variationSettings = FontVariation.Settings(FontVariation.weight(500)))
+        )
 
     /** Body font - System Default */
     val bodyFamily = FontFamily.Default
 
-    /** Monospace font - for code blocks */
-    val monoFamily = FontFamily.Monospace
-
-    // For backwards compatibility
-    val fontFamily = FontFamily.SansSerif
+    /** Monospace font - JetBrains Mono Variable */
+    val monoFamily: FontFamily
+        @Composable get() = FontFamily(
+            Font(Res.font.jetbrains_mono_regular)
+        )
 
     // ═══════════════════════════════════════════════════════════════════════════
     // DISPLAY STYLES (Hero text, large headings)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    /** Hero/display text - "Initialize" - Light weight */
-    val displayLarge = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Light,
-        fontSize = 28.sp,
-        lineHeight = 32.sp,
-        letterSpacing = (-0.5).sp
-    )
+    /** Hero/display text - "Initialize" - High emphasis weight */
+    val displayLarge: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 32.sp,
+            lineHeight = 38.sp,
+            letterSpacing = (-1.0).sp
+        )
 
     /** Display medium - Secondary hero text */
-    val displayMedium = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 24.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
-    )
+    val displayMediumStyle: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displaySemiBold,
+            fontSize = 28.sp,
+            lineHeight = 34.sp,
+            letterSpacing = (-0.5).sp
+        )
 
     /** Display small - Tertiary display */
-    val displaySmall = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 20.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
-    )
+    val displaySmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 24.sp,
+            lineHeight = 30.sp,
+            letterSpacing = 0.sp
+        )
 
     // ═══════════════════════════════════════════════════════════════════════════
     // HEADLINE STYLES (Page titles, section headers)
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** Large headline - "Connection" - Bold */
-    val headlineLarge = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 28.sp,
-        letterSpacing = (-0.5).sp
-    )
+    val headlineLarge: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            letterSpacing = (-0.5).sp
+        )
 
     /** Medium headline - Section headers */
-    val headlineMedium = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 20.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
-    )
+    val headlineMedium: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displaySemiBold,
+            fontSize = 20.sp,
+            lineHeight = 26.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Small headline - Card titles, subsections */
-    val headlineSmall = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 18.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.sp
-    )
+    val headlineSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displaySemiBold,
+            fontSize = 18.sp,
+            lineHeight = 24.sp,
+            letterSpacing = 0.sp
+        )
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TITLE STYLES (List items, navigation)
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** Large title - Navigation items, major list items */
-    val titleLarge = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 16.sp,
-        lineHeight = 22.sp,
-        letterSpacing = 0.sp
-    )
+    val titleLarge: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 16.sp,
+            lineHeight = 22.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Medium title - List item primary text */
-    val titleMedium = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp
-    )
+    val titleMedium: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displaySemiBold,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Small title - Compact list items */
-    val titleSmall = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        letterSpacing = 0.sp
-    )
+    val titleSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            letterSpacing = 0.sp
+        )
 
     // ═══════════════════════════════════════════════════════════════════════════
     // BODY STYLES (Content text)
@@ -158,116 +184,121 @@ object AppTypography {
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** Large label - Button text, prominent labels */
-    val labelLarge = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.5.sp
-    )
+    val labelLarge: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 15.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.5.sp
+        )
 
     /** Medium label - Standard labels, tabs */
-    val labelMedium = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
-    )
+    val labelMedium: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.5.sp
+        )
 
     /** Small label - Status badges, timestamps */
-    val labelSmall = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.5.sp
-    )
+    val labelSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 0.5.sp
+        )
 
     /** Extra small label - Very compact labels */
-    val labelExtraSmall = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 9.sp,
-        lineHeight = 12.sp,
-        letterSpacing = 1.sp
-    )
+    val labelExtraSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 9.sp,
+            lineHeight = 12.sp,
+            letterSpacing = 1.sp
+        )
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SPECIAL STYLES
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** Header label - UPPERCASE with wide tracking */
-    val headerLabel = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 2.sp
-    )
+    val headerLabel: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 2.sp
+        )
 
     /** Section header - UPPERCASE with tracking */
-    val sectionHeader = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 11.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 1.5.sp
-    )
+    val sectionHeader: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayBold,
+            fontSize = 11.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 1.5.sp
+        )
 
     /** Status text - For status indicators */
-    val status = TextStyle(
-        fontFamily = displayFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 10.sp,
-        lineHeight = 12.sp,
-        letterSpacing = 0.5.sp
-    )
+    val status: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = displayMedium,
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+            letterSpacing = 0.5.sp
+        )
 
     /** Code blocks - Monospace */
-    val code = TextStyle(
-        fontFamily = monoFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.sp
-    )
+    val code: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = monoFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 14.sp,
+            lineHeight = 20.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Code small - Smaller code text */
-    val codeSmall = TextStyle(
-        fontFamily = monoFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        letterSpacing = 0.sp
-    )
+    val codeSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = monoFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Mono label - Monospace labels (commit hashes, etc.) */
-    val monoLabel = TextStyle(
-        fontFamily = monoFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.sp
-    )
+    val monoLabel: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = monoFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 0.sp
+        )
 
     /** Code extra small - For tiny boot sequences */
-    val codeExtraSmall = TextStyle(
-        fontFamily = monoFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 9.sp,
-        lineHeight = 12.sp,
-        letterSpacing = 1.sp
-    )
+    val codeExtraSmall: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = monoFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 9.sp,
+            lineHeight = 12.sp,
+            letterSpacing = 1.sp
+        )
 
     /** Footer text - Very small, muted */
-    val footer = TextStyle(
-        fontFamily = monoFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 2.sp
-    )
+    val footer: TextStyle
+        @Composable get() = TextStyle(
+            fontFamily = monoFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 10.sp,
+            lineHeight = 14.sp,
+            letterSpacing = 2.sp
+        )
 }
 
 /**
@@ -276,7 +307,7 @@ object AppTypography {
 @Composable
 fun appTypography(): Typography = Typography(
     displayLarge = AppTypography.displayLarge,
-    displayMedium = AppTypography.displayMedium,
+    displayMedium = AppTypography.displayMediumStyle,
     displaySmall = AppTypography.displaySmall,
     headlineLarge = AppTypography.headlineLarge,
     headlineMedium = AppTypography.headlineMedium,

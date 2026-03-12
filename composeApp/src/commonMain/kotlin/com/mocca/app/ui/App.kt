@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +43,7 @@ import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun App() {
     AppTheme {

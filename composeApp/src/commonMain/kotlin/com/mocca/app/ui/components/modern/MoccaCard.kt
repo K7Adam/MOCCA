@@ -178,7 +178,7 @@ fun MoccaSessionCard(
     activeIndicatorColor: Color = AppColors.accentGreen,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
-    shape: Shape = AppShapes.sessionCard,
+    shape: Shape = if (isActive) AppShapes.slanted else AppShapes.sessionCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(

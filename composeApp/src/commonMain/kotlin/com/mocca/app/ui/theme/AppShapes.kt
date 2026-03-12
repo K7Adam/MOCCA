@@ -1,18 +1,23 @@
 package com.mocca.app.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialShapes
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.toShape
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 
 /**
- * MOCCA Shapes - Modern rounded corners design system.
- * Soft, rounded aesthetic with 16dp-32dp corner radii.
+ * MOCCA Shapes - Modern rounded corners and expressive shapes design system.
+ * Features standard rounded aesthetic (16dp-32dp) and M3 Expressive shape library.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 object AppShapes {
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BASE CORNER RADII
+    // BASE CORNER RADII (Standard M3)
     // ═══════════════════════════════════════════════════════════════════════════
 
     /** No rounding - for specific elements that need sharp corners */
@@ -38,6 +43,25 @@ object AppShapes {
 
     /** 2XL - 32dp - for floating inputs, pill containers */
     val rounded2xl: Shape = RoundedCornerShape(32.dp)
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EXPRESSIVE SHAPES (M3 Expressive Library - 35 shapes)
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    /** Hero shapes for high-impact UI elements */
+    val flower: Shape @Composable get() = MaterialShapes.Flower.toShape()
+    val sunny: Shape @Composable get() = MaterialShapes.Sunny.toShape()
+    val gem: Shape @Composable get() = MaterialShapes.Gem.toShape()
+    val puffy: Shape @Composable get() = MaterialShapes.Puffy.toShape()
+    val bun: Shape @Composable get() = MaterialShapes.Bun.toShape()
+    val heart: Shape @Composable get() = MaterialShapes.Heart.toShape()
+    val boom: Shape @Composable get() = MaterialShapes.Boom.toShape()
+    
+    /** Geometric expressive shapes */
+    val slanted: Shape @Composable get() = MaterialShapes.Slanted.toShape()
+    val arch: Shape @Composable get() = MaterialShapes.Arch.toShape()
+    val arrow: Shape @Composable get() = MaterialShapes.Arrow.toShape()
+    val fan: Shape @Composable get() = MaterialShapes.Fan.toShape()
 
     // ═══════════════════════════════════════════════════════════════════════════
     // SPECIAL SHAPES
@@ -109,8 +133,9 @@ object AppShapes {
 }
 
 /**
- * Creates Material3 Shapes with modern rounded corners.
+ * Creates Material3 Shapes with modern rounded corners and expressive extensions.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 fun appShapes(): Shapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(8.dp),

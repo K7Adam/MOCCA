@@ -40,9 +40,11 @@ kotlin {
         commonMain.dependencies {
             // Compose
             implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3.expressive)
+            implementation(libs.graphics.shapes)
             implementation(compose.ui)
+            implementation(libs.compose.ui.text)
             implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
