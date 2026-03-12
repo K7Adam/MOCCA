@@ -15,9 +15,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ripple
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.SplitButtonLayout
+import androidx.compose.material3.SplitButtonDefaults
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -25,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -119,6 +125,72 @@ fun MoccaButton(
             }
         }
     }
+}
+
+/**
+ * Material 3 Expressive Split Button for Mocca.
+ */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun MoccaSplitButton(
+    text: String,
+    onPrimaryClick: () -> Unit,
+    onTrailingClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    checked: Boolean = false,
+    onCheckedChange: ((Boolean) -> Unit)? = null,
+    icon: ImageVector? = null,
+    backgroundColor: Color = AppColors.accentGreen,
+    textColor: Color = AppColors.background
+) {
+    SplitButtonLayout(
+        modifier = modifier,
+        leadingButton = {
+            SplitButtonDefaults.FilledLeadingButton(
+                onClick = onPrimaryClick,
+                enabled = enabled,
+                colors = SplitButtonDefaults.filledLeadingButtonColors(
+                    containerColor = backgroundColor,
+                    contentColor = textColor
+                )
+            ) {
+                if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(SplitButtonDefaults.LeadingIconSize)
+                    )
+                    Spacer(Modifier.width(ButtonDefaults.IconSpacing))
+                }
+                Text(
+                    text = text.uppercase(),
+                    style = AppTypography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        },
+        trailingButton = {
+            SplitButtonDefaults.FilledTrailingButton(
+                checked = checked,
+                onCheckedChange = { onCheckedChange?.invoke(it) ?: onTrailingClick() },
+                enabled = enabled,
+                colors = SplitButtonDefaults.filledTrailingButtonColors(
+                    containerColor = backgroundColor,
+                    contentColor = textColor
+                )
+            ) {
+                val rotation by animateFloatAsState(if (checked) 180f else 0f)
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Options",
+                    modifier = Modifier
+                        .size(SplitButtonDefaults.TrailingIconSize)
+                        .graphicsLayer { rotationZ = rotation }
+                )
+            }
+        }
+    )
 }
 
 @Composable

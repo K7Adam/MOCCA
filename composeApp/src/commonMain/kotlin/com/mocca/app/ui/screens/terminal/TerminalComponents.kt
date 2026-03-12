@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -310,6 +312,7 @@ internal fun TerminalInputBar(
 // EMPTY STATE
 // ═══════════════════════════════════════════════════════════════════════════════
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun TerminalEmptyState(
     isCreating: Boolean,
@@ -345,10 +348,9 @@ internal fun TerminalEmptyState(
                 )
             ) {
                 if (isCreating) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier.size(16.dp),
-                        color = AppColors.background,
-                        strokeWidth = 2.dp
+                        color = AppColors.background
                     )
                 } else {
                     Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))

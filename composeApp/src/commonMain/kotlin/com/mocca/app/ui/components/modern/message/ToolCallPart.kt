@@ -17,10 +17,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -91,6 +90,7 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
 // ContextToolGroup — collapsible card grouping consecutive tool calls
 // ---------------------------------------------------------------------------
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.ToolResult?>>) {
     if (tools.isEmpty()) return
@@ -140,9 +140,8 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
             )
             // Status badges
             if (hasRunning) {
-                CircularProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier.size(10.dp),
-                    strokeWidth = 1.5.dp,
                     color = AppColors.statusWaiting
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.xs))

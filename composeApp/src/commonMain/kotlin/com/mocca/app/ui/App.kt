@@ -20,13 +20,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,7 +44,6 @@ import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun App() {
     AppTheme {
@@ -78,6 +78,7 @@ fun App() {
  * Brief branded splash shown while the server config loads from the database.
  * Matches the onboarding's visual language for a seamless transition.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SplashScreen() {
     val infiniteTransition = rememberInfiniteTransition(label = "splash")
@@ -116,9 +117,8 @@ private fun SplashScreen() {
 
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
-        CircularProgressIndicator(
-            modifier = Modifier.size(24.dp),
-            strokeWidth = 2.dp,
+        LoadingIndicator(
+            modifier = Modifier.size(32.dp),
             color = AppColors.accent
         )
     }

@@ -53,38 +53,14 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.FloatingToolbarDefaults
+
 /**
- * Chat input bar with integrated status bar, input field, action toolbar, and nav indicator.
- * Compact status bar, multi-line input, action toolbar, and nav indicator.
- *
- * @param inputText Current input text
- * @param onInputTextChange Callback when input text changes
- * @param onSendClick Callback when send button is clicked
- * @param inputEnabled Whether input is enabled
- * @param placeholder Placeholder text for input field
- * @param dragProgress Real-time drag progress for nav indicator
- * @param onItemClick Callback for nav item clicks
- * @param modelName Current model name
- * @param agentName Current agent name
- * @param providerResponse Available providers and models
- * @param selectedProviderId Currently selected provider ID
- * @param selectedModelId Currently selected model ID
- * @param onModelSelected Callback when model is selected
- * @param variants Available variants
- * @param selectedVariantId Currently selected variant ID
- * @param onVariantSelected Callback when variant is selected
- * @param modes Available modes/agents
- * @param selectedModeId Currently selected mode ID
- * @param onModeSelected Callback when mode is selected
- * @param attachedFiles Currently attached files
- * @param onRemoveAttachment Callback to remove an attachment
- * @param onAttachClick Callback to open file picker
- * @param commands Available terminal commands
- * @param onCommandSelected Callback when command is selected
- * @param onModeSelectedForMention Callback when mode is selected via @mention
- * @param modifier Modifier for styling
- * @param alpha Alpha value for crossfade animation
+ * Chat input bar reconstructed with Material 3 Expressive HorizontalFloatingToolbar.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ChatInputBar(
     inputText: String,
@@ -128,6 +104,9 @@ fun ChatInputBar(
     var isInputFocused by remember { mutableStateOf(false) }
     // Manual palette trigger (for / button)
     var showCommandPalette by remember { mutableStateOf(false) }
+    
+    // Expressive state
+    var expanded by remember { mutableStateOf(true) }
 
     val items = defaultBottomNavItems
     var travelDistancePx by remember { mutableFloatStateOf(0f) }
@@ -155,7 +134,6 @@ fun ChatInputBar(
         }
     }
 
-    // Handle input changes for suggestions
     val handleValueChange = { newValue: String ->
         onInputTextChange(newValue)
         if (newValue.startsWith("/")) {
@@ -198,159 +176,149 @@ fun ChatInputBar(
     Column(
         modifier = modifier
             .alpha(alpha)
-            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ═══════════════ STATUS BAR ═══════════════
-        ChatInputBarStatusRow(
-            modelName = modelName,
-            agentName = agentName,
-            providerResponse = providerResponse,
-            variants = variants,
-            selectedVariantId = selectedVariantId,
-            modes = modes,
-            selectedModeId = selectedModeId,
-            onModeSelected = onModeSelected,
-            onModelSelectorClick = { showModelSelector = true },
-            onVariantSelectorClick = { showVariantSelector = true },
-            statusBarHeight = StatusBarHeight
-        )
-
-        HorizontalDivider(
-            thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
-        )
-
-        // ═══════════════ INPUT AREA ═══════════════
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = InputMinHeight, max = InputMaxHeight)
-                .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.sm)
+        HorizontalFloatingToolbar(
+            expanded = expanded,
+            containerColor = AppColors.surface,
+            contentColor = AppColors.white,
+            shape = AppShapes.extraLarge,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            val interactionSource = remember { MutableInteractionSource() }
-            isInputFocused = interactionSource.collectIsFocusedAsState().value
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = AppSpacing.xs)
+            ) {
+                // ═══════════════ STATUS BAR ═══════════════
+                ChatInputBarStatusRow(
+                    modelName = modelName,
+                    agentName = agentName,
+                    providerResponse = providerResponse,
+                    variants = variants,
+                    selectedVariantId = selectedVariantId,
+                    modes = modes,
+                    selectedModeId = selectedModeId,
+                    onModeSelected = onModeSelected,
+                    onModelSelectorClick = { showModelSelector = true },
+                    onVariantSelectorClick = { showVariantSelector = true },
+                    statusBarHeight = StatusBarHeight
+                )
 
-            BasicTextField(
-                value = inputText,
-                onValueChange = handleValueChange,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = inputEnabled,
-                textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
-                cursorBrush = SolidColor(AppColors.accentGreen),
-                interactionSource = interactionSource,
-                decorationBox = { innerTextField ->
-                    Box {
-                        if (inputText.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                color = AppColors.textPlaceholder,
-                                style = AppTypography.bodyMedium
-                            )
+                HorizontalDivider(
+                    thickness = 0.5.dp,
+                    color = AppColors.border.copy(alpha = 0.3f),
+                    modifier = Modifier.padding(horizontal = AppSpacing.md)
+                )
+
+                // ═══════════════ INPUT AREA ═══════════════
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = InputMinHeight, max = InputMaxHeight)
+                        .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
+                ) {
+                    val interactionSource = remember { MutableInteractionSource() }
+                    isInputFocused = interactionSource.collectIsFocusedAsState().value
+
+                    BasicTextField(
+                        value = inputText,
+                        onValueChange = handleValueChange,
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = inputEnabled,
+                        textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+                        cursorBrush = SolidColor(AppColors.accentGreen),
+                        interactionSource = interactionSource,
+                        decorationBox = { innerTextField ->
+                            Box {
+                                if (inputText.isEmpty()) {
+                                    Text(
+                                        text = placeholder,
+                                        color = AppColors.textPlaceholder,
+                                        style = AppTypography.bodyMedium
+                                    )
+                                }
+                                innerTextField()
+                            }
                         }
-                        innerTextField()
+                    )
+
+                    // Suggestions popup
+                    if (showSuggestions && currentSuggestions.isNotEmpty()) {
+                        SuggestionPopup(
+                            suggestions = currentSuggestions,
+                            onSuggestionSelected = onSuggestionSelected,
+                            onDismiss = { showSuggestions = false }
+                        )
+                    }
+
+                    // Manual command palette
+                    if (showCommandPalette && commands.isNotEmpty()) {
+                        SuggestionPopup(
+                            suggestions = commands.map { cmd ->
+                                SuggestionItem(cmd.name, "/${cmd.name}", cmd.description, SuggestionType.COMMAND)
+                            },
+                            onSuggestionSelected = { item ->
+                                val cmd = commands.find { it.name == item.id }
+                                if (cmd != null) {
+                                    onCommandSelected(cmd)
+                                }
+                                showCommandPalette = false
+                            },
+                            onDismiss = { showCommandPalette = false }
+                        )
                     }
                 }
-            )
 
-            // Suggestions popup (text-triggered)
-            if (showSuggestions && currentSuggestions.isNotEmpty()) {
-                SuggestionPopup(
-                    suggestions = currentSuggestions,
-                    onSuggestionSelected = onSuggestionSelected,
-                    onDismiss = { showSuggestions = false }
-                )
-            }
+                // ═══════════════ ACTION TOOLBAR ═══════════════
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(ActionToolbarHeight)
+                        .padding(horizontal = AppSpacing.md),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Attachment button
+                    MoccaIconButton(
+                        icon = Icons.Default.AttachFile,
+                        onClick = onAttachClick,
+                        size = 32.dp,
+                        iconColor = AppColors.textSecondary
+                    )
 
-            // Manual command palette (triggered by / button)
-            if (showCommandPalette && commands.isNotEmpty()) {
-                SuggestionPopup(
-                    suggestions = commands.map { cmd ->
-                        SuggestionItem(cmd.name, "/${cmd.name}", cmd.description, SuggestionType.COMMAND)
-                    },
-                    onSuggestionSelected = { item ->
-                        val cmd = commands.find { it.name == item.id }
-                        if (cmd != null) {
-                            onCommandSelected(cmd)
-                        } else {
-                            // Fallback: insert into input
-                            onInputTextChange("/${item.id} ")
-                        }
-                        showCommandPalette = false
-                    },
-                    onDismiss = { showCommandPalette = false }
-                )
+                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                    
+                    // / command button
+                    Box(
+                        modifier = Modifier
+                            .clickable(onClick = { showCommandPalette = !showCommandPalette })
+                            .padding(horizontal = AppSpacing.xs)
+                    ) {
+                        Text(
+                            text = "/",
+                            color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                            style = AppTypography.labelLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Send button
+                    MoccaCompactButton(
+                        text = "SEND",
+                        onClick = onSendClick,
+                        enabled = inputEnabled && inputText.isNotBlank(),
+                        icon = Icons.AutoMirrored.Filled.Send
+                    )
+                }
             }
         }
 
-        // ═══════════════ ACTION TOOLBAR ═══════════════
-        HorizontalDivider(
-            thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
-        )
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(ActionToolbarHeight)
-                .padding(horizontal = AppSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // / command button - opens command palette directly
-            Box(
-                modifier = Modifier
-                    .size(ActionToolbarHeight)
-                    .background(
-                        color = if (showCommandPalette) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.surface.copy(alpha = 0.3f),
-                        shape = AppShapes.pill
-                    )
-                    .then(
-                        if (showCommandPalette) Modifier.border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.pill) else Modifier
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = { showCommandPalette = !showCommandPalette }
-                    )
-                    .padding(horizontal = AppSpacing.sm),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "/",
-                    color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
-                    style = AppTypography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
-            VerticalDivider(
-                modifier = Modifier.height(14.dp),
-                thickness = AppSpacing.borderThin,
-                color = AppColors.border
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.xs))
-
-            // Attachment button
-            MoccaIconButton(
-                icon = Icons.Default.AttachFile,
-                onClick = onAttachClick,
-                size = 32.dp,
-                iconColor = AppColors.textSecondary
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Send button
-            MoccaCompactButton(
-                text = "SEND",
-                onClick = onSendClick,
-                enabled = inputEnabled && inputText.isNotBlank(),
-                icon = Icons.AutoMirrored.Filled.Send
-            )
-        }
-
-        // ═══════════════ NAV INDICATOR WITH ICONS ═══════════════
+        // ═══════════════ NAV INDICATOR ═══════════════
         ChatInputBarNavIndicator(
             items = items,
             dragProgress = dragProgress,
@@ -394,4 +362,3 @@ private val InputMinHeight = 32.dp
 private val InputMaxHeight = 80.dp
 private val ActionToolbarHeight = 36.dp
 private val NavIndicatorHeight = 32.dp // Increased to fit icons + dots
-

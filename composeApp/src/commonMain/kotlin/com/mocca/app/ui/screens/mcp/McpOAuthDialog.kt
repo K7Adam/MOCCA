@@ -11,12 +11,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.automirrored.filled.Launch
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +38,7 @@ import com.mocca.app.ui.theme.AppTypography
  *
  * W3-T3: MCP OAuth flow UI.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun McpOAuthDialog(
     oauthState: McpOAuthState,
@@ -149,10 +147,9 @@ fun McpOAuthDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                 ) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         color = AppColors.statusWaiting,
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
+                        modifier = Modifier.size(16.dp)
                     )
                     Text(
                         text = "Generating authorization URL...",
@@ -243,10 +240,9 @@ fun McpOAuthDialog(
                     horizontalArrangement = Arrangement.Center,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         color = AppColors.statusWaiting,
-                        modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
+                        modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(

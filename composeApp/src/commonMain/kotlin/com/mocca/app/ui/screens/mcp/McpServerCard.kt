@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun McpServerCard(
     server: McpServerInfo,
@@ -75,10 +78,9 @@ internal fun McpServerCard(
             
             // Toggle or loading
             if (isOperationInProgress) {
-                CircularProgressIndicator(
+                LoadingIndicator(
                     color = AppColors.statusWaiting,
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
+                    modifier = Modifier.size(20.dp)
                 )
             } else {
                 ModernToggle(

@@ -30,8 +30,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -59,6 +60,7 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * Connect step — unified screen for server discovery (background) + server list + manual entry.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun OnboardingConnectStep(
     discoveredServers: ImmutableList<DiscoveredServer>,
@@ -140,9 +142,8 @@ internal fun OnboardingConnectStep(
                         fontWeight = FontWeight.Medium
                     )
                     if (isDiscovering) {
-                        CircularProgressIndicator(
+                        LoadingIndicator(
                             modifier = Modifier.size(14.dp),
-                            strokeWidth = 2.dp,
                             color = AppColors.accent
                         )
                     }

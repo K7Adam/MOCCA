@@ -4,9 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -31,6 +32,7 @@ import org.jetbrains.compose.resources.stringResource
 
 class SessionsScreen : Screen {
     
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -236,12 +238,11 @@ class SessionsScreen : Screen {
                         }
                         
                         if (state.isLoading && state.sessions.isNotEmpty()) {
-                            LinearProgressIndicator(
+                            LoadingIndicator(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .align(Alignment.TopCenter),
-                                color = AppColors.statusWaiting,
-                                trackColor = AppColors.border
+                                color = AppColors.statusWaiting
                             )
                         }
                     }

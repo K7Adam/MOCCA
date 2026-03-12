@@ -23,8 +23,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Computer
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ripple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -53,7 +54,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Matches mockup: mockups_screens/context_&_history_sidebar/screen.png
  * Refactored for modern UI/UX with session grouping.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ContextHistoryPanel(
     sessions: List<Session>,
@@ -272,9 +273,8 @@ private fun ConversationHistorySection(
                                             RunningSessionIndicator(isRunning = true, statusLabel = "LIVE")
                                         }
                                         if (isLoading) {
-                                            CircularProgressIndicator(
+                                            LoadingIndicator(
                                                 modifier = Modifier.size(12.dp),
-                                                strokeWidth = 2.dp,
                                                 color = AppColors.statusWaiting
                                             )
                                         } else {
@@ -359,9 +359,8 @@ private fun NewSessionButton(
         horizontalArrangement = Arrangement.Center
     ) {
         if (isLoading) {
-            CircularProgressIndicator(
+            LoadingIndicator(
                 modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
                 color = AppColors.statusWaiting
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))

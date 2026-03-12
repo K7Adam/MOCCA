@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +25,7 @@ import com.mocca.app.ui.theme.*
  */
 class TerminalScreen : Screen {
 
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
@@ -42,10 +45,9 @@ class TerminalScreen : Screen {
                             modifier = Modifier.size(40.dp)
                         ) {
                             if (state.isCreatingTab) {
-                                CircularProgressIndicator(
+                                LoadingIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = AppColors.accentGreen,
-                                    strokeWidth = 2.dp
+                                    color = AppColors.accentGreen
                                 )
                             } else {
                                 Icon(
@@ -81,7 +83,7 @@ class TerminalScreen : Screen {
                     state.isLoadingTabs -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                CircularProgressIndicator(
+                                LoadingIndicator(
                                     color = AppColors.accentGreen,
                                     modifier = Modifier.size(32.dp)
                                 )

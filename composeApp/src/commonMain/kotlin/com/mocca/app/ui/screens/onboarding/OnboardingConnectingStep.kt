@@ -19,8 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +41,7 @@ import com.mocca.app.ui.theme.AppTypography
 /**
  * Connecting step — staged progress visualization with auto-navigation on success.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 internal fun OnboardingConnectingStep(
     connectionStage: ConnectionStage,
@@ -144,9 +146,8 @@ internal fun OnboardingConnectingStep(
 
         } else {
             // ── Connecting state with staged progress ─────────────────────
-            CircularProgressIndicator(
+            LoadingIndicator(
                 modifier = Modifier.size(48.dp),
-                strokeWidth = 3.dp,
                 color = AppColors.accent
             )
 
@@ -208,6 +209,7 @@ internal fun OnboardingConnectingStep(
 /**
  * Individual stage item in the connection progress.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun StageItem(
     label: String,
@@ -237,9 +239,8 @@ private fun StageItem(
                     )
                 }
                 isActive -> {
-                    CircularProgressIndicator(
+                    LoadingIndicator(
                         modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp,
                         color = AppColors.accent
                     )
                 }
@@ -268,3 +269,4 @@ private fun StageItem(
         }
     }
 }
+

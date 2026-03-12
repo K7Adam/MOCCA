@@ -7,8 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,10 +18,12 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 
 /**
- * Modern processing indicator.
+ * Modern processing indicator using M3 Expressive path-morphing LoadingIndicator.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ModernProcessingIndicator() {
     Row(
@@ -29,10 +32,10 @@ fun ModernProcessingIndicator() {
             .padding(vertical = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(12.dp),
-            strokeWidth = 1.5.dp,
-            color = AppColors.accentGreen
+        LoadingIndicator(
+            modifier = Modifier.size(16.dp),
+            color = AppColors.accentGreen,
+            polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
         )
         
         Spacer(modifier = Modifier.width(AppSpacing.sm))

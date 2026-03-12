@@ -15,10 +15,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.PermissionRequest
-import androidx.compose.material3.Surface
 import com.mocca.app.ui.components.modern.MoccaCompactButton
 import com.mocca.app.ui.components.modern.MoccaTextButton
 import com.mocca.app.ui.theme.*
@@ -48,6 +46,7 @@ private const val AUTO_APPROVE_TTL_SECONDS = 30
  * @param onDeny          Callback when DENY button is clicked
  * @param modifier        Modifier for styling
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PermissionBanner(
     permission: PermissionRequest,
@@ -166,13 +165,9 @@ fun PermissionBanner(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier.size(28.dp)
                             ) {
-                                CircularProgressIndicator(
-                                    progress = { countdownProgress },
+                                LoadingIndicator(
                                     modifier = Modifier.fillMaxSize(),
-                                    color = amberAccent,
-                                    trackColor = amberAccent.copy(alpha = 0.2f),
-                                    strokeWidth = 2.dp,
-                                    strokeCap = StrokeCap.Round
+                                    color = amberAccent
                                 )
                                 Text(
                                     text = secondsRemaining.toString(),

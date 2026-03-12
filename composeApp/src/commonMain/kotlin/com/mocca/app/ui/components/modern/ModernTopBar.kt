@@ -22,7 +22,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.HorizontalFloatingToolbar
+import androidx.compose.material3.FloatingToolbarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,8 +52,9 @@ import com.mocca.app.ui.theme.AppColors
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Modern top bar with optional navigation icon and actions.
+ * Modern Top Bar reconstructed as an Expressive Morphing Floating Toolbar.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun ModernTopBar(
     title: String,
@@ -56,23 +64,26 @@ fun ModernTopBar(
     showDivider: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
+    var expanded by remember { mutableStateOf(true) }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.background, AppShapes.none)
+            .padding(top = AppSpacing.sm)
+            .background(Color.Transparent),
+        contentAlignment = Alignment.TopCenter
     ) {
-        // Content row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(AppSpacing.topBarHeight)
-                .padding(horizontal = AppSpacing.lg),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        HorizontalFloatingToolbar(
+            expanded = expanded,
+            modifier = Modifier.padding(horizontal = AppSpacing.md),
+            containerColor = AppColors.surface,
+            contentColor = AppColors.white,
+            shape = AppShapes.pill,
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+                modifier = Modifier.padding(horizontal = AppSpacing.md)
             ) {
                 if (navigationIcon != null && onNavigationClick != null) {
                     MoccaIconButton(
@@ -85,24 +96,17 @@ fun ModernTopBar(
                 Text(
                     text = title.uppercase(),
                     color = AppColors.white,
-                    style = AppTypography.headlineSmall,
+                    style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
+                
+                Spacer(modifier = Modifier.width(AppSpacing.sm))
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = actions
+                )
             }
-            
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                content = actions
-            )
-        }
-        
-        // Bottom divider
-        if (showDivider) {
-            HorizontalDivider(
-                modifier = Modifier.align(Alignment.BottomCenter),
-                thickness = AppSpacing.borderThin,
-                color = AppColors.border
-            )
         }
     }
 }

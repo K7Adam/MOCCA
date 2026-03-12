@@ -14,7 +14,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,6 +60,7 @@ val defaultQuotes = listOf(
  * Rotating quote display with fade animation.
  * Centers content and rotates through quotes.
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun QuoteRotator(
     quotes: List<String> = defaultQuotes,
@@ -99,9 +101,8 @@ fun QuoteRotator(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
             ) {
-                CircularProgressIndicator(
+                LoadingIndicator(
                     modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp,
                     color = AppColors.statusWaiting
                 )
                 Text(
