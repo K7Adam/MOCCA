@@ -1,5 +1,12 @@
 package com.mocca.app.ui.screens.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -27,8 +34,10 @@ import com.mocca.app.ui.theme.*
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.screens.files.FilesScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
@@ -55,6 +64,9 @@ fun ChatContent(
         { _ -> navigator?.push(FilesScreen()) }
     }
     
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
     // Track scroll direction for dock auto-hide
     var previousScrollIndex by remember { mutableStateOf(0) }
     var previousScrollOffset by remember { mutableStateOf(0) }
@@ -220,6 +232,39 @@ fun ChatContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
+            // Hero Moment: Connection Success
+            val isConnected = state.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected
+            var showHeroMoment by remember { mutableStateOf(false) }
+            LaunchedEffect(isConnected) {
+                if (isConnected) {
+                    showHeroMoment = true
+                    kotlinx.coroutines.delay(2000)
+                    showHeroMoment = false
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showHeroMoment,
+                enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                exit = fadeOut() + scaleOut(targetScale = 1.2f),
+                modifier = Modifier.align(Alignment.Center).zIndex(100f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .background(AppColors.accentGreen.copy(alpha = 0.2f), AppShapes.pill)
+                        .border(2.dp, AppColors.accentGreen, AppShapes.pill),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CONNECTED",
+                        style = AppTypography.labelLarge,
+                        color = AppColors.accentGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             // Sticky Todo Panel at top (zIndex ensures it stays above messages)
             TodoListPanel(
                 todos = state.todos,

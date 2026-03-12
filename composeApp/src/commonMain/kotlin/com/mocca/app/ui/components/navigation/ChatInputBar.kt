@@ -1,5 +1,6 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.ui.text.font.FontWeight
@@ -107,6 +109,14 @@ fun ChatInputBar(
     
     // Expressive state
     var expanded by remember { mutableStateOf(true) }
+    
+    // Use M3 Expressive Motion Scheme for expansion animation
+    val expansionSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
+    val expansionProgress by animateFloatAsState(
+        targetValue = if (expanded) 1f else 0f,
+        animationSpec = expansionSpec,
+        label = "toolbarExpansion"
+    )
 
     val items = defaultBottomNavItems
     var travelDistancePx by remember { mutableFloatStateOf(0f) }

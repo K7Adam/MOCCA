@@ -19,6 +19,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.SplitButtonDefaults
@@ -51,6 +52,7 @@ object MoccaButtonDefaults {
     val SpacingIcon: Dp = 6.dp
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun MoccaButton(
     text: String,
@@ -68,9 +70,12 @@ fun MoccaButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    
+    // Use M3 Expressive Motion Scheme for scale animation
+    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
+        animationSpec = scaleSpec,
         label = "buttonScale"
     )
     

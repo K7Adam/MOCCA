@@ -1,5 +1,6 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
 /**
  * Modern Top Bar and Divider components.
@@ -54,7 +57,7 @@ import com.mocca.app.ui.theme.AppColors
 /**
  * Modern Top Bar reconstructed as an Expressive Morphing Floating Toolbar.
  */
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ModernTopBar(
     title: String,
@@ -62,9 +65,13 @@ fun ModernTopBar(
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
     showDivider: Boolean = true,
+    sessionId: String? = null,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(true) }
+    
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
 
     Box(
         modifier = modifier
@@ -93,11 +100,23 @@ fun ModernTopBar(
                     )
                 }
                 
+                val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null && sessionId != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedBounds(
+                            rememberSharedContentState(key = "session_title_$sessionId"),
+                            animatedVisibilityScope = animatedVisibilityScope
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+
                 Text(
                     text = title.uppercase(),
                     color = AppColors.white,
                     style = AppTypography.labelLarge,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = titleModifier
                 )
                 
                 Spacer(modifier = Modifier.width(AppSpacing.sm))

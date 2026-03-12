@@ -127,9 +127,16 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
 
-        // Reset chat-specific state when navigating away from the chat (CENTER) panel.
-        // This prevents the scroll-to-bottom button from leaking to side panels and
-        // ensures the chat input compacts properly on panel changes.
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+// ...
+    @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+// ...
+        // Reset chat-specific state
         LaunchedEffect(panelState.state) {
             if (panelState.state != PanelState.CENTER) {
                 scrollDirection = ScrollDirection.IDLE
@@ -138,19 +145,18 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        // PERFORMANCE FIX: BackHandler to close panels before exiting app
-        BackHandler(enabled = panelState.state != PanelState.CENTER) {
-            panelState.closePanel()
-        }
-
-        // Main content wrapped in Box for GlobalActivityIndicator overlay
-        // Use Pitch Black background
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(AppColors.background)
-                .statusBarsPadding()
-        ) {
+        AnimatedContent(targetState = panelState.state, label = "panelTransition") { targetPanelState ->
+            CompositionLocalProvider(
+                LocalNavAnimatedVisibilityScope provides this
+            ) {
+                // Main content wrapped in Box
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AppColors.background)
+                        .statusBarsPadding()
+                ) {
+// ... rest of the content
             Box(modifier = Modifier.fillMaxSize()) {
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above

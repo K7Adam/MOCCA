@@ -20,11 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -36,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.SlideTransition
 import com.mocca.app.data.repository.ServerConfigRepository
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.theme.AppColors
@@ -44,6 +49,7 @@ import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
 import org.koin.compose.koinInject
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun App() {
     AppTheme {
@@ -60,14 +66,20 @@ fun App() {
                 // Branded splash while loading server config from DB
                 SplashScreen()
             } else {
-                val startScreen = if (activeConfig != null && activeConfig!!.host.isNotBlank()) {
-                    MainScreen()
-                } else {
-                    ProgressiveOnboardingScreen()
-                }
+                SharedTransitionLayout {
+                    CompositionLocalProvider(
+                        LocalSharedTransitionScope provides this
+                    ) {
+                        val startScreen = if (activeConfig != null && activeConfig!!.host.isNotBlank()) {
+                            MainScreen()
+                        } else {
+                            ProgressiveOnboardingScreen()
+                        }
 
-                Navigator(startScreen) { navigator ->
-                    SlideTransition(navigator)
+                        Navigator(startScreen) { navigator ->
+                            SlideTransition(navigator)
+                        }
+                    }
                 }
             }
         }

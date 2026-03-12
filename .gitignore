@@ -49,3 +49,7 @@ nul
 
 # Agent work artifacts
 .sisyphus/
+
+# Secrets
+.env
+.env.*

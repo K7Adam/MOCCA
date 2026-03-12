@@ -1,6 +1,7 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -51,132 +52,13 @@ import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
-
-/**
- * Pulsing indicator for running/active sessions.
- * Shows a mint green dot with "LIVE" or "PROCESSING" label.
- */
-@Composable
-fun RunningSessionIndicator(
-    isRunning: Boolean,
-    statusLabel: String = "LIVE",
-    modifier: Modifier = Modifier
-) {
-    if (!isRunning) return
-    
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-    
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
-    )
-    
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        // Pulsing dot with outer glow effect
-        Box(contentAlignment = Alignment.Center) {
-            // Glow ring
-            Box(
-                modifier = Modifier
-                    .size((8 * pulseScale).dp)
-                    .alpha(pulseAlpha * 0.5f)
-                    .background(AppColors.accentGreen, CircleShape)
-            )
-            // Core dot
-            Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(AppColors.accentGreen, CircleShape)
-            )
-        }
-        
-        // Status label
-        Text(
-            text = statusLabel,
-            style = AppTypography.labelSmall,
-            color = AppColors.accentGreen,
-            fontWeight = FontWeight.Bold,
-            fontSize = 10.sp,
-            letterSpacing = 1.sp
-        )
-    }
-}
-
-/**
- * Visual stack of child session cards behind parent.
- * Shows 1-3 stacked cards with decreasing offset.
- */
-@Composable
-private fun StackedChildPreview(
-    childCount: Int,
-    hasRunningChild: Boolean,
-    modifier: Modifier = Modifier
-) {
-    if (childCount == 0) return
-    
-    val visibleStacks = minOf(childCount, 3)
-    
-    Box(modifier = modifier) {
-        // Render stacks from back to front
-        for (i in (visibleStacks - 1) downTo 0) {
-            val offsetX = ((visibleStacks - 1 - i) * 4).dp
-            val offsetY = ((visibleStacks - 1 - i) * 3).dp
-            val alpha = 0.3f + (i * 0.2f)
-            
-            Box(
-                modifier = Modifier
-                    .offset(x = offsetX, y = offsetY)
-                    .zIndex(i.toFloat())
-                    .size(width = 40.dp, height = 24.dp)
-                    .alpha(alpha)
-                    .clip(AppShapes.small)
-                    .background(
-                        if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen
-                        } else {
-                            AppColors.surfaceContainerHigh
-                        }
-                    )
-                    .border(
-                        width = 1.dp,
-                        color = if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen
-                        } else {
-                            AppColors.border.copy(alpha = 0.3f)
-                        },
-                        shape = AppShapes.small
-                    )
-            )
-        }
-    }
-}
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
 /**
  * Card component for displaying a session group with parent-child hierarchy.
- * 
- * Features:
- * - Stacked card visualization for child sessions
- * - Pulsing indicator for running sessions
- * - Expand/collapse for viewing children
- * - Active indicator bar
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun GroupedSessionCard(
     group: SessionGroup,
@@ -189,10 +71,12 @@ fun GroupedSessionCard(
     val hasChildren = group.children.isNotEmpty()
     val hasRunningChild = group.runningSessions.any { it.id != group.parent.id }
     
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+    
     Column(modifier = modifier.fillMaxWidth()) {
-        // Parent card with stacked preview
+        // Parent card
         Box(modifier = Modifier.fillMaxWidth()) {
-            // Stacked child preview (behind parent)
             if (hasChildren && !group.isExpanded) {
                 StackedChildPreview(
                     childCount = group.children.size,
@@ -203,7 +87,6 @@ fun GroupedSessionCard(
                 )
             }
             
-            // Parent session card
             val parentModifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.sessionCard)
@@ -242,20 +125,32 @@ fun GroupedSessionCard(
                     .clickable { onSessionClick(group.parent) }
                     .padding(AppSpacing.cardPadding)
             ) {
-                // Header row: Title + Running indicator
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val titleText = group.parent.title ?: "Untitled Session"
+                    
+                    val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedBounds(
+                                rememberSharedContentState(key = "session_title_${group.parent.id}"),
+                                animatedVisibilityScope = animatedVisibilityScope
+                            )
+                        }
+                    } else {
+                        Modifier
+                    }
+
                     Text(
-                        text = group.parent.title ?: "Untitled Session",
+                        text = titleText,
                         style = AppTypography.titleSmall,
                         color = AppColors.textPrimary,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).then(titleModifier)
                     )
                     
                     if (isRunning) {
@@ -269,7 +164,6 @@ fun GroupedSessionCard(
                 
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                // Footer: Child count + Expand toggle
                 if (hasChildren) {
                     Row(
                         modifier = Modifier
@@ -310,7 +204,6 @@ fun GroupedSessionCard(
             }
         }
         
-        // Expanded children list
         AnimatedVisibility(
             visible = group.isExpanded && hasChildren,
             enter = expandVertically() + fadeIn(),
@@ -337,8 +230,118 @@ fun GroupedSessionCard(
 }
 
 /**
+ * Pulsing indicator for running/active sessions.
+ */
+@Composable
+fun RunningSessionIndicator(
+    isRunning: Boolean,
+    statusLabel: String = "LIVE",
+    modifier: Modifier = Modifier
+) {
+    if (!isRunning) return
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.4f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseAlpha"
+    )
+    
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+    
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .size((8 * pulseScale).dp)
+                    .alpha(pulseAlpha * 0.5f)
+                    .background(AppColors.accentGreen, CircleShape)
+            )
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(AppColors.accentGreen, CircleShape)
+            )
+        }
+        
+        Text(
+            text = statusLabel,
+            style = AppTypography.labelSmall,
+            color = AppColors.accentGreen,
+            fontWeight = FontWeight.Bold,
+            fontSize = 10.sp,
+            letterSpacing = 1.sp
+        )
+    }
+}
+
+/**
+ * Visual stack of child session cards behind parent.
+ */
+@Composable
+private fun StackedChildPreview(
+    childCount: Int,
+    hasRunningChild: Boolean,
+    modifier: Modifier = Modifier
+) {
+    if (childCount == 0) return
+    
+    val visibleStacks = minOf(childCount, 3)
+    
+    Box(modifier = modifier) {
+        for (i in (visibleStacks - 1) downTo 0) {
+            val offsetX = ((visibleStacks - 1 - i) * 4).dp
+            val offsetY = ((visibleStacks - 1 - i) * 3).dp
+            val alpha = 0.3f + (i * 0.2f)
+            
+            Box(
+                modifier = Modifier
+                    .offset(x = offsetX, y = offsetY)
+                    .zIndex(i.toFloat())
+                    .size(width = 40.dp, height = 24.dp)
+                    .alpha(alpha)
+                    .clip(AppShapes.small)
+                    .background(
+                        if (hasRunningChild && i == visibleStacks - 1) {
+                            AppColors.accentGreen
+                        } else {
+                            AppColors.surfaceContainerHigh
+                        }
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = if (hasRunningChild && i == visibleStacks - 1) {
+                            AppColors.accentGreen
+                        } else {
+                            AppColors.border.copy(alpha = 0.3f)
+                        },
+                        shape = AppShapes.small
+                    )
+            )
+        }
+    }
+}
+
+/**
  * Compact card for child/sub sessions.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ChildSessionCard(
     session: Session,
@@ -346,6 +349,9 @@ private fun ChildSessionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -365,7 +371,6 @@ private fun ChildSessionCard(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Title (with sub-agent prefix stripped)
         val displayTitle = session.title?.let { title ->
             when {
                 title.startsWith("Background:") -> title.removePrefix("Background:").trim()
@@ -374,13 +379,24 @@ private fun ChildSessionCard(
             }
         } ?: "Sub-session"
         
+        val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+            with(sharedTransitionScope) {
+                Modifier.sharedBounds(
+                    rememberSharedContentState(key = "session_title_${session.id}"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                )
+            }
+        } else {
+            Modifier
+        }
+
         Text(
             text = displayTitle,
             style = AppTypography.bodySmall,
             color = AppColors.textPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f).then(titleModifier)
         )
         
         if (isRunning) {
