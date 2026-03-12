@@ -135,7 +135,7 @@ fun MoccaInput(
                 .height(AppSpacing.inputHeight)
                 .clip(shape)
                 .background(backgroundColor, shape)
-                .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 6.dp)
+                .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.5f), blur = 8.dp)
                 .border(animatedBorderWidth, animatedBorderColor, shape)
                 .padding(horizontal = AppSpacing.inputPaddingHorizontal)
         ) {
@@ -228,7 +228,7 @@ fun CommandLineInput(
             .fillMaxWidth()
             .clip(shape)
             .background(AppColors.surfaceContainer, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 6.dp)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.5f), blur = 8.dp)
             .border(AppSpacing.borderThin, AppColors.border, shape)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically

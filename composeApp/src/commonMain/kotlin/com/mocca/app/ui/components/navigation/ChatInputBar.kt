@@ -53,6 +53,8 @@ import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import androidx.compose.ui.graphics.Color
+import com.mocca.app.ui.theme.innerShadow
 import com.mocca.app.ui.theme.AppTypography
 
 import androidx.compose.material3.HorizontalFloatingToolbar
@@ -192,7 +194,13 @@ fun ChatInputBar(
             expanded = expanded,
             colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
             shape = AppShapes.extraLarge,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .innerShadow(
+                    shape = AppShapes.extraLarge,
+                    color = Color.Black.copy(alpha = 0.5f),
+                    blur = 8.dp
+                )
         ) {
             Column(
                 modifier = Modifier
