@@ -155,7 +155,6 @@ internal fun TerminalContent(
     val density = LocalDensity.current
     val monoStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
-        fontSize = 13.sp,
         lineHeight = 18.sp,
         color = AppColors.accentGreen
     )
@@ -204,7 +203,7 @@ internal fun TerminalContent(
                     Spacer(Modifier.height(8.dp))
                     Text(
                         text = tab.error,
-                        style = monoStyle.copy(color = AppColors.error, fontSize = 12.sp),
+                        style = monoStyle.copy(color = AppColors.error),
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -264,7 +263,6 @@ internal fun TerminalInputBar(
             text = "❯",
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                fontSize = 14.sp,
                 color = AppColors.accentGreen,
                 fontWeight = FontWeight.Bold
             )
@@ -279,7 +277,6 @@ internal fun TerminalInputBar(
                 .focusRequester(focusRequester),
             textStyle = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
                 color = AppColors.white
             ),
             cursorBrush = SolidColor(AppColors.accentGreen),
@@ -334,8 +331,7 @@ internal fun TerminalEmptyState(
             Text(
                 "NO TERMINAL SESSIONS",
                 style = AppTypography.labelMedium,
-                color = AppColors.textTertiary,
-                letterSpacing = 1.sp
+                color = AppColors.textTertiary
             )
             Button(
                 onClick = onCreateClick,

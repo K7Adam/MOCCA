@@ -151,7 +151,7 @@ fun UpdateDialog(
                             logs.forEach { log ->
                                 Text(
                                     text = "> $log",
-                                    style = AppTypography.codeSmall.copy(fontSize = 10.sp),
+                                    style = AppTypography.codeSmall.copy(),
                                     color = if (log.startsWith("ERROR") || log.startsWith("CRITICAL")) AppColors.alertRed else AppColors.textSecondary,
                                     fontFamily = AppTypography.monoFamily
                                 )
@@ -162,7 +162,7 @@ fun UpdateDialog(
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                                 Text(
                                     text = "> ERROR: $error",
-                                    style = AppTypography.codeSmall.copy(fontSize = 10.sp),
+                                    style = AppTypography.codeSmall.copy(),
                                     color = AppColors.alertRed,
                                     fontFamily = AppTypography.monoFamily
                                 )

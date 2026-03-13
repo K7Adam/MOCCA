@@ -285,9 +285,7 @@ fun RunningSessionIndicator(
             text = statusLabel,
             style = AppTypography.labelSmall,
             color = AppColors.accentGreen,
-            fontWeight = FontWeight.Bold,
-            fontSize = 10.sp,
-            letterSpacing = 1.sp
+            fontWeight = FontWeight.Bold
         )
     }
 }

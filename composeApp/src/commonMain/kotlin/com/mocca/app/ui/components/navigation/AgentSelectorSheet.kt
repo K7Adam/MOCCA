@@ -21,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +50,7 @@ fun AgentSelectorBottomSheet(
         contentColor = AppColors.textPrimary,
         scrimColor = AppColors.scrim,
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        shape = AppShapes.bottomSheet
     ) {
         Column(
             modifier = Modifier

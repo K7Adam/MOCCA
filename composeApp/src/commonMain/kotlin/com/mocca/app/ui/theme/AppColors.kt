@@ -15,6 +15,14 @@ import androidx.compose.ui.graphics.Color
  */
 @Immutable
 object AppColors {
+    // ---------------------------------------------------------------------------
+    // BRAND ANCHOR COLORS
+    // ---------------------------------------------------------------------------
+    val AnchorPrimary = Color(0xFF8B9DC3)
+    val AnchorSecondary = Color(0xFF8B9DC3)
+    val AnchorTertiary = Color(0xFF8B9DC3)
+    val DarkBackgroundSeed = Color(0xFF1A1A1A)
+
     // ═══════════════════════════════════════════════════════════════════════════
     // BACKGROUNDS — M3 Tonal Surface Hierarchy
     // ═══════════════════════════════════════════════════════════════════════════

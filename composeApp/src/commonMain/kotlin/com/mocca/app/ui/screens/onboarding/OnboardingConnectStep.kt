@@ -35,6 +35,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -175,7 +176,7 @@ internal fun OnboardingConnectStep(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(AppColors.surfaceVariant, AppSpacing.let { 
-                            androidx.compose.foundation.shape.RoundedCornerShape(AppSpacing.cornerRadiusMedium) 
+                            AppShapes.medium 
                         })
                         .padding(AppSpacing.xl),
                     contentAlignment = Alignment.Center

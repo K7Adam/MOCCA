@@ -144,8 +144,7 @@ internal fun SessionDisposedBanner(
                     text = "SESSION DISPOSED",
                     style = AppTypography.labelSmall,
                     color = AppColors.warning,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = reason,

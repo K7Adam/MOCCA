@@ -131,8 +131,7 @@ fun DateSeparator(date: String) {
             text = date.uppercase(),
             style = AppTypography.labelExtraSmall,
             color = AppColors.textTertiary,
-            modifier = Modifier.padding(horizontal = AppSpacing.md),
-            letterSpacing = 2.sp
+            modifier = Modifier.padding(horizontal = AppSpacing.md)
         )
         Box(
             modifier = Modifier

@@ -220,8 +220,7 @@ private fun NotGitRepoScreen() {
             Text(
                 text = "NOT A GIT REPOSITORY",
                 style = AppTypography.headlineSmall,
-                color = AppColors.white.copy(alpha = 0.4f),
-                letterSpacing = 1.sp
+                color = AppColors.white.copy(alpha = 0.4f)
             )
             Text(
                 text = "The server's working directory is not\nunder version control.",

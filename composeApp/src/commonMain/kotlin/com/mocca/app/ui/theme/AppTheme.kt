@@ -16,7 +16,7 @@ import androidx.compose.runtime.ReadOnlyComposable
  * - Soft dark (#1A1A1A) background
  * - Desaturated cool gray-blue accent (#8B9DC3)
  * - M3 tonal surface elevation hierarchy
- * - Modern rounded corners (12dp-24dp)
+ * - Modern rounded corners and expressive shapes
  * - Extended colors for app-specific elements
  */
 
@@ -25,59 +25,12 @@ import androidx.compose.runtime.ReadOnlyComposable
 // ═══════════════════════════════════════════════════════════════════════════════
 
 private val AppColorScheme: ColorScheme = darkColorScheme(
-    // Primary — accent color for main interactive elements
-    primary = AppColors.accentGreen,
-    onPrimary = AppColors.buttonText,
-    primaryContainer = AppColors.surfaceContainerHigh,
-    onPrimaryContainer = AppColors.textPrimary,
-
-    // Secondary — accent for status/emphasis
-    secondary = AppColors.accentGreen,
-    onSecondary = AppColors.background,
-    secondaryContainer = AppColors.surfaceContainer,
-    onSecondaryContainer = AppColors.accentGreen,
-
-    // Tertiary
-    tertiary = AppColors.primary,
-    onTertiary = AppColors.textPrimary,
-    tertiaryContainer = AppColors.primaryDim,
-    onTertiaryContainer = AppColors.statusOnline,
-
-    // Error
-    error = AppColors.error,
-    onError = AppColors.white,
-    errorContainer = AppColors.alertRedDim,
-    onErrorContainer = AppColors.error,
-
-    // Background
-    background = AppColors.background,
-    onBackground = AppColors.textPrimary,
-
-    // Surface — M3 tonal elevation hierarchy
-    surface = AppColors.surface,
-    onSurface = AppColors.textPrimary,
-    surfaceVariant = AppColors.surfaceVariant,
-    onSurfaceVariant = AppColors.textSecondary,
-    surfaceTint = AppColors.accentGreen,
-    surfaceBright = AppColors.surfaceBright,
-    surfaceDim = AppColors.surfaceDim,
-    surfaceContainer = AppColors.surfaceContainer,
-    surfaceContainerHigh = AppColors.surfaceContainerHigh,
-    surfaceContainerHighest = AppColors.surfaceContainerHighest,
-    surfaceContainerLow = AppColors.surfaceContainerLow,
-    surfaceContainerLowest = AppColors.surfaceContainerLowest,
-
-    // Outline
-    outline = AppColors.border,
-    outlineVariant = AppColors.borderLight,
-
-    // Inverse (for contrast elements like snackbars)
-    inverseSurface = AppColors.white,
-    inverseOnSurface = AppColors.background,
-    inversePrimary = AppColors.greyDark,
-
-    // Scrim
-    scrim = AppColors.scrim
+    primary = AppColors.AnchorPrimary,
+    secondary = AppColors.AnchorSecondary,
+    tertiary = AppColors.AnchorTertiary,
+    background = AppColors.DarkBackgroundSeed,
+    surface = AppColors.DarkBackgroundSeed,
+    // Rely on Material 3 standard generation for the rest, anchoring on the primary and dark seed.
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════

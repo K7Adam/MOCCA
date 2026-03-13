@@ -39,16 +39,14 @@ internal fun EmptySessionState() {
                 text = "MOCCA_AI_v2",
                 style = AppTypography.headlineMedium,
                 color = AppColors.white,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 4.sp
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "SYSTEM READY // SELECT_MODEL",
                 style = AppTypography.labelExtraSmall,
                 color = AppColors.textTertiary,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                letterSpacing = 1.sp
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
@@ -74,8 +72,7 @@ internal fun ModernBootSequence() {
                     text = line,
                     style = AppTypography.labelExtraSmall,
                     color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.textTertiary,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.sp
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

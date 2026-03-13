@@ -2,6 +2,9 @@ package com.mocca.app.ui.screens.main
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.CompositionLocalProvider
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.foundation.background
@@ -160,7 +163,17 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        AnimatedContent(targetState = panelState.state, label = "panelTransition") { targetPanelState ->
+        val panelEnterSpec = androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+        val panelExitSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+
+        AnimatedContent(
+            targetState = panelState.state,
+            label = "panelTransition",
+            transitionSpec = {
+                fadeIn(animationSpec = panelEnterSpec) togetherWith
+                fadeOut(animationSpec = panelExitSpec)
+            }
+        ) { targetPanelState ->
             CompositionLocalProvider(
                 LocalNavAnimatedVisibilityScope provides this
             ) {

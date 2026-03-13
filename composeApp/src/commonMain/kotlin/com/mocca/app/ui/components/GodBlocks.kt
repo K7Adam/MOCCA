@@ -234,16 +234,14 @@ fun GodBadge(
 ) {
     Surface(
         color = containerColor,
-        shape = AppShapes.small,
-    ) {
+        shape = AppShapes.small
+) {
         Text(
             text = text.uppercase(),
             style = AppTypography.labelSmall,
             fontWeight = FontWeight.Bold,
             color = contentColor,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-            fontSize = 10.sp,
-            letterSpacing = 1.sp
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
         )
     }
 }

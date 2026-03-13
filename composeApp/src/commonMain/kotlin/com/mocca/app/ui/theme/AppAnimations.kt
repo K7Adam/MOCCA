@@ -50,39 +50,21 @@ object AppAnimations {
     // MOTION SCHEME TOKENS (M3 Expressive)
     // ═══════════════════════════════════════════════════════════════════════════════
 
-    /**
-     * Default spatial spec for movement/size changes.
-     */
     val spatialDefault: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.defaultSpatialSpec()
 
-    /**
-     * Fast spatial spec for quick interactions.
-     */
     val spatialFast: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.fastSpatialSpec()
 
-    /**
-     * Slow spatial spec for emphasized transitions.
-     */
     val spatialSlow: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.slowSpatialSpec()
 
-    /**
-     * Default effects spec for alpha/color changes.
-     */
     val effectsDefault: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.defaultEffectsSpec()
 
-    /**
-     * Fast effects spec.
-     */
     val effectsFast: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.fastEffectsSpec()
 
-    /**
-     * Slow effects spec.
-     */
     val effectsSlow: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.slowEffectsSpec()
 }

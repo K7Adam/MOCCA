@@ -95,8 +95,7 @@ fun ModernHeader(
                 text = displayText.uppercase(),
                 color = color,
                 style = AppTypography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp
+                fontWeight = FontWeight.Bold
             )
         }
         

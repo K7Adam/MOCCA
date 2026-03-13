@@ -221,7 +221,7 @@ private fun UserMessageContent(
     onLongClick: () -> Unit
 ) {
     // Content Grouping: Sharp top-right for User
-    val shape = RoundedCornerShape(topStart = 24.dp, topEnd = 2.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
+    val shape = AppShapes.large
 
     Box(
         modifier = Modifier
@@ -249,7 +249,7 @@ private fun AgentMessageContent(
     onLongClick: () -> Unit
 ) {
     // Content Grouping: Sharp top-left for Agent
-    val shape = RoundedCornerShape(topStart = 2.dp, topEnd = 24.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
+    val shape = AppShapes.large
 
     Box(
         modifier = Modifier

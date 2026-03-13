@@ -147,7 +147,7 @@ private fun DashboardContent(sessionId: String) {
                                     .background(AppColors.surfaceVariant, AppShapes.medium),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("+3", style = AppTypography.labelSmall, color = AppColors.textPrimary.copy(alpha = 0.4f), fontSize = 10.sp)
+                                Text("+3", style = AppTypography.labelSmall, color = AppColors.textPrimary.copy(alpha = 0.4f))
                             }
                         }
                     }
@@ -196,7 +196,7 @@ private fun GodModuleCard(
     Surface(
         modifier = modifier,
         color = AppColors.surfaceVariant,
-        shape = RoundedCornerShape(32.dp),
+        shape = AppShapes.extraExtraLarge,
         border = BorderStroke(1.dp, AppColors.border)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -237,8 +237,7 @@ private fun GodModuleCard(
             Text(
                 text = title,
                 style = AppTypography.labelSmall,
-                color = AppColors.textPrimary.copy(alpha = 0.4f),
-                letterSpacing = 1.sp
+                color = AppColors.textPrimary.copy(alpha = 0.4f)
             )
             
             if (status != null) {
@@ -309,8 +308,7 @@ private fun GodBottomNavBar(
                         text = item.label,
                         style = AppTypography.labelSmall,
                         color = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        fontSize = 9.sp
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }
             }

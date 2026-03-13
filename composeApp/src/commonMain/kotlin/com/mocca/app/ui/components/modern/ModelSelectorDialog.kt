@@ -48,7 +48,7 @@ fun ModelSelectorDialog(
         contentColor = AppColors.white,
         scrimColor = Color.Black.copy(alpha = 0.5f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+        shape = AppShapes.bottomSheet
     ) {
         Column(
             modifier = Modifier

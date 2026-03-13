@@ -193,8 +193,7 @@ private fun GodFilesList(
             Text(
                 text = "DIRECTORY EMPTY",
                 style = AppTypography.labelMedium,
-                color = AppColors.textPrimary.copy(alpha = 0.2f),
-                letterSpacing = 1.sp
+                color = AppColors.textPrimary.copy(alpha = 0.2f)
             )
         }
     } else {

@@ -213,8 +213,7 @@ private fun CompactNavItem(
         Text(
             text = item.label,
             style = AppTypography.labelSmall.copy(
-                fontSize = 10.sp,
-                letterSpacing = 0.3.sp,
+                
                 lineHeight = 12.sp
             ),
             color = textColor,

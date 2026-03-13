@@ -139,8 +139,7 @@ private fun ExpandableThinkingPreview(content: String) {
                 text = if (expanded) "◓ COLLAPSE" else "◒ VIEW_${lines.size}_STEPS",
                 color = AppColors.statusThinking.copy(alpha = 0.8f),
                 style = AppTypography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 0.5.sp
+                fontWeight = FontWeight.Bold
             )
         }
     }

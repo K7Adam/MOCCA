@@ -36,9 +36,9 @@ fun MarkdownText(
     
     val mdTypography = markdownTypography(
         text = style,
-        code = style.copy(fontSize = 12.sp, color = AppColors.accentGreen, fontFamily = FontFamily.Monospace),
-        h1 = AppTypography.headlineMedium.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-        h2 = AppTypography.headlineSmall.copy(color = color, fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
+        code = style.copy( color = AppColors.accentGreen, fontFamily = FontFamily.Monospace),
+        h1 = AppTypography.headlineMedium.copy(color = color, fontWeight = FontWeight.Bold),
+        h2 = AppTypography.headlineSmall.copy(color = color, fontWeight = FontWeight.Bold),
         h3 = AppTypography.titleLarge.copy(color = color, fontWeight = FontWeight.Bold),
         h4 = AppTypography.titleMedium.copy(color = color, fontWeight = FontWeight.Bold),
         h5 = AppTypography.titleSmall.copy(color = color, fontWeight = FontWeight.Bold),

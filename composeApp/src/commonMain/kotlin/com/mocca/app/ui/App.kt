@@ -76,7 +76,10 @@ fun App() {
                         }
 
                         Navigator(startScreen) { navigator ->
-                            SlideTransition(navigator)
+                            SlideTransition(
+                                navigator = navigator,
+                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                            )
                         }
                     }
                 }
