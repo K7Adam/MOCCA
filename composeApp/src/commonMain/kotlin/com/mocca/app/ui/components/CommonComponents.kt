@@ -40,7 +40,7 @@ fun PermissionRequestDialog(
         icon = {
             Icon(
                 Icons.Default.Warning,
-                contentDescription = null,
+                contentDescription = "Permission Required",
                 tint = AppColors.accentGreen
             )
         },
@@ -150,7 +150,7 @@ fun PermissionRequestDialog(
                         contentColor = AppColors.background
                     )
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = null)
+                    Icon(Icons.Default.Check, contentDescription = "Allow")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(Res.string.allow))
                 }
@@ -164,7 +164,7 @@ fun PermissionRequestDialog(
                     contentColor = AppColors.textSecondary
                 )
             ) {
-                Icon(Icons.Default.Close, contentDescription = null)
+                Icon(Icons.Default.Close, contentDescription = "Deny")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(stringResource(Res.string.deny))
             }

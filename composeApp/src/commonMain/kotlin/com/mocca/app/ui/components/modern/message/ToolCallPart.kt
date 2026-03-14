@@ -179,8 +179,8 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
                 HorizontalDivider(color = borderColor.copy(alpha = 0.4f))
-                tools.forEach { (invocation, _) ->
-                    RichToolCard(invocation)
+                tools.forEach { (invocation, result) ->
+                    RichToolCard(invocation, result)
                 }
             }
         }

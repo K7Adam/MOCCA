@@ -29,6 +29,31 @@ import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.ui.platform.LocalClipboardManager
 
 @Composable
+internal fun FileHeader(path: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        Icon(
+            Icons.Default.Description,
+            contentDescription = "File",
+            modifier = Modifier.size(14.dp),
+            tint = AppColors.textTertiary
+        )
+        Text(
+            text = path,
+            style = AppTypography.labelSmall,
+            color = AppColors.textSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
 internal fun CodeBlock(
     code: String,
     label: String? = null,

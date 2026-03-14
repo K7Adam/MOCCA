@@ -259,7 +259,7 @@ private fun RenderPartGroup(group: PartGroup, onFileClick: ((String) -> Unit)?) 
                 onFileClick = onFileClick
             )
             is MessagePart.Reasoning -> ModernReasoningBlock(part)
-            is MessagePart.ToolInvocation -> RichToolCard(part)
+            is MessagePart.ToolInvocation -> RichToolCard(part, null) // In ContextToolGroup, they are paired. Standalone calls get null result.
             is MessagePart.ToolResult -> ModernToolResultBlock(part)
             is MessagePart.File -> ModernFileBlock(part)
             is MessagePart.SubTask -> ModernSubTaskBlock(part)

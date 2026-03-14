@@ -108,7 +108,7 @@ fun MoccaButton(
             if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "$text icon",
                     tint = txtColor,
                     modifier = Modifier.size(MoccaButtonDefaults.IconSize)
                 )
@@ -251,7 +251,7 @@ fun MoccaOutlinedButton(
             if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "$text icon",
                     tint = txtColor,
                     modifier = Modifier.size(MoccaButtonDefaults.IconSize)
                 )
@@ -316,7 +316,7 @@ fun MoccaCompactButton(
             if (icon != null) {
                 Icon(
                     imageVector = icon,
-                    contentDescription = null,
+                    contentDescription = "$text icon",
                     tint = txtColor,
                     modifier = Modifier.size(MoccaButtonDefaults.IconSizeSmall)
                 )
