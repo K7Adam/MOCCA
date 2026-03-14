@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.components.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.*
@@ -55,7 +54,7 @@ internal fun GitStatusSummary(
                             Text(
                                 text = status?.branch ?: "unknown",
                                 style = AppTypography.titleMedium,
-                                color = AppColors.white,
+                                color = AppColors.textPrimary,
                                 fontWeight = FontWeight.Bold
                             )
                         }

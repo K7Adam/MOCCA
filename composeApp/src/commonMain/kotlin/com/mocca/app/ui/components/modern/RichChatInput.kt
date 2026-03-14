@@ -245,7 +245,7 @@ fun RichChatInput(
                         } else false
                     },
                 enabled = enabled,
-                textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
+                textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
                 cursorBrush = SolidColor(AppColors.accentGreen),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,

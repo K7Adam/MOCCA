@@ -70,12 +70,12 @@ fun WebFetchToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modi
                         Icons.Default.Link,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.white
+                        tint = AppColors.textPrimary
                     )
                     Text(
                         text = url,
                         style = AppTypography.bodySmall,
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -87,7 +87,7 @@ fun WebFetchToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modi
                 Text(
                     text = "Format: $format",
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey
+                    color = AppColors.textSecondary
                 )
             }
             
@@ -132,7 +132,7 @@ fun TaskToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         text = subagentType,
                         style = AppTypography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                 }
             }
@@ -166,7 +166,7 @@ fun GenericToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modif
         title = part.title,
         icon = Icons.Default.Build,
         iconTint = when (part.state) {
-            ToolState.PENDING -> AppColors.grey
+            ToolState.PENDING -> AppColors.textSecondary
             ToolState.RUNNING -> AppColors.statusWaiting
             ToolState.COMPLETED -> AppColors.accentGreen
             ToolState.ERROR -> AppColors.error
@@ -227,7 +227,7 @@ private fun TodoListView(output: String) {
                 Text(
                     text = "Total: ${todos.size}",
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey
+                    color = AppColors.textSecondary
                 )
                 if (inProgress.isNotEmpty()) {
                     Text(
@@ -262,7 +262,7 @@ private fun TodoListView(output: String) {
                     Text(
                         text = if (showCompleted) "Hide completed (${completed.size})" else "Show completed (${completed.size})",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
                 if (showCompleted) {
@@ -277,7 +277,7 @@ private fun TodoListView(output: String) {
         Text(
             text = output.take(500),
             style = AppTypography.bodySmall,
-            color = AppColors.white
+            color = AppColors.textPrimary
         )
     }
 }
@@ -345,9 +345,9 @@ private fun TodoItemRow(
             text = todo.content,
             style = AppTypography.bodySmall,
             color = if (isCompleted) 
-                AppColors.grey 
+                AppColors.textSecondary 
             else 
-                AppColors.white
+                AppColors.textPrimary
         )
         
         // Priority badge

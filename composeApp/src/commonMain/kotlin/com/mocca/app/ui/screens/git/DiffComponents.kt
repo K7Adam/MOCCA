@@ -159,7 +159,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             ) {
                 Text(
                     text = file.path,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelMedium,
                     modifier = Modifier.weight(1f),
                     overflow = TextOverflow.Ellipsis,
@@ -167,7 +167,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
                 )
                 Text(
                     text = "+${file.additions} -${file.deletions}",
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     style = AppTypography.labelSmall
                 )
             }
@@ -186,12 +186,12 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(AppColors.greyDark)
+                    .background(AppColors.textSecondaryDark)
                     .padding(horizontal = AppSpacing.sm, vertical = 2.dp)
             ) {
                 Text(
                     text = hunk.header,
-                    color = AppColors.greyLight,
+                    color = AppColors.textSecondaryLight,
                     style = AppTypography.monoLabel
                 )
             }
@@ -264,13 +264,13 @@ internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
     ) {
         Text(
             text = "${line.oldLineNumber ?: ""}",
-            color = AppColors.grey,
+            color = AppColors.textSecondary,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(32.dp).padding(start = 4.dp)
         )
         Text(
             text = "${line.newLineNumber ?: ""}",
-            color = AppColors.grey,
+            color = AppColors.textSecondary,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(32.dp)
         )
@@ -279,7 +279,7 @@ internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
             color = when (line.type) {
                 DiffLineType.ADDITION -> AppColors.diffAdditionText
                 DiffLineType.DELETION -> AppColors.diffDeletionText
-                else -> AppColors.white
+                else -> AppColors.textPrimary
             },
             style = AppTypography.codeSmall,
             modifier = Modifier.padding(start = 4.dp),
@@ -374,7 +374,7 @@ internal fun SplitDiffCell(
         val lineNum = if (isLeft) line?.oldLineNumber else line?.newLineNumber
         Text(
             text = "${lineNum ?: ""}",
-            color = AppColors.grey,
+            color = AppColors.textSecondary,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(28.dp).padding(start = 4.dp)
         )
@@ -383,7 +383,7 @@ internal fun SplitDiffCell(
             color = when (line?.type) {
                 DiffLineType.ADDITION -> AppColors.diffAdditionText
                 DiffLineType.DELETION -> AppColors.diffDeletionText
-                else -> AppColors.white
+                else -> AppColors.textPrimary
             },
             style = AppTypography.codeSmall,
             modifier = Modifier.padding(start = 2.dp),

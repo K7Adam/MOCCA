@@ -123,7 +123,7 @@ fun GitStatusModule(
                 StatusDot(color = AppColors.accentGreen)
                 Text(
                     text = branchName.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -177,7 +177,7 @@ fun SkillsEngineModule(
             ) {
                 if (!skill.isActive) {
                     StatusDot(
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         size = 6.dp,
                         showGlow = false
                     )
@@ -185,7 +185,7 @@ fun SkillsEngineModule(
                 }
                 Text(
                     text = skill.name.uppercase(),
-                    color = if (skill.isActive) AppColors.white else AppColors.textTertiary,
+                    color = if (skill.isActive) AppColors.textPrimary else AppColors.textTertiary,
                     style = AppTypography.bodySmall
                 )
             }

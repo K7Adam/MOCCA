@@ -62,7 +62,7 @@ internal fun ChatInputTextFieldArea(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = inputEnabled,
-            textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
+            textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
             cursorBrush = SolidColor(AppColors.accentGreen),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->

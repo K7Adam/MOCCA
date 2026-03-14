@@ -144,7 +144,7 @@ fun PermissionBanner(
                         Text(
                             text = permission.permission.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = AppColors.white,
+                            color = AppColors.textPrimary,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,

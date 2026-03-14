@@ -630,7 +630,7 @@ fun AppearanceSection(
                     colors = androidx.compose.material3.SliderDefaults.colors(
                         thumbColor = AppColors.primary,
                         activeTrackColor = AppColors.primary,
-                        inactiveTrackColor = AppColors.greyDark
+                        inactiveTrackColor = AppColors.textSecondaryDark
                     )
                 )
                 
@@ -955,7 +955,7 @@ fun ProjectSection(
                     placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.textPrimary),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
                         imeAction = ImeAction.Done
@@ -1282,7 +1282,7 @@ fun SettingsRowItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) AppColors.white else AppColors.textSecondary,
+                color = if (isEnabled) AppColors.textPrimary else AppColors.textSecondary,
                 style = AppTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) androidx.compose.ui.text.style.TextDecoration.LineThrough else androidx.compose.ui.text.style.TextDecoration.None
                 ),
@@ -1310,12 +1310,12 @@ fun SettingsRowItem(
                     checkedThumbColor = AppColors.background,
                     checkedTrackColor = AppColors.primary,
                     checkedBorderColor = AppColors.primary,
-                    uncheckedThumbColor = AppColors.white,
+                    uncheckedThumbColor = AppColors.textPrimary,
                     uncheckedTrackColor = AppColors.surfaceVariant,
                     uncheckedBorderColor = AppColors.border,
-                    disabledCheckedThumbColor = AppColors.grey,
+                    disabledCheckedThumbColor = AppColors.textSecondary,
                     disabledCheckedTrackColor = AppColors.surfaceVariant,
-                    disabledUncheckedThumbColor = AppColors.grey,
+                    disabledUncheckedThumbColor = AppColors.textSecondary,
                     disabledUncheckedTrackColor = AppColors.surfaceVariant
                 )
             )

@@ -45,7 +45,7 @@ fun LegacyMessageBubble(
     
     // Terminal style: User bubbles use surfaceVariant, Assistant is plain text/markdown
     val containerColor = if (isUser) AppColors.surfaceVariant else Color.Transparent
-    val contentColor = if (isUser) AppColors.white else AppColors.white
+    val contentColor = if (isUser) AppColors.textPrimary else AppColors.textPrimary
     
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -59,7 +59,7 @@ fun LegacyMessageBubble(
             Text(
                 text = message.role.name.lowercase().replaceFirstChar { it.uppercase() },
                 style = AppTypography.labelSmall,
-                color = AppColors.grey,
+                color = AppColors.textSecondary,
                 modifier = Modifier.padding(start = 8.dp, bottom = 2.dp)
             )
         }
@@ -174,7 +174,7 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = AppColors.grey
+                    tint = AppColors.textSecondary
                 )
             }
             
@@ -186,7 +186,7 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
                     Text(
                         text = part.content,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -212,14 +212,14 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
                 Text(
                     text = "Tool Output",
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey
+                    color = AppColors.textSecondary
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = AppColors.grey
+                    tint = AppColors.textSecondary
                 )
             }
             
@@ -228,7 +228,7 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
                 Text(
                     text = part.result,
                     style = AppTypography.bodySmall,
-                    color = AppColors.white
+                    color = AppColors.textPrimary
                 )
             }
         }

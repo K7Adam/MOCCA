@@ -63,7 +63,7 @@ class McpScreen : Screen {
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
                             text = "${state.connectedCount}/${state.totalCount} SERVERS_ACTIVE",
-                            color = if (state.connectedCount > 0) AppColors.statusOnline else AppColors.grey,
+                            color = if (state.connectedCount > 0) AppColors.statusOnline else AppColors.textSecondary,
                             style = AppTypography.labelSmall,
                             modifier = Modifier.padding(start = 16.dp)
                         )
@@ -73,7 +73,7 @@ class McpScreen : Screen {
                         MoccaIconButton(
                             icon = Icons.Default.Refresh,
                             onClick = { screenModel.refresh() },
-                            iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.greyLight
+                            iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.textSecondaryLight
                         )
                         MoccaIconButton(
                             icon = Icons.Default.Add,
@@ -108,7 +108,7 @@ class McpScreen : Screen {
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = "LOADING_MCP_STATUS...",
-                                color = AppColors.grey,
+                                color = AppColors.textSecondary,
                                 style = AppTypography.bodyMedium
                             )
                         }
@@ -119,7 +119,7 @@ class McpScreen : Screen {
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f)
-                            .border(AppSpacing.borderThin, AppColors.greyDark, AppShapes.medium),
+                            .border(AppSpacing.borderThin, AppColors.textSecondaryDark, AppShapes.medium),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
@@ -129,20 +129,20 @@ class McpScreen : Screen {
                             Icon(
                                 imageVector = Icons.Default.CloudOff,
                                 contentDescription = null,
-                                tint = AppColors.greyDark,
+                                tint = AppColors.textSecondaryDark,
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
                                 text = "NO_MCP_SERVERS_FOUND",
-                                color = AppColors.grey,
+                                color = AppColors.textSecondary,
                                 style = AppTypography.bodyLarge,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             Text(
                                 text = "Add a server to get started",
-                                color = AppColors.greyDark,
+                                color = AppColors.textSecondaryDark,
                                 style = AppTypography.bodySmall
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.lg))

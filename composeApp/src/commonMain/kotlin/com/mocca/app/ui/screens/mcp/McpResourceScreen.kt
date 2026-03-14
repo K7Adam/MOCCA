@@ -83,14 +83,14 @@ data class McpResourceScreen(val serverName: String) : Screen {
                         )
                         Text(
                             text = "server: \"$serverName\"",
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             style = AppTypography.codeSmall
                         )
                     }
                     MoccaIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = { screenModel.loadResources() },
-                        iconColor = if (state.isLoading) AppColors.statusWaiting else AppColors.greyLight
+                        iconColor = if (state.isLoading) AppColors.statusWaiting else AppColors.textSecondaryLight
                     )
                 }
 
@@ -122,7 +122,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
                                     text = "LOADING_RESOURCES...",
-                                    color = AppColors.grey,
+                                    color = AppColors.textSecondary,
                                     style = AppTypography.bodyMedium
                                 )
                             }
@@ -134,7 +134,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                                .border(AppSpacing.borderThin, AppColors.greyDark, AppShapes.medium),
+                                .border(AppSpacing.borderThin, AppColors.textSecondaryDark, AppShapes.medium),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -144,19 +144,19 @@ data class McpResourceScreen(val serverName: String) : Screen {
                                 Icon(
                                     imageVector = Icons.Default.FolderOff,
                                     contentDescription = null,
-                                    tint = AppColors.greyDark,
+                                    tint = AppColors.textSecondaryDark,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
                                     text = "NO_RESOURCES_FOUND",
-                                    color = AppColors.grey,
+                                    color = AppColors.textSecondary,
                                     style = AppTypography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "This server exposes no resources",
-                                    color = AppColors.greyDark,
+                                    color = AppColors.textSecondaryDark,
                                     style = AppTypography.bodySmall
                                 )
                             }
@@ -200,7 +200,7 @@ private fun McpResourceItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) AppColors.statusWaiting else AppColors.greyDark
+    val borderColor = if (isSelected) AppColors.statusWaiting else AppColors.textSecondaryDark
 
     Column(
         modifier = Modifier
@@ -234,7 +234,7 @@ private fun McpResourceItem(
             resource.mimeType?.let { mime ->
                 Text(
                     text = mime,
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(start = AppSpacing.xs)
                 )
@@ -252,7 +252,7 @@ private fun McpResourceItem(
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = desc,
-                color = AppColors.grey,
+                color = AppColors.textSecondary,
                 style = AppTypography.labelSmall,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -312,7 +312,7 @@ private fun McpResourceContentPanel(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.greyLight
+                    iconColor = AppColors.textSecondaryLight
                 )
             }
 
@@ -335,7 +335,7 @@ private fun McpResourceContentPanel(
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             Text(
                                 text = "READING_RESOURCE...",
-                                color = AppColors.grey,
+                                color = AppColors.textSecondary,
                                 style = AppTypography.bodySmall
                             )
                         }
@@ -353,7 +353,7 @@ private fun McpResourceContentPanel(
                         SelectionContainer {
                             Text(
                                 text = content.text ?: "(binary content — ${content.mimeType ?: "unknown mime type"})",
-                                color = if (content.text != null) AppColors.textPrimary else AppColors.grey,
+                                color = if (content.text != null) AppColors.textPrimary else AppColors.textSecondary,
                                 style = AppTypography.codeSmall,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -365,7 +365,7 @@ private fun McpResourceContentPanel(
                     else -> {
                         Text(
                             text = "SELECT_RESOURCE_TO_READ",
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             style = AppTypography.bodyMedium
                         )
                     }

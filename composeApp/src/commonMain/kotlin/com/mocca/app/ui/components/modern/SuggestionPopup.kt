@@ -137,13 +137,13 @@ private fun SuggestionRow(
             Text(
                 text = item.label,
                 style = AppTypography.bodySmall,
-                color = AppColors.white
+                color = AppColors.textPrimary
             )
             item.description?.let { desc ->
                 Text(
                     text = desc,
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     maxLines = 1
                 )
             }

@@ -81,7 +81,7 @@ internal fun TerminalTabItem(
         label = "tabBg"
     )
     val textColor by animateColorAsState(
-        targetValue = if (isActive) AppColors.white else AppColors.textSecondary,
+        targetValue = if (isActive) AppColors.textPrimary else AppColors.textSecondary,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "tabText"
     )
@@ -277,7 +277,7 @@ internal fun TerminalInputBar(
                 .focusRequester(focusRequester),
             textStyle = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                color = AppColors.white
+                color = AppColors.textPrimary
             ),
             cursorBrush = SolidColor(AppColors.accentGreen),
             singleLine = true,

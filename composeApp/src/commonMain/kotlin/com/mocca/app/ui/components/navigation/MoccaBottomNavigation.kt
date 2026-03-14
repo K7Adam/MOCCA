@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Computer
@@ -44,7 +45,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.roundToInt
@@ -198,7 +198,7 @@ fun MoccaBottomNavigation(
                         .height(1.dp)
                         .background(
                             color = AppColors.border.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(1.dp)
+                            shape = AppShapes.extraSmall
                         )
                 )
                 // Active indicator pill

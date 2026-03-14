@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing

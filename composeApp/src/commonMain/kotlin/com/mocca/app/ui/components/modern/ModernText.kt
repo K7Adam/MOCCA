@@ -22,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -46,7 +45,7 @@ import kotlinx.coroutines.delay
 fun ModernText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     style: TextStyle = AppTypography.bodyMedium,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
@@ -69,7 +68,7 @@ fun ModernText(
 fun ModernHeader(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     prefix: String = "//",
     suffix: String = "",
     showBrackets: Boolean = false
@@ -127,7 +126,7 @@ fun ModernHeader(
 fun TerminalLabel(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.greyLight
+    color: Color = AppColors.textSecondaryLight
 ) {
     Text(
         text = text.uppercase(),
@@ -145,7 +144,7 @@ fun TerminalLabel(
 fun TerminalMeta(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.grey
+    color: Color = AppColors.textSecondary
 ) {
     Text(
         text = text.uppercase(),
@@ -172,7 +171,7 @@ fun TerminalMeta(
 fun TypewriterText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
     typingDelayMs: Long = 50L,
     initialDelayMs: Long = 0L,
@@ -229,7 +228,7 @@ fun TypewriterText(
 fun TypewriterCycleText(
     texts: List<String>,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     style: TextStyle = AppTypography.headlineMedium,
     typingDelayMs: Long = 80L,
     eraseDelayMs: Long = 40L,
@@ -296,7 +295,7 @@ fun BlinkingCursor(
     modifier: Modifier = Modifier,
     width: Dp = 10.dp,
     height: Dp = 18.dp,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     blinkDurationMs: Int = 530
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "cursor")
@@ -336,12 +335,12 @@ fun ConsoleLogLine(
         ConsoleLogStatus.DONE -> "[DONE]" to AppColors.accentGreen
         ConsoleLogStatus.WAIT -> "[WAIT]" to AppColors.statusWaiting
         ConsoleLogStatus.ERROR -> "[ERROR]" to AppColors.error
-        ConsoleLogStatus.INFO -> "[INFO]" to AppColors.greyLight
+        ConsoleLogStatus.INFO -> "[INFO]" to AppColors.textSecondaryLight
     }
     
     val textColor = when (status) {
-        ConsoleLogStatus.WAIT -> AppColors.white
-        else -> AppColors.grey
+        ConsoleLogStatus.WAIT -> AppColors.textPrimary
+        else -> AppColors.textSecondary
     }
     
     Row(modifier = modifier) {
@@ -354,7 +353,7 @@ fun ConsoleLogLine(
             )
             Text(
                 text = " > ",
-                color = AppColors.grey,
+                color = AppColors.textSecondary,
                 style = AppTypography.bodySmall
             )
         }

@@ -77,7 +77,7 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Text(
                     text = part.result,
-                    color = AppColors.whiteDim,
+                    color = AppColors.textPrimaryDim,
                     style = AppTypography.bodySmall
                 )
             }

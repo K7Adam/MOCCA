@@ -44,7 +44,7 @@ fun SyncStatusIndicator(
     val (icon, color, label) = when (globalSyncState) {
         is GlobalSyncState.NotSynced -> Triple(
             Icons.Default.CloudOff,
-            AppColors.grey,
+            AppColors.textSecondary,
             null // Don't show label for NotSynced - not intrusive
         )
         is GlobalSyncState.Syncing -> Triple(
@@ -238,7 +238,7 @@ fun SyncStatusDot(
     modifier: Modifier = Modifier
 ) {
     val color = when (globalSyncState) {
-        is GlobalSyncState.NotSynced -> AppColors.grey
+        is GlobalSyncState.NotSynced -> AppColors.textSecondary
         is GlobalSyncState.Syncing -> AppColors.accentGreen
         is GlobalSyncState.Fresh -> AppColors.statusOnline
         is GlobalSyncState.Partial -> AppColors.statusWaiting

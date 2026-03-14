@@ -112,7 +112,7 @@ internal fun ChecklistItem(
             Text(
                 text = text,
                 style = AppTypography.bodyMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.Medium
             )
             
@@ -164,7 +164,7 @@ internal fun ServerListItem(
             Text(
                 text = server.name,
                 style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.accentGreen else AppColors.white,
+                color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             
@@ -245,7 +245,7 @@ internal fun CredentialDialog(
         title = {
             Text(
                 text = "SERVER CREDENTIALS",
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.headlineSmall
             )
         },

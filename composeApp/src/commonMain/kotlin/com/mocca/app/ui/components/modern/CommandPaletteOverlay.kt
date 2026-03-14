@@ -147,7 +147,7 @@ fun CommandPaletteOverlay(
                         modifier = Modifier
                             .weight(1f)
                             .focusRequester(focusRequester),
-                        textStyle = AppTypography.bodyMedium.copy(color = AppColors.white),
+                        textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
                         cursorBrush = SolidColor(AppColors.accentGreen),
                         singleLine = true,
                         decorationBox = { inner ->

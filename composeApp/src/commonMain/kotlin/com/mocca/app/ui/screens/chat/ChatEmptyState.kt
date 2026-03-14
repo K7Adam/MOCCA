@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
 
@@ -38,7 +37,7 @@ internal fun EmptySessionState() {
             Text(
                 text = "MOCCA_AI_v2",
                 style = AppTypography.headlineMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))

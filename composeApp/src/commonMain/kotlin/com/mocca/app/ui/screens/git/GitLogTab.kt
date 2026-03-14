@@ -45,7 +45,7 @@ internal fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         text = "LOAD MORE",
                         onClick = { screenModel.loadLog(skip = commits.size) },
                         containerColor = AppColors.white.copy(alpha = 0.05f),
-                        contentColor = AppColors.white
+                        contentColor = AppColors.textPrimary
                     )
                 }
             }
@@ -88,7 +88,7 @@ private fun LogTimelineItem(
                     Text(
                         text = commit.author.take(1).uppercase(),
                         style = AppTypography.labelMedium,
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                 }
             }
@@ -121,7 +121,7 @@ private fun LogTimelineItem(
                     Text(
                         text = commit.message,
                         style = AppTypography.titleSmall,
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

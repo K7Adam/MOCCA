@@ -40,7 +40,7 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "ADD",
                     onClick = { screenModel.showAddRemoteDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.white,
+                    contentColor = AppColors.textPrimary,
                     modifier = Modifier.height(32.dp)
                 )
             }
@@ -101,7 +101,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "CREATE",
                     onClick = { screenModel.showCreateTagDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.white,
+                    contentColor = AppColors.textPrimary,
                     modifier = Modifier.height(32.dp)
                 )
             }

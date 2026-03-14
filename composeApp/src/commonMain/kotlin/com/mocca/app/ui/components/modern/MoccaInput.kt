@@ -156,7 +156,7 @@ fun MoccaInput(
                     enabled = enabled,
                     singleLine = singleLine,
                     textStyle = AppTypography.bodyMedium.copy(
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     ),
                     visualTransformation = visualTransformation,
                     cursorBrush = SolidColor(AppColors.accentGreen),
@@ -238,7 +238,7 @@ fun CommandLineInput(
             enabled = enabled,
             singleLine = true,
             textStyle = AppTypography.bodyMedium.copy(
-                color = AppColors.white
+                color = AppColors.textPrimary
             ),
             cursorBrush = SolidColor(AppColors.accentGreen),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -294,7 +294,7 @@ fun CommandLineInput(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = AppSpacing.fabSize,
-            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.greyDark,
+            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.textSecondaryDark,
             iconColor = if (value.isNotBlank()) AppColors.background else AppColors.textTertiary
         )
     }

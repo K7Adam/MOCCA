@@ -69,7 +69,7 @@ fun QuestionDialog(
             Icon(
                 @Suppress("DEPRECATION") Icons.Default.Help,
                 contentDescription = null,
-                tint = AppColors.white
+                tint = AppColors.textPrimary
             )
         },
         title = {
@@ -158,7 +158,7 @@ fun QuestionDialog(
                                                     Text(
                                                         text = option.description,
                                                         style = AppTypography.bodySmall,
-                                                        color = AppColors.grey
+                                                        color = AppColors.textSecondary
                                                     )
                                                 }
                                             }
@@ -231,8 +231,8 @@ fun QuestionDialog(
         shape = AppShapes.medium,
                             // Translucent container
         containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark surface
-        titleContentColor = AppColors.white,
-        textContentColor = AppColors.whiteDim,
-        iconContentColor = AppColors.white
+        titleContentColor = AppColors.textPrimary,
+        textContentColor = AppColors.textPrimaryDim,
+        iconContentColor = AppColors.textPrimary
     )
 }

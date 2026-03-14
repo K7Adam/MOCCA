@@ -47,12 +47,12 @@ fun BashToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Folder,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.textSecondary
                     )
                     Text(
                         text = workdir,
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }

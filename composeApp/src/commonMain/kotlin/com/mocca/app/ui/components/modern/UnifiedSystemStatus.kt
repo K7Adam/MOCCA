@@ -158,7 +158,7 @@ private fun ComponentStatusRow(
         is ServerComponentStatus.Connected -> AppColors.statusOnline to "Connected"
         is ServerComponentStatus.Connecting -> AppColors.accentGreen to "Connecting..."
         is ServerComponentStatus.Error -> AppColors.statusOffline to status.message
-        is ServerComponentStatus.Unknown -> AppColors.grey to "Unknown"
+        is ServerComponentStatus.Unknown -> AppColors.textSecondary to "Unknown"
     }
     
     Row(
@@ -174,7 +174,7 @@ private fun ComponentStatusRow(
         Text(
             text = name,
             style = AppTypography.bodyMedium,
-            color = AppColors.white,
+            color = AppColors.textPrimary,
             modifier = Modifier.weight(1f)
         )
         

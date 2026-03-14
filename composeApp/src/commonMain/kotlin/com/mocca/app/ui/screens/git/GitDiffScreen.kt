@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -69,7 +68,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.white
+                    iconColor = AppColors.textPrimary
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {

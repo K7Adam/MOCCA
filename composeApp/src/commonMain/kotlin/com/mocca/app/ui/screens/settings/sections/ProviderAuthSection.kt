@@ -67,7 +67,7 @@ fun ProviderAuthSection(
                 ) {
                     Text(
                         text = providerId.uppercase(),
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )

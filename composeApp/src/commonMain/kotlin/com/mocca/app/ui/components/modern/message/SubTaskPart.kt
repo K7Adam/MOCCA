@@ -53,7 +53,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
 
     val statusColor = when (part.status) {
         SessionStatus.RUNNING -> AppColors.accentGreen
-        SessionStatus.COMPLETED -> AppColors.grey
+        SessionStatus.COMPLETED -> AppColors.textSecondary
         SessionStatus.ERROR -> AppColors.error
         SessionStatus.IDLE -> AppColors.textTertiary
     }
@@ -161,7 +161,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
 @Composable
 fun ModernSubMessage(message: Message) {
     val isUser = message.role == MessageRole.USER
-    val color = if (isUser) AppColors.textSecondary else AppColors.white
+    val color = if (isUser) AppColors.textSecondary else AppColors.textPrimary
 
     Row(modifier = Modifier.fillMaxWidth()) {
         if (!isUser) {

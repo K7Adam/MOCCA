@@ -295,12 +295,12 @@ private fun SendButton(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Send,
                 contentDescription = null,
-                tint = if (canSend) AppColors.background else AppColors.grey,
+                tint = if (canSend) AppColors.background else AppColors.textSecondary,
                 modifier = Modifier.size(NavConstants.SendIconSize)
             )
             Text(
                 text = "SEND",
-                color = if (canSend) AppColors.background else AppColors.grey,
+                color = if (canSend) AppColors.background else AppColors.textSecondary,
                 style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
@@ -326,12 +326,12 @@ private fun AbortButton(onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = null,
-                tint = AppColors.white,
+                tint = AppColors.textPrimary,
                 modifier = Modifier.size(NavConstants.SendIconSize)
             )
             Text(
                 text = "ABORT",
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1

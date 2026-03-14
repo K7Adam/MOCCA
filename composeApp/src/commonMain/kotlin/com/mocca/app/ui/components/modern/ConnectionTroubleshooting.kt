@@ -69,7 +69,7 @@ fun ConnectionTroubleshootingCard(
             Text(
                 text = "Connection Troubleshooting",
                 style = AppTypography.labelMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -142,7 +142,7 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
             Text(
                 text = step.name,
                 style = AppTypography.bodySmall,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.Medium
             )
             
@@ -200,7 +200,7 @@ fun ConnectionHelpInline(
         Text(
             text = errorMessage,
             style = AppTypography.bodySmall,
-            color = AppColors.whiteDim
+            color = AppColors.textPrimaryDim
         )
         
         Text(

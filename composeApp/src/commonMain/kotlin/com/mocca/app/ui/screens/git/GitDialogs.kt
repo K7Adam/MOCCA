@@ -92,16 +92,16 @@ internal fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckou
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             Column {
                 Text(text = branch, color = AppColors.statusOnline, style = AppTypography.bodyMedium, modifier = Modifier.padding(vertical = AppSpacing.md))
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 GodButton(text = "CHECKOUT", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                GodButton(text = "MERGE INTO CURRENT", onClick = onMerge, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.white, modifier = Modifier.fillMaxWidth())
+                GodButton(text = "MERGE INTO CURRENT", onClick = onMerge, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.textPrimary, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                GodButton(text = "REBASE CURRENT ONTO", onClick = onRebase, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.white, modifier = Modifier.fillMaxWidth())
+                GodButton(text = "REBASE CURRENT ONTO", onClick = onRebase, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.textPrimary, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {},
@@ -117,7 +117,7 @@ internal fun TerminalCommitDialog(message: String, onMessageChange: (String) -> 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             MoccaInput(
                 value = message,
@@ -141,7 +141,7 @@ internal fun CreateStashDialog(message: String, onMessageChange: (String) -> Uni
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             MoccaInput(
                 value = message,
@@ -168,7 +168,7 @@ internal fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> U
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             Column {
                 MoccaInput(value = name, onValueChange = { name = it }, label = "REMOTE NAME", placeholder = "origin")
@@ -194,7 +194,7 @@ internal fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> U
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             Column {
                 MoccaInput(value = name, onValueChange = { name = it }, label = "TAG NAME", placeholder = "v1.0.0")
@@ -219,7 +219,7 @@ internal fun CreateBranchDialog(onDismiss: () -> Unit, onCreate: (String) -> Uni
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.white) },
+        title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.textPrimary) },
         text = {
             MoccaInput(
                 value = name,

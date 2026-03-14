@@ -25,7 +25,7 @@ fun EditToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = Icons.Default.Edit,
-        iconTint = AppColors.white,
+        iconTint = AppColors.textPrimary,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -39,12 +39,12 @@ fun EditToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.textSecondary
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )

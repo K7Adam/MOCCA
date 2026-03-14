@@ -97,7 +97,7 @@ fun ModuleCard(
                 }
                 Text(
                     text = title.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelLarge, // Updated typography
                     fontWeight = FontWeight.Bold
                 )
@@ -172,7 +172,7 @@ fun ModuleRowItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) AppColors.white else AppColors.textSecondary,
+                color = if (isEnabled) AppColors.textPrimary else AppColors.textSecondary,
                 style = AppTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) TextDecoration.LineThrough else TextDecoration.None
                 ),
@@ -224,12 +224,12 @@ fun ModernToggle(
             checkedThumbColor = AppColors.background,
             checkedTrackColor = AppColors.accentGreen,
             checkedBorderColor = AppColors.accentGreen,
-            uncheckedThumbColor = AppColors.white,
+            uncheckedThumbColor = AppColors.textPrimary,
             uncheckedTrackColor = AppColors.surfaceVariant,
             uncheckedBorderColor = AppColors.border,
-            disabledCheckedThumbColor = AppColors.grey,
+            disabledCheckedThumbColor = AppColors.textSecondary,
             disabledCheckedTrackColor = AppColors.surfaceVariant,
-            disabledUncheckedThumbColor = AppColors.grey,
+            disabledUncheckedThumbColor = AppColors.textSecondary,
             disabledUncheckedTrackColor = AppColors.surfaceVariant
         )
     )

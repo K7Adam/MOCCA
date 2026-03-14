@@ -87,7 +87,10 @@ object AppColors {
     // ═══════════════════════════════════════════════════════════════════════════
 
     val textPrimary = onSurface
+    val textPrimaryDim = onSurface.copy(alpha = 0.7f)
     val textSecondary = onSurfaceVariant
+    val textSecondaryLight = onSurfaceVariant.copy(alpha = 0.8f)
+    val textSecondaryDark = onSurfaceVariant.copy(alpha = 0.6f)
     val textTertiary = onSurfaceVariant.copy(alpha = 0.6f)
     val textPlaceholder = onSurfaceVariant.copy(alpha = 0.4f)
     

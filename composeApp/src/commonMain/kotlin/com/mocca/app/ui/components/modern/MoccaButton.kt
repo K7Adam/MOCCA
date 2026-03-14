@@ -61,8 +61,8 @@ fun MoccaButton(
     enabled: Boolean = true,
     backgroundColor: Color = AppColors.accentGreen,
     textColor: Color = AppColors.background,
-    disabledBackgroundColor: Color = AppColors.greyDark,
-    disabledTextColor: Color = AppColors.grey,
+    disabledBackgroundColor: Color = AppColors.textSecondaryDark,
+    disabledTextColor: Color = AppColors.textSecondary,
     height: Dp = MoccaButtonDefaults.Height,
     showBrackets: Boolean = false,
     icon: ImageVector? = null,
@@ -205,9 +205,9 @@ fun MoccaOutlinedButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     borderColor: Color = AppColors.accentGreen,
-    textColor: Color = AppColors.white,
-    disabledBorderColor: Color = AppColors.greyDark,
-    disabledTextColor: Color = AppColors.grey,
+    textColor: Color = AppColors.textPrimary,
+    disabledBorderColor: Color = AppColors.textSecondaryDark,
+    disabledTextColor: Color = AppColors.textSecondary,
     borderWidth: Dp = AppSpacing.borderThin,
     height: Dp = MoccaButtonDefaults.Height,
     showBrackets: Boolean = false,
@@ -287,8 +287,8 @@ fun MoccaCompactButton(
         label = "buttonScale"
     )
     
-    val bgColor = if (enabled) backgroundColor else AppColors.greyDark
-    val txtColor = if (enabled) textColor else AppColors.grey
+    val bgColor = if (enabled) backgroundColor else AppColors.textSecondaryDark
+    val txtColor = if (enabled) textColor else AppColors.textSecondary
     
     Box(
         modifier = modifier

@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -131,7 +131,7 @@ internal fun ChatInputBarNavIndicator(
                 }
                 .background(
                     color = AppColors.accentGreen.copy(alpha = 0.6f),
-                    shape = RoundedCornerShape(1.dp)
+                    shape = AppShapes.extraSmall
                 )
         )
     }

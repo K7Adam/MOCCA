@@ -39,7 +39,7 @@ fun VariantSelectorDialog(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = AppColors.background,
-        contentColor = AppColors.white,
+        contentColor = AppColors.textPrimary,
         scrimColor = Color.Black.copy(alpha = 0.5f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
         shape = AppShapes.bottomSheetExpanded
@@ -61,13 +61,13 @@ fun VariantSelectorDialog(
                 Text(
                     text = "// SELECT VARIANT",
                     style = AppTypography.titleMedium,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.grey
+                    iconColor = AppColors.textSecondary
                 )
             }
             
@@ -88,7 +88,7 @@ fun VariantSelectorDialog(
                         Text(
                             text = "// NO VARIANTS AVAILABLE",
                             style = AppTypography.labelSmall,
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             modifier = Modifier.padding(AppSpacing.md)
                         )
                     }
@@ -131,7 +131,7 @@ fun VariantSelectorDialog(
                             Text(
                                 text = "> ${variantId.uppercase()}",
                                 style = AppTypography.bodySmall,
-                                color = if (isSelected) AppColors.accentGreen else AppColors.white
+                                color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary
                             )
                             
                             if (isSelected) {

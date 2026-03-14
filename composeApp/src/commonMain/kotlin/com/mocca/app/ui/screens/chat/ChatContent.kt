@@ -202,7 +202,7 @@ fun ChatContent(
                 onDismissRequest = { screenModel.dismissShareDialog() },
                 containerColor = AppColors.surfaceContainerHigh,
                 shape = AppShapes.dialog,
-                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.white) },
+                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.textPrimary) },
                 text = {
                     Column {
                         if (isShared) {
@@ -215,7 +215,7 @@ fun ChatContent(
                                 enabled = false 
                             )
                         } else {
-                            Text("Make this session publicly accessible?", color = AppColors.white, style = AppTypography.bodyMedium)
+                            Text("Make this session publicly accessible?", color = AppColors.textPrimary, style = AppTypography.bodyMedium)
                         }
                     }
                 },

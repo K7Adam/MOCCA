@@ -68,7 +68,7 @@ fun PermissionRequestDialog(
                         text = permission.permission,
                         modifier = Modifier.padding(12.dp),
                         style = AppTypography.titleMedium,
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                 }
                 
@@ -92,14 +92,14 @@ fun PermissionRequestDialog(
                                 Text(
                                     text = pattern,
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.grey
+                                    color = AppColors.textSecondary
                                 )
                             }
                             if (permission.patterns.size > 10) {
                                 Text(
                                     text = "... and ${permission.patterns.size - 10} more",
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.grey
+                                    color = AppColors.textSecondary
                                 )
                             }
                         }
@@ -129,7 +129,7 @@ fun PermissionRequestDialog(
                             text = formatMetadataMap(permission.metadata),
                             modifier = Modifier.padding(12.dp),
                             style = AppTypography.bodySmall,
-                            color = AppColors.grey
+                            color = AppColors.textSecondary
                         )
                     }
                 }
@@ -146,7 +146,7 @@ fun PermissionRequestDialog(
                     onClick = onApprove,
                     shape = AppShapes.pill,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.white,
+                        containerColor = AppColors.textPrimary,
                         contentColor = AppColors.background
                     )
                 ) {
@@ -161,7 +161,7 @@ fun PermissionRequestDialog(
                 onClick = onDeny,
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = AppColors.grey
+                    contentColor = AppColors.textSecondary
                 )
             ) {
                 Icon(Icons.Default.Close, contentDescription = null)
@@ -212,13 +212,13 @@ fun LoadingScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LoadingIndicator(
-                color = AppColors.white
+                color = AppColors.textPrimary
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = message.uppercase(),
                 style = AppTypography.bodyMedium,
-                color = AppColors.grey
+                color = AppColors.textSecondary
             )
         }
     }
@@ -248,13 +248,13 @@ fun ErrorScreen(
             Text(
                 text = stringResource(Res.string.error_occurred).uppercase(),
                 style = AppTypography.headlineSmall,
-                color = AppColors.white
+                color = AppColors.textPrimary
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = message,
                 style = AppTypography.bodyMedium,
-                color = AppColors.grey
+                color = AppColors.textSecondary
             )
             if (onRetry != null) {
                 Spacer(modifier = Modifier.height(AppSpacing.xl))
@@ -287,20 +287,20 @@ fun EmptyContent(
             Text(
                 text = icon,
                 style = AppTypography.displayLarge,
-                color = AppColors.grey
+                color = AppColors.textSecondary
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = title.uppercase(),
                 style = AppTypography.headlineSmall,
-                color = AppColors.white
+                color = AppColors.textPrimary
             )
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
                     text = subtitle,
                     style = AppTypography.bodyMedium,
-                    color = AppColors.grey
+                    color = AppColors.textSecondary
                 )
             }
             if (action != null) {

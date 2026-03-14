@@ -276,14 +276,14 @@ private fun StepCircle(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Complete",
-                    tint = AppColors.white,
+                    tint = AppColors.textPrimary,
                     modifier = Modifier.size(16.dp)
                 )
             } else {
                 Text(
                     text = "$stepNumber",
                     style = AppTypography.labelSmall,
-                    color = if (isActive) AppColors.white else AppColors.textTertiary,
+                    color = if (isActive) AppColors.textPrimary else AppColors.textTertiary,
                     fontWeight = FontWeight.Bold
                 )
             }

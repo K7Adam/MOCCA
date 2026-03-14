@@ -43,7 +43,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "CREATE",
                     onClick = { showCreateBranch = true },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.white,
+                    contentColor = AppColors.textPrimary,
                     modifier = Modifier.height(32.dp)
                 )
             }

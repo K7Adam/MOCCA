@@ -35,7 +35,7 @@ internal fun McpServerCard(
         server.status.isConnected -> AppColors.statusOnline
         server.status.needsAuth -> AppColors.statusWaiting
         server.status.hasFailed -> AppColors.error
-        else -> AppColors.grey
+        else -> AppColors.textSecondary
     }
     
     Column(
@@ -56,7 +56,7 @@ internal fun McpServerCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "{ ",
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     style = AppTypography.code
                 )
                 Text(
@@ -69,7 +69,7 @@ internal fun McpServerCard(
                 )
                 Text(
                     text = " }",
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     style = AppTypography.code
                 )
             }
@@ -135,7 +135,7 @@ internal fun McpMetaField(label: String, value: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = "$label: ",
-            color = AppColors.grey,
+            color = AppColors.textSecondary,
             style = AppTypography.codeSmall
         )
         Text(

@@ -58,13 +58,13 @@ internal fun McpServerDetailsDialog(
                 Column {
                     Text(
                         text = server.name.uppercase(),
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         style = AppTypography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "${server.displayType} | ${getStatusText(server.status.status)}",
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -72,7 +72,7 @@ internal fun McpServerDetailsDialog(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.greyLight
+                    iconColor = AppColors.textSecondaryLight
                 )
             }
             
@@ -107,21 +107,21 @@ internal fun McpServerDetailsDialog(
                             Icon(
                                 imageVector = Icons.Default.Build,
                                 contentDescription = null,
-                                tint = AppColors.greyLight,
+                                tint = AppColors.textSecondaryLight,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = tool.name,
-                                    color = AppColors.white,
+                                    color = AppColors.textPrimary,
                                     style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 tool.description?.let { desc ->
                                     Text(
                                         text = desc,
-                                        color = AppColors.grey,
+                                        color = AppColors.textSecondary,
                                         style = AppTypography.labelSmall,
                                         maxLines = 2,
                                         overflow = TextOverflow.Ellipsis
@@ -152,20 +152,20 @@ internal fun McpServerDetailsDialog(
                             Icon(
                                 imageVector = Icons.Default.Folder,
                                 contentDescription = null,
-                                tint = AppColors.greyLight,
+                                tint = AppColors.textSecondaryLight,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = resource.name,
-                                    color = AppColors.white,
+                                    color = AppColors.textPrimary,
                                     style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = resource.uri,
-                                    color = AppColors.grey,
+                                    color = AppColors.textSecondary,
                                     style = AppTypography.labelSmall
                                 )
                             }
@@ -178,7 +178,7 @@ internal fun McpServerDetailsDialog(
                 server.status.prompts?.takeIf { it.isNotEmpty() }?.let { prompts ->
                     Text(
                         text = "// PROMPTS (${server.promptCount})",
-                        color = AppColors.whiteDim,
+                        color = AppColors.textPrimaryDim,
                         style = AppTypography.labelMedium
                     )
                     Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -193,21 +193,21 @@ internal fun McpServerDetailsDialog(
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Chat,
                                 contentDescription = null,
-                                tint = AppColors.greyLight,
+                                tint = AppColors.textSecondaryLight,
                                 modifier = Modifier.size(14.dp)
                             )
                             Spacer(modifier = Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(
                                     text = prompt.name,
-                                    color = AppColors.white,
+                                    color = AppColors.textPrimary,
                                     style = AppTypography.bodySmall,
                                     fontWeight = FontWeight.Bold
                                 )
                                 prompt.description?.let { desc ->
                                     Text(
                                         text = desc,
-                                        color = AppColors.grey,
+                                        color = AppColors.textSecondary,
                                         style = AppTypography.labelSmall
                                     )
                                 }
@@ -226,7 +226,7 @@ internal fun McpServerDetailsDialog(
                     ) {
                         Text(
                             text = if (server.isConnected) "NO_CAPABILITIES_EXPOSED" else "CONNECT_TO_VIEW_CAPABILITIES",
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             style = AppTypography.bodyMedium
                         )
                     }

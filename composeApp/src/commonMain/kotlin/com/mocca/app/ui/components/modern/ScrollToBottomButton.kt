@@ -76,7 +76,7 @@ fun ScrollToBottomButton(
                 Icon(
                     imageVector = Icons.Default.ArrowDownward,
                     contentDescription = "Scroll to bottom",
-                    tint = AppColors.white,
+                    tint = AppColors.textPrimary,
                     modifier = Modifier.size(20.dp)
                 )
 

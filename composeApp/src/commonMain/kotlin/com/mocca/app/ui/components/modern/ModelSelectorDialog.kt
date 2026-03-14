@@ -45,7 +45,7 @@ fun ModelSelectorDialog(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = AppColors.background,
-        contentColor = AppColors.white,
+        contentColor = AppColors.textPrimary,
         scrimColor = Color.Black.copy(alpha = 0.5f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
         shape = AppShapes.bottomSheetExpanded
@@ -67,13 +67,13 @@ fun ModelSelectorDialog(
                 Text(
                     text = "// SELECT MODEL",
                     style = AppTypography.titleMedium,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.grey
+                    iconColor = AppColors.textSecondary
                 )
             }
             
@@ -100,7 +100,7 @@ fun ModelSelectorDialog(
                 androidx.compose.foundation.text.BasicTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.textPrimary),
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = AppSpacing.xs),
@@ -111,7 +111,7 @@ fun ModelSelectorDialog(
                                 Text(
                                     text = "Search models...",
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.greyDark
+                                    color = AppColors.textSecondaryDark
                                 )
                             }
                             innerTextField()
@@ -122,7 +122,7 @@ fun ModelSelectorDialog(
                     MoccaIconButton(
                         icon = Icons.Default.Close,
                         onClick = { searchQuery = "" },
-                        iconColor = AppColors.grey,
+                        iconColor = AppColors.textSecondary,
                         size = 16.dp
                     )
                 }
@@ -206,7 +206,7 @@ fun ModelSelectorDialog(
                                Text(
                                    text = "> ${recent.modelId.uppercase()} [${recent.providerId.uppercase()}]",
                                    style = AppTypography.bodySmall,
-                                   color = if (isSelected) AppColors.accentGreen else AppColors.white
+                                   color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary
                                )
                            }
                        }
@@ -255,7 +255,7 @@ fun ModelSelectorDialog(
                         Text(
                             text = "// NO MATCHES",
                             style = AppTypography.labelSmall,
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             modifier = Modifier.padding(AppSpacing.md)
                         )
                     }
@@ -265,13 +265,13 @@ fun ModelSelectorDialog(
                         Text(
                             text = "// NO PROVIDERS CONFIGURED",
                             style = AppTypography.labelSmall,
-                            color = AppColors.grey,
+                            color = AppColors.textSecondary,
                             modifier = Modifier.padding(AppSpacing.md)
                         )
                         Text(
                             text = "Configure providers in opencode settings.",
                             style = AppTypography.bodySmall,
-                            color = AppColors.greyDark,
+                            color = AppColors.textSecondaryDark,
                             modifier = Modifier.padding(
                                 start = AppSpacing.md,
                                 top = AppSpacing.xs
@@ -321,13 +321,13 @@ private fun ProviderSection(
                 Text(
                     text = if (expanded) "[-]" else "[+]",
                     style = AppTypography.bodySmall,
-                    color = AppColors.grey
+                    color = AppColors.textSecondary
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
                     text = provider.name.uppercase(),
                     style = AppTypography.bodyMedium,
-                    color = if (enabled) AppColors.white else AppColors.greyDark,
+                    color = if (enabled) AppColors.textPrimary else AppColors.textSecondaryDark,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -335,7 +335,7 @@ private fun ProviderSection(
             Text(
                 text = "${provider.modelCount} models",
                 style = AppTypography.labelSmall,
-                color = AppColors.grey
+                color = AppColors.textSecondary
             )
         }
         
@@ -374,8 +374,8 @@ private fun ProviderSection(
                         style = AppTypography.bodySmall,
                         color = when {
                             isSelected -> AppColors.accentGreen
-                            enabled -> AppColors.greyLight
-                            else -> AppColors.greyDark
+                            enabled -> AppColors.textSecondaryLight
+                            else -> AppColors.textSecondaryDark
                         }
                     )
                     

@@ -79,7 +79,7 @@ internal fun OnboardingWelcomeStep(
         Text(
             text = "MOCCA",
             style = AppTypography.displayLarge,
-            color = AppColors.white,
+            color = AppColors.textPrimary,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )

@@ -143,7 +143,7 @@ object CrossProjectSessionsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.white
+                    iconColor = AppColors.textPrimary
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
@@ -321,7 +321,7 @@ private fun CrossProjectSessionRow(
             Text(
                 text = session.title?.ifBlank { null } ?: "Session ${session.id.take(8)}",
                 style = AppTypography.labelMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis

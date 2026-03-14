@@ -24,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.mocca.app.ui.components.modern.MoccaTextButton
 import com.mocca.app.ui.theme.AppColors
@@ -100,13 +99,13 @@ internal fun TerminalErrorOverlay(
             ) {
                 Text(
                     text = "ERROR: $error",
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onDismiss) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.white)
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.textPrimary)
                 }
             }
         }

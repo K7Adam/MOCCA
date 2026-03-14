@@ -106,13 +106,13 @@ fun ModernTopBar(
                     MoccaIconButton(
                         icon = navigationIcon,
                         onClick = onNavigationClick,
-                        iconColor = AppColors.white
+                        iconColor = AppColors.textPrimary
                     )
                 }
 
                 Text(
                     text = title.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -156,12 +156,12 @@ fun TerminalStatusLine(
         ) {
             Text(
                 text = leftText.uppercase(),
-                color = AppColors.grey,
+                color = AppColors.textSecondary,
                 style = AppTypography.labelSmall
             )
             Text(
                 text = centerText.uppercase(),
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -198,7 +198,7 @@ fun TerminalDivider(
 @Composable
 fun TerminalDividerProminent(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.white,
+    color: Color = AppColors.textPrimary,
     thickness: Dp = AppSpacing.borderStandard
 ) {
     HorizontalDivider(
@@ -216,7 +216,7 @@ fun TerminalDividerProminent(
 fun TerminalSectionDivider(
     text: String,
     modifier: Modifier = Modifier,
-    textColor: Color = AppColors.grey,
+    textColor: Color = AppColors.textSecondary,
     lineColor: Color = AppColors.border
 ) {
     Row(
@@ -265,14 +265,14 @@ fun PanelHeader(
         Box {
             Text(
                 text = title.uppercase(),
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle.uppercase(),
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(top = AppSpacing.xl + AppSpacing.xs)
                 )
@@ -324,7 +324,7 @@ fun ConnectionQualityIndicator(
         )
         ConnectionQuality.UNKNOWN -> Triple(
             Icons.Filled.NetworkWifi1Bar,
-            AppColors.grey,
+            AppColors.textSecondary,
             "UNKNOWN"
         )
     }

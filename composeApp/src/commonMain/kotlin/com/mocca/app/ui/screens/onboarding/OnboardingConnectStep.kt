@@ -108,7 +108,7 @@ internal fun OnboardingConnectStep(
         Text(
             text = "CONNECT TO SERVER",
             style = AppTypography.headlineSmall,
-            color = AppColors.white,
+            color = AppColors.textPrimary,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = AppSpacing.lg)
         )
@@ -292,7 +292,7 @@ internal fun OnboardingConnectStep(
                             onCheckedChange = { useHttps = it },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = AppColors.accentGreen,
-                                checkedThumbColor = AppColors.white,
+                                checkedThumbColor = AppColors.textPrimary,
                                 uncheckedTrackColor = AppColors.surfaceContainerHigh,
                                 uncheckedThumbColor = AppColors.textTertiary
                             )

@@ -53,7 +53,7 @@ fun EmulatorSetupBanner(
             ) {
                 Text(
                     text = "Android Emulator Detected",
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -70,7 +70,7 @@ fun EmulatorSetupBanner(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Dismiss",
-                tint = AppColors.grey,
+                tint = AppColors.textSecondary,
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onDismiss() }

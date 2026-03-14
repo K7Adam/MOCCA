@@ -86,7 +86,7 @@ fun MoccaIconButton(
     contentDescription: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = Color.Transparent,
-    iconColor: Color = AppColors.white,
+    iconColor: Color = AppColors.textPrimary,
     borderColor: Color? = null,
     size: Dp = AppSpacing.iconButtonSizeCompact
 ) {
@@ -98,7 +98,7 @@ fun MoccaIconButton(
         label = "iconButtonScale"
     )
     
-    val tintColor = if (enabled) iconColor else AppColors.grey
+    val tintColor = if (enabled) iconColor else AppColors.textSecondary
     
     Box(
         modifier = modifier
@@ -185,10 +185,10 @@ fun MoccaTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textColor: Color = AppColors.greyLight
+    textColor: Color = AppColors.textSecondaryLight
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val color = if (enabled) textColor else AppColors.greyDark
+    val color = if (enabled) textColor else AppColors.textSecondaryDark
     
     Box(
         modifier = modifier

@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -71,7 +70,7 @@ class GitScreen : Screen {
                     },
                     actions = {
                         IconButton(onClick = { /* More actions */ }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.white)
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.textPrimary)
                         }
                     }
                 )
@@ -150,7 +149,7 @@ private fun GitTabsNavigation(
                     onClick = { onTabSelected(tab) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSelected) AppColors.primary else AppColors.white.copy(alpha = 0.05f),
-                        contentColor = if (isSelected) AppColors.white else AppColors.white.copy(alpha = 0.6f)
+                        contentColor = if (isSelected) AppColors.textPrimary else AppColors.white.copy(alpha = 0.6f)
                     ),
                     shape = AppShapes.pill,
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
@@ -180,14 +179,14 @@ private fun GitFloatingBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             TextButton(onClick = onFetch, modifier = Modifier.padding(horizontal = 12.dp)) {
-                Text("Refetch", color = AppColors.white, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                Text("Refetch", color = AppColors.textPrimary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
             }
             
             Box(modifier = Modifier.size(1.dp, 16.dp).background(AppColors.white.copy(alpha = 0.1f)))
             
             TextButton(onClick = onPull, modifier = Modifier.padding(horizontal = 12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Pull", color = AppColors.white, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Pull", color = AppColors.textPrimary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                     Box(modifier = Modifier.size(6.dp).background(AppColors.primary, AppShapes.circle))
                 }
             }

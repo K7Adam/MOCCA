@@ -46,7 +46,7 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         },
                         style = AppTypography.labelSmall,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -63,12 +63,12 @@ fun ReadToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.textSecondary
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -116,12 +116,12 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Pattern:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                     Text(
                         text = pattern,
                         style = AppTypography.bodySmall,
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                 }
             }
@@ -135,12 +135,12 @@ fun GlobToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "In:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                     Text(
                         text = path,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -170,7 +170,7 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
         state = part.state,
         title = pattern ?: part.title,
         icon = Icons.Default.FindInPage,
-        iconTint = AppColors.white,
+        iconTint = AppColors.textPrimary,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -183,13 +183,13 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Search:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                     Text(
                         text = pattern,
                         style = AppTypography.bodySmall,
                         fontWeight = FontWeight.Medium,
-                        color = AppColors.white
+                        color = AppColors.textPrimary
                     )
                 }
             }
@@ -203,12 +203,12 @@ fun GrepToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifier
                     Text(
                         text = "Files:",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                     Text(
                         text = include,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -263,7 +263,7 @@ fun WriteToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifie
         state = part.state,
         title = filePath?.substringAfterLast('/') ?: part.title,
         icon = @Suppress("DEPRECATION") Icons.Default.NoteAdd,
-        iconTint = AppColors.white,
+        iconTint = AppColors.textPrimary,
         modifier = modifier
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
@@ -277,12 +277,12 @@ fun WriteToolCard(part: MessagePart.ToolInvocation, modifier: Modifier = Modifie
                         Icons.Default.Description,
                         contentDescription = null,
                         modifier = Modifier.size(14.dp),
-                        tint = AppColors.grey
+                        tint = AppColors.textSecondary
                     )
                     Text(
                         text = filePath,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }

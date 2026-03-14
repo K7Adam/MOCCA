@@ -91,7 +91,7 @@ fun TerminalServerCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatusDot(
-                color = if (isActive) AppColors.statusOnline else AppColors.grey,
+                color = if (isActive) AppColors.statusOnline else AppColors.textSecondary,
                 size = 12.dp
             )
             Spacer(modifier = Modifier.width(AppSpacing.md))
@@ -99,7 +99,7 @@ fun TerminalServerCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name.uppercase(),
-                    color = if (isActive) AppColors.statusOnline else AppColors.white,
+                    color = if (isActive) AppColors.statusOnline else AppColors.textPrimary,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -202,7 +202,7 @@ fun TerminalServerEditDialog(
         title = {
             Text(
                 text = if (isNewServer) "ADD SERVER" else "EDIT SERVER",
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.headlineSmall
             )
         },

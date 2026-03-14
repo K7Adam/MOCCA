@@ -81,13 +81,13 @@ fun McpOAuthDialog(
                 Column {
                     Text(
                         text = "OAUTH_AUTHORIZATION",
-                        color = AppColors.white,
+                        color = AppColors.textPrimary,
                         style = AppTypography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "server: \"${oauthState.serverName}\"",
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         style = AppTypography.codeSmall
                     )
                 }
@@ -152,7 +152,7 @@ fun McpOAuthDialog(
                     )
                     Text(
                         text = "Generating authorization URL...",
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -177,18 +177,18 @@ fun McpOAuthDialog(
                 label = {
                     Text(
                         text = "AUTH_CODE",
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         style = AppTypography.labelSmall
                     )
                 },
                 placeholder = {
                     Text(
                         text = "Paste the code from your browser here...",
-                        color = AppColors.greyDark,
+                        color = AppColors.textSecondaryDark,
                         style = AppTypography.bodySmall
                     )
                 },
-                textStyle = AppTypography.code.copy(color = AppColors.white),
+                textStyle = AppTypography.code.copy(color = AppColors.textPrimary),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AppColors.statusWaiting,
                     unfocusedBorderColor = AppColors.border,
@@ -246,7 +246,7 @@ fun McpOAuthDialog(
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(
                         text = "Verifying authorization code...",
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         style = AppTypography.bodySmall
                     )
                 }

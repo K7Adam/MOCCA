@@ -179,10 +179,10 @@ private fun TodoItem(todo: Todo) {
     // Animated color for status
     val statusColor by animateColorAsState(
         targetValue = when (todo.status) {
-            TodoStatus.PENDING -> AppColors.grey
+            TodoStatus.PENDING -> AppColors.textSecondary
             TodoStatus.IN_PROGRESS -> AppColors.accentGreen
             TodoStatus.COMPLETED -> AppColors.accentGreen
-            TodoStatus.CANCELLED -> AppColors.greyDark
+            TodoStatus.CANCELLED -> AppColors.textSecondaryDark
         },
         label = "statusColor"
     )
@@ -192,7 +192,7 @@ private fun TodoItem(todo: Todo) {
         targetValue = if (todo.status == TodoStatus.COMPLETED || todo.status == TodoStatus.CANCELLED) {
             AppColors.grey.copy(alpha = 0.6f)
         } else {
-            AppColors.white
+            AppColors.textPrimary
         },
         label = "textAlpha"
     )

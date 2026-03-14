@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.ui.theme.AppColors
@@ -62,7 +61,7 @@ fun UpdateDialog(
 
             Text(
                 text = "Version ${updateInfo.version}",
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 style = AppTypography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -108,7 +107,7 @@ fun UpdateDialog(
                             Text(
                                 text = "LOGS",
                                 style = AppTypography.labelSmall,
-                                color = AppColors.grey
+                                color = AppColors.textSecondary
                             )
                             
                             IconButton(
@@ -198,7 +197,7 @@ fun UpdateDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(4.dp)
-                                .background(AppColors.greyDark, AppShapes.pill)
+                                .background(AppColors.textSecondaryDark, AppShapes.pill)
                         ) {
                             Box(
                                 modifier = Modifier

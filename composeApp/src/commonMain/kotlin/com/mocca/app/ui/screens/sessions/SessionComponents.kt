@@ -61,7 +61,7 @@ internal fun ModernConnectionProgressContent(
         Text(
             text = message.uppercase(),
             style = AppTypography.labelSmall,
-            color = AppColors.greyLight
+            color = AppColors.textSecondaryLight
         )
     }
 }
@@ -78,13 +78,13 @@ internal fun ModernEmptySessionsContent(
         Text(
             text = stringResource(Res.string.no_sessions).uppercase(),
             style = AppTypography.headlineSmall,
-            color = AppColors.white
+            color = AppColors.textPrimary
         )
         Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = stringResource(Res.string.no_sessions_hint),
             style = AppTypography.bodySmall,
-            color = AppColors.greyLight,
+            color = AppColors.textSecondaryLight,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(AppSpacing.lg))
@@ -179,7 +179,7 @@ internal fun MoccaSessionCard(
                 Text(
                     text = (session.title ?: stringResource(Res.string.untitled_session)).uppercase(),
                     style = AppTypography.labelMedium,
-                    color = if (isSelected) AppColors.statusOnline else AppColors.white,
+                    color = if (isSelected) AppColors.statusOnline else AppColors.textPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold
@@ -193,13 +193,13 @@ internal fun MoccaSessionCard(
                     Text(
                         text = formatTime(session.updatedAt),
                         style = AppTypography.labelExtraSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                     if (session.summaryFiles > 0) {
                         Text(
                             text = "\u2022 ${session.summaryFiles}F",
                             style = AppTypography.labelExtraSmall,
-                            color = AppColors.greyLight
+                            color = AppColors.textSecondaryLight
                         )
                     }
                 }
@@ -219,7 +219,7 @@ internal fun MoccaSessionCard(
 @Composable
 internal fun ModernStatusChip(status: SessionStatus) {
     val (color, textRes) = when (status) {
-        SessionStatus.IDLE -> AppColors.grey to Res.string.session_idle
+        SessionStatus.IDLE -> AppColors.textSecondary to Res.string.session_idle
         SessionStatus.RUNNING -> AppColors.statusOnline to Res.string.session_running
         SessionStatus.COMPLETED -> AppColors.success to Res.string.session_completed
         SessionStatus.ERROR -> AppColors.error to Res.string.session_error
@@ -279,7 +279,7 @@ internal fun ModernSearchBar(
                 Icons.Default.Search,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = AppColors.grey
+                tint = AppColors.textSecondary
             )
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -291,7 +291,7 @@ internal fun ModernSearchBar(
                     .weight(1f)
                     .focusRequester(focusRequester),
                 textStyle = AppTypography.labelSmall.copy(
-                    color = AppColors.white
+                    color = AppColors.textPrimary
                 ),
                 cursorBrush = SolidColor(AppColors.accentGreen),
                 singleLine = true,
@@ -303,7 +303,7 @@ internal fun ModernSearchBar(
                             Text(
                                 text = "SEARCH...",
                                 style = AppTypography.labelSmall,
-                                color = AppColors.grey
+                                color = AppColors.textSecondary
                             )
                         }
                         innerTextField()
@@ -315,7 +315,7 @@ internal fun ModernSearchBar(
                 MoccaIconButton(
                     icon = Icons.Default.Clear,
                     onClick = onClear,
-                    iconColor = AppColors.grey,
+                    iconColor = AppColors.textSecondary,
                     size = 28.dp,
                     contentDescription = "Clear"
                 )
@@ -341,19 +341,19 @@ internal fun TerminalNotConnectedContent(
             icon,
             contentDescription = null,
             modifier = Modifier.size(48.dp),
-            tint = AppColors.grey
+            tint = AppColors.textSecondary
         )
         Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
             text = title.uppercase(),
             style = AppTypography.headlineSmall,
-            color = AppColors.white
+            color = AppColors.textPrimary
         )
         Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = message,
             style = AppTypography.bodySmall,
-            color = AppColors.greyLight,
+            color = AppColors.textSecondaryLight,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(AppSpacing.lg))

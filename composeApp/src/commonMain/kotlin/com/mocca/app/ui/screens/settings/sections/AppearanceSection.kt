@@ -116,7 +116,7 @@ fun AppearanceSection(
                     colors = androidx.compose.material3.SliderDefaults.colors(
                         thumbColor = AppColors.accentGreen,
                         activeTrackColor = AppColors.accentGreen,
-                        inactiveTrackColor = AppColors.greyDark
+                        inactiveTrackColor = AppColors.textSecondaryDark
                     )
                 )
                 

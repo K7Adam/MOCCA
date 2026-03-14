@@ -128,13 +128,13 @@ fun ConnectionStatusBanner(
                     MoccaTextButton(
                         text = "SETUP SERVER",
                         onClick = onSetupClick,
-                        textColor = AppColors.white
+                        textColor = AppColors.textPrimary
                     )
                 } else if (onRetryClick != null) {
                     MoccaTextButton(
                         text = "RETRY",
                         onClick = onRetryClick,
-                        textColor = AppColors.white
+                        textColor = AppColors.textPrimary
                     )
                 }
             }
@@ -339,7 +339,7 @@ fun TerminalEmptyState(
         
         Text(
             text = title.uppercase(),
-            color = AppColors.white,
+            color = AppColors.textPrimary,
             style = AppTypography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -381,7 +381,7 @@ fun TerminalLoadingState(
         // Simple text-based loading indicator
         TypewriterText(
             text = message.uppercase(),
-            color = AppColors.white,
+            color = AppColors.textPrimary,
             style = AppTypography.headlineSmall,
             typingDelayMs = 100L,
             showCursor = true

@@ -97,7 +97,7 @@ internal fun AttachmentPreviewChip(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Remove attachment",
-                tint = AppColors.white,
+                tint = AppColors.textPrimary,
                 modifier = Modifier.size(10.dp)
             )
         }

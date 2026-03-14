@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SmartToy
@@ -48,7 +48,6 @@ import com.mocca.app.ui.components.modern.message.ModernThinkingBlock
 import com.mocca.app.ui.components.modern.message.ModernToolResultBlock
 import com.mocca.app.ui.screens.chat.MarkdownText
 import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
@@ -281,7 +280,7 @@ private fun RenderPartGroup(group: PartGroup, onFileClick: ((String) -> Unit)?) 
             is MessagePart.Text -> MarkdownText(
                 markdown = part.text,
                 style = AppTypography.bodyMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 onFileClick = onFileClick
             )
             is MessagePart.Reasoning -> ModernReasoningBlock(part)

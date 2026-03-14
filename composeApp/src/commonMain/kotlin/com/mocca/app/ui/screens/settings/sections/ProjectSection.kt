@@ -65,7 +65,7 @@ fun ProjectSection(
                     placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = AppTypography.bodySmall.copy(color = AppColors.white),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.textPrimary),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
                         imeAction = ImeAction.Done

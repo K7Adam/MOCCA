@@ -21,7 +21,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppTypography
@@ -67,7 +66,7 @@ fun GodHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                        tint = AppColors.white,
+                        tint = AppColors.textPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -93,7 +92,7 @@ fun GodHeader(
                 Text(
                     text = title,
                     style = AppTypography.titleMedium,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -208,7 +207,7 @@ fun GodListItem(
                 Text(
                     text = title,
                     style = AppTypography.titleSmall,
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     fontWeight = FontWeight.Medium
                 )
                 Text(

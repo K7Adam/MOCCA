@@ -57,7 +57,7 @@ internal fun CodeBlock(
                 Text(
                     text = label,
                     style = AppTypography.labelSmall,
-                    color = AppColors.grey,
+                    color = AppColors.textSecondary,
                     modifier = Modifier.padding(bottom = AppSpacing.xs)
                 )
             } else {
@@ -106,7 +106,7 @@ internal fun CodeBlock(
             Text(
                 text = code.lines().take(maxLines).joinToString("\n"),
                 style = AppTypography.code,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 modifier = Modifier
                     .padding(AppSpacing.md)
                     .horizontalScroll(scrollState)
@@ -214,7 +214,7 @@ internal fun FileListView(output: String) {
         Text(
             text = "Found $fileCount file${if (fileCount != 1) "s" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.grey
+            color = AppColors.textSecondary
         )
         
         Surface(
@@ -247,7 +247,7 @@ internal fun FileListView(output: String) {
                             style = AppTypography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = AppColors.white
+                            color = AppColors.textPrimary
                         )
                     }
                 }
@@ -255,7 +255,7 @@ internal fun FileListView(output: String) {
                     Text(
                         text = "... and ${fileCount - 50} more",
                         style = AppTypography.labelSmall,
-                        color = AppColors.grey
+                        color = AppColors.textSecondary
                     )
                 }
             }
@@ -272,7 +272,7 @@ internal fun GrepResultsView(output: String) {
         Text(
             text = "Found $totalMatches match${if (totalMatches != 1) "es" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.grey
+            color = AppColors.textSecondary
         )
         
         Surface(
@@ -297,13 +297,13 @@ internal fun GrepResultsView(output: String) {
                             Text(
                                 text = parts[0].substringAfterLast('/'),
                                 style = AppTypography.labelSmall,
-                                color = AppColors.white
+                                color = AppColors.textPrimary
                             )
                             if (parts.size >= 3) {
                                 Text(
                                     text = ":${parts[1]}",
                                     style = AppTypography.labelSmall,
-                                    color = AppColors.grey
+                                    color = AppColors.textSecondary
                                 )
                             }
                         }
@@ -314,7 +314,7 @@ internal fun GrepResultsView(output: String) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = AppSpacing.sm),
-                        color = AppColors.whiteDim
+                        color = AppColors.textPrimaryDim
                     )
                 }
             }

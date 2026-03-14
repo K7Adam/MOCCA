@@ -151,7 +151,7 @@ internal fun OnboardingConnectingStep(
             Text(
                 text = "Connecting...",
                 style = AppTypography.headlineMedium,
-                color = AppColors.white,
+                color = AppColors.textPrimary,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -249,7 +249,7 @@ private fun StageItem(
                 style = AppTypography.bodyMedium,
                 color = when {
                     isComplete -> AppColors.accentGreen
-                    isActive -> AppColors.white
+                    isActive -> AppColors.textPrimary
                     else -> AppColors.textTertiary
                 },
                 fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,

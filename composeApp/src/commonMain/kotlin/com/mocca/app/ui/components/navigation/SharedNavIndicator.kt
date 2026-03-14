@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +48,7 @@ fun SharedNavIndicator(
                 .height(1.dp)
                 .background(
                     color = AppColors.border.copy(alpha = 0.3f),
-                    shape = RoundedCornerShape(1.dp)
+                    shape = AppShapes.extraSmall
                 )
         )
         

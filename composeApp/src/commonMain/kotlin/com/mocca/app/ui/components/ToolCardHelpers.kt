@@ -125,7 +125,7 @@ internal fun BaseToolCard(
                     Text(
                         text = title,
                         style = AppTypography.bodySmall,
-                        color = AppColors.grey,
+                        color = AppColors.textSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -145,7 +145,7 @@ internal fun BaseToolCard(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse" else "Expand",
                     modifier = Modifier.size(18.dp),
-                    tint = AppColors.grey
+                    tint = AppColors.textSecondary
                 )
             }
             
@@ -170,7 +170,7 @@ internal fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
             Text(
                 text = "Pending",
                 style = AppTypography.labelSmall,
-                color = AppColors.grey
+                color = AppColors.textSecondary
             )
         }
         ToolState.RUNNING -> {

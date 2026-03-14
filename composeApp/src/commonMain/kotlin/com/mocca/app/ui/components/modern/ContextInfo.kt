@@ -83,7 +83,7 @@ fun ContextInfoGrid(
                     }
                     Text(
                         text = mcpStatus.uppercase(),
-                        color = if (isMcpOnline) AppColors.white else AppColors.statusOffline,
+                        color = if (isMcpOnline) AppColors.textPrimary else AppColors.statusOffline,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -99,7 +99,7 @@ fun ContextInfoGrid(
                 )
                 Text(
                     text = model.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -122,7 +122,7 @@ fun ContextInfoGrid(
                 )
                 Text(
                     text = latency.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -137,7 +137,7 @@ fun ContextInfoGrid(
                 )
                 Text(
                     text = port.uppercase(),
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -181,7 +181,7 @@ fun ContextWindowBar(
                 )
                 Text(
                     text = "${formatTokenCount(usedTokens)}/${formatTokenCount(maxTokens)}",
-                    color = AppColors.white,
+                    color = AppColors.textPrimary,
                     style = AppTypography.labelSmall
                 )
             }
