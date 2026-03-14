@@ -8,6 +8,7 @@ import com.mocca.app.api.RetryPolicy
 import com.mocca.app.data.GlobalActivityManager
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.local.LocalCacheFactory
+import com.mocca.app.data.local.DatabasePruner
 import com.mocca.app.data.repository.*
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.security.SecureTokenStorage
@@ -71,10 +72,11 @@ val commonModule = module {
     single { 
         EventStreamRepository(
             sseClient = get(),
-            networkObserver = getOrNull(),
+            networkObserver = getOrNull<com.mocca.app.util.NetworkObserver>(),
             apiClient = get(),
             appLifecycleObserver = getOrNull(),
-            notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>()
+            notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>(),
+            localCache = get()
         )
     }
     singleOf(::FileRepository)
@@ -130,7 +132,8 @@ val commonModule = module {
             appLifecycleObserver = getOrNull(),
             networkObserver = getOrNull(),
             notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>(),
-            moccaApiClient = get()
+            moccaApiClient = get(),
+            databasePruner = get()
         )
     }
     
@@ -203,6 +206,10 @@ val cacheModule = module {
     
     single {
         ServerConfigRepository(get(), get())
+    }
+    
+    single {
+        DatabasePruner(get())
     }
 }
 

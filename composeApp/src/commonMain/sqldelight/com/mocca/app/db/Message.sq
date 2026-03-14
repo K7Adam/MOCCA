@@ -9,6 +9,7 @@ CREATE TABLE MessageEntity (
     cost REAL,
     isRead INTEGER AS kotlin.Boolean NOT NULL DEFAULT 1,
     metadata TEXT,
+    isStreaming INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
     FOREIGN KEY (sessionId) REFERENCES SessionEntity(id) ON DELETE CASCADE
 );
 
@@ -53,8 +54,12 @@ SELECT * FROM MessageEntity WHERE id = ?;
 
 -- Insert or replace message
 insertOrReplace:
-INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost, isRead, metadata)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost, isRead, metadata, isStreaming)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- Fast update for streaming parts without replacing entire message
+updateStreamingParts:
+UPDATE MessageEntity SET parts = ? WHERE id = ? AND isStreaming = 1;
 
 -- Delete message by ID
 deleteById:

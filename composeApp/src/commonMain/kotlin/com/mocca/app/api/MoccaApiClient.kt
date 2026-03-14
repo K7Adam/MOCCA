@@ -75,10 +75,14 @@ class MoccaApiClient(
             safeCallNoRetry("abortSession") { post("session/$sessionId/abort").body() }
 
     // Messages
-    suspend fun getMessages(sessionId: String): Result<List<MessageResponse>> =
+    suspend fun getMessages(sessionId: String, limit: Int? = null): Result<List<MessageResponse>> =
             safeCall("getMessages") {
-                Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId")
-                val response = get("session/$sessionId/message")
+                Napier.v("[MoccaApiClient] Fetching messages for session: $sessionId (limit: $limit)")
+                val response = get("session/$sessionId/message") {
+                    if (limit != null) {
+                        parameter("limit", limit)
+                    }
+                }
                 val rawText = response.bodyAsText()
                 // OOM guard: if the response is extremely large, parse cautiously.
                 // A normal 100-message response is ~200-500KB. Anything over 20MB is pathological.

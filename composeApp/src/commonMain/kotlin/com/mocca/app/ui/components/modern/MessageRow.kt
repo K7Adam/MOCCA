@@ -221,7 +221,7 @@ private fun UserMessageContent(
     onLongClick: () -> Unit
 ) {
     // Content Grouping: Sharp top-right for User
-    val shape = AppShapes.large
+    val shape = AppShapes.messageBubbleUser
 
     Box(
         modifier = Modifier
@@ -249,7 +249,7 @@ private fun AgentMessageContent(
     onLongClick: () -> Unit
 ) {
     // Content Grouping: Sharp top-left for Agent
-    val shape = AppShapes.large
+    val shape = AppShapes.messageBubbleAgent
 
     Box(
         modifier = Modifier

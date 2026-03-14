@@ -42,7 +42,7 @@ fun VariantSelectorDialog(
         contentColor = AppColors.white,
         scrimColor = Color.Black.copy(alpha = 0.5f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
-        shape = AppShapes.bottomSheet
+        shape = AppShapes.bottomSheetExpanded
     ) {
         Column(
             modifier = Modifier

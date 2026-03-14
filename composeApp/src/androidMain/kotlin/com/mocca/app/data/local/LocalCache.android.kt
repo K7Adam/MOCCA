@@ -192,7 +192,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 model = message.model,
                 cost = message.cost,
                 isRead = message.isRead,
-                metadata = message.metadata
+                metadata = message.metadata,
+                isStreaming = message.isStreaming
             )
         } catch (e: Exception) {
             Napier.w("Failed to cache message", e)
@@ -213,7 +214,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                         model = message.model,
                         cost = message.cost,
                         isRead = message.isRead,
-                        metadata = message.metadata
+                        metadata = message.metadata,
+                        isStreaming = message.isStreaming
                     )
                 }
             }
@@ -290,7 +292,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                 model = existingMessage.model,
                 cost = existingMessage.cost,
                 isRead = existingMessage.isRead,
-                metadata = existingMessage.metadata
+                metadata = existingMessage.metadata,
+                isStreaming = existingMessage.isStreaming
             )
         } catch (e: Exception) {
             Napier.w("Failed to update message part: $messageId/$partId", e)

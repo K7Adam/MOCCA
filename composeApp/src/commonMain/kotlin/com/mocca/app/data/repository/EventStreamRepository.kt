@@ -41,7 +41,8 @@ class EventStreamRepository(
     private val networkObserver: NetworkObserver? = null,
     private val apiClient: MoccaApiClient? = null,
     private val appLifecycleObserver: AppLifecycleObserver? = null,
-    private val notificationTracker: NotificationTracker? = null
+    private val notificationTracker: NotificationTracker? = null,
+    private val localCache: com.mocca.app.data.local.LocalCache? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -62,6 +63,16 @@ class EventStreamRepository(
     // Pause state for background optimization
     private var isPaused = false
     private var wasConnectedBeforePause = false
+    
+    // Throttle database writes for streaming
+    private var lastDbWriteTime = 0L
+    private val dbWriteThrottleMs = 150L 
+    private var pendingDbDelta = ""
+    private var dbWriteJob: Job? = null
+    
+    // Track streaming messages that have already been inserted into LocalCache
+    private val streamingMessagesInserted = ConcurrentHashMap<String, Boolean>()
+
     
     /**
      * Callback invoked when app resumes from background.
@@ -674,6 +685,26 @@ class EventStreamRepository(
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
                 Napier.v(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
                 
+                // Insert initial streaming message to LocalCache if it doesn't exist yet
+                if (localCache != null && streamingMessagesInserted.putIfAbsent(part.messageID, true) == null) {
+                    repositoryScope.launch {
+                        try {
+                            val placeholder = Message(
+                                id = part.messageID,
+                                sessionId = part.sessionID,
+                                role = com.mocca.app.domain.model.MessageRole.ASSISTANT,
+                                parts = emptyList(),
+                                createdAt = System.currentTimeMillis(),
+                                isStreaming = true
+                            )
+                            localCache.insertMessage(placeholder)
+                            Napier.d("Inserted placeholder streaming message: ${part.messageID}")
+                        } catch (e: Exception) {
+                            Napier.w("Could not insert placeholder message: ${e.message}")
+                        }
+                    }
+                }
+                
                 // Handle thinking state for extended reasoning models (Claude/o1)
                 if (part.type == "thinking") {
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
@@ -730,6 +761,44 @@ class EventStreamRepository(
                                 if (_streamingText.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
                                     Napier.w("[EventStream] Streaming text exceeded max size, truncating")
                                     _streamingText.value = _streamingText.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                                }
+                                
+                                // Persist streaming chunks to LocalCache (throttled)
+                                if (delta != null && localCache != null) {
+                                    pendingDbDelta += delta
+                                    val now = System.currentTimeMillis()
+                                    if (now - lastDbWriteTime > dbWriteThrottleMs) {
+                                        val deltaToWrite = pendingDbDelta
+                                        pendingDbDelta = ""
+                                        lastDbWriteTime = now
+                                        
+                                        // Write in background to avoid blocking the stream
+                                        dbWriteJob?.cancel()
+                                        dbWriteJob = repositoryScope.launch {
+                                            localCache.updateMessagePart(
+                                                messageId = part.messageID,
+                                                partId = part.id,
+                                                delta = deltaToWrite
+                                            )
+                                        }
+                                    } else {
+                                        // Schedule a delayed write for the remainder if no new chunks arrive soon
+                                        dbWriteJob?.cancel()
+                                        dbWriteJob = repositoryScope.launch {
+                                            delay(dbWriteThrottleMs * 2)
+                                            streamingTextMutex.withLock {
+                                                if (pendingDbDelta.isNotEmpty()) {
+                                                    val deltaToWrite = pendingDbDelta
+                                                    pendingDbDelta = ""
+                                                    localCache.updateMessagePart(
+                                                        messageId = part.messageID,
+                                                        partId = part.id,
+                                                        delta = deltaToWrite
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             

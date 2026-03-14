@@ -50,7 +50,8 @@ class StateCoordinator(
     private val appLifecycleObserver: AppLifecycleObserver?,
     private val networkObserver: NetworkObserver?,
     private val notificationTracker: NotificationTracker? = null,
-    private val moccaApiClient: MoccaApiClient
+    private val moccaApiClient: MoccaApiClient,
+    private val databasePruner: com.mocca.app.data.local.DatabasePruner
 ) {
     private val coordinatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     
@@ -213,6 +214,9 @@ class StateCoordinator(
     
     init {
         Napier.i("[StateCoordinator] Initializing...")
+        
+        // Trigger database pruning on startup to keep local cache lean
+        databasePruner.pruneNow()
         
         // Wire up callbacks
         eventStreamRepository.onAppResume = { 

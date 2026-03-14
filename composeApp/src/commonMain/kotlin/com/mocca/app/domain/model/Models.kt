@@ -4,6 +4,8 @@ import androidx.compose.runtime.Immutable
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @Immutable
 @Serializable
@@ -357,7 +359,8 @@ data class Message(
     val cost: Double? = null,
     val tokens: TokenUsage? = null,
     val isRead: Boolean = true,
-    val metadata: String? = null
+    val metadata: String? = null,
+    val isStreaming: Boolean = false
 ) {
     companion object {
         fun fromResponse(response: MessageResponse): Message {
@@ -404,7 +407,8 @@ data class Message(
                 cost = response.info.cost,
                 tokens = response.info.tokens,
                 isRead = true,
-                metadata = null
+                metadata = null,
+                isStreaming = false
             )
         }
     }

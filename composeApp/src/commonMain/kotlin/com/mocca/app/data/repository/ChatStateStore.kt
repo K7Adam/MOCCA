@@ -297,8 +297,8 @@ class ChatStateStore(
                     _isSessionIdle.value = true
                     _isSending.value = false
                     
-                    // Reload messages on idle (message complete)
-                    reloadMessages(currentId)
+                    // Fast-sync messages on idle instead of full reload (Cache Optimization)
+                    syncLatestMessages(currentId)
                     refreshTodos()
                 }
                 // Child session idle
@@ -357,6 +357,23 @@ class ChatStateStore(
     private fun reloadMessages(sessionId: String) {
         // trySend on a CONFLATED channel never blocks and never fails (replaces pending value).
         reloadChannel.trySend(sessionId)
+    }
+
+    /**
+     * Fast-sync messages from server without full DB reload.
+     * Used when session goes idle to efficiently update latest message states.
+     */
+    private fun syncLatestMessages(sessionId: String) {
+        storeScope.launch {
+            try {
+                sessionRepository.syncLatestMessages(sessionId, keepLimit = 5)
+                // DB observer will automatically update _messages
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    Napier.e("[ChatStateStore] Error fast-syncing messages: \${e.message}", e)
+                }
+            }
+        }
     }
 
     /**

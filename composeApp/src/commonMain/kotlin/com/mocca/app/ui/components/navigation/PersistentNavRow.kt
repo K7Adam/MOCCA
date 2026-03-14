@@ -242,7 +242,7 @@ private fun PersistentNavItem(
                         .scale(pulseScale)
                         .background(
                             color = AppColors.accentGreen.copy(alpha = pulseAlpha),
-                            shape = RoundedCornerShape(50)
+                            shape = com.mocca.app.ui.theme.AppShapes.circle
                         )
                 )
             }

@@ -211,8 +211,10 @@ class SessionRepository(
 
     /**
      * Get messages for a session with caching.
+     * @param fetchLimit Optional parameter to limit the number of messages fetched from the server.
+     * If null, fetches the default history size from the server.
      */
-    fun getMessages(sessionId: String, limit: Long = 50): Flow<Resource<List<Message>>> = channelFlow {
+    fun getMessages(sessionId: String, limit: Long = 50, fetchLimit: Int? = null): Flow<Resource<List<Message>>> = channelFlow {
         send(Resource.Loading())
 
         // 1. Memory cache
@@ -238,7 +240,7 @@ class SessionRepository(
 
         // 3. Network Refresh - fetch latest from server
         launch {
-            val result = apiClient.getMessages(sessionId)
+            val result = apiClient.getMessages(sessionId, fetchLimit)
             result.fold(
                 onSuccess = { responses ->
                     val messages = responses.map { Message.fromResponse(it) }
@@ -256,6 +258,27 @@ class SessionRepository(
         
         awaitClose { dbJob.cancel() }
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Fast-sync: Fetches only the most recent N messages and updates the local cache.
+     * Use this when a session goes idle to avoid full history refetch.
+     */
+    suspend fun syncLatestMessages(sessionId: String, keepLimit: Int = 5): Result<Unit> = withContext(Dispatchers.IO) {
+        val result = apiClient.getMessages(sessionId, keepLimit)
+        result.fold(
+            onSuccess = { responses ->
+                val messages = responses.map { Message.fromResponse(it) }
+                if (messages.isNotEmpty()) {
+                    localCache.insertMessages(messages)
+                }
+                Result.success(Unit)
+            },
+            onFailure = { error ->
+                Napier.e("[SessionRepository] Failed to sync latest messages: ${error.message}", error)
+                Result.failure(error)
+            }
+        )
+    }
 
     /**
      * Load older messages for pagination.

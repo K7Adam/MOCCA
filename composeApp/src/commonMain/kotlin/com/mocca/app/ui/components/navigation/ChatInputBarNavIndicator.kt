@@ -113,7 +113,7 @@ internal fun ChatInputBarNavIndicator(
                             .size(if (isSelected) 4.dp else 3.dp)
                             .background(
                                 color = if (isSelected) AppColors.accentGreen else AppColors.textTertiary.copy(alpha = 0.4f),
-                                shape = RoundedCornerShape(50)
+                                shape = com.mocca.app.ui.theme.AppShapes.circle
                             )
                     )
                 }

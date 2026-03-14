@@ -50,7 +50,7 @@ fun AgentSelectorBottomSheet(
         contentColor = AppColors.textPrimary,
         scrimColor = AppColors.scrim,
         dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
-        shape = AppShapes.bottomSheet
+        shape = AppShapes.bottomSheetExpanded
     ) {
         Column(
             modifier = Modifier
