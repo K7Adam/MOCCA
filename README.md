@@ -29,7 +29,7 @@ OpenCode Server (HTTP Basic Auth)
 - `ApiExecutor` — interface for HTTP requests (consumers never hold HttpClient)
 - `ConnectionStatus` — real-time connection state for UI
 
-**UI Theme:** Neutral monochrome soft dark with clean Material 3 Surface components
+**UI Theme**: Material 3 Expressive (Full Tokenization). True dark tonal palette driven by `#8B9DC3` seed color. Squircle-based shapes and expressive motion schemes.
 
 ## Quick Start
 
@@ -110,10 +110,11 @@ curl -u opencode:your_password http://<host>:4096/global/health
 | Component | Version |
 |-----------|---------|
 | Kotlin | 2.3.0 |
-| Compose Multiplatform | 1.9.3 |
+| Compose Multiplatform | 1.11.0-alpha04 |
 | Koin | 4.1.1 |
 | Voyager | 1.1.0-beta03 |
 | AGP | 9.0.0-rc03 |
+| M3 Expressive | 1.4.0-alpha05 |
 
 ### Project Structure
 
