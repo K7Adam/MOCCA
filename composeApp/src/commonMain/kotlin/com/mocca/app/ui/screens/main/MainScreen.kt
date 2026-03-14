@@ -5,6 +5,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.runtime.CompositionLocalProvider
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.foundation.background
@@ -178,14 +181,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             CompositionLocalProvider(
                 LocalNavAnimatedVisibilityScope provides this
             ) {
-            Box(modifier = Modifier.fillMaxSize().background(AppColors.background).statusBarsPadding()) {
+            Box(modifier = Modifier.fillMaxSize().background(AppColors.background)) {
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════
                 SwipePanelLayout(
-                    modifier = Modifier,
+                    modifier = Modifier.fillMaxSize(),
                         leftPanel = {
                         ContextHistoryPanel(
+                            modifier = Modifier.fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
                             sessions = state.sessions,
                             sessionGroups = state.sessionGroups,
                             runningSessionIds = state.runningSessionIds,

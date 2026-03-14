@@ -60,6 +60,7 @@ fun App() {
             modifier = Modifier
                 .fillMaxSize()
                 .background(AppColors.background)
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
         ) {
             if (!isLoaded) {
                 // Branded splash while loading server config from DB

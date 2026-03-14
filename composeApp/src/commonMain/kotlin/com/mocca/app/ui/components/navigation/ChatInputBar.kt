@@ -150,6 +150,7 @@ fun ChatInputBar(
     Column(
         modifier = modifier
             .alpha(alpha)
+            .windowInsetsPadding(WindowInsets.ime)
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.sm),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
