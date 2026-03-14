@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -163,15 +164,15 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        val panelEnterSpec = androidx.compose.material3.MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-        val panelExitSpec = androidx.compose.material3.MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
+        val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
 
         AnimatedContent(
             targetState = panelState.state,
             label = "panelTransition",
             transitionSpec = {
-                fadeIn(animationSpec = panelEnterSpec) togetherWith
-                fadeOut(animationSpec = panelExitSpec)
+                fadeIn(animationSpec = enterSpec) togetherWith
+                fadeOut(animationSpec = exitSpec)
             }
         ) { targetPanelState ->
             CompositionLocalProvider(

@@ -28,19 +28,12 @@ import com.mocca.app.ui.theme.AppColors
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
+import androidx.compose.runtime.getValue
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.material3.MaterialTheme
+
 /**
  * Nav indicator section with icons and sliding indicator for ChatInputBar.
- *
- * @param items Navigation items to display
- * @param dragProgress Current drag progress for indicator positioning
- * @param onItemClick Callback when a nav item is clicked
- * @param travelDistancePx Pixel distance between first and last item centers
- * @param firstItemCenterPx Center X of first item in root coordinates
- * @param lastItemCenterPx Center X of last item in root coordinates
- * @param onTravelDistanceChanged Callback when travel distance is recalculated
- * @param onFirstItemCenterChanged Callback when first item center is measured
- * @param onLastItemCenterChanged Callback when last item center is measured
- * @param navIndicatorHeight Height of the nav indicator section
  */
 @Composable
 internal fun ChatInputBarNavIndicator(
@@ -55,6 +48,13 @@ internal fun ChatInputBarNavIndicator(
     onLastItemCenterChanged: (Float) -> Unit,
     navIndicatorHeight: androidx.compose.ui.unit.Dp
 ) {
+    // Animate drag progress for smoother sliding when clicking items
+    val animatedDragProgress by animateFloatAsState(
+        targetValue = dragProgress,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "indicatorSliding"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -126,7 +126,7 @@ internal fun ChatInputBarNavIndicator(
                 .width(24.dp)
                 .height(2.dp)
                 .offset {
-                    val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
+                    val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * animatedDragProgress)
                     IntOffset(xOffsetPx.roundToInt(), 0)
                 }
                 .background(

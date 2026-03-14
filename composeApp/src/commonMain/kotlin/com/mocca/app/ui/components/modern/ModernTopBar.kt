@@ -78,9 +78,22 @@ fun ModernTopBar(
             .background(Color.Transparent),
         contentAlignment = Alignment.TopCenter
     ) {
+        val toolbarModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null && sessionId != null) {
+            with(sharedTransitionScope) {
+                Modifier
+                    .padding(horizontal = AppSpacing.md)
+                    .sharedBounds(
+                        rememberSharedContentState(key = "session_card_$sessionId"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    )
+            }
+        } else {
+            Modifier.padding(horizontal = AppSpacing.md)
+        }
+
         HorizontalFloatingToolbar(
             expanded = expanded,
-            modifier = Modifier.padding(horizontal = AppSpacing.md),
+            modifier = toolbarModifier,
             colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
             shape = AppShapes.pill,
         ) {
@@ -96,24 +109,12 @@ fun ModernTopBar(
                         iconColor = AppColors.white
                     )
                 }
-                
-                val titleModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null && sessionId != null) {
-                    with(sharedTransitionScope) {
-                        Modifier.sharedBounds(
-                            rememberSharedContentState(key = "session_title_$sessionId"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                    }
-                } else {
-                    Modifier
-                }
 
                 Text(
                     text = title.uppercase(),
                     color = AppColors.white,
                     style = AppTypography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = titleModifier
+                    fontWeight = FontWeight.Bold
                 )
                 
                 Spacer(modifier = Modifier.width(AppSpacing.sm))

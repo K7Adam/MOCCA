@@ -1,5 +1,6 @@
 package com.mocca.app.ui.screens.sessions
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,6 +30,8 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.ui.components.modern.*
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -124,6 +127,7 @@ internal fun ModernSessionsList(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 internal fun MoccaSessionCard(
     session: Session,
@@ -135,14 +139,28 @@ internal fun MoccaSessionCard(
     val borderColor = if (isSelected) AppColors.statusOnline else AppColors.border
     val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.05f) else Color.Transparent
     
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(AppShapes.medium)
-            .background(bgColor, AppShapes.medium)
-            .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
-            .clickable(onClick = onClick)
-    ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
+    val modifier = Modifier
+        .fillMaxWidth()
+        .clip(AppShapes.medium)
+        .background(bgColor, AppShapes.medium)
+        .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
+        .clickable(onClick = onClick)
+
+    val finalModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            modifier.sharedBounds(
+                rememberSharedContentState(key = "session_card_${session.id}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else {
+        modifier
+    }
+
+    Box(modifier = finalModifier) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
