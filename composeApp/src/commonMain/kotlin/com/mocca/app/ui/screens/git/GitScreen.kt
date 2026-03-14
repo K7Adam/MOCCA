@@ -8,6 +8,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonGroup
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -161,41 +163,53 @@ private fun GitTabsNavigation(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun GitFloatingBar(
     onFetch: () -> Unit,
     onPull: () -> Unit,
     onPush: () -> Unit
 ) {
-    Surface(
-        modifier = Modifier.padding(bottom = 16.dp),
-        color = AppColors.surfaceContainerHigh,
-        shape = AppShapes.pill,
-        border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)),
-        shadowElevation = 8.dp
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onFetch, modifier = Modifier.padding(horizontal = 12.dp)) {
-                Text("Refetch", color = AppColors.textPrimary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.padding(bottom = 16.dp)) {
+        ButtonGroup {
+            Button(
+                onClick = onFetch,
+                shape = AppShapes.pill,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.surfaceContainerHigh,
+                    contentColor = AppColors.textPrimary
+                ),
+                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+            ) {
+                Text("Refetch", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
             }
             
-            Box(modifier = Modifier.size(1.dp, 16.dp).background(AppColors.white.copy(alpha = 0.1f)))
-            
-            TextButton(onClick = onPull, modifier = Modifier.padding(horizontal = 12.dp)) {
+            Button(
+                onClick = onPull,
+                shape = AppShapes.pill,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.surfaceContainerHigh,
+                    contentColor = AppColors.textPrimary
+                ),
+                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Pull", color = AppColors.textPrimary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Pull", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                     Box(modifier = Modifier.size(6.dp).background(AppColors.primary, AppShapes.circle))
                 }
             }
 
-            Box(modifier = Modifier.size(1.dp, 16.dp).background(AppColors.white.copy(alpha = 0.1f)))
-
-            TextButton(onClick = onPush, modifier = Modifier.padding(horizontal = 12.dp)) {
+            Button(
+                onClick = onPush,
+                shape = AppShapes.pill,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.surfaceContainerHigh,
+                    contentColor = AppColors.primary
+                ),
+                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Push", color = AppColors.primary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                    Text("Push", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                     Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = AppColors.primary, modifier = Modifier.size(16.dp))
                 }
             }

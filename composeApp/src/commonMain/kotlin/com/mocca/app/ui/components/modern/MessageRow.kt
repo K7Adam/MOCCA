@@ -15,13 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -82,9 +77,6 @@ private fun groupParts(parts: List<MessagePart>): List<PartGroup> {
     return result
 }
 
-/**
- * Format token count for display (e.g., 1.2K, 15K)
- */
 private fun formatTokenCount(count: Int): String {
     return when {
         count >= 1_000_000 -> "${(count / 1_000_000f).let { if (it >= 10) it.toInt().toString() else "%.1f".format(it) }}M"
@@ -96,14 +88,6 @@ private fun formatTokenCount(count: Int): String {
 private fun formatTime(timestamp: Long): String {
     return com.mocca.app.util.TimeFormatter.formatTime(timestamp)
 }
-
-/**
- * Modern message row replacing the old bubble layout.
- *
- * - AI messages: full-width, no background/border (flat layout)
- * - User messages: subtle surfaceContainerHigh tint, 85% width, end-aligned
- * - Max nesting depth: 3-4 levels
- */
 
 @Composable
 fun MessageRow(
@@ -130,20 +114,16 @@ fun MessageRow(
             .padding(top = if (isFirstInGroup) AppSpacing.sm else 1.dp),
         horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
     ) {
-        // Date separator
         if (dateHeader != null) {
             DateSeparator(dateHeader)
             Spacer(modifier = Modifier.height(AppSpacing.md))
         }
 
-        // Message header (role label + timestamp)
         if (isFirstInGroup) {
             MessageHeader(isUser = isUser, createdAt = message.createdAt, showTimestamps = showTimestamps)
         }
 
-        // Message content
         if (isUser) {
-            // User: tinted surface, 85% width, rounded
             UserMessageContent(
                 message = message,
                 onFileClick = onFileClick,
@@ -153,7 +133,6 @@ fun MessageRow(
                 }
             )
         } else {
-            // AI: full-width, no background
             AgentMessageContent(
                 message = message,
                 showTokenCounts = showTokenCounts,
@@ -165,7 +144,6 @@ fun MessageRow(
             )
         }
 
-        // Context menu
         MessageContextMenu(
             expanded = showContextMenu,
             message = message,
@@ -219,8 +197,7 @@ private fun UserMessageContent(
     onFileClick: ((String) -> Unit)?,
     onLongClick: () -> Unit
 ) {
-    // Content Grouping: Sharp top-right for User
-    val shape = AppShapes.messageBubbleUser
+    val shape = AppShapes.large
 
     Box(
         modifier = Modifier
@@ -247,8 +224,7 @@ private fun AgentMessageContent(
     onFileClick: ((String) -> Unit)?,
     onLongClick: () -> Unit
 ) {
-    // Content Grouping: Sharp top-left for Agent
-    val shape = AppShapes.messageBubbleAgent
+    val shape = AppShapes.large
 
     Box(
         modifier = Modifier
@@ -265,7 +241,6 @@ private fun AgentMessageContent(
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
             }
 
-            // Token count footer
             if (showTokenCounts && message.tokens != null) {
                 TokenCountFooter(tokens = message.tokens)
             }
@@ -335,6 +310,7 @@ private fun TokenCountFooter(tokens: TokenUsage) {
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun MessageContextMenu(
     expanded: Boolean,
@@ -345,35 +321,57 @@ private fun MessageContextMenu(
     onDelete: () -> Unit,
     onEditPart: (MessagePart) -> Unit
 ) {
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss,
-        modifier = Modifier.background(AppColors.surfaceElevated, AppShapes.medium)
+    if (!expanded) return
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = AppSpacing.xs),
+        contentAlignment = Alignment.Center
     ) {
-        DropdownMenuItem(
-            text = { Text("FORK FROM HERE", style = AppTypography.labelSmall, color = AppColors.textSecondary) },
-            onClick = { onFork(); onDismiss() }
-        )
-        DropdownMenuItem(
-            text = { Text("REVERT TO HERE", style = AppTypography.labelSmall, color = AppColors.textSecondary) },
-            onClick = { onRevert(); onDismiss() }
-        )
-        // EDIT PART — only shown for messages with editable (Text) parts
-        val textParts = message.parts.filterIsInstance<MessagePart.Text>()
-        if (textParts.isNotEmpty()) {
-            HorizontalDivider(color = AppColors.border.copy(alpha = 0.3f))
-            textParts.forEachIndexed { index, textPart ->
-                val label = if (textParts.size > 1) "EDIT PART ${index + 1}" else "EDIT PART"
-                DropdownMenuItem(
-                    text = { Text(label, style = AppTypography.labelSmall, color = AppColors.textSecondary) },
-                    onClick = { onEditPart(textPart); onDismiss() }
-                )
+        androidx.compose.material3.HorizontalFloatingToolbar(
+            expanded = expanded,
+            modifier = Modifier.clip(AppShapes.pill),
+            colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
+            shape = AppShapes.pill,
+            content = {
+                Row(
+                    modifier = Modifier.padding(horizontal = AppSpacing.sm),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    MoccaIconButton(
+                        icon = Icons.Default.ContentCopy,
+                        onClick = { /* Copy action */ onDismiss() },
+                        iconColor = AppColors.textSecondary,
+                        size = 32.dp
+                    )
+                    
+                    MoccaIconButton(
+                        icon = Icons.Default.Refresh,
+                        onClick = { onFork(); onDismiss() },
+                        iconColor = AppColors.textSecondary,
+                        size = 32.dp
+                    )
+
+                    val textParts = message.parts.filterIsInstance<MessagePart.Text>()
+                    if (textParts.isNotEmpty()) {
+                        MoccaIconButton(
+                            icon = Icons.Default.Edit,
+                            onClick = { onEditPart(textParts.first()); onDismiss() },
+                            iconColor = AppColors.textSecondary,
+                            size = 32.dp
+                        )
+                    }
+
+                    MoccaIconButton(
+                        icon = Icons.Default.Delete,
+                        onClick = { onDelete(); onDismiss() },
+                        iconColor = AppColors.error,
+                        size = 32.dp
+                    )
+                }
             }
-        }
-        HorizontalDivider(color = AppColors.border.copy(alpha = 0.3f))
-        DropdownMenuItem(
-            text = { Text("DELETE MESSAGE", style = AppTypography.labelSmall, color = AppColors.error) },
-            onClick = { onDelete(); onDismiss() }
         )
     }
 }
