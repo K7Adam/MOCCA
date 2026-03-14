@@ -2,7 +2,6 @@ package com.mocca.app.ui.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -10,14 +9,13 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 
 /**
- * MOCCA App Theme — Neutral monochrome soft dark.
+ * MOCCA App Theme — Material 3 Expressive.
  *
  * Features:
- * - Soft dark (#1A1A1A) background
- * - Desaturated cool gray-blue accent (#8B9DC3)
- * - M3 tonal surface elevation hierarchy
- * - Modern rounded corners and expressive shapes
- * - Extended colors for app-specific elements
+ * - True M3 tonal palette with soft dark foundation.
+ * - Desaturated cool gray-blue accent.
+ * - Full 15-token expressive typography scale.
+ * - Expressive motion and squircle-based shapes.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -25,12 +23,47 @@ import androidx.compose.runtime.ReadOnlyComposable
 // ═══════════════════════════════════════════════════════════════════════════════
 
 private val AppColorScheme: ColorScheme = darkColorScheme(
-    primary = AppColors.AnchorPrimary,
-    secondary = AppColors.AnchorSecondary,
+    primary = AppColors.primary,
+    onPrimary = AppColors.onPrimary,
+    primaryContainer = AppColors.primaryContainer,
+    onPrimaryContainer = AppColors.onPrimaryContainer,
+    inversePrimary = AppColors.inversePrimary,
+    
+    secondary = AppColors.secondary,
+    onSecondary = AppColors.onSecondary,
+    secondaryContainer = AppColors.secondaryContainer,
+    onSecondaryContainer = AppColors.onSecondaryContainer,
+    
     tertiary = AppColors.AnchorTertiary,
-    background = AppColors.DarkBackgroundSeed,
-    surface = AppColors.DarkBackgroundSeed,
-    // Rely on Material 3 standard generation for the rest, anchoring on the primary and dark seed.
+    onTertiary = AppColors.onPrimary,
+    tertiaryContainer = AppColors.primaryContainer,
+    onTertiaryContainer = AppColors.onPrimaryContainer,
+    
+    background = AppColors.background,
+    onBackground = AppColors.onBackground,
+    
+    surface = AppColors.surface,
+    onSurface = AppColors.onSurface,
+    surfaceVariant = AppColors.surfaceVariant,
+    onSurfaceVariant = AppColors.onSurfaceVariant,
+    
+    surfaceDim = AppColors.surfaceDim,
+    surfaceBright = AppColors.surfaceBright,
+    surfaceContainerLowest = AppColors.surfaceContainerLowest,
+    surfaceContainerLow = AppColors.surfaceContainerLow,
+    surfaceContainer = AppColors.surfaceContainer,
+    surfaceContainerHigh = AppColors.surfaceContainerHigh,
+    surfaceContainerHighest = AppColors.surfaceContainerHighest,
+    
+    outline = AppColors.outline,
+    outlineVariant = AppColors.outlineVariant,
+    
+    error = AppColors.error,
+    onError = AppColors.onError,
+    errorContainer = AppColors.errorContainer,
+    onErrorContainer = AppColors.onErrorContainer,
+    
+    scrim = AppColors.scrim
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -39,15 +72,7 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
 
 /**
  * MOCCA App Theme.
- *
- * Features:
- * - Soft dark (#1A1A1A) background
- * - Desaturated cool gray-blue accent
- * - Modern rounded corners
- * - Extended colors for app-specific elements
- * - Material 3 Expressive Motion
  */
-
 @Composable
 fun AppTheme(
     content: @Composable () -> Unit
@@ -64,7 +89,6 @@ fun AppTheme(
             motionScheme = MotionScheme.expressive(),
             content = content
         )
-
     }
 }
 
@@ -74,12 +98,6 @@ fun AppTheme(
 
 /**
  * Access extended app colors and tokens from the current theme.
- *
- * Usage:
- * ```
- * val statusColor = AppTheme.extendedColors.statusOnline
- * val cardPadding = AppTheme.spacing.cardPadding
- * ```
  */
 object AppTheme {
     /**
@@ -97,7 +115,7 @@ object AppTheme {
         get() = AppSpacing
 
     /**
-     * Raw typography styles (for use outside MaterialTheme context)
+     * Raw typography styles
      */
     val typography: AppTypography
         get() = AppTypography
