@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -41,16 +40,15 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.theme.AppAnimations
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
     val HeightCompact: Dp = 36.dp
     val HeightSmall: Dp = 32.dp
-    val IconSize: Dp = 18.dp
-    val IconSizeSmall: Dp = 14.dp
-    val PaddingHorizontal: Dp = 12.dp
-    val SpacingIcon: Dp = 6.dp
+    val IconSize: Dp = 20.dp
+    val IconSizeSmall: Dp = 16.dp
+    val PaddingHorizontal: Dp = 16.dp
+    val SpacingIcon: Dp = 8.dp
 }
 
 @Composable
@@ -71,10 +69,10 @@ fun MoccaButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     
-    // Use M3 Expressive Motion Scheme for scale animation
+    // State-of-the-art M3 Expressive scale motion
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
+        targetValue = if (isPressed) 0.94f else 1f,
         animationSpec = scaleSpec,
         label = "buttonScale"
     )
@@ -92,13 +90,14 @@ fun MoccaButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = Color.Black.copy(alpha = 0.15f)),
+                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
                         onClick = onClick
                     )
                 } else {
                     Modifier
                 }
-            ),
+            )
+            .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -132,10 +131,6 @@ fun MoccaButton(
     }
 }
 
-/**
- * Material 3 Expressive Split Button for Mocca.
- */
-
 @Composable
 fun MoccaSplitButton(
     text: String,
@@ -155,7 +150,7 @@ fun MoccaSplitButton(
             SplitButtonDefaults.LeadingButton(
                 onClick = onPrimaryClick,
                 enabled = enabled,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                colors = ButtonDefaults.buttonColors(
                     containerColor = backgroundColor,
                     contentColor = textColor
                 )
@@ -180,14 +175,19 @@ fun MoccaSplitButton(
                 checked = checked,
                 onCheckedChange = { onCheckedChange?.invoke(it) ?: onTrailingClick() },
                 enabled = enabled,
-                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                colors = ButtonDefaults.buttonColors(
                     containerColor = backgroundColor,
                     contentColor = textColor
                 )
             ) {
-                val rotation by animateFloatAsState(if (checked) 180f else 0f)
+                val rotationSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+                val rotation by animateFloatAsState(
+                    targetValue = if (checked) 180f else 0f,
+                    animationSpec = rotationSpec,
+                    label = "splitBtnRotation"
+                )
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowDown,
+                    imageVector = Icons.Default.KeyboardArrowDown,
                     contentDescription = "Options",
                     modifier = Modifier
                         .size(SplitButtonDefaults.TrailingIconSize)
@@ -215,10 +215,11 @@ fun MoccaOutlinedButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.96f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "buttonScale"
+        targetValue = if (isPressed) 0.94f else 1f,
+        animationSpec = scaleSpec,
+        label = "buttonScaleOutlined"
     )
     
     val brdColor = if (enabled) borderColor else disabledBorderColor
@@ -235,13 +236,14 @@ fun MoccaOutlinedButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.15f)),
+                        indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.2f)),
                         onClick = onClick
                     )
                 } else {
                     Modifier
                 }
-            ),
+            )
+            .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -281,10 +283,11 @@ fun MoccaCompactButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = if (isPressed) AppAnimations.SpringBouncy else AppAnimations.SpringSmooth,
-        label = "buttonScale"
+        targetValue = if (isPressed) 0.92f else 1f,
+        animationSpec = scaleSpec,
+        label = "buttonScaleCompact"
     )
     
     val bgColor = if (enabled) backgroundColor else AppColors.textSecondaryDark
@@ -299,7 +302,7 @@ fun MoccaCompactButton(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = Color.Black.copy(alpha = 0.15f)),
+                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
                         onClick = onClick
                     )
                 } else {

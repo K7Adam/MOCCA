@@ -1,5 +1,10 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -20,27 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.components.modern.shimmer
 import com.mocca.app.ui.theme.innerShadow
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 
-/**
- * Modern MOCCA card containers with rounded corners.
- * Based on UI overhaul designs - soft, rounded aesthetic with subtle borders.
- */
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// BASIC TERMINAL CARD (16dp rounded corners)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Basic card with rounded corners and subtle border.
- * Default: 16dp rounded corners, dark surface background.
- */
 @Composable
 fun MoccaCard(
     modifier: Modifier = Modifier,
@@ -56,25 +42,21 @@ fun MoccaCard(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.2f), blur = 8.dp)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.25f), blur = 12.dp)
             .border(borderWidth, borderColor, shape)
             .then(if (isLoading) Modifier.shimmer() else Modifier)
             .padding(contentPadding)
     ) {
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(MaterialTheme.motionScheme.defaultEffectsSpec()) + expandVertically(),
-            exit = fadeOut(MaterialTheme.motionScheme.defaultEffectsSpec()) + shrinkVertically()
+            enter = fadeIn(MaterialTheme.motionScheme.fastEffectsSpec()) + expandVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec()),
+            exit = fadeOut(MaterialTheme.motionScheme.fastEffectsSpec()) + shrinkVertically(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
         ) {
             Column(content = content)
         }
     }
 }
 
-/**
- * Elevated card with subtle highlight and slightly thicker border.
- * Used for input fields, status monitors, important containers.
- */
 @Composable
 fun MoccaCardElevated(
     modifier: Modifier = Modifier,
@@ -89,23 +71,13 @@ fun MoccaCardElevated(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.3f), blur = 12.dp)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 16.dp)
             .border(borderWidth, borderColor, shape)
             .padding(contentPadding),
         content = content
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// STATUS MONITOR CARD (Rounded container with elevated surface)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Status monitor card with elevated surface design.
- * Used on onboarding screen for the hero status section.
- * 
- * Modern design: 24dp rounded corners, subtle surface elevation, soft border.
- */
 @Composable
 fun StatusMonitorCard(
     modifier: Modifier = Modifier,
@@ -120,6 +92,7 @@ fun StatusMonitorCard(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
+            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.15f), blur = 20.dp)
             .border(borderWidth, borderColor, shape)
     ) {
         Column(
@@ -129,14 +102,6 @@ fun StatusMonitorCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SECTION CARD (with left accent border)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Card with left accent border, used for console log sections.
- * Retains left-border style but with rounded corners on right side.
- */
 @Composable
 fun MoccaSectionCard(
     modifier: Modifier = Modifier,
@@ -163,14 +128,6 @@ fun MoccaSectionCard(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SESSION CARD (with active indicator)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Session/conversation list item card with active indicator.
- * Modern design: 24dp rounded corners, subtle border, left accent when active.
- */
 @Composable
 fun MoccaSessionCard(
     modifier: Modifier = Modifier,
@@ -197,14 +154,6 @@ fun MoccaSessionCard(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// MODULE CARD (for dashboard modules/tools)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Module card for dashboard tools.
- * 28dp rounded corners per design specs.
- */
 @Composable
 fun ModuleToolCard(
     modifier: Modifier = Modifier,
@@ -224,13 +173,6 @@ fun ModuleToolCard(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// SURFACE CARD (Semi-transparent overlay container)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Surface card with semi-transparent background for overlay effects.
- */
 @Composable
 fun SurfaceCard(
     modifier: Modifier = Modifier,
