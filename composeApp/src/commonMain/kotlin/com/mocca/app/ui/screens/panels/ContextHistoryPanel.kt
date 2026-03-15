@@ -1,7 +1,6 @@
 package com.mocca.app.ui.screens.panels
 
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,6 +46,9 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 
 /**
  * Left swipe panel: Context info + Session history.
@@ -122,12 +124,28 @@ fun ContextHistoryPanel(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun AgentHeader(
     agentName: String = "--",
     appVersion: String = ""
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
+    val headerModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                rememberSharedContentState(key = "nav_item_LEFT"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else {
+        Modifier
+    }
+
     Row(
+        modifier = headerModifier,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {

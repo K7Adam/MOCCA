@@ -50,6 +50,9 @@ import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import kotlin.math.abs
@@ -158,6 +161,7 @@ fun PersistentNavRow(
  * @param onClick Callback when clicked
  * @param isAgentRunning Whether to show the agent running indicator (pulsing dot)
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun PersistentNavItem(
     item: BottomNavItem,
@@ -166,6 +170,9 @@ private fun PersistentNavItem(
     showLabel: Boolean,
     isAgentRunning: Boolean = false
 ) {
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
     // Animated color transition
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
@@ -187,10 +194,21 @@ private fun PersistentNavItem(
         label = "scale"
     )
 
+    val itemModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                rememberSharedContentState(key = "nav_item_${item.panelState}"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else {
+        Modifier
+    }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = Modifier
+        modifier = itemModifier
             // CRITICAL: Fixed touch target size - NEVER changes
             .defaultMinSize(
                 minWidth = NavConstants.TouchTargetMinWidth,

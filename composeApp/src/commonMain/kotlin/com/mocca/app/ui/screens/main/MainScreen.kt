@@ -72,6 +72,7 @@ import com.mocca.app.ui.screens.settings.SettingsScreen
 import com.mocca.app.ui.screens.terminal.TerminalScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.DynamicExpressiveBackground
 import org.koin.core.parameter.parametersOf
 import androidx.compose.runtime.rememberCoroutineScope
 import com.mocca.app.util.FilePickerHelper
@@ -181,7 +182,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             CompositionLocalProvider(
                 LocalNavAnimatedVisibilityScope provides this
             ) {
-            Box(modifier = Modifier.fillMaxSize().background(AppColors.background)) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                DynamicExpressiveBackground()
+                
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════

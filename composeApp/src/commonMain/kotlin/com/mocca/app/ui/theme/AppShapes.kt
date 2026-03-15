@@ -55,6 +55,7 @@ object AppShapes {
     val tag: Shape = RoundedCornerShape(9999.dp)
     val dialog: Shape = RoundedCornerShape(24.dp)
     val filePreview: Shape = RoundedCornerShape(16.dp)
+    val squircle: Shape = createSquircleShape()
 }
 
 @Composable

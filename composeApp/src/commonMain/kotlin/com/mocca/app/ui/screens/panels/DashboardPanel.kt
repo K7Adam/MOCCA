@@ -1,7 +1,6 @@
 package com.mocca.app.ui.screens.panels
 
 import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,9 +26,15 @@ import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.GridView
+import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.text.font.FontWeight
 import com.mocca.app.ui.theme.AppTypography
 
@@ -37,6 +42,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Right swipe panel: Modular tools dashboard.
  * Compact design: merged modules to reduce vertical space.
  */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardPanel(
     screenModel: DashboardScreenModel,
@@ -53,7 +59,20 @@ fun DashboardPanel(
 ) {
     val state by screenModel.state.collectAsState()
     val scrollState = rememberScrollState()
-    
+    val sharedTransitionScope = LocalSharedTransitionScope.current
+    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+
+    val headerModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+        with(sharedTransitionScope) {
+            Modifier.sharedBounds(
+                rememberSharedContentState(key = "nav_item_RIGHT"),
+                animatedVisibilityScope = animatedVisibilityScope
+            )
+        }
+    } else {
+        Modifier
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -62,6 +81,31 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
+        // ─── DASHBOARD HEADER ──────────────────────────────────────────────
+        PanelHeader(
+            title = "DASHBOARD",
+            modifier = headerModifier,
+            icon = {
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(AppShapes.medium)
+                        .background(AppColors.surfaceContainer, AppShapes.medium)
+                        .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.GridView,
+                        contentDescription = null,
+                        tint = AppColors.textPrimary,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        )
+        
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+        
         // ─── SYNC STATUS ───────────────────────────────────────────────────
         SyncStatusCard(
             globalSyncState = state.globalSyncState,
