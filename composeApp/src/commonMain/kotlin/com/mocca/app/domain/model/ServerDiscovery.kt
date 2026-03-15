@@ -16,7 +16,7 @@ data class DiscoveredServer(
     val password: String = "",
     val source: DiscoverySource,
     val discoveredAt: Long = System.currentTimeMillis(),
-    val useHttps: Boolean = false
+    val useHttps: Boolean = true
 ) {
     /**
      * Generates the base URL for this server.

@@ -117,7 +117,7 @@ object NetworkConfig {
     // ═══════════════════════════════════════════════════════════════════════════════
     
     /** OpenCode server default port */
-    const val OPENCODE_SERVER_PORT = 4242
+    const val OPENCODE_SERVER_PORT = 443
     
     /** OpenCode Server Host (formerly EMULATOR_HOST_IP) */
     const val DEFAULT_HOST_IP = "100.73.93.117"

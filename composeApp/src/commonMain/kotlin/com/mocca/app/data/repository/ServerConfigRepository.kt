@@ -216,7 +216,8 @@ class ServerConfigRepository(
                 port = NetworkConfig.OPENCODE_SERVER_PORT,
                 username = NetworkConfig.DEFAULT_USERNAME,
                 password = NetworkConfig.DEFAULT_PASSWORD,
-                isActive = true
+                isActive = true,
+                useHttps = true
             )
         } else {
             // Physical device - return null, requires onboarding
@@ -240,14 +241,15 @@ class ServerConfigRepository(
             name = "Tailscale ($cleanHostname)",
             host = cleanHostname,
             port = 443,
-            isActive = false
+            isActive = false,
+            useHttps = true
         )
     }
     
     /**
      * Create a LAN connection configuration.
      * @param lanIp The LAN IP address (e.g., "192.168.1.100")
-     * @param port The port number (default 4242)
+     * @param port The port number (default 443)
      */
     fun createLanConfig(
         lanIp: String,
@@ -258,7 +260,8 @@ class ServerConfigRepository(
             name = "LAN ($lanIp)",
             host = lanIp,
             port = port,
-            isActive = false
+            isActive = false,
+            useHttps = true
         )
     }
 

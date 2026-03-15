@@ -19,11 +19,11 @@ data class ServerConfig(
         val id: String,
         val name: String,
         val host: String = "localhost",
-        val port: Int = 4242,
+        val port: Int = 443,
         val username: String = NetworkConfig.DEFAULT_USERNAME,
         val password: String = "",
         val isActive: Boolean = false,
-        val useHttps: Boolean = false
+        val useHttps: Boolean = true
 ) {
     /** Base URL for API requests. Supports HTTPS for Tailscale connections. */
     val baseUrl: String
