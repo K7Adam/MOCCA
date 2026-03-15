@@ -2,6 +2,7 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.api.NetworkConfig
 import com.mocca.app.api.getPlatformDefaultHost
+import com.mocca.app.api.getHttpEngine
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.domain.model.*
@@ -267,7 +268,7 @@ class ServerConfigRepository(
 
     suspend fun checkServerHealth(baseUrl: String): Boolean {
         return try {
-            val tempClient = HttpClient {
+            val tempClient = HttpClient(getHttpEngine()) {
                 install(ContentNegotiation) {
                     json(Json {
                         ignoreUnknownKeys = true

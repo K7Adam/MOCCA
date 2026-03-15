@@ -6,6 +6,12 @@ import android.os.Build
 import io.ktor.client.engine.*
 import io.ktor.client.engine.okhttp.*
 
+import java.security.SecureRandom
+import java.security.cert.X509Certificate
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
+
 actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
     config {
         connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -15,6 +21,20 @@ actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
         writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         retryOnConnectionFailure(true)
         
+        // ─── SSL BYPASS FOR TAILSCALE/LOCAL CONNECTIONS ───────────────────
+        // Trust all certificates to allow connections to local servers/Tailscale IPs
+        val trustAllCerts = object : X509TrustManager {
+            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
+            override fun getAcceptedIssuers(): Array<X509Certificate> = arrayOf()
+        }
+
+        val sslContext = SSLContext.getInstance("SSL")
+        sslContext.init(null, arrayOf<TrustManager>(trustAllCerts), SecureRandom())
+        sslSocketFactory(sslContext.socketFactory, trustAllCerts)
+        hostnameVerifier { _, _ -> true }
+        // ──────────────────────────────────────────────────────────────────
+
         // HTTP/2 Multiplexing & Connection Pooling
         val dispatcher = okhttp3.Dispatcher().apply {
             maxRequestsPerHost = 16
