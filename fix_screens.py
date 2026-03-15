@@ -1,143 +1,134 @@
 import re
 
-file_path = 'composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/workspace/WorkspaceScreen.kt'
-with open(file_path, 'r', encoding='utf-8') as f:
+with open('composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/main/MainScreen.kt', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Replace imports
-imports_to_add = """
-import cafe.adriel.voyager.navigator.tab.TabNavigator
-import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.Tab
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
-"""
+# 1. Add imports
+content = content.replace('import androidx.compose.material3.MaterialTheme\n', 'import androidx.compose.material3.MaterialTheme\nimport androidx.compose.material3.Scaffold\nimport androidx.compose.ui.graphics.Color\nimport com.mocca.app.ui.components.navigation.PersistentNavRow\nimport com.mocca.app.ui.components.navigation.ChatInputContent\nimport androidx.compose.material3.Surface\n')
 
-if "import cafe.adriel.voyager.navigator.tab.TabNavigator" not in content:
-    content = content.replace("import cafe.adriel.voyager.navigator.currentOrThrow", "import cafe.adriel.voyager.navigator.currentOrThrow\n" + imports_to_add)
+# 2. Move state collection up
+content = content.replace('        val chatState by chatScreenModel.state.collectAsState()', '        val chatState by chatScreenModel.state.collectAsState()\n        val inputText by chatScreenModel.inputText.collectAsState()\n        val shellMode by chatScreenModel.shellMode.collectAsState()')
 
-# Replace the WorkspaceScreen class
-new_class = """data class WorkspaceScreen(val sessionId: String) : Screen {
+# remove it from the bottom
+content = content.replace('            val inputText by chatScreenModel.inputText.collectAsState()\n            val shellMode by chatScreenModel.shellMode.collectAsState()\n', '')
 
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
 
-        TabNavigator(DashboardTab(sessionId)) { tabNavigator ->
-            Scaffold(
-                topBar = {
-                    val currentTitle = tabNavigator.current.options.title
-                    val isDashboard = tabNavigator.current is DashboardTab
-                    GodHeader(
-                        title = if (isDashboard) "Workspace_01" else currentTitle,
-                        onBackClick = { navigator.pop() },
-                        subtitle = if (isDashboard) null else "SESSION: \",
-                        actions = {
-                            IconButton(onClick = { /* Settings */ }) {
-                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.textPrimary.copy(alpha = 0.5f))
+# 3. Modify ChatContent area to include ChatInputContent
+chat_content_search = """                                ChatContent(
+                                    screenModel = chatScreenModel, 
+                                    onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction },
+                                    onScrollToBottomStateChange = { show, hasNew ->
+                                        showScrollToBottom = show
+                                        hasNewMessagesWhileScrolledUp = hasNew
+                                    },
+                                    scrollToBottomTrigger = scrollToBottomTrigger
+                                )"""
+
+chat_content_replacement = """                                Box(modifier = Modifier.weight(1f)) {
+                                    ChatContent(
+                                        screenModel = chatScreenModel, 
+                                        onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction },
+                                        onScrollToBottomStateChange = { show, hasNew ->
+                                            showScrollToBottom = show
+                                            hasNewMessagesWhileScrolledUp = hasNew
+                                        },
+                                        scrollToBottomTrigger = scrollToBottomTrigger
+                                    )
+                                }
+                                
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth().imePadding(),
+                                    color = Color.Transparent
+                                ) {
+                                    ChatInputContent(
+                                        inputText = inputText,
+                                        onInputTextChange = { chatScreenModel.updateInputText(it) },
+                                        onSendClick = { chatScreenModel.sendMessage() },
+                                        inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
+                                        isSessionIdle = chatState.isSessionIdle,
+                                        onAbortClick = { chatScreenModel.abortSession() },
+                                        modelName = chatState.modelName,
+                                        agentName = chatState.agentName,
+                                        providerResponse = chatState.providerInfo,
+                                        selectedProviderId = chatState.selectedProviderId,
+                                        selectedModelId = chatState.selectedModelId,
+                                        onModelSelected = { providerId, modelId -> chatScreenModel.selectModel(providerId, modelId) },
+                                        variants = chatState.availableVariants,
+                                        selectedVariantId = chatState.selectedVariantId,
+                                        onVariantSelected = { chatScreenModel.selectVariant(it) },
+                                        modes = chatState.modes,
+                                        selectedModeId = chatState.selectedModeId,
+                                        onModeSelected = { chatScreenModel.selectMode(it) },
+                                        attachedFiles = chatState.attachedFiles,
+                                        onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
+                                        onAttachClick = { filePickerLauncher.launch() },
+                                        commands = chatState.commands,
+                                        onCommandSelected = { chatScreenModel.executeCommand(it) },
+                                        onModeSelectedForMention = { chatScreenModel.selectMode(it.id) },
+                                        shellMode = shellMode,
+                                        onShellModeToggle = { chatScreenModel.toggleShellMode() },
+                                        onHistoryUp = { chatScreenModel.navigateHistoryUp() },
+                                        onHistoryDown = { chatScreenModel.navigateHistoryDown() }
+                                    )
+                                }"""
+
+content = content.replace(chat_content_search, chat_content_replacement)
+
+# 4. Wrap SwipePanelLayout in Scaffold
+
+swipe_search = "                SwipePanelLayout(\n                    modifier = Modifier.fillMaxSize(),"
+
+scaffold_replacement = """                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = Color.Transparent,
+                    bottomBar = {
+                        val sharedTransitionScope = LocalSharedTransitionScope.current
+                        val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+            
+                        val bottomBarModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier
+                                    .navigationBarsPadding()
+                                    .sharedBounds(
+                                        rememberSharedContentState(key = "bottom_bar"),
+                                        animatedVisibilityScope = animatedVisibilityScope
+                                    )
+                            }
+                        } else {
+                            Modifier
+                                .navigationBarsPadding()
+                        }
+                        
+                        Box(
+                            modifier = Modifier.padding(horizontal = AppSpacing.screenPaddingHorizontalCompact, vertical = AppSpacing.sm)
+                        ) {
+                            Surface(
+                                modifier = bottomBarModifier.fillMaxWidth(),
+                                color = AppColors.surfaceContainer,
+                                shape = AppShapes.rounded2xl
+                            ) {
+                                PersistentNavRow(
+                                    dragProgress = dragProgress,
+                                    onItemClick = { panelState.state = it },
+                                    showLabels = true,
+                                    isAgentRunning = !chatState.isSessionIdle,
+                                    modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
+                                )
                             }
                         }
-                    )
-                },
-                containerColor = AppColors.background,
-                bottomBar = {
-                    GodBottomNavBar(tabNavigator, sessionId)
-                }
-            ) { padding ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    AnimatedContent(
-                        targetState = tabNavigator.current,
-                        transitionSpec = {
-                            fadeIn(animationSpec = tween(250)) togetherWith fadeOut(animationSpec = tween(250))
-                        },
-                        label = "tab_transition"
-                    ) { tab ->
-                        tabNavigator.saveableState(key = "tab_", tab = tab) {
-                            tab.Content()
-                        }
                     }
-                }
-            }
-        }
-    }
-}
-"""
+                ) { paddingValues ->
+                SwipePanelLayout(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),"""
 
-content = re.sub(r'data class WorkspaceScreen\(val sessionId: String\) : Screen \{.*?\n\s+private fun getTabTitle\(index: Int\): String = when \(index\) \{.*?\}\n\}', new_class, content, flags=re.DOTALL)
+content = content.replace(swipe_search, scaffold_replacement)
 
-# Replace GodBottomNavBar
-new_bottom_bar = """@Composable
-private fun GodBottomNavBar(
-    tabNavigator: TabNavigator,
-    sessionId: String
-) {
-    val items = listOf(
-        DashboardTab(sessionId),
-        ChatTab(sessionId),
-        ExplorerTab,
-        GitTab
-    )
+# 5. Remove UnifiedFloatingBottomBar call at the end
+bottom_bar_search = r'            // Determine bottom bar mode based on current panel[\s\S]*?UnifiedFloatingBottomBar\([\s\S]*?modifier = bottomBarModifier\s*\)'
+content = re.sub(bottom_bar_search, '            // Bottom bar is now handled by Scaffold', content)
 
-    Surface(
-        color = AppColors.background.copy(alpha = 0.9f),
-        modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, AppColors.border)
-    ) {
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .height(72.dp)
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            items.forEach { tab ->
-                val isSelected = tabNavigator.current == tab
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clickable(onClick = { tabNavigator.current = tab })
-                        .padding(vertical = 8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    // Extract ImageVector safely or fallback to GridOn if something goes wrong
-                    // Note: Voyager TabOptions only has Painter, not ImageVector natively, but we know the mapping
-                    val iconVector = when(tab) {
-                        is DashboardTab -> GridView
-                        is ChatTab -> Icons.AutoMirrored.Filled.Chat
-                        is ExplorerTab -> Icons.Default.Folder
-                        is GitTab -> Code
-                        else -> GridView
-                    }
-                    
-                    Icon(
-                        imageVector = iconVector,
-                        contentDescription = tab.options.title,
-                        tint = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = tab.options.title.uppercase(),
-                        style = AppTypography.labelSmall,
-                        color = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                    )
-                }
-            }
-        }
-    }
-}"""
+# Close the scaffold
+content = content.replace('            // End of content wrapper', '                }\n            // End of content wrapper')
 
-content = re.sub(r'@Composable\s+private fun GodBottomNavBar\(\s+selectedIndex: Int,\s+onItemSelected: \(Int\) -> Unit\s+\) \{.*?\}\s+\}', new_bottom_bar, content, flags=re.DOTALL)
-
-with open(file_path, 'w', encoding='utf-8') as f:
+with open('composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/main/MainScreen.kt', 'w', encoding='utf-8') as f:
     f.write(content)

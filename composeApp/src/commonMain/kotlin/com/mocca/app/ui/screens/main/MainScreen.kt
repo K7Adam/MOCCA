@@ -17,6 +17,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.ui.graphics.Color
+import com.mocca.app.ui.components.navigation.PersistentNavRow
+import com.mocca.app.ui.components.navigation.ChatInputContent
+import androidx.compose.material3.Surface
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -106,6 +111,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Use a stable ChatScreenModel instance and reload content when session changes
         val chatScreenModel = koinScreenModel<ChatScreenModel>()
         val chatState by chatScreenModel.state.collectAsState()
+        val inputText by chatScreenModel.inputText.collectAsState()
+        val shellMode by chatScreenModel.shellMode.collectAsState()
 
         // Reload chat session when ID changes
         androidx.compose.runtime.LaunchedEffect(state.currentSessionId) {
@@ -188,8 +195,48 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above
                 // ═══════════════════════════════════════════════════════════════════
-                SwipePanelLayout(
+                Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    containerColor = Color.Transparent,
+                    bottomBar = {
+                        val sharedTransitionScope = LocalSharedTransitionScope.current
+                        val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+            
+                        val bottomBarModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier
+                                    .navigationBarsPadding()
+                                    .sharedBounds(
+                                        rememberSharedContentState(key = "bottom_bar"),
+                                        animatedVisibilityScope = animatedVisibilityScope
+                                    )
+                            }
+                        } else {
+                            Modifier
+                                .navigationBarsPadding()
+                        }
+                        
+                        Box(
+                            modifier = Modifier.padding(horizontal = AppSpacing.screenPaddingHorizontalCompact, vertical = AppSpacing.sm)
+                        ) {
+                            Surface(
+                                modifier = bottomBarModifier.fillMaxWidth(),
+                                color = AppColors.surfaceContainer,
+                                shape = AppShapes.rounded2xl
+                            ) {
+                                PersistentNavRow(
+                                    dragProgress = dragProgress,
+                                    onItemClick = { panelState.state = it },
+                                    showLabels = true,
+                                    isAgentRunning = !chatState.isSessionIdle,
+                                    modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
+                                )
+                            }
+                        }
+                    }
+                ) { paddingValues ->
+                SwipePanelLayout(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
                         leftPanel = {
                         ContextHistoryPanel(
                             modifier = Modifier.fillMaxHeight().windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
@@ -260,15 +307,54 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 }
 
                                 // Chat content (input will be disabled based on connection status)
-                                ChatContent(
-                                    screenModel = chatScreenModel, 
-                                    onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction },
-                                    onScrollToBottomStateChange = { show, hasNew ->
-                                        showScrollToBottom = show
-                                        hasNewMessagesWhileScrolledUp = hasNew
-                                    },
-                                    scrollToBottomTrigger = scrollToBottomTrigger
-                                )
+                                Box(modifier = Modifier.weight(1f)) {
+                                    ChatContent(
+                                        screenModel = chatScreenModel, 
+                                        onScrollDirectionChange = { direction: ScrollDirection -> scrollDirection = direction },
+                                        onScrollToBottomStateChange = { show, hasNew ->
+                                            showScrollToBottom = show
+                                            hasNewMessagesWhileScrolledUp = hasNew
+                                        },
+                                        scrollToBottomTrigger = scrollToBottomTrigger
+                                    )
+                                }
+                                
+                                Surface(
+                                    modifier = Modifier.fillMaxWidth().imePadding(),
+                                    color = Color.Transparent
+                                ) {
+                                    ChatInputContent(
+                                        inputText = inputText,
+                                        onInputTextChange = { chatScreenModel.updateInputText(it) },
+                                        onSendClick = { chatScreenModel.sendMessage() },
+                                        inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
+                                        placeholder = "Type a message...",
+                                        isSessionIdle = chatState.isSessionIdle,
+                                        onAbortClick = { chatScreenModel.abortSession() },
+                                        modelName = chatState.modelName,
+                                        agentName = chatState.agentName,
+                                        providerResponse = chatState.providerInfo,
+                                        selectedProviderId = chatState.selectedProviderId,
+                                        selectedModelId = chatState.selectedModelId,
+                                        onModelSelected = { providerId, modelId -> chatScreenModel.selectModel(providerId, modelId) },
+                                        variants = chatState.availableVariants,
+                                        selectedVariantId = chatState.selectedVariantId,
+                                        onVariantSelected = { chatScreenModel.selectVariant(it) },
+                                        modes = chatState.modes,
+                                        selectedModeId = chatState.selectedModeId,
+                                        onModeSelected = { chatScreenModel.selectMode(it) },
+                                        attachedFiles = chatState.attachedFiles,
+                                        onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
+                                        onAttachClick = { filePickerLauncher.launch() },
+                                        commands = chatState.commands,
+                                        onCommandSelected = { chatScreenModel.executeCommand(it) },
+                                        onModeSelectedForMention = { chatScreenModel.selectMode(it.id) },
+                                        shellMode = shellMode,
+                                        onShellModeToggle = { chatScreenModel.toggleShellMode() },
+                                        onHistoryUp = { chatScreenModel.navigateHistoryUp() },
+                                        onHistoryDown = { chatScreenModel.navigateHistoryDown() }
+                                    )
+                                }
                             }
                         } else {
                             // Empty state - no session selected
@@ -326,6 +412,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     onPanelStateChange = { panelState.state = it },
                     onDragProgressChange = { progress -> dragProgress = progress }
                 )
+                }
             // End of content wrapper
 
 
@@ -335,8 +422,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             // ═══════════════════════════════════════════════════════════════════════
             // Surface-based bottom bar with dynamic adaptation
             // Nav row is ALWAYS visible; only chat input auto-hides on scroll
-            val inputText by chatScreenModel.inputText.collectAsState()
-            val shellMode by chatScreenModel.shellMode.collectAsState()
             
             // Chat input auto-hides when scrolling up (reading older messages)
             // Nav row stays visible at all times on all screens
@@ -443,72 +528,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 }
             }
             
-            // Determine bottom bar mode based on current panel
-            // Chat input should only be expanded on the chat screen (CENTER panel)
-            val bottomBarMode = if (panelState.state == PanelState.CENTER) {
-                BottomBarMode.ChatInput
-            } else {
-                BottomBarMode.Navigation
-            }
-
-            val sharedTransitionScope = LocalSharedTransitionScope.current
-            val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
-
-            val bottomBarModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                with(sharedTransitionScope) {
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        .navigationBarsPadding()
-                        .sharedBounds(
-                            rememberSharedContentState(key = "bottom_bar"),
-                            animatedVisibilityScope = animatedVisibilityScope
-                        )
-                }
-            } else {
-                Modifier
-                    .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
-            }
-
-            UnifiedFloatingBottomBar(
-                mode = bottomBarMode,
-                dragProgress = dragProgress,
-                isChatInputVisible = isChatInputVisible,
-                onItemClick = { panelState.state = it },
-                // Chat input parameters
-                inputText = inputText,
-                onInputTextChange = { chatScreenModel.updateInputText(it) },
-                onSendClick = { chatScreenModel.sendMessage() },
-                inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
-                // Agent state - transforms SEND to ABORT when running
-                isSessionIdle = chatState.isSessionIdle,
-                onAbortClick = { chatScreenModel.abortSession() },
-                modelName = chatState.modelName,
-                agentName = chatState.agentName,
-                providerResponse = chatState.providerInfo,
-                selectedProviderId = chatState.selectedProviderId,
-                selectedModelId = chatState.selectedModelId,
-                onModelSelected = { providerId, modelId -> chatScreenModel.selectModel(providerId, modelId) },
-                variants = chatState.availableVariants,
-                selectedVariantId = chatState.selectedVariantId,
-                onVariantSelected = { chatScreenModel.selectVariant(it) },
-                modes = chatState.modes,
-                selectedModeId = chatState.selectedModeId,
-                onModeSelected = { chatScreenModel.selectMode(it) },
-                attachedFiles = chatState.attachedFiles,
-                onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
-                onAttachClick = { filePickerLauncher.launch() },
-                commands = chatState.commands,
-                onCommandSelected = { cmd -> chatScreenModel.executeCommand(cmd) },
-                onModeSelectedForMention = { mode -> chatScreenModel.selectMode(mode.id) },
-                shellMode = shellMode,
-                onShellModeToggle = { chatScreenModel.toggleShellMode() },
-                planMode = chatState.isPlanMode,
-                onPlanModeToggle = { chatScreenModel.togglePlanMode() },
-                onHistoryUp = { chatScreenModel.navigateHistoryUp() },
-                onHistoryDown = { chatScreenModel.navigateHistoryDown() },
-                modifier = bottomBarModifier
-            )
+            // Bottom bar is now handled by Scaffold
         }
     }
 }
