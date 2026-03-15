@@ -77,6 +77,7 @@ kotlin {
             implementation(libs.voyager.screenmodel)
             implementation(libs.voyager.koin)
             implementation(libs.voyager.transitions)
+            implementation(libs.voyager.tab.navigator)
 
             // KotlinX
             implementation(libs.kotlinx.serialization.json)
