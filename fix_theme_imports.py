@@ -1,62 +1,51 @@
 import os
 import re
 
-dir_path = r'C:\Users\ruzaq\AndroidStudioProjects\MOCCA\composeApp\src'
+target_dir = 'composeApp/src/commonMain/kotlin'
 
-replacements = {
-    r'AppTheme\.extendedColors\.textPrimary': 'MaterialTheme.colorScheme.onSurface',
-    r'AppTheme\.extendedColors\.textSecondary': 'MaterialTheme.colorScheme.onSurfaceVariant',
-    r'AppTheme\.extendedColors\.textTertiary': 'MaterialTheme.colorScheme.onSurfaceVariant',
-    r'AppTheme\.extendedColors\.textPlaceholder': 'MaterialTheme.colorScheme.onSurfaceVariant',
-    r'AppTheme\.extendedColors\.accentGreen': 'MaterialTheme.colorScheme.primary',
-    r'AppTheme\.extendedColors\.accent': 'MaterialTheme.colorScheme.primary',
-    r'AppTheme\.colors\.accentGreen': 'MaterialTheme.colorScheme.primary',
-    r'AppTheme\.colors\.accent': 'MaterialTheme.colorScheme.primary',
-    r'AppTheme\.extendedColors\.white': 'androidx.compose.ui.graphics.Color.White',
-    r'AppTheme\.colors\.white': 'androidx.compose.ui.graphics.Color.White',
-    r'AppTheme\.extendedColors\.error': 'MaterialTheme.colorScheme.error',
-    r'AppTheme\.extendedColors\.grey': 'MaterialTheme.colorScheme.outline',
-    r'AppTheme\.extendedColors\.border': 'MaterialTheme.colorScheme.outline',
-    r'AppTheme\.extendedColors\.borderLight': 'MaterialTheme.colorScheme.outlineVariant',
-    r'AppTheme\.extendedColors\.surfaceVariant': 'MaterialTheme.colorScheme.surfaceVariant',
-    r'AppTheme\.extendedColors\.surfaceContainerHigh': 'MaterialTheme.colorScheme.surfaceContainerHigh',
-    r'AppTheme\.extendedColors\.surfaceContainer': 'MaterialTheme.colorScheme.surfaceContainer',
-    r'AppTheme\.extendedColors\.background': 'MaterialTheme.colorScheme.background',
-    r'AppTheme\.colors\.background': 'MaterialTheme.colorScheme.background',    
-    r'AppTheme\.colors\.surfaceDim': 'MaterialTheme.colorScheme.surfaceDim',    
-    r'AppTheme\.colors\.surface': 'MaterialTheme.colorScheme.surface',
+replacements = [
+    (r'\bMaterialTheme\.typography\b', 'AppTheme.typography'),
+    (r'\bMaterialTheme\.colorScheme\b', 'AppTheme.colors'),
+    (r'\bMaterialTheme\.shapes\b', 'AppTheme.shapes')
+]
 
-    r'AppTheme\.typography\.labelLarge': 'MaterialTheme.typography.labelLarge', 
-    r'AppTheme\.typography\.labelMedium': 'MaterialTheme.typography.labelMedium',
-    r'AppTheme\.typography\.labelSmall': 'MaterialTheme.typography.labelSmall', 
-    r'AppTheme\.typography\.bodyLarge': 'MaterialTheme.typography.bodyLarge',   
-    r'AppTheme\.typography\.bodyMedium': 'MaterialTheme.typography.bodyMedium', 
-    r'AppTheme\.typography\.bodySmall': 'MaterialTheme.typography.bodySmall',   
-    r'AppTheme\.typography\.titleLarge': 'MaterialTheme.typography.titleLarge', 
-    r'AppTheme\.typography\.titleMedium': 'MaterialTheme.typography.titleMedium',
-    r'AppTheme\.typography\.titleSmall': 'MaterialTheme.typography.titleSmall', 
-    r'AppTheme\.typography\.headlineLarge': 'MaterialTheme.typography.headlineLarge',
-    r'AppTheme\.typography\.headlineMedium': 'MaterialTheme.typography.headlineMedium',
-    r'AppTheme\.typography\.headlineSmall': 'MaterialTheme.typography.headlineSmall',
-    r'AppTheme\.typography\.displayLarge': 'MaterialTheme.typography.displayLarge',
-    r'AppTheme\.typography\.displayMedium': 'MaterialTheme.typography.displayMedium',
-    r'AppTheme\.typography\.displaySmall': 'MaterialTheme.typography.displaySmall',
-}
+updated_count = 0
 
-for root, dirs, files in os.walk(dir_path):
+for root, _, files in os.walk(target_dir):
     for file in files:
-        if file.endswith('.kt'):
-            path = os.path.join(root, file)
-            with open(path, 'r', encoding='utf-8') as f:
-                content = f.read()
+        if not file.endswith('.kt'):
+            continue
+        
+        filepath = os.path.join(root, file)
+        with open(filepath, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        modified = False
+        new_content = content
+        
+        for old, new in replacements:
+            if re.search(old, new_content):
+                new_content = re.sub(old, new, new_content)
+                modified = True
+                
+        if modified:
+            # Check if import exists
+            import_stmt = 'import com.mocca.app.ui.theme.AppTheme'
+            if import_stmt not in new_content:
+                # Find the last import and append there, or after package
+                if 'import ' in new_content:
+                    # Find the last import
+                    last_import_idx = new_content.rfind('import ')
+                    end_of_line = new_content.find('\n', last_import_idx)
+                    if end_of_line == -1:
+                        end_of_line = len(new_content)
+                    new_content = new_content[:end_of_line] + f'\n{import_stmt}' + new_content[end_of_line:]
+                else:
+                    new_content = re.sub(r'^(package\s+[^\n]+)', r'\1\n\n' + import_stmt, new_content, count=1, flags=re.MULTILINE)
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(new_content)
+            print(f"Updated {filepath}")
+            updated_count += 1
 
-            original_content = content
-            for old, new in replacements.items():
-                content = re.sub(old, new, content)
-
-            if content != original_content:
-                if 'MaterialTheme.' in content and 'import androidx.compose.material3.MaterialTheme' not in content:
-                    content = 'import androidx.compose.material3.MaterialTheme\n' + content
-                with open(path, 'w', encoding='utf-8') as f:
-                    f.write(content)
-                print(f"Updated {path}")
+print(f"Total files updated: {updated_count}")

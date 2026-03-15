@@ -24,7 +24,7 @@ import kotlin.math.sin
 @Composable
 fun ExpressiveBentoCard(
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainer,
+    containerColor: Color = AppTheme.colors.surfaceContainer,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Surface(

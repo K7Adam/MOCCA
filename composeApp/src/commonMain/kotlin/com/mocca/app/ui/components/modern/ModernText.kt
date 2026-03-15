@@ -29,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
+import com.mocca.app.ui.theme.AppTheme
 
 /**
  * Modern styled text components.
@@ -132,7 +133,7 @@ fun TerminalLabel(
         text = text.uppercase(),
         modifier = modifier,
         color = color,
-        style = MaterialTheme.typography.labelMedium
+        style = AppTheme.typography.labelMedium
     )
 }
 
@@ -150,7 +151,7 @@ fun TerminalMeta(
         text = text.uppercase(),
         modifier = modifier,
         color = color,
-        style = MaterialTheme.typography.labelSmall
+        style = AppTheme.typography.labelSmall
     )
 }
 
@@ -172,7 +173,7 @@ fun TypewriterText(
     text: String,
     modifier: Modifier = Modifier,
     color: Color = AppColors.textPrimary,
-    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    style: TextStyle = AppTheme.typography.bodyMedium,
     typingDelayMs: Long = 50L,
     initialDelayMs: Long = 0L,
     showCursor: Boolean = true,

@@ -101,7 +101,7 @@ fun AppTheme(
  */
 object AppTheme {
     /**
-     * Extended colors not available in MaterialTheme.colorScheme
+     * Extended colors not available in AppTheme.colors
      */
     val extendedColors: ExtendedAppColors
         @Composable
