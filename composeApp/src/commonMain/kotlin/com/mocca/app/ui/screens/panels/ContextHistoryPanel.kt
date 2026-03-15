@@ -2,10 +2,13 @@ package com.mocca.app.ui.screens.panels
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,13 +45,12 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
 import com.mocca.app.ui.components.modern.*
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.*
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+
+import androidx.compose.animation.animateContentSize
 
 /**
  * Left swipe panel: Context info + Session history.
@@ -85,6 +87,7 @@ fun ContextHistoryPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(AppSpacing.lg)
     ) {
         // Agent header
@@ -268,7 +271,7 @@ private fun ConversationHistorySection(
                         
                         MoccaSessionCard(
                             isActive = isActive,
-                            modifier = Modifier.clickable { onSessionClick(session) }
+                            onClick = { onSessionClick(session) }
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
                                 Row(
@@ -362,11 +365,11 @@ private fun NewSessionButton(
             .clip(AppShapes.card)
             .border(AppSpacing.borderThin, borderColor, AppShapes.card)
             .background(AppColors.surfaceContainer, AppShapes.card)
-            .clickable(
-                enabled = !isLoading,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = AppColors.textPrimary.copy(alpha = 0.1f)),
-                onClick = onClick
+            .moccaClickable(
+                onClick = onClick, 
+                pressedScale = 0.96f, 
+                rippleColor = AppColors.textPrimary.copy(alpha = 0.1f),
+                enabled = !isLoading
             )
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically,

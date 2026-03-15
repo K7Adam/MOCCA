@@ -27,9 +27,14 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.innerShadow
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.shrinkVertically
+import com.mocca.app.ui.theme.*
+
 @Composable
 fun MoccaCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.surfaceContainer,
     borderColor: Color = AppColors.border,
     borderWidth: Dp = AppSpacing.borderThin,
@@ -44,7 +49,9 @@ fun MoccaCard(
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.25f), blur = 12.dp)
             .border(borderWidth, borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .then(if (isLoading) Modifier.shimmer() else Modifier)
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding)
     ) {
         AnimatedVisibility(
@@ -60,6 +67,7 @@ fun MoccaCard(
 @Composable
 fun MoccaCardElevated(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.cardBackground,
     borderColor: Color = AppColors.borderLight,
     borderWidth: Dp = AppSpacing.borderThin,
@@ -73,6 +81,8 @@ fun MoccaCardElevated(
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 16.dp)
             .border(borderWidth, borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.accentGreen.copy(alpha = 0.15f))
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
     )
@@ -81,6 +91,7 @@ fun MoccaCardElevated(
 @Composable
 fun StatusMonitorCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.surfaceContainer,
     borderColor: Color = AppColors.border,
     borderWidth: Dp = AppSpacing.borderThin,
@@ -94,9 +105,12 @@ fun StatusMonitorCard(
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.15f), blur = 20.dp)
             .border(borderWidth, borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
     ) {
         Column(
-            modifier = Modifier.padding(contentPadding),
+            modifier = Modifier
+                .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
+                .padding(contentPadding),
             content = content
         )
     }
@@ -105,6 +119,7 @@ fun StatusMonitorCard(
 @Composable
 fun MoccaSectionCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     leftBorderColor: Color = AppColors.accentGreen,
     leftBorderWidth: Dp = AppSpacing.borderStandard,
     backgroundColor: Color = AppColors.surfaceVariant,
@@ -122,6 +137,8 @@ fun MoccaSectionCard(
                     size = androidx.compose.ui.geometry.Size(leftBorderWidth.toPx(), size.height)
                 )
             }
+            .moccaClickable(onClick = onClick, pressedScale = 0.99f, rippleColor = AppColors.accentGreen.copy(alpha = 0.05f))
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(start = contentPadding + leftBorderWidth, end = contentPadding, 
                      top = contentPadding, bottom = contentPadding),
         content = content
@@ -131,6 +148,7 @@ fun MoccaSectionCard(
 @Composable
 fun MoccaSessionCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     isActive: Boolean = false,
     backgroundColor: Color = AppColors.surfaceContainerHigh,
     borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
@@ -149,6 +167,8 @@ fun MoccaSessionCard(
                 shape
             )
             .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.97f)
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
     )
@@ -157,6 +177,7 @@ fun MoccaSessionCard(
 @Composable
 fun ModuleToolCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.moduleBackground,
     borderColor: Color = AppColors.border,
     contentPadding: Dp = AppSpacing.modulePadding,
@@ -168,6 +189,8 @@ fun ModuleToolCard(
             .clip(shape)
             .background(backgroundColor, shape)
             .border(AppSpacing.borderThin, borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.96f)
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
     )
@@ -176,6 +199,7 @@ fun ModuleToolCard(
 @Composable
 fun SurfaceCard(
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.surfaceContainerHigh,
     borderColor: Color = AppColors.border,
     contentPadding: Dp = AppSpacing.cardPadding,
@@ -187,6 +211,8 @@ fun SurfaceCard(
             .clip(shape)
             .background(backgroundColor, shape)
             .border(AppSpacing.borderThin, borderColor, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
+            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
     )

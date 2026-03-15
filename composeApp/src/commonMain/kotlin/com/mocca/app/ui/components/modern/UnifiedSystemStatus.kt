@@ -16,10 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.*
 
 /**
  * Unified system status indicator showing both OpenCode Agent and Git Server health.
@@ -58,7 +55,7 @@ fun UnifiedStatusIndicator(
     
     Row(
         modifier = modifier
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+            .moccaClickable(onClick = onClick, pressedScale = 0.96f, rippleColor = color.copy(alpha = 0.1f))
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)

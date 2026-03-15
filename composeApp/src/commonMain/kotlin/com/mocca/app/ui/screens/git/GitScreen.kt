@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.material3.ButtonGroup
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.animation.animateContentSize
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -171,7 +173,10 @@ private fun GitFloatingBar(
     onPush: () -> Unit
 ) {
     Box(modifier = Modifier.padding(bottom = 16.dp)) {
-        ButtonGroup {
+        Row(
+            modifier = Modifier.animateContentSize(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Button(
                 onClick = onFetch,
                 shape = AppShapes.pill,
