@@ -30,7 +30,7 @@
 
 ## Phase 3: Screen Transitions and Polish
 
-- [ ] **Task: Implement Contextual Screen Transitions**
+- [~] **Task: Implement Contextual Screen Transitions**
     - [ ] Write tests to verify transition states and timing.
     - [ ] Implement motion-driven transitions between main app screens (Chat, Files, Git).
     - [ ] Verify that transitions are fluid and maintain the user's mental model.

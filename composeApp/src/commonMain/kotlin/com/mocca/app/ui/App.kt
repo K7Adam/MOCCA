@@ -49,6 +49,8 @@ import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import org.koin.compose.koinInject
 
+import com.mocca.app.ui.navigation.ModernTransitions
+
 @Composable
 fun App() {
     AppTheme {
@@ -77,10 +79,18 @@ fun App() {
                         }
 
                         Navigator(startScreen) { navigator ->
-                            SlideTransition(
-                                navigator = navigator,
-                                animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                            )
+                            // Use ModernTransitions for expressive screen navigation
+                            val transitionSpec = ModernTransitions.expressiveFadeScale()
+                            
+                            androidx.compose.animation.AnimatedContent(
+                                targetState = navigator.lastItem,
+                                transitionSpec = { transitionSpec },
+                                label = "expressive_screen_transition"
+                            ) { screen ->
+                                navigator.saveableState("transition", screen) {
+                                    screen.Content()
+                                }
+                            }
                         }
                     }
                 }

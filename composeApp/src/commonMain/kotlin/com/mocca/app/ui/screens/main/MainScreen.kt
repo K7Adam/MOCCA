@@ -63,6 +63,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
+import com.mocca.app.ui.navigation.ModernTransitions
 import com.mocca.app.ui.screens.chat.ChatContent
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.chat.ScrollDirection
@@ -175,16 +176,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        val enterSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
-        val exitSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val panelTransition = ModernTransitions.panelTransition()
 
         AnimatedContent(
             targetState = panelState.state,
             label = "panelTransition",
-            transitionSpec = {
-                fadeIn(animationSpec = enterSpec) togetherWith
-                fadeOut(animationSpec = exitSpec)
-            }
+            transitionSpec = { panelTransition }
         ) { targetPanelState ->
             CompositionLocalProvider(
                 LocalNavAnimatedVisibilityScope provides this
