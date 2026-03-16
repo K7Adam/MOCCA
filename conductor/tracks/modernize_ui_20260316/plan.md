@@ -16,7 +16,7 @@
 
 ## Phase 2: Modernized UI Components
 
-- [ ] **Task: Redesign Core Action Components (Buttons, FABs)**
+- [~] **Task: Redesign Core Action Components (Buttons, FABs)**
     - [ ] Write tests for the new `ModernButton` and `ModernFAB`.
     - [ ] Implement action components with Material 3 Expressive styles and animations.
     - [ ] Verify interaction feedback and motion-driven states.
