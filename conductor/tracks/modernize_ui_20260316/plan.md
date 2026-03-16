@@ -7,10 +7,10 @@
     - [x] Implement the `MoccaTheme` using Material 3 Expressive color schemes and typography.
     - [x] Verify that the theme is applied correctly across the application modules.
 
-- [~] **Task: Implement Core Adaptive Layout Components**
-    - [ ] Write tests for the `AdaptiveScaffold` and `AdaptivePane` components.
-    - [ ] Implement a flexible scaffold that adapts based on screen size and orientation.
-    - [ ] Verify responsiveness across multiple device configurations.
+- [x] **Task: Implement Core Adaptive Layout Components** (77117aa)
+    - [x] Write tests for the `AdaptiveScaffold` and `AdaptivePane` components.
+    - [x] Implement a flexible scaffold that adapts based on screen size and orientation.
+    - [x] Verify responsiveness across multiple device configurations.
 
 - [ ] **Task: Conductor - User Manual Verification 'Phase 1: Foundation and Style System' (Protocol in workflow.md)**
 
