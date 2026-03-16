@@ -16,12 +16,12 @@
 
 ## Phase 2: Modernized UI Components
 
-- [~] **Task: Redesign Core Action Components (Buttons, FABs)**
-    - [ ] Write tests for the new `ModernButton` and `ModernFAB`.
-    - [ ] Implement action components with Material 3 Expressive styles and animations.
-    - [ ] Verify interaction feedback and motion-driven states.
+- [x] **Task: Redesign Core Action Components (Buttons, FABs)** (a561fb7)
+    - [x] Write tests for the new `ModernButton` and `ModernFAB`.
+    - [x] Implement action components with Material 3 Expressive styles and animations.
+    - [x] Verify interaction feedback and motion-driven states.
 
-- [ ] **Task: Create Modernized Message and Chat Components**
+- [~] **Task: Create Modernized Message and Chat Components**
     - [ ] Write tests for the `ModernMessageItem` and `ChatBubble` components.
     - [ ] Implement chat UI components with enhanced visual clarity and motion.
     - [ ] Verify the UI with real-time chat data and streaming responses.
