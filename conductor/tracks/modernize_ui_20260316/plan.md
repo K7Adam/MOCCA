@@ -2,7 +2,7 @@
 
 ## Phase 1: Foundation and Style System
 
-- [ ] **Task: Define Material 3 Expressive Theme and Tokens**
+- [~] **Task: Define Material 3 Expressive Theme and Tokens**
     - [ ] Write tests to verify theme configuration and token values.
     - [ ] Implement the `MoccaTheme` using Material 3 Expressive color schemes and typography.
     - [ ] Verify that the theme is applied correctly across the application modules.

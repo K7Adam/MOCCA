@@ -97,8 +97,47 @@ fun AppTheme(
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Access extended app colors and tokens from the current theme.
+ * MOCCA Theme — Unified access to Material 3 tokens and extended app attributes.
  */
+object MoccaTheme {
+    /**
+     * Extended colors not available in the standard Material 3 ColorScheme.
+     */
+    val extendedColors: ExtendedAppColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalExtendedColors.current
+
+    /**
+     * Spacing tokens for consistent layout.
+     */
+    val spacing: AppSpacing
+        get() = AppSpacing
+
+    /**
+     * Typography tokens (Material 3 scale + custom tokens).
+     */
+    val typography: AppTypography
+        get() = AppTypography
+
+    /**
+     * Shape tokens (Squircle and Material 3 foundations).
+     */
+    val shapes: AppShapes
+        get() = AppShapes
+
+    /**
+     * Color tokens (Direct access to the AppColors object).
+     */
+    val colors: AppColors
+        get() = AppColors
+}
+
+/**
+ * Access extended app colors and tokens from the current theme.
+ * Deprecated: Use [MoccaTheme] instead.
+ */
+@Deprecated("Use MoccaTheme instead", replaceWith = ReplaceWith("MoccaTheme"))
 object AppTheme {
     /**
      * Extended colors not available in AppTheme.colors
