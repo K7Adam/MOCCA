@@ -14,7 +14,7 @@
     - [ ] Identify the most expensive UI components and navigation transitions.
     - [ ] Establish a performance baseline for future comparison.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Research and Analysis' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Research and Analysis' (Protocol in workflow.md) [checkpoint: 2e17ea1]
 
 ## Phase 2: Deslop and Refactor Foundations
 
