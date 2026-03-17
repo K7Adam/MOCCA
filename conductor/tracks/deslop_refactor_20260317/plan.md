@@ -2,13 +2,13 @@
 
 ## Phase 1: Research and Analysis
 
-- [ ] Task: Research "AI Slop" and 2026 KMP/Compose Performance Best Practices
+- [x] Task: Research "AI Slop" and 2026 KMP/Compose Performance Best Practices
     - [ ] Research common patterns that contribute to 'AI slop' in LLM-generated code.
     - [ ] Research 2026 best practices for battery and memory management in KMP/Compose.
     - [ ] Study the latest Material 3 Expressive updates and motion guidelines.
     - [ ] Create a "Deslop and Refactor Strategy" document summarizing the findings.
 
-- [ ] Task: Baseline Performance and Resource Profiling
+- [x] Task: Baseline Performance and Resource Profiling
     - [ ] Profile current navigation flows to identify frame drops.
     - [ ] Benchmark current battery and CPU usage during active chat and terminal sessions.
     - [ ] Identify the most expensive UI components and navigation transitions.
