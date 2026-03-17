@@ -101,7 +101,7 @@ fun GroupedSessionCard(
             } else {
                 parentModifier.border(
                     width = AppSpacing.borderThin,
-                    color = AppColors.border.copy(alpha = 0.3f),
+                    color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.sessionCard
                 )
             }
@@ -146,7 +146,7 @@ fun GroupedSessionCard(
                     Text(
                         text = titleText,
                         style = AppTypography.titleSmall,
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -180,7 +180,7 @@ fun GroupedSessionCard(
                             Text(
                                 text = "${group.children.size} sub-session${if (group.children.size > 1) "s" else ""}",
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textTertiary
+                                color = AppColors.outline
                             )
                             
                             if (hasRunningChild) {
@@ -196,7 +196,7 @@ fun GroupedSessionCard(
                             imageVector = if (group.isExpanded) Icons.Filled.ExpandLess
                                 else Icons.Filled.ExpandMore,
                             contentDescription = if (group.isExpanded) "Collapse" else "Expand",
-                            tint = AppColors.textTertiary,
+                            tint = AppColors.outline,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -327,7 +327,7 @@ private fun StackedChildPreview(
                         color = if (hasRunningChild && i == visibleStacks - 1) {
                             AppColors.accentGreen
                         } else {
-                            AppColors.border.copy(alpha = 0.3f)
+                            AppColors.outline.copy(alpha = 0.3f)
                         },
                         shape = AppShapes.small
                     )
@@ -361,7 +361,7 @@ private fun ChildSessionCard(
             .border(
                 width = 1.dp,
                 color = if (isRunning) AppColors.accentGreen.copy(alpha = 0.3f)
-                else AppColors.border,
+                else AppColors.outline,
                 shape = AppShapes.medium
             )
             .clickable(onClick = onClick)
@@ -391,7 +391,7 @@ private fun ChildSessionCard(
         Text(
             text = displayTitle,
             style = AppTypography.bodySmall,
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).then(titleModifier)

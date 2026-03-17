@@ -70,7 +70,7 @@ internal fun ChatInputStatusBar(
                 )
                 .border(
                     width = 0.5.dp,
-                    color = AppColors.border.copy(alpha = 0.3f),
+                    color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.pill
                 )
                 .clickable(enabled = providerResponse != null, onClick = onModelSelectorClick)
@@ -85,11 +85,11 @@ internal fun ChatInputStatusBar(
                     imageVector = Icons.Default.SmartToy,
                     contentDescription = null,
                     modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                    tint = AppColors.textSecondary
+                    tint = AppColors.onSurfaceVariant
                 )
                 Text(
                     text = modelName.uppercase(),
-                    color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
+                    color = if (providerResponse != null) AppColors.onSurfaceVariant else AppColors.outline,
                     style = AppTypography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -108,7 +108,7 @@ internal fun ChatInputStatusBar(
                     )
                     .border(
                         width = 0.5.dp,
-                        color = AppColors.border.copy(alpha = 0.3f),
+                        color = AppColors.outline.copy(alpha = 0.3f),
                         shape = AppShapes.pill
                     )
                     .clickable(onClick = onVariantSelectorClick)
@@ -123,11 +123,11 @@ internal fun ChatInputStatusBar(
                         imageVector = Icons.Default.Tune,
                         contentDescription = null,
                         modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                        tint = AppColors.textTertiary
+                        tint = AppColors.outline
                     )
                     Text(
                         text = (selectedVariantId ?: "DEF").take(5).uppercase(),
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.labelSmall,
                         maxLines = 1
                     )
@@ -169,7 +169,7 @@ private fun AgentSelectorChip(
                 )
                 .border(
                     width = 0.5.dp,
-                    color = AppColors.border.copy(alpha = 0.3f),
+                    color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.pill
                 )
                 .clickable { showAgentMenu = true }
@@ -184,11 +184,11 @@ private fun AgentSelectorChip(
                     imageVector = Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.size(NavConstants.StatusBarIconSize),
-                    tint = AppColors.textTertiary
+                    tint = AppColors.outline
                 )
                 Text(
                     text = agentName.take(8).uppercase(),
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall,
                     maxLines = 1
                 )
@@ -202,7 +202,7 @@ private fun AgentSelectorChip(
             properties = PopupProperties(focusable = false),
             modifier = Modifier
                 .background(AppColors.surfaceContainerHigh, AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.5f), AppShapes.medium)
         ) {
             modes.forEach { mode ->
                 DropdownMenuItem(
@@ -210,7 +210,7 @@ private fun AgentSelectorChip(
                         Text(
                             mode.name.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.onSurfaceVariant
                         )
                     },
                     onClick = {

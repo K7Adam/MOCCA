@@ -41,12 +41,12 @@ internal fun FileHeader(path: String) {
             Icons.Default.Description,
             contentDescription = "File",
             modifier = Modifier.size(14.dp),
-            tint = AppColors.textTertiary
+            tint = AppColors.outline
         )
         Text(
             text = path,
             style = AppTypography.labelSmall,
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -82,7 +82,7 @@ internal fun CodeBlock(
                 Text(
                     text = label,
                     style = AppTypography.labelSmall,
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = AppSpacing.xs)
                 )
             } else {
@@ -111,13 +111,13 @@ internal fun CodeBlock(
                         imageVector = if (isCopied) Icons.Default.Check else Icons.Default.ContentCopy,
                         contentDescription = "Copy",
                         modifier = Modifier.size(12.dp),
-                        tint = if (isCopied) AppColors.accentGreen else AppColors.textTertiary
+                        tint = if (isCopied) AppColors.accentGreen else AppColors.outline
                     )
                 }
                 Text(
                     text = if (copied) "COPIED" else "COPY",
                     style = AppTypography.labelExtraSmall,
-                    color = if (copied) AppColors.accentGreen else AppColors.textTertiary
+                    color = if (copied) AppColors.accentGreen else AppColors.outline
                 )
             }
         }
@@ -131,7 +131,7 @@ internal fun CodeBlock(
             Text(
                 text = code.lines().take(maxLines).joinToString("\n"),
                 style = AppTypography.code,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 modifier = Modifier
                     .padding(AppSpacing.md)
                     .horizontalScroll(scrollState)
@@ -173,7 +173,7 @@ internal fun DiffView(oldText: String, newText: String) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.medium)
-            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium),
+            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.5f), AppShapes.medium),
         verticalArrangement = Arrangement.spacedBy(0.dp) // Seamless
     ) {
         // Removed lines
@@ -239,7 +239,7 @@ internal fun FileListView(output: String) {
         Text(
             text = "Found $fileCount file${if (fileCount != 1) "s" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.textSecondary
+            color = AppColors.onSurfaceVariant
         )
         
         Surface(
@@ -272,7 +272,7 @@ internal fun FileListView(output: String) {
                             style = AppTypography.bodySmall,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            color = AppColors.textPrimary
+                            color = AppColors.onSurface
                         )
                     }
                 }
@@ -280,7 +280,7 @@ internal fun FileListView(output: String) {
                     Text(
                         text = "... and ${fileCount - 50} more",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textSecondary
+                        color = AppColors.onSurfaceVariant
                     )
                 }
             }
@@ -297,7 +297,7 @@ internal fun GrepResultsView(output: String) {
         Text(
             text = "Found $totalMatches match${if (totalMatches != 1) "es" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.textSecondary
+            color = AppColors.onSurfaceVariant
         )
         
         Surface(
@@ -322,13 +322,13 @@ internal fun GrepResultsView(output: String) {
                             Text(
                                 text = parts[0].substringAfterLast('/'),
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textPrimary
+                                color = AppColors.onSurface
                             )
                             if (parts.size >= 3) {
                                 Text(
                                     text = ":${parts[1]}",
                                     style = AppTypography.labelSmall,
-                                    color = AppColors.textSecondary
+                                    color = AppColors.onSurfaceVariant
                                 )
                             }
                         }
@@ -339,7 +339,7 @@ internal fun GrepResultsView(output: String) {
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(start = AppSpacing.sm),
-                        color = AppColors.textPrimaryDim
+                        color = AppColors.onSurfaceDim
                     )
                 }
             }

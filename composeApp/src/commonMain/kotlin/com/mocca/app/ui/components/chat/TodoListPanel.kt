@@ -122,7 +122,7 @@ fun TodoListPanel(
                             color = when {
                                 inProgressCount > 0 -> AppColors.accentGreen
                                 completedCount == totalCount && totalCount > 0 -> AppColors.accentGreen
-                                else -> AppColors.textTertiary
+                                else -> AppColors.outline
                             },
                             fontWeight = FontWeight.Medium
                         )
@@ -132,7 +132,7 @@ fun TodoListPanel(
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
-                        tint = AppColors.textTertiary,
+                        tint = AppColors.outline,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -158,7 +158,7 @@ fun TodoListPanel(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
-                                .background(AppColors.border.copy(alpha = 0.3f))
+                                .background(AppColors.outline.copy(alpha = 0.3f))
                         )
                         
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
@@ -179,10 +179,10 @@ private fun TodoItem(todo: Todo) {
     // Animated color for status
     val statusColor by animateColorAsState(
         targetValue = when (todo.status) {
-            TodoStatus.PENDING -> AppColors.textSecondary
+            TodoStatus.PENDING -> AppColors.onSurfaceVariant
             TodoStatus.IN_PROGRESS -> AppColors.accentGreen
             TodoStatus.COMPLETED -> AppColors.accentGreen
-            TodoStatus.CANCELLED -> AppColors.textSecondaryDark
+            TodoStatus.CANCELLED -> AppColors.onSurfaceVariantDark
         },
         label = "statusColor"
     )
@@ -190,9 +190,9 @@ private fun TodoItem(todo: Todo) {
     // Animated alpha for completed items
     val textAlpha by animateColorAsState(
         targetValue = if (todo.status == TodoStatus.COMPLETED || todo.status == TodoStatus.CANCELLED) {
-            AppColors.grey.copy(alpha = 0.6f)
+            AppColors.outlineVariant.copy(alpha = 0.6f)
         } else {
-            AppColors.textPrimary
+            AppColors.onSurface
         },
         label = "textAlpha"
     )

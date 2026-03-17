@@ -127,7 +127,7 @@ internal fun ChatInputActionToolbar(
                 .height(16.dp)
                 .padding(horizontal = AppSpacing.xs),
             thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.5f)
+            color = AppColors.outline.copy(alpha = 0.5f)
         )
 
         // CENTER: Attachment button
@@ -148,7 +148,7 @@ internal fun ChatInputActionToolbar(
             Icon(
                 imageVector = Icons.Default.AttachFile,
                 contentDescription = "Attach file",
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier.size(NavConstants.ActionIconSize)
             )
         }
@@ -192,7 +192,7 @@ private fun ToggleActionButton(
     ) {
         Text(
             text = text,
-            color = if (isActive) AppColors.accentGreen else AppColors.textSecondary,
+            color = if (isActive) AppColors.accentGreen else AppColors.onSurfaceVariant,
             style = AppTypography.labelMedium,
             fontWeight = FontWeight.Bold
         )
@@ -222,7 +222,7 @@ private fun AgentMentionButton(
             properties = PopupProperties(focusable = false),
             modifier = Modifier
                 .background(AppColors.surfaceContainerHigh, AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.5f), AppShapes.medium)
         ) {
             if (modes.isEmpty()) {
                 DropdownMenuItem(
@@ -230,7 +230,7 @@ private fun AgentMentionButton(
                         Text(
                             "No agents available",
                             style = AppTypography.labelSmall,
-                            color = AppColors.textTertiary
+                            color = AppColors.outline
                         )
                     },
                     onClick = { showAgentPalette = false }
@@ -243,13 +243,13 @@ private fun AgentMentionButton(
                                 Text(
                                     mode.name.uppercase(),
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.onSurfaceVariant
                                 )
                                 mode.description?.let { desc ->
                                     Text(
                                         desc,
                                         style = AppTypography.labelSmall,
-                                        color = AppColors.textTertiary,
+                                        color = AppColors.outline,
                                         maxLines = 1
                                     )
                                 }
@@ -295,12 +295,12 @@ private fun SendButton(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.Send,
                 contentDescription = null,
-                tint = if (canSend) AppColors.background else AppColors.textSecondary,
+                tint = if (canSend) AppColors.background else AppColors.onSurfaceVariant,
                 modifier = Modifier.size(NavConstants.SendIconSize)
             )
             Text(
                 text = "SEND",
-                color = if (canSend) AppColors.background else AppColors.textSecondary,
+                color = if (canSend) AppColors.background else AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1
@@ -326,12 +326,12 @@ private fun AbortButton(onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = null,
-                tint = AppColors.textPrimary,
+                tint = AppColors.onSurface,
                 modifier = Modifier.size(NavConstants.SendIconSize)
             )
             Text(
                 text = "ABORT",
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.labelSmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1

@@ -57,8 +57,8 @@ fun ForkSessionDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(AppColors.surfaceElevated, AppShapes.dialog)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.dialog)
+                .background(AppColors.surfaceContainerHigh, AppShapes.dialog)
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.dialog)
                 .padding(AppSpacing.lg)
         ) {
             Text(
@@ -71,7 +71,7 @@ fun ForkSessionDialog(
             Text(
                 text = "Select the message to fork from",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.md))
             MoccaInput(
@@ -115,7 +115,7 @@ private fun ForkMessageRow(
 ) {
     val isUser = message.role == MessageRole.USER
     val roleLabel = if (isUser) "USER" else "AGENT"
-    val roleColor = if (isUser) AppColors.textSecondary else AppColors.accentGreen
+    val roleColor = if (isUser) AppColors.onSurfaceVariant else AppColors.accentGreen
     val textSnippet = remember(message.parts) {
         message.parts.filterIsInstance<MessagePart.Text>().firstOrNull()?.text?.take(120)?.trim()
             ?: message.parts.filterIsInstance<MessagePart.ToolInvocation>().firstOrNull()?.let { "[${it.name}]" }
@@ -131,7 +131,7 @@ private fun ForkMessageRow(
         modifier = Modifier
             .fillMaxWidth()
             .background(AppColors.surfaceVariant, AppShapes.small)
-            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.4f), AppShapes.small)
+            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.4f), AppShapes.small)
             .clickable(onClick = onClick)
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
     ) {
@@ -151,7 +151,7 @@ private fun ForkMessageRow(
                     Text(
                         text = timeLabel,
                         style = AppTypography.labelExtraSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
             }
@@ -159,7 +159,7 @@ private fun ForkMessageRow(
             Text(
                 text = textSnippet,
                 style = AppTypography.bodySmall,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )

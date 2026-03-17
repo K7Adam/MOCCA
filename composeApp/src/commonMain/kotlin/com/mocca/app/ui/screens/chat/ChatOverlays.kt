@@ -55,14 +55,14 @@ internal fun RevertedSessionBanner(onResume: () -> Unit) {
                     Icon(
                         Icons.Default.History, 
                         contentDescription = null,
-                        tint = AppColors.textSecondary,
+                        tint = AppColors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(
                         text = "VIEWING OLDER VERSION",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textSecondary
+                        color = AppColors.onSurfaceVariant
                     )
                 }
                 MoccaTextButton(
@@ -99,13 +99,13 @@ internal fun TerminalErrorOverlay(
             ) {
                 Text(
                     text = "ERROR: $error",
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
                 IconButton(onClick = onDismiss) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.textPrimary)
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.onSurface)
                 }
             }
         }
@@ -148,7 +148,7 @@ internal fun SessionDisposedBanner(
                 Text(
                     text = reason,
                     style = AppTypography.labelExtraSmall,
-                    color = AppColors.textSecondary
+                    color = AppColors.onSurfaceVariant
                 )
             }
         }
@@ -156,7 +156,7 @@ internal fun SessionDisposedBanner(
             Icon(
                 Icons.Filled.Close,
                 contentDescription = "Dismiss",
-                tint = AppColors.textTertiary,
+                tint = AppColors.outline,
                 modifier = Modifier.size(14.dp)
             )
         }

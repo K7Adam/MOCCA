@@ -28,7 +28,7 @@ fun NotificationsSection(
     Column(modifier = modifier) {
         Text(
             text = "NOTIFICATIONS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -43,7 +43,7 @@ fun NotificationsSection(
                 onToggle = { onSetNotifyPermissions(!preferences.notifyPermissions) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Session Complete
             ModuleRowItem(
@@ -53,7 +53,7 @@ fun NotificationsSection(
                 onToggle = { onSetNotifySessionComplete(!preferences.notifySessionComplete) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Connection Lost
             ModuleRowItem(

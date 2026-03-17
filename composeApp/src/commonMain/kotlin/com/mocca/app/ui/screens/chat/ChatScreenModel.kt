@@ -179,77 +179,133 @@ class ChatScreenModel(
     }
 
     private fun syncDelegates() {
+        // 1. Session & Message Updates
         screenModelScope.launch {
             combine(
-                flows = listOf(
-                    chatStateStore.messages,
-                    chatStateStore.childSessions,
-                    chatStateStore.childMessages,
-                    chatStateStore.childStreamingText,
-                    chatStateStore.isThinking,
-                    chatStateStore.thinkingContent,
-                    chatStateStore.thinkingElapsedMs,
-                    chatStateStore.pendingPermission,
-                    chatStateStore.pendingQuestion,
-                    stateCoordinator.connectionStatus,
-                    configDelegate.providerInfo,
-                    configDelegate.selectedProviderId,
-                    configDelegate.selectedModelId,
-                    configDelegate.selectedVariantId,
-                    configDelegate.modes,
-                    configDelegate.selectedModeId,
-                    configDelegate.modelName,
-                    configDelegate.agentName,
-                    configDelegate.maxTokens,
-                    configDelegate.recentModels,
-                    configDelegate.commands,
-                    chatStateStore.todos,
-                    appStateStore.userPreferences,
-                    // CRITICAL: Sync loading states from ChatStateStore
-                    chatStateStore.isLoading,
-                    chatStateStore.isSending,
-                    chatStateStore.isSessionIdle,
-                    chatStateStore.error,
-                    chatStateStore.sessionDisposed
-                )
+                chatStateStore.messages,
+                chatStateStore.childSessions,
+                chatStateStore.childMessages,
+                chatStateStore.childStreamingText,
+                chatStateStore.isLoading,
+                chatStateStore.isSending,
+                chatStateStore.isSessionIdle,
+                chatStateStore.error,
+                chatStateStore.sessionDisposed
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
-                _state.value.copy(
-                    messages = (args[0] as List<Message>).toImmutableList(),
-                    childSessions = (args[1] as Map<String, Session>).toImmutableMap(),
-                    childMessages = (args[2] as Map<String, List<Message>>).mapValues { it.value.toImmutableList() }.toImmutableMap(),
-                    childStreamingText = (args[3] as Map<String, String>).toImmutableMap(),
-                    isThinking = args[4] as Boolean,
-                    thinkingContent = args[5] as String,
-                    thinkingElapsedMs = args[6] as Long,
-                    pendingPermission = args[7] as PermissionRequest?,
-                    pendingQuestion = args[8] as QuestionRequest?,
-                    connectionStatus = args[9] as ConnectionStatus,
-                    providerInfo = args[10] as ProviderResponse?,
-                    selectedProviderId = args[11] as String,
-                    selectedModelId = args[12] as String,
-                    selectedVariantId = args[13] as String?,
-                    modes = args[14] as ImmutableList<Mode>,
-                    selectedModeId = args[15] as String?,
-                    isPlanMode = (args[15] as String?) == "plan",
-                    modelName = args[16] as String,
-                    agentName = args[17] as String,
-                    maxTokens = args[18] as Int,
-                    recentModels = args[19] as ImmutableList<RecentModel>,
-                    commands = args[20] as ImmutableList<Command>,
-                    todos = (args[21] as List<Todo>).toImmutableList(),
-                    showTimestamps = (args[22] as UserPreferences).showTimestamps,
-                    showTokenCounts = (args[22] as UserPreferences).showTokenCounts,
-                    // CRITICAL: Sync loading states from ChatStateStore
-                    isLoading = args[23] as Boolean,
-                    isSending = args[24] as Boolean,
-                    isSessionIdle = args[25] as Boolean,
-                    error = args[26] as String?,
-                    sessionDisposed = (args[27] as String?) != null,
-                    disposalReason = args[27] as String?
-                )
-            }.collect { newState ->
-                _state.update { newState }
+                val msgs = args[0] as List<Message>
+                val children = args[1] as Map<String, Session>
+                val childMsgs = args[2] as Map<String, List<Message>>
+                val childStreaming = args[3] as Map<String, String>
+                val loading = args[4] as Boolean
+                val sending = args[5] as Boolean
+                val idle = args[6] as Boolean
+                val err = args[7] as String?
+                val disposed = args[8] as String?
+
+                _state.update { it.copy(
+                    messages = msgs.toImmutableList(),
+                    childSessions = children.toImmutableMap(),
+                    childMessages = childMsgs.mapValues { m -> m.value.toImmutableList() }.toImmutableMap(),
+                    childStreamingText = childStreaming.toImmutableMap(),
+                    isLoading = loading,
+                    isSending = sending,
+                    isSessionIdle = idle,
+                    error = err,
+                    sessionDisposed = disposed != null,
+                    disposalReason = disposed
+                ) }
+            }.collect()
+        }
+
+        // 2. Thinking State Updates
+        screenModelScope.launch {
+            combine(
+                chatStateStore.isThinking,
+                chatStateStore.thinkingContent,
+                chatStateStore.thinkingElapsedMs
+            ) { thinking, content, elapsed ->
+                _state.update { it.copy(
+                    isThinking = thinking,
+                    thinkingContent = content,
+                    thinkingElapsedMs = elapsed
+                ) }
+            }.collect()
+        }
+
+        // 3. Permissions & Interaction Updates
+        screenModelScope.launch {
+            combine(
+                chatStateStore.pendingPermission,
+                chatStateStore.pendingQuestion,
+                configDelegate.commands,
+                chatStateStore.todos
+            ) { perm, quest, cmds, todos ->
+                _state.update { it.copy(
+                    pendingPermission = perm,
+                    pendingQuestion = quest,
+                    commands = cmds,
+                    todos = todos.toImmutableList()
+                ) }
+            }.collect()
+        }
+
+        // 4. Configuration & Model Updates
+        screenModelScope.launch {
+            combine(
+                configDelegate.providerInfo,
+                configDelegate.selectedProviderId,
+                configDelegate.selectedModelId,
+                configDelegate.selectedVariantId,
+                configDelegate.modes,
+                configDelegate.selectedModeId,
+                configDelegate.modelName,
+                configDelegate.agentName,
+                configDelegate.maxTokens,
+                configDelegate.recentModels
+            ) { args ->
+                @Suppress("UNCHECKED_CAST")
+                val provider = args[0] as ProviderResponse?
+                val pId = args[1] as String
+                val mId = args[2] as String
+                val vId = args[3] as String?
+                val modes = args[4] as ImmutableList<Mode>
+                val modeId = args[5] as String?
+                val mName = args[6] as String
+                val aName = args[7] as String
+                val maxT = args[8] as Int
+                val recent = args[9] as ImmutableList<RecentModel>
+
+                _state.update { it.copy(
+                    providerInfo = provider,
+                    selectedProviderId = pId,
+                    selectedModelId = mId,
+                    selectedVariantId = vId,
+                    modes = modes,
+                    selectedModeId = modeId,
+                    isPlanMode = modeId == "plan",
+                    modelName = mName,
+                    agentName = aName,
+                    maxTokens = maxT,
+                    recentModels = recent
+                ) }
+            }.collect()
+        }
+
+        // 5. App & User Preference Updates
+        screenModelScope.launch {
+            appStateStore.userPreferences.collect { prefs ->
+                _state.update { it.copy(
+                    showTimestamps = prefs.showTimestamps,
+                    showTokenCounts = prefs.showTokenCounts
+                ) }
+            }
+        }
+
+        // 6. Infrastructure status
+        screenModelScope.launch {
+            stateCoordinator.connectionStatus.collect { status ->
+                _state.update { it.copy(connectionStatus = status) }
             }
         }
     }

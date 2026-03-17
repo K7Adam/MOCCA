@@ -28,7 +28,7 @@ fun ChatSection(
     Column(modifier = modifier) {
         Text(
             text = "CHAT",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -43,7 +43,7 @@ fun ChatSection(
                 onToggle = { onSetAutoScroll(!preferences.autoScroll) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Confirm Delete
             ModuleRowItem(
@@ -53,7 +53,7 @@ fun ChatSection(
                 onToggle = { onSetConfirmDelete(!preferences.confirmDelete) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Show Thinking Blocks
             ModuleRowItem(

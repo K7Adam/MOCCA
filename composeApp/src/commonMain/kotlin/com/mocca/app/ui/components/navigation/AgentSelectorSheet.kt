@@ -46,9 +46,9 @@ fun AgentSelectorBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = AppColors.background,
-        contentColor = AppColors.textPrimary,
+        contentColor = AppColors.onSurface,
         scrimColor = AppColors.scrim,
-        dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.border) },
+        dragHandle = { BottomSheetDefaults.DragHandle(color = AppColors.outline) },
         shape = AppShapes.bottomSheetExpanded
     ) {
         Column(
@@ -68,17 +68,17 @@ fun AgentSelectorBottomSheet(
                 Text(
                     text = "// SELECT AGENT",
                     style = AppTypography.titleMedium,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     fontWeight = FontWeight.Bold
                 )
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.textSecondary
+                    iconColor = AppColors.onSurfaceVariant
                 )
             }
             
-            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
             
             // Agent list
             LazyColumn(
@@ -113,7 +113,7 @@ fun AgentSelectorBottomSheet(
                         Text(
                             text = "> ${mode.name.uppercase()}",
                             style = AppTypography.bodySmall,
-                            color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary
+                            color = if (isSelected) AppColors.accentGreen else AppColors.onSurface
                         )
                         
                         if (isSelected) {

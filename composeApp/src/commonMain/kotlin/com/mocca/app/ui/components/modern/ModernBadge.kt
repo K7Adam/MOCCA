@@ -79,8 +79,8 @@ fun OutlinedBadge(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = Color.Transparent,
-    textColor: Color = AppColors.textSecondary,
-    borderColor: Color = AppColors.border,
+    textColor: Color = AppColors.onSurfaceVariant,
+    borderColor: Color = AppColors.outline,
     paddingHorizontal: Dp = AppSpacing.badgePaddingHorizontal,
     paddingVertical: Dp = AppSpacing.badgePaddingVertical,
     shape: Shape = AppShapes.pill
@@ -120,7 +120,7 @@ fun StatusBadge(
         ModernStatus.ONLINE -> AppColors.accentGreen to AppColors.accentGreen
         ModernStatus.OFFLINE -> AppColors.statusOffline to AppColors.statusOffline
         ModernStatus.WAITING -> AppColors.statusWaiting to AppColors.statusWaiting
-        ModernStatus.IDLE -> AppColors.textTertiary to AppColors.textTertiary
+        ModernStatus.IDLE -> AppColors.outline to AppColors.outline
     }
     
     Row(
@@ -247,7 +247,7 @@ fun TerminalTag(
     text: String,
     modifier: Modifier = Modifier,
     backgroundColor: Color = AppColors.surfaceVariant,
-    textColor: Color = AppColors.textSecondary,
+    textColor: Color = AppColors.onSurfaceVariant,
     paddingHorizontal: Dp = AppSpacing.tagPaddingHorizontal,
     paddingVertical: Dp = AppSpacing.tagPaddingVertical,
     shape: Shape = AppShapes.tag
@@ -305,7 +305,7 @@ fun TerminalEditBadge(
 ) {
     Text(
         text = "EDIT",
-        color = AppColors.textSecondary,
+        color = AppColors.onSurfaceVariant,
         style = AppTypography.labelSmall,
         modifier = modifier
     )

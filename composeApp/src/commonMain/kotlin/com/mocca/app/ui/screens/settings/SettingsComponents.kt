@@ -91,7 +91,7 @@ fun TerminalServerCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatusDot(
-                color = if (isActive) AppColors.statusOnline else AppColors.textSecondary,
+                color = if (isActive) AppColors.statusOnline else AppColors.onSurfaceVariant,
                 size = 12.dp
             )
             Spacer(modifier = Modifier.width(AppSpacing.md))
@@ -99,13 +99,13 @@ fun TerminalServerCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = server.name.uppercase(),
-                    color = if (isActive) AppColors.statusOnline else AppColors.textPrimary,
+                    color = if (isActive) AppColors.statusOnline else AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = server.baseUrl,
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.bodySmall
                 )
             }
@@ -122,7 +122,7 @@ fun TerminalServerCard(
         
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
-            color = AppColors.border
+            color = AppColors.outline
         )
         
         // Actions
@@ -142,7 +142,7 @@ fun TerminalServerCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val (statusIcon, statusColor) = when (connectionStatus) {
-                    ServerConnectionStatus.UNKNOWN -> Icons.Default.QuestionMark to AppColors.textTertiary
+                    ServerConnectionStatus.UNKNOWN -> Icons.Default.QuestionMark to AppColors.outline
                     ServerConnectionStatus.CHECKING -> Icons.Default.Sync to AppColors.statusWaiting
                     ServerConnectionStatus.CONNECTED -> Icons.Default.CheckCircle to AppColors.statusOnline
                     ServerConnectionStatus.FAILED -> Icons.Default.Error to AppColors.error
@@ -166,12 +166,12 @@ fun TerminalServerCard(
             MoccaIconButton(
                 icon = Icons.Default.Edit,
                 onClick = onEdit,
-                iconColor = AppColors.textSecondary
+                iconColor = AppColors.onSurfaceVariant
             )
             MoccaIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDelete,
-                iconColor = AppColors.alertRed
+                iconColor = AppColors.error
             )
         }
     }
@@ -202,7 +202,7 @@ fun TerminalServerEditDialog(
         title = {
             Text(
                 text = if (isNewServer) "ADD SERVER" else "EDIT SERVER",
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.headlineSmall
             )
         },

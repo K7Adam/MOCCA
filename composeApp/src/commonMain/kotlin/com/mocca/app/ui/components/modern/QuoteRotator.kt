@@ -69,7 +69,7 @@ fun QuoteRotator(
     intervalMs: Long = 4000L,
     fadeInDurationMs: Int = 500,
     fadeOutDurationMs: Int = 500,
-    textColor: Color = AppColors.textPrimary,
+    textColor: Color = AppColors.onSurface,
     showAsciiArt: Boolean = true,
     versionText: String? = null,
     serverText: String? = null,
@@ -143,7 +143,7 @@ fun QuoteRotator(
             val metaText = listOfNotNull(versionText, serverText).joinToString(" • ")
             Text(
                 text = metaText.uppercase(),
-                color = AppColors.textSecondaryDark,
+                color = AppColors.onSurfaceVariantDark,
                 style = AppTypography.labelSmall,
                 textAlign = TextAlign.Center
             )
@@ -161,7 +161,7 @@ fun QuoteRotator(
 @Composable
 fun AsciiGlobe(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textSecondary
+    color: Color = AppColors.onSurfaceVariant
 ) {
     val asciiArt = """
            .---.
@@ -191,7 +191,7 @@ fun AsciiGlobe(
 @Composable
 fun AsciiTerminal(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textSecondary
+    color: Color = AppColors.onSurfaceVariant
 ) {
     val asciiArt = """
         ┌─────────────────────┐
@@ -217,7 +217,7 @@ fun AsciiTerminal(
 @Composable
 fun DecorativeBrackets(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary
+    color: Color = AppColors.onSurface
 ) {
     Text(
         text = "[[ ]]",

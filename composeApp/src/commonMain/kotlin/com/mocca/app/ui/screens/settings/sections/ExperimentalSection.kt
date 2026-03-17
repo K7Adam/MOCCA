@@ -25,7 +25,7 @@ fun ExperimentalSection(
     Column(modifier = modifier) {
         Text(
             text = "EXPERIMENTAL",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -35,7 +35,7 @@ fun ExperimentalSection(
             Text(
                 text = "Manage server-wide experimental feature flags and global config options.",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(

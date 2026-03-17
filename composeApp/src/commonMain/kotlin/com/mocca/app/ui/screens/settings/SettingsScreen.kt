@@ -78,7 +78,7 @@ class SettingsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textSecondary
+                    iconColor = AppColors.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Text(
@@ -151,13 +151,13 @@ class SettingsScreen : Screen {
                             // Info note about server-side configuration
                             Text(
                                 text = "Provider and model are configured on the OpenCode server.",
-                                color = AppColors.textTertiary,
+                                color = AppColors.outline,
                                 style = AppTypography.labelSmall
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.xs))
                             Text(
                                 text = "Update these settings via /config command in OpenCode.",
-                                color = AppColors.textTertiary,
+                                color = AppColors.outline,
                                 style = AppTypography.labelSmall
                             )
                         }
@@ -282,7 +282,7 @@ class SettingsScreen : Screen {
                     text = {
                         Text(
                             text = "This will remove all cached sessions, messages, and local data. You will need to re-download data from the server.\n\nThis action cannot be undone.",
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             style = AppTypography.bodyMedium
                         )
                     },
@@ -315,7 +315,7 @@ fun AppConfigSection(
     Column(modifier = modifier) {
         Text(
             text = "APP CONFIGURATION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -333,24 +333,24 @@ fun AppConfigSection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "DEFAULT PROVIDER",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
                         text = defaultProvider.uppercase(),
-                        color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.textSecondary,
+                        color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodyMedium
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "DEFAULT MODEL",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
                         text = defaultModel,
-                        color = if (serverDefaultModel != null) AppColors.statusOnline else AppColors.textSecondary,
+                        color = if (serverDefaultModel != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -362,13 +362,13 @@ fun AppConfigSection(
             if (serverModes.isNotEmpty()) {
                 Text(
                     text = "AVAILABLE MODES",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Text(
                     text = serverModes.joinToString(", ") { it.name },
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
             }
@@ -378,13 +378,13 @@ fun AppConfigSection(
             // Info note about server-side configuration
             Text(
                 text = "Provider and model are configured on the OpenCode server.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = "Update these settings via /config command in OpenCode.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }
@@ -405,7 +405,7 @@ fun AppUpdatesSection(
     Column(modifier = modifier) {
         Text(
             text = "APP UPDATES",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -416,10 +416,10 @@ fun AppUpdatesSection(
             val tokenStatus = githubTokenStatus
             val statusColor = when {
                 tokenStatus?.isValid == true -> AppColors.statusOnline
-                tokenStatus?.isMissing == true -> AppColors.textSecondary
+                tokenStatus?.isMissing == true -> AppColors.onSurfaceVariant
                 tokenStatus?.isError == true -> AppColors.error
-                githubToken.isBlank() -> AppColors.textSecondary
-                else -> AppColors.textSecondary
+                githubToken.isBlank() -> AppColors.onSurfaceVariant
+                else -> AppColors.onSurfaceVariant
             }
             
             Row(
@@ -429,7 +429,7 @@ fun AppUpdatesSection(
             ) {
                 Text(
                     text = "Token Status:",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
                 Row(
@@ -460,7 +460,7 @@ fun AppUpdatesSection(
             
             Text(
                 text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -518,7 +518,7 @@ fun AppUpdatesSection(
                         msg.contains("invalid", ignoreCase = true) -> AppColors.error
                         msg.contains("valid", ignoreCase = true) ||
                         msg.contains("available", ignoreCase = true) -> AppColors.statusOnline
-                        else -> AppColors.textSecondary
+                        else -> AppColors.onSurfaceVariant
                     },
                     style = AppTypography.labelSmall
                 )
@@ -528,7 +528,7 @@ fun AppUpdatesSection(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }
@@ -547,7 +547,7 @@ fun AppearanceSection(
     Column(modifier = modifier) {
         Text(
             text = "APPEARANCE",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -562,7 +562,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Show Timestamps
             SettingsRowItem(
@@ -572,7 +572,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Compact Mode
             SettingsRowItem(
@@ -582,7 +582,7 @@ fun AppearanceSection(
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Hide API Keys
             SettingsRowItem(
@@ -605,7 +605,7 @@ fun AppearanceSection(
                 ) {
                     Text(
                         text = "TEXT SCALE",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
@@ -630,7 +630,7 @@ fun AppearanceSection(
                     colors = androidx.compose.material3.SliderDefaults.colors(
                         thumbColor = AppColors.primary,
                         activeTrackColor = AppColors.primary,
-                        inactiveTrackColor = AppColors.textSecondaryDark
+                        inactiveTrackColor = AppColors.onSurfaceVariantDark
                     )
                 )
                 
@@ -639,9 +639,9 @@ fun AppearanceSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Small", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                    Text("Default", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                    Text("Large", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                    Text("Small", color = AppColors.outline, style = AppTypography.labelSmall)
+                    Text("Default", color = AppColors.outline, style = AppTypography.labelSmall)
+                    Text("Large", color = AppColors.outline, style = AppTypography.labelSmall)
                 }
             }
         }
@@ -658,7 +658,7 @@ fun ChatSection(
     Column(modifier = modifier) {
         Text(
             text = "CHAT",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -673,7 +673,7 @@ fun ChatSection(
                 onToggle = { onSetAutoScroll(!preferences.autoScroll) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Confirm Delete
             SettingsRowItem(
@@ -683,7 +683,7 @@ fun ChatSection(
                 onToggle = { onSetConfirmDelete(!preferences.confirmDelete) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Show Thinking Blocks
             SettingsRowItem(
@@ -705,7 +705,7 @@ fun ConnectionSection(
     Column(modifier = modifier) {
         Text(
             text = "CONNECTION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -720,7 +720,7 @@ fun ConnectionSection(
                 onToggle = { onSetAutoReconnect(!preferences.autoReconnect) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Data Saver Mode
             SettingsRowItem(
@@ -734,7 +734,7 @@ fun ConnectionSection(
             
             Text(
                 text = "Data Saver disables background sync and reduces network calls.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }
@@ -748,7 +748,7 @@ fun ExperimentalSection(
     Column(modifier = modifier) {
         Text(
             text = "EXPERIMENTAL",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -758,7 +758,7 @@ fun ExperimentalSection(
             Text(
                 text = "Manage server-wide experimental feature flags and global config options.",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
@@ -780,7 +780,7 @@ fun NotificationsSection(
     Column(modifier = modifier) {
         Text(
             text = "NOTIFICATIONS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -795,7 +795,7 @@ fun NotificationsSection(
                 onToggle = { onSetNotifyPermissions(!preferences.notifyPermissions) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Session Complete
             SettingsRowItem(
@@ -805,7 +805,7 @@ fun NotificationsSection(
                 onToggle = { onSetNotifySessionComplete(!preferences.notifySessionComplete) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Connection Lost
             SettingsRowItem(
@@ -829,7 +829,7 @@ fun PrivacySecuritySection(
     Column(modifier = modifier) {
         Text(
             text = "PRIVACY & SECURITY",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -844,7 +844,7 @@ fun PrivacySecuritySection(
                 onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Clear Cache on Exit
             SettingsRowItem(
@@ -868,12 +868,12 @@ fun PrivacySecuritySection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "CLEAR ALL CACHE",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
                         text = "Remove cached sessions and messages",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -885,7 +885,7 @@ fun PrivacySecuritySection(
                 )
             }
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Reset Preferences
             Row(
@@ -896,12 +896,12 @@ fun PrivacySecuritySection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "RESET PREFERENCES",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
                         text = "Restore all settings to defaults",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -926,7 +926,7 @@ fun ProjectSection(
     Column(modifier = modifier) {
         Text(
             text = "PROJECT",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -940,11 +940,11 @@ fun ProjectSection(
                     isEnabled = true,
                     showToggle = false
                 )
-                HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+                HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
                     text = "PROJECT PATH",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(horizontal = AppSpacing.sm)
                 )
@@ -952,10 +952,10 @@ fun ProjectSection(
                 OutlinedTextField(
                     value = editingProjectPath,
                     onValueChange = onSetEditingProjectPath,
-                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
+                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.outline) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = AppTypography.bodySmall.copy(color = AppColors.textPrimary),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.onSurface),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
                         imeAction = ImeAction.Done
@@ -965,7 +965,7 @@ fun ProjectSection(
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppColors.primary,
-                        unfocusedBorderColor = AppColors.border,
+                        unfocusedBorderColor = AppColors.outline,
                         cursorColor = AppColors.primary,
                         focusedContainerColor = AppColors.background,
                         unfocusedContainerColor = AppColors.background
@@ -1001,7 +1001,7 @@ fun ProviderAuthSection(
     Column(modifier = modifier) {
         Text(
             text = "PROVIDER AUTHENTICATION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -1034,7 +1034,7 @@ fun ProviderAuthSection(
                     )
                     Text(
                         text = if (isExpanded) "[-]" else "[+]",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -1044,7 +1044,7 @@ fun ProviderAuthSection(
                         val methods = providerAuthMethods[providerId]
                         
                         if (authLoading && selectedProviderId == providerId) {
-                            Text("Loading auth methods...", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                            Text("Loading auth methods...", color = AppColors.outline, style = AppTypography.labelSmall)
                         } else {
                             // OAuth Button
                             if (methods?.any { it.type == "oauth" } == true) {
@@ -1059,7 +1059,7 @@ fun ProviderAuthSection(
                                     height = AppSpacing.buttonHeightCompact
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                Text("- OR -", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                Text("- OR -", color = AppColors.outline, style = AppTypography.labelSmall)
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                             }
                             
@@ -1090,7 +1090,7 @@ fun ProviderAuthSection(
                 }
                 
                 if (index < commonProviders.size - 1) {
-                    HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+                    HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 }
             }
         }
@@ -1111,7 +1111,7 @@ fun ServersSection(
     Column(modifier = modifier) {
         Text(
             text = "SERVERS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -1146,7 +1146,7 @@ fun SkillsSection(
     Column(modifier = modifier) {
         Text(
             text = "SKILLS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -1156,7 +1156,7 @@ fun SkillsSection(
             Text(
                 text = "View agent skills registered on the OpenCode server.",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
@@ -1181,7 +1181,7 @@ fun SettingsCard(
             .fillMaxWidth()
             .clip(AppShapes.moduleCard)
             .background(AppColors.surfaceVariant, AppShapes.moduleCard)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.moduleCard)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.moduleCard)
     ) {
         // Header
         Row(
@@ -1270,7 +1270,7 @@ fun SettingsRowItem(
         if (!isEnabled || !isConnected) {
             StatusDot(
                 color = when {
-                    !isEnabled -> AppColors.textTertiary
+                    !isEnabled -> AppColors.outline
                     else -> AppColors.statusOffline
                 },
                 size = AppSpacing.statusDotSizeLarge
@@ -1282,7 +1282,7 @@ fun SettingsRowItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) AppColors.textPrimary else AppColors.textSecondary,
+                color = if (isEnabled) AppColors.onSurface else AppColors.onSurfaceVariant,
                 style = AppTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) androidx.compose.ui.text.style.TextDecoration.LineThrough else androidx.compose.ui.text.style.TextDecoration.None
                 ),
@@ -1292,7 +1292,7 @@ fun SettingsRowItem(
             )
             Text(
                 text = subtitle,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.bodySmall,
                 maxLines = 1,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
@@ -1310,12 +1310,12 @@ fun SettingsRowItem(
                     checkedThumbColor = AppColors.background,
                     checkedTrackColor = AppColors.primary,
                     checkedBorderColor = AppColors.primary,
-                    uncheckedThumbColor = AppColors.textPrimary,
+                    uncheckedThumbColor = AppColors.onSurface,
                     uncheckedTrackColor = AppColors.surfaceVariant,
-                    uncheckedBorderColor = AppColors.border,
-                    disabledCheckedThumbColor = AppColors.textSecondary,
+                    uncheckedBorderColor = AppColors.outline,
+                    disabledCheckedThumbColor = AppColors.onSurfaceVariant,
                     disabledCheckedTrackColor = AppColors.surfaceVariant,
-                    disabledUncheckedThumbColor = AppColors.textSecondary,
+                    disabledUncheckedThumbColor = AppColors.onSurfaceVariant,
                     disabledUncheckedTrackColor = AppColors.surfaceVariant
                 )
             )

@@ -36,7 +36,7 @@ fun ServersSection(
     Column(modifier = modifier) {
         Text(
             text = "SERVERS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         

@@ -85,7 +85,7 @@ fun ModernThinkingIndicator(
             
             Text(
                 text = formatThinkingDuration(elapsedMs),
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelExtraSmall
             )
         }
@@ -126,7 +126,7 @@ private fun ExpandableThinkingPreview(content: String) {
         ) { text ->
             Text(
                 text = text,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.bodySmall,
                 fontFamily = AppTypography.monoFamily
             )

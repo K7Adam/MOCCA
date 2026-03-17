@@ -66,7 +66,7 @@ fun McpConfigModule(
             if (index < servers.lastIndex) {
                 HorizontalDivider(
                     thickness = AppSpacing.borderThin,
-                    color = AppColors.border
+                    color = AppColors.outline
                 )
             }
         }
@@ -103,7 +103,7 @@ fun GitStatusModule(
                 icon = Icons.Default.ChevronRight,
                 onClick = onExpandClick,
                 size = 32.dp,
-                iconColor = AppColors.textSecondary
+                iconColor = AppColors.onSurfaceVariant
             )
         }
     ) {
@@ -117,13 +117,13 @@ fun GitStatusModule(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .clip(AppShapes.small)
-                    .background(AppColors.border.copy(alpha=0.3f))
+                    .background(AppColors.outline.copy(alpha=0.3f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 StatusDot(color = AppColors.accentGreen)
                 Text(
                     text = branchName.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -131,12 +131,12 @@ fun GitStatusModule(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "UNCOMMITTED",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Text(
                     text = if (changedFiles > 0) String.format("%02d", changedFiles) else "00",
-                    color = if (changedFiles > 0) AppColors.statusWaiting else AppColors.textSecondary,
+                    color = if (changedFiles > 0) AppColors.statusWaiting else AppColors.onSurfaceVariant,
                     style = AppTypography.headlineSmall,
                     fontWeight = FontWeight.Black
                 )
@@ -163,7 +163,7 @@ fun SkillsEngineModule(
                 icon = Icons.Default.Settings,
                 onClick = onFilterClick,
                 size = 32.dp,
-                iconColor = AppColors.textSecondary
+                iconColor = AppColors.onSurfaceVariant
             )
         }
     ) {
@@ -177,7 +177,7 @@ fun SkillsEngineModule(
             ) {
                 if (!skill.isActive) {
                     StatusDot(
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         size = 6.dp,
                         showGlow = false
                     )
@@ -185,7 +185,7 @@ fun SkillsEngineModule(
                 }
                 Text(
                     text = skill.name.uppercase(),
-                    color = if (skill.isActive) AppColors.textPrimary else AppColors.textTertiary,
+                    color = if (skill.isActive) AppColors.onSurface else AppColors.outline,
                     style = AppTypography.bodySmall
                 )
             }

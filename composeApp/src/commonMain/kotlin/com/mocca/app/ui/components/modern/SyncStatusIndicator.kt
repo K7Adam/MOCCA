@@ -44,7 +44,7 @@ fun SyncStatusIndicator(
     val (icon, color, label) = when (globalSyncState) {
         is GlobalSyncState.NotSynced -> Triple(
             Icons.Default.CloudOff,
-            AppColors.textSecondary,
+            AppColors.onSurfaceVariant,
             null // Don't show label for NotSynced - not intrusive
         )
         is GlobalSyncState.Syncing -> Triple(
@@ -147,7 +147,7 @@ fun SyncStatusCard(
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Refresh",
-                        tint = AppColors.textSecondary,
+                        tint = AppColors.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -176,7 +176,7 @@ fun SyncStatusCard(
             Text(
                 text = if (hasError) "SYNC ERROR" else "SYNC STATUS",
                 style = AppTypography.labelSmall,
-                color = if (hasError) AppColors.error else AppColors.textSecondary,
+                color = if (hasError) AppColors.error else AppColors.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
             SyncStatusIndicator(
@@ -238,7 +238,7 @@ fun SyncStatusDot(
     modifier: Modifier = Modifier
 ) {
     val color = when (globalSyncState) {
-        is GlobalSyncState.NotSynced -> AppColors.textSecondary
+        is GlobalSyncState.NotSynced -> AppColors.onSurfaceVariant
         is GlobalSyncState.Syncing -> AppColors.accentGreen
         is GlobalSyncState.Fresh -> AppColors.statusOnline
         is GlobalSyncState.Partial -> AppColors.statusWaiting

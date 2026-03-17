@@ -53,7 +53,7 @@ fun EmulatorSetupBanner(
             ) {
                 Text(
                     text = "Android Emulator Detected",
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -62,7 +62,7 @@ fun EmulatorSetupBanner(
                 
                 Text(
                     text = "Git features require ADB port forwarding. Tap for setup instructions.",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.bodySmall
                 )
             }
@@ -70,7 +70,7 @@ fun EmulatorSetupBanner(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Dismiss",
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onDismiss() }

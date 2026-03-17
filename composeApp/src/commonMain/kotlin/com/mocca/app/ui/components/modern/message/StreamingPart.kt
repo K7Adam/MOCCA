@@ -94,7 +94,7 @@ fun ModernStreamingMessage(
                 MarkdownText(
                     markdown = text,
                     style = AppTypography.bodyMedium,
-                    color = AppColors.textPrimary
+                    color = AppColors.onSurface
                 )
                 Text(
                     text = "█",
@@ -124,19 +124,19 @@ fun DateSeparator(date: String) {
             modifier = Modifier
                 .weight(1f)
                 .height(1.dp)
-                .background(AppColors.border.copy(alpha = 0.5f))
+                .background(AppColors.outline.copy(alpha = 0.5f))
         )
         Text(
             text = date.uppercase(),
             style = AppTypography.labelExtraSmall,
-            color = AppColors.textTertiary,
+            color = AppColors.outline,
             modifier = Modifier.padding(horizontal = AppSpacing.md)
         )
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(1.dp)
-                .background(AppColors.border.copy(alpha = 0.5f))
+                .background(AppColors.outline.copy(alpha = 0.5f))
         )
     }
 }

@@ -32,7 +32,7 @@ fun PrivacySecuritySection(
     Column(modifier = modifier) {
         Text(
             text = "PRIVACY & SECURITY",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -47,7 +47,7 @@ fun PrivacySecuritySection(
                 onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Clear Cache on Exit
             ModuleRowItem(
@@ -71,12 +71,12 @@ fun PrivacySecuritySection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "CLEAR ALL CACHE",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
                         text = "Remove cached sessions and messages",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -88,7 +88,7 @@ fun PrivacySecuritySection(
                 )
             }
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Reset Preferences
             Row(
@@ -99,12 +99,12 @@ fun PrivacySecuritySection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "RESET PREFERENCES",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
                         text = "Restore all settings to defaults",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }

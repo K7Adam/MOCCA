@@ -53,9 +53,9 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
 
     val statusColor = when (part.status) {
         SessionStatus.RUNNING -> AppColors.accentGreen
-        SessionStatus.COMPLETED -> AppColors.textSecondary
+        SessionStatus.COMPLETED -> AppColors.onSurfaceVariant
         SessionStatus.ERROR -> AppColors.error
-        SessionStatus.IDLE -> AppColors.textTertiary
+        SessionStatus.IDLE -> AppColors.outline
     }
 
     val statusIcon = when (part.status) {
@@ -100,7 +100,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
                     Text(
                         text = "EXECUTING...",
                         style = AppTypography.labelExtraSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
             }
@@ -127,7 +127,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
                     Text(
                         text = "INITIALIZING...",
                         style = AppTypography.bodySmall,
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = AppSpacing.sm)
                     )
                 } else {
@@ -147,7 +147,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
                             MarkdownText(
                                 markdown = part.streamingText + "█",
                                 style = AppTypography.bodySmall,
-                                color = AppColors.textSecondary
+                                color = AppColors.onSurfaceVariant
                             )
                         }
                     }
@@ -161,7 +161,7 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
 @Composable
 fun ModernSubMessage(message: Message) {
     val isUser = message.role == MessageRole.USER
-    val color = if (isUser) AppColors.textSecondary else AppColors.textPrimary
+    val color = if (isUser) AppColors.onSurfaceVariant else AppColors.onSurface
 
     Row(modifier = Modifier.fillMaxWidth()) {
         if (!isUser) {
@@ -187,14 +187,14 @@ fun ModernSubMessage(message: Message) {
                         Text(
                             text = "{ ${part.name} }",
                             style = AppTypography.labelExtraSmall,
-                            color = AppColors.textTertiary
+                            color = AppColors.outline
                         )
                     }
                     is MessagePart.ToolResult -> {
                         Text(
                             text = "{ Result }",
                             style = AppTypography.labelExtraSmall,
-                            color = AppColors.textTertiary
+                            color = AppColors.outline
                         )
                     }
                     is MessagePart.SubTask -> {

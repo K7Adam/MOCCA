@@ -24,7 +24,7 @@ fun SkillsSection(
     Column(modifier = modifier) {
         Text(
             text = "SKILLS",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -34,7 +34,7 @@ fun SkillsSection(
             Text(
                 text = "View agent skills registered on the OpenCode server.",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(

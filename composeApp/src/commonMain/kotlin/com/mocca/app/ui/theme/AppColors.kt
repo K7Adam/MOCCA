@@ -55,23 +55,35 @@ object AppColors {
     val surfaceDim = Color(0xFF0F0F0F) // Tone 6
     val surfaceBright = Color(0xFF383838) // Tone 24
     
+    val onSurfaceDim = onSurface.copy(alpha = 0.7f)
+    val onSurfaceVariantLight = onSurfaceVariant.copy(alpha = 0.8f)
+    val textPlaceholder = onSurfaceVariant.copy(alpha = 0.4f)
+    
     val surfaceContainerLowest = Color(0xFF121212) // Tone 8
     val surfaceContainerLow = Color(0xFF1A1A1A) // Tone 10
     val surfaceContainer = Color(0xFF202020) // Tone 12
     val surfaceContainerHigh = Color(0xFF272727) // Tone 17
     val surfaceContainerHighest = Color(0xFF303030) // Tone 22
 
+    val moduleBackground = surfaceContainer
+
     val outline = Color(0xFF333333) // Tone 25
     val outlineVariant = Color(0xFF444444) // Tone 35
-
-    // ═══════════════════════════════════════════════════════════════════════════
-    // SEMANTIC STATUS COLORS
-    // ═══════════════════════════════════════════════════════════════════════════
 
     val error = Color(0xFFEF5350)
     val onError = Color(0xFF690005)
     val errorContainer = Color(0xFF93000A)
     val onErrorContainer = Color(0xFFFFDAD6)
+    val errorDim = error.copy(alpha = 0.1f)
+
+    val scrim = Color(0xCC000000)
+    
+    val textSecondary = onSurfaceVariant
+    val grey = outlineVariant
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // EXTENDED UI COLORS
+    // ═══════════════════════════════════════════════════════════════════════════
 
     val success = Color(0xFF4CAF50)
     val warning = Color(0xFFFFB74D)
@@ -82,49 +94,10 @@ object AppColors {
     val statusThinking = Color(0xFF8B9DC3)
     val statusProcessing = Color(0xFF8B9DC3)
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // COMPATIBILITY ALIASES (Mapping legacy names to M3 tokens)
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    val textPrimary = onSurface
-    val textPrimaryDim = onSurface.copy(alpha = 0.7f)
-    val textSecondary = onSurfaceVariant
-    val textSecondaryLight = onSurfaceVariant.copy(alpha = 0.8f)
-    val textSecondaryDark = onSurfaceVariant.copy(alpha = 0.6f)
-    val textTertiary = onSurfaceVariant.copy(alpha = 0.6f)
-    val textPlaceholder = onSurfaceVariant.copy(alpha = 0.4f)
-    
-    val surfaceElevated = surfaceContainerHigh
-    val cardBackground = surfaceContainer
-    val cardHighlight = surfaceContainerHigh
-    val moduleBackground = surfaceContainer
-    
-    val alertRed = error
-    val alertRedDim = error.copy(alpha = 0.1f)
-    val alertBorderStart = error
-    val alertBorderEnd = warning
-
-    val indicator = primary
-    val activeIndicator = primary
-    val buttonBackground = primary
-    val buttonText = onPrimary
-    val buttonSecondary = surfaceVariant
-    val sendButton = primary
-    
-    val input = surfaceContainerLow
-
     val white = Color(0xFFFFFFFF)
-    val whiteDim = Color(0xFFA0A0A0)
-    val whiteMuted = Color(0xFF666666)
-    
-    val greyDark = Color(0xFF333333)
-    val grey = Color(0xFF666666)
-    val greyLight = Color(0xFF999999)
-    val greyExtraLight = Color(0xFFB0B0B0)
-    
-    val border = Color(0xFF333333)
-    val borderLight = Color(0xFF444444)
-    val borderWhite = Color(0xFFE8E8E8)
+    val greyLight = outline // Alias for consistency
+    val greyDark = surfaceContainerHighest // Alias for consistency
+    val onSurfaceVariantDark = surfaceContainerHighest // Alias for legacy buttons
 
     val accent = Color(0xFF8B9DC3)
     val accentBright = Color(0xFFA3B4D4)
@@ -133,7 +106,6 @@ object AppColors {
     val badgeBackground = Color(0xFF303030)
     val badgeText = Color(0xFFE8E8E8)
     
-    val scrim = Color(0xCC000000)
     val inputGlow = Color(0x408B9DC3)
 
     // Code Colors

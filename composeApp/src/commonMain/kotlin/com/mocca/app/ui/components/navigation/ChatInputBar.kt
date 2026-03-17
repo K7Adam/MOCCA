@@ -181,7 +181,7 @@ fun ChatInputBar(
 
                     HorizontalDivider(
                         thickness = 0.5.dp,
-                        color = AppColors.border.copy(alpha = 0.3f),
+                        color = AppColors.outline.copy(alpha = 0.3f),
                         modifier = Modifier.padding(horizontal = AppSpacing.md)
                     )
 
@@ -199,7 +199,7 @@ fun ChatInputBar(
                             onValueChange = handleValueChange,
                             modifier = Modifier.fillMaxWidth(),
                             enabled = inputEnabled,
-                            textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+                            textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
                             cursorBrush = SolidColor(AppColors.accentGreen),
                             interactionSource = interactionSource,
                             decorationBox = { innerTextField ->
@@ -252,7 +252,7 @@ fun ChatInputBar(
                             icon = Icons.Default.AttachFile,
                             onClick = onAttachClick,
                             size = 32.dp,
-                            iconColor = AppColors.textSecondary
+                            iconColor = AppColors.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.width(AppSpacing.xs))
@@ -264,7 +264,7 @@ fun ChatInputBar(
                         ) {
                             Text(
                                 text = "/",
-                                color = if (showCommandPalette) AppColors.accentGreen else AppColors.textSecondary,
+                                color = if (showCommandPalette) AppColors.accentGreen else AppColors.onSurfaceVariant,
                                 style = AppTypography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )

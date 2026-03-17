@@ -175,13 +175,13 @@ private fun PersistentNavItem(
 
     // Animated color transition
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )

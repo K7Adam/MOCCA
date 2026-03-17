@@ -68,7 +68,7 @@ fun PermissionRequestDialog(
                         text = permission.permission,
                         modifier = Modifier.padding(12.dp),
                         style = AppTypography.titleMedium,
-                        color = AppColors.textPrimary
+                        color = AppColors.onSurface
                     )
                 }
                 
@@ -92,14 +92,14 @@ fun PermissionRequestDialog(
                                 Text(
                                     text = pattern,
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.textSecondary
+                                    color = AppColors.onSurfaceVariant
                                 )
                             }
                             if (permission.patterns.size > 10) {
                                 Text(
                                     text = "... and ${permission.patterns.size - 10} more",
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.textSecondary
+                                    color = AppColors.onSurfaceVariant
                                 )
                             }
                         }
@@ -112,7 +112,7 @@ fun PermissionRequestDialog(
                     Text(
                         text = "Already allowed: ${permission.always.take(3).joinToString(", ")}",
                         style = AppTypography.bodySmall,
-                        color = AppColors.border
+                        color = AppColors.outline
                     )
                 }
                 
@@ -129,7 +129,7 @@ fun PermissionRequestDialog(
                             text = formatMetadataMap(permission.metadata),
                             modifier = Modifier.padding(12.dp),
                             style = AppTypography.bodySmall,
-                            color = AppColors.textSecondary
+                            color = AppColors.onSurfaceVariant
                         )
                     }
                 }
@@ -146,7 +146,7 @@ fun PermissionRequestDialog(
                     onClick = onApprove,
                     shape = AppShapes.pill,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = AppColors.textPrimary,
+                        containerColor = AppColors.onSurface,
                         contentColor = AppColors.background
                     )
                 ) {
@@ -161,7 +161,7 @@ fun PermissionRequestDialog(
                 onClick = onDeny,
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = AppColors.textSecondary
+                    contentColor = AppColors.onSurfaceVariant
                 )
             ) {
                 Icon(Icons.Default.Close, contentDescription = "Deny")
@@ -212,13 +212,13 @@ fun LoadingScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             LoadingIndicator(
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = message.uppercase(),
                 style = AppTypography.bodyMedium,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
         }
     }
@@ -248,13 +248,13 @@ fun ErrorScreen(
             Text(
                 text = stringResource(Res.string.error_occurred).uppercase(),
                 style = AppTypography.headlineSmall,
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = message,
                 style = AppTypography.bodyMedium,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             if (onRetry != null) {
                 Spacer(modifier = Modifier.height(AppSpacing.xl))
@@ -287,20 +287,20 @@ fun EmptyContent(
             Text(
                 text = icon,
                 style = AppTypography.displayLarge,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text(
                 text = title.uppercase(),
                 style = AppTypography.headlineSmall,
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             )
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
                     text = subtitle,
                     style = AppTypography.bodyMedium,
-                    color = AppColors.textSecondary
+                    color = AppColors.onSurfaceVariant
                 )
             }
             if (action != null) {

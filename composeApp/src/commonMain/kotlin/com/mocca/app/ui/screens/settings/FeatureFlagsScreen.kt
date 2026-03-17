@@ -53,7 +53,7 @@ object FeatureFlagsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textPrimary
+                    iconColor = AppColors.onSurface
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 ModernHeader(text = "FEATURE FLAGS", modifier = Modifier.weight(1f))
@@ -118,7 +118,7 @@ object FeatureFlagsScreen : Screen {
                         Spacer(modifier = Modifier.height(AppSpacing.sm))
                         Text(
                             text = "GLOBAL SETTINGS",
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             style = AppTypography.labelSmall
                         )
                     }
@@ -135,7 +135,7 @@ object FeatureFlagsScreen : Screen {
                                 onToggle = { screenModel.setAutoshare(it) }
                             )
 
-                            HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                            HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
 
                             // Autoupdate
                             ModuleRowItem(
@@ -145,7 +145,7 @@ object FeatureFlagsScreen : Screen {
                                 onToggle = { screenModel.setAutoupdate(it) }
                             )
 
-                            HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                            HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
 
                             // Telemetry
                             ModuleRowItem(
@@ -162,7 +162,7 @@ object FeatureFlagsScreen : Screen {
                         Spacer(modifier = Modifier.height(AppSpacing.md))
                         Text(
                             text = "EXPERIMENTAL FLAGS",
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             style = AppTypography.labelSmall
                         )
                     }
@@ -172,7 +172,7 @@ object FeatureFlagsScreen : Screen {
                             Text(
                                 text = "Experimental flags are configured server-side in the OpenCode config file. Enable them by setting experimental keys in your opencode.json.",
                                 style = AppTypography.bodySmall,
-                                color = AppColors.textSecondary
+                                color = AppColors.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
 
@@ -185,35 +185,35 @@ object FeatureFlagsScreen : Screen {
                                     description = "Git worktree management",
                                     enabled = false
                                 )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                 ExperimentalFlagRow(
                                     key = "plan",
                                     label = "PLAN MODE",
                                     description = "Agent planning mode before execution",
                                     enabled = false
                                 )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                 ExperimentalFlagRow(
                                     key = "exa",
                                     label = "EXA SEARCH",
                                     description = "Exa neural web search integration",
                                     enabled = false
                                 )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                 ExperimentalFlagRow(
                                     key = "lsp",
                                     label = "LSP INTEGRATION",
                                     description = "Language Server Protocol diagnostics",
                                     enabled = false
                                 )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                 ExperimentalFlagRow(
                                     key = "disableTerminals",
                                     label = "DISABLE TERMINALS",
                                     description = "Hide terminal sessions from UI",
                                     enabled = false
                                 )
-                                HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                 ExperimentalFlagRow(
                                     key = "disableFileBrowser",
                                     label = "DISABLE FILE BROWSER",
@@ -241,7 +241,7 @@ object FeatureFlagsScreen : Screen {
                                         enabled = value
                                     )
                                     if (index < sortedFlags.lastIndex) {
-                                        HorizontalDivider(color = AppColors.border, thickness = 0.5.dp)
+                                        HorizontalDivider(color = AppColors.outline, thickness = 0.5.dp)
                                     }
                                 }
                             }
@@ -266,7 +266,7 @@ object FeatureFlagsScreen : Screen {
                                     Text(
                                         text = "Saving...",
                                         style = AppTypography.labelSmall,
-                                        color = AppColors.textSecondary
+                                        color = AppColors.onSurfaceVariant
                                     )
                                 }
                             }
@@ -304,27 +304,27 @@ private fun ExperimentalFlagRow(
                 Text(
                     text = label,
                     style = AppTypography.labelMedium,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     fontWeight = FontWeight.Medium
                 )
                 // Read-only badge
                 Box(
                     modifier = Modifier
                         .clip(AppShapes.pill)
-                        .background(AppColors.border)
+                        .background(AppColors.outline)
                         .padding(horizontal = AppSpacing.xs, vertical = 2.dp)
                 ) {
                     Text(
                         text = "SERVER",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
             }
             Text(
                 text = description,
                 style = AppTypography.bodySmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -334,12 +334,12 @@ private fun ExperimentalFlagRow(
                 .clip(AppShapes.pill)
                 .background(
                     if (enabled) AppColors.accentGreen.copy(alpha = 0.15f)
-                    else AppColors.border
+                    else AppColors.outline
                 )
                 .border(
                     AppSpacing.borderThin,
                     if (enabled) AppColors.accentGreen.copy(alpha = 0.5f)
-                    else AppColors.borderLight,
+                    else AppColors.outlineVariant,
                     AppShapes.pill
                 )
                 .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
@@ -347,7 +347,7 @@ private fun ExperimentalFlagRow(
             Text(
                 text = if (enabled) "ON" else "OFF",
                 style = AppTypography.labelSmall,
-                color = if (enabled) AppColors.accentGreen else AppColors.textTertiary,
+                color = if (enabled) AppColors.accentGreen else AppColors.outline,
                 fontWeight = FontWeight.Bold
             )
         }

@@ -50,14 +50,14 @@ internal fun SetupChecklist() {
         modifier = Modifier
             .fillMaxWidth()
             .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
             .padding(AppSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         Text(
             text = "SETUP CHECKLIST",
             style = AppTypography.labelSmall,
-            color = AppColors.textSecondary
+            color = AppColors.onSurfaceVariant
         )
         
         ChecklistItem(
@@ -112,14 +112,14 @@ internal fun ChecklistItem(
             Text(
                 text = text,
                 style = AppTypography.bodyMedium,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Medium
             )
             
             Text(
                 text = subtext,
                 style = AppTypography.bodySmall,
-                color = AppColors.textTertiary
+                color = AppColors.outline
             )
         }
     }
@@ -138,7 +138,7 @@ internal fun ServerListItem(
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
     }
     
-    val borderColor = if (isSelected) AppColors.accentGreen else AppColors.border
+    val borderColor = if (isSelected) AppColors.accentGreen else AppColors.outline
     val backgroundColor = if (isSelected) AppColors.accentGreen.copy(alpha = 0.1f) else AppColors.surfaceVariant
     
     Row(
@@ -154,7 +154,7 @@ internal fun ServerListItem(
         Icon(
             imageVector = sourceIcon,
             contentDescription = null,
-            tint = if (isSelected) AppColors.accentGreen else AppColors.textSecondary,
+            tint = if (isSelected) AppColors.accentGreen else AppColors.onSurfaceVariant,
             modifier = Modifier.size(24.dp)
         )
         
@@ -164,14 +164,14 @@ internal fun ServerListItem(
             Text(
                 text = server.name,
                 style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.accentGreen else AppColors.textPrimary,
+                color = if (isSelected) AppColors.accentGreen else AppColors.onSurface,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
             )
             
             Text(
                 text = server.baseUrl,
                 style = AppTypography.bodySmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
         }
         
@@ -196,15 +196,15 @@ internal fun ErrorMessage(
         modifier = modifier
             .fillMaxWidth()
             .clip(AppShapes.card)
-            .background(AppColors.alertRed.copy(alpha = 0.1f), AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.alertRed, AppShapes.card)
+            .background(AppColors.error.copy(alpha = 0.1f), AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.error, AppShapes.card)
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = Icons.Default.Refresh,
             contentDescription = "Error",
-            tint = AppColors.alertRed,
+            tint = AppColors.error,
             modifier = Modifier.size(20.dp)
         )
         
@@ -213,7 +213,7 @@ internal fun ErrorMessage(
         Text(
             text = message,
             style = AppTypography.bodySmall,
-            color = AppColors.alertRed,
+            color = AppColors.error,
             modifier = Modifier.weight(1f)
         )
         
@@ -245,7 +245,7 @@ internal fun CredentialDialog(
         title = {
             Text(
                 text = "SERVER CREDENTIALS",
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.headlineSmall
             )
         },
@@ -254,7 +254,7 @@ internal fun CredentialDialog(
                 Text(
                     text = "Enter credentials for $serverName",
                     style = AppTypography.bodyMedium,
-                    color = AppColors.textSecondary
+                    color = AppColors.onSurfaceVariant
                 )
                 
                 Spacer(modifier = Modifier.height(AppSpacing.lg))
@@ -292,7 +292,7 @@ internal fun CredentialDialog(
             Text(
                 text = "Cancel",
                 style = AppTypography.bodyMedium,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 modifier = Modifier.clickable(onClick = onDismiss)
             )
         }

@@ -64,7 +64,7 @@ fun ModuleCard(
             .clip(AppShapes.large)
             .background(AppColors.moduleBackground, AppShapes.large)
             .innerShadow(AppShapes.large, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
-            .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.3f), AppShapes.large)
+            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.3f), AppShapes.large)
     ) {
         // Header
         Row(
@@ -85,19 +85,19 @@ fun ModuleCard(
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = AppColors.textSecondary,
+                        tint = AppColors.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                 } else {
                     Text(
                         text = "{ }",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.bodyMedium
                     )
                 }
                 Text(
                     text = title.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelLarge, // Updated typography
                     fontWeight = FontWeight.Bold
                 )
@@ -160,7 +160,7 @@ fun ModuleRowItem(
         if (!isEnabled || !isConnected) {
             StatusDot(
                 color = when {
-                    !isEnabled -> AppColors.textTertiary
+                    !isEnabled -> AppColors.outline
                     else -> AppColors.statusOffline
                 },
                 size = AppSpacing.statusDotSizeLarge
@@ -172,7 +172,7 @@ fun ModuleRowItem(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
-                color = if (isEnabled) AppColors.textPrimary else AppColors.textSecondary,
+                color = if (isEnabled) AppColors.onSurface else AppColors.onSurfaceVariant,
                 style = AppTypography.bodyMedium.copy(
                     textDecoration = if (isStrikethrough) TextDecoration.LineThrough else TextDecoration.None
                 ),
@@ -182,7 +182,7 @@ fun ModuleRowItem(
             )
             Text(
                 text = subtitle,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.bodySmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -224,12 +224,12 @@ fun ModernToggle(
             checkedThumbColor = AppColors.background,
             checkedTrackColor = AppColors.accentGreen,
             checkedBorderColor = AppColors.accentGreen,
-            uncheckedThumbColor = AppColors.textPrimary,
+            uncheckedThumbColor = AppColors.onSurface,
             uncheckedTrackColor = AppColors.surfaceVariant,
-            uncheckedBorderColor = AppColors.border,
-            disabledCheckedThumbColor = AppColors.textSecondary,
+            uncheckedBorderColor = AppColors.outline,
+            disabledCheckedThumbColor = AppColors.onSurfaceVariant,
             disabledCheckedTrackColor = AppColors.surfaceVariant,
-            disabledUncheckedThumbColor = AppColors.textSecondary,
+            disabledUncheckedThumbColor = AppColors.onSurfaceVariant,
             disabledUncheckedTrackColor = AppColors.surfaceVariant
         )
     )
@@ -251,7 +251,7 @@ fun ModuleActionButton(
     Box(
         modifier = modifier
             .clip(AppShapes.small)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.small)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.small)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
@@ -261,7 +261,7 @@ fun ModuleActionButton(
     ) {
         Text(
             text = text.uppercase(),
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
     }

@@ -219,7 +219,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             Surface(
                                 modifier = bottomBarModifier.fillMaxWidth(),
                                 color = AppColors.surfaceContainer,
-                                shape = AppShapes.rounded2xl
+                                shape = AppShapes.extraLarge
                             ) {
                                 PersistentNavRow(
                                     dragProgress = dragProgress,
@@ -469,13 +469,13 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Close Menu",
-                                        tint = AppColors.textPrimary
+                                        tint = AppColors.onSurface
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = "Open Menu",
-                                        tint = AppColors.textPrimary
+                                        tint = AppColors.onSurface
                                     )
                                 }
                             }
@@ -490,7 +490,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         icon = { Icon(Icons.Default.Share, contentDescription = "Share") },
                         text = { Text("Share Session") },
                         containerColor = AppColors.surfaceContainer,
-                        contentColor = AppColors.textPrimary
+                        contentColor = AppColors.onSurface
                     )
 
                     if (showScrollToBottom) {
@@ -519,7 +519,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             },
                             text = { Text("Scroll to Bottom") },
                             containerColor = AppColors.surfaceContainer,
-                            contentColor = AppColors.textPrimary
+                            contentColor = AppColors.onSurface
                         )
                     }
                 }

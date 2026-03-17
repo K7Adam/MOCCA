@@ -37,7 +37,7 @@ fun AppUpdatesSection(
     Column(modifier = modifier) {
         Text(
             text = "APP UPDATES",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -48,10 +48,10 @@ fun AppUpdatesSection(
             val tokenStatus = githubTokenStatus
             val statusColor = when {
                 tokenStatus?.isValid == true -> AppColors.statusOnline
-                tokenStatus?.isMissing == true -> AppColors.textSecondary
+                tokenStatus?.isMissing == true -> AppColors.onSurfaceVariant
                 tokenStatus?.isError == true -> AppColors.error
-                githubToken.isBlank() -> AppColors.textSecondary
-                else -> AppColors.textSecondary
+                githubToken.isBlank() -> AppColors.onSurfaceVariant
+                else -> AppColors.onSurfaceVariant
             }
             
             Row(
@@ -61,7 +61,7 @@ fun AppUpdatesSection(
             ) {
                 Text(
                     text = "Token Status:",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
                 Row(
@@ -92,7 +92,7 @@ fun AppUpdatesSection(
             
             Text(
                 text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -150,7 +150,7 @@ fun AppUpdatesSection(
                         msg.contains("invalid", ignoreCase = true) -> AppColors.error
                         msg.contains("valid", ignoreCase = true) ||
                         msg.contains("available", ignoreCase = true) -> AppColors.statusOnline
-                        else -> AppColors.textSecondary
+                        else -> AppColors.onSurfaceVariant
                     },
                     style = AppTypography.labelSmall
                 )
@@ -160,7 +160,7 @@ fun AppUpdatesSection(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }

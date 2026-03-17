@@ -125,7 +125,7 @@ internal fun BaseToolCard(
                     Text(
                         text = title,
                         style = AppTypography.bodySmall,
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
@@ -145,7 +145,7 @@ internal fun BaseToolCard(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = if (expanded) "Collapse" else "Expand",
                     modifier = Modifier.size(18.dp),
-                    tint = AppColors.textSecondary
+                    tint = AppColors.onSurfaceVariant
                 )
             }
             
@@ -153,7 +153,7 @@ internal fun BaseToolCard(
             AnimatedVisibility(visible = expanded) {
                 Column(modifier = Modifier.padding(top = AppSpacing.md)) {
                     HorizontalDivider(
-                        color = AppColors.border.copy(alpha = 0.5f),
+                        color = AppColors.outline.copy(alpha = 0.5f),
                         modifier = Modifier.padding(bottom = AppSpacing.md)
                     )
                     content()
@@ -170,7 +170,7 @@ internal fun ToolStateIndicator(state: ToolState, startTimeMs: Long? = null) {
             Text(
                 text = "Pending",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
         }
         ToolState.RUNNING -> {
@@ -254,7 +254,7 @@ internal fun ShowDuration(richState: RichToolState) {
         Text(
             text = formatDuration(duration),
             style = AppTypography.labelSmall,
-            color = AppColors.grey.copy(alpha = 0.7f)
+            color = AppColors.outlineVariant.copy(alpha = 0.7f)
         )
     }
 }

@@ -202,11 +202,11 @@ fun ChatContent(
                 onDismissRequest = { screenModel.dismissShareDialog() },
                 containerColor = AppColors.surfaceContainerHigh,
                 shape = AppShapes.dialog,
-                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.textPrimary) },
+                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.onSurface) },
                 text = {
                     Column {
                         if (isShared) {
-                            Text("This session is publicly accessible.", color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                            Text("This session is publicly accessible.", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             MoccaInput(
                                 value = shareUrl,
@@ -215,7 +215,7 @@ fun ChatContent(
                                 enabled = false 
                             )
                         } else {
-                            Text("Make this session publicly accessible?", color = AppColors.textPrimary, style = AppTypography.bodyMedium)
+                            Text("Make this session publicly accessible?", color = AppColors.onSurface, style = AppTypography.bodyMedium)
                         }
                     }
                 },
@@ -245,7 +245,7 @@ fun ChatContent(
                                 screenModel.unshareSession()
                                 screenModel.dismissShareDialog()
                             },
-                            textColor = AppColors.alertRed
+                            textColor = AppColors.error
                         )
                     } else {
                         MoccaTextButton(

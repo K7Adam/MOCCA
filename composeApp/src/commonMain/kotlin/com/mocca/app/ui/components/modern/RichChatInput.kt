@@ -166,7 +166,7 @@ fun RichChatInput(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceContainer, AppShapes.rounded2xl)
+            .background(AppColors.surfaceContainer, AppShapes.extraLarge)
             .windowInsetsPadding(WindowInsets.ime)
     ) {
         // Status bar (MODEL + MODE)
@@ -184,8 +184,8 @@ fun RichChatInput(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
-                Icon(Icons.Default.SmartToy, null, Modifier.size(12.dp), AppColors.textTertiary)
-                Text(modelName.uppercase(), color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary, style = AppTypography.labelSmall)
+                Icon(Icons.Default.SmartToy, null, Modifier.size(12.dp), AppColors.outline)
+                Text(modelName.uppercase(), color = if (providerResponse != null) AppColors.onSurfaceVariant else AppColors.outline, style = AppTypography.labelSmall)
             }
             if (variants.isNotEmpty()) {
                 Row(
@@ -193,8 +193,8 @@ fun RichChatInput(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
-                    Icon(Icons.Default.Tune, null, Modifier.size(12.dp), AppColors.textTertiary)
-                    Text((selectedVariantId ?: "DEFAULT").uppercase(), color = AppColors.textSecondary, style = AppTypography.labelSmall)
+                    Icon(Icons.Default.Tune, null, Modifier.size(12.dp), AppColors.outline)
+                    Text((selectedVariantId ?: "DEFAULT").uppercase(), color = AppColors.onSurfaceVariant, style = AppTypography.labelSmall)
                 }
             }
             Row(
@@ -202,12 +202,12 @@ fun RichChatInput(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
-                Icon(Icons.Default.Person, null, Modifier.size(12.dp), AppColors.textTertiary)
-                Text(agentName.uppercase(), color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                Icon(Icons.Default.Person, null, Modifier.size(12.dp), AppColors.outline)
+                Text(agentName.uppercase(), color = AppColors.outline, style = AppTypography.labelSmall)
             }
         }
 
-        HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+        HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
 
         if (attachedFiles.isNotEmpty()) {
             Row(
@@ -220,7 +220,7 @@ fun RichChatInput(
                     AttachmentChip(file = file, onRemove = { onRemoveAttachment(file) })
                 }
             }
-            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
         }
 
         val inputScrollState = rememberScrollState()
@@ -245,7 +245,7 @@ fun RichChatInput(
                         } else false
                     },
                 enabled = enabled,
-                textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+                textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
                 cursorBrush = SolidColor(AppColors.accentGreen),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Default),
                 keyboardActions = KeyboardActions.Default,
@@ -267,7 +267,7 @@ fun RichChatInput(
             }
         }
 
-        HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+        HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
 
         // Action toolbar
         Row(
@@ -281,11 +281,11 @@ fun RichChatInput(
                 icon = Icons.Default.Add,
                 onClick = { handleValueChange(if (value.isEmpty()) "@" else "$value @") },
                 size = AppSpacing.iconButtonSizeCompact,
-                iconColor = AppColors.textSecondary
+                iconColor = AppColors.onSurfaceVariant
             )
-            MoccaTextButton(text = "/", onClick = { handleValueChange("/") }, textColor = AppColors.textSecondary)
+            MoccaTextButton(text = "/", onClick = { handleValueChange("/") }, textColor = AppColors.onSurfaceVariant)
             Spacer(modifier = Modifier.width(AppSpacing.xs))
-            VerticalDivider(modifier = Modifier.height(16.dp), thickness = AppSpacing.borderThin, color = AppColors.border)
+            VerticalDivider(modifier = Modifier.height(16.dp), thickness = AppSpacing.borderThin, color = AppColors.outline)
             Spacer(modifier = Modifier.width(AppSpacing.xs))
             Box {
                 var showAgentMenu by remember { mutableStateOf(false) }
@@ -294,12 +294,12 @@ fun RichChatInput(
                     onClick = { showAgentMenu = true },
                     icon = Icons.Default.Person,
                     backgroundColor = AppColors.surfaceVariant,
-                    textColor = AppColors.textSecondary
+                    textColor = AppColors.onSurfaceVariant
                 )
                 DropdownMenu(
                     expanded = showAgentMenu,
                     onDismissRequest = { showAgentMenu = false },
-                    modifier = Modifier.background(AppColors.surfaceElevated)
+                    modifier = Modifier.background(AppColors.surfaceContainerHigh)
                 ) {
                     modes.forEach { mode ->
                         DropdownMenuItem(
@@ -307,7 +307,7 @@ fun RichChatInput(
                                 Text(
                                     mode.name.uppercase(),
                                     style = AppTypography.labelSmall,
-                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                                    color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.onSurfaceVariant
                                 )
                             },
                             onClick = {
@@ -323,7 +323,7 @@ fun RichChatInput(
                 icon = Icons.Default.AttachFile,
                 onClick = onAttachClick,
                 size = AppSpacing.iconButtonSizeCompact,
-                iconColor = AppColors.textSecondary
+                iconColor = AppColors.onSurfaceVariant
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             MoccaCompactButton(
@@ -367,16 +367,16 @@ internal fun AttachmentChip(
         modifier = Modifier
             .clip(AppShapes.pill)
             .background(AppColors.surfaceVariant, AppShapes.pill)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.pill)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.pill)
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(Icons.Default.AttachFile, null, tint = AppColors.textSecondary, modifier = Modifier.size(12.dp))
+        Icon(Icons.Default.AttachFile, null, tint = AppColors.onSurfaceVariant, modifier = Modifier.size(12.dp))
         Spacer(modifier = Modifier.width(4.dp))
-        Text(file.name.take(20), style = AppTypography.labelSmall, color = AppColors.textSecondary)
+        Text(file.name.take(20), style = AppTypography.labelSmall, color = AppColors.onSurfaceVariant)
         Spacer(modifier = Modifier.width(4.dp))
-        Text("(${file.displaySize})", style = AppTypography.labelSmall, color = AppColors.textTertiary)
+        Text("(${file.displaySize})", style = AppTypography.labelSmall, color = AppColors.outline)
         Spacer(modifier = Modifier.width(AppSpacing.xs))
-        Icon(Icons.Default.Close, "Remove", tint = AppColors.textTertiary, modifier = Modifier.size(14.dp).clickable { onRemove() })
+        Icon(Icons.Default.Close, "Remove", tint = AppColors.outline, modifier = Modifier.size(14.dp).clickable { onRemove() })
     }
 }

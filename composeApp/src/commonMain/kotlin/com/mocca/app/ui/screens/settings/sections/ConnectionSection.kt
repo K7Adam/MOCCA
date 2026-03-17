@@ -27,7 +27,7 @@ fun ConnectionSection(
     Column(modifier = modifier) {
         Text(
             text = "CONNECTION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -42,7 +42,7 @@ fun ConnectionSection(
                 onToggle = { onSetAutoReconnect(!preferences.autoReconnect) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Data Saver Mode
             ModuleRowItem(
@@ -56,7 +56,7 @@ fun ConnectionSection(
             
             Text(
                 text = "Data Saver disables background sync and reduces network calls.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }

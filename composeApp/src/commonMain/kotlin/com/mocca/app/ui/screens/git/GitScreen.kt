@@ -74,7 +74,7 @@ class GitScreen : Screen {
                     },
                     actions = {
                         IconButton(onClick = { /* More actions */ }) {
-                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.textPrimary)
+                            Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.onSurface)
                         }
                     }
                 )
@@ -153,7 +153,7 @@ private fun GitTabsNavigation(
                     onClick = { onTabSelected(tab) },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isSelected) AppColors.primary else AppColors.white.copy(alpha = 0.05f),
-                        contentColor = if (isSelected) AppColors.textPrimary else AppColors.white.copy(alpha = 0.6f)
+                        contentColor = if (isSelected) AppColors.onSurface else AppColors.white.copy(alpha = 0.6f)
                     ),
                     shape = AppShapes.pill,
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
@@ -182,7 +182,7 @@ private fun GitFloatingBar(
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AppColors.surfaceContainerHigh,
-                    contentColor = AppColors.textPrimary
+                    contentColor = AppColors.onSurface
                 ),
                 border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
             ) {
@@ -194,7 +194,7 @@ private fun GitFloatingBar(
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = AppColors.surfaceContainerHigh,
-                    contentColor = AppColors.textPrimary
+                    contentColor = AppColors.onSurface
                 ),
                 border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
             ) {

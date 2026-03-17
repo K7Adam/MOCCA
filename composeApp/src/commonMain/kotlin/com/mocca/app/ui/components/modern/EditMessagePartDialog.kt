@@ -44,8 +44,8 @@ fun EditMessagePartDialog(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(AppColors.surfaceElevated, AppShapes.dialog)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.dialog)
+                .background(AppColors.surfaceContainerHigh, AppShapes.dialog)
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.dialog)
                 .padding(AppSpacing.lg)
         ) {
             Text(

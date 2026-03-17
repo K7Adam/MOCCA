@@ -57,7 +57,7 @@ fun ContextInfoGrid(
             .fillMaxWidth()
             .clip(AppShapes.card)
             .background(AppColors.surfaceContainer, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
             .padding(AppSpacing.cardPadding)
     ) {
         // Row 1: MCP_STATUS and MODEL
@@ -69,7 +69,7 @@ fun ContextInfoGrid(
             Column {
                 Text(
                     text = "MCP STATUS",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Row(
@@ -83,7 +83,7 @@ fun ContextInfoGrid(
                     }
                     Text(
                         text = mcpStatus.uppercase(),
-                        color = if (isMcpOnline) AppColors.textPrimary else AppColors.statusOffline,
+                        color = if (isMcpOnline) AppColors.onSurface else AppColors.statusOffline,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -94,12 +94,12 @@ fun ContextInfoGrid(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "MODEL",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Text(
                     text = model.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -117,12 +117,12 @@ fun ContextInfoGrid(
             Column {
                 Text(
                     text = "LATENCY",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Text(
                     text = latency.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -132,12 +132,12 @@ fun ContextInfoGrid(
             Column(horizontalAlignment = Alignment.End) {
                 Text(
                     text = "PORT",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Text(
                     text = port.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -176,12 +176,12 @@ fun ContextWindowBar(
             ) {
                 Text(
                     text = "CTX WINDOW",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Text(
                     text = "${formatTokenCount(usedTokens)}/${formatTokenCount(maxTokens)}",
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelSmall
                 )
             }
@@ -225,7 +225,7 @@ fun ContextWindowBar(
             Spacer(modifier = Modifier.height(AppSpacing.xxs))
             Text(
                 text = "$usagePercentInt% USED",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall,
                 modifier = Modifier.align(Alignment.End)
             )
@@ -272,7 +272,7 @@ fun ContextInfoContainer(
         ) {
             Text(
                 text = "CONTEXT INFO",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

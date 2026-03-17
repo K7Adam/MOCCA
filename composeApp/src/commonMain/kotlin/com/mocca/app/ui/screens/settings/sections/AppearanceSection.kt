@@ -33,7 +33,7 @@ fun AppearanceSection(
     Column(modifier = modifier) {
         Text(
             text = "APPEARANCE",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -48,7 +48,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Show Timestamps
             ModuleRowItem(
@@ -58,7 +58,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Compact Mode
             ModuleRowItem(
@@ -68,7 +68,7 @@ fun AppearanceSection(
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
             )
             
-            HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Hide API Keys
             ModuleRowItem(
@@ -91,7 +91,7 @@ fun AppearanceSection(
                 ) {
                     Text(
                         text = "TEXT SCALE",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
@@ -116,7 +116,7 @@ fun AppearanceSection(
                     colors = androidx.compose.material3.SliderDefaults.colors(
                         thumbColor = AppColors.accentGreen,
                         activeTrackColor = AppColors.accentGreen,
-                        inactiveTrackColor = AppColors.textSecondaryDark
+                        inactiveTrackColor = AppColors.onSurfaceVariantDark
                     )
                 )
                 
@@ -125,9 +125,9 @@ fun AppearanceSection(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Small", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                    Text("Default", color = AppColors.textTertiary, style = AppTypography.labelSmall)
-                    Text("Large", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                    Text("Small", color = AppColors.outline, style = AppTypography.labelSmall)
+                    Text("Default", color = AppColors.outline, style = AppTypography.labelSmall)
+                    Text("Large", color = AppColors.outline, style = AppTypography.labelSmall)
                 }
             }
         }

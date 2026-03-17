@@ -81,13 +81,13 @@ fun McpOAuthDialog(
                 Column {
                     Text(
                         text = "OAUTH_AUTHORIZATION",
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "server: \"${oauthState.serverName}\"",
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.codeSmall
                     )
                 }
@@ -95,7 +95,7 @@ fun McpOAuthDialog(
 
             HorizontalDivider(
                 thickness = AppSpacing.borderThin,
-                color = AppColors.border
+                color = AppColors.outline
             )
 
             // ── Step 1: Auth URL ────────────────────────────────────────────────
@@ -114,7 +114,7 @@ fun McpOAuthDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(AppColors.surfaceVariant, AppShapes.medium)
-                            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+                            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium)
                             .padding(AppSpacing.sm)
                     )
                 }
@@ -152,7 +152,7 @@ fun McpOAuthDialog(
                     )
                     Text(
                         text = "Generating authorization URL...",
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -160,7 +160,7 @@ fun McpOAuthDialog(
 
             HorizontalDivider(
                 thickness = AppSpacing.borderThin,
-                color = AppColors.border
+                color = AppColors.outline
             )
 
             // ── Step 2: Paste code ──────────────────────────────────────────────
@@ -177,21 +177,21 @@ fun McpOAuthDialog(
                 label = {
                     Text(
                         text = "AUTH_CODE",
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.labelSmall
                     )
                 },
                 placeholder = {
                     Text(
                         text = "Paste the code from your browser here...",
-                        color = AppColors.textSecondaryDark,
+                        color = AppColors.onSurfaceVariantDark,
                         style = AppTypography.bodySmall
                     )
                 },
-                textStyle = AppTypography.code.copy(color = AppColors.textPrimary),
+                textStyle = AppTypography.code.copy(color = AppColors.onSurface),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AppColors.statusWaiting,
-                    unfocusedBorderColor = AppColors.border,
+                    unfocusedBorderColor = AppColors.outline,
                     cursorColor = AppColors.statusWaiting,
                     focusedContainerColor = AppColors.surfaceVariant,
                     unfocusedContainerColor = AppColors.surfaceVariant
@@ -246,7 +246,7 @@ fun McpOAuthDialog(
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(
                         text = "Verifying authorization code...",
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.bodySmall
                     )
                 }

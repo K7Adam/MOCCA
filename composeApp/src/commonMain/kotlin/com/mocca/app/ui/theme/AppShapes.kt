@@ -16,9 +16,8 @@ object AppShapes {
     val medium: CornerBasedShape = RoundedCornerShape(12.dp)
     val large: CornerBasedShape = RoundedCornerShape(16.dp)
     val extraLarge: CornerBasedShape = RoundedCornerShape(24.dp)
-    val xxl: CornerBasedShape = RoundedCornerShape(28.dp)
+    val rounded2xl: CornerBasedShape = extraLarge // Alias for compatibility
     val extraExtraLarge: CornerBasedShape = RoundedCornerShape(32.dp)
-    val rounded2xl: CornerBasedShape = RoundedCornerShape(32.dp)
 
     val flower: Shape @Composable get() = MaterialShapes.Flower.toShape()
     val sunny: Shape @Composable get() = MaterialShapes.Sunny.toShape()
@@ -42,10 +41,8 @@ object AppShapes {
     val messageBubbleUser: Shape = RoundedCornerShape(topStart = 24.dp, topEnd = 2.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
     val messageBubbleAgent: Shape = RoundedCornerShape(topStart = 2.dp, topEnd = 24.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
     val input: Shape = RoundedCornerShape(32.dp)
-    val button: Shape = RoundedCornerShape(9999.dp)
     val card: Shape = RoundedCornerShape(16.dp)
     val moduleCard: Shape = RoundedCornerShape(28.dp)
-    val alertBanner: Shape = RoundedCornerShape(9999.dp)
     val codeBlock: Shape = RoundedCornerShape(12.dp)
     val avatar: Shape = RoundedCornerShape(50)
     val fab: Shape = RoundedCornerShape(50)

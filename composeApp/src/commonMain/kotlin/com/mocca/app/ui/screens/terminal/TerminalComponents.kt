@@ -52,7 +52,7 @@ internal fun TerminalTabBar(
             .background(AppColors.surface)
             .border(
                 AppSpacing.borderThin,
-                AppColors.border.copy(alpha = 0.3f)
+                AppColors.outline.copy(alpha = 0.3f)
             )
             .horizontalScroll(scrollState),
         verticalAlignment = Alignment.CenterVertically
@@ -81,7 +81,7 @@ internal fun TerminalTabItem(
         label = "tabBg"
     )
     val textColor by animateColorAsState(
-        targetValue = if (isActive) AppColors.textPrimary else AppColors.textSecondary,
+        targetValue = if (isActive) AppColors.onSurface else AppColors.onSurfaceVariant,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "tabText"
     )
@@ -98,10 +98,10 @@ internal fun TerminalTabItem(
     ) {
         // Status indicator dot
         val dotColor = when {
-            tab.isConnecting -> AppColors.textSecondary
+            tab.isConnecting -> AppColors.onSurfaceVariant
             tab.isConnected -> AppColors.accentGreen
             tab.error != null -> AppColors.error
-            else -> AppColors.textTertiary
+            else -> AppColors.outline
         }
         Box(
             modifier = Modifier
@@ -131,7 +131,7 @@ internal fun TerminalTabItem(
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Close terminal",
-                    tint = AppColors.textSecondary,
+                    tint = AppColors.onSurfaceVariant,
                     modifier = Modifier.size(12.dp)
                 )
             }
@@ -224,7 +224,7 @@ internal fun TerminalContent(
             }
         }
 
-        HorizontalDivider(color = AppColors.border.copy(alpha = 0.3f))
+        HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
 
         // ── INPUT BAR ─────────────────────────────────────────────────────────
         TerminalInputBar(
@@ -277,7 +277,7 @@ internal fun TerminalInputBar(
                 .focusRequester(focusRequester),
             textStyle = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             ),
             cursorBrush = SolidColor(AppColors.accentGreen),
             singleLine = true,
@@ -298,7 +298,7 @@ internal fun TerminalInputBar(
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
-                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accentGreen else AppColors.textTertiary,
+                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accentGreen else AppColors.outline,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -325,13 +325,13 @@ internal fun TerminalEmptyState(
             Icon(
                 Icons.Default.Terminal,
                 contentDescription = null,
-                tint = AppColors.textTertiary,
+                tint = AppColors.outline,
                 modifier = Modifier.size(48.dp)
             )
             Text(
                 "NO TERMINAL SESSIONS",
                 style = AppTypography.labelMedium,
-                color = AppColors.textTertiary
+                color = AppColors.outline
             )
             Button(
                 onClick = onCreateClick,

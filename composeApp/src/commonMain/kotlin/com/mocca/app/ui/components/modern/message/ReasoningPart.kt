@@ -46,7 +46,7 @@ fun ModernReasoningBlock(part: MessagePart.Reasoning) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.medium)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium)
             .background(AppColors.background.copy(alpha = 0.3f), AppShapes.medium)
             .padding(AppSpacing.sm)
     ) {
@@ -65,14 +65,14 @@ fun ModernReasoningBlock(part: MessagePart.Reasoning) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "THOUGHTS [${part.timeMs}ms]",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelExtraSmall,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -82,11 +82,11 @@ fun ModernReasoningBlock(part: MessagePart.Reasoning) {
                 HorizontalDivider(
                     modifier = Modifier.padding(vertical = AppSpacing.sm),
                     thickness = AppSpacing.borderThin,
-                    color = AppColors.border.copy(alpha = 0.5f)
+                    color = AppColors.outline.copy(alpha = 0.5f)
                 )
                 Text(
                     text = part.content,
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.bodySmall
                 )
             }
@@ -135,7 +135,7 @@ fun ModernThinkingBlock(part: MessagePart.Thinking) {
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -148,7 +148,7 @@ fun ModernThinkingBlock(part: MessagePart.Thinking) {
                 )
                 Text(
                     text = part.content,
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.bodySmall
                 )
             }

@@ -30,7 +30,7 @@ fun ExpressiveBentoCard(
     Surface(
         modifier = modifier,
         color = containerColor,
-        shape = AppShapes.rounded2xl,
+        shape = AppShapes.extraLarge,
         tonalElevation = 2.dp,
         shadowElevation = 0.dp
     ) {

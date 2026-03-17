@@ -91,13 +91,13 @@ fun DashboardPanel(
                         .size(48.dp)
                         .clip(AppShapes.medium)
                         .background(AppColors.surfaceContainer, AppShapes.medium)
-                        .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium),
+                        .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.GridView,
                         contentDescription = null,
-                        tint = AppColors.textPrimary,
+                        tint = AppColors.onSurface,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -123,7 +123,7 @@ fun DashboardPanel(
             Text(
                 text = "REAL-TIME EVENTS",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
             SseStatusIndicator(isConnected = state.isSseConnected)
@@ -173,7 +173,7 @@ fun DashboardPanel(
                 icon = Icons.Default.Settings,
                 onClick = onSettingsClick,
                 contentDescription = "Settings",
-                iconColor = AppColors.textPrimary
+                iconColor = AppColors.onSurface
             )
             MoccaIconButton(
                 icon = Icons.Default.Terminal,
@@ -205,7 +205,7 @@ private fun WorkspaceModule(
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Projects
             when (projects) {
-                is Resource.Loading -> Text("Bootstrapping workspace...", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                is Resource.Loading -> Text("Bootstrapping workspace...", color = AppColors.outline, style = AppTypography.labelMedium)
                 is Resource.Success -> {
                     val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
                     if (active != null) {
@@ -213,31 +213,31 @@ private fun WorkspaceModule(
                             StatusDot(color = AppColors.accentGreen)
                             Spacer(Modifier.width(8.dp))
                             Column {
-                                Text(active.displayName.uppercase(), color = AppColors.textPrimary, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
-                                Text(active.path ?: active.directory ?: "/", color = AppColors.textSecondary, style = AppTypography.labelSmall)
+                                Text(active.displayName.uppercase(), color = AppColors.onSurface, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
+                                Text(active.path ?: active.directory ?: "/", color = AppColors.onSurfaceVariant, style = AppTypography.labelSmall)
                             }
                         }
                     }
                     if (projects.data.size > 1) {
-                        Text("+${projects.data.size - 1} standby environments", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                        Text("+${projects.data.size - 1} standby environments", color = AppColors.outline, style = AppTypography.labelSmall)
                     }
                 }
                 is Resource.Error -> Text("ENV INIT FAILED", color = AppColors.error, style = AppTypography.labelMedium)
             }
             
-            HorizontalDivider(color = AppColors.border.copy(alpha = 0.5f))
+            HorizontalDivider(color = AppColors.outline.copy(alpha = 0.5f))
             
             // Agents
             when (agents) {
-                is Resource.Loading -> Text("Loading agents...", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                is Resource.Loading -> Text("Loading agents...", color = AppColors.outline, style = AppTypography.labelMedium)
                 is Resource.Success -> {
                     if (agents.data.isNotEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${agents.data.size} ACTIVE AGENTS", color = AppColors.textSecondary, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                            Text("${agents.data.size} ACTIVE AGENTS", color = AppColors.onSurfaceVariant, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                         }
-                        Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 2)
+                        Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 2)
                     } else {
-                        Text("NO AGENTS ONLINE", color = AppColors.textTertiary, style = AppTypography.labelMedium)
+                        Text("NO AGENTS ONLINE", color = AppColors.outline, style = AppTypography.labelMedium)
                     }
                 }
                 is Resource.Error -> Text("AGENT LINK FAILED", color = AppColors.error, style = AppTypography.labelMedium)
@@ -258,15 +258,15 @@ private fun CapabilitiesModule(
         Row(modifier = Modifier.fillMaxWidth()) {
             // Tools Column
             Column(modifier = Modifier.weight(1f)) {
-                Text("INTEGRATED TOOLS", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                Text("INTEGRATED TOOLS", color = AppColors.outline, style = AppTypography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 when (tools) {
-                    is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                    is Resource.Loading -> Text("SCANNING...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {
                         Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = tools.data.take(3).joinToString("\n") { "• $it" }
                         if (preview.isNotEmpty()) {
-                            Text(preview, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 3)
+                            Text(preview, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
                     is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
@@ -275,15 +275,15 @@ private fun CapabilitiesModule(
             
             // Commands Column
             Column(modifier = Modifier.weight(1f)) {
-                Text("SLASH COMMANDS", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                Text("SLASH COMMANDS", color = AppColors.outline, style = AppTypography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 when (commands) {
-                    is Resource.Loading -> Text("SCANNING...", color = AppColors.textSecondary, style = AppTypography.bodySmall)
+                    is Resource.Loading -> Text("SCANNING...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {
                         Text("${commands.data.size} AVAILABLE", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = commands.data.take(3).joinToString("\n") { "• /${it.name}" }
                         if (preview.isNotEmpty()) {
-                            Text(preview, color = AppColors.textPrimary, style = AppTypography.bodySmall, maxLines = 3)
+                            Text(preview, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
                     is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)

@@ -115,10 +115,10 @@ fun CommandPaletteOverlay(
                     .padding(top = 64.dp, start = AppSpacing.md, end = AppSpacing.md)
                     .fillMaxWidth()
                     .clip(AppShapes.dialog)
-                    .background(AppColors.surfaceElevated)
+                    .background(AppColors.surfaceContainerHigh)
                     .border(
                         width = AppSpacing.borderThin,
-                        color = AppColors.border,
+                        color = AppColors.outline,
                         shape = AppShapes.dialog
                     )
                     .clickable(
@@ -147,7 +147,7 @@ fun CommandPaletteOverlay(
                         modifier = Modifier
                             .weight(1f)
                             .focusRequester(focusRequester),
-                        textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+                        textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
                         cursorBrush = SolidColor(AppColors.accentGreen),
                         singleLine = true,
                         decorationBox = { inner ->
@@ -167,7 +167,7 @@ fun CommandPaletteOverlay(
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Clear",
-                            tint = AppColors.textTertiary,
+                            tint = AppColors.outline,
                             modifier = Modifier
                                 .size(16.dp)
                                 .clickable(
@@ -181,7 +181,7 @@ fun CommandPaletteOverlay(
 
                 HorizontalDivider(
                     thickness = AppSpacing.borderThin,
-                    color = AppColors.border.copy(alpha = 0.5f)
+                    color = AppColors.outline.copy(alpha = 0.5f)
                 )
 
                 // ── Results list ─────────────────────────────────────────────
@@ -214,7 +214,7 @@ fun CommandPaletteOverlay(
                             if (filteredCommands.isNotEmpty()) {
                                 HorizontalDivider(
                                     thickness = AppSpacing.borderThin,
-                                    color = AppColors.border.copy(alpha = 0.3f),
+                                    color = AppColors.outline.copy(alpha = 0.3f),
                                     modifier = Modifier.padding(horizontal = AppSpacing.md)
                                 )
                             }
@@ -245,7 +245,7 @@ fun CommandPaletteOverlay(
                                 Text(
                                     text = "No results for \"$query\"",
                                     style = AppTypography.bodySmall,
-                                    color = AppColors.textTertiary
+                                    color = AppColors.outline
                                 )
                             }
                         }
@@ -255,7 +255,7 @@ fun CommandPaletteOverlay(
                 // ── Footer hint ──────────────────────────────────────────────
                 HorizontalDivider(
                     thickness = AppSpacing.borderThin,
-                    color = AppColors.border.copy(alpha = 0.3f)
+                    color = AppColors.outline.copy(alpha = 0.3f)
                 )
                 Row(
                     modifier = Modifier
@@ -266,18 +266,18 @@ fun CommandPaletteOverlay(
                     Text(
                         text = "↑↓ navigate",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                     Text(
                         text = "↵ select",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
                         text = "esc dismiss",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
             }
@@ -299,7 +299,7 @@ private fun PaletteSection(label: String) {
     Text(
         text = label,
         style = AppTypography.labelSmall,
-        color = AppColors.textTertiary,
+        color = AppColors.outline,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.padding(
             start = AppSpacing.md,
@@ -351,14 +351,14 @@ private fun CommandPaletteItem(
             Text(
                 text = name,
                 style = AppTypography.bodySmall,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Medium
             )
             if (!description.isNullOrBlank()) {
                 Text(
                     text = description,
                     style = AppTypography.labelSmall,
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     maxLines = 1
                 )
             }

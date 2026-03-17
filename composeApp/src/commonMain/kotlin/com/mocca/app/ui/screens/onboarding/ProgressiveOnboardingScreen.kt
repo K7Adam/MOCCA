@@ -234,7 +234,7 @@ private fun WizardStepIndicator(
                 HorizontalDivider(
                     modifier = Modifier.width(32.dp),
                     thickness = 2.dp,
-                    color = if (index < currentIndex) AppColors.accentGreen else AppColors.border
+                    color = if (index < currentIndex) AppColors.accentGreen else AppColors.outline
                 )
             }
         }
@@ -276,14 +276,14 @@ private fun StepCircle(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = "Complete",
-                    tint = AppColors.textPrimary,
+                    tint = AppColors.onSurface,
                     modifier = Modifier.size(16.dp)
                 )
             } else {
                 Text(
                     text = "$stepNumber",
                     style = AppTypography.labelSmall,
-                    color = if (isActive) AppColors.textPrimary else AppColors.textTertiary,
+                    color = if (isActive) AppColors.onSurface else AppColors.outline,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -295,7 +295,7 @@ private fun StepCircle(
             color = when {
                 isComplete -> AppColors.accentGreen
                 isActive -> AppColors.accent
-                else -> AppColors.textTertiary
+                else -> AppColors.outline
             },
             textAlign = TextAlign.Center,
             fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal

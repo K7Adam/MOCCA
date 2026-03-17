@@ -88,7 +88,7 @@ class TerminalScreen : Screen {
                                 Text(
                                     "LOADING TERMINALS...",
                                     style = AppTypography.labelSmall,
-                                    color = AppColors.textSecondary
+                                    color = AppColors.onSurfaceVariant
                                 )
                             }
                         }
@@ -117,7 +117,7 @@ class TerminalScreen : Screen {
                             Text(
                                 "SELECT A TERMINAL TAB",
                                 style = AppTypography.labelMedium,
-                                color = AppColors.textTertiary
+                                color = AppColors.outline
                             )
                         }
                     }

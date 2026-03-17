@@ -66,7 +66,7 @@ object WorktreeScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textPrimary
+                    iconColor = AppColors.onSurface
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
@@ -74,7 +74,7 @@ object WorktreeScreen : Screen {
                     Text(
                         text = "Experimental — ${uiState.worktrees.size} worktree${if (uiState.worktrees.size != 1) "s" else ""}",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
                 MoccaIconButton(
@@ -122,7 +122,7 @@ object WorktreeScreen : Screen {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(AppSpacing.borderThin, AppColors.borderLight, AppShapes.medium)
+                    .border(AppSpacing.borderThin, AppColors.outlineVariant, AppShapes.medium)
             ) {
                 when {
                     uiState.isLoading && uiState.worktrees.isEmpty() -> LoadingScreen()
@@ -172,7 +172,7 @@ private fun WorktreeCard(
         WorktreeStatus.READY -> AppColors.statusOnline
         WorktreeStatus.CREATING -> AppColors.statusWaiting
         WorktreeStatus.FAILED -> AppColors.statusOffline
-        WorktreeStatus.UNKNOWN -> AppColors.textTertiary
+        WorktreeStatus.UNKNOWN -> AppColors.outline
     }
 
     Row(
@@ -180,7 +180,7 @@ private fun WorktreeCard(
             .fillMaxWidth()
             .clip(AppShapes.card)
             .background(AppColors.surface)
-            .border(0.5.dp, AppColors.border, AppShapes.card)
+            .border(0.5.dp, AppColors.outline, AppShapes.card)
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -199,7 +199,7 @@ private fun WorktreeCard(
             Text(
                 text = worktree.branch ?: "(no branch)",
                 style = AppTypography.labelMedium,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -208,7 +208,7 @@ private fun WorktreeCard(
             Text(
                 text = worktree.path,
                 style = AppTypography.monoLabel,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -279,14 +279,14 @@ private fun WorktreeEmptyState(onCreateClick: () -> Unit) {
         Text(
             text = "NO WORKTREES",
             style = AppTypography.labelLarge,
-            color = AppColors.textTertiary,
+            color = AppColors.outline,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = "Create a worktree to work on multiple branches simultaneously.",
             style = AppTypography.labelSmall,
-            color = AppColors.textTertiary
+            color = AppColors.outline
         )
         Spacer(modifier = Modifier.height(AppSpacing.xl))
         MoccaButton(
@@ -311,7 +311,7 @@ private fun WorktreeCreateDialog(
                 .fillMaxWidth()
                 .clip(AppShapes.dialog)
                 .background(AppColors.surface)
-                .border(0.5.dp, AppColors.border, AppShapes.dialog)
+                .border(0.5.dp, AppColors.outline, AppShapes.dialog)
                 .padding(AppSpacing.xl)
         ) {
             Text(
@@ -326,7 +326,7 @@ private fun WorktreeCreateDialog(
             Text(
                 text = "BRANCH NAME",
                 style = AppTypography.labelSmall,
-                color = AppColors.textTertiary
+                color = AppColors.outline
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             OutlinedTextField(
@@ -344,9 +344,9 @@ private fun WorktreeCreateDialog(
                 }),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AppColors.accentGreen,
-                    unfocusedBorderColor = AppColors.border,
-                    focusedTextColor = AppColors.textPrimary,
-                    unfocusedTextColor = AppColors.textPrimary,
+                    unfocusedBorderColor = AppColors.outline,
+                    focusedTextColor = AppColors.onSurface,
+                    unfocusedTextColor = AppColors.onSurface,
                     cursorColor = AppColors.accentGreen,
                     focusedContainerColor = AppColors.background,
                     unfocusedContainerColor = AppColors.background
@@ -373,7 +373,7 @@ private fun WorktreeCreateDialog(
                     onClick = onDismiss,
                     enabled = !isCreating
                 ) {
-                    Text("CANCEL", style = AppTypography.labelSmall, color = AppColors.textTertiary)
+                    Text("CANCEL", style = AppTypography.labelSmall, color = AppColors.outline)
                 }
 
                 if (isCreating) {

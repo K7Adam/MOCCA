@@ -40,7 +40,7 @@ fun ProviderAuthSection(
     Column(modifier = modifier) {
         Text(
             text = "PROVIDER AUTHENTICATION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -67,13 +67,13 @@ fun ProviderAuthSection(
                 ) {
                     Text(
                         text = providerId.uppercase(),
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = if (isExpanded) "[-]" else "[+]",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                 }
@@ -83,7 +83,7 @@ fun ProviderAuthSection(
                         val methods = providerAuthMethods[providerId]
                         
                         if (authLoading && selectedProviderId == providerId) {
-                            Text("Loading auth methods...", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                            Text("Loading auth methods...", color = AppColors.outline, style = AppTypography.labelSmall)
                         } else {
                             // OAuth Button
                             if (methods?.any { it.type == "oauth" } == true) {
@@ -98,7 +98,7 @@ fun ProviderAuthSection(
                                     height = AppSpacing.buttonHeightCompact
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                Text("- OR -", color = AppColors.textTertiary, style = AppTypography.labelSmall)
+                                Text("- OR -", color = AppColors.outline, style = AppTypography.labelSmall)
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                             }
                             
@@ -129,7 +129,7 @@ fun ProviderAuthSection(
                 }
                 
                 if (index < commonProviders.size - 1) {
-                    HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+                    HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 }
             }
         }

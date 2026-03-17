@@ -60,7 +60,7 @@ data class WorkspaceScreen(val sessionId: String) : Screen {
                         subtitle = if (isDashboard) null else "SESSION: " + sessionId,
                         actions = {
                             IconButton(onClick = { /* Settings */ }) {
-                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.textPrimary.copy(alpha = 0.5f))
+                                Icon(Icons.Default.Settings, contentDescription = "Settings", tint = AppColors.onSurface.copy(alpha = 0.5f))
                             }
                         }
                     )
@@ -131,13 +131,13 @@ internal fun DashboardContent(sessionId: String) {
                                     modifier = Modifier
                                         .size(28.dp)
                                         .background(AppColors.surfaceVariant, AppShapes.medium)
-                                        .border(1.dp, AppColors.border, AppShapes.medium),
+                                        .border(1.dp, AppColors.outline, AppShapes.medium),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = if (it == 0) Icons.Default.Code else if (it == 1) Icons.Default.Terminal else Icons.Default.Dataset,
                                         contentDescription = null,
-                                        tint = AppColors.textPrimary.copy(alpha = 0.7f),
+                                        tint = AppColors.onSurface.copy(alpha = 0.7f),
                                         modifier = Modifier.size(14.dp)
                                     )
                                 }
@@ -148,7 +148,7 @@ internal fun DashboardContent(sessionId: String) {
                                     .background(AppColors.surfaceVariant, AppShapes.medium),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text("+3", style = AppTypography.labelSmall, color = AppColors.textPrimary.copy(alpha = 0.4f))
+                                Text("+3", style = AppTypography.labelSmall, color = AppColors.onSurface.copy(alpha = 0.4f))
                             }
                         }
                     }
@@ -168,11 +168,11 @@ internal fun DashboardContent(sessionId: String) {
                         Text(
                             text = "feat: modular grid",
                             style = AppTypography.monoLabel,
-                            color = AppColors.textPrimary.copy(alpha = 0.7f),
+                            color = AppColors.onSurface.copy(alpha = 0.7f),
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
                                 .background(AppColors.surfaceContainer, AppShapes.small)
-                                .border(1.dp, AppColors.border, AppShapes.small)
+                                .border(1.dp, AppColors.outline, AppShapes.small)
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                         // TODO: Add SVG-like path drawing for git graph
@@ -191,14 +191,14 @@ private fun GodModuleCard(
     modifier: Modifier = Modifier,
     status: String? = null,
     subtitle: String? = null,
-    statusColor: Color = AppColors.textPrimary,
+    statusColor: Color = AppColors.onSurface,
     content: @Composable (ColumnScope.() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,
         color = AppColors.surfaceVariant,
-        shape = AppShapes.extraExtraLarge,
-        border = BorderStroke(1.dp, AppColors.border)
+        shape = AppShapes.extraLarge,
+        border = BorderStroke(1.dp, AppColors.outline)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(
@@ -210,10 +210,10 @@ private fun GodModuleCard(
                     modifier = Modifier
                         .size(40.dp)
                         .background(AppColors.surfaceVariant, AppShapes.circle)
-                        .border(1.dp, AppColors.border, AppShapes.circle),
+                        .border(1.dp, AppColors.outline, AppShapes.circle),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, contentDescription = null, tint = AppColors.textPrimary, modifier = Modifier.size(20.dp))
+                    Icon(icon, contentDescription = null, tint = AppColors.onSurface, modifier = Modifier.size(20.dp))
                     if (status == "Online") {
                         Box(
                             modifier = Modifier
@@ -228,7 +228,7 @@ private fun GodModuleCard(
                 Icon(
                     Icons.Default.DragIndicator,
                     contentDescription = null,
-                    tint = AppColors.textPrimary.copy(alpha = 0.1f),
+                    tint = AppColors.onSurface.copy(alpha = 0.1f),
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -238,14 +238,14 @@ private fun GodModuleCard(
             Text(
                 text = title,
                 style = AppTypography.labelSmall,
-                color = AppColors.textPrimary.copy(alpha = 0.4f)
+                color = AppColors.onSurface.copy(alpha = 0.4f)
             )
             
             if (status != null) {
                 Text(
                     text = status,
                     style = AppTypography.titleLarge,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -254,7 +254,7 @@ private fun GodModuleCard(
                 Text(
                     text = subtitle,
                     style = if (title == "MCP SERVER") AppTypography.codeSmall else AppTypography.bodySmall,
-                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.textPrimary.copy(alpha = 0.4f)
+                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.onSurface.copy(alpha = 0.4f)
                 )
             }
             
@@ -278,7 +278,7 @@ private fun GodBottomNavBar(
     Surface(
         color = AppColors.background.copy(alpha = 0.9f),
         modifier = Modifier.fillMaxWidth(),
-        border = BorderStroke(1.dp, AppColors.border)
+        border = BorderStroke(1.dp, AppColors.outline)
     ) {
         Row(
             modifier = Modifier
@@ -311,14 +311,14 @@ private fun GodBottomNavBar(
                     Icon(
                         imageVector = iconVector,
                         contentDescription = tab.options.title,
-                        tint = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
+                        tint = if (isSelected) AppColors.onSurface else AppColors.onSurface.copy(alpha = 0.3f),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = tab.options.title.uppercase(),
                         style = AppTypography.labelSmall,
-                        color = if (isSelected) AppColors.textPrimary else AppColors.textPrimary.copy(alpha = 0.3f),
+                        color = if (isSelected) AppColors.onSurface else AppColors.onSurface.copy(alpha = 0.3f),
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                     )
                 }

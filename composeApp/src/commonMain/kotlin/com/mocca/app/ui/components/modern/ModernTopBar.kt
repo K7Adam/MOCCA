@@ -106,13 +106,13 @@ fun ModernTopBar(
                     MoccaIconButton(
                         icon = navigationIcon,
                         onClick = onNavigationClick,
-                        iconColor = AppColors.textPrimary
+                        iconColor = AppColors.onSurface
                     )
                 }
 
                 Text(
                     text = title.uppercase(),
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -156,12 +156,12 @@ fun TerminalStatusLine(
         ) {
             Text(
                 text = leftText.uppercase(),
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
             Text(
                 text = centerText.uppercase(),
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -182,7 +182,7 @@ fun TerminalStatusLine(
 @Composable
 fun TerminalDivider(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.border,
+    color: Color = AppColors.outline,
     thickness: Dp = AppSpacing.borderThin
 ) {
     HorizontalDivider(
@@ -198,7 +198,7 @@ fun TerminalDivider(
 @Composable
 fun TerminalDividerProminent(
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     thickness: Dp = AppSpacing.borderStandard
 ) {
     HorizontalDivider(
@@ -216,8 +216,8 @@ fun TerminalDividerProminent(
 fun TerminalSectionDivider(
     text: String,
     modifier: Modifier = Modifier,
-    textColor: Color = AppColors.textSecondary,
-    lineColor: Color = AppColors.border
+    textColor: Color = AppColors.onSurfaceVariant,
+    lineColor: Color = AppColors.outline
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -265,14 +265,14 @@ fun PanelHeader(
         Box {
             Text(
                 text = title.uppercase(),
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.headlineLarge,
                 fontWeight = FontWeight.Bold
             )
             if (subtitle != null) {
                 Text(
                     text = subtitle.uppercase(),
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(top = AppSpacing.xl + AppSpacing.xs)
                 )
@@ -324,7 +324,7 @@ fun ConnectionQualityIndicator(
         )
         ConnectionQuality.UNKNOWN -> Triple(
             Icons.Filled.NetworkWifi1Bar,
-            AppColors.textSecondary,
+            AppColors.onSurfaceVariant,
             "UNKNOWN"
         )
     }

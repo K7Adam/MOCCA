@@ -54,7 +54,7 @@ internal fun GitStatusSummary(
                             Text(
                                 text = status?.branch ?: "unknown",
                                 style = AppTypography.titleMedium,
-                                color = AppColors.textPrimary,
+                                color = AppColors.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -63,7 +63,7 @@ internal fun GitStatusSummary(
                                 GodBadge(text = "↑${status?.ahead}", containerColor = AppColors.accentGreen.copy(alpha = 0.2f), contentColor = AppColors.accentGreen)
                             }
                             if ((status?.behind ?: 0) > 0) {
-                                GodBadge(text = "↓${status?.behind}", containerColor = AppColors.alertRed.copy(alpha = 0.2f), contentColor = AppColors.alertRed)
+                                GodBadge(text = "↓${status?.behind}", containerColor = AppColors.error.copy(alpha = 0.2f), contentColor = AppColors.error)
                             }
                         }
                     }
@@ -162,7 +162,7 @@ internal fun GitStatusSummary(
                                 Icon(Icons.Default.Add, contentDescription = "Stage", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.discardFile(change.path) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.AutoMirrored.Filled.Undo, contentDescription = "Discard", tint = AppColors.error.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                             }
                         }
                     },
@@ -262,7 +262,7 @@ internal fun GitStatusSummary(
                                 Icon(Icons.Default.Unarchive, contentDescription = "Pop", tint = AppColors.accentGreen.copy(alpha = 0.7f), modifier = Modifier.size(18.dp))
                             }
                             IconButton(onClick = { screenModel.dropStash(stash.index) }, modifier = Modifier.size(32.dp)) {
-                                Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.alertRed.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+                                Icon(Icons.Default.Delete, contentDescription = "Drop", tint = AppColors.error.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
                             }
                         }
                     }

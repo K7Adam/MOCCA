@@ -69,7 +69,7 @@ fun QuestionDialog(
             Icon(
                 @Suppress("DEPRECATION") Icons.Default.Help,
                 contentDescription = null,
-                tint = AppColors.textPrimary
+                tint = AppColors.onSurface
             )
         },
         title = {
@@ -111,7 +111,7 @@ fun QuestionDialog(
                                 color = AppColors.surfaceContainerHigh, // Translucent surface
                                 border = BorderStroke(
                                     1.dp, 
-                                    AppColors.border // Border
+                                    AppColors.outline // Border
                                 )
                             ) {
                                 Column {
@@ -158,7 +158,7 @@ fun QuestionDialog(
                                                     Text(
                                                         text = option.description,
                                                         style = AppTypography.bodySmall,
-                                                        color = AppColors.textSecondary
+                                                        color = AppColors.onSurfaceVariant
                                                     )
                                                 }
                                             }
@@ -190,7 +190,7 @@ fun QuestionDialog(
                     if (index < request.questions.lastIndex) {
                         HorizontalDivider(
                             modifier = Modifier.padding(vertical = AppSpacing.sm),
-                            color = AppColors.border
+                            color = AppColors.outline
                         )
                     }
                 }
@@ -218,7 +218,7 @@ fun QuestionDialog(
             OutlinedButton(
                 onClick = onReject,
                 shape = AppShapes.pill,
-                border = BorderStroke(1.dp, AppColors.border)
+                border = BorderStroke(1.dp, AppColors.outline)
             ) {
                 Icon(Icons.Default.Close, contentDescription = null)
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -231,8 +231,8 @@ fun QuestionDialog(
         shape = AppShapes.medium,
                             // Translucent container
         containerColor = com.mocca.app.ui.theme.AppColors.surface.copy(alpha = 0.9f), // 90% dark surface
-        titleContentColor = AppColors.textPrimary,
-        textContentColor = AppColors.textPrimaryDim,
-        iconContentColor = AppColors.textPrimary
+        titleContentColor = AppColors.onSurface,
+        textContentColor = AppColors.onSurfaceDim,
+        iconContentColor = AppColors.onSurface
     )
 }

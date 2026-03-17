@@ -43,7 +43,7 @@ fun MoccaListItem(
     trailingContent: @Composable (() -> Unit)? = null,
     onClick: (() -> Unit)? = null,
     backgroundColor: Color = AppColors.surfaceContainerLow,
-    contentColor: Color = AppColors.textPrimary
+    contentColor: Color = AppColors.onSurface
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -65,7 +65,7 @@ fun MoccaListItem(
                 if (onClick != null) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.textPrimary.copy(alpha = 0.1f)),
+                        indication = ripple(color = AppColors.onSurface.copy(alpha = 0.1f)),
                         onClick = onClick
                     )
                 } else Modifier
@@ -99,7 +99,7 @@ fun MoccaListItem(
                     Text(
                         text = supportingText,
                         style = AppTypography.bodySmall,
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.dp)

@@ -45,8 +45,8 @@ fun UpdateDialog(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(max = 500.dp) // Constrain max height to prevent overflow
-                .background(AppColors.surfaceElevated, AppShapes.dialog)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.dialog)
+                .background(AppColors.surfaceContainerHigh, AppShapes.dialog)
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.dialog)
                 .padding(AppSpacing.lg)
         ) {
             // Header (always visible, not scrollable)
@@ -61,7 +61,7 @@ fun UpdateDialog(
 
             Text(
                 text = "Version ${updateInfo.version}",
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.titleMedium,
                 fontWeight = FontWeight.SemiBold
             )
@@ -78,7 +78,7 @@ fun UpdateDialog(
                 if (updateInfo.releaseNotes.isNotBlank()) {
                     Text(
                         text = updateInfo.releaseNotes,
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         style = AppTypography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -93,7 +93,7 @@ fun UpdateDialog(
                             .fillMaxWidth()
                             .height(150.dp)
                             .background(AppColors.background, AppShapes.small)
-                            .border(AppSpacing.borderThin, AppColors.border, AppShapes.small)
+                            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.small)
                     ) {
                         // Log Header
                         Row(
@@ -107,7 +107,7 @@ fun UpdateDialog(
                             Text(
                                 text = "LOGS",
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textSecondary
+                                color = AppColors.onSurfaceVariant
                             )
                             
                             IconButton(
@@ -151,7 +151,7 @@ fun UpdateDialog(
                                 Text(
                                     text = "> $log",
                                     style = AppTypography.codeSmall.copy(),
-                                    color = if (log.startsWith("ERROR") || log.startsWith("CRITICAL")) AppColors.alertRed else AppColors.textSecondary,
+                                    color = if (log.startsWith("ERROR") || log.startsWith("CRITICAL")) AppColors.error else AppColors.onSurfaceVariant,
                                     fontFamily = AppTypography.monoFamily
                                 )
                             }
@@ -162,7 +162,7 @@ fun UpdateDialog(
                                 Text(
                                     text = "> ERROR: $error",
                                     style = AppTypography.codeSmall.copy(),
-                                    color = AppColors.alertRed,
+                                    color = AppColors.error,
                                     fontFamily = AppTypography.monoFamily
                                 )
                             }
@@ -173,7 +173,7 @@ fun UpdateDialog(
                 // Size
                 Text(
                     text = "Download size: ${updateInfo.size / 1024 / 1024} MB",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
             }
@@ -197,7 +197,7 @@ fun UpdateDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(4.dp)
-                                .background(AppColors.textSecondaryDark, AppShapes.pill)
+                                .background(AppColors.onSurfaceVariantDark, AppShapes.pill)
                         ) {
                             Box(
                                 modifier = Modifier

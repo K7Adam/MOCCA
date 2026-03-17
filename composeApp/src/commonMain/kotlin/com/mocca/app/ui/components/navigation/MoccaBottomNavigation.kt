@@ -131,7 +131,7 @@ fun MoccaBottomNavigation(
             .widthIn(min = 280.dp, max = 360.dp)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm)
             .navigationBarsPadding()
-            .background(AppColors.surfaceContainer, AppShapes.rounded2xl)
+            .background(AppColors.surfaceContainer, AppShapes.extraLarge)
             .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.sm),
         contentAlignment = Alignment.Center
     ) {
@@ -197,7 +197,7 @@ fun MoccaBottomNavigation(
                         .fillMaxWidth(0.8f)
                         .height(1.dp)
                         .background(
-                            color = AppColors.border.copy(alpha = 0.3f),
+                            color = AppColors.outline.copy(alpha = 0.3f),
                             shape = AppShapes.extraSmall
                         )
                 )
@@ -240,13 +240,13 @@ private fun BottomNavItemComponent(
 
     // Animated color transition based on selection
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.textTertiary,
+        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )

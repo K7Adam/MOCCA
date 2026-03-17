@@ -28,7 +28,7 @@ fun AppConfigSection(
     Column(modifier = modifier) {
         Text(
             text = "APP CONFIGURATION",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -46,24 +46,24 @@ fun AppConfigSection(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "DEFAULT PROVIDER",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
                         text = defaultProvider.uppercase(),
-                        color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.textSecondary,
+                        color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodyMedium
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "DEFAULT MODEL",
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
                         text = defaultModel,
-                        color = if (serverDefaultModel != null) AppColors.statusOnline else AppColors.textSecondary,
+                        color = if (serverDefaultModel != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -75,13 +75,13 @@ fun AppConfigSection(
             if (serverModes.isNotEmpty()) {
                 Text(
                     text = "AVAILABLE MODES",
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Text(
                     text = serverModes.joinToString(", ") { it.name },
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
             }
@@ -91,13 +91,13 @@ fun AppConfigSection(
             // Info note about server-side configuration
             Text(
                 text = "Provider and model are configured on the OpenCode server.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = "Update these settings via /config command in OpenCode.",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }

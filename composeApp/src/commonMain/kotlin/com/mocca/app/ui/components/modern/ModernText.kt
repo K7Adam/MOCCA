@@ -46,7 +46,7 @@ import com.mocca.app.ui.theme.MoccaTheme
 fun ModernText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     style: TextStyle = AppTypography.bodyMedium,
     maxLines: Int = Int.MAX_VALUE,
     overflow: TextOverflow = TextOverflow.Clip,
@@ -69,7 +69,7 @@ fun ModernText(
 fun ModernHeader(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     prefix: String = "//",
     suffix: String = "",
     showBrackets: Boolean = false
@@ -127,7 +127,7 @@ fun ModernHeader(
 fun TerminalLabel(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textSecondaryLight
+    color: Color = AppColors.onSurfaceVariantLight
 ) {
     Text(
         text = text.uppercase(),
@@ -145,7 +145,7 @@ fun TerminalLabel(
 fun TerminalMeta(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textSecondary
+    color: Color = AppColors.onSurfaceVariant
 ) {
     Text(
         text = text.uppercase(),
@@ -172,7 +172,7 @@ fun TerminalMeta(
 fun TypewriterText(
     text: String,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     style: TextStyle = MoccaTheme.typography.bodyMedium,
     typingDelayMs: Long = 50L,
     initialDelayMs: Long = 0L,
@@ -229,7 +229,7 @@ fun TypewriterText(
 fun TypewriterCycleText(
     texts: List<String>,
     modifier: Modifier = Modifier,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     style: TextStyle = AppTypography.headlineMedium,
     typingDelayMs: Long = 80L,
     eraseDelayMs: Long = 40L,
@@ -296,7 +296,7 @@ fun BlinkingCursor(
     modifier: Modifier = Modifier,
     width: Dp = 10.dp,
     height: Dp = 18.dp,
-    color: Color = AppColors.textPrimary,
+    color: Color = AppColors.onSurface,
     blinkDurationMs: Int = 530
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "cursor")
@@ -336,12 +336,12 @@ fun ConsoleLogLine(
         ConsoleLogStatus.DONE -> "[DONE]" to AppColors.accentGreen
         ConsoleLogStatus.WAIT -> "[WAIT]" to AppColors.statusWaiting
         ConsoleLogStatus.ERROR -> "[ERROR]" to AppColors.error
-        ConsoleLogStatus.INFO -> "[INFO]" to AppColors.textSecondaryLight
+        ConsoleLogStatus.INFO -> "[INFO]" to AppColors.onSurfaceVariantLight
     }
     
     val textColor = when (status) {
-        ConsoleLogStatus.WAIT -> AppColors.textPrimary
-        else -> AppColors.textSecondary
+        ConsoleLogStatus.WAIT -> AppColors.onSurface
+        else -> AppColors.onSurfaceVariant
     }
     
     Row(modifier = modifier) {
@@ -354,7 +354,7 @@ fun ConsoleLogLine(
             )
             Text(
                 text = " > ",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.bodySmall
             )
         }

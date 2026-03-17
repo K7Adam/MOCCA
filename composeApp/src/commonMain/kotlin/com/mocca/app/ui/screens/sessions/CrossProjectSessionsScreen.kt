@@ -143,7 +143,7 @@ object CrossProjectSessionsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textPrimary
+                    iconColor = AppColors.onSurface
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
@@ -151,7 +151,7 @@ object CrossProjectSessionsScreen : Screen {
                     Text(
                         text = "Experimental — ${uiState.sessions.size} session${if (uiState.sessions.size != 1) "s" else ""} across ${uiState.groupedByProject.size} project${if (uiState.groupedByProject.size != 1) "s" else ""}",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
                 MoccaIconButton(
@@ -193,7 +193,7 @@ object CrossProjectSessionsScreen : Screen {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(AppSpacing.borderThin, AppColors.borderLight, AppShapes.medium)
+                    .border(AppSpacing.borderThin, AppColors.outlineVariant, AppShapes.medium)
             ) {
                 when {
                     uiState.isLoading && uiState.sessions.isEmpty() -> LoadingScreen()
@@ -275,7 +275,7 @@ private fun ProjectGroupHeader(
             Text(
                 text = "($count)",
                 style = AppTypography.labelSmall,
-                color = AppColors.textTertiary
+                color = AppColors.outline
             )
         }
         projectPath?.let { path ->
@@ -283,7 +283,7 @@ private fun ProjectGroupHeader(
             Text(
                 text = path,
                 style = AppTypography.monoLabel,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = AppSpacing.lg + AppSpacing.xs)
@@ -292,7 +292,7 @@ private fun ProjectGroupHeader(
         Spacer(modifier = Modifier.height(AppSpacing.xs))
         HorizontalDivider(
             thickness = 0.5.dp,
-            color = AppColors.border
+            color = AppColors.outline
         )
     }
 }
@@ -312,7 +312,7 @@ private fun CrossProjectSessionRow(
             .clip(AppShapes.card)
             .clickable(onClick = onOpen)
             .background(AppColors.surface)
-            .border(0.5.dp, AppColors.border, AppShapes.card)
+            .border(0.5.dp, AppColors.outline, AppShapes.card)
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -321,7 +321,7 @@ private fun CrossProjectSessionRow(
             Text(
                 text = session.title?.ifBlank { null } ?: "Session ${session.id.take(8)}",
                 style = AppTypography.labelMedium,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -331,7 +331,7 @@ private fun CrossProjectSessionRow(
             Text(
                 text = session.id,
                 style = AppTypography.monoLabel,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -364,14 +364,14 @@ private fun CrossProjectSessionsEmptyState() {
         Text(
             text = "NO SESSIONS",
             style = AppTypography.labelLarge,
-            color = AppColors.textTertiary,
+            color = AppColors.outline,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = "No sessions found across any projects.",
             style = AppTypography.labelSmall,
-            color = AppColors.textTertiary
+            color = AppColors.outline
         )
     }
 }

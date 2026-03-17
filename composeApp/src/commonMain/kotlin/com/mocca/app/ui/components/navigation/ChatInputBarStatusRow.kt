@@ -72,14 +72,14 @@ internal fun ChatInputBarStatusRow(
                 imageVector = Icons.Default.SmartToy,
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
-                tint = AppColors.textTertiary
+                tint = AppColors.outline
             )
             val displayModelName = modelName.substringAfterLast("/").let {
                 if (it.length > 14) "…" + it.takeLast(13) else it
             }
             Text(
                 text = displayModelName.uppercase(),
-                color = if (providerResponse != null) AppColors.textSecondary else AppColors.textTertiary,
+                color = if (providerResponse != null) AppColors.onSurfaceVariant else AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }
@@ -95,11 +95,11 @@ internal fun ChatInputBarStatusRow(
                     imageVector = Icons.Default.Tune,
                     contentDescription = null,
                     modifier = Modifier.size(12.dp),
-                    tint = AppColors.textTertiary
+                    tint = AppColors.outline
                 )
                 Text(
                     text = (selectedVariantId ?: "DEF").take(6).uppercase(),
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
             }
@@ -116,11 +116,11 @@ internal fun ChatInputBarStatusRow(
                 imageVector = Icons.Default.Person,
                 contentDescription = null,
                 modifier = Modifier.size(12.dp),
-                tint = AppColors.textTertiary
+                tint = AppColors.outline
             )
             Text(
                 text = agentName.take(10).uppercase(),
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }

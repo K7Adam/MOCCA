@@ -429,66 +429,51 @@ class MoccaApiClient(
                 val rawText = response.bodyAsText()
                 Napier.v("[MoccaApiClient] executeShell raw response (${rawText.length} chars)")
 
-                // Helper to extract output from a parsed JSON string
-                fun extractOutput(jsonStr: String): String? {
-                    try {
-                        val jsonObj = json.parseToJsonElement(jsonStr)
-                        val parts = jsonObj.jsonObject["parts"]?.jsonArray ?: return null
-                        // Find the last part with output (the tool result)
-                        for (i in parts.indices.reversed()) {
-                            val part = parts[i].jsonObject
-                            val state = part["state"]?.jsonObject
-                            val output = state?.get("output")?.jsonPrimitive?.contentOrNull
-                                ?: state?.get("metadata")?.jsonObject?.get("output")?.jsonPrimitive?.contentOrNull
-                            if (output != null) return output
-                        }
-                    } catch (e: Exception) {
-                        // Ignore parse errors for partial/invalid strings
-                    }
-                    return null
-                }
-
                 try {
-                    // The /session/:id/shell endpoint might return an SSE stream (lines starting with "data: ")
-                    // or a plain JSON object. We handle both cases to be robust.
-                    val lines = rawText.split('\n')
-                    val isSse = lines.any { it.trim().startsWith("data: ") }
-                    
-                    if (isSse) {
-                        for (line in lines.reversed()) {
-                            val trimmed = line.trim()
-                            if (trimmed.startsWith("data: ")) {
-                                val jsonStr = trimmed.removePrefix("data: ").trim()
-                                if (jsonStr.isEmpty() || jsonStr == "[DONE]") continue
-                                
-                                extractOutput(jsonStr)?.let {
-                                    Napier.d("[MoccaApiClient] executeShell extracted output from SSE (${it.length} chars)")
-                                    return@safeCallNoRetry it
-                                }
-                            }
-                        }
-                    } else {
-                        // Plain JSON response
-                        extractOutput(rawText)?.let {
-                            Napier.d("[MoccaApiClient] executeShell extracted output from JSON (${it.length} chars)")
-                            return@safeCallNoRetry it
-                        }
-                    }
-                    
-                    // Fallback: if no output found in SSE or plain JSON, return raw text
-                    Napier.w(
-                            "[MoccaApiClient] executeShell: Could not extract output from response, using raw text"
-                    )
-                    rawText
+                    parseShellOutput(rawText)
                 } catch (e: Exception) {
-                    // If anything fails entirely, return raw text (backwards compatibility)
-                    Napier.w(
-                            "[MoccaApiClient] executeShell: Unexpected error parsing response, using raw text: ${e.message}"
-                    )
+                    Napier.w("[MoccaApiClient] executeShell: Error parsing response, using raw text: ${e.message}")
                     rawText
                 }
             }
         }
+
+    /** Helper to extract output from shell response (SSE or JSON). */
+    private fun parseShellOutput(rawText: String): String {
+        val lines = rawText.split('\n')
+        val isSse = lines.any { it.trim().startsWith("data: ") }
+        
+        return if (isSse) {
+            lines.reversed().asSequence()
+                .map { it.trim() }
+                .filter { it.startsWith("data: ") }
+                .map { it.removePrefix("data: ").trim() }
+                .filter { it.isNotEmpty() && it != "[DONE]" }
+                .mapNotNull { extractOutputFromJson(it) }
+                .firstOrNull() ?: rawText
+        } else {
+            extractOutputFromJson(rawText) ?: rawText
+        }
+    }
+
+    /** Helper to extract output from a parsed JSON string. */
+    private fun extractOutputFromJson(jsonStr: String): String? {
+        return try {
+            val jsonObj = json.parseToJsonElement(jsonStr)
+            val parts = jsonObj.jsonObject["parts"]?.jsonArray ?: return null
+            // Find the last part with output (the tool result)
+            for (i in parts.indices.reversed()) {
+                val part = parts[i].jsonObject
+                val state = part["state"]?.jsonObject
+                val output = state?.get("output")?.jsonPrimitive?.contentOrNull
+                    ?: state?.get("metadata")?.jsonObject?.get("output")?.jsonPrimitive?.contentOrNull
+                if (output != null) return output
+            }
+            null
+        } catch (e: Exception) {
+            null
+        }
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION TODO (Priority 2.1)
@@ -984,59 +969,49 @@ class MoccaApiClient(
             // 0. Content-Type validation: Detect HTML responses (routing errors)
             val contentType = response.contentType()
             if (contentType != null) {
-                val isHtml =
-                        contentType.match(ContentType.Text.Html) ||
-                                contentType.contentType == "text" &&
-                                        contentType.contentSubtype == "html"
+                val isHtml = contentType.match(ContentType.Text.Html) ||
+                             (contentType.contentType == "text" && contentType.contentSubtype == "html")
                 if (isHtml) {
                     Napier.e("$tag: Received HTML instead of JSON. Possible routing error.")
                     throw NetworkError.ServerError(
                             statusCode = 406, // Not Acceptable
-                            message =
-                                    "Routing error: Expected JSON but received HTML. " +
-                                            "Endpoint may be a frontend route, not a REST API."
+                            message = "Routing error: Expected JSON but received HTML. Endpoint may be a frontend route."
                     )
                 }
             }
 
             // 1. Check for non-success status code
             if (!response.status.isSuccess()) {
-                val message =
-                        try {
-                            val error = json.decodeFromString<ServerErrorResponse>(bodyText)
-                            error.message ?: error.name ?: "Server Error: ${response.status}"
-                        } catch (e: Exception) {
-                            "Server Error: ${response.status}"
-                        }
+                val message = try {
+                    val error = json.decodeFromString<ServerErrorResponse>(bodyText)
+                    error.message ?: error.name ?: "Server Error: ${response.status}"
+                } catch (e: Exception) {
+                    "Server Error: ${response.status}"
+                }
                 throw NetworkError.ServerError(response.status.value, message)
             }
 
             // 2. Try to parse successful response
+            if (T::class == Unit::class) return@withRetry Unit as T
+            
             try {
-                if (T::class == Unit::class) {
-                    return@withRetry Unit as T
-                }
                 json.decodeFromString<T>(bodyText)
             } catch (e: Exception) {
-                // 3. If parsing fails, check if it's actually an error object disguised as 200 OK
+                // 3. If parsing fails, check if it's an error object in a 200 OK
                 try {
                     val errorResponse = json.decodeFromString<ServerErrorResponse>(bodyText)
-                    // If successful and has name/message, treat as error
                     if (errorResponse.name != null || errorResponse.message != null) {
                         throw NetworkError.ServerError(
                                 statusCode = response.status.value,
-                                message = errorResponse.message
-                                                ?: errorResponse.name ?: "Unknown Server Error"
+                                message = errorResponse.message ?: errorResponse.name ?: "Unknown Error"
                         )
                     }
-                    throw e // Re-throw original if it looked like an error but wasn't conclusive
-                } catch (errorParseError: Exception) {
-                    // It wasn't an error object either. Genuine parse error.
+                    throw e
+                } catch (parseErr: Exception) {
                     throw e
                 }
             }
-        }
-                .mapError { error -> NetworkError.from(error) }
+        }.mapError { NetworkError.from(it) }
     }
 
     private suspend inline fun <reified T> safeCall(
@@ -1045,9 +1020,9 @@ class MoccaApiClient(
             crossinline block: suspend HttpClient.() -> T
     ): Result<T> {
         val policy = if (retryable) retryPolicy else RetryPolicy.None
-        return withRetry(policy, tag) { api.execute { block() } }.mapError { error ->
-            NetworkError.from(error)
-        }
+        return withRetry(policy, tag) { 
+            api.execute { block() } 
+        }.mapError { NetworkError.from(it) }
     }
 
     private suspend inline fun <reified T> safeCallNoRetry(

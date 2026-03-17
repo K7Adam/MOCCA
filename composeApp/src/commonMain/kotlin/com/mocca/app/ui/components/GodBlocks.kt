@@ -66,7 +66,7 @@ fun GodHeader(
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                        tint = AppColors.textPrimary,
+                        tint = AppColors.onSurface,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -92,7 +92,7 @@ fun GodHeader(
                 Text(
                     text = title,
                     style = AppTypography.titleMedium,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -207,7 +207,7 @@ fun GodListItem(
                 Text(
                     text = title,
                     style = AppTypography.titleSmall,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     fontWeight = FontWeight.Medium
                 )
                 Text(

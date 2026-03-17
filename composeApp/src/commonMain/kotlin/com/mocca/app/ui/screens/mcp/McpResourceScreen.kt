@@ -71,26 +71,26 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = AppColors.textPrimary
+                        iconColor = AppColors.onSurface
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.md))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "MCP_RESOURCES",
-                            color = AppColors.textPrimary,
+                            color = AppColors.onSurface,
                             style = AppTypography.headlineSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = "server: \"$serverName\"",
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             style = AppTypography.codeSmall
                         )
                     }
                     MoccaIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = { screenModel.loadResources() },
-                        iconColor = if (state.isLoading) AppColors.statusWaiting else AppColors.textSecondaryLight
+                        iconColor = if (state.isLoading) AppColors.statusWaiting else AppColors.onSurfaceVariantLight
                     )
                 }
 
@@ -122,7 +122,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
                                     text = "LOADING_RESOURCES...",
-                                    color = AppColors.textSecondary,
+                                    color = AppColors.onSurfaceVariant,
                                     style = AppTypography.bodyMedium
                                 )
                             }
@@ -134,7 +134,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
-                                .border(AppSpacing.borderThin, AppColors.textSecondaryDark, AppShapes.medium),
+                                .border(AppSpacing.borderThin, AppColors.onSurfaceVariantDark, AppShapes.medium),
                             contentAlignment = Alignment.Center
                         ) {
                             Column(
@@ -144,19 +144,19 @@ data class McpResourceScreen(val serverName: String) : Screen {
                                 Icon(
                                     imageVector = Icons.Default.FolderOff,
                                     contentDescription = null,
-                                    tint = AppColors.textSecondaryDark,
+                                    tint = AppColors.onSurfaceVariantDark,
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
                                     text = "NO_RESOURCES_FOUND",
-                                    color = AppColors.textSecondary,
+                                    color = AppColors.onSurfaceVariant,
                                     style = AppTypography.bodyLarge,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
                                     text = "This server exposes no resources",
-                                    color = AppColors.textSecondaryDark,
+                                    color = AppColors.onSurfaceVariantDark,
                                     style = AppTypography.bodySmall
                                 )
                             }
@@ -200,7 +200,7 @@ private fun McpResourceItem(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) AppColors.statusWaiting else AppColors.textSecondaryDark
+    val borderColor = if (isSelected) AppColors.statusWaiting else AppColors.onSurfaceVariantDark
 
     Column(
         modifier = Modifier
@@ -224,7 +224,7 @@ private fun McpResourceItem(
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = resource.name,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.bodySmall,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
@@ -234,7 +234,7 @@ private fun McpResourceItem(
             resource.mimeType?.let { mime ->
                 Text(
                     text = mime,
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(start = AppSpacing.xs)
                 )
@@ -252,7 +252,7 @@ private fun McpResourceItem(
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = desc,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -281,7 +281,7 @@ private fun McpResourceContentPanel(
                 .fillMaxWidth(0.97f)
                 .fillMaxHeight(0.85f)
                 .background(AppColors.surface, AppShapes.card)
-                .border(AppSpacing.borderStandard, AppColors.borderLight, AppShapes.card)
+                .border(AppSpacing.borderStandard, AppColors.outlineVariant, AppShapes.card)
                 .clip(AppShapes.card)
         ) {
             // Header
@@ -295,7 +295,7 @@ private fun McpResourceContentPanel(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = resource.name.uppercase(),
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
@@ -312,11 +312,11 @@ private fun McpResourceContentPanel(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
-                    iconColor = AppColors.textSecondaryLight
+                    iconColor = AppColors.onSurfaceVariantLight
                 )
             }
 
-            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.border)
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
 
             // Content area
             Box(
@@ -335,7 +335,7 @@ private fun McpResourceContentPanel(
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             Text(
                                 text = "READING_RESOURCE...",
-                                color = AppColors.textSecondary,
+                                color = AppColors.onSurfaceVariant,
                                 style = AppTypography.bodySmall
                             )
                         }
@@ -353,7 +353,7 @@ private fun McpResourceContentPanel(
                         SelectionContainer {
                             Text(
                                 text = content.text ?: "(binary content — ${content.mimeType ?: "unknown mime type"})",
-                                color = if (content.text != null) AppColors.textPrimary else AppColors.textSecondary,
+                                color = if (content.text != null) AppColors.onSurface else AppColors.onSurfaceVariant,
                                 style = AppTypography.codeSmall,
                                 modifier = Modifier
                                     .fillMaxSize()
@@ -365,7 +365,7 @@ private fun McpResourceContentPanel(
                     else -> {
                         Text(
                             text = "SELECT_RESOURCE_TO_READ",
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             style = AppTypography.bodyMedium
                         )
                     }

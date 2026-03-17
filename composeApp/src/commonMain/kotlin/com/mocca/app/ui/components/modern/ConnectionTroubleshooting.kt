@@ -52,7 +52,7 @@ fun ConnectionTroubleshootingCard(
         modifier = modifier
             .fillMaxWidth()
             .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
             .padding(AppSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
@@ -69,7 +69,7 @@ fun ConnectionTroubleshootingCard(
             Text(
                 text = "Connection Troubleshooting",
                 style = AppTypography.labelMedium,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -78,7 +78,7 @@ fun ConnectionTroubleshootingCard(
         Text(
             text = "Status: $connectionStatus",
             style = AppTypography.bodySmall,
-            color = AppColors.textSecondary
+            color = AppColors.onSurfaceVariant
         )
         
         // Diagnostic steps
@@ -142,7 +142,7 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
             Text(
                 text = step.name,
                 style = AppTypography.bodySmall,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Medium
             )
             
@@ -156,7 +156,7 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
                 Text(
                     text = help,
                     style = AppTypography.labelSmall,
-                    color = AppColors.textTertiary
+                    color = AppColors.outline
                 )
             }
         }
@@ -175,8 +175,8 @@ fun ConnectionHelpInline(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppColors.alertRedDim, AppShapes.small)
-            .border(AppSpacing.borderThin, AppColors.alertRed, AppShapes.small)
+            .background(AppColors.errorDim, AppShapes.small)
+            .border(AppSpacing.borderThin, AppColors.error, AppShapes.small)
             .padding(AppSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
@@ -187,12 +187,12 @@ fun ConnectionHelpInline(
             Icon(
                 imageVector = Icons.Default.Error,
                 contentDescription = null,
-                tint = AppColors.alertRed
+                tint = AppColors.error
             )
             Text(
                 text = "Connection Problem",
                 style = AppTypography.labelMedium,
-                color = AppColors.alertRed,
+                color = AppColors.error,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -200,7 +200,7 @@ fun ConnectionHelpInline(
         Text(
             text = errorMessage,
             style = AppTypography.bodySmall,
-            color = AppColors.textPrimaryDim
+            color = AppColors.onSurfaceDim
         )
         
         Text(
@@ -209,7 +209,7 @@ fun ConnectionHelpInline(
                    "• Device and computer are on different networks\n" +
                    "• Firewall blocking port 4242",
             style = AppTypography.bodySmall,
-            color = AppColors.textSecondary
+            color = AppColors.onSurfaceVariant
         )
         
         Row(

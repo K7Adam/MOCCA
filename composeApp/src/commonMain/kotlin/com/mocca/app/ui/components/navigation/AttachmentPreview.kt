@@ -58,7 +58,7 @@ internal fun AttachmentPreviewChip(
             .clip(AppShapes.medium)
             .border(
                 AppSpacing.borderThin,
-                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.border,
+                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.outline,
                 AppShapes.medium
             )
             .background(AppColors.surface, AppShapes.medium)
@@ -74,7 +74,7 @@ internal fun AttachmentPreviewChip(
             Icon(
                 imageVector = Icons.Default.AttachFile,
                 contentDescription = null,
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier
                     .size(24.dp)
                     .align(Alignment.Center)
@@ -97,7 +97,7 @@ internal fun AttachmentPreviewChip(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Remove attachment",
-                tint = AppColors.textPrimary,
+                tint = AppColors.onSurface,
                 modifier = Modifier.size(10.dp)
             )
         }

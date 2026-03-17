@@ -25,7 +25,7 @@ fun TabPillButton(
     activeTextColor: Color = AppColors.background,
     inactiveBackgroundColor: Color = Color.Transparent,
     inactiveBorderColor: Color = AppColors.accentGreen.copy(alpha = 0.4f),
-    inactiveTextColor: Color = AppColors.textSecondary
+    inactiveTextColor: Color = AppColors.onSurfaceVariant
 ) {
     Box(
         modifier = modifier
@@ -60,11 +60,11 @@ fun MoccaIconButton(
     contentDescription: String? = null,
     enabled: Boolean = true,
     backgroundColor: Color = Color.Transparent,
-    iconColor: Color = AppColors.textPrimary,
+    iconColor: Color = AppColors.onSurface,
     borderColor: Color? = null,
     size: Dp = AppSpacing.iconButtonSizeCompact
 ) {
-    val tintColor = if (enabled) iconColor else AppColors.textSecondary
+    val tintColor = if (enabled) iconColor else AppColors.onSurfaceVariant
     
     Box(
         modifier = modifier
@@ -126,9 +126,9 @@ fun MoccaTextButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textColor: Color = AppColors.textSecondaryLight
+    textColor: Color = AppColors.onSurfaceVariantLight
 ) {
-    val color = if (enabled) textColor else AppColors.textSecondaryDark
+    val color = if (enabled) textColor else AppColors.onSurfaceVariantDark
     
     Box(
         modifier = modifier

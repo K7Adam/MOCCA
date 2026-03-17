@@ -75,7 +75,7 @@ class SessionsScreen : Screen {
                         icon = Icons.Default.Search,
                         onClick = { screenModel.toggleSearch() },
                         contentDescription = "Search",
-                        iconColor = if (state.isSearchVisible) AppColors.statusOnline else AppColors.textSecondary
+                        iconColor = if (state.isSearchVisible) AppColors.statusOnline else AppColors.onSurfaceVariant
                     )
                     MoccaIconButton(
                         icon = Icons.Default.Settings,
@@ -107,7 +107,7 @@ class SessionsScreen : Screen {
             
             HorizontalDivider(
                 thickness = AppSpacing.borderThin,
-                color = AppColors.border
+                color = AppColors.outline
             )
             
             // Main Content
@@ -189,13 +189,13 @@ class SessionsScreen : Screen {
                                         Icons.Default.SearchOff,
                                         contentDescription = null,
                                         modifier = Modifier.size(48.dp),
-                                        tint = AppColors.textSecondary
+                                        tint = AppColors.onSurfaceVariant
                                     )
                                     Spacer(modifier = Modifier.height(AppSpacing.md))
                                     Text(
                                         text = "NO_RESULTS_FOR: \"${state.searchQuery}\"",
                                         style = AppTypography.bodyMedium,
-                                        color = AppColors.textSecondaryLight
+                                        color = AppColors.onSurfaceVariantLight
                                     )
                                 }
                             }

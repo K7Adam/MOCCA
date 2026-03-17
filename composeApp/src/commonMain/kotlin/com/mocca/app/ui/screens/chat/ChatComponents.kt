@@ -45,7 +45,7 @@ fun LegacyMessageBubble(
     
     // Terminal style: User bubbles use surfaceVariant, Assistant is plain text/markdown
     val containerColor = if (isUser) AppColors.surfaceVariant else Color.Transparent
-    val contentColor = if (isUser) AppColors.textPrimary else AppColors.textPrimary
+    val contentColor = if (isUser) AppColors.onSurface else AppColors.onSurface
     
     var showMenu by remember { mutableStateOf(false) }
     val haptic = LocalHapticFeedback.current
@@ -59,7 +59,7 @@ fun LegacyMessageBubble(
             Text(
                 text = message.role.name.lowercase().replaceFirstChar { it.uppercase() },
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 modifier = Modifier.padding(start = 8.dp, bottom = 2.dp)
             )
         }
@@ -150,7 +150,7 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .border(1.dp, AppColors.border, AppShapes.medium)
+            .border(1.dp, AppColors.outline, AppShapes.medium)
             .clickable { expanded = !expanded },
         shape = AppShapes.medium,
         color = AppColors.surface
@@ -174,19 +174,19 @@ fun ReasoningBlock(part: MessagePart.Reasoning) {
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = AppColors.textSecondary
+                    tint = AppColors.onSurfaceVariant
                 )
             }
             
             AnimatedVisibility(visible = expanded) {
                 Column {
                     Spacer(modifier = Modifier.height(8.dp))
-                    HorizontalDivider(color = AppColors.border)
+                    HorizontalDivider(color = AppColors.outline)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = part.content,
                         style = AppTypography.bodySmall,
-                        color = AppColors.textSecondary
+                        color = AppColors.onSurfaceVariant
                     )
                 }
             }
@@ -212,14 +212,14 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
                 Text(
                     text = "Tool Output",
                     style = AppTypography.labelSmall,
-                    color = AppColors.textSecondary
+                    color = AppColors.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Icon(
                     if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = AppColors.textSecondary
+                    tint = AppColors.onSurfaceVariant
                 )
             }
             
@@ -228,7 +228,7 @@ fun ToolResultBlock(part: MessagePart.ToolResult) {
                 Text(
                     text = part.result,
                     style = AppTypography.bodySmall,
-                    color = AppColors.textPrimary
+                    color = AppColors.onSurface
                 )
             }
         }

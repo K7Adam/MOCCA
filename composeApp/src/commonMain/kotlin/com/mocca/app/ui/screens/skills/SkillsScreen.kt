@@ -135,7 +135,7 @@ object SkillsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textPrimary
+                    iconColor = AppColors.onSurface
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
@@ -143,7 +143,7 @@ object SkillsScreen : Screen {
                     Text(
                         text = "${uiState.skills.size} skill${if (uiState.skills.size != 1) "s" else ""} available",
                         style = AppTypography.labelSmall,
-                        color = AppColors.textTertiary
+                        color = AppColors.outline
                     )
                 }
                 MoccaIconButton(
@@ -185,7 +185,7 @@ object SkillsScreen : Screen {
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(AppSpacing.borderThin, AppColors.borderLight, AppShapes.medium)
+                    .border(AppSpacing.borderThin, AppColors.outlineVariant, AppShapes.medium)
             ) {
                 when {
                     uiState.isLoading && uiState.skills.isEmpty() -> LoadingScreen()
@@ -216,7 +216,7 @@ private fun SkillCard(skill: SkillInfo) {
             .fillMaxWidth()
             .clip(AppShapes.card)
             .background(AppColors.surface)
-            .border(0.5.dp, AppColors.border, AppShapes.card)
+            .border(0.5.dp, AppColors.outline, AppShapes.card)
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm)
     ) {
         // Name row
@@ -242,7 +242,7 @@ private fun SkillCard(skill: SkillInfo) {
             Text(
                 text = desc,
                 style = AppTypography.bodySmall,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -275,12 +275,12 @@ private fun SkillCard(skill: SkillInfo) {
         // System prompt preview divider
         skill.system?.let { sys ->
             Spacer(modifier = Modifier.height(AppSpacing.xs))
-            HorizontalDivider(thickness = 0.5.dp, color = AppColors.border)
+            HorizontalDivider(thickness = 0.5.dp, color = AppColors.outline)
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = sys,
                 style = AppTypography.monoLabel,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -304,14 +304,14 @@ private fun SkillsEmptyState() {
         Text(
             text = "NO SKILLS",
             style = AppTypography.labelLarge,
-            color = AppColors.textTertiary,
+            color = AppColors.outline,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         Text(
             text = "No skills found. Add skills to .opencode/skills/ on the server.",
             style = AppTypography.labelSmall,
-            color = AppColors.textTertiary
+            color = AppColors.outline
         )
     }
 }

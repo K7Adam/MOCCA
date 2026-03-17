@@ -36,7 +36,7 @@ fun ProjectSection(
     Column(modifier = modifier) {
         Text(
             text = "PROJECT",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
@@ -50,11 +50,11 @@ fun ProjectSection(
                     isEnabled = true,
                     showToggle = false
                 )
-                HorizontalDivider(color = AppColors.border, thickness = AppSpacing.borderThin)
+                HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
                     text = "PROJECT PATH",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(horizontal = AppSpacing.sm)
                 )
@@ -62,10 +62,10 @@ fun ProjectSection(
                 OutlinedTextField(
                     value = editingProjectPath,
                     onValueChange = onSetEditingProjectPath,
-                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.textTertiary) },
+                    placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.outline) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    textStyle = AppTypography.bodySmall.copy(color = AppColors.textPrimary),
+                    textStyle = AppTypography.bodySmall.copy(color = AppColors.onSurface),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Uri,
                         imeAction = ImeAction.Done
@@ -75,7 +75,7 @@ fun ProjectSection(
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AppColors.accentGreen,
-                        unfocusedBorderColor = AppColors.border,
+                        unfocusedBorderColor = AppColors.outline,
                         cursorColor = AppColors.accentGreen,
                         focusedContainerColor = AppColors.background,
                         unfocusedContainerColor = AppColors.background

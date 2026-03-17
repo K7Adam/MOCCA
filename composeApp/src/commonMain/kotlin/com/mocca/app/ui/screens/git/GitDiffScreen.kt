@@ -68,7 +68,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.textPrimary
+                    iconColor = AppColors.onSurface
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
@@ -101,7 +101,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .border(AppSpacing.borderThin, AppColors.borderLight, AppShapes.medium)
+                    .border(AppSpacing.borderThin, AppColors.outlineVariant, AppShapes.medium)
             ) {
                 when {
                     uiState.isLoading -> LoadingScreen()

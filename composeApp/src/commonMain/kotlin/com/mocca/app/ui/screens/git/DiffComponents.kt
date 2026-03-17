@@ -33,7 +33,7 @@ internal fun DiffModeToggle(splitMode: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .clip(AppShapes.pill)
             .background(AppColors.surface, AppShapes.pill)
-            .border(0.5.dp, AppColors.border, AppShapes.pill),
+            .border(0.5.dp, AppColors.outline, AppShapes.pill),
         verticalAlignment = Alignment.CenterVertically
     ) {
         DiffModeTab(label = "UNIFIED", active = !splitMode) {
@@ -65,7 +65,7 @@ internal fun DiffModeTab(label: String, active: Boolean, onClick: () -> Unit) {
         Text(
             text = label,
             style = AppTypography.labelSmall,
-            color = if (active) AppColors.accentGreen else AppColors.textTertiary,
+            color = if (active) AppColors.accentGreen else AppColors.outline,
             fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
         )
     }
@@ -120,7 +120,7 @@ internal fun DiffSummaryBar(diff: GitDiff) {
         Text(
             text = "${diff.files.size} file${if (diff.files.size != 1) "s" else ""}",
             style = AppTypography.labelSmall,
-            color = AppColors.textTertiary
+            color = AppColors.outline
         )
     }
 }
@@ -159,7 +159,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             ) {
                 Text(
                     text = file.path,
-                    color = AppColors.textPrimary,
+                    color = AppColors.onSurface,
                     style = AppTypography.labelMedium,
                     modifier = Modifier.weight(1f),
                     overflow = TextOverflow.Ellipsis,
@@ -167,7 +167,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
                 )
                 Text(
                     text = "+${file.additions} -${file.deletions}",
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
             }
@@ -186,12 +186,12 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(AppColors.textSecondaryDark)
+                    .background(AppColors.onSurfaceVariantDark)
                     .padding(horizontal = AppSpacing.sm, vertical = 2.dp)
             ) {
                 Text(
                     text = hunk.header,
-                    color = AppColors.textSecondaryLight,
+                    color = AppColors.onSurfaceVariantLight,
                     style = AppTypography.monoLabel
                 )
             }
@@ -264,13 +264,13 @@ internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
     ) {
         Text(
             text = "${line.oldLineNumber ?: ""}",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(32.dp).padding(start = 4.dp)
         )
         Text(
             text = "${line.newLineNumber ?: ""}",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(32.dp)
         )
@@ -279,7 +279,7 @@ internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
             color = when (line.type) {
                 DiffLineType.ADDITION -> AppColors.diffAdditionText
                 DiffLineType.DELETION -> AppColors.diffDeletionText
-                else -> AppColors.textPrimary
+                else -> AppColors.onSurface
             },
             style = AppTypography.codeSmall,
             modifier = Modifier.padding(start = 4.dp),
@@ -342,7 +342,7 @@ internal fun SplitDiffLines(lines: List<com.mocca.app.domain.model.GitDiffLine>)
                     modifier = Modifier
                         .width(1.dp)
                         .height(IntrinsicSize.Min)
-                        .background(AppColors.border)
+                        .background(AppColors.outline)
                 )
                 // Right side (new / addition)
                 SplitDiffCell(
@@ -374,7 +374,7 @@ internal fun SplitDiffCell(
         val lineNum = if (isLeft) line?.oldLineNumber else line?.newLineNumber
         Text(
             text = "${lineNum ?: ""}",
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             style = AppTypography.monoLabel,
             modifier = Modifier.width(28.dp).padding(start = 4.dp)
         )
@@ -383,7 +383,7 @@ internal fun SplitDiffCell(
             color = when (line?.type) {
                 DiffLineType.ADDITION -> AppColors.diffAdditionText
                 DiffLineType.DELETION -> AppColors.diffDeletionText
-                else -> AppColors.textPrimary
+                else -> AppColors.onSurface
             },
             style = AppTypography.codeSmall,
             modifier = Modifier.padding(start = 2.dp),

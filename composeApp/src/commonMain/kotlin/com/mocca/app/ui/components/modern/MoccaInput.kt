@@ -98,7 +98,7 @@ fun MoccaInput(
     singleLine: Boolean = true,
     showPrompt: Boolean = false, // Modern design doesn't use terminal prompts
     backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.border,
+    borderColor: Color = AppColors.outline,
     borderWidth: Dp = AppSpacing.borderThin,
     shape: Shape = AppShapes.input,
     visualTransformation: VisualTransformation = VisualTransformation.None,
@@ -121,7 +121,7 @@ fun MoccaInput(
         if (label != null) {
             Text(
                 text = label.uppercase(),
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelMedium
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -156,7 +156,7 @@ fun MoccaInput(
                     enabled = enabled,
                     singleLine = singleLine,
                     textStyle = AppTypography.bodyMedium.copy(
-                        color = AppColors.textPrimary
+                        color = AppColors.onSurface
                     ),
                     visualTransformation = visualTransformation,
                     cursorBrush = SolidColor(AppColors.accentGreen),
@@ -184,7 +184,7 @@ fun MoccaInput(
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = hint,
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
         }
@@ -227,7 +227,7 @@ fun CommandLineInput(
             .clip(shape)
             .background(AppColors.surfaceContainer, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.5f), blur = 8.dp)
-            .border(AppSpacing.borderThin, AppColors.border, shape)
+            .border(AppSpacing.borderThin, AppColors.outline, shape)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -238,7 +238,7 @@ fun CommandLineInput(
             enabled = enabled,
             singleLine = true,
             textStyle = AppTypography.bodyMedium.copy(
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             ),
             cursorBrush = SolidColor(AppColors.accentGreen),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -269,7 +269,7 @@ fun CommandLineInput(
                         icon = Icons.Default.KeyboardArrowUp,
                         onClick = onHistoryUp,
                         enabled = enabled,
-                        iconColor = AppColors.textSecondary,
+                        iconColor = AppColors.onSurfaceVariant,
                         size = AppSpacing.iconButtonSizeCompact,
                         contentDescription = "Previous command"
                     )
@@ -279,7 +279,7 @@ fun CommandLineInput(
                         icon = Icons.Default.KeyboardArrowDown,
                         onClick = onHistoryDown,
                         enabled = enabled,
-                        iconColor = AppColors.textSecondary,
+                        iconColor = AppColors.onSurfaceVariant,
                         size = AppSpacing.iconButtonSizeCompact,
                         contentDescription = "Next command"
                     )
@@ -294,8 +294,8 @@ fun CommandLineInput(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = AppSpacing.fabSize,
-            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.textSecondaryDark,
-            iconColor = if (value.isNotBlank()) AppColors.background else AppColors.textTertiary
+            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.onSurfaceVariantDark,
+            iconColor = if (value.isNotBlank()) AppColors.background else AppColors.outline
         )
     }
 }

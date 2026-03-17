@@ -50,7 +50,7 @@ fun ModernFileBlock(part: MessagePart.File) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium)
                 .clickable { showPreview = true }
                 .padding(AppSpacing.xxs)
         ) {
@@ -67,7 +67,7 @@ fun ModernFileBlock(part: MessagePart.File) {
                 Text(
                     text = part.filename,
                     style = AppTypography.labelExtraSmall,
-                    color = AppColors.textTertiary,
+                    color = AppColors.outline,
                     modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
                 )
             }
@@ -95,7 +95,7 @@ fun ModernFileBlock(part: MessagePart.File) {
                     Text(
                         text = "TAP TO CLOSE",
                         style = AppTypography.labelExtraSmall,
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = AppSpacing.xl)
@@ -108,20 +108,20 @@ fun ModernFileBlock(part: MessagePart.File) {
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium)
                 .padding(AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Default.Description,
                 contentDescription = null,
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier.size(12.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = part.filename ?: "ATTACHMENT",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.bodySmall
             )
         }

@@ -47,7 +47,7 @@ fun SharedNavIndicator(
                 .fillMaxWidth(0.8f)
                 .height(1.dp)
                 .background(
-                    color = AppColors.border.copy(alpha = 0.3f),
+                    color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.extraSmall
                 )
         )

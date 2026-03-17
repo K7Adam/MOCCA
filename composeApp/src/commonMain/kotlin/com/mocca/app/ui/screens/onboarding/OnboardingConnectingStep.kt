@@ -90,7 +90,7 @@ internal fun OnboardingConnectingStep(
             Text(
                 text = "Launching MOCCA...",
                 style = AppTypography.bodyMedium,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
 
@@ -99,7 +99,7 @@ internal fun OnboardingConnectingStep(
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Failed",
-                tint = AppColors.alertRed,
+                tint = AppColors.error,
                 modifier = Modifier.size(64.dp)
             )
 
@@ -108,7 +108,7 @@ internal fun OnboardingConnectingStep(
             Text(
                 text = "Connection Failed",
                 style = AppTypography.headlineMedium,
-                color = AppColors.alertRed,
+                color = AppColors.error,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -118,7 +118,7 @@ internal fun OnboardingConnectingStep(
                 Text(
                     text = error,
                     style = AppTypography.bodyMedium,
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
@@ -151,7 +151,7 @@ internal fun OnboardingConnectingStep(
             Text(
                 text = "Connecting...",
                 style = AppTypography.headlineMedium,
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -249,8 +249,8 @@ private fun StageItem(
                 style = AppTypography.bodyMedium,
                 color = when {
                     isComplete -> AppColors.accentGreen
-                    isActive -> AppColors.textPrimary
-                    else -> AppColors.textTertiary
+                    isActive -> AppColors.onSurface
+                    else -> AppColors.outline
                 },
                 fontWeight = if (isActive) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier.alpha(

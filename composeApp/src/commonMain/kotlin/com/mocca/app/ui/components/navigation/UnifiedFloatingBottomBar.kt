@@ -210,7 +210,7 @@ fun UnifiedFloatingBottomBar(
         Surface(
             modifier = containerModifier,
             color = AppColors.surfaceContainer,
-            shape = AppShapes.rounded2xl
+            shape = AppShapes.extraLarge
         ) {
             Column(
                 modifier = Modifier.fillMaxSize(),

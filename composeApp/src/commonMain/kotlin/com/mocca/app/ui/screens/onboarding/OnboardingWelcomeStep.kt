@@ -79,7 +79,7 @@ internal fun OnboardingWelcomeStep(
         Text(
             text = "MOCCA",
             style = AppTypography.displayLarge,
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
@@ -89,7 +89,7 @@ internal fun OnboardingWelcomeStep(
         Text(
             text = "Your mobile companion for OpenCode",
             style = AppTypography.bodyLarge,
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
 

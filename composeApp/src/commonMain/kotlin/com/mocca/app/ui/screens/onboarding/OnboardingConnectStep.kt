@@ -108,7 +108,7 @@ internal fun OnboardingConnectStep(
         Text(
             text = "CONNECT TO SERVER",
             style = AppTypography.headlineSmall,
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(vertical = AppSpacing.lg)
         )
@@ -132,7 +132,7 @@ internal fun OnboardingConnectStep(
                     Icon(
                         imageVector = Icons.Default.Wifi,
                         contentDescription = null,
-                        tint = if (isDiscovering) AppColors.accent else AppColors.textSecondary,
+                        tint = if (isDiscovering) AppColors.accent else AppColors.onSurfaceVariant,
                         modifier = Modifier
                             .size(20.dp)
                             .then(if (isDiscovering) Modifier.alpha(scanAlpha) else Modifier)
@@ -140,7 +140,7 @@ internal fun OnboardingConnectStep(
                     Text(
                         text = if (isDiscovering) "Scanning network..." else "Available Servers",
                         style = AppTypography.labelLarge,
-                        color = if (isDiscovering) AppColors.accent else AppColors.textSecondary,
+                        color = if (isDiscovering) AppColors.accent else AppColors.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
                     )
                     if (isDiscovering) {
@@ -188,19 +188,19 @@ internal fun OnboardingConnectStep(
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = null,
-                            tint = AppColors.textTertiary,
+                            tint = AppColors.outline,
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
                             text = "No servers found on your network",
                             style = AppTypography.bodyMedium,
-                            color = AppColors.textSecondary,
+                            color = AppColors.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Text(
                             text = "Make sure OpenCode is running, or enter server details manually",
                             style = AppTypography.bodySmall,
-                            color = AppColors.textTertiary,
+                            color = AppColors.outline,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -237,7 +237,7 @@ internal fun OnboardingConnectStep(
                     Text(
                         text = "MANUAL CONNECTION",
                         style = AppTypography.labelMedium,
-                        color = AppColors.textSecondary,
+                        color = AppColors.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
                     )
 
@@ -285,16 +285,16 @@ internal fun OnboardingConnectStep(
                         Text(
                             text = "Use HTTPS",
                             style = AppTypography.bodyMedium,
-                            color = AppColors.textSecondary
+                            color = AppColors.onSurfaceVariant
                         )
                         Switch(
                             checked = useHttps,
                             onCheckedChange = { useHttps = it },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = AppColors.accentGreen,
-                                checkedThumbColor = AppColors.textPrimary,
+                                checkedThumbColor = AppColors.onSurface,
                                 uncheckedTrackColor = AppColors.surfaceContainerHigh,
-                                uncheckedThumbColor = AppColors.textTertiary
+                                uncheckedThumbColor = AppColors.outline
                             )
                         )
                     }
@@ -306,7 +306,7 @@ internal fun OnboardingConnectStep(
                     Text(
                         text = "$protocol://$previewHost:$previewPort",
                         style = AppTypography.bodySmall,
-                        color = AppColors.textTertiary,
+                        color = AppColors.outline,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )

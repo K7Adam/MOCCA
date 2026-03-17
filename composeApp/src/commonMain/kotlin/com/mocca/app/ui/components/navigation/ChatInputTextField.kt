@@ -62,7 +62,7 @@ internal fun ChatInputTextFieldArea(
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
             enabled = inputEnabled,
-            textStyle = AppTypography.bodyMedium.copy(color = AppColors.textPrimary),
+            textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
             cursorBrush = SolidColor(AppColors.accentGreen),
             interactionSource = interactionSource,
             decorationBox = { innerTextField ->
@@ -88,7 +88,7 @@ internal fun ChatInputTextFieldArea(
             properties = PopupProperties(focusable = false),
             modifier = Modifier
                 .background(AppColors.surfaceContainerHigh, AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border.copy(alpha = 0.5f), AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.5f), AppShapes.medium)
         ) {
             if (isCommandSuggestion) {
                 CommandSuggestionItems(
@@ -125,7 +125,7 @@ private fun CommandSuggestionItems(
                 Text(
                     "No commands match \"$suggestionQuery\"",
                     style = AppTypography.labelSmall,
-                    color = AppColors.textTertiary
+                    color = AppColors.outline
                 )
             },
             onClick = onDismiss
@@ -144,7 +144,7 @@ private fun CommandSuggestionItems(
                             Text(
                                 desc,
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textTertiary,
+                                color = AppColors.outline,
                                 maxLines = 1
                             )
                         }
@@ -175,7 +175,7 @@ private fun ModeSuggestionItems(
                 Text(
                     "No agents match \"$suggestionQuery\"",
                     style = AppTypography.labelSmall,
-                    color = AppColors.textTertiary
+                    color = AppColors.outline
                 )
             },
             onClick = onDismiss
@@ -188,13 +188,13 @@ private fun ModeSuggestionItems(
                         Text(
                             mode.name.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.textSecondary
+                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.onSurfaceVariant
                         )
                         mode.description?.let { desc ->
                             Text(
                                 desc,
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textTertiary,
+                                color = AppColors.outline,
                                 maxLines = 1
                             )
                         }

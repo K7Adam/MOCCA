@@ -144,7 +144,7 @@ fun PermissionBanner(
                         Text(
                             text = permission.permission.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = AppColors.textPrimary,
+                            color = AppColors.onSurface,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -216,14 +216,14 @@ fun PermissionBanner(
                             Text(
                                 text = "// TARGETS",
                                 style = AppTypography.labelExtraSmall,
-                                color = AppColors.textTertiary
+                                color = AppColors.outline
                             )
                             Spacer(modifier = Modifier.height(2.dp))
 
                             Text(
                                 text = permission.patterns.take(3).joinToString("\n"),
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textSecondary,
+                                color = AppColors.onSurfaceVariant,
                                 maxLines = 3,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -232,7 +232,7 @@ fun PermissionBanner(
                                 Text(
                                     text = "+ ${permission.patterns.size - 3} more",
                                     style = AppTypography.labelExtraSmall,
-                                    color = AppColors.textTertiary
+                                    color = AppColors.outline
                                 )
                             }
 

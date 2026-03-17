@@ -157,13 +157,13 @@ private fun AgentHeader(
                 .size(48.dp)
                 .clip(AppShapes.medium)
                 .background(AppColors.surfaceContainer, AppShapes.medium)
-                .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium),
+                .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.Computer,
                 contentDescription = null,
-                tint = AppColors.textPrimary,
+                tint = AppColors.onSurface,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -171,13 +171,13 @@ private fun AgentHeader(
         Column {
             Text(
                 text = agentName.uppercase(),
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
                 text = appVersion.ifEmpty { "--" }.uppercase(),
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.bodySmall
             )
         }
@@ -210,7 +210,7 @@ private fun ConversationHistorySection(
         ) {
             Text(
                 text = "CONVERSATION HISTORY",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -280,7 +280,7 @@ private fun ConversationHistorySection(
                                 ) {
                                     Text(
                                         text = "#${formatSessionId(session.id)}",
-                                        color = if (isActive) AppColors.textPrimary else AppColors.textSecondary,
+                                        color = if (isActive) AppColors.onSurface else AppColors.onSurfaceVariant,
                                         style = AppTypography.labelSmall,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -299,7 +299,7 @@ private fun ConversationHistorySection(
                                         } else {
                                             Text(
                                                 text = formatTimeAgo(session.updatedAt),
-                                                color = AppColors.textTertiary,
+                                                color = AppColors.outline,
                                                 style = AppTypography.labelSmall
                                             )
                                         }
@@ -308,7 +308,7 @@ private fun ConversationHistorySection(
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = session.title ?: "Untitled Session",
-                                    color = if (isActive) AppColors.textPrimary else AppColors.textTertiary,
+                                    color = if (isActive) AppColors.onSurface else AppColors.outline,
                                     style = AppTypography.bodySmall,
                                     maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
@@ -354,7 +354,7 @@ private fun NewSessionButton(
     isLoading: Boolean = false
 ) {
     val borderColor by animateColorAsState(
-        targetValue = if (isLoading) AppColors.statusWaiting else AppColors.border,
+        targetValue = if (isLoading) AppColors.statusWaiting else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "borderColor"
     )
@@ -368,7 +368,7 @@ private fun NewSessionButton(
             .moccaClickable(
                 onClick = onClick, 
                 pressedScale = 0.96f, 
-                rippleColor = AppColors.textPrimary.copy(alpha = 0.1f),
+                rippleColor = AppColors.onSurface.copy(alpha = 0.1f),
                 enabled = !isLoading
             )
             .padding(AppSpacing.md),
@@ -397,7 +397,7 @@ private fun NewSessionButton(
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "NEW SESSION",
-                color = AppColors.textPrimary,
+                color = AppColors.onSurface,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
             )

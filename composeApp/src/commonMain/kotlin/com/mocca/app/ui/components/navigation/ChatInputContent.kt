@@ -202,7 +202,7 @@ fun ChatInputContent(
         // ═══════════════ ACTION TOOLBAR (Cleaner, Grouped) ═══════════════
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.3f)
+            color = AppColors.outline.copy(alpha = 0.3f)
         )
 
         ChatInputActionToolbar(
@@ -228,7 +228,7 @@ fun ChatInputContent(
         // Subtle divider before nav row
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
-            color = AppColors.border.copy(alpha = 0.3f)
+            color = AppColors.outline.copy(alpha = 0.3f)
         )
     }
 

@@ -92,7 +92,7 @@ fun SystemStatusCard(
         modifier = modifier
             .fillMaxWidth()
             .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
             .padding(AppSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
@@ -105,7 +105,7 @@ fun SystemStatusCard(
             Text(
                 text = "SYSTEM STATUS",
                 style = AppTypography.labelSmall,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
             
             UnifiedStatusIndicator(status = unifiedStatus)
@@ -155,7 +155,7 @@ private fun ComponentStatusRow(
         is ServerComponentStatus.Connected -> AppColors.statusOnline to "Connected"
         is ServerComponentStatus.Connecting -> AppColors.accentGreen to "Connecting..."
         is ServerComponentStatus.Error -> AppColors.statusOffline to status.message
-        is ServerComponentStatus.Unknown -> AppColors.textSecondary to "Unknown"
+        is ServerComponentStatus.Unknown -> AppColors.onSurfaceVariant to "Unknown"
     }
     
     Row(
@@ -171,7 +171,7 @@ private fun ComponentStatusRow(
         Text(
             text = name,
             style = AppTypography.bodyMedium,
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             modifier = Modifier.weight(1f)
         )
         

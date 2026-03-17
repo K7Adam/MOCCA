@@ -43,7 +43,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "CREATE",
                     onClick = { showCreateBranch = true },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.textPrimary,
+                    contentColor = AppColors.onSurface,
                     modifier = Modifier.height(32.dp)
                 )
             }
@@ -65,7 +65,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         if (branch.ahead > 0 || branch.behind > 0) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
-                                if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.alertRed)
+                                if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.error)
                             }
                         }
                     },

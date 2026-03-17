@@ -60,13 +60,13 @@ class FilesScreen : Screen {
                         Icon(
                             imageVector = Icons.Default.FolderOpen,
                             contentDescription = null,
-                            tint = AppColors.textPrimary.copy(alpha = 0.4f),
+                            tint = AppColors.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(16.dp)
                         )
                     },
                     actions = {
                         IconButton(onClick = { screenModel.loadFiles(state.currentPath) }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = AppColors.textPrimary)
+                            Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = AppColors.onSurface)
                         }
                     }
                 )
@@ -125,7 +125,7 @@ private fun GodBreadcrumbBar(
     Surface(
         color = Color.Transparent,
         modifier = modifier.fillMaxWidth(),
-        border = BorderStroke(0.5.dp, AppColors.border)
+        border = BorderStroke(0.5.dp, AppColors.outline)
     ) {
         Row(
             modifier = Modifier
@@ -144,7 +144,7 @@ private fun GodBreadcrumbBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Up",
-                        tint = AppColors.textPrimary,
+                        tint = AppColors.onSurface,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -163,13 +163,13 @@ private fun GodBreadcrumbBar(
                         Icon(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
-                            tint = AppColors.textPrimary.copy(alpha = 0.2f),
+                            tint = AppColors.onSurface.copy(alpha = 0.2f),
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = segment,
                             style = AppTypography.labelMedium,
-                            color = AppColors.textPrimary,
+                            color = AppColors.onSurface,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -192,7 +192,7 @@ private fun GodFilesList(
             Text(
                 text = "DIRECTORY EMPTY",
                 style = AppTypography.labelMedium,
-                color = AppColors.textPrimary.copy(alpha = 0.2f)
+                color = AppColors.onSurface.copy(alpha = 0.2f)
             )
         }
     } else {
@@ -213,7 +213,7 @@ private fun GodFilesList(
                         Icon(
                             imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
                             contentDescription = null,
-                            tint = if (file.isDirectory) AppColors.accentGreen else AppColors.textPrimary.copy(alpha = 0.4f),
+                            tint = if (file.isDirectory) AppColors.accentGreen else AppColors.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -222,7 +222,7 @@ private fun GodFilesList(
                             Icon(
                                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
-                                tint = AppColors.textPrimary.copy(alpha = 0.2f),
+                                tint = AppColors.onSurface.copy(alpha = 0.2f),
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -248,7 +248,7 @@ private fun GodFileViewer(
         Surface(
             color = AppColors.surface,
             modifier = Modifier.fillMaxWidth(),
-            border = BorderStroke(1.dp, AppColors.border)
+            border = BorderStroke(1.dp, AppColors.outline)
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
@@ -265,14 +265,14 @@ private fun GodFileViewer(
                     Text(
                         text = fileName,
                         style = AppTypography.titleSmall,
-                        color = AppColors.textPrimary,
+                        color = AppColors.onSurface,
                         fontWeight = FontWeight.Bold
                     )
                     if (language != null) {
                         Text(
                             text = language.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = AppColors.textPrimary.copy(alpha = 0.4f)
+                            color = AppColors.onSurface.copy(alpha = 0.4f)
                         )
                     }
                 }
@@ -285,7 +285,7 @@ private fun GodFileViewer(
                     Icon(
                         Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = AppColors.textPrimary,
+                        tint = AppColors.onSurface,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -305,7 +305,7 @@ private fun GodFileViewer(
             Text(
                 text = content,
                 style = AppTypography.code,
-                color = AppColors.textSecondary
+                color = AppColors.onSurfaceVariant
             )
         }
     }

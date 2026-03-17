@@ -128,13 +128,13 @@ fun ConnectionStatusBanner(
                     MoccaTextButton(
                         text = "SETUP SERVER",
                         onClick = onSetupClick,
-                        textColor = AppColors.textPrimary
+                        textColor = AppColors.onSurface
                     )
                 } else if (onRetryClick != null) {
                     MoccaTextButton(
                         text = "RETRY",
                         onClick = onRetryClick,
-                        textColor = AppColors.textPrimary
+                        textColor = AppColors.onSurface
                     )
                 }
             }
@@ -186,7 +186,7 @@ fun InlineConnectionStatus(
             // Minimalist: show connected text without dot
             Text(
                 text = (serverName?.uppercase() ?: "CONNECTED"),
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
         }
@@ -244,7 +244,7 @@ fun CombinedConnectionIndicator(
             StatusDot(color = AppColors.accentGreen)
             Text(
                 text = serverName?.uppercase() ?: "ONLINE",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
         } else {
@@ -260,7 +260,7 @@ fun CombinedConnectionIndicator(
         if (isHttpConnected) {
             Text(
                 text = "•",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
             SseStatusIndicator(isConnected = isSseConnected)
@@ -300,7 +300,7 @@ fun NotImplementedBanner(
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
                 text = "${featureName.uppercase()} feature is under development",
-                color = AppColors.textTertiary,
+                color = AppColors.outline,
                 style = AppTypography.bodySmall
             )
         }
@@ -333,13 +333,13 @@ fun TerminalEmptyState(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = AppColors.textTertiary
+                tint = AppColors.outline
             )
         }
         
         Text(
             text = title.uppercase(),
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             style = AppTypography.headlineSmall,
             fontWeight = FontWeight.Bold
         )
@@ -347,7 +347,7 @@ fun TerminalEmptyState(
         if (subtitle != null) {
             Text(
                 text = subtitle,
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.bodySmall
             )
         }
@@ -381,7 +381,7 @@ fun TerminalLoadingState(
         // Simple text-based loading indicator
         TypewriterText(
             text = message.uppercase(),
-            color = AppColors.textPrimary,
+            color = AppColors.onSurface,
             style = AppTypography.headlineSmall,
             typingDelayMs = 100L,
             showCursor = true

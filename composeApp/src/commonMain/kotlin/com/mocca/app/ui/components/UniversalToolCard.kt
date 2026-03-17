@@ -90,7 +90,7 @@ private fun EditToolContent(invocation: MessagePart.ToolInvocation, result: Mess
         Text(
             text = instruction,
             style = AppTypography.bodySmall,
-            color = AppColors.textSecondary,
+            color = AppColors.onSurfaceVariant,
             modifier = Modifier.padding(vertical = AppSpacing.xs)
         )
     }
@@ -122,7 +122,7 @@ private fun TaskToolContent(invocation: MessagePart.ToolInvocation, result: Mess
         Text(
             text = objective,
             style = AppTypography.bodyMedium,
-            color = AppColors.textPrimary
+            color = AppColors.onSurface
         )
     }
 }
@@ -144,7 +144,7 @@ private fun getToolVisuals(toolName: String): Pair<androidx.compose.ui.graphics.
         "edit", "write_file", "replace", "write", "todowrite" -> Icons.Default.Edit to AppColors.syntaxString
         "ls", "list_directory", "read_file", "read", "glob", "grep_search", "grep", "search" -> Icons.Default.Folder to AppColors.accent
         "task", "ticket", "prd" -> Icons.AutoMirrored.Filled.Notes to AppColors.statusWaiting
-        else -> Icons.Default.Build to AppColors.textSecondary
+        else -> Icons.Default.Build to AppColors.onSurfaceVariant
     }
 }
 

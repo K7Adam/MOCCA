@@ -83,8 +83,8 @@ fun SuggestionPopup(
                     width = 1.dp,
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            AppColors.borderLight.copy(alpha = 0.4f),
-                            AppColors.border.copy(alpha = 0.2f)
+                            AppColors.outlineVariant.copy(alpha = 0.4f),
+                            AppColors.outline.copy(alpha = 0.2f)
                         )
                     ),
                     shape = AppShapes.medium
@@ -137,13 +137,13 @@ private fun SuggestionRow(
             Text(
                 text = item.label,
                 style = AppTypography.bodySmall,
-                color = AppColors.textPrimary
+                color = AppColors.onSurface
             )
             item.description?.let { desc ->
                 Text(
                     text = desc,
                     style = AppTypography.labelSmall,
-                    color = AppColors.textSecondary,
+                    color = AppColors.onSurfaceVariant,
                     maxLines = 1
                 )
             }

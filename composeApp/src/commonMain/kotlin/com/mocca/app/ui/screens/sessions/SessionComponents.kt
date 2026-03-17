@@ -61,7 +61,7 @@ internal fun ModernConnectionProgressContent(
         Text(
             text = message.uppercase(),
             style = AppTypography.labelSmall,
-            color = AppColors.textSecondaryLight
+            color = AppColors.onSurfaceVariantLight
         )
     }
 }
@@ -78,13 +78,13 @@ internal fun ModernEmptySessionsContent(
         Text(
             text = stringResource(Res.string.no_sessions).uppercase(),
             style = AppTypography.headlineSmall,
-            color = AppColors.textPrimary
+            color = AppColors.onSurface
         )
         Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = stringResource(Res.string.no_sessions_hint),
             style = AppTypography.bodySmall,
-            color = AppColors.textSecondaryLight,
+            color = AppColors.onSurfaceVariantLight,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(AppSpacing.lg))
@@ -136,7 +136,7 @@ internal fun MoccaSessionCard(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) AppColors.statusOnline else AppColors.border
+    val borderColor = if (isSelected) AppColors.statusOnline else AppColors.outline
     val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.05f) else Color.Transparent
     
     val sharedTransitionScope = LocalSharedTransitionScope.current
@@ -179,7 +179,7 @@ internal fun MoccaSessionCard(
                 Text(
                     text = (session.title ?: stringResource(Res.string.untitled_session)).uppercase(),
                     style = AppTypography.labelMedium,
-                    color = if (isSelected) AppColors.statusOnline else AppColors.textPrimary,
+                    color = if (isSelected) AppColors.statusOnline else AppColors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold
@@ -193,13 +193,13 @@ internal fun MoccaSessionCard(
                     Text(
                         text = formatTime(session.updatedAt),
                         style = AppTypography.labelExtraSmall,
-                        color = AppColors.textSecondary
+                        color = AppColors.onSurfaceVariant
                     )
                     if (session.summaryFiles > 0) {
                         Text(
                             text = "\u2022 ${session.summaryFiles}F",
                             style = AppTypography.labelExtraSmall,
-                            color = AppColors.textSecondaryLight
+                            color = AppColors.onSurfaceVariantLight
                         )
                     }
                 }
@@ -219,7 +219,7 @@ internal fun MoccaSessionCard(
 @Composable
 internal fun ModernStatusChip(status: SessionStatus) {
     val (color, textRes) = when (status) {
-        SessionStatus.IDLE -> AppColors.textSecondary to Res.string.session_idle
+        SessionStatus.IDLE -> AppColors.onSurfaceVariant to Res.string.session_idle
         SessionStatus.RUNNING -> AppColors.statusOnline to Res.string.session_running
         SessionStatus.COMPLETED -> AppColors.success to Res.string.session_completed
         SessionStatus.ERROR -> AppColors.error to Res.string.session_error
@@ -268,7 +268,7 @@ internal fun ModernSearchBar(
     Box(
         modifier = modifier
             .background(AppColors.surface.copy(alpha = 0.8f), AppShapes.medium)
-            .border(AppSpacing.borderThin, AppColors.border, AppShapes.medium)
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium)
             .padding(AppSpacing.xs)
     ) {
         Row(
@@ -279,7 +279,7 @@ internal fun ModernSearchBar(
                 Icons.Default.Search,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = AppColors.textSecondary
+                tint = AppColors.onSurfaceVariant
             )
             
             Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -291,7 +291,7 @@ internal fun ModernSearchBar(
                     .weight(1f)
                     .focusRequester(focusRequester),
                 textStyle = AppTypography.labelSmall.copy(
-                    color = AppColors.textPrimary
+                    color = AppColors.onSurface
                 ),
                 cursorBrush = SolidColor(AppColors.accentGreen),
                 singleLine = true,
@@ -303,7 +303,7 @@ internal fun ModernSearchBar(
                             Text(
                                 text = "SEARCH...",
                                 style = AppTypography.labelSmall,
-                                color = AppColors.textSecondary
+                                color = AppColors.onSurfaceVariant
                             )
                         }
                         innerTextField()
@@ -315,7 +315,7 @@ internal fun ModernSearchBar(
                 MoccaIconButton(
                     icon = Icons.Default.Clear,
                     onClick = onClear,
-                    iconColor = AppColors.textSecondary,
+                    iconColor = AppColors.onSurfaceVariant,
                     size = 28.dp,
                     contentDescription = "Clear"
                 )
@@ -341,19 +341,19 @@ internal fun TerminalNotConnectedContent(
             icon,
             contentDescription = null,
             modifier = Modifier.size(48.dp),
-            tint = AppColors.textSecondary
+            tint = AppColors.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
             text = title.uppercase(),
             style = AppTypography.headlineSmall,
-            color = AppColors.textPrimary
+            color = AppColors.onSurface
         )
         Spacer(modifier = Modifier.height(AppSpacing.xs))
         Text(
             text = message,
             style = AppTypography.bodySmall,
-            color = AppColors.textSecondaryLight,
+            color = AppColors.onSurfaceVariantLight,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
         Spacer(modifier = Modifier.height(AppSpacing.lg))

@@ -40,7 +40,7 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "ADD",
                     onClick = { screenModel.showAddRemoteDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.textPrimary,
+                    contentColor = AppColors.onSurface,
                     modifier = Modifier.height(32.dp)
                 )
             }
@@ -58,7 +58,7 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 },
                 trailing = {
                     IconButton(onClick = { screenModel.removeRemote(remote.name) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.alertRed.copy(alpha = 0.6f))
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.error.copy(alpha = 0.6f))
                     }
                 }
             )
@@ -72,8 +72,8 @@ internal fun StashesTab(uiState: GitUiState, screenModel: GitScreenModel) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(64.dp), tint = AppColors.primary)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("Stashes Not Fully Implemented", fontWeight = FontWeight.Bold, color = AppColors.textSecondary)
-            Text("Counts: ${uiState.stashes.size}", color = AppColors.textSecondary.copy(alpha = 0.7f))
+            Text("Stashes Not Fully Implemented", fontWeight = FontWeight.Bold, color = AppColors.onSurfaceVariant)
+            Text("Counts: ${uiState.stashes.size}", color = AppColors.onSurfaceVariant.copy(alpha = 0.7f))
         }
     }
 }
@@ -101,7 +101,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     text = "CREATE",
                     onClick = { screenModel.showCreateTagDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
-                    contentColor = AppColors.textPrimary,
+                    contentColor = AppColors.onSurface,
                     modifier = Modifier.height(32.dp)
                 )
             }
@@ -119,7 +119,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 },
                 trailing = {
                     IconButton(onClick = { screenModel.deleteTag(tag) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.alertRed.copy(alpha = 0.6f))
+                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.error.copy(alpha = 0.6f))
                     }
                 }
             )

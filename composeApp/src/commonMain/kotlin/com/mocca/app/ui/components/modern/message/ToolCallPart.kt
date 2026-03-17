@@ -60,14 +60,14 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
         ) {
             Text(
                 text = "TOOL OUTPUT",
-                color = AppColors.textSecondary,
+                color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelExtraSmall,
                 modifier = Modifier.weight(1f)
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = AppColors.textSecondary,
+                tint = AppColors.onSurfaceVariant,
                 modifier = Modifier.size(14.dp)
             )
         }
@@ -77,7 +77,7 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
                 Text(
                     text = part.result,
-                    color = AppColors.textPrimaryDim,
+                    color = AppColors.onSurfaceDim,
                     style = AppTypography.bodySmall
                 )
             }
@@ -103,7 +103,7 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
     val accentColor = when {
         hasRunning -> AppColors.statusWaiting
         errorCount > 0 -> AppColors.error
-        else -> AppColors.textTertiary
+        else -> AppColors.outline
     }
     val borderColor = accentColor.copy(alpha = 0.35f)
 
@@ -163,7 +163,7 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
             Icon(
                 imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                 contentDescription = null,
-                tint = AppColors.textTertiary,
+                tint = AppColors.outline,
                 modifier = Modifier.size(14.dp)
             )
         }
