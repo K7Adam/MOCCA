@@ -178,16 +178,19 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
         val panelTransition = ModernTransitions.panelTransition()
 
-        AnimatedContent(
-            targetState = panelState.state,
-            label = "panelTransition",
-            transitionSpec = { panelTransition }
-        ) { targetPanelState ->
-            CompositionLocalProvider(
-                LocalNavAnimatedVisibilityScope provides this
-            ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                DynamicExpressiveBackground()
+        @OptIn(ExperimentalSharedTransitionApi::class)
+        SharedTransitionLayout {
+            AnimatedContent(
+                targetState = panelState.state,
+                label = "panelTransition",
+                transitionSpec = { panelTransition }
+            ) { targetPanelState ->
+                CompositionLocalProvider(
+                    LocalSharedTransitionScope provides this@SharedTransitionLayout,
+                    LocalNavAnimatedVisibilityScope provides this
+                ) {
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        DynamicExpressiveBackground()
                 
                 // ═══════════════════════════════════════════════════════════════════
                 // Content area - full screen, unified bottom bar floats above

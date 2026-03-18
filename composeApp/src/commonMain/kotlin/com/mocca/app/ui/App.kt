@@ -51,9 +51,15 @@ import org.koin.compose.koinInject
 
 import com.mocca.app.ui.navigation.ModernTransitions
 
+import com.mocca.app.ui.theme.AppPerformance
+import com.mocca.app.ui.theme.PerformanceTier
+
 @Composable
 fun App() {
-    AppTheme {
+    // Simple heuristic: could be improved with actual device info via expect/actual
+    val performance = remember { AppPerformance(tier = PerformanceTier.HIGH) }
+    
+    AppTheme(performance = performance) {
         val serverConfigRepository = koinInject<ServerConfigRepository>()
         val isLoaded by serverConfigRepository.isLoaded.collectAsState()
         val activeConfig by serverConfigRepository.activeServer.collectAsState()

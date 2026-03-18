@@ -70,28 +70,29 @@ fun ChatContent(
     val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
 
     // Track scroll direction for dock auto-hide
-    var previousScrollIndex by remember { mutableStateOf(0) }
-    var previousScrollOffset by remember { mutableStateOf(0) }
-    
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        val currentIndex = listState.firstVisibleItemIndex
-        val currentOffset = listState.firstVisibleItemScrollOffset
-        
-        // Determine scroll direction based on position changes
-        val direction = when {
-            currentIndex > previousScrollIndex -> ScrollDirection.UP
-            currentIndex < previousScrollIndex -> ScrollDirection.DOWN
-            currentOffset > previousScrollOffset + 10 -> ScrollDirection.UP
-            currentOffset < previousScrollOffset - 10 -> ScrollDirection.DOWN
-            else -> ScrollDirection.IDLE
+    LaunchedEffect(listState) {
+        snapshotFlow { 
+            val info = listState.layoutInfo
+            Pair(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) 
         }
-        
-        if (direction != ScrollDirection.IDLE) {
-            onScrollDirectionChange(direction)
+        .distinctUntilChanged()
+        .collect { (currentIndex, currentOffset) ->
+            // Determine scroll direction based on position changes
+            val direction = when {
+                currentIndex > previousScrollIndex -> ScrollDirection.UP
+                currentIndex < previousScrollIndex -> ScrollDirection.DOWN
+                currentOffset > previousScrollOffset + 10 -> ScrollDirection.UP
+                currentOffset < previousScrollOffset - 10 -> ScrollDirection.DOWN
+                else -> ScrollDirection.IDLE
+            }
+            
+            if (direction != ScrollDirection.IDLE) {
+                onScrollDirectionChange(direction)
+            }
+            
+            previousScrollIndex = currentIndex
+            previousScrollOffset = currentOffset
         }
-        
-        previousScrollIndex = currentIndex
-        previousScrollOffset = currentOffset
     }
     
     LaunchedEffect(streamingText) {

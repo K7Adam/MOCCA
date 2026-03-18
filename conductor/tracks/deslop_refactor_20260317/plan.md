@@ -34,7 +34,7 @@
 
 ## Phase 3: Performance and Resource Optimization
 
-- [ ] Task: Optimize Navigation and Animations
+- [~] Task: Optimize Navigation and Animations
     - [ ] Implement optimized navigation transitions to achieve 60/120 FPS.
     - [ ] Refactor expensive animations to use more efficient KMP/Compose patterns.
     - [ ] Use SharedTransitionLayout and other modern tools for fluid screen transitions.

@@ -75,18 +75,26 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
  */
 @Composable
 fun AppTheme(
+    performance: AppPerformance = AppPerformance(),
     content: @Composable () -> Unit
 ) {
     val extendedColors = ExtendedAppColors()
 
     CompositionLocalProvider(
-        LocalExtendedColors provides extendedColors
+        LocalExtendedColors provides extendedColors,
+        LocalAppPerformance provides performance
     ) {
+        val motionScheme = if (performance.useExpressiveMotion) {
+            MotionScheme.expressive()
+        } else {
+            MotionScheme.standard()
+        }
+
         MaterialExpressiveTheme(
             colorScheme = AppColorScheme,
             typography = appTypography(),
             shapes = appShapes(),
-            motionScheme = MotionScheme.expressive(),
+            motionScheme = motionScheme,
             content = content
         )
     }

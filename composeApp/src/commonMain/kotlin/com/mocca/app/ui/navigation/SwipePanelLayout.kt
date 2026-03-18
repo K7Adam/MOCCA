@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppMotion
 import kotlin.math.roundToInt
 
 enum class PanelState {
