@@ -8,13 +8,14 @@ MOCCA is built on the **Kotlin Multiplatform** ecosystem, designed for a modern,
 
 ## Frontend Frameworks
 - **Compose Multiplatform (v1.9.3):** Declarative UI for high-performance interfaces.
-- **Material 3 Adaptive & Expressive:** Advanced design components for responsive and engaging layouts.
+- **Material 3 Adaptive & Expressive:** Advanced design components with SharedTransitionLayout and Physics-based motion.
 
 ## Core Libraries & Infrastructure
 - **Ktor (v3.0.3):** High-performance networking for AI collaboration and command execution.
 - **Koin (v4.1.1):** Dependency injection for a modular and testable architecture.
 - **Voyager (v1.1.0-beta03):** Navigation and ScreenModel management (MVI/ScreenModel).
 - **SQLDelight (v2.2.1):** Local caching and offline-first data management.
+- **Coil 3:** High-performance, optimized image loading with custom memory/disk caching.
 - **kotlinx-serialization & coroutines:** Modern tools for data handling and asynchronous execution.
 
 ## Platform Support
