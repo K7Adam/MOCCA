@@ -34,19 +34,19 @@
 
 ## Phase 3: Performance and Resource Optimization
 
-- [~] Task: Optimize Navigation and Animations
-    - [ ] Implement optimized navigation transitions to achieve 60/120 FPS.
-    - [ ] Refactor expensive animations to use more efficient KMP/Compose patterns.
-    - [ ] Use SharedTransitionLayout and other modern tools for fluid screen transitions.
-    - [ ] Verify that all navigation flows are smooth and jank-free.
+- [x] Task: Optimize Navigation and Animations
+    - [x] Implement optimized navigation transitions to achieve 60/120 FPS.
+    - [x] Refactor expensive animations to use more efficient KMP/Compose patterns.
+    - [x] Use SharedTransitionLayout and other modern tools for fluid screen transitions.
+    - [x] Verify that all navigation flows are smooth and jank-free.
 
-- [ ] Task: Optimize Battery and Resource Usage
-    - [ ] Refactor background processes and network calls to reduce CPU and battery impact.
-    - [ ] Implement resource-efficient patterns for chat streaming and terminal updates.
-    - [ ] Optimize image loading and rendering for reduced memory usage.
-    - [ ] Verify improvement against the performance baseline.
+- [x] Task: Optimize Battery and Resource Usage
+    - [x] Refactor background processes and network calls to reduce CPU and battery impact.
+    - [x] Implement resource-efficient patterns for chat streaming and terminal updates.
+    - [x] Optimize image loading and rendering for reduced memory usage.
+    - [x] Verify improvement against the performance baseline.
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Performance and Resource Optimization' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Performance and Resource Optimization' (Protocol in workflow.md) [checkpoint: c3af6eb]
 
 ## Phase 4: Final Refinement and Verification
 
