@@ -178,6 +178,7 @@ class ChatScreenModel(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun syncDelegates() {
         // 1. Session & Message Updates
         screenModelScope.launch {

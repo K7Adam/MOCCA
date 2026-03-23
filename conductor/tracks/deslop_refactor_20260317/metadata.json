@@ -1,8 +1,0 @@
-{
-  "track_id": "deslop_refactor_20260317",
-  "type": "refactor",
-  "status": "new",
-  "created_at": "2026-03-18T00:03:00Z",
-  "updated_at": "2026-03-18T00:03:00Z",
-  "description": "analyze current state of the app and plan a deep refactoring and \"deslopifying\" of the app and the code. Improving the codebase, improving the app responsiveness, optimizing the apps battery-usage, improving the navigation (the app lags when navigating, because of the animations, but i like the animations, they should jsut be refactored/imporved for optimized performance), all while maintaining and improving googles material 3 expressive style and design system using all the ultra-modern and latest bleeding edge features and best-practices as of march 2026 for the given use-case and tech-stack. also research what \"slop\" and \"ai slop\" and deslop the mocca codebase and the app itself."
-}

@@ -70,13 +70,16 @@ fun ChatContent(
     val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
 
     // Track scroll direction for dock auto-hide
+    var previousScrollIndex by remember { mutableStateOf(0) }
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    
     LaunchedEffect(listState) {
         snapshotFlow { 
-            val info = listState.layoutInfo
             Pair(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) 
         }
-        .distinctUntilChanged()
-        .collect { (currentIndex, currentOffset) ->
+        .collect { pair ->
+            val currentIndex = pair.first
+            val currentOffset = pair.second
             // Determine scroll direction based on position changes
             val direction = when {
                 currentIndex > previousScrollIndex -> ScrollDirection.UP
