@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -25,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.focusBorder
 import com.mocca.app.ui.theme.innerShadow
 
 import androidx.compose.animation.animateContentSize
@@ -43,13 +46,15 @@ fun MoccaCard(
     isLoading: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.25f), blur = 12.dp)
             .border(borderWidth, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
             .then(if (isLoading) Modifier.shimmer() else Modifier)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding)
@@ -75,13 +80,15 @@ fun MoccaCardElevated(
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 16.dp)
             .border(borderWidth, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.primary.copy(alpha = 0.15f))
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.primary.copy(alpha = 0.15f), interactionSource = interactionSource)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
@@ -99,13 +106,15 @@ fun StatusMonitorCard(
     shape: Shape = AppShapes.extraLarge,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.15f), blur = 20.dp)
             .border(borderWidth, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
     ) {
         Column(
             modifier = Modifier
@@ -126,6 +135,7 @@ fun MoccaSectionCard(
     contentPadding: Dp = AppSpacing.lg,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .clip(AppShapes.medium)
@@ -137,7 +147,8 @@ fun MoccaSectionCard(
                     size = androidx.compose.ui.geometry.Size(leftBorderWidth.toPx(), size.height)
                 )
             }
-            .moccaClickable(onClick = onClick, pressedScale = 0.99f, rippleColor = AppColors.primary.copy(alpha = 0.05f))
+            .focusBorder(interactionSource, AppShapes.medium)
+            .moccaClickable(onClick = onClick, pressedScale = 0.99f, rippleColor = AppColors.primary.copy(alpha = 0.05f), interactionSource = interactionSource)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(start = contentPadding + leftBorderWidth, end = contentPadding, 
                      top = contentPadding, bottom = contentPadding),
@@ -158,6 +169,7 @@ fun MoccaSessionCard(
     shape: Shape = if (isActive) AppShapes.slanted else AppShapes.sessionCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -167,7 +179,8 @@ fun MoccaSessionCard(
                 shape
             )
             .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.97f)
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.97f, interactionSource = interactionSource)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
@@ -184,12 +197,14 @@ fun ModuleToolCard(
     shape: Shape = AppShapes.moduleCard,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
             .border(AppSpacing.borderThin, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.96f)
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.96f, interactionSource = interactionSource)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
@@ -206,12 +221,14 @@ fun SurfaceCard(
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
             .border(AppSpacing.borderThin, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
+            .focusBorder(interactionSource, shape)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content

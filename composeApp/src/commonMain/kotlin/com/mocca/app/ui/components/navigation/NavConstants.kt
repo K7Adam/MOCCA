@@ -126,8 +126,8 @@ object NavConstants {
     /** Status bar icon size (increased for visibility) */
     val StatusBarIconSize = 12.dp
     
-    /** Action toolbar button size (visual) - optimized for touch targets */
-    val ActionButtonSize = 40.dp
+    /** Action toolbar button size (visual) - WCAG 2.5.5 minimum 48dp */
+    val ActionButtonSize = 48.dp
     
     /** Send button height - optimized for touch targets */
     val SendButtonHeight = 32.dp

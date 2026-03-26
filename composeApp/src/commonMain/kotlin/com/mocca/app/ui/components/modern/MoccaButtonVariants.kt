@@ -2,10 +2,13 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.InteractionSource
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -64,13 +67,15 @@ fun MoccaIconButton(
     backgroundColor: Color = Color.Transparent,
     iconColor: Color = AppColors.onSurface,
     borderColor: Color? = null,
-    size: Dp = AppSpacing.iconButtonSizeCompact
+    size: Dp = AppSpacing.iconButtonSizeCompact,
+    interactionSource: InteractionSource = remember { MutableInteractionSource() }
 ) {
     val tintColor = if (enabled) iconColor else AppColors.onSurfaceVariant
     
     Box(
         modifier = modifier
             .size(size)
+            .focusBorder(interactionSource, shape = AppShapes.circle)
             .background(backgroundColor, AppShapes.circle)
             .then(
                 if (borderColor != null) {

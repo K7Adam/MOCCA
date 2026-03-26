@@ -41,6 +41,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.focusBorder
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
@@ -69,8 +70,7 @@ fun MoccaButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isFocused by interactionSource.collectIsFocusedAsState()
-    
+
     // State-of-the-art M3 Expressive scale motion
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
@@ -82,15 +82,13 @@ fun MoccaButton(
     val bgColor = if (enabled) backgroundColor else disabledBackgroundColor
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
-    
+
     Box(
         modifier = modifier
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
-            .then(
-                if (isFocused) Modifier.border(2.dp, AppColors.onSurface, AppShapes.pill) else Modifier
-            )
+            .focusBorder(interactionSource)
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -292,7 +290,6 @@ fun MoccaCompactButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val isFocused by interactionSource.collectIsFocusedAsState()
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
@@ -302,15 +299,13 @@ fun MoccaCompactButton(
     
     val bgColor = if (enabled) backgroundColor else AppColors.onSurfaceVariantDark
     val txtColor = if (enabled) textColor else AppColors.onSurfaceVariant
-    
+
     Box(
         modifier = modifier
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
-            .then(
-                if (isFocused) Modifier.border(2.dp, AppColors.onSurface, AppShapes.pill) else Modifier
-            )
+            .focusBorder(interactionSource)
             .then(
                 if (enabled) {
                     Modifier.clickable(

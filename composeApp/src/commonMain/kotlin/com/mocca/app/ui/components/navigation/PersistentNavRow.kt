@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.focusBorder
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Computer
@@ -102,13 +103,15 @@ fun PersistentNavRow(
                 val distanceFromProgress = abs(dragProgress - item.targetProgress)
                 val isSelected = distanceFromProgress < 0.25f
                 val proximity = 1f - (distanceFromProgress * 2f).coerceIn(0f, 1f)
+                val interactionSource = remember { MutableInteractionSource() }
 
                 Box(
                     modifier = Modifier
                         .weight(1f) // 1/3 width
                         .fillMaxHeight() // Fill available height in the row
+                        .focusBorder(interactionSource)
                         .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
+                            interactionSource = interactionSource,
                             indication = null, // No ripple for cleaner look
                             onClick = { onItemClick(item.panelState) }
                         )
