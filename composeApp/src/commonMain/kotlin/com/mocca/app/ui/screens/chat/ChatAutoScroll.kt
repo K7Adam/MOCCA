@@ -38,11 +38,11 @@ private const val BOTTOM_THRESHOLD = 2
 
 /**
  * Creates and manages auto-scroll state for a LazyColumn with reverseLayout.
- * 
+ *
  * With reverseLayout = true:
  * - Index 0 is the BOTTOM (newest messages)
  * - Higher indices are at the TOP (older messages)
- * 
+ *
  * @param listState The LazyListState to track
  * @param enabled Whether auto-scroll is enabled
  * @return AutoScrollState indicating current scroll position state
@@ -58,7 +58,7 @@ fun rememberAutoScrollState(
             else listState.firstVisibleItemIndex <= BOTTOM_THRESHOLD
         }
     }
-    
+
     val userHasScrolledUp by remember(listState) {
         derivedStateOf {
             if (!enabled) false
@@ -67,14 +67,14 @@ fun rememberAutoScrollState(
             }
         }
     }
-    
+
     val shouldAutoScroll by remember(listState) {
         derivedStateOf {
             if (!enabled) false
             else isAtBottom
         }
     }
-    
+
     return remember(isAtBottom, shouldAutoScroll, userHasScrolledUp) {
         AutoScrollState(
             isAtBottom = isAtBottom,
@@ -87,7 +87,7 @@ fun rememberAutoScrollState(
 /**
  * Auto-scroll effect that smoothly scrolls to bottom when new content arrives.
  * Respects user scroll position - won't auto-scroll if user is reading history.
- * 
+ *
  * @param listState The LazyListState to control
  * @param messageCount Current message count (triggers scroll when changed)
  * @param streamingText Current streaming text (triggers scroll when non-empty)
@@ -103,23 +103,23 @@ fun AutoScrollEffect(
     enabled: Boolean = true
 ) {
     val coroutineScope = rememberCoroutineScope()
-    
+
     var lastMessageCount by remember { mutableStateOf(messageCount) }
     var wasStreaming by remember { mutableStateOf(false) }
-    
+
     LaunchedEffect(messageCount, streamingText, enabled) {
         if (!enabled) return@LaunchedEffect
-        
+
         val messagesChanged = messageCount != lastMessageCount
         val startedStreaming = streamingText.isNotEmpty() && !wasStreaming
         val isStreaming = streamingText.isNotEmpty()
-        
+
         val shouldScroll = autoScrollState.shouldAutoScroll && (
-            messagesChanged || 
-            startedStreaming ||
-            (isStreaming && autoScrollState.isAtBottom)
-        )
-        
+                messagesChanged ||
+                        startedStreaming ||
+                        (isStreaming && autoScrollState.isAtBottom)
+                )
+
         if (shouldScroll) {
             coroutineScope.launch {
                 listState.animateScrollToItem(
@@ -128,7 +128,7 @@ fun AutoScrollEffect(
                 )
             }
         }
-        
+
         lastMessageCount = messageCount
         wasStreaming = streamingText.isNotEmpty()
     }
@@ -136,8 +136,20 @@ fun AutoScrollEffect(
 
 /**
  * Extension function to smoothly scroll to the bottom of a reverse-layout LazyColumn.
+ *
+ * For long distances, snap close to the latest content first, then animate the
+ * final approach so the interaction stays responsive instead of animating
+ * through a large portion of the list.
  */
 suspend fun LazyListState.animateScrollToBottom() {
+    val currentIndex = firstVisibleItemIndex
+    val longDistanceThreshold = 40
+    val animatedApproachIndex = 6
+
+    if (currentIndex > longDistanceThreshold) {
+        scrollToItem(index = animatedApproachIndex, scrollOffset = 0)
+    }
+
     animateScrollToItem(index = 0, scrollOffset = 0)
 }
 
