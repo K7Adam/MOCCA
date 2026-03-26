@@ -66,7 +66,7 @@ fun SharedNavIndicator(
                     IntOffset(xOffsetPx.roundToInt(), 0)
                 }
                 .background(
-                    color = AppColors.accentGreen,
+                    color = AppColors.primary,
                     shape = RoundedCornerShape(2.dp)
                 )
         )

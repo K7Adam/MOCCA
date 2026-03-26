@@ -74,7 +74,7 @@ fun QuoteRotator(
     versionText: String? = null,
     serverText: String? = null,
     isLoading: Boolean = false,       // Show loading indicator under ASCII art
-    loadingText: String = "LOADING..." // Text to show when loading
+    loadingText: String = "Loading..." // Text to show when loading
 ) {
     var currentIndex by remember { mutableStateOf(0) }
     
@@ -142,7 +142,7 @@ fun QuoteRotator(
         if (versionText != null || serverText != null) {
             val metaText = listOfNotNull(versionText, serverText).joinToString(" • ")
             Text(
-                text = metaText.uppercase(),
+                text = metaText,
                 color = AppColors.onSurfaceVariantDark,
                 style = AppTypography.labelSmall,
                 textAlign = TextAlign.Center

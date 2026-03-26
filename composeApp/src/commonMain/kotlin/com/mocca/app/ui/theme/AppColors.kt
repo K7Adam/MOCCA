@@ -52,6 +52,10 @@ object AppColors {
     val surfaceVariant = Color(0xFF272727) // Tone 20
     val onSurfaceVariant = Color(0xFFA0A0A0) // Tone 70
     
+    val surfaceTint = primary // Brand primary for surface tinting
+    val inverseSurface = Color(0xFFE8E8E8) // Tone 90
+    val inverseOnSurface = Color(0xFF1A1A1A) // Tone 10
+    
     val surfaceDim = Color(0xFF0F0F0F) // Tone 6
     val surfaceBright = Color(0xFF383838) // Tone 24
     
@@ -67,7 +71,7 @@ object AppColors {
 
     val moduleBackground = surfaceContainer
 
-    val outline = Color(0xFF333333) // Tone 25
+    val outline = Color(0xFF707070) // Tone 44
     val outlineVariant = Color(0xFF444444) // Tone 35
 
     val error = Color(0xFFEF5350)
@@ -93,6 +97,12 @@ object AppColors {
     val statusWaiting = Color(0xFFFFB74D)
     val statusThinking = Color(0xFF8B9DC3)
     val statusProcessing = Color(0xFF8B9DC3)
+
+    // Semantic Status Colors (explicit tokens for status semantics)
+    val statusSuccess = Color(0xFF4CAF50)
+    val statusError = Color(0xFFEF5350)
+    val statusWarning = Color(0xFFFFB74D)
+    val statusInfo = Color(0xFF8B9DC3)
 
     val white = Color(0xFFFFFFFF)
     val greyLight = outline // Alias for consistency
@@ -129,6 +139,24 @@ object AppColors {
     val shimmerBase = Color(0xFF202020)
     val shimmerHighlight = Color(0xFF383838)
     val shimmerAccent = Color(0x158B9DC3)
+}
+
+/**
+ * Semantic state-layer opacity tokens for Material 3 Expressive.
+ * Used to replace hard-coded alpha values across components.
+ */
+@Immutable
+object AppOpacity {
+    const val hover = 0.08f
+    const val focus = 0.12f
+    const val press = 0.12f
+    const val drag = 0.16f
+    const val selected = 0.12f
+    const val disabled = 0.38f
+    const val subtle = 0.05f
+    const val medium = 0.15f
+    const val prominent = 0.30f
+    const val scrim = 0.80f
 }
 
 /**

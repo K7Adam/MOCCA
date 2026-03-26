@@ -35,7 +35,7 @@ fun ServersSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "SERVERS",
+            text = "Servers",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
@@ -56,7 +56,7 @@ fun ServersSection(
         }
         
         MoccaButton(
-            text = "ADD SERVER",
+            text = "Add server",
             onClick = onAddNewServer,
             modifier = Modifier.fillMaxWidth(),
             height = AppSpacing.buttonHeightCompact

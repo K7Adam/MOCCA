@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -57,7 +58,7 @@ fun MoccaButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.primary,
     textColor: Color = AppColors.background,
     disabledBackgroundColor: Color = AppColors.onSurfaceVariantDark,
     disabledTextColor: Color = AppColors.onSurfaceVariant,
@@ -68,6 +69,7 @@ fun MoccaButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
     
     // State-of-the-art M3 Expressive scale motion
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
@@ -86,6 +88,9 @@ fun MoccaButton(
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
+            .then(
+                if (isFocused) Modifier.border(2.dp, AppColors.onSurface, AppShapes.pill) else Modifier
+            )
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -215,6 +220,7 @@ fun MoccaOutlinedButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.94f else 1f,
@@ -222,7 +228,10 @@ fun MoccaOutlinedButton(
         label = "buttonScaleOutlined"
     )
     
-    val brdColor = if (enabled) borderColor else disabledBorderColor
+    val brdColor = if (enabled) {
+        if (isFocused) AppColors.primary else borderColor
+    } else disabledBorderColor
+    val currentBorderWidth = if (isFocused) 2.dp else borderWidth
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
     
@@ -231,7 +240,7 @@ fun MoccaOutlinedButton(
             .height(height)
             .scale(scale)
             .background(Color.Transparent, AppShapes.pill)
-            .border(borderWidth, brdColor, AppShapes.pill)
+            .border(currentBorderWidth, brdColor, AppShapes.pill)
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -283,6 +292,7 @@ fun MoccaCompactButton(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val isFocused by interactionSource.collectIsFocusedAsState()
     val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
@@ -298,6 +308,9 @@ fun MoccaCompactButton(
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
+            .then(
+                if (isFocused) Modifier.border(2.dp, AppColors.onSurface, AppShapes.pill) else Modifier
+            )
             .then(
                 if (enabled) {
                     Modifier.clickable(

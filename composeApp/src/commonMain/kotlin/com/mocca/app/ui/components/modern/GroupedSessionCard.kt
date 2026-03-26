@@ -95,7 +95,7 @@ fun GroupedSessionCard(
             val borderModifier = if (isRunning) {
                 parentModifier.border(
                     width = 1.dp,
-                    color = AppColors.accentGreen,
+                    color = AppColors.primary,
                     shape = AppShapes.sessionCard
                 )
             } else {
@@ -112,7 +112,7 @@ fun GroupedSessionCard(
                         if (isActive) {
                             Modifier.drawBehind {
                                 drawRect(
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.primary,
                                     topLeft = Offset(0f, 0f),
                                     size = androidx.compose.ui.geometry.Size(
                                         AppSpacing.activeIndicatorWidth.toPx(),
@@ -187,7 +187,7 @@ fun GroupedSessionCard(
                                 Box(
                                     modifier = Modifier
                                         .size(6.dp)
-                                        .background(AppColors.accentGreen, CircleShape)
+                                        .background(AppColors.primary, CircleShape)
                                 )
                             }
                         }
@@ -317,7 +317,7 @@ private fun StackedChildPreview(
                     .clip(AppShapes.small)
                     .background(
                         if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen
+                            AppColors.primary
                         } else {
                             AppColors.surfaceContainerHigh
                         }
@@ -325,7 +325,7 @@ private fun StackedChildPreview(
                     .border(
                         width = 1.dp,
                         color = if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.accentGreen
+                            AppColors.primary
                         } else {
                             AppColors.outline.copy(alpha = 0.3f)
                         },
@@ -355,12 +355,12 @@ private fun ChildSessionCard(
             .fillMaxWidth()
             .clip(AppShapes.medium)
             .background(
-                if (isRunning) AppColors.accentGreen.copy(alpha = 0.1f)
+                if (isRunning) AppColors.primary.copy(alpha = 0.1f)
                 else AppColors.surfaceVariant
             )
             .border(
                 width = 1.dp,
-                color = if (isRunning) AppColors.accentGreen.copy(alpha = 0.3f)
+                color = if (isRunning) AppColors.primary.copy(alpha = 0.3f)
                 else AppColors.outline,
                 shape = AppShapes.medium
             )

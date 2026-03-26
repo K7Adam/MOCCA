@@ -76,7 +76,7 @@ internal fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
                         modifier = Modifier.size(16.dp)
                     )
                     Text(
-                        text = message.uppercase(),
+                        text = message,
                         color = AppColors.background,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
@@ -92,21 +92,21 @@ internal fun BranchActionDialog(branch: String, onDismiss: () -> Unit, onCheckou
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("BRANCH ACTIONS", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Branch actions", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             Column {
                 Text(text = branch, color = AppColors.statusOnline, style = AppTypography.bodyMedium, modifier = Modifier.padding(vertical = AppSpacing.md))
                 Spacer(modifier = Modifier.height(AppSpacing.md))
-                GodButton(text = "CHECKOUT", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
+                GodButton(text = "Checkout", onClick = onCheckout, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                GodButton(text = "MERGE INTO CURRENT", onClick = onMerge, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.onSurface, modifier = Modifier.fillMaxWidth())
+                GodButton(text = "Merge into current", onClick = onMerge, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.onSurface, modifier = Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                GodButton(text = "REBASE CURRENT ONTO", onClick = onRebase, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.onSurface, modifier = Modifier.fillMaxWidth())
+                GodButton(text = "Rebase current onto", onClick = onRebase, containerColor = AppColors.white.copy(alpha = 0.05f), contentColor = AppColors.onSurface, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {},
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
+            MoccaTextButton(text = "Cancel", onClick = onDismiss, modifier = Modifier.fillMaxWidth())
         },
         shape = AppShapes.dialog
     )
@@ -117,7 +117,7 @@ internal fun TerminalCommitDialog(message: String, onMessageChange: (String) -> 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("COMMIT CHANGES", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Commit changes", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             MoccaInput(
                 value = message,
@@ -127,10 +127,10 @@ internal fun TerminalCommitDialog(message: String, onMessageChange: (String) -> 
             )
         },
         confirmButton = {
-            GodButton(text = "COMMIT", onClick = onCommit, enabled = message.isNotBlank())
+            GodButton(text = "Commit", onClick = onCommit, enabled = message.isNotBlank())
         },
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "Cancel", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -141,7 +141,7 @@ internal fun CreateStashDialog(message: String, onMessageChange: (String) -> Uni
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE STASH", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Create stash", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             MoccaInput(
                 value = message,
@@ -151,10 +151,10 @@ internal fun CreateStashDialog(message: String, onMessageChange: (String) -> Uni
             )
         },
         confirmButton = {
-            GodButton(text = "STASH", onClick = onCreate)
+            GodButton(text = "Stash", onClick = onCreate)
         },
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "Cancel", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -168,19 +168,19 @@ internal fun AddRemoteDialog(onAdd: (String, String) -> Unit, onDismiss: () -> U
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("ADD REMOTE", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Add remote", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             Column {
-                MoccaInput(value = name, onValueChange = { name = it }, label = "REMOTE NAME", placeholder = "origin")
+                MoccaInput(value = name, onValueChange = { name = it }, label = "Remote name", placeholder = "origin")
                 Spacer(modifier = Modifier.height(AppSpacing.md))
-                MoccaInput(value = url, onValueChange = { url = it }, label = "REMOTE URL", placeholder = "https://github.com/...")
+                MoccaInput(value = url, onValueChange = { url = it }, label = "Remote URL", placeholder = "https://github.com/...")
             }
         },
         confirmButton = {
-            GodButton(text = "ADD", onClick = { onAdd(name, url) }, enabled = name.isNotBlank() && url.isNotBlank())
+            GodButton(text = "Add", onClick = { onAdd(name, url) }, enabled = name.isNotBlank() && url.isNotBlank())
         },
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "Cancel", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -194,19 +194,19 @@ internal fun CreateTagDialog(onAdd: (String, String) -> Unit, onDismiss: () -> U
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE TAG", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Create tag", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             Column {
-                MoccaInput(value = name, onValueChange = { name = it }, label = "TAG NAME", placeholder = "v1.0.0")
+                MoccaInput(value = name, onValueChange = { name = it }, label = "Tag name", placeholder = "v1.0.0")
                 Spacer(modifier = Modifier.height(AppSpacing.md))
-                MoccaInput(value = msg, onValueChange = { msg = it }, label = "TAG MESSAGE", placeholder = "Release version 1.0.0")
+                MoccaInput(value = msg, onValueChange = { msg = it }, label = "Tag message", placeholder = "Release version 1.0.0")
             }
         },
         confirmButton = {
-            GodButton(text = "CREATE", onClick = { onAdd(name, msg) }, enabled = name.isNotBlank())
+            GodButton(text = "Create", onClick = { onAdd(name, msg) }, enabled = name.isNotBlank())
         },
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "Cancel", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )
@@ -219,20 +219,20 @@ internal fun CreateBranchDialog(onDismiss: () -> Unit, onCreate: (String) -> Uni
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = AppColors.surfaceContainerHigh,
-        title = { Text("CREATE BRANCH", style = AppTypography.labelLarge, color = AppColors.onSurface) },
+        title = { Text("Create branch", style = AppTypography.labelLarge, color = AppColors.onSurface) },
         text = {
             MoccaInput(
                 value = name,
                 onValueChange = { name = it },
-                label = "BRANCH NAME",
+                label = "Branch name",
                 placeholder = "feature/new-feature"
             )
         },
         confirmButton = {
-            GodButton(text = "CREATE & CHECKOUT", onClick = { onCreate(name) }, enabled = name.isNotBlank())
+            GodButton(text = "Create & checkout", onClick = { onCreate(name) }, enabled = name.isNotBlank())
         },
         dismissButton = {
-            MoccaTextButton(text = "CANCEL", onClick = onDismiss)
+            MoccaTextButton(text = "Cancel", onClick = onDismiss)
         },
         shape = AppShapes.dialog
     )

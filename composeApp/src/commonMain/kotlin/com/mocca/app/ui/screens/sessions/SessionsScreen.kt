@@ -61,7 +61,7 @@ class SessionsScreen : Screen {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 ModernHeader(
-                    text = "SESSIONS", 
+                    text = "Sessions", 
                     modifier = Modifier.weight(1f)
                 )
                 
@@ -75,7 +75,7 @@ class SessionsScreen : Screen {
                         icon = Icons.Default.Search,
                         onClick = { screenModel.toggleSearch() },
                         contentDescription = "Search",
-                        iconColor = if (state.isSearchVisible) AppColors.statusOnline else AppColors.onSurfaceVariant
+                        iconColor = if (state.isSearchVisible) AppColors.primary else AppColors.onSurfaceVariant
                     )
                     MoccaIconButton(
                         icon = Icons.Default.Settings,
@@ -193,7 +193,7 @@ class SessionsScreen : Screen {
                                     )
                                     Spacer(modifier = Modifier.height(AppSpacing.md))
                                     Text(
-                                        text = "NO_RESULTS_FOR: \"${state.searchQuery}\"",
+                                        text = "No results for \"${state.searchQuery}\"",
                                         style = AppTypography.bodyMedium,
                                         color = AppColors.onSurfaceVariantLight
                                     )
@@ -226,7 +226,7 @@ class SessionsScreen : Screen {
                                             .padding(AppSpacing.md)
                                     ) {
                                         MoccaButton(
-                                            text = "NEW SESSION",
+                                            text = "New session",
                                             onClick = { screenModel.createSession() },
                                             icon = Icons.Default.Add
                                         )

@@ -5,31 +5,64 @@ appId: com.mocca.app
 tags:
   - navigation
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/common/launch_app.yaml
 
 - extendedWaitUntil:
-    visible: ".*"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 15000
 
-# Swipe left to reveal dashboard panel
-- swipe:
-    direction: LEFT
-    duration: 300
+# Open tools panel via bottom navigation
+- tapOn: "TOOLS"
 
-- waitForAnimationToEnd
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Scroll dashboard to quick actions row
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
 
 # Tap on Terminal button
-- tapOn:
-    text: "Terminal"
-    optional: true
-
-- tapOn:
-    id: ".*terminal.*"
-    optional: true
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(Terminal|TERMINAL)"
+          retryTapIfNoChange: true
 
 - extendedWaitUntil:
-    visible: ".*"
-    timeout: 5000
+    visible: "TERMINAL"
+    timeout: 10000
 
 - takeScreenshot: terminal_screen

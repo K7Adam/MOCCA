@@ -5,31 +5,28 @@ appId: com.mocca.app
 tags:
   - navigation
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/common/launch_app.yaml
 
 - extendedWaitUntil:
-    visible: ".*"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 15000
 
-# Swipe left to reveal dashboard panel
-- swipe:
-    direction: LEFT
-    duration: 300
+# Open tools panel via bottom navigation
+- tapOn: "TOOLS"
 
-- waitForAnimationToEnd
+- waitForAnimationToEnd:
+    timeout: 2000
 
 # Tap on Files button
-- tapOn:
-    text: "Files"
-    optional: true
-
-- tapOn:
-    id: ".*files.*"
-    optional: true
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "Files"
+          retryTapIfNoChange: true
 
 - extendedWaitUntil:
-    visible: ".*"
-    timeout: 5000
+    visible: "Files"
+    timeout: 10000
 
 - takeScreenshot: files_screen

@@ -6,6 +6,5 @@ appId: com.mocca.app
 - runFlow: ../flows/onboarding/app_launch.yaml
 - runFlow: ../flows/sessions/create_new_session.yaml
 - runFlow: ../flows/navigation/navigate_to_settings.yaml
-- runFlow: ../flows/navigation/navigate_to_files.yaml
 - runFlow: ../flows/navigation/navigate_to_git.yaml
 - runFlow: ../flows/navigation/navigate_to_terminal.yaml

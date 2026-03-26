@@ -69,7 +69,7 @@ fun TerminalServerCard(
     onDelete: () -> Unit,
     onCheckConnection: () -> Unit
 ) {
-    val borderColor = if (isActive) AppColors.statusOnline else null
+    val borderColor = if (isActive) AppColors.primary else null
     
     Column(
         modifier = Modifier
@@ -86,20 +86,20 @@ fun TerminalServerCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onActivate)
-                .background(if (isActive) AppColors.statusOnline.copy(alpha = 0.1f) else Color.Transparent)
+                .background(if (isActive) AppColors.primary.copy(alpha = 0.1f) else Color.Transparent)
                 .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically
         ) {
             StatusDot(
-                color = if (isActive) AppColors.statusOnline else AppColors.onSurfaceVariant,
+                color = if (isActive) AppColors.primary else AppColors.onSurfaceVariant,
                 size = 12.dp
             )
             Spacer(modifier = Modifier.width(AppSpacing.md))
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = server.name.uppercase(),
-                    color = if (isActive) AppColors.statusOnline else AppColors.onSurface,
+                    text = server.name,
+                    color = if (isActive) AppColors.primary else AppColors.onSurface,
                     style = AppTypography.bodyMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -112,8 +112,8 @@ fun TerminalServerCard(
             
             if (isActive) {
                 Text(
-                    text = "SELECTED",
-                    color = AppColors.statusOnline,
+                    text = "Selected",
+                    color = AppColors.primary,
                     style = AppTypography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -166,12 +166,14 @@ fun TerminalServerCard(
             MoccaIconButton(
                 icon = Icons.Default.Edit,
                 onClick = onEdit,
-                iconColor = AppColors.onSurfaceVariant
+                iconColor = AppColors.onSurfaceVariant,
+                contentDescription = "Edit server"
             )
             MoccaIconButton(
                 icon = Icons.Default.Delete,
                 onClick = onDelete,
-                iconColor = AppColors.error
+                iconColor = AppColors.error,
+                contentDescription = "Delete server"
             )
         }
     }
@@ -201,7 +203,7 @@ fun TerminalServerEditDialog(
         shape = AppShapes.dialog,
         title = {
             Text(
-                text = if (isNewServer) "ADD SERVER" else "EDIT SERVER",
+                text = if (isNewServer) "Add server" else "Edit server",
                 color = AppColors.onSurface,
                 style = AppTypography.headlineSmall
             )
@@ -213,7 +215,7 @@ fun TerminalServerEditDialog(
                 MoccaInput(
                     value = name,
                     onValueChange = { name = it },
-                    label = "SERVER NAME",
+                    label = "Server name",
                     placeholder = "My Server",
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -224,7 +226,7 @@ fun TerminalServerEditDialog(
                 MoccaInput(
                     value = host,
                     onValueChange = { host = it },
-                    label = "HOST",
+                    label = "Host",
                     placeholder = NetworkConfig.DEFAULT_HOST_IP,
                     hint = "Tailscale hostname, LAN IP, or localhost",
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -236,7 +238,7 @@ fun TerminalServerEditDialog(
                 MoccaInput(
                     value = port,
                     onValueChange = { port = it },
-                    label = "PORT",
+                    label = "Port",
                     placeholder = "4242",
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -247,7 +249,7 @@ fun TerminalServerEditDialog(
                 MoccaInput(
                     value = username,
                     onValueChange = { username = it },
-                    label = "USERNAME",
+                    label = "Username",
                     placeholder = NetworkConfig.DEFAULT_USERNAME,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
@@ -258,7 +260,7 @@ fun TerminalServerEditDialog(
                 MoccaInput(
                     value = password,
                     onValueChange = { password = it },
-                    label = "PASSWORD",
+                    label = "Password",
                     placeholder = "Leave empty if none",
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
@@ -279,7 +281,7 @@ fun TerminalServerEditDialog(
         },
         confirmButton = {
             MoccaButton(
-                text = "SAVE",
+                text = "Save",
                 onClick = {
                     onSave(
                         server.copy(
@@ -297,7 +299,7 @@ fun TerminalServerEditDialog(
         },
         dismissButton = {
             MoccaTextButton(
-                text = "CANCEL",
+                text = "Cancel",
                 onClick = onDismiss
             )
         }

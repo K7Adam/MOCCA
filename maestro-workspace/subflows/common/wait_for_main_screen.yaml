@@ -3,7 +3,7 @@
 # Usage: runFlow: subflows/common/wait_for_main_screen.yaml
 appId: com.mocca.app
 ---
-# Wait for either the quote rotator (empty state) or chat content
+# Wait for a stable app landmark (main panel or onboarding)
 - extendedWaitUntil:
-    visible: "SEND"
-    timeout: 60000
+    visible: "(SEND|SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000

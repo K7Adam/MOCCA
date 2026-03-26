@@ -58,7 +58,7 @@ internal fun AttachmentPreviewChip(
             .clip(AppShapes.medium)
             .border(
                 AppSpacing.borderThin,
-                if (file.isImage) AppColors.accentGreen.copy(alpha = 0.4f) else AppColors.outline,
+                if (file.isImage) AppColors.primary.copy(alpha = 0.4f) else AppColors.outline,
                 AppShapes.medium
             )
             .background(AppColors.surface, AppShapes.medium)

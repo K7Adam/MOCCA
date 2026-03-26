@@ -26,17 +26,17 @@ fun ConnectionSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "CONNECTION",
+            text = "Connection",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "NETWORK") {
+        ModuleCard(title = "Network") {
             // Auto Reconnect
             ModuleRowItem(
-                title = "AUTO RECONNECT",
+                title = "Auto reconnect",
                 subtitle = "Reconnect when connection drops",
                 isEnabled = preferences.autoReconnect,
                 onToggle = { onSetAutoReconnect(!preferences.autoReconnect) }
@@ -46,7 +46,7 @@ fun ConnectionSection(
             
             // Data Saver Mode
             ModuleRowItem(
-                title = "DATA SAVER",
+                title = "Data saver",
                 subtitle = "Reduce background network usage",
                 isEnabled = preferences.dataSaverMode,
                 onToggle = { onSetDataSaverMode(!preferences.dataSaverMode) }

@@ -23,14 +23,14 @@ fun SkillsSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "SKILLS",
+            text = "Skills",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "SERVER SKILLS") {
+        ModuleCard(title = "Server skills") {
             Text(
                 text = "View agent skills registered on the OpenCode server.",
                 style = AppTypography.labelSmall,
@@ -38,7 +38,7 @@ fun SkillsSection(
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
-                text = "BROWSE SKILLS",
+                text = "Browse skills",
                 onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
                 height = AppSpacing.buttonHeightCompact
             )

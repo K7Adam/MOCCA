@@ -236,7 +236,7 @@ private fun NotGitRepoScreen() {
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                text = "NOT A GIT REPOSITORY",
+                text = "Not a git repository",
                 style = AppTypography.headlineSmall,
                 color = AppColors.white.copy(alpha = 0.4f)
             )

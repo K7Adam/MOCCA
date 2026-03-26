@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.mocca.app.ui.theme.*
 
 @Composable
@@ -77,6 +79,15 @@ fun MoccaIconButton(
                     Modifier
                 }
             )
+            .then(
+                if (contentDescription != null) {
+                    androidx.compose.ui.Modifier.semantics {
+                        this.contentDescription = contentDescription
+                    }
+                } else {
+                    androidx.compose.ui.Modifier
+                }
+            )
             .moccaClickable(
                 onClick = onClick, 
                 pressedScale = 0.9f, 
@@ -108,6 +119,15 @@ fun MoccaFab(
         modifier = modifier
             .size(size)
             .background(backgroundColor, AppShapes.circle)
+            .then(
+                if (contentDescription != null) {
+                    androidx.compose.ui.Modifier.semantics {
+                        this.contentDescription = contentDescription
+                    }
+                } else {
+                    androidx.compose.ui.Modifier
+                }
+            )
             .moccaClickable(onClick = onClick, pressedScale = 0.95f, rippleColor = Color.Black.copy(alpha = 0.15f)),
         contentAlignment = Alignment.Center
     ) {

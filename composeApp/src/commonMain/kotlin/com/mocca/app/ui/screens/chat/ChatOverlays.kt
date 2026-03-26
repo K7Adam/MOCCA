@@ -60,15 +60,15 @@ internal fun RevertedSessionBanner(onResume: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(
-                        text = "VIEWING OLDER VERSION",
+                        text = "Viewing older version",
                         style = AppTypography.labelSmall,
                         color = AppColors.onSurfaceVariant
                     )
                 }
                 MoccaTextButton(
-                    text = "RESUME LATEST",
+                    text = "Resume latest",
                     onClick = onResume,
-                    textColor = AppColors.accentGreen
+                    textColor = AppColors.primary
                 )
             }
         }
@@ -140,7 +140,7 @@ internal fun SessionDisposedBanner(
             )
             Column {
                 Text(
-                    text = "SESSION DISPOSED",
+                    text = "Session disposed",
                     style = AppTypography.labelSmall,
                     color = AppColors.warning,
                     fontWeight = FontWeight.Bold

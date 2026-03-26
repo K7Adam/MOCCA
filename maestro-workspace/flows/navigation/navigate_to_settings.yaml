@@ -6,36 +6,46 @@ tags:
   - smoke
   - navigation
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/common/launch_app.yaml
 
 # Wait for app to be ready
 - extendedWaitUntil:
-    visible: ".*"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 15000
 
-# Swipe left to reveal dashboard panel (right panel)
-- swipe:
-    direction: LEFT
-    duration: 300
+# Open tools panel via bottom navigation
+- tapOn: "TOOLS"
 
-# Wait for panel animation
-- waitForAnimationToEnd
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Scroll dashboard to quick actions row
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
+
+- swipe:
+    direction: UP
+    duration: 450
+
+- waitForAnimationToEnd:
+    timeout: 1500
 
 # Tap on Settings button
-- tapOn:
-    text: "Settings"
-    optional: true
-
-# Alternative: tap by id pattern
-- tapOn:
-    id: ".*settings.*"
-    optional: true
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(Settings|SETTINGS)"
+          retryTapIfNoChange: true
 
 # Wait for settings screen
 - extendedWaitUntil:
-    visible: ".*"
-    timeout: 5000
+    visible: "SETTINGS"
+    timeout: 10000
 
 # Take screenshot
 - takeScreenshot: settings_screen

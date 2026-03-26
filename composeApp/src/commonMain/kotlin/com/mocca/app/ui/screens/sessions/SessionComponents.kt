@@ -59,7 +59,7 @@ internal fun ModernConnectionProgressContent(
         )
         Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
-            text = message.uppercase(),
+            text = message,
             style = AppTypography.labelSmall,
             color = AppColors.onSurfaceVariantLight
         )
@@ -76,7 +76,7 @@ internal fun ModernEmptySessionsContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(Res.string.no_sessions).uppercase(),
+            text = stringResource(Res.string.no_sessions),
             style = AppTypography.headlineSmall,
             color = AppColors.onSurface
         )
@@ -89,7 +89,7 @@ internal fun ModernEmptySessionsContent(
         )
         Spacer(modifier = Modifier.height(AppSpacing.lg))
         MoccaButton(
-            text = "NEW SESSION",
+            text = "New session",
             onClick = onCreateClick,
             icon = Icons.Default.Add,
             modifier = Modifier.fillMaxWidth(0.7f)
@@ -136,8 +136,8 @@ internal fun MoccaSessionCard(
     onClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
-    val borderColor = if (isSelected) AppColors.statusOnline else AppColors.outline
-    val bgColor = if (isSelected) AppColors.statusOnline.copy(alpha = 0.05f) else Color.Transparent
+    val borderColor = if (isSelected) AppColors.primary else AppColors.outline
+    val bgColor = if (isSelected) AppColors.primary.copy(alpha = 0.05f) else Color.Transparent
     
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
@@ -169,7 +169,7 @@ internal fun MoccaSessionCard(
         ) {
             // Active indicator dot
             if (isSelected) {
-                StatusDot(color = AppColors.statusOnline, size = 6.dp)
+                StatusDot(color = AppColors.primary, size = 6.dp)
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
             }
             
@@ -177,9 +177,9 @@ internal fun MoccaSessionCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = (session.title ?: stringResource(Res.string.untitled_session)).uppercase(),
+                    text = session.title ?: stringResource(Res.string.untitled_session),
                     style = AppTypography.labelMedium,
-                    color = if (isSelected) AppColors.statusOnline else AppColors.onSurface,
+                    color = if (isSelected) AppColors.primary else AppColors.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     fontWeight = FontWeight.Bold
@@ -293,7 +293,7 @@ internal fun ModernSearchBar(
                 textStyle = AppTypography.labelSmall.copy(
                     color = AppColors.onSurface
                 ),
-                cursorBrush = SolidColor(AppColors.accentGreen),
+                cursorBrush = SolidColor(AppColors.primary),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { /* Already filtering live */ }),
@@ -301,7 +301,7 @@ internal fun ModernSearchBar(
                     Box {
                         if (query.isEmpty()) {
                             Text(
-                                text = "SEARCH...",
+                                text = "Search...",
                                 style = AppTypography.labelSmall,
                                 color = AppColors.onSurfaceVariant
                             )
@@ -345,7 +345,7 @@ internal fun TerminalNotConnectedContent(
         )
         Spacer(modifier = Modifier.height(AppSpacing.md))
         Text(
-            text = title.uppercase(),
+            text = title,
             style = AppTypography.headlineSmall,
             color = AppColors.onSurface
         )
@@ -361,14 +361,14 @@ internal fun TerminalNotConnectedContent(
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             MoccaButton(
-                text = "CONFIGURE",
+                text = "Configure",
                 onClick = onConfigureClick,
                 icon = Icons.Default.Settings,
                 modifier = Modifier.weight(1f)
             )
             if (onRetryClick != null) {
                 MoccaOutlinedButton(
-                    text = "RETRY",
+                    text = "Retry",
                     onClick = onRetryClick,
                     icon = Icons.Default.Refresh,
                     modifier = Modifier.weight(1f)

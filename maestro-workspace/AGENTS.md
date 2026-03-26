@@ -26,11 +26,23 @@ maestro-workspace/
 ## RUNNING TESTS
 Tests MUST be executed on an Android Emulator to ensure the app can reach the host via `10.0.2.2`.
 
+### Local Agent Workflow (VISIBLE emulator)
+Use visible emulator first, then run tests:
+```powershell
+.\maestro-workspace\start-emulator.ps1
+.\maestro-workspace\run-emulator-tests.ps1 maestro-workspace/testplans/smoke.yaml
+```
+
 ### Recommended Execution
-Use the helper script to automatically target the first available emulator:
+Use the helper script to target a running emulator:
 ```powershell
 .\maestro-workspace\run-emulator-tests.ps1 maestro-workspace/testplans/smoke.yaml
 ```
+
+> `run-emulator-tests.ps1` requires a running emulator instance.
+
+### CI Workflow (HEADLESS emulator)
+CI uses `.github/workflows/maestro-tests.yml` with `reactivecircus/android-emulator-runner` and headless emulator flags.
 
 ### Manual Execution
 ```bash

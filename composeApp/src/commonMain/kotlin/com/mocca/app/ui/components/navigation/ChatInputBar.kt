@@ -200,7 +200,7 @@ fun ChatInputBar(
                             modifier = Modifier.fillMaxWidth(),
                             enabled = inputEnabled,
                             textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
-                            cursorBrush = SolidColor(AppColors.accentGreen),
+                            cursorBrush = SolidColor(AppColors.primary),
                             interactionSource = interactionSource,
                             decorationBox = { innerTextField ->
                                 Box {
@@ -264,7 +264,7 @@ fun ChatInputBar(
                         ) {
                             Text(
                                 text = "/",
-                                color = if (showCommandPalette) AppColors.accentGreen else AppColors.onSurfaceVariant,
+                                color = if (showCommandPalette) AppColors.primary else AppColors.onSurfaceVariant,
                                 style = AppTypography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )

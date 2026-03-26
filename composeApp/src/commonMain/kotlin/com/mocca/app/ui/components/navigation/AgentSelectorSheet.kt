@@ -91,7 +91,7 @@ fun AgentSelectorBottomSheet(
                     Text(
                         text = "// AVAILABLE",
                         style = AppTypography.labelSmall,
-                        color = AppColors.accentGreen,
+                        color = AppColors.primary,
                         modifier = Modifier.padding(start = AppSpacing.sm, top = AppSpacing.sm, bottom = AppSpacing.xs)
                     )
                 }
@@ -105,7 +105,7 @@ fun AgentSelectorBottomSheet(
                                 onModeSelected(mode.id)
                                 onDismiss()
                             }
-                            .background(if (isSelected) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.background)
+                            .background(if (isSelected) AppColors.primary.copy(alpha = 0.2f) else AppColors.background)
                             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
@@ -113,11 +113,11 @@ fun AgentSelectorBottomSheet(
                         Text(
                             text = "> ${mode.name.uppercase()}",
                             style = AppTypography.bodySmall,
-                            color = if (isSelected) AppColors.accentGreen else AppColors.onSurface
+                            color = if (isSelected) AppColors.primary else AppColors.onSurface
                         )
                         
                         if (isSelected) {
-                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.accentGreen, modifier = Modifier.size(16.dp))
+                            Icon(Icons.Default.Check, contentDescription = "Selected", tint = AppColors.primary, modifier = Modifier.size(16.dp))
                         }
                     }
                 }

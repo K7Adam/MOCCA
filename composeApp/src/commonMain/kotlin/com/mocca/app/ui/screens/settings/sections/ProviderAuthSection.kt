@@ -39,14 +39,14 @@ fun ProviderAuthSection(
     
     Column(modifier = modifier) {
         Text(
-            text = "PROVIDER AUTHENTICATION",
+            text = "Provider authentication",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "CONFIGURE PROVIDERS") {
+        ModuleCard(title = "Configure providers") {
             commonProviders.forEachIndexed { index, providerId ->
                 var isExpanded by remember { mutableStateOf(false) }
                 var manualKey by remember { mutableStateOf("") }
@@ -66,7 +66,7 @@ fun ProviderAuthSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = providerId.uppercase(),
+                        text = providerId.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
@@ -88,7 +88,7 @@ fun ProviderAuthSection(
                             // OAuth Button
                             if (methods?.any { it.type == "oauth" } == true) {
                                 MoccaButton(
-                                    text = "CONNECT (OAUTH)",
+                                    text = "Connect (OAuth)",
                                     onClick = { 
                                         onStartOAuth(providerId) { url ->
                                             openUrl(url)
@@ -98,7 +98,7 @@ fun ProviderAuthSection(
                                     height = AppSpacing.buttonHeightCompact
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
-                                Text("- OR -", color = AppColors.outline, style = AppTypography.labelSmall)
+                                Text("— or —", color = AppColors.outline, style = AppTypography.labelSmall)
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                             }
                             
@@ -106,19 +106,19 @@ fun ProviderAuthSection(
                             MoccaInput(
                                 value = manualKey,
                                 onValueChange = { manualKey = it },
-                                placeholder = "API KEY",
+                                placeholder = "API key",
                                 label = null
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             MoccaCompactButton(
-                                text = "SAVE KEY",
+                                text = "Save key",
                                 onClick = { onSaveManualKey(providerId, manualKey) },
                                 enabled = manualKey.isNotBlank(),
                                 height = AppSpacing.buttonHeightSmall
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             MoccaCompactButton(
-                                text = "REMOVE AUTH",
+                                text = "Remove auth",
                                 onClick = { onRemoveAuth(providerId) },
                                 height = AppSpacing.buttonHeightSmall,
                                 backgroundColor = AppColors.error.copy(alpha = 0.15f),

@@ -1,0 +1,96 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "GIT STATUS"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: "(STATUS|NOT A GIT REPOSITORY)"
+    timeout: 10000
+- takeScreenshot: catalog_screen_git_status
+
+- tapOn: "BRANCHES"
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_git_branches
+
+- tapOn: "LOG"
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_git_log
+
+- tapOn: "REMOTES"
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_git_remotes
+
+- tapOn: "TAGS"
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_git_tags
+
+- back
+- waitForAnimationToEnd:
+    timeout: 1200
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 1200
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(Terminal|TERMINAL)"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: ".*TERMINAL.*"
+    timeout: 10000
+- takeScreenshot: catalog_screen_terminal

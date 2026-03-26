@@ -48,7 +48,7 @@ import com.mocca.app.ui.theme.innerShadow
 /**
  * Module card for the modular dashboard.
  * Contains a header with icon and optional action button, plus content area.
- * Now using M3 Expressive Gem shape and inner shadow.
+ * Uses the dedicated moduleCard shape to remain visually distinct from standard cards.
  */
 @Composable
 fun ModuleCard(
@@ -61,10 +61,10 @@ fun ModuleCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(AppShapes.large)
-            .background(AppColors.moduleBackground, AppShapes.large)
-            .innerShadow(AppShapes.large, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
-            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.3f), AppShapes.large)
+            .clip(AppShapes.moduleCard)
+            .background(AppColors.moduleBackground, AppShapes.moduleCard)
+            .innerShadow(AppShapes.moduleCard, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
+            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.3f), AppShapes.moduleCard)
     ) {
         // Header
         Row(
@@ -222,8 +222,8 @@ fun ModernToggle(
         enabled = enabled,
         colors = SwitchDefaults.colors(
             checkedThumbColor = AppColors.background,
-            checkedTrackColor = AppColors.accentGreen,
-            checkedBorderColor = AppColors.accentGreen,
+            checkedTrackColor = AppColors.primary,
+            checkedBorderColor = AppColors.primary,
             uncheckedThumbColor = AppColors.onSurface,
             uncheckedTrackColor = AppColors.surfaceVariant,
             uncheckedBorderColor = AppColors.outline,

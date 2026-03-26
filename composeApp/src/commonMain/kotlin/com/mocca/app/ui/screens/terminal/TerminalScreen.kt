@@ -32,7 +32,7 @@ class TerminalScreen : Screen {
         Scaffold(
             topBar = {
                 GodHeader(
-                    title = "TERMINAL",
+                    title = "Terminal",
                     onBackClick = { navigator.pop() },
                     subtitle = state.activeTab?.let { "${state.cols}×${state.rows}" },
                     actions = {
@@ -44,13 +44,13 @@ class TerminalScreen : Screen {
                             if (state.isCreatingTab) {
                                 LoadingIndicator(
                                     modifier = Modifier.size(18.dp),
-                                    color = AppColors.accentGreen
+                                    color = AppColors.primary
                                 )
                             } else {
                                 Icon(
                                     Icons.Default.Add,
                                     contentDescription = "New terminal",
-                                    tint = AppColors.accentGreen,
+                                    tint = AppColors.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -81,12 +81,12 @@ class TerminalScreen : Screen {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 LoadingIndicator(
-                                    color = AppColors.accentGreen,
+                                    color = AppColors.primary,
                                     modifier = Modifier.size(32.dp)
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 Text(
-                                    "LOADING TERMINALS...",
+                                    "Loading terminals...",
                                     style = AppTypography.labelSmall,
                                     color = AppColors.onSurfaceVariant
                                 )
@@ -115,7 +115,7 @@ class TerminalScreen : Screen {
                     else -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Text(
-                                "SELECT A TERMINAL TAB",
+                                "Select a terminal tab",
                                 style = AppTypography.labelMedium,
                                 color = AppColors.outline
                             )

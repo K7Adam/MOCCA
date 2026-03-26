@@ -53,16 +53,17 @@ class McpScreen : Screen {
                     MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
-                        iconColor = AppColors.onSurface
+                        iconColor = AppColors.onSurface,
+                        contentDescription = "Go back"
                     )
                     
                     Spacer(modifier = Modifier.width(AppSpacing.md))
                     
                     Column(modifier = Modifier.weight(1f)) {
-                        ModernHeader(text = "MCP_JSON_CONFIG")
+                        ModernHeader(text = "MCP JSON config")
                         Spacer(modifier = Modifier.height(AppSpacing.xs))
                         Text(
-                            text = "${state.connectedCount}/${state.totalCount} SERVERS_ACTIVE",
+                            text = "${state.connectedCount}/${state.totalCount} servers active",
                             color = if (state.connectedCount > 0) AppColors.statusOnline else AppColors.onSurfaceVariant,
                             style = AppTypography.labelSmall,
                             modifier = Modifier.padding(start = 16.dp)
@@ -73,12 +74,14 @@ class McpScreen : Screen {
                         MoccaIconButton(
                             icon = Icons.Default.Refresh,
                             onClick = { screenModel.refresh() },
-                            iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.onSurfaceVariantLight
+                            iconColor = if (state.isRefreshing) AppColors.statusWaiting else AppColors.onSurfaceVariantLight,
+                            contentDescription = "Refresh MCP servers"
                         )
                         MoccaIconButton(
                             icon = Icons.Default.Add,
                             onClick = { showAddDialog = true },
-                            iconColor = AppColors.statusOnline
+                            iconColor = AppColors.primary,
+                            contentDescription = "Add MCP server"
                         )
                     }
                 }
@@ -107,7 +110,7 @@ class McpScreen : Screen {
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
-                                text = "LOADING_MCP_STATUS...",
+                                text = "Loading MCP status...",
                                 color = AppColors.onSurfaceVariant,
                                 style = AppTypography.bodyMedium
                             )
@@ -134,7 +137,7 @@ class McpScreen : Screen {
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
-                                text = "NO_MCP_SERVERS_FOUND",
+                                text = "No MCP servers found",
                                 color = AppColors.onSurfaceVariant,
                                 style = AppTypography.bodyLarge,
                                 fontWeight = FontWeight.Bold
@@ -147,7 +150,7 @@ class McpScreen : Screen {
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.lg))
                             MoccaButton(
-                                text = "ADD_SERVER",
+                                text = "Add server",
                                 onClick = { showAddDialog = true }
                             )
                         }

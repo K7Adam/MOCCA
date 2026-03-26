@@ -24,14 +24,14 @@ fun ExperimentalSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "EXPERIMENTAL",
+            text = "Experimental",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "FEATURE FLAGS") {
+        ModuleCard(title = "Feature flags") {
             Text(
                 text = "Manage server-wide experimental feature flags and global config options.",
                 style = AppTypography.labelSmall,
@@ -39,7 +39,7 @@ fun ExperimentalSection(
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
-                text = "MANAGE FLAGS",
+                text = "Manage flags",
                 onClick = { navigator.push(FeatureFlagsScreen) },
                 height = AppSpacing.buttonHeightCompact
             )

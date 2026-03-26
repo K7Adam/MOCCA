@@ -6,5 +6,5 @@ appId: com.mocca.app
 - launchApp:
     clearState: true
 - extendedWaitUntil:
-    visible: "PROBING_HOST..."
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000

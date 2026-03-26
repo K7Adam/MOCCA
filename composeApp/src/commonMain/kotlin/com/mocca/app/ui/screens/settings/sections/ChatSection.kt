@@ -27,17 +27,17 @@ fun ChatSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "CHAT",
+            text = "Chat",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "MESSAGING") {
+        ModuleCard(title = "Messaging") {
             // Auto Scroll
             ModuleRowItem(
-                title = "AUTO SCROLL",
+                title = "Auto scroll",
                 subtitle = "Scroll to bottom on new messages",
                 isEnabled = preferences.autoScroll,
                 onToggle = { onSetAutoScroll(!preferences.autoScroll) }
@@ -47,7 +47,7 @@ fun ChatSection(
             
             // Confirm Delete
             ModuleRowItem(
-                title = "CONFIRM DELETE",
+                title = "Confirm delete",
                 subtitle = "Ask before deleting sessions",
                 isEnabled = preferences.confirmDelete,
                 onToggle = { onSetConfirmDelete(!preferences.confirmDelete) }
@@ -57,7 +57,7 @@ fun ChatSection(
             
             // Show Thinking Blocks
             ModuleRowItem(
-                title = "SHOW THINKING",
+                title = "Show thinking",
                 subtitle = "Display AI reasoning blocks",
                 isEnabled = preferences.showThinkingBlocks,
                 onToggle = { onSetShowThinkingBlocks(!preferences.showThinkingBlocks) }

@@ -27,14 +27,14 @@ fun AppConfigSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APP CONFIGURATION",
+            text = "App configuration",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "GLOBAL DEFAULTS") {
+        ModuleCard(title = "Global defaults") {
             val defaultProvider = serverDefaultProvider ?: "Not set"
             val defaultModel = serverDefaultModel ?: "Not set"
 
@@ -45,19 +45,19 @@ fun AppConfigSection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "DEFAULT PROVIDER",
+                        text = "Default provider",
                         color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
-                        text = defaultProvider.uppercase(),
+                        text = defaultProvider,
                         color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodyMedium
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "DEFAULT MODEL",
+                        text = "Default model",
                         color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
@@ -74,7 +74,7 @@ fun AppConfigSection(
             // Show available modes from server
             if (serverModes.isNotEmpty()) {
                 Text(
-                    text = "AVAILABLE MODES",
+                    text = "Available modes",
                     color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )

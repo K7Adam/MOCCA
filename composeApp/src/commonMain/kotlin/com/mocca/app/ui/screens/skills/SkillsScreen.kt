@@ -135,11 +135,12 @@ object SkillsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.onSurface
+                    iconColor = AppColors.onSurface,
+                    contentDescription = "Go back"
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Column(modifier = Modifier.weight(1f)) {
-                    ModernHeader(text = "SKILLS")
+                    ModernHeader(text = "Skills")
                     Text(
                         text = "${uiState.skills.size} skill${if (uiState.skills.size != 1) "s" else ""} available",
                         style = AppTypography.labelSmall,
@@ -149,7 +150,8 @@ object SkillsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { screenModel.load() },
-                    iconColor = AppColors.accentGreen
+                    iconColor = AppColors.primary,
+                    contentDescription = "Refresh skills"
                 )
             }
 
@@ -173,7 +175,7 @@ object SkillsScreen : Screen {
                         modifier = Modifier.weight(1f)
                     )
                     TextButton(onClick = { screenModel.clearError() }) {
-                        Text("DISMISS", style = AppTypography.labelSmall, color = AppColors.error)
+                        Text("Dismiss", style = AppTypography.labelSmall, color = AppColors.error)
                     }
                 }
             }
@@ -228,7 +230,7 @@ private fun SkillCard(skill: SkillInfo) {
             Text(
                 text = skill.name,
                 style = AppTypography.labelMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -258,14 +260,14 @@ private fun SkillCard(skill: SkillInfo) {
                     Box(
                         modifier = Modifier
                             .clip(AppShapes.pill)
-                            .background(AppColors.accentGreen.copy(alpha = 0.12f))
-                            .border(0.5.dp, AppColors.accentGreen.copy(alpha = 0.3f), AppShapes.pill)
+                            .background(AppColors.primary.copy(alpha = 0.12f))
+                            .border(0.5.dp, AppColors.primary.copy(alpha = 0.3f), AppShapes.pill)
                             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
                     ) {
                         Text(
                             text = tag,
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen
+                            color = AppColors.primary
                         )
                     }
                 }
@@ -302,7 +304,7 @@ private fun SkillsEmptyState() {
         verticalArrangement = Arrangement.Center
     ) {
         Text(
-            text = "NO SKILLS",
+            text = "No skills",
             style = AppTypography.labelLarge,
             color = AppColors.outline,
             fontWeight = FontWeight.Bold

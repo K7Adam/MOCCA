@@ -1,0 +1,56 @@
+name: MOCCA Maestro Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  maestro-smoke:
+    name: Emulator Smoke Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Debug APK
+        run: ./gradlew :androidApp:assembleDebug
+
+      - name: Run Maestro smoke tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            mkdir -p maestro-workspace/.maestro
+            curl -Ls "https://get.maestro.mobile.dev" | bash
+            export PATH="$PATH:$HOME/.maestro/bin"
+            adb devices
+            adb install -r androidApp/build/outputs/apk/debug/androidApp-debug.apk
+            adb shell pm clear com.mocca.app
+            adb logcat -c
+            maestro --device emulator-5554 test maestro-workspace/testplans/smoke.yaml
+            adb logcat -d > maestro-workspace/.maestro/logcat.txt
+
+      - name: Upload Maestro artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-artifacts
+          path: maestro-workspace/.maestro/
+          if-no-files-found: warn

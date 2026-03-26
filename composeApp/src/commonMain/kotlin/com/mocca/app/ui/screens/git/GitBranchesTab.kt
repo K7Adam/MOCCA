@@ -35,12 +35,12 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "LOCAL BRANCHES",
+                    text = "Local branches",
                     style = AppTypography.labelSmall,
                     color = AppColors.white.copy(alpha = 0.4f)
                 )
                 GodButton(
-                    text = "CREATE",
+                    text = "Create",
                     onClick = { showCreateBranch = true },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
                     contentColor = AppColors.onSurface,
@@ -57,7 +57,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                         Icon(
                             imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
                             contentDescription = null,
-                            tint = if (branch.name == currentBranch) AppColors.accentGreen else AppColors.white.copy(alpha = 0.4f),
+                            tint = if (branch.name == currentBranch) AppColors.primary else AppColors.white.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -79,7 +79,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
             item {
                 Spacer(Modifier.height(16.dp))
                 Text(
-                    text = "REMOTE BRANCHES",
+                    text = "Remote branches",
                     style = AppTypography.labelSmall,
                     color = AppColors.white.copy(alpha = 0.4f),
                     modifier = Modifier.padding(bottom = 8.dp)

@@ -6,12 +6,11 @@ tags:
   - smoke
   - critical
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/common/launch_app.yaml
 
 # Verify main UI is displayed
 - extendedWaitUntil:
-    visible: ".*"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 15000
 
 # Take screenshot for verification

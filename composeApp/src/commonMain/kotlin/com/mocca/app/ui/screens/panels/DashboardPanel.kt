@@ -83,7 +83,7 @@ fun DashboardPanel(
     ) {
         // ─── DASHBOARD HEADER ──────────────────────────────────────────────
         PanelHeader(
-            title = "DASHBOARD",
+            title = "Dashboard",
             modifier = headerModifier,
             icon = {
                 Box(
@@ -121,7 +121,7 @@ fun DashboardPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "REAL-TIME EVENTS",
+                text = "Real-time events",
                 style = AppTypography.labelSmall,
                 color = AppColors.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
@@ -169,17 +169,19 @@ fun DashboardPanel(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg, Alignment.CenterHorizontally)
         ) {
-            MoccaIconButton(
+            MoccaCompactButton(
+                text = "Settings",
                 icon = Icons.Default.Settings,
                 onClick = onSettingsClick,
-                contentDescription = "Settings",
-                iconColor = AppColors.onSurface
+                textColor = AppColors.onSurface,
+                backgroundColor = AppColors.surfaceContainerHigh
             )
-            MoccaIconButton(
+            MoccaCompactButton(
+                text = "Terminal",
                 icon = Icons.Default.Terminal,
                 onClick = onTerminalClick,
-                contentDescription = "Terminal",
-                iconColor = AppColors.accentGreen
+                textColor = AppColors.primary,
+                backgroundColor = AppColors.surfaceContainerHigh
             )
         }
         
@@ -201,7 +203,7 @@ private fun WorkspaceModule(
 ) {
     val currentId = (currentProject as? Resource.Success)?.data?.id
     
-    ModuleCard(title = "WORKSPACE") {
+    ModuleCard(title = "Workspace") {
         Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // Projects
             when (projects) {
@@ -210,7 +212,7 @@ private fun WorkspaceModule(
                     val active = projects.data.find { it.id == currentId } ?: projects.data.firstOrNull()
                     if (active != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            StatusDot(color = AppColors.accentGreen)
+                            StatusDot(color = AppColors.primary)
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(active.displayName.uppercase(), color = AppColors.onSurface, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
@@ -222,7 +224,7 @@ private fun WorkspaceModule(
                         Text("+${projects.data.size - 1} standby environments", color = AppColors.outline, style = AppTypography.labelSmall)
                     }
                 }
-                is Resource.Error -> Text("ENV INIT FAILED", color = AppColors.error, style = AppTypography.labelMedium)
+                is Resource.Error -> Text("Env init failed", color = AppColors.error, style = AppTypography.labelMedium)
             }
             
             HorizontalDivider(color = AppColors.outline.copy(alpha = 0.5f))
@@ -233,14 +235,14 @@ private fun WorkspaceModule(
                 is Resource.Success -> {
                     if (agents.data.isNotEmpty()) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${agents.data.size} ACTIVE AGENTS", color = AppColors.onSurfaceVariant, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
+                            Text("${agents.data.size} active agents", color = AppColors.onSurfaceVariant, style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
                         }
                         Text(agents.data.joinToString(" • ") { it.name.uppercase() }, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 2)
                     } else {
-                        Text("NO AGENTS ONLINE", color = AppColors.outline, style = AppTypography.labelMedium)
+                        Text("No agents online", color = AppColors.outline, style = AppTypography.labelMedium)
                     }
                 }
-                is Resource.Error -> Text("AGENT LINK FAILED", color = AppColors.error, style = AppTypography.labelMedium)
+                is Resource.Error -> Text("Agent link failed", color = AppColors.error, style = AppTypography.labelMedium)
             }
         }
     }
@@ -254,39 +256,39 @@ private fun CapabilitiesModule(
     tools: Resource<List<String>>,
     commands: Resource<List<com.mocca.app.domain.model.Command>>
 ) {
-    ModuleCard(title = "CAPABILITIES") {
+    ModuleCard(title = "Capabilities") {
         Row(modifier = Modifier.fillMaxWidth()) {
             // Tools Column
             Column(modifier = Modifier.weight(1f)) {
-                Text("INTEGRATED TOOLS", color = AppColors.outline, style = AppTypography.labelSmall)
+                Text("Integrated tools", color = AppColors.outline, style = AppTypography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 when (tools) {
-                    is Resource.Loading -> Text("SCANNING...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
+                    is Resource.Loading -> Text("Scanning...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${tools.data.size} SYSTEM TOOLS", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${tools.data.size} system tools", color = AppColors.primary, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = tools.data.take(3).joinToString("\n") { "• $it" }
                         if (preview.isNotEmpty()) {
                             Text(preview, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
-                    is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
+                    is Resource.Error -> Text("Offline", color = AppColors.error, style = AppTypography.labelLarge)
                 }
             }
             
             // Commands Column
             Column(modifier = Modifier.weight(1f)) {
-                Text("SLASH COMMANDS", color = AppColors.outline, style = AppTypography.labelSmall)
+                Text("Slash commands", color = AppColors.outline, style = AppTypography.labelSmall)
                 Spacer(Modifier.height(4.dp))
                 when (commands) {
-                    is Resource.Loading -> Text("SCANNING...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
+                    is Resource.Loading -> Text("Scanning...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {
-                        Text("${commands.data.size} AVAILABLE", color = AppColors.accentGreen, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
+                        Text("${commands.data.size} available", color = AppColors.primary, style = AppTypography.labelLarge, fontWeight = FontWeight.Bold)
                         val preview = commands.data.take(3).joinToString("\n") { "• /${it.name}" }
                         if (preview.isNotEmpty()) {
                             Text(preview, color = AppColors.onSurface, style = AppTypography.bodySmall, maxLines = 3)
                         }
                     }
-                    is Resource.Error -> Text("OFFLINE", color = AppColors.error, style = AppTypography.labelLarge)
+                    is Resource.Error -> Text("Offline", color = AppColors.error, style = AppTypography.labelLarge)
                 }
             }
         }

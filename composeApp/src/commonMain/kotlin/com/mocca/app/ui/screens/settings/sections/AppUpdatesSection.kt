@@ -36,14 +36,14 @@ fun AppUpdatesSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APP UPDATES",
+            text = "App updates",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "GITHUB AUTO UPDATE") {
+        ModuleCard(title = "GitHub auto update") {
             // Token status indicator
             val tokenStatus = githubTokenStatus
             val statusColor = when {
@@ -60,7 +60,7 @@ fun AppUpdatesSection(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Token Status:",
+                    text = "Token status:",
                     color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall
                 )
@@ -103,7 +103,7 @@ fun AppUpdatesSection(
             MoccaInput(
                 value = tokenInput,
                 onValueChange = { tokenInput = it },
-                label = "GITHUB PAT",
+                label = "GitHub PAT",
                 placeholder = "ghp_... or github_pat_..."
             )
             
@@ -115,7 +115,7 @@ fun AppUpdatesSection(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 MoccaOutlinedButton(
-                    text = "SAVE",
+                    text = "Save",
                     onClick = { onSaveToken(tokenInput) },
                     enabled = tokenInput.isNotBlank() && tokenInput != githubToken && !isValidatingToken,
                     modifier = Modifier.weight(1f),
@@ -123,7 +123,7 @@ fun AppUpdatesSection(
                 )
                 
                 MoccaOutlinedButton(
-                    text = "VALIDATE",
+                    text = "Validate",
                     onClick = onValidateToken,
                     enabled = githubToken.isNotBlank() && !isValidatingToken && !isLoading,
                     modifier = Modifier.weight(1f),
@@ -131,7 +131,7 @@ fun AppUpdatesSection(
                 )
                 
                 MoccaButton(
-                    text = "CHECK UPDATES",
+                    text = "Check updates",
                     onClick = onCheckUpdates,
                     enabled = !isLoading && !isValidatingToken,
                     modifier = Modifier.weight(1.2f),

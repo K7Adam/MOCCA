@@ -109,7 +109,7 @@ fun MoccaInput(
     val isFocused by interactionSource.collectIsFocusedAsState()
     
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (isFocused) AppColors.accentGreen else borderColor,
+        targetValue = if (isFocused) AppColors.primary else borderColor,
         animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
     )
     val animatedBorderWidth by animateDpAsState(
@@ -159,7 +159,7 @@ fun MoccaInput(
                         color = AppColors.onSurface
                     ),
                     visualTransformation = visualTransformation,
-                    cursorBrush = SolidColor(AppColors.accentGreen),
+                    cursorBrush = SolidColor(AppColors.primary),
                     keyboardOptions = keyboardOptions,
                     keyboardActions = keyboardActions,
                     interactionSource = interactionSource,
@@ -240,7 +240,7 @@ fun CommandLineInput(
             textStyle = AppTypography.bodyMedium.copy(
                 color = AppColors.onSurface
             ),
-            cursorBrush = SolidColor(AppColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.primary),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onSubmit() }),
             decorationBox = { innerTextField ->

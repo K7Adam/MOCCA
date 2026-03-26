@@ -76,19 +76,19 @@ val defaultBottomNavItems = listOf(
     BottomNavItem(
         panelState = PanelState.LEFT_OPEN,
         icon = Icons.Default.Computer,
-        label = "SESSIONS",
+        label = "Sessions",
         targetProgress = 1.0f  // LEFT_OPEN is at progress 1.0
     ),
     BottomNavItem(
         panelState = PanelState.CENTER,
         icon = Icons.AutoMirrored.Filled.Chat,
-        label = "CHAT",
+        label = "Chat",
         targetProgress = 0.5f  // CENTER is at progress 0.5
     ),
     BottomNavItem(
         panelState = PanelState.RIGHT_OPEN,
         icon = Icons.Default.Dashboard,
-        label = "TOOLS",
+        label = "Tools",
         targetProgress = 0.0f  // RIGHT_OPEN is at progress 0.0
     )
 )
@@ -214,7 +214,7 @@ fun MoccaBottomNavigation(
                             IntOffset(xOffsetPx.roundToInt(), 0)
                         }
                         .background(
-                            color = AppColors.accentGreen,
+                            color = AppColors.primary,
                             shape = RoundedCornerShape(2.dp)
                         )
                 )
@@ -240,13 +240,13 @@ private fun BottomNavItemComponent(
 
     // Animated color transition based on selection
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
+        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
+        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )

@@ -35,17 +35,17 @@ fun ProjectSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "PROJECT",
+            text = "Project",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "CURRENT PROJECT") {
+        ModuleCard(title = "Current project") {
             Column(modifier = Modifier.padding(AppSpacing.sm)) {
                 ModuleRowItem(
-                    title = "NAME",
+                    title = "Name",
                     subtitle = currentProject.displayName,
                     isEnabled = true,
                     showToggle = false
@@ -53,7 +53,7 @@ fun ProjectSection(
                 HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
-                    text = "PROJECT PATH",
+                    text = "Project path",
                     color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(horizontal = AppSpacing.sm)
@@ -74,9 +74,9 @@ fun ProjectSection(
                         onDone = { onSaveProjectPath() }
                     ),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AppColors.accentGreen,
+                        focusedBorderColor = AppColors.primary,
                         unfocusedBorderColor = AppColors.outline,
-                        cursorColor = AppColors.accentGreen,
+                        cursorColor = AppColors.primary,
                         focusedContainerColor = AppColors.background,
                         unfocusedContainerColor = AppColors.background
                     ),
@@ -84,7 +84,7 @@ fun ProjectSection(
                 )
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 MoccaCompactButton(
-                    text = "UPDATE PATH",
+                    text = "Update path",
                     onClick = onSaveProjectPath,
                     enabled = editingProjectPath.isNotBlank() &&
                         editingProjectPath != (currentProject.path ?: currentProject.directory ?: ""),

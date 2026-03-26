@@ -7,15 +7,19 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.kotlin.multiplatform.library) apply false
-    alias(libs.plugins.detekt)
+    alias(libs.plugins.detekt) apply false
 }
 
-subprojects {
-    apply(plugin = "io.gitlab.arturbosch.detekt")
-    
-    detekt {
-       config.setFrom(files("$rootDir/detekt.yml"))
-       buildUponDefaultConfig = true
-       baseline = file("$rootDir/detekt-baseline.xml")
+val isDetektBuild = gradle.startParameter.taskNames.any { it.contains("detekt", ignoreCase = true) || it.contains("check", ignoreCase = true) }
+
+if (isDetektBuild) {
+    subprojects {
+        apply(plugin = "io.gitlab.arturbosch.detekt")
+        
+        extensions.configure<io.gitlab.arturbosch.detekt.extensions.DetektExtension>("detekt") {
+           config.setFrom(rootProject.layout.projectDirectory.file("detekt.yml"))
+           buildUponDefaultConfig = true
+           baseline = rootProject.layout.projectDirectory.file("detekt-baseline.xml").asFile
+        }
     }
 }

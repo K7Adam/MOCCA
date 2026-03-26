@@ -97,11 +97,11 @@ internal fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("STAGED", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f))
+                        Text("Staged", style = AppTypography.labelSmall, color = AppColors.accentGreen.copy(alpha = 0.6f))
                         GodBadge(text = "${status.staged.size}", containerColor = AppColors.accentGreen.copy(alpha = 0.15f), contentColor = AppColors.accentGreen)
                     }
                     TextButton(onClick = { screenModel.unstageAll() }) {
-                        Text("UNSTAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                        Text("Unstage all", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                     }
                 }
             }
@@ -136,11 +136,11 @@ internal fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("MODIFIED", style = AppTypography.labelSmall, color = AppColors.statusWaiting.copy(alpha = 0.6f))
+                        Text("Modified", style = AppTypography.labelSmall, color = AppColors.statusWaiting.copy(alpha = 0.6f))
                         GodBadge(text = "${status.unstaged.size}", containerColor = AppColors.statusWaiting.copy(alpha = 0.15f), contentColor = AppColors.statusWaiting)
                     }
                     TextButton(onClick = { screenModel.stageAll() }) {
-                        Text("STAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                        Text("Stage all", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                     }
                 }
             }
@@ -180,18 +180,18 @@ internal fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("UNTRACKED", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                        Text("Untracked", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                         GodBadge(text = "${status.untracked.size}", containerColor = AppColors.white.copy(alpha = 0.08f), contentColor = AppColors.white.copy(alpha = 0.5f))
                     }
                     TextButton(onClick = { screenModel.stageAll() }) {
-                        Text("STAGE ALL", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                        Text("Stage all", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                     }
                 }
             }
             items(status.untracked) { path ->
                 GodListItem(
                     title = path.substringAfterLast('/'),
-                    subtitle = path.substringBeforeLast('/', "").ifBlank { "/" } + " • NEW",
+                    subtitle = path.substringBeforeLast('/', "").ifBlank { "/" } + " • New",
                     icon = {
                         Icon(
                             imageVector = Icons.Default.FiberNew,
@@ -214,7 +214,7 @@ internal fun GitStatusSummary(
             item { 
                 Spacer(modifier = Modifier.height(8.dp))
                 GodButton(
-                    text = "COMMIT ${uiState.stagedCount} FILES", 
+                    text = "Commit ${uiState.stagedCount} files", 
                     onClick = { screenModel.showCommitDialog() }, 
                     icon = { Icon(Icons.Default.Check, contentDescription = null) },
                     modifier = Modifier.fillMaxWidth()
@@ -232,14 +232,14 @@ internal fun GitStatusSummary(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("STASHES", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
+                        Text("Stashes", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                         if (uiState.stashes.isNotEmpty()) {
                             GodBadge(text = "${uiState.stashes.size}", containerColor = AppColors.white.copy(alpha = 0.08f), contentColor = AppColors.white.copy(alpha = 0.5f))
                         }
                     }
                     if (uiState.hasChanges) {
                         TextButton(onClick = { screenModel.showStashDialog() }) {
-                            Text("STASH CHANGES", style = AppTypography.labelSmall, color = AppColors.primary)
+                            Text("Stash changes", style = AppTypography.labelSmall, color = AppColors.primary)
                         }
                     }
                 }
@@ -277,7 +277,7 @@ internal fun GitStatusSummary(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.CheckCircle, contentDescription = null, tint = AppColors.statusOnline, modifier = Modifier.size(48.dp))
                         Spacer(Modifier.height(8.dp))
-                        Text("WORKING TREE CLEAN", style = AppTypography.headlineSmall, color = AppColors.statusOnline)
+                        Text("Working tree clean", style = AppTypography.headlineSmall, color = AppColors.statusOnline)
                     }
                 }
             }

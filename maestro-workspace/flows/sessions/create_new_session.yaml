@@ -6,26 +6,31 @@ tags:
   - smoke
   - sessions
 ---
-- launchApp:
-    clearState: true
+- runFlow: ../../subflows/common/launch_app.yaml
 
 # Wait for app to be ready
 - extendedWaitUntil:
-    visible: ".*"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 15000
 
-# Swipe right to reveal context panel (left panel)
-- swipe:
-    direction: RIGHT
-    duration: 300
+# Open sessions panel via bottom navigation
+- tapOn: "SESSIONS"
 
 # Wait for panel animation
-- waitForAnimationToEnd
+- waitForAnimationToEnd:
+    timeout: 2000
 
-# Look for new session button or + icon
-- tapOn:
-    id: ".*new.*session.*"
-    optional: true
+# Tap NEW SESSION in context panel
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(NEW SESSION|New session)"
+          retryTapIfNoChange: true
+
+# Wait for potential create animation to settle
+- waitForAnimationToEnd:
+    timeout: 3000
 
 # Take screenshot to capture result
 - takeScreenshot: create_session_result

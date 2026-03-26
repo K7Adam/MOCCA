@@ -170,13 +170,13 @@ private fun AgentHeader(
         
         Column {
             Text(
-                text = agentName.uppercase(),
+                text = agentName,
                 color = AppColors.onSurface,
                 style = AppTypography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = appVersion.ifEmpty { "--" }.uppercase(),
+                text = appVersion.ifEmpty { "--" },
                 color = AppColors.outline,
                 style = AppTypography.bodySmall
             )
@@ -209,7 +209,7 @@ private fun ConversationHistorySection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "CONVERSATION HISTORY",
+                text = "Conversation history",
                 color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
@@ -217,7 +217,7 @@ private fun ConversationHistorySection(
             if (runningSessionIds.isNotEmpty()) {
                 RunningSessionIndicator(
                     isRunning = true,
-                    statusLabel = "${runningSessionIds.size} ACTIVE"
+                    statusLabel = "${runningSessionIds.size} active"
                 )
             }
         }
@@ -382,7 +382,7 @@ private fun NewSessionButton(
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
-                text = "CREATING...",
+                text = "Creating...",
                 color = AppColors.statusWaiting,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold
@@ -391,12 +391,12 @@ private fun NewSessionButton(
             Icon(
                 imageVector = Icons.Default.Add,
                 contentDescription = "New session",
-                tint = AppColors.accentGreen,
+                tint = AppColors.primary,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
-                text = "NEW SESSION",
+                text = "New session",
                 color = AppColors.onSurface,
                 style = AppTypography.labelMedium,
                 fontWeight = FontWeight.Bold

@@ -51,7 +51,7 @@ internal fun DiffModeTab(label: String, active: Boolean, onClick: () -> Unit) {
         modifier = Modifier
             .clip(AppShapes.pill)
             .background(
-                if (active) AppColors.accentGreen.copy(alpha = 0.2f) else AppColors.background,
+                if (active) AppColors.primary.copy(alpha = 0.2f) else AppColors.background,
                 AppShapes.pill
             )
             .clickable(
@@ -65,7 +65,7 @@ internal fun DiffModeTab(label: String, active: Boolean, onClick: () -> Unit) {
         Text(
             text = label,
             style = AppTypography.labelSmall,
-            color = if (active) AppColors.accentGreen else AppColors.outline,
+            color = if (active) AppColors.primary else AppColors.outline,
             fontWeight = if (active) FontWeight.Bold else FontWeight.Normal
         )
     }

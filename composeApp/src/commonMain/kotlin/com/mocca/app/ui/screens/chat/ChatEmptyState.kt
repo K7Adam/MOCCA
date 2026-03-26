@@ -35,14 +35,14 @@ internal fun EmptySessionState() {
             ModernBootSequence()
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "MOCCA_AI_v2",
+                text = "Mocca AI v2",
                 style = AppTypography.headlineMedium,
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "SYSTEM READY // SELECT_MODEL",
+                text = "System ready // Select model",
                 style = AppTypography.labelExtraSmall,
                 color = AppColors.outline,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -54,9 +54,9 @@ internal fun EmptySessionState() {
 @Composable
 internal fun ModernBootSequence() {
     val lines = listOf(
-        "MOCCA_OS_BOOT",
-        "NETWORK_UPLINK_SECURED",
-        "RESOURCES_MAXIMIZED"
+        "Mocca OS boot",
+        "Network uplink secured",
+        "Resources maximized"
     )
     
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -70,7 +70,7 @@ internal fun ModernBootSequence() {
                 Text(
                     text = line,
                     style = AppTypography.labelExtraSmall,
-                    color = if (index == lines.size - 1) AppColors.accentGreen else AppColors.outline,
+                    color = if (index == lines.size - 1) AppColors.primary else AppColors.outline,
                     fontWeight = FontWeight.Bold
                 )
             }

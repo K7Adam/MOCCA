@@ -210,7 +210,7 @@ private fun AgentSelectorChip(
                         Text(
                             mode.name.uppercase(),
                             style = AppTypography.labelSmall,
-                            color = if (mode.id == selectedModeId) AppColors.accentGreen else AppColors.onSurfaceVariant
+                            color = if (mode.id == selectedModeId) AppColors.primary else AppColors.onSurfaceVariant
                         )
                     },
                     onClick = {

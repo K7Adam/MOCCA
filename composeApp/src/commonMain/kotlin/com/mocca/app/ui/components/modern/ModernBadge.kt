@@ -93,7 +93,7 @@ fun OutlinedBadge(
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
-            text = text.uppercase(),
+            text = text,
             color = textColor,
             style = AppTypography.labelSmall,
             fontWeight = FontWeight.Medium
@@ -259,7 +259,7 @@ fun TerminalTag(
             .padding(horizontal = paddingHorizontal, vertical = paddingVertical)
     ) {
         Text(
-            text = text.uppercase(),
+            text = text,
             color = textColor,
             style = AppTypography.labelSmall
         )
@@ -304,7 +304,7 @@ fun TerminalEditBadge(
     modifier: Modifier = Modifier
 ) {
     Text(
-        text = "EDIT",
+        text = "Edit",
         color = AppColors.onSurfaceVariant,
         style = AppTypography.labelSmall,
         modifier = modifier

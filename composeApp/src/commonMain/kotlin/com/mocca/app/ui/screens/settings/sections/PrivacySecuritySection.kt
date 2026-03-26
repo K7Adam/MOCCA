@@ -31,17 +31,17 @@ fun PrivacySecuritySection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "PRIVACY & SECURITY",
+            text = "Privacy & security",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "SECURITY") {
+        ModuleCard(title = "Security") {
             // Screen Security
             ModuleRowItem(
-                title = "SCREEN SECURITY",
+                title = "Screen security",
                 subtitle = "Prevent screenshots",
                 isEnabled = preferences.screenSecurity,
                 onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
@@ -51,7 +51,7 @@ fun PrivacySecuritySection(
             
             // Clear Cache on Exit
             ModuleRowItem(
-                title = "CLEAR CACHE ON EXIT",
+                title = "Clear cache on exit",
                 subtitle = "Remove local data when app closes",
                 isEnabled = preferences.clearCacheOnExit,
                 onToggle = { onSetClearCacheOnExit(!preferences.clearCacheOnExit) }
@@ -61,7 +61,7 @@ fun PrivacySecuritySection(
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Data Management
-        ModuleCard(title = "DATA") {
+        ModuleCard(title = "Data") {
             // Clear Cache Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -70,7 +70,7 @@ fun PrivacySecuritySection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "CLEAR ALL CACHE",
+                        text = "Clear all cache",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -82,7 +82,7 @@ fun PrivacySecuritySection(
                 }
                 
                 MoccaOutlinedButton(
-                    text = "CLEAR",
+                    text = "Clear",
                     onClick = onShowClearCacheDialog,
                     height = AppSpacing.buttonHeightSmall
                 )
@@ -98,7 +98,7 @@ fun PrivacySecuritySection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "RESET PREFERENCES",
+                        text = "Reset preferences",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -110,7 +110,7 @@ fun PrivacySecuritySection(
                 }
                 
                 MoccaOutlinedButton(
-                    text = "RESET",
+                    text = "Reset",
                     onClick = onResetPreferences,
                     height = AppSpacing.buttonHeightSmall
                 )

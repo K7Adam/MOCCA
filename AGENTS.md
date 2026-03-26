@@ -37,6 +37,7 @@ MOCCA/
 |-------|----------|
 | `kotlin-best-practices` | KMP architecture, MVI, DI patterns |
 | `taste-skill-compose` | UI/UX design, animations, theming, M3 design |
+| `material3-expressive-compose` | Compose UI implementation/refactors with MOCCA dark theme + Material 3 Expressive constraints |
 | `android-mcp` | Device automation, ADB commands |
 
 **See `.opencode/skills/` for detailed skill documentation.**
@@ -64,6 +65,9 @@ MOCCA/
 
 ## COMMANDS
 ```bash
+# Start emulator (local visible window)
+.\maestro-workspace\start-emulator.ps1
+
 # Build
 .\gradlew.bat :androidApp:assembleDebug
 
@@ -73,3 +77,7 @@ MOCCA/
 # Logcat
 adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 ```
+
+## EMULATOR WORKFLOW (AGENTIC)
+- **Local agent runs**: use visible emulator (`.\maestro-workspace\start-emulator.ps1`), then execute Maestro via `run-emulator-tests.ps1`.
+- **CI runs**: emulator is headless in GitHub Actions workflow (`.github/workflows/maestro-tests.yml`).

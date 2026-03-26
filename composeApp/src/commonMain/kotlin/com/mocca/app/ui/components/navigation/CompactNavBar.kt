@@ -147,7 +147,7 @@ fun CompactNavBar(
                         IntOffset(xOffsetPx.roundToInt(), 0)
                     }
                     .background(
-                        color = AppColors.accentGreen,
+                        color = AppColors.primary,
                         shape = RoundedCornerShape(2.dp)
                     )
             )
@@ -169,13 +169,13 @@ private fun CompactNavItem(
 
     // Animated color transition
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
+        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.accentGreen else AppColors.outline,
+        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )

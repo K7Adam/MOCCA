@@ -1,0 +1,31 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- tapOn: "SESSIONS"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: catalog_sessions_initial
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(NEW SESSION|New session)"
+          retryTapIfNoChange: true
+
+- waitForAnimationToEnd:
+    timeout: 2500
+- takeScreenshot: catalog_sessions_after_new_session
+
+- tapOn: "CHAT"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: catalog_chat_after_new_session

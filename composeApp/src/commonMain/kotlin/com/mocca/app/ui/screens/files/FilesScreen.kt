@@ -154,7 +154,7 @@ private fun GodBreadcrumbBar(
                 Icons.Default.Home,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
-                tint = AppColors.accentGreen
+                tint = AppColors.primary
             )
             
             pathHistory.lastOrNull()?.let { path ->
@@ -190,7 +190,7 @@ private fun GodFilesList(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "DIRECTORY EMPTY",
+                text = "Directory empty",
                 style = AppTypography.labelMedium,
                 color = AppColors.onSurface.copy(alpha = 0.2f)
             )
@@ -213,7 +213,7 @@ private fun GodFilesList(
                         Icon(
                             imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
                             contentDescription = null,
-                            tint = if (file.isDirectory) AppColors.accentGreen else AppColors.onSurface.copy(alpha = 0.4f),
+                            tint = if (file.isDirectory) AppColors.primary else AppColors.onSurface.copy(alpha = 0.4f),
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -257,7 +257,7 @@ private fun GodFileViewer(
                 Icon(
                     getFileIcon(fileName),
                     contentDescription = null,
-                    tint = AppColors.accentGreen,
+                    tint = AppColors.primary,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -270,7 +270,7 @@ private fun GodFileViewer(
                     )
                     if (language != null) {
                         Text(
-                            text = language.uppercase(),
+                            text = language,
                             style = AppTypography.labelSmall,
                             color = AppColors.onSurface.copy(alpha = 0.4f)
                         )

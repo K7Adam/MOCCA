@@ -1,0 +1,39 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- takeScreenshot: catalog_main_center_initial
+
+- tapOn: "SESSIONS"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: catalog_panel_sessions
+
+- tapOn: "CHAT"
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: catalog_panel_chat
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: catalog_panel_tools_top
+
+- swipe:
+    direction: UP
+    duration: 450
+- waitForAnimationToEnd:
+    timeout: 1200
+- swipe:
+    direction: UP
+    duration: 450
+- waitForAnimationToEnd:
+    timeout: 1200
+- takeScreenshot: catalog_panel_tools_scrolled

@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA"
+      ]
+    },
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git"
+      ],
+      "cwd": "C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA"
+    },
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp"
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "android-mcp": {
+      "command": "uvx",
+      "args": [
+        "android-mcp",
+        "--emulator"
+      ]
+    }
+  }
+}

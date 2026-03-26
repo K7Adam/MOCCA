@@ -1,0 +1,135 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- swipe:
+    direction: UP
+    duration: 450
+- waitForAnimationToEnd:
+    timeout: 1000
+- swipe:
+    direction: UP
+    duration: 450
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(Settings|SETTINGS)"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: "SETTINGS"
+    timeout: 10000
+
+- takeScreenshot: catalog_screen_settings_top
+
+- swipe:
+    direction: UP
+    duration: 500
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_settings_middle
+
+- swipe:
+    direction: UP
+    duration: 500
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_settings_lower
+
+- swipe:
+    direction: UP
+    duration: 500
+- waitForAnimationToEnd:
+    timeout: 1000
+- takeScreenshot: catalog_screen_settings_bottom
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "BROWSE.*"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: ".*SKILLS.*"
+    timeout: 10000
+- takeScreenshot: catalog_screen_skills
+
+- back
+- waitForAnimationToEnd:
+    timeout: 1200
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- swipe:
+    direction: UP
+    duration: 550
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "MANAGE.*"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: ".*FEATURE FLAGS.*"
+    timeout: 10000
+- takeScreenshot: catalog_screen_feature_flags

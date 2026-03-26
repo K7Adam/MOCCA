@@ -1,0 +1,42 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "WORKSPACE"
+          retryTapIfNoChange: true
+
+- extendedWaitUntil:
+    visible: "(WORKSPACE_01|DASHBOARD|EXPLORER|GIT)"
+    timeout: 10000
+
+- takeScreenshot: catalog_screen_workspace_dashboard
+
+- tapOn: "EXPLORER"
+- waitForAnimationToEnd:
+    timeout: 1200
+- takeScreenshot: catalog_screen_workspace_explorer
+
+- tapOn: "GIT"
+- waitForAnimationToEnd:
+    timeout: 1200
+- takeScreenshot: catalog_screen_workspace_git
+
+- tapOn: "CHAT"
+- waitForAnimationToEnd:
+    timeout: 1200
+- takeScreenshot: catalog_screen_workspace_chat

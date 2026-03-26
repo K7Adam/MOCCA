@@ -82,7 +82,7 @@ class SettingsScreen : Screen {
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Text(
-                    text = "SETTINGS",
+                    text = "Settings",
                     color = AppColors.primary,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold
@@ -167,9 +167,9 @@ class SettingsScreen : Screen {
                 // Server Info Section
                 state.serverVersion?.let { version ->
                     item {
-                        SettingsCard(title = "OPENCODE SERVER INFO") {
+                        SettingsCard(title = "OpenCode Server Info") {
                             SettingsRowItem(
-                                title = "SERVER VERSION",
+                                title = "Server Version",
                                 subtitle = version,
                                 isEnabled = true,
                                 showToggle = false
@@ -274,7 +274,7 @@ class SettingsScreen : Screen {
                     shape = AppShapes.dialog,
                     title = {
                         Text(
-                            text = "CLEAR ALL CACHE",
+                            text = "Clear All Cache",
                             color = AppColors.primary,
                             style = AppTypography.headlineSmall
                         )
@@ -288,14 +288,14 @@ class SettingsScreen : Screen {
                     },
                     confirmButton = {
                         MoccaButton(
-                            text = "CLEAR",
+                            text = "Clear",
                             onClick = { screenModel.confirmClearCache() },
                             height = AppSpacing.buttonHeightCompact
                         )
                     },
                     dismissButton = {
                         MoccaTextButton(
-                            text = "CANCEL",
+                            text = "Cancel",
                             onClick = { screenModel.hideClearCacheDialog() }
                         )
                     }
@@ -314,14 +314,14 @@ fun AppConfigSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APP CONFIGURATION",
+            text = "App Configuration",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "GLOBAL DEFAULTS") {
+        SettingsCard(title = "Global Defaults") {
             val defaultProvider = serverDefaultProvider ?: "Not set"
             val defaultModel = serverDefaultModel ?: "Not set"
 
@@ -332,19 +332,19 @@ fun AppConfigSection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "DEFAULT PROVIDER",
+                        text = "Default Provider",
                         color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
                     Text(
-                        text = defaultProvider.uppercase(),
+                        text = defaultProvider.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
                         color = if (serverDefaultProvider != null) AppColors.statusOnline else AppColors.onSurfaceVariant,
                         style = AppTypography.bodyMedium
                     )
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "DEFAULT MODEL",
+                        text = "Default Model",
                         color = AppColors.outline,
                         style = AppTypography.labelSmall
                     )
@@ -361,7 +361,7 @@ fun AppConfigSection(
             // Show available modes from server
             if (serverModes.isNotEmpty()) {
                 Text(
-                    text = "AVAILABLE MODES",
+                    text = "Available Modes",
                     color = AppColors.outline,
                     style = AppTypography.labelSmall
                 )
@@ -404,14 +404,14 @@ fun AppUpdatesSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APP UPDATES",
+            text = "App Updates",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "GITHUB AUTO UPDATE") {
+        SettingsCard(title = "GitHub Auto Update") {
             // Token status indicator
             val tokenStatus = githubTokenStatus
             val statusColor = when {
@@ -471,7 +471,7 @@ fun AppUpdatesSection(
             MoccaInput(
                 value = tokenInput,
                 onValueChange = { tokenInput = it },
-                label = "GITHUB PAT",
+                label = "GitHub PAT",
                 placeholder = "ghp_... or github_pat_..."
             )
             
@@ -483,7 +483,7 @@ fun AppUpdatesSection(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 MoccaOutlinedButton(
-                    text = "SAVE",
+                    text = "Save",
                     onClick = { onSaveToken(tokenInput) },
                     enabled = tokenInput.isNotBlank() && tokenInput != githubToken && !isValidatingToken,
                     modifier = Modifier.weight(1f),
@@ -491,7 +491,7 @@ fun AppUpdatesSection(
                 )
                 
                 MoccaOutlinedButton(
-                    text = "VALIDATE",
+                    text = "Validate",
                     onClick = onValidateToken,
                     enabled = githubToken.isNotBlank() && !isValidatingToken && !isLoading,
                     modifier = Modifier.weight(1f),
@@ -499,7 +499,7 @@ fun AppUpdatesSection(
                 )
                 
                 MoccaButton(
-                    text = "CHECK UPDATES",
+                    text = "Check Updates",
                     onClick = onCheckUpdates,
                     enabled = !isLoading && !isValidatingToken,
                     modifier = Modifier.weight(1.2f),
@@ -546,17 +546,17 @@ fun AppearanceSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APPEARANCE",
+            text = "Appearance",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "DISPLAY") {
+        SettingsCard(title = "Display") {
             // Show Token Counts
             SettingsRowItem(
-                title = "SHOW TOKEN COUNTS",
+                title = "Show Token Counts",
                 subtitle = "Display input/output tokens in chat",
                 isEnabled = preferences.showTokenCounts,
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
@@ -566,7 +566,7 @@ fun AppearanceSection(
             
             // Show Timestamps
             SettingsRowItem(
-                title = "SHOW TIMESTAMPS",
+                title = "Show Timestamps",
                 subtitle = "Display message timestamps",
                 isEnabled = preferences.showTimestamps,
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
@@ -576,7 +576,7 @@ fun AppearanceSection(
             
             // Compact Mode
             SettingsRowItem(
-                title = "COMPACT MODE",
+                title = "Compact Mode",
                 subtitle = "Reduced padding for higher density",
                 isEnabled = preferences.compactMode,
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
@@ -586,7 +586,7 @@ fun AppearanceSection(
             
             // Hide API Keys
             SettingsRowItem(
-                title = "HIDE API KEYS",
+                title = "Hide API Keys",
                 subtitle = "Mask sensitive keys in settings",
                 isEnabled = preferences.hideApiKeys,
                 onToggle = { onSetHideApiKeys(!preferences.hideApiKeys) }
@@ -596,7 +596,7 @@ fun AppearanceSection(
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Font Scale Slider
-        SettingsCard(title = "FONT SIZE") {
+        SettingsCard(title = "Font Size") {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -604,7 +604,7 @@ fun AppearanceSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "TEXT SCALE",
+                        text = "Text Scale",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -657,17 +657,17 @@ fun ChatSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "CHAT",
+            text = "Chat",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "MESSAGING") {
+        SettingsCard(title = "Messaging") {
             // Auto Scroll
             SettingsRowItem(
-                title = "AUTO SCROLL",
+                title = "Auto Scroll",
                 subtitle = "Scroll to bottom on new messages",
                 isEnabled = preferences.autoScroll,
                 onToggle = { onSetAutoScroll(!preferences.autoScroll) }
@@ -677,7 +677,7 @@ fun ChatSection(
             
             // Confirm Delete
             SettingsRowItem(
-                title = "CONFIRM DELETE",
+                title = "Confirm Delete",
                 subtitle = "Ask before deleting sessions",
                 isEnabled = preferences.confirmDelete,
                 onToggle = { onSetConfirmDelete(!preferences.confirmDelete) }
@@ -687,7 +687,7 @@ fun ChatSection(
             
             // Show Thinking Blocks
             SettingsRowItem(
-                title = "SHOW THINKING",
+                title = "Show Thinking",
                 subtitle = "Display AI reasoning blocks",
                 isEnabled = preferences.showThinkingBlocks,
                 onToggle = { onSetShowThinkingBlocks(!preferences.showThinkingBlocks) }
@@ -704,17 +704,17 @@ fun ConnectionSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "CONNECTION",
+            text = "Connection",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "NETWORK") {
+        SettingsCard(title = "Network") {
             // Auto Reconnect
             SettingsRowItem(
-                title = "AUTO RECONNECT",
+                title = "Auto Reconnect",
                 subtitle = "Reconnect when connection drops",
                 isEnabled = preferences.autoReconnect,
                 onToggle = { onSetAutoReconnect(!preferences.autoReconnect) }
@@ -724,7 +724,7 @@ fun ConnectionSection(
             
             // Data Saver Mode
             SettingsRowItem(
-                title = "DATA SAVER",
+                title = "Data Saver",
                 subtitle = "Reduce background network usage",
                 isEnabled = preferences.dataSaverMode,
                 onToggle = { onSetDataSaverMode(!preferences.dataSaverMode) }
@@ -747,14 +747,14 @@ fun ExperimentalSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "EXPERIMENTAL",
+            text = "Experimental",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "FEATURE FLAGS") {
+        SettingsCard(title = "Feature Flags") {
             Text(
                 text = "Manage server-wide experimental feature flags and global config options.",
                 style = AppTypography.labelSmall,
@@ -762,7 +762,7 @@ fun ExperimentalSection(
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
-                text = "MANAGE FLAGS",
+                text = "Manage Flags",
                 onClick = { navigator.push(FeatureFlagsScreen) },
                 height = AppSpacing.buttonHeightCompact
             )
@@ -779,17 +779,17 @@ fun NotificationsSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "NOTIFICATIONS",
+            text = "Notifications",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "ALERTS") {
+        SettingsCard(title = "Alerts") {
             // Permission Notifications
             SettingsRowItem(
-                title = "PERMISSION REQUESTS",
+                title = "Permission Requests",
                 subtitle = "Alert when AI needs approval",
                 isEnabled = preferences.notifyPermissions,
                 onToggle = { onSetNotifyPermissions(!preferences.notifyPermissions) }
@@ -799,7 +799,7 @@ fun NotificationsSection(
             
             // Session Complete
             SettingsRowItem(
-                title = "SESSION COMPLETE",
+                title = "Session Complete",
                 subtitle = "Alert when AI finishes task",
                 isEnabled = preferences.notifySessionComplete,
                 onToggle = { onSetNotifySessionComplete(!preferences.notifySessionComplete) }
@@ -809,7 +809,7 @@ fun NotificationsSection(
             
             // Connection Lost
             SettingsRowItem(
-                title = "CONNECTION LOST",
+                title = "Connection Lost",
                 subtitle = "Alert on server disconnect",
                 isEnabled = preferences.notifyConnectionLost,
                 onToggle = { onSetNotifyConnectionLost(!preferences.notifyConnectionLost) }
@@ -828,17 +828,17 @@ fun PrivacySecuritySection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "PRIVACY & SECURITY",
+            text = "Privacy & Security",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "SECURITY") {
+        SettingsCard(title = "Security") {
             // Screen Security
             SettingsRowItem(
-                title = "SCREEN SECURITY",
+                title = "Screen Security",
                 subtitle = "Prevent screenshots",
                 isEnabled = preferences.screenSecurity,
                 onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
@@ -848,7 +848,7 @@ fun PrivacySecuritySection(
             
             // Clear Cache on Exit
             SettingsRowItem(
-                title = "CLEAR CACHE ON EXIT",
+                title = "Clear Cache on Exit",
                 subtitle = "Remove local data when app closes",
                 isEnabled = preferences.clearCacheOnExit,
                 onToggle = { onSetClearCacheOnExit(!preferences.clearCacheOnExit) }
@@ -858,7 +858,7 @@ fun PrivacySecuritySection(
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Data Management
-        SettingsCard(title = "DATA") {
+        SettingsCard(title = "Data") {
             // Clear Cache Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -867,7 +867,7 @@ fun PrivacySecuritySection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "CLEAR ALL CACHE",
+                        text = "Clear All Cache",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -879,7 +879,7 @@ fun PrivacySecuritySection(
                 }
                 
                 MoccaOutlinedButton(
-                    text = "CLEAR",
+                    text = "Clear",
                     onClick = onShowClearCacheDialog,
                     height = AppSpacing.buttonHeightSmall
                 )
@@ -895,7 +895,7 @@ fun PrivacySecuritySection(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "RESET PREFERENCES",
+                        text = "Reset Preferences",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -907,7 +907,7 @@ fun PrivacySecuritySection(
                 }
                 
                 MoccaOutlinedButton(
-                    text = "RESET",
+                    text = "Reset",
                     onClick = onResetPreferences,
                     height = AppSpacing.buttonHeightSmall
                 )
@@ -925,17 +925,17 @@ fun ProjectSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "PROJECT",
+            text = "Project",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "CURRENT PROJECT") {
+        SettingsCard(title = "Current Project") {
             Column(modifier = Modifier.padding(AppSpacing.sm)) {
                 SettingsRowItem(
-                    title = "NAME",
+                    title = "Name",
                     subtitle = currentProject.displayName,
                     isEnabled = true,
                     showToggle = false
@@ -943,7 +943,7 @@ fun ProjectSection(
                 HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Text(
-                    text = "PROJECT PATH",
+                    text = "Project Path",
                     color = AppColors.onSurfaceVariant,
                     style = AppTypography.labelSmall,
                     modifier = Modifier.padding(horizontal = AppSpacing.sm)
@@ -974,7 +974,7 @@ fun ProjectSection(
                 )
                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                 MoccaCompactButton(
-                    text = "UPDATE PATH",
+                    text = "Update Path",
                     onClick = onSaveProjectPath,
                     enabled = editingProjectPath.isNotBlank() &&
                         editingProjectPath != (currentProject.path ?: currentProject.directory ?: ""),
@@ -1000,14 +1000,14 @@ fun ProviderAuthSection(
     
     Column(modifier = modifier) {
         Text(
-            text = "PROVIDER AUTHENTICATION",
+            text = "Provider Authentication",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "CONFIGURE PROVIDERS") {
+        SettingsCard(title = "Configure Providers") {
             commonProviders.forEachIndexed { index, providerId ->
                 var isExpanded by remember { mutableStateOf(false) }
                 var manualKey by remember { mutableStateOf("") }
@@ -1027,7 +1027,7 @@ fun ProviderAuthSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = providerId.uppercase(),
+                        text = providerId.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() },
                         color = AppColors.primary,
                         style = AppTypography.bodyMedium,
                         fontWeight = FontWeight.Bold
@@ -1049,7 +1049,7 @@ fun ProviderAuthSection(
                             // OAuth Button
                             if (methods?.any { it.type == "oauth" } == true) {
                                 MoccaButton(
-                                    text = "CONNECT (OAUTH)",
+                                    text = "Connect (OAuth)",
                                     onClick = { 
                                         onStartOAuth(providerId) { url ->
                                             openUrl(url)
@@ -1067,19 +1067,19 @@ fun ProviderAuthSection(
                             MoccaInput(
                                 value = manualKey,
                                 onValueChange = { manualKey = it },
-                                placeholder = "API KEY",
+                                placeholder = "API Key",
                                 label = null
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             MoccaCompactButton(
-                                text = "SAVE KEY",
+                                text = "Save Key",
                                 onClick = { onSaveManualKey(providerId, manualKey) },
                                 enabled = manualKey.isNotBlank(),
                                 height = AppSpacing.buttonHeightSmall
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.sm))
                             MoccaCompactButton(
-                                text = "REMOVE AUTH",
+                                text = "Remove Auth",
                                 onClick = { onRemoveAuth(providerId) },
                                 height = AppSpacing.buttonHeightSmall,
                                 backgroundColor = AppColors.error.copy(alpha = 0.15f),
@@ -1110,7 +1110,7 @@ fun ServersSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "SERVERS",
+            text = "Servers",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
@@ -1131,7 +1131,7 @@ fun ServersSection(
         }
         
         MoccaButton(
-            text = "ADD SERVER",
+            text = "Add Server",
             onClick = onAddNewServer,
             modifier = Modifier.fillMaxWidth(),
             height = AppSpacing.buttonHeightCompact
@@ -1145,14 +1145,14 @@ fun SkillsSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "SKILLS",
+            text = "Skills",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        SettingsCard(title = "SERVER SKILLS") {
+        SettingsCard(title = "Server Skills") {
             Text(
                 text = "View agent skills registered on the OpenCode server.",
                 style = AppTypography.labelSmall,
@@ -1160,7 +1160,7 @@ fun SkillsSection(
             )
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             MoccaButton(
-                text = "BROWSE SKILLS",
+                text = "Browse Skills",
                 onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
                 height = AppSpacing.buttonHeightCompact
             )
@@ -1213,7 +1213,7 @@ fun SettingsCard(
                     )
                 }
                 Text(
-                    text = title.uppercase(),
+                    text = title,
                     color = AppColors.primary,
                     style = AppTypography.labelLarge,
                     fontWeight = FontWeight.Bold

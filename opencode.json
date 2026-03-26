@@ -1,0 +1,75 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "composeApp/src/commonMain/kotlin/com/mocca/app/**/AGENTS.md",
+    "maestro-workspace/AGENTS.md"
+  ],
+  "watcher": {
+    "ignore": [
+      "**/.git/**",
+      "**/.gradle/**",
+      "**/.idea/**",
+      "**/.kotlin/**",
+      "**/build/**",
+      "**/node_modules/**"
+    ]
+  },
+  "command": {
+    "mocca-emulator-start": {
+      "description": "Start local visible Android emulator",
+      "template": "Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\\maestro-workspace\\start-emulator.ps1'` and confirm emulator serial from `adb devices` output."
+    },
+    "mocca-build": {
+      "description": "Build Android debug APK",
+      "template": "Run `powershell.exe -NoProfile -Command \"& '.\\gradlew.bat' :androidApp:assembleDebug\"` and summarize errors if any."
+    },
+    "mocca-tests": {
+      "description": "Run shared KMP tests",
+      "template": "Run `powershell.exe -NoProfile -Command \"& '.\\gradlew.bat' :composeApp:allTests\"` and report only failing tests with root causes."
+    },
+    "mocca-e2e-smoke": {
+      "description": "Run Maestro smoke tests",
+      "template": "Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File '.\\maestro-workspace\\start-emulator.ps1'` first, then run `powershell.exe -NoProfile -Command \"& '.\\maestro-workspace\\run-emulator-tests.ps1' 'maestro-workspace/testplans/smoke.yaml' -BuildApk\"`, and summarize failing steps with artifact paths."
+    },
+    "mocca-logcat": {
+      "description": "Collect filtered warning logcat",
+      "template": "Run `adb logcat -c && adb logcat *:W | findstr \"mocca|Exception\"` and summarize relevant errors."
+    }
+  },
+  "mcp": {
+    "stitch": {
+      "type": "remote",
+      "url": "https://stitch.googleapis.com/mcp",
+      "enabled": true,
+      "oauth": false,
+      "timeout": 300000,
+      "headers": {
+        "X-Goog-Api-Key": "{env:STITCH_API_KEY}"
+      }
+    },
+    "android-mcp": {
+      "type": "local",
+      "enabled": false,
+      "timeout": 120000,
+      "command": [
+        "uvx",
+        "android-mcp",
+        "--emulator"
+      ]
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": false,
+      "headers": {
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      }
+    },
+    "gh-grep": {
+      "type": "remote",
+      "url": "https://mcp.grep.app",
+      "enabled": false
+    }
+  }
+}

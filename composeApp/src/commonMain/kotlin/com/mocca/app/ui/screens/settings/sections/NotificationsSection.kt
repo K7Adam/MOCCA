@@ -27,17 +27,17 @@ fun NotificationsSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "NOTIFICATIONS",
+            text = "Notifications",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "ALERTS") {
+        ModuleCard(title = "Alerts") {
             // Permission Notifications
             ModuleRowItem(
-                title = "PERMISSION REQUESTS",
+                title = "Permission requests",
                 subtitle = "Alert when AI needs approval",
                 isEnabled = preferences.notifyPermissions,
                 onToggle = { onSetNotifyPermissions(!preferences.notifyPermissions) }
@@ -47,7 +47,7 @@ fun NotificationsSection(
             
             // Session Complete
             ModuleRowItem(
-                title = "SESSION COMPLETE",
+                title = "Session complete",
                 subtitle = "Alert when AI finishes task",
                 isEnabled = preferences.notifySessionComplete,
                 onToggle = { onSetNotifySessionComplete(!preferences.notifySessionComplete) }
@@ -57,7 +57,7 @@ fun NotificationsSection(
             
             // Connection Lost
             ModuleRowItem(
-                title = "CONNECTION LOST",
+                title = "Connection lost",
                 subtitle = "Alert on server disconnect",
                 isEnabled = preferences.notifyConnectionLost,
                 onToggle = { onSetNotifyConnectionLost(!preferences.notifyConnectionLost) }

@@ -1,0 +1,8 @@
+appId: com.mocca.app
+---
+- runFlow: ../flows/catalog/capture_panels.yaml
+- runFlow: ../flows/catalog/capture_sessions_chat.yaml
+- runFlow: ../flows/catalog/capture_files_git_terminal.yaml
+- runFlow: ../flows/catalog/capture_settings_skills_flags.yaml
+- runFlow: ../flows/catalog/capture_onboarding_connection.yaml
+- runFlow: ../flows/catalog/capture_mcp.yaml

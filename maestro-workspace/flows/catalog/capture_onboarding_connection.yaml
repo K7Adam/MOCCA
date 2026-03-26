@@ -1,0 +1,17 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(Select Server|CONNECT TO SERVER|Enter server manually|SESSIONS|CHAT|TOOLS)"
+    timeout: 30000
+
+- takeScreenshot: catalog_onboarding_initial
+
+- waitForAnimationToEnd:
+    timeout: 1800
+
+- takeScreenshot: catalog_state_chat_no_session

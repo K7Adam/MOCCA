@@ -385,9 +385,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                 ) {
                                     QuoteRotator(
                                         versionText = state.appVersion,
-                                        serverText = if (state.isConnected) "LOCAL SERVER" else null,
+                                        serverText = if (state.isConnected) "Local server" else null,
                                         isLoading = state.isLoadingSession || state.isCreatingSession,
-                                        loadingText = if (state.isCreatingSession) "CREATING_SESSION..." else "LOADING_SESSION..."
+                                        loadingText = if (state.isCreatingSession) "Creating session..." else "Loading session..."
                                     )
                                 }
                             }
@@ -459,7 +459,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         ToggleFloatingActionButton(
                             checked = fabMenuExpanded,
                             onCheckedChange = { fabMenuExpanded = it },
-                            containerColor = { AppColors.surfaceContainerHigh }
+                            containerColor = { AppColors.primary }
                         ) {
                             androidx.compose.animation.AnimatedContent(
                                 targetState = fabMenuExpanded, 
@@ -469,13 +469,13 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                     Icon(
                                         imageVector = Icons.Default.Close,
                                         contentDescription = "Close Menu",
-                                        tint = AppColors.onSurface
+                                        tint = AppColors.onPrimary
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Add,
                                         contentDescription = "Open Menu",
-                                        tint = AppColors.onSurface
+                                        tint = AppColors.onPrimary
                                     )
                                 }
                             }

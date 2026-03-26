@@ -1,0 +1,48 @@
+appId: com.mocca.app
+tags:
+  - catalog
+---
+- launchApp:
+    clearState: true
+
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    timeout: 30000
+
+- tapOn: "TOOLS"
+- waitForAnimationToEnd:
+    timeout: 2000
+
+- takeScreenshot: catalog_module_mcp_dashboard
+
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          text: "(JSON CONFIG|MCP CONFIG)"
+          retryTapIfNoChange: true
+
+- waitForAnimationToEnd:
+    timeout: 1200
+
+- takeScreenshot: catalog_module_mcp_after_config_tap
+
+- back
+- waitForAnimationToEnd:
+    timeout: 1200
+
+- tapOn:
+    text: ".*CONNECTED.*"
+    optional: true
+
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- tapOn:
+    text: "VIEW_RESOURCES.*"
+    optional: true
+
+- waitForAnimationToEnd:
+    timeout: 1000
+
+- takeScreenshot: catalog_screen_mcp_resources

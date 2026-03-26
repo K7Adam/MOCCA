@@ -32,17 +32,17 @@ fun AppearanceSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "APPEARANCE",
+            text = "Appearance",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "DISPLAY") {
+        ModuleCard(title = "Display") {
             // Show Token Counts
             ModuleRowItem(
-                title = "SHOW TOKEN COUNTS",
+                title = "Show token counts",
                 subtitle = "Display input/output tokens in chat",
                 isEnabled = preferences.showTokenCounts,
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
@@ -52,7 +52,7 @@ fun AppearanceSection(
             
             // Show Timestamps
             ModuleRowItem(
-                title = "SHOW TIMESTAMPS",
+                title = "Show timestamps",
                 subtitle = "Display message timestamps",
                 isEnabled = preferences.showTimestamps,
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
@@ -62,7 +62,7 @@ fun AppearanceSection(
             
             // Compact Mode
             ModuleRowItem(
-                title = "COMPACT MODE",
+                title = "Compact mode",
                 subtitle = "Reduced padding for higher density",
                 isEnabled = preferences.compactMode,
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
@@ -72,7 +72,7 @@ fun AppearanceSection(
             
             // Hide API Keys
             ModuleRowItem(
-                title = "HIDE API KEYS",
+                title = "Hide API keys",
                 subtitle = "Mask sensitive keys in settings",
                 isEnabled = preferences.hideApiKeys,
                 onToggle = { onSetHideApiKeys(!preferences.hideApiKeys) }
@@ -82,7 +82,7 @@ fun AppearanceSection(
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Font Scale Slider
-        ModuleCard(title = "FONT SIZE") {
+        ModuleCard(title = "Font size") {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -90,13 +90,13 @@ fun AppearanceSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "TEXT SCALE",
+                        text = "Text scale",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
                     Text(
                         text = "${preferences.fontScalePercent}%",
-                        color = AppColors.accentGreen,
+                        color = AppColors.primary,
                         style = AppTypography.labelMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -114,8 +114,8 @@ fun AppearanceSection(
                     valueRange = 0.8f..1.4f,
                     steps = 5,
                     colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = AppColors.accentGreen,
-                        activeTrackColor = AppColors.accentGreen,
+                        thumbColor = AppColors.primary,
+                        activeTrackColor = AppColors.primary,
                         inactiveTrackColor = AppColors.onSurfaceVariantDark
                     )
                 )

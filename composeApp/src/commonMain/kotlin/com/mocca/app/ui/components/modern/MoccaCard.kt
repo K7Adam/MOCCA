@@ -81,7 +81,7 @@ fun MoccaCardElevated(
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 16.dp)
             .border(borderWidth, borderColor, shape)
-            .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.accentGreen.copy(alpha = 0.15f))
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.primary.copy(alpha = 0.15f))
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(contentPadding),
         content = content
@@ -120,7 +120,7 @@ fun StatusMonitorCard(
 fun MoccaSectionCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    leftBorderColor: Color = AppColors.accentGreen,
+    leftBorderColor: Color = AppColors.primary,
     leftBorderWidth: Dp = AppSpacing.borderStandard,
     backgroundColor: Color = AppColors.surfaceVariant,
     contentPadding: Dp = AppSpacing.lg,
@@ -137,7 +137,7 @@ fun MoccaSectionCard(
                     size = androidx.compose.ui.geometry.Size(leftBorderWidth.toPx(), size.height)
                 )
             }
-            .moccaClickable(onClick = onClick, pressedScale = 0.99f, rippleColor = AppColors.accentGreen.copy(alpha = 0.05f))
+            .moccaClickable(onClick = onClick, pressedScale = 0.99f, rippleColor = AppColors.primary.copy(alpha = 0.05f))
             .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(start = contentPadding + leftBorderWidth, end = contentPadding, 
                      top = contentPadding, bottom = contentPadding),
@@ -152,7 +152,7 @@ fun MoccaSessionCard(
     isActive: Boolean = false,
     backgroundColor: Color = AppColors.surfaceContainerHigh,
     borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
-    activeIndicatorColor: Color = AppColors.accentGreen,
+    activeIndicatorColor: Color = AppColors.primary,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = if (isActive) AppShapes.slanted else AppShapes.sessionCard,

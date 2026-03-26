@@ -103,7 +103,8 @@ fun GitStatusModule(
                 icon = Icons.Default.ChevronRight,
                 onClick = onExpandClick,
                 size = 32.dp,
-                iconColor = AppColors.onSurfaceVariant
+                iconColor = AppColors.onSurfaceVariant,
+                contentDescription = "Open Git status"
             )
         }
     ) {
@@ -163,7 +164,8 @@ fun SkillsEngineModule(
                 icon = Icons.Default.Settings,
                 onClick = onFilterClick,
                 size = 32.dp,
-                iconColor = AppColors.onSurfaceVariant
+                iconColor = AppColors.onSurfaceVariant,
+                contentDescription = "Filter skills"
             )
         }
     ) {
