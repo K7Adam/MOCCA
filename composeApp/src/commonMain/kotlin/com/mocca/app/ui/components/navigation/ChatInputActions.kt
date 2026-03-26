@@ -29,6 +29,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -89,7 +91,8 @@ internal fun ChatInputActionToolbar(
             ToggleActionButton(
                 text = "/",
                 isActive = showCommandPalette,
-                onClick = onCommandPaletteToggle
+                onClick = onCommandPaletteToggle,
+                contentDescription = "Toggle command palette"
             )
         }
 
@@ -97,28 +100,32 @@ internal fun ChatInputActionToolbar(
         ToggleActionButton(
             text = "!",
             isActive = shellMode,
-            onClick = onShellModeToggle
+            onClick = onShellModeToggle,
+            contentDescription = "Toggle shell mode"
         )
 
         // P plan mode button
         ToggleActionButton(
             text = "P",
             isActive = planMode,
-            onClick = onPlanModeToggle
+            onClick = onPlanModeToggle,
+            contentDescription = "Toggle plan mode"
         )
 
         // History up button
         ToggleActionButton(
             text = "\u2191",
             isActive = false,
-            onClick = onHistoryUp
+            onClick = onHistoryUp,
+            contentDescription = "History up"
         )
 
         // History down button
         ToggleActionButton(
             text = "\u2193",
             isActive = false,
-            onClick = onHistoryDown
+            onClick = onHistoryDown,
+            contentDescription = "History down"
         )
 
         // Subtle separator
@@ -171,8 +178,10 @@ internal fun ChatInputActionToolbar(
 private fun ToggleActionButton(
     text: String,
     isActive: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    contentDescription: String? = null
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(NavConstants.ActionButtonSize)
@@ -184,9 +193,14 @@ private fun ToggleActionButton(
                 if (isActive) Modifier.border(AppSpacing.borderThin, AppColors.primary, AppShapes.pill) else Modifier
             )
             .clickable(
-                interactionSource = remember { MutableInteractionSource() },
+                interactionSource = interactionSource,
                 indication = null,
                 onClick = onClick
+            )
+            .then(
+                if (contentDescription != null) {
+                    Modifier.semantics { this.contentDescription = contentDescription }
+                } else Modifier
             ),
         contentAlignment = Alignment.Center
     ) {
