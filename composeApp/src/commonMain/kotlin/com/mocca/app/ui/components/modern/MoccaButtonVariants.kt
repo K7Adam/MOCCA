@@ -26,10 +26,10 @@ fun TabPillButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    activeBackgroundColor: Color = AppColors.accentGreen,
+    activeBackgroundColor: Color = AppColors.primary,
     activeTextColor: Color = AppColors.background,
     inactiveBackgroundColor: Color = Color.Transparent,
-    inactiveBorderColor: Color = AppColors.accentGreen.copy(alpha = 0.4f),
+    inactiveBorderColor: Color = AppColors.primary.copy(alpha = 0.4f),
     inactiveTextColor: Color = AppColors.onSurfaceVariant
 ) {
     Box(
@@ -44,7 +44,7 @@ fun TabPillButton(
                         .border(AppSpacing.borderThin, inactiveBorderColor, AppShapes.pill)
                 }
             )
-            .moccaClickable(onClick = onClick, pressedScale = 0.94f, rippleColor = AppColors.accentGreen.copy(alpha = 0.15f))
+            .moccaClickable(onClick = onClick, pressedScale = 0.94f, rippleColor = AppColors.primary.copy(alpha = 0.15f))
             .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
     ) {

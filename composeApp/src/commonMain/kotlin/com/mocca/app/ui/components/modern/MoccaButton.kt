@@ -144,7 +144,7 @@ fun MoccaSplitButton(
     checked: Boolean = false,
     onCheckedChange: ((Boolean) -> Unit)? = null,
     icon: ImageVector? = null,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.primary,
     textColor: Color = AppColors.background
 ) {
     SplitButtonLayout(
@@ -282,7 +282,7 @@ fun MoccaCompactButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.primary,
     textColor: Color = AppColors.background,
     height: Dp = MoccaButtonDefaults.HeightCompact,
     paddingHorizontal: Dp = MoccaButtonDefaults.PaddingHorizontal,
