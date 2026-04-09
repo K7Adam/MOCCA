@@ -291,7 +291,7 @@ internal fun OnboardingConnectStep(
                             checked = useHttps,
                             onCheckedChange = { useHttps = it },
                             colors = SwitchDefaults.colors(
-                                checkedTrackColor = AppColors.accentGreen,
+                                checkedTrackColor = AppColors.primary,
                                 checkedThumbColor = AppColors.onSurface,
                                 uncheckedTrackColor = AppColors.surfaceContainerHigh,
                                 uncheckedThumbColor = AppColors.outline

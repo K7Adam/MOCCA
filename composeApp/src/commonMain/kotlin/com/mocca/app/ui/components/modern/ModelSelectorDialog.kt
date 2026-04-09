@@ -95,7 +95,7 @@ fun ModelSelectorDialog(
                 Text(
                     text = "> ",
                     style = AppTypography.bodySmall,
-                    color = AppColors.accentGreen
+                    color = AppColors.primary
                 )
                 androidx.compose.foundation.text.BasicTextField(
                     value = searchQuery,
@@ -171,7 +171,7 @@ fun ModelSelectorDialog(
                        Text(
                            text = "// RECENT",
                            style = AppTypography.labelSmall,
-                           color = AppColors.accentGreen,
+                           color = AppColors.primary,
                            modifier = Modifier.padding(
                                start = AppSpacing.sm,
                                top = AppSpacing.sm,
@@ -192,7 +192,7 @@ fun ModelSelectorDialog(
                                    }
                                    .background(
                                        if (isSelected) 
-                                           AppColors.accentGreen.copy(alpha = 0.2f) 
+                                           AppColors.primary.copy(alpha = 0.2f) 
                                        else 
                                            AppColors.background
                                    )
@@ -206,7 +206,7 @@ fun ModelSelectorDialog(
                                Text(
                                    text = "> ${recent.modelId.uppercase()} [${recent.providerId.uppercase()}]",
                                    style = AppTypography.bodySmall,
-                                   color = if (isSelected) AppColors.accentGreen else AppColors.onSurface
+                                   color = if (isSelected) AppColors.primary else AppColors.onSurface
                                )
                            }
                        }
@@ -226,7 +226,7 @@ fun ModelSelectorDialog(
                         Text(
                             text = "// CONNECTED",
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen,
+                            color = AppColors.primary,
                             modifier = Modifier.padding(
                                 start = AppSpacing.sm,
                                 top = AppSpacing.sm,
@@ -356,7 +356,7 @@ private fun ProviderSection(
                         .clickable(enabled = enabled) { onModelSelected(modelId) }
                         .background(
                             if (isSelected) 
-                                AppColors.accentGreen.copy(alpha = 0.2f) 
+                                AppColors.primary.copy(alpha = 0.2f) 
                             else 
                                 AppColors.background
                         )
@@ -373,7 +373,7 @@ private fun ProviderSection(
                         text = "> ${modelId.replace("-", " ").uppercase()}",
                         style = AppTypography.bodySmall,
                         color = when {
-                            isSelected -> AppColors.accentGreen
+                            isSelected -> AppColors.primary
                             enabled -> AppColors.onSurfaceVariantLight
                             else -> AppColors.onSurfaceVariantDark
                         }
@@ -383,7 +383,7 @@ private fun ProviderSection(
                         Icon(
                             Icons.Default.Check,
                             contentDescription = "Selected",
-                            tint = AppColors.accentGreen,
+                            tint = AppColors.primary,
                             modifier = Modifier.size(16.dp)
                         )
                     }

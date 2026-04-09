@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -34,6 +35,9 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -78,17 +82,19 @@ fun MoccaButton(
         animationSpec = scaleSpec,
         label = "buttonScale"
     )
-    
+
     val bgColor = if (enabled) backgroundColor else disabledBackgroundColor
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
 
     Box(
         modifier = modifier
+            .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
             .focusBorder(interactionSource)
+            .semantics { role = Role.Button }
             .then(
                 if (enabled) {
                     Modifier.clickable(
@@ -207,7 +213,7 @@ fun MoccaOutlinedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    borderColor: Color = AppColors.accentGreen,
+    borderColor: Color = AppColors.primary,
     textColor: Color = AppColors.onSurface,
     disabledBorderColor: Color = AppColors.onSurfaceVariantDark,
     disabledTextColor: Color = AppColors.onSurfaceVariant,
@@ -225,25 +231,27 @@ fun MoccaOutlinedButton(
         animationSpec = scaleSpec,
         label = "buttonScaleOutlined"
     )
-    
+
     val brdColor = if (enabled) {
         if (isFocused) AppColors.primary else borderColor
     } else disabledBorderColor
     val currentBorderWidth = if (isFocused) 2.dp else borderWidth
     val txtColor = if (enabled) textColor else disabledTextColor
     val displayText = if (showBrackets) "[ $text ]" else text
-    
+
     Box(
         modifier = modifier
+            .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
             .scale(scale)
             .background(Color.Transparent, AppShapes.pill)
             .border(currentBorderWidth, brdColor, AppShapes.pill)
+            .semantics { role = Role.Button }
             .then(
                 if (enabled) {
                     Modifier.clickable(
                         interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.accentGreen.copy(alpha = 0.2f)),
+                        indication = ripple(color = AppColors.primary.copy(alpha = 0.2f)),
                         onClick = onClick
                     )
                 } else {
@@ -296,16 +304,18 @@ fun MoccaCompactButton(
         animationSpec = scaleSpec,
         label = "buttonScaleCompact"
     )
-    
+
     val bgColor = if (enabled) backgroundColor else AppColors.onSurfaceVariantDark
     val txtColor = if (enabled) textColor else AppColors.onSurfaceVariant
 
     Box(
         modifier = modifier
+            .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
             .scale(scale)
             .background(bgColor, AppShapes.pill)
             .focusBorder(interactionSource)
+            .semantics { role = Role.Button }
             .then(
                 if (enabled) {
                     Modifier.clickable(

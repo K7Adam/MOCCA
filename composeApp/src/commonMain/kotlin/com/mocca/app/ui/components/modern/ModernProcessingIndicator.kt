@@ -33,15 +33,15 @@ fun ModernProcessingIndicator() {
     ) {
         LoadingIndicator(
             modifier = Modifier.size(16.dp),
-            color = AppColors.accentGreen,
+            color = AppColors.primary,
             polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
         )
-        
+
         Spacer(modifier = Modifier.width(AppSpacing.sm))
-        
+
         Text(
             text = "PROCESSING...",
-            color = AppColors.accentGreen,
+            color = AppColors.primary,
             style = AppTypography.labelExtraSmall,
             fontWeight = FontWeight.Bold
         )

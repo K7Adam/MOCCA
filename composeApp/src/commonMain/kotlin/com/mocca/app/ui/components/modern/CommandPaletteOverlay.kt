@@ -77,15 +77,15 @@ fun CommandPaletteOverlay(
         if (query.isBlank()) commands
         else commands.filter {
             it.name.contains(query, ignoreCase = true) ||
-                it.description?.contains(query, ignoreCase = true) == true
+                    it.description?.contains(query, ignoreCase = true) == true
         }
     }
     val filteredModes = remember(modes, query) {
         if (query.isBlank()) modes
         else modes.filter {
             it.name.contains(query, ignoreCase = true) ||
-                it.id.contains(query, ignoreCase = true) ||
-                it.description?.contains(query, ignoreCase = true) == true
+                    it.id.contains(query, ignoreCase = true) ||
+                    it.description?.contains(query, ignoreCase = true) == true
         }
     }
 
@@ -138,7 +138,7 @@ fun CommandPaletteOverlay(
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
-                        tint = AppColors.accentGreen,
+                        tint = AppColors.primary,
                         modifier = Modifier.size(18.dp)
                     )
                     BasicTextField(
@@ -148,7 +148,7 @@ fun CommandPaletteOverlay(
                             .weight(1f)
                             .focusRequester(focusRequester),
                         textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
-                        cursorBrush = SolidColor(AppColors.accentGreen),
+                        cursorBrush = SolidColor(AppColors.primary),
                         singleLine = true,
                         decorationBox = { inner ->
                             Box {
@@ -334,7 +334,7 @@ private fun CommandPaletteItem(
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = AppColors.accentGreen.copy(alpha = 0.15f),
+                    color = AppColors.primary.copy(alpha = 0.15f),
                     shape = AppShapes.small
                 ),
             contentAlignment = Alignment.Center
@@ -342,7 +342,7 @@ private fun CommandPaletteItem(
             Text(
                 text = prefix,
                 style = AppTypography.labelSmall,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold
             )
         }

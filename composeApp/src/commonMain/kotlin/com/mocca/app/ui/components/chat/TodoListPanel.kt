@@ -106,7 +106,7 @@ fun TodoListPanel(
                             Text(
                                 text = "$completedCount",
                                 style = AppTypography.labelExtraSmall,
-                                color = AppColors.accentGreen,
+                                color = AppColors.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -120,8 +120,8 @@ fun TodoListPanel(
                             },
                             style = AppTypography.labelExtraSmall,
                             color = when {
-                                inProgressCount > 0 -> AppColors.accentGreen
-                                completedCount == totalCount && totalCount > 0 -> AppColors.accentGreen
+                                inProgressCount > 0 -> AppColors.primary
+                                completedCount == totalCount && totalCount > 0 -> AppColors.primary
                                 else -> AppColors.outline
                             },
                             fontWeight = FontWeight.Medium
@@ -180,8 +180,8 @@ private fun TodoItem(todo: Todo) {
     val statusColor by animateColorAsState(
         targetValue = when (todo.status) {
             TodoStatus.PENDING -> AppColors.onSurfaceVariant
-            TodoStatus.IN_PROGRESS -> AppColors.accentGreen
-            TodoStatus.COMPLETED -> AppColors.accentGreen
+            TodoStatus.IN_PROGRESS -> AppColors.primary
+            TodoStatus.COMPLETED -> AppColors.success
             TodoStatus.CANCELLED -> AppColors.onSurfaceVariantDark
         },
         label = "statusColor"

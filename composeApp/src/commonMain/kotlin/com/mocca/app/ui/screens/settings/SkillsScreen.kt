@@ -148,7 +148,7 @@ object SkillsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { screenModel.load() },
-                    iconColor = AppColors.accentGreen
+                    iconColor = AppColors.primary
                 )
             }
 
@@ -222,7 +222,7 @@ private fun SkillCard(skill: SkillInfo) {
         Text(
             text = skill.name,
             style = AppTypography.labelMedium,
-            color = AppColors.accentGreen,
+            color = AppColors.primary,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
@@ -250,14 +250,14 @@ private fun SkillCard(skill: SkillInfo) {
                     Box(
                         modifier = Modifier
                             .clip(AppShapes.pill)
-                            .background(AppColors.accentGreen.copy(alpha = 0.12f))
-                            .border(0.5.dp, AppColors.accentGreen.copy(alpha = 0.3f), AppShapes.pill)
+                            .background(AppColors.primary.copy(alpha = 0.12f))
+                            .border(0.5.dp, AppColors.primary.copy(alpha = 0.3f), AppShapes.pill)
                             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
                     ) {
                         Text(
                             text = tag,
                             style = AppTypography.labelSmall,
-                            color = AppColors.accentGreen
+                            color = AppColors.primary
                         )
                     }
                 }

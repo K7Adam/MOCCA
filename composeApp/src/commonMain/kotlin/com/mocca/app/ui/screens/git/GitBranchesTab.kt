@@ -64,7 +64,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     trailing = {
                         if (branch.ahead > 0 || branch.behind > 0) {
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.accentGreen)
+                                if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.primary)
                                 if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.error)
                             }
                         }

@@ -22,11 +22,11 @@ object AppMotion {
     val fastSpatial = 200 // ms
     val standardSpatial = 300 // ms
     val slowSpatial = 500 // ms
-    
+
     // Effects (Fade/Color)
     val fastEffects = 150 // ms
     val standardEffects = 250 // ms
-    
+
     // Spring Constants (Expressive)
     val dampingRatio = 0.8f
     val stiffnessLow = 200f
@@ -43,18 +43,18 @@ fun Modifier.moccaClickable(
     onClick: (() -> Unit)?,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     pressedScale: Float = 0.96f,
-    rippleColor: Color = AppColors.accentGreen.copy(alpha = 0.1f),
+    rippleColor: Color = AppColors.primary.copy(alpha = 0.1f),
     enabled: Boolean = true
 ): Modifier {
     if (onClick == null) return this
-    
+
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1f,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
         label = "moccaClickableScale"
     )
-    
+
     return this
         .scale(scale)
         .clickable(

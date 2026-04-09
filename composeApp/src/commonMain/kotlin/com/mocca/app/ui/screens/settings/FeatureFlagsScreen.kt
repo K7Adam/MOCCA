@@ -91,13 +91,13 @@ object FeatureFlagsScreen : Screen {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(AppShapes.medium)
-                        .background(AppColors.accentGreen.copy(alpha = 0.12f))
-                        .border(AppSpacing.borderThin, AppColors.accentGreen, AppShapes.medium)
+                        .background(AppColors.success.copy(alpha = 0.12f))
+                        .border(AppSpacing.borderThin, AppColors.success, AppShapes.medium)
                         .padding(AppSpacing.md)
                 ) {
                     Text(
                         text = uiState.successMessage!!,
-                        color = AppColors.accentGreen,
+                        color = AppColors.success,
                         style = AppTypography.bodySmall
                     )
                 }
@@ -106,7 +106,7 @@ object FeatureFlagsScreen : Screen {
 
             if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    LoadingIndicator(color = AppColors.accentGreen)
+                    LoadingIndicator(color = AppColors.primary)
                 }
             } else {
                 LazyColumn(
@@ -261,7 +261,7 @@ object FeatureFlagsScreen : Screen {
                                 ) {
                                     LoadingIndicator(
                                         modifier = Modifier.size(14.dp),
-                                        color = AppColors.accentGreen
+                                        color = AppColors.primary
                                     )
                                     Text(
                                         text = "Saving...",
@@ -333,12 +333,12 @@ private fun ExperimentalFlagRow(
             modifier = Modifier
                 .clip(AppShapes.pill)
                 .background(
-                    if (enabled) AppColors.accentGreen.copy(alpha = 0.15f)
+                    if (enabled) AppColors.primary.copy(alpha = 0.15f)
                     else AppColors.outline
                 )
                 .border(
                     AppSpacing.borderThin,
-                    if (enabled) AppColors.accentGreen.copy(alpha = 0.5f)
+                    if (enabled) AppColors.primary.copy(alpha = 0.5f)
                     else AppColors.outlineVariant,
                     AppShapes.pill
                 )
@@ -347,7 +347,7 @@ private fun ExperimentalFlagRow(
             Text(
                 text = if (enabled) "ON" else "OFF",
                 style = AppTypography.labelSmall,
-                color = if (enabled) AppColors.accentGreen else AppColors.outline,
+                color = if (enabled) AppColors.primary else AppColors.outline,
                 fontWeight = FontWeight.Bold
             )
         }

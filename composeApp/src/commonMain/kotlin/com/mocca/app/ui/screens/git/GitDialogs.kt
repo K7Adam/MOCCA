@@ -60,7 +60,7 @@ internal fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
             contentAlignment = Alignment.BottomCenter
         ) {
             Surface(
-                color = if (toastIsWarning) AppColors.error else AppColors.accentGreen,
+                color = if (toastIsWarning) AppColors.error else AppColors.success,
                 shape = AppShapes.pill,
                 modifier = Modifier.padding(horizontal = 24.dp)
             ) {

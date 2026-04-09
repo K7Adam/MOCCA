@@ -64,7 +64,7 @@ fun ForkSessionDialog(
             Text(
                 text = "FORK FROM",
                 style = AppTypography.labelLarge,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
@@ -115,7 +115,7 @@ private fun ForkMessageRow(
 ) {
     val isUser = message.role == MessageRole.USER
     val roleLabel = if (isUser) "USER" else "AGENT"
-    val roleColor = if (isUser) AppColors.onSurfaceVariant else AppColors.accentGreen
+    val roleColor = if (isUser) AppColors.onSurfaceVariant else AppColors.primary
     val textSnippet = remember(message.parts) {
         message.parts.filterIsInstance<MessagePart.Text>().firstOrNull()?.text?.take(120)?.trim()
             ?: message.parts.filterIsInstance<MessagePart.ToolInvocation>().firstOrNull()?.let { "[${it.name}]" }

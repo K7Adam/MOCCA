@@ -271,19 +271,19 @@ fun RunningSessionIndicator(
                 modifier = Modifier
                     .size((8 * pulseScale).dp)
                     .alpha(pulseAlpha * 0.5f)
-                    .background(AppColors.accentGreen, CircleShape)
+                    .background(AppColors.statusOnline, CircleShape)
             )
             Box(
                 modifier = Modifier
                     .size(8.dp)
-                    .background(AppColors.accentGreen, CircleShape)
+                    .background(AppColors.statusOnline, CircleShape)
             )
         }
         
         Text(
             text = statusLabel,
             style = AppTypography.labelSmall,
-            color = AppColors.accentGreen,
+            color = AppColors.statusOnline,
             fontWeight = FontWeight.Bold
         )
     }

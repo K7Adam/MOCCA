@@ -148,7 +148,7 @@ fun ContextToolGroup(tools: List<Pair<MessagePart.ToolInvocation, MessagePart.To
                 Text(
                     text = "\u2713 $completedCount",
                     style = AppTypography.labelExtraSmall,
-                    color = AppColors.accentGreen
+                    color = AppColors.success
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.xs))
             }

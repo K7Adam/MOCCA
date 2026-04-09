@@ -24,7 +24,7 @@ import org.koin.compose.koinInject
 /**
  * A subtle pulsing indicator shown when any background activity is running.
  * Should be placed in a corner of the main UI (e.g., top-right of status bar).
- * 
+ *
  * Terminal aesthetic: Small, unobtrusive, monochrome pulsing dot.
  */
 @Composable
@@ -33,14 +33,14 @@ fun GlobalActivityIndicator(
     activityManager: GlobalActivityManager = koinInject()
 ) {
     val isActive by activityManager.isActive.collectAsState()
-    
+
     if (!isActive) return
-    
+
     LoadingIndicator(
         modifier = modifier
             .padding(8.dp)
             .size(8.dp),
-        color = AppColors.accentGreen,
+        color = AppColors.primary,
         polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
     )
 }
@@ -55,10 +55,10 @@ fun CompactActivityIndicator(
     modifier: Modifier = Modifier
 ) {
     if (!isActive) return
-    
+
     LoadingIndicator(
         modifier = modifier.size(6.dp),
-        color = AppColors.accentGreen,
+        color = AppColors.primary,
         polygons = LoadingIndicatorDefaults.IndeterminateIndicatorPolygons
     )
 }

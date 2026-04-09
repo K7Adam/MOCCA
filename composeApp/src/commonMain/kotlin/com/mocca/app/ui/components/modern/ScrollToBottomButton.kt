@@ -171,7 +171,7 @@ fun ScrollToBottomButton(
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
                                 .clip(AppShapes.circle)
-                                .background(AppColors.accentGreen)
+                                .background(AppColors.primary)
                                 .border(
                                     width = 2.dp,
                                     color = containerColor,

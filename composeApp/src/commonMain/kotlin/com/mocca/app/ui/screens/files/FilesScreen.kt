@@ -42,13 +42,13 @@ import mocca.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 
 class FilesScreen : Screen {
-    
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<FilesScreenModel>()
         val state by screenModel.state.collectAsState()
-        
+
         Scaffold(
             topBar = {
                 GodHeader(
@@ -65,8 +65,15 @@ class FilesScreen : Screen {
                         )
                     },
                     actions = {
-                        IconButton(onClick = { screenModel.loadFiles(state.currentPath) }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = AppColors.onSurface)
+                        IconButton(
+                            onClick = { screenModel.loadFiles(state.currentPath) },
+                            modifier = Modifier.minimumInteractiveComponentSize()
+                        ) {
+                            Icon(
+                                Icons.Default.Refresh,
+                                contentDescription = "Refresh files",
+                                tint = AppColors.onSurface
+                            )
                         }
                     }
                 )
@@ -79,13 +86,13 @@ class FilesScreen : Screen {
                     .padding(padding)
             ) {
                 // Breadcrumb navigation
-        GodBreadcrumbBar(
-            pathHistory = state.pathHistory,
-            canNavigateUp = state.pathHistory.size > 1,
-            onNavigateUp = { screenModel.navigateUp() },
-            modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none)
-        )
-                
+                GodBreadcrumbBar(
+                    pathHistory = state.pathHistory,
+                    canNavigateUp = state.pathHistory.size > 1,
+                    onNavigateUp = { screenModel.navigateUp() },
+                    modifier = Modifier.background(AppColors.surfaceContainer, AppShapes.none)
+                )
+
                 // Content
                 Box(
                     modifier = Modifier
@@ -138,25 +145,26 @@ private fun GodBreadcrumbBar(
                 IconButton(
                     onClick = onNavigateUp,
                     modifier = Modifier
-                        .size(32.dp)
+                        .minimumInteractiveComponentSize()
+                        .size(48.dp)
                         .background(AppColors.surfaceVariant, AppShapes.circle)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Up",
+                        contentDescription = "Navigate up",
                         tint = AppColors.onSurface,
                         modifier = Modifier.size(16.dp)
                     )
                 }
             }
-            
+
             Icon(
                 Icons.Default.Home,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
                 tint = AppColors.primary
             )
-            
+
             pathHistory.lastOrNull()?.let { path ->
                 if (path.isNotEmpty()) {
                     path.split("/").filter { it.isNotEmpty() }.forEach { segment ->
@@ -279,19 +287,20 @@ private fun GodFileViewer(
                 IconButton(
                     onClick = onClose,
                     modifier = Modifier
-                        .size(32.dp)
+                        .minimumInteractiveComponentSize()
+                        .size(48.dp)
                         .background(AppColors.surfaceVariant, AppShapes.circle)
                 ) {
                     Icon(
                         Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = "Close file viewer",
                         tint = AppColors.onSurface,
                         modifier = Modifier.size(16.dp)
                     )
                 }
             }
         }
-        
+
         // File Content
         Box(
             modifier = Modifier

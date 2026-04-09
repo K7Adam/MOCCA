@@ -73,14 +73,14 @@ fun ConnectionTroubleshootingCard(
                 fontWeight = FontWeight.Bold
             )
         }
-        
+
         // Status summary
         Text(
             text = "Status: $connectionStatus",
             style = AppTypography.bodySmall,
             color = AppColors.onSurfaceVariant
         )
-        
+
         // Diagnostic steps
         Column(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
@@ -89,9 +89,9 @@ fun ConnectionTroubleshootingCard(
                 DiagnosticStepRow(step)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(AppSpacing.md))
-        
+
         // Action buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -103,7 +103,7 @@ fun ConnectionTroubleshootingCard(
                 modifier = Modifier.weight(1f),
                 height = AppSpacing.buttonHeightCompact
             )
-            
+
             MoccaButton(
                 text = "Retry Connection",
                 onClick = onRetry,
@@ -121,9 +121,9 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
         DiagnosticStatus.PASS -> Icons.Default.CheckCircle to AppColors.statusOnline
         DiagnosticStatus.FAIL -> Icons.Default.Error to AppColors.statusOffline
         DiagnosticStatus.WARNING -> Icons.Default.Info to AppColors.statusWaiting
-        DiagnosticStatus.CHECKING -> Icons.Default.Refresh to AppColors.accentGreen
+        DiagnosticStatus.CHECKING -> Icons.Default.Refresh to AppColors.primary
     }
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -135,7 +135,7 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
             tint = color,
             modifier = Modifier.size(20.dp)
         )
-        
+
         Column(
             modifier = Modifier.weight(1f)
         ) {
@@ -145,13 +145,13 @@ private fun DiagnosticStepRow(step: DiagnosticStep) {
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Medium
             )
-            
+
             Text(
                 text = step.message,
                 style = AppTypography.bodySmall,
                 color = color
             )
-            
+
             step.helpText?.let { help ->
                 Text(
                     text = help,
@@ -196,22 +196,22 @@ fun ConnectionHelpInline(
                 fontWeight = FontWeight.Bold
             )
         }
-        
+
         Text(
             text = errorMessage,
             style = AppTypography.bodySmall,
             color = AppColors.onSurfaceDim
         )
-        
+
         Text(
             text = "Common causes:\n" +
-                   "• OpenCode server is not running on your computer\n" +
-                   "• Device and computer are on different networks\n" +
-                   "• Firewall blocking port 4242",
+                    "• OpenCode server is not running on your computer\n" +
+                    "• Device and computer are on different networks\n" +
+                    "• Firewall blocking port 4242",
             style = AppTypography.bodySmall,
             color = AppColors.onSurfaceVariant
         )
-        
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
@@ -220,13 +220,13 @@ fun ConnectionHelpInline(
                 text = "TROUBLESHOOT",
                 onClick = onTroubleshoot
             )
-            
+
             Spacer(modifier = Modifier.weight(1f))
-            
+
             MoccaTextButton(
                 text = "RETRY",
                 onClick = onRetry,
-                textColor = AppColors.accentGreen
+                textColor = AppColors.primary
             )
         }
     }

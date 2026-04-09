@@ -80,7 +80,7 @@ fun MoccaListItem(
                 Icon(
                     imageVector = leadingIcon,
                     contentDescription = null,
-                    tint = AppColors.accentGreen,
+                    tint = AppColors.primary,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))

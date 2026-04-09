@@ -1,20 +1,21 @@
 package com.mocca.app.ui.components.modern
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ripple
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ripple
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -72,6 +73,7 @@ fun McpConfigModule(
         }
     }
 }
+
 data class McpServerItem(
     val id: String,
     val name: String,
@@ -118,10 +120,10 @@ fun GitStatusModule(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .clip(AppShapes.small)
-                    .background(AppColors.outline.copy(alpha=0.3f))
+                    .background(AppColors.outline.copy(alpha = 0.3f))
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
-                StatusDot(color = AppColors.accentGreen)
+                StatusDot(color = AppColors.primary)
                 Text(
                     text = branchName.uppercase(),
                     color = AppColors.onSurface,
@@ -173,6 +175,7 @@ fun SkillsEngineModule(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 48.dp)
                     .clickable { onSkillClick(skill.id) }
                     .padding(vertical = AppSpacing.xs),
                 verticalAlignment = Alignment.CenterVertically

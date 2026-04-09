@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -102,12 +103,12 @@ fun ModuleCard(
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             if (actionButton != null) {
                 actionButton()
             }
         }
-        
+
         // Content
         Column(
             modifier = Modifier
@@ -167,7 +168,7 @@ fun ModuleRowItem(
             )
             Spacer(modifier = Modifier.width(AppSpacing.md))
         }
-        
+
         // Text content
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -188,7 +189,7 @@ fun ModuleRowItem(
                 overflow = TextOverflow.Ellipsis
             )
         }
-        
+
         // Toggle switch
         if (showToggle && onToggle != null) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
@@ -250,6 +251,7 @@ fun ModuleActionButton(
 ) {
     Box(
         modifier = modifier
+            .heightIn(min = 48.dp)
             .clip(AppShapes.small)
             .border(AppSpacing.borderThin, AppColors.outline, AppShapes.small)
             .clickable(
@@ -257,7 +259,8 @@ fun ModuleActionButton(
                 indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
                 onClick = onClick
             )
-            .padding(horizontal = AppSpacing.sm, vertical = 4.dp)
+            .padding(horizontal = AppSpacing.sm, vertical = 4.dp),
+        contentAlignment = Alignment.Center
     ) {
         Text(
             text = text.uppercase(),
@@ -266,4 +269,3 @@ fun ModuleActionButton(
         )
     }
 }
-

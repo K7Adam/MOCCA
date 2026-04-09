@@ -41,7 +41,7 @@ fun PermissionRequestDialog(
             Icon(
                 Icons.Default.Warning,
                 contentDescription = "Permission Required",
-                tint = AppColors.accentGreen
+                tint = AppColors.primary
             )
         },
         title = {

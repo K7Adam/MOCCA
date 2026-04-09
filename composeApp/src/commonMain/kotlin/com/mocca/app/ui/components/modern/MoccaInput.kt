@@ -144,7 +144,7 @@ fun MoccaInput(
                 if (showPrompt) {
                     Text(
                         text = "> ",
-                        color = AppColors.accentGreen,
+                        color = AppColors.primary,
                         style = AppTypography.bodyMedium
                     )
                 }
@@ -294,7 +294,7 @@ fun CommandLineInput(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
             size = AppSpacing.fabSize,
-            backgroundColor = if (value.isNotBlank()) AppColors.accentGreen else AppColors.onSurfaceVariantDark,
+            backgroundColor = if (value.isNotBlank()) AppColors.primary else AppColors.onSurfaceVariantDark,
             iconColor = if (value.isNotBlank()) AppColors.background else AppColors.outline
         )
     }

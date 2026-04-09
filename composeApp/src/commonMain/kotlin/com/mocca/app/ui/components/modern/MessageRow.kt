@@ -124,7 +124,8 @@ fun MessageRow(
 private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Boolean) {
     val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
     val label = if (isUser) "USER" else "AGENT"
-    val color = if (isUser) AppColors.onSurfaceVariant else AppColors.accentGreen
+    val color = if (isUser) AppColors.onSurfaceVariant else AppColors.primary
+    val iconDescription = if (isUser) "User message" else "Agent message"
     val timeText = remember(createdAt) { formatTime(createdAt) }
 
     Row(
@@ -137,7 +138,12 @@ private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Bool
         horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
     ) {
         if (!isUser) {
-            Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(10.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = iconDescription,
+                tint = color,
+                modifier = Modifier.size(10.dp)
+            )
             Spacer(modifier = Modifier.width(AppSpacing.xs))
         }
 
@@ -150,7 +156,12 @@ private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Bool
 
         if (isUser) {
             Spacer(modifier = Modifier.width(AppSpacing.xs))
-            Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(10.dp))
+            Icon(
+                imageVector = icon,
+                contentDescription = iconDescription,
+                tint = color,
+                modifier = Modifier.size(10.dp)
+            )
         }
     }
 }
@@ -222,13 +233,18 @@ private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> U
                 color = AppColors.onSurface,
                 onFileClick = onFileClick
             )
+
             is MessagePart.Reasoning -> ModernReasoningBlock(part)
-            is MessagePart.ToolInvocation -> RichToolCard(part, null) // In ContextToolGroup, they are paired. Standalone calls get null result.
+            is MessagePart.ToolInvocation -> RichToolCard(
+                part,
+                null
+            ) // In ContextToolGroup, they are paired. Standalone calls get null result.
             is MessagePart.ToolResult -> ModernToolResultBlock(part)
             is MessagePart.File -> ModernFileBlock(part)
             is MessagePart.SubTask -> ModernSubTaskBlock(part)
             is MessagePart.Thinking -> ModernThinkingBlock(part)
         }
+
         is MessagePartGroup.ToolGroup -> ContextToolGroup(tools = group.tools)
     }
 }
@@ -257,7 +273,7 @@ private fun TokenCountFooter(tokens: TokenUsage) {
         if (tokens.output > 0) {
             Text(
                 text = "OUT: ${FormatUtils.formatCompactNumber(tokens.output)}",
-                color = AppColors.accentGreen.copy(alpha = 0.7f),
+                color = AppColors.primary.copy(alpha = 0.7f),
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -266,7 +282,7 @@ private fun TokenCountFooter(tokens: TokenUsage) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(
                 text = "REASON: ${FormatUtils.formatCompactNumber(tokens.reasoning)}",
-                color = AppColors.accentGreen.copy(alpha = 0.5f),
+                color = AppColors.primary.copy(alpha = 0.5f),
                 style = AppTypography.labelExtraSmall,
                 fontWeight = FontWeight.Medium
             )
@@ -308,13 +324,15 @@ private fun MessageContextMenu(
                         icon = Icons.Default.ContentCopy,
                         onClick = { /* Copy action */ onDismiss() },
                         iconColor = AppColors.onSurfaceVariant,
+                        contentDescription = "Copy message",
                         size = 32.dp
                     )
-                    
+
                     MoccaIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = { onFork(); onDismiss() },
                         iconColor = AppColors.onSurfaceVariant,
+                        contentDescription = "Fork from message",
                         size = 32.dp
                     )
 
@@ -324,6 +342,7 @@ private fun MessageContextMenu(
                             icon = Icons.Default.Edit,
                             onClick = { onEditPart(textParts.first()); onDismiss() },
                             iconColor = AppColors.onSurfaceVariant,
+                            contentDescription = "Edit message",
                             size = 32.dp
                         )
                     }
@@ -332,6 +351,7 @@ private fun MessageContextMenu(
                         icon = Icons.Default.Delete,
                         onClick = { onDelete(); onDismiss() },
                         iconColor = AppColors.error,
+                        contentDescription = "Delete message",
                         size = 32.dp
                     )
                 }

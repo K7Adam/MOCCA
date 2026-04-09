@@ -157,7 +157,7 @@ object CrossProjectSessionsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.Default.Refresh,
                     onClick = { screenModel.load() },
-                    iconColor = AppColors.accentGreen
+                    iconColor = AppColors.primary
                 )
             }
 
@@ -261,13 +261,13 @@ private fun ProjectGroupHeader(
                     .width(3.dp)
                     .height(16.dp)
                     .clip(AppShapes.small)
-                    .background(AppColors.accentGreen)
+                    .background(AppColors.primary)
             )
             Text(
                 text = projectPath?.substringAfterLast('/')?.substringAfterLast('\\')?.uppercase()
                     ?: projectId.take(12).uppercase(),
                 style = AppTypography.labelMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -343,7 +343,7 @@ private fun CrossProjectSessionRow(
         MoccaIconButton(
             icon = Icons.AutoMirrored.Filled.OpenInNew,
             onClick = onOpen,
-            iconColor = AppColors.accentGreen
+            iconColor = AppColors.primary
         )
     }
 }

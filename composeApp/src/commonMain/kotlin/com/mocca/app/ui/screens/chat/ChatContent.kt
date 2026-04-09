@@ -279,7 +279,7 @@ fun ChatContent(
                 Box(contentAlignment = Alignment.Center) {
                     // Background Kinetic Shape
                     val shape = if (currentHeroMoment == HeroMomentType.CONNECTED) AppShapes.flower else AppShapes.gem
-                    val color = if (currentHeroMoment == HeroMomentType.CONNECTED) AppColors.accentGreen else AppColors.accent
+                    val color = if (currentHeroMoment == HeroMomentType.CONNECTED) AppColors.statusOnline else AppColors.accent
                     
                     Box(
                         modifier = Modifier

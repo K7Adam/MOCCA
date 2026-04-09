@@ -13,11 +13,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import com.mocca.app.ui.theme.*
 
 @Composable
@@ -34,7 +36,7 @@ fun TabPillButton(
 ) {
     Box(
         modifier = modifier
-            .height(MoccaButtonDefaults.HeightCompact)
+            .heightIn(min = 48.dp)
             .then(
                 if (isSelected) {
                     Modifier.background(activeBackgroundColor, AppShapes.pill)
@@ -44,7 +46,12 @@ fun TabPillButton(
                         .border(AppSpacing.borderThin, inactiveBorderColor, AppShapes.pill)
                 }
             )
-            .moccaClickable(onClick = onClick, pressedScale = 0.94f, rippleColor = AppColors.primary.copy(alpha = 0.15f))
+            .semantics { role = Role.Tab }
+            .moccaClickable(
+                onClick = onClick,
+                pressedScale = 0.94f,
+                rippleColor = AppColors.primary.copy(alpha = 0.15f)
+            )
             .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
     ) {
@@ -71,9 +78,10 @@ fun MoccaIconButton(
     interactionSource: InteractionSource = remember { MutableInteractionSource() }
 ) {
     val tintColor = if (enabled) iconColor else AppColors.onSurfaceVariant
-    
+
     Box(
         modifier = modifier
+            .sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             .size(size)
             .focusBorder(interactionSource, shape = AppShapes.circle)
             .background(backgroundColor, AppShapes.circle)
@@ -88,15 +96,18 @@ fun MoccaIconButton(
                 if (contentDescription != null) {
                     androidx.compose.ui.Modifier.semantics {
                         this.contentDescription = contentDescription
+                        this.role = Role.Button
                     }
                 } else {
-                    androidx.compose.ui.Modifier
+                    androidx.compose.ui.Modifier.semantics {
+                        this.role = Role.Button
+                    }
                 }
             )
             .moccaClickable(
-                onClick = onClick, 
-                pressedScale = 0.9f, 
-                rippleColor = AppColors.accentGreen.copy(alpha = 0.15f),
+                onClick = onClick,
+                pressedScale = 0.9f,
+                rippleColor = AppColors.primary.copy(alpha = 0.15f),
                 enabled = enabled
             ),
         contentAlignment = Alignment.Center
@@ -116,7 +127,7 @@ fun MoccaFab(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
-    backgroundColor: Color = AppColors.accentGreen,
+    backgroundColor: Color = AppColors.primary,
     iconColor: Color = AppColors.background,
     size: Dp = AppSpacing.fabSize
 ) {
@@ -128,9 +139,12 @@ fun MoccaFab(
                 if (contentDescription != null) {
                     androidx.compose.ui.Modifier.semantics {
                         this.contentDescription = contentDescription
+                        this.role = Role.Button
                     }
                 } else {
-                    androidx.compose.ui.Modifier
+                    androidx.compose.ui.Modifier.semantics {
+                        this.role = Role.Button
+                    }
                 }
             )
             .moccaClickable(onClick = onClick, pressedScale = 0.95f, rippleColor = Color.Black.copy(alpha = 0.15f)),
@@ -154,14 +168,15 @@ fun MoccaTextButton(
     textColor: Color = AppColors.onSurfaceVariantLight
 ) {
     val color = if (enabled) textColor else AppColors.onSurfaceVariantDark
-    
+
     Box(
         modifier = modifier
-            .height(MoccaButtonDefaults.HeightCompact)
+            .heightIn(min = 48.dp)
+            .semantics { role = Role.Button }
             .moccaClickable(
-                onClick = onClick, 
-                pressedScale = 0.96f, 
-                rippleColor = AppColors.accentGreen.copy(alpha = 0.1f),
+                onClick = onClick,
+                pressedScale = 0.96f,
+                rippleColor = AppColors.primary.copy(alpha = 0.1f),
                 enabled = enabled
             )
             .padding(horizontal = AppSpacing.sm),

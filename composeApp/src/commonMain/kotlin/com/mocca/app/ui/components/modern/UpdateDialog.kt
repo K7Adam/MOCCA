@@ -37,7 +37,7 @@ fun UpdateDialog(
 ) {
     @Suppress("DEPRECATION")
     val clipboardManager = LocalClipboardManager.current
-    
+
     BasicAlertDialog(
         onDismissRequest = { if (!isDownloading) onDismiss() }
     ) {
@@ -52,7 +52,7 @@ fun UpdateDialog(
             // Header (always visible, not scrollable)
             Text(
                 text = "UPDATE AVAILABLE",
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 style = AppTypography.labelLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -87,7 +87,7 @@ fun UpdateDialog(
                 // Log Console (Visible during download or error)
                 if (isDownloading || error != null || logs.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(AppSpacing.md))
-                    
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -109,7 +109,7 @@ fun UpdateDialog(
                                 style = AppTypography.labelSmall,
                                 color = AppColors.onSurfaceVariant
                             )
-                            
+
                             IconButton(
                                 onClick = {
                                     // Build text to copy including logs and error
@@ -128,19 +128,19 @@ fun UpdateDialog(
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,
                                     contentDescription = "Copy Logs",
-                                    tint = AppColors.accentGreen,
+                                    tint = AppColors.primary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
                         }
-                        
+
                         // Log Content
                         val logScrollState = rememberScrollState()
                         // Auto-scroll to bottom when logs change
                         androidx.compose.runtime.LaunchedEffect(logs.size, error) {
                             logScrollState.animateScrollTo(logScrollState.maxValue)
                         }
-                        
+
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -155,7 +155,7 @@ fun UpdateDialog(
                                     fontFamily = AppTypography.monoFamily
                                 )
                             }
-                            
+
                             // Error Message - Displayed inside logs so it gets copied
                             if (error != null) {
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -187,7 +187,7 @@ fun UpdateDialog(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "Downloading... ${(progress * 100).toInt()}%",
-                            color = AppColors.accentGreen,
+                            color = AppColors.primary,
                             style = AppTypography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -203,11 +203,12 @@ fun UpdateDialog(
                                 modifier = Modifier
                                     .fillMaxWidth(progress)
                                     .fillMaxHeight()
-                                    .background(AppColors.accentGreen, AppShapes.pill)
+                                    .background(AppColors.primary, AppShapes.pill)
                             )
                         }
                     }
                 }
+
                 error != null -> {
                     // Error state buttons
                     Row(
@@ -230,6 +231,7 @@ fun UpdateDialog(
                         }
                     }
                 }
+
                 else -> {
                     // Normal buttons
                     Row(

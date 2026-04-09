@@ -69,7 +69,7 @@ internal fun OnboardingConnectingStep(
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Connected",
-                tint = AppColors.accentGreen,
+                tint = AppColors.success,
                 modifier = Modifier
                     .size(80.dp)
                     .scale(successScale)
@@ -80,7 +80,7 @@ internal fun OnboardingConnectingStep(
             Text(
                 text = "Connected!",
                 style = AppTypography.headlineMedium,
-                color = AppColors.accentGreen,
+                color = AppColors.success,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
@@ -229,7 +229,7 @@ private fun StageItem(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Done",
-                        tint = AppColors.accentGreen,
+                        tint = AppColors.success,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -248,7 +248,7 @@ private fun StageItem(
                 text = label,
                 style = AppTypography.bodyMedium,
                 color = when {
-                    isComplete -> AppColors.accentGreen
+                    isComplete -> AppColors.success
                     isActive -> AppColors.onSurface
                     else -> AppColors.outline
                 },

@@ -63,9 +63,9 @@ fun GodHeader(
                         .size(40.dp)
                         .background(AppColors.primary, AppShapes.circle)
                 ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
                         tint = AppColors.onSurface,
                         modifier = Modifier.size(24.dp)
                     )
@@ -140,7 +140,7 @@ fun GodButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = AppColors.accentGreen,
+    containerColor: Color = AppColors.primary,
     contentColor: Color = AppColors.background,
     icon: (@Composable () -> Unit)? = null,
     enabled: Boolean = true
@@ -234,7 +234,7 @@ fun GodBadge(
     Surface(
         color = containerColor,
         shape = AppShapes.small
-) {
+    ) {
         Text(
             text = text.uppercase(),
             style = AppTypography.labelSmall,

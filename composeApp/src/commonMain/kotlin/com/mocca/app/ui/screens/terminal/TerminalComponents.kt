@@ -99,7 +99,7 @@ internal fun TerminalTabItem(
         // Status indicator dot
         val dotColor = when {
             tab.isConnecting -> AppColors.onSurfaceVariant
-            tab.isConnected -> AppColors.accentGreen
+            tab.isConnected -> AppColors.statusOnline
             tab.error != null -> AppColors.error
             else -> AppColors.outline
         }
@@ -156,7 +156,7 @@ internal fun TerminalContent(
     val monoStyle = TextStyle(
         fontFamily = FontFamily.Monospace,
         lineHeight = 18.sp,
-        color = AppColors.accentGreen
+        color = AppColors.primary
     )
 
     Column(modifier = modifier.background(AppColors.background)) {
@@ -263,7 +263,7 @@ internal fun TerminalInputBar(
             text = "❯",
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
-                color = AppColors.accentGreen,
+                color = AppColors.primary,
                 fontWeight = FontWeight.Bold
             )
         )
@@ -279,7 +279,7 @@ internal fun TerminalInputBar(
                 fontFamily = FontFamily.Monospace,
                 color = AppColors.onSurface
             ),
-            cursorBrush = SolidColor(AppColors.accentGreen),
+            cursorBrush = SolidColor(AppColors.primary),
             singleLine = true,
             enabled = isEnabled
         )
@@ -298,7 +298,7 @@ internal fun TerminalInputBar(
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
-                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.accentGreen else AppColors.outline,
+                tint = if (isEnabled && inputText.isNotEmpty()) AppColors.primary else AppColors.outline,
                 modifier = Modifier.size(16.dp)
             )
         }
@@ -338,7 +338,7 @@ internal fun TerminalEmptyState(
                 enabled = !isCreating,
                 shape = AppShapes.pill,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = AppColors.accentGreen,
+                    containerColor = AppColors.primary,
                     contentColor = AppColors.background
                 )
             ) {

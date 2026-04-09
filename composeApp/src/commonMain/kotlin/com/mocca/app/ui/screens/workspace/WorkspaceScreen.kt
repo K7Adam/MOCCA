@@ -113,7 +113,7 @@ internal fun DashboardContent(sessionId: String) {
                     icon = Icons.Default.Dns,
                     status = "Online",
                     subtitle = "12ms latency",
-                    statusColor = AppColors.accentGreen
+                    statusColor = AppColors.statusOnline
                 )
                 
                 // Skills (1x1)
@@ -220,7 +220,7 @@ private fun GodModuleCard(
                                 .size(10.dp)
                                 .align(Alignment.TopEnd)
                                 .offset(x = 2.dp, y = (-2).dp)
-                                .background(AppColors.accentGreen, AppShapes.circle)
+                                .background(AppColors.statusOnline, AppShapes.circle)
                                 .border(2.dp, AppColors.surfaceVariant, AppShapes.circle)
                         )
                     }
@@ -254,7 +254,7 @@ private fun GodModuleCard(
                 Text(
                     text = subtitle,
                     style = if (title == "MCP SERVER") AppTypography.codeSmall else AppTypography.bodySmall,
-                    color = if (title == "MCP SERVER") AppColors.accentGreen else AppColors.onSurface.copy(alpha = 0.4f)
+                    color = if (title == "MCP SERVER") AppColors.statusOnline else AppColors.onSurface.copy(alpha = 0.4f)
                 )
             }
             
