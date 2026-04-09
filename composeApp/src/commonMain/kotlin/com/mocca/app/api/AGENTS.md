@@ -18,12 +18,6 @@ Ktor-based networking layer providing REST and SSE connectivity to a single Open
 - **GitHubApiClient.kt**: Client for GitHub Releases API (app auto-update feature).
 - **Platform.kt**: Platform detection utilities.
 
-## DELETED FILES (for reference)
-The following files were removed during the connection architecture refactoring:
-- ~~`GitApiClient.kt`~~ — Replaced by OpenCode's built-in VCS endpoints in `MoccaApiClient`
-- ~~`HttpClientProvider.kt`~~ — Replaced by `ConnectionManager` (in data/repository)
-- ~~`GitServerChecker.kt`~~ — No longer needed (no separate Git server)
-
 ## CONVENTIONS
 - **ApiExecutor Pattern**: All API consumers depend on `ApiExecutor`, never on `HttpClient` directly. The `ConnectionManager` implements `ApiExecutor` and manages the `HttpClient` lifecycle, auth headers, and reconnection.
 - **Timeouts**: Standard timeout is **120s** (`requestTimeout`, `socketTimeout`) to accommodate long-running LLM tasks.

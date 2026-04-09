@@ -49,6 +49,7 @@ nul
 
 # Agent work artifacts
 .sisyphus/
+.opencode/package-lock.json
 
 # Secrets
 .env

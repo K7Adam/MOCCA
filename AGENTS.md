@@ -1,6 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-02-22
+**Updated:** 2026-03-26
+**Commit:** 8dc9171
 **Project:** MOCCA (Mobile OpenCode Companion App)
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
 

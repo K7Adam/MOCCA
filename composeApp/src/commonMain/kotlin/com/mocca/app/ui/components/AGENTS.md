@@ -26,7 +26,7 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 
 ## KEY COMPONENTS
 ### 1. Modern Primitives (`modern/`)
-- `MoccaButton`: Pill-shaped button with `accentGreen` background and black text.
+- `MoccaButton`: Pill-shaped button with `primary` background and black text.
 - `MoccaInput`: Solid black background with rounded corners and subtle border.
 - `MoccaCard`: Rounded container with `surfaceContainer` background and 16dp corners.
 - `ModernBadge`: Surface-based "USER" or "AGENT" tags with tonal elevation.
