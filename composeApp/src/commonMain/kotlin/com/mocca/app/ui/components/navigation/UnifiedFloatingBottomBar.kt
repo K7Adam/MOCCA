@@ -216,7 +216,7 @@ fun UnifiedFloatingBottomBar(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Bottom
             ) {
-                // ═══════════════ CHAT INPUT CONTENT (Can auto-hide) ═══════════════
+
                 // AnimatedVisibility allows the chat input to hide while nav row stays visible
                 // This is the KEY fix: nav row is ALWAYS rendered below this
                 AnimatedVisibility(
@@ -268,8 +268,7 @@ fun UnifiedFloatingBottomBar(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
-                
-                // ═══════════════ PERSISTENT NAV ROW (ALWAYS VISIBLE!) ═══════════════
+
                 // This nav row is ALWAYS visible with SAME SIZE and SAME POSITION
                 // It NEVER hides - only the chat input above it can hide
                 // Icons are always 22dp, touch targets always 48dp

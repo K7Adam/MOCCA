@@ -18,11 +18,9 @@ import kotlinx.datetime.Clock
  * - Thinking state for extended reasoning models
  * 
  * Architecture:
- * ```
- * SSE Events → EventStreamRepository → StateCoordinator → ChatStateStore → UI
+ * SSE Events -> EventStreamRepository -> StateCoordinator -> ChatStateStore -> UI
  *                    ↓                        ↓                  ↑
- *              LocalCache ←────────────────────────────────────┘
- * ```
+ *              LocalCache <--------------------------------------┘
  */
 class ChatStateStore(
     private val localCache: LocalCache,
@@ -30,20 +28,18 @@ class ChatStateStore(
     private val sessionRepository: SessionRepository
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SESSION STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _currentSessionId = MutableStateFlow<String?>(null)
     val currentSessionId: StateFlow<String?> = _currentSessionId.asStateFlow()
     
     private val _session = MutableStateFlow<Session?>(null)
     val session: StateFlow<Session?> = _session.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // MESSAGE STATE - Reactive from DB
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     private val _optimisticUserMessage = MutableStateFlow<Message?>(null)
@@ -72,10 +68,6 @@ class ChatStateStore(
     private val _isSending = MutableStateFlow(false)
     val isSending: StateFlow<Boolean> = _isSending.asStateFlow()
     
-    // Legacy session idle state - kept for event handlers but no longer used for button control
-    // The button now uses the server-authoritative runningSessionIds below instead
-    private val _isSessionIdle = MutableStateFlow(true)
-    
     // Server-authoritative session idle state based on runningSessionIds from StateCoordinator
     // This is purely driven by the server's /session/status endpoint which is polled regularly
     // and updated via SSE events. This replaces the old logic that relied on local _isSending
@@ -103,10 +95,9 @@ class ChatStateStore(
     private val _sessionDisposed = MutableStateFlow<String?>(null)
     /** Non-null when a server.instance.disposed or global.disposed event was received; contains the reason string. */
     val sessionDisposed: StateFlow<String?> = _sessionDisposed.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // STREAMING STATE - From StateCoordinator
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val streamingText: StateFlow<String> = stateCoordinator.streamingText
     val isThinking: StateFlow<Boolean> = stateCoordinator.isThinking
@@ -118,24 +109,21 @@ class ChatStateStore(
     
     private val _thinkingElapsedMs = MutableStateFlow(0L)
     val thinkingElapsedMs: StateFlow<Long> = _thinkingElapsedMs.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // PERMISSION/QUESTION STATE - From StateCoordinator
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val pendingPermission: StateFlow<PermissionRequest?> = stateCoordinator.pendingPermission
     val pendingQuestion: StateFlow<QuestionRequest?> = stateCoordinator.pendingQuestion
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // TODO STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _todos = MutableStateFlow<List<Todo>>(emptyList())
     val todos: StateFlow<List<Todo>> = _todos.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CHILD SESSION STATE (for subagents)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _childSessions = MutableStateFlow<Map<String, Session>>(emptyMap())
     val childSessions: StateFlow<Map<String, Session>> = _childSessions.asStateFlow()
@@ -145,10 +133,9 @@ class ChatStateStore(
     
     private val _childStreamingText = MutableStateFlow<Map<String, String>>(emptyMap())
     val childStreamingText: StateFlow<Map<String, String>> = _childStreamingText.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // INTERNAL STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private var messageObserverJob: Job? = null
     private var broadcastObserverJob: Job? = null
@@ -157,10 +144,9 @@ class ChatStateStore(
     // Conflated channel: rapid reloadMessages() calls collapse to one pending reload.
     // CONFLATED means only the latest value survives — no queue buildup, no concurrent fetches.
     private val reloadChannel = Channel<String>(Channel.CONFLATED)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     init {
         Napier.i("[ChatStateStore] Initialized with StateCoordinator")
@@ -232,10 +218,9 @@ class ChatStateStore(
         _childSessions.value = emptyMap()
         _childMessages.value = emptyMap()
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // BROADCAST EVENT HANDLING
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun observeBroadcastEvents() {
         broadcastObserverJob = storeScope.launch {
@@ -283,7 +268,6 @@ class ChatStateStore(
                 val session = event.properties.info
                 if (session.id == currentId) {
                     _session.value = session
-                    _isSessionIdle.value = session.status != SessionStatus.RUNNING
                 }
                 // Handle child session updates
                 if (session.effectiveParentID == currentId) {
@@ -294,7 +278,6 @@ class ChatStateStore(
             
             is ServerEvent.SessionIdle -> {
                 if (event.properties.sessionID == currentId) {
-                    _isSessionIdle.value = true
                     _isSending.value = false
                     
                     // Fast-sync messages on idle instead of full reload (Cache Optimization)
@@ -330,23 +313,20 @@ class ChatStateStore(
             
             is ServerEvent.ServerInstanceDisposed -> {
                 Napier.w("[ChatStateStore] Server instance disposed: ${event.properties.reason}")
-                _isSessionIdle.value = true
                 _isSending.value = false
                 _sessionDisposed.value = event.properties.reason ?: "Server instance disposed"
             }
             is ServerEvent.GlobalDisposed -> {
                 Napier.w("[ChatStateStore] Global disposed: ${event.properties.reason}")
-                _isSessionIdle.value = true
                 _isSending.value = false
                 _sessionDisposed.value = event.properties.reason ?: "Server session ended"
             }
             else -> { /* Other events handled elsewhere */ }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // MESSAGE OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Reload messages from server.
@@ -425,10 +405,9 @@ class ChatStateStore(
             sessionRepository.loadMoreMessages(sessionId, cursor ?: 0, 50)
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CHILD SESSION OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun loadChildSessions(parentId: String) {
         storeScope.launch {
@@ -455,10 +434,9 @@ class ChatStateStore(
             }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // TODO OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun loadTodos(sessionId: String) {
         todoObserverJob?.cancel()
@@ -474,10 +452,9 @@ class ChatStateStore(
     fun refreshTodos() {
         _currentSessionId.value?.let { loadTodos(it) }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // MESSAGE SENDING
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Send a message to the current session.
@@ -503,7 +480,6 @@ class ChatStateStore(
         )
         
         _isSending.value = true
-        _isSessionIdle.value = false
         _error.value = null
         
         return sessionRepository.sendMessageAsync(
@@ -517,7 +493,6 @@ class ChatStateStore(
         ).also { result ->
             if (result.isFailure) {
                 _isSending.value = false
-                _isSessionIdle.value = true
                 _error.value = result.exceptionOrNull()?.message
                 _optimisticUserMessage.value = null
             }
@@ -533,14 +508,12 @@ class ChatStateStore(
         return sessionRepository.abortSession(sessionId).also { result ->
             if (result.isSuccess) {
                 _isSending.value = false
-                _isSessionIdle.value = true
             }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // PERMISSION/QUESTION HANDLING
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     suspend fun approvePermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
@@ -578,10 +551,9 @@ class ChatStateStore(
             if (it.isSuccess) stateCoordinator.dismissQuestion()
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SESSION OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     suspend fun forkSession(messageId: String): Result<Session> {
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
@@ -609,10 +581,9 @@ class ChatStateStore(
             else Result.failure(Exception((result as? Resource.Error)?.message ?: "Failed to share"))
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // UTILITY
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     fun clearError() { _error.value = null }
     fun clearDisposed() { _sessionDisposed.value = null }

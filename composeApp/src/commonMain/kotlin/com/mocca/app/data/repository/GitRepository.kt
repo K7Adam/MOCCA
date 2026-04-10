@@ -33,9 +33,8 @@ class GitRepository(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Read Operations (via OpenCode built-in endpoints)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     fun getVcsInfo(): Flow<Resource<VcsInfo>> = flow {
         emit(Resource.Loading())
@@ -151,9 +150,8 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Write Operations (via shell execution)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Execute a git command on the server via shell.
@@ -245,10 +243,9 @@ class GitRepository(
             }
         )
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Helpers
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Get ahead/behind counts relative to upstream.
@@ -279,9 +276,8 @@ class GitRepository(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Read Operations via Shell (branches, log, remotes, tags, stashes)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     fun getBranches(sessionId: String? = null): Flow<Resource<List<GitBranch>>> = flow {
         emit(Resource.Loading())
@@ -460,9 +456,8 @@ class GitRepository(
         )
     }.flowOn(Dispatchers.Default)
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Additional Write Operations (stash, merge, rebase, remote, tag)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     suspend fun createStash(sessionId: String, message: String?): Result<GitOperationResult> {
         val cmd = if (message != null) "git stash push -m \"$message\"" else "git stash push"

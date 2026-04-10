@@ -1,11 +1,11 @@
 # DATA REPOSITORY LAYER
 
-**Scope:** Offline-First Repositories, ConnectionManager
+**Scope:** Server-First Repositories, ConnectionManager
 
 **Relevant Skills:** `kotlin-best-practices` (repository patterns, Flow)
 
 ## OVERVIEW
-The Repository layer implements an **offline-first** architecture, mediating between the `MoccaApiClient` (Network) and `LocalCache` (SQLDelight Persistence). Its primary goal is to provide immediate UI updates using cached data while fetching fresh data from the server in the background.
+The Repository layer implements a **server-first** architecture, mediating between the `MoccaApiClient` (Network) and `LocalCache` (SQLDelight Persistence). Its primary goal is to provide immediate UI updates using cached data while fetching fresh data from the server in the background.
 
 ## KEY REPOSITORIES
 
@@ -26,12 +26,22 @@ All Git operations go through OpenCode's built-in endpoints:
 - **Diff**: `/session/:id/diff` for session diffs
 - Write operations require a `sessionId: String` parameter
 
-### SessionRepository
-Constructor takes 2 params: `(apiClient: MoccaApiClient, localCache: LocalCache)`.
+### StateCoordinator
+Central coordinator for all application state.
+- **Single Source of Truth**: Tracks active session ID and running sessions.
+- **Event Flow**: SSE Events -> EventStreamRepository -> StateCoordinator -> State Stores -> UI
+
+### ChatStateStore
+Specialized state store for chat screen state.
+- Provides reactive chat state, pending permissions, and thinking state tracking.
+
+### AppStateStore
+Global application state store.
+- Tracks global configuration and connection state.
 
 ## PATTERNS
 
-### 1. Offline-First Flow<Resource<T>>
+### 1. Server-First Flow<Resource<T>>
 Most data fetching operations return a `Flow<Resource<T>>`. The implementation follows a strict emission order to ensure low latency and data consistency.
 
 **Required Execution Order:**
@@ -78,7 +88,7 @@ class MyRepository(private val apiExecutor: ApiExecutor) {
 ```
 
 ### 3. Exceptions: Suspend Resource
-Some specific lookups return a `suspend Resource<T>` instead of a Flow. These still follow the offline-first logic but execute sequentially without multiple emissions.
+Some specific lookups return a `suspend Resource<T>` instead of a Flow. These still follow the server-first logic but execute sequentially without multiple emissions.
 
 *   **SessionRepository.getSession(sessionId: String)**: Returns `Resource<Session>`. It attempts to fetch from the network and updates the cache if found, falling back to the local cache if the network request fails or the item isn't in the network response.
 

@@ -20,8 +20,7 @@ actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
         readTimeout(600, java.util.concurrent.TimeUnit.SECONDS)
         writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
         retryOnConnectionFailure(true)
-        
-        // ─── SSL BYPASS FOR TAILSCALE/LOCAL CONNECTIONS ───────────────────
+
         // Trust all certificates to allow connections to local servers/Tailscale IPs
         val trustAllCerts = object : X509TrustManager {
             override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {}
@@ -33,7 +32,7 @@ actual fun getHttpEngine(): HttpClientEngine = OkHttp.create {
         sslContext.init(null, arrayOf<TrustManager>(trustAllCerts), SecureRandom())
         sslSocketFactory(sslContext.socketFactory, trustAllCerts)
         hostnameVerifier { _, _ -> true }
-        // ──────────────────────────────────────────────────────────────────
+
 
         // HTTP/2 Multiplexing & Connection Pooling
         val dispatcher = okhttp3.Dispatcher().apply {

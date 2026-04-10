@@ -138,15 +138,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
 
     // ==================== Messages ====================
 
-    override suspend fun getMessages(sessionId: String): List<Message> {
-        return try {
-            messageQueries.selectBySession(sessionId).executeAsList().map { it.toMessage() }
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached messages", e)
-            emptyList()
-        }
-    }
-    
+
     override suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message> {
         return try {
             messageQueries.selectBySessionPaged(sessionId, cursor, limit).executeAsList().map { it.toMessage() }
@@ -154,13 +146,6 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             Napier.w("Failed to get paged messages", e)
             emptyList()
         }
-    }
-
-    override fun observeMessages(sessionId: String): kotlinx.coroutines.flow.Flow<List<Message>> {
-        return messageQueries.selectBySession(sessionId)
-            .asFlow()
-            .mapToList(Dispatchers.IO)
-            .map { list -> list.map { it.toMessage() } }
     }
 
     override fun observeRecentMessages(sessionId: String, limit: Long): kotlinx.coroutines.flow.Flow<List<Message>> {
@@ -176,27 +161,6 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         } catch (e: Exception) {
             Napier.w("Failed to get cached message", e)
             null
-        }
-    }
-
-    override suspend fun insertMessage(message: Message) {
-        try {
-            val partsJson = json.encodeToString(ListSerializer(MessagePart.serializer()), message.parts)
-
-            messageQueries.insertOrReplace(
-                id = message.id,
-                sessionId = message.sessionId,
-                role = message.role.name.lowercase(),
-                parts = partsJson,
-                createdAt = message.createdAt,
-                model = message.model,
-                cost = message.cost,
-                isRead = message.isRead,
-                metadata = message.metadata,
-                isStreaming = message.isStreaming
-            )
-        } catch (e: Exception) {
-            Napier.w("Failed to cache message", e)
         }
     }
 
@@ -224,19 +188,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
     
-    override suspend fun updateMessage(message: Message) {
-        // Use insertOrReplace for upsert behavior
-        insertMessage(message)
-    }
 
-    override suspend fun deleteMessages(sessionId: String) {
-        try {
-            messageQueries.deleteBySession(sessionId)
-        } catch (e: Exception) {
-            Napier.w("Failed to delete messages", e)
-        }
-    }
-    
     override suspend fun deleteMessage(messageId: String) {
         try {
             messageQueries.deleteById(messageId)
@@ -301,18 +253,6 @@ private class AndroidLocalCache(context: Context) : LocalCache {
     }
 
     // ==================== Todos ====================
-
-    override suspend fun getSessionTodos(sessionId: String): List<Todo> {
-        return try {
-            val jsonStr = sessionTodoQueries.selectBySessionId(sessionId).executeAsOneOrNull()
-            if (jsonStr != null) {
-                json.decodeFromString(ListSerializer(Todo.serializer()), jsonStr)
-            } else emptyList()
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached todos", e)
-            emptyList()
-        }
-    }
 
     override suspend fun insertSessionTodos(sessionId: String, todos: List<Todo>) {
         try {
@@ -411,10 +351,6 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         _cachedGitStatus.value = status
     }
     
-    override fun clearGitStatus() {
-        _cachedGitStatus.value = null
-    }
-
     // ==================== Agents ====================
     
     override suspend fun getAllAgents(): List<Agent> {
@@ -426,51 +362,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
     
-    override suspend fun getVisibleAgents(): List<Agent> {
-        return try {
-            database.agentQueries.selectVisible().executeAsList().map { it.toAgent() }
-        } catch (e: Exception) {
-            Napier.w("Failed to get visible agents", e)
-            emptyList()
-        }
-    }
-    
-    override suspend fun getAgent(name: String): Agent? {
-        return try {
-            database.agentQueries.selectByName(name).executeAsOneOrNull()?.toAgent()
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached agent", e)
-            null
-        }
-    }
-    
-    override suspend fun insertAgent(agent: Agent) {
-        try {
-            val now = System.currentTimeMillis()
-            val permissionsJson = agent.permission?.let { 
-                json.encodeToString(ListSerializer(AgentPermission.serializer()), it) 
-            }
-            val optionsJson = agent.options?.toString()
-            
-            database.agentQueries.insertOrReplace(
-                name = agent.name,
-                mode = agent.mode,
-                description = agent.description,
-                prompt = agent.prompt,
-                isNative = agent.native,
-                isHidden = agent.hidden,
-                color = agent.color,
-                modelProviderId = agent.model?.providerId,
-                modelId = agent.model?.modelId,
-                permissionsJson = permissionsJson,
-                optionsJson = optionsJson,
-                cachedAt = now
-            )
-        } catch (e: Exception) {
-            Napier.w("Failed to cache agent", e)
-        }
-    }
-    
+
     override suspend fun insertAgents(agents: List<Agent>) {
         try {
             database.transaction {
@@ -531,35 +423,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
     
-    override suspend fun getCommand(name: String): Command? {
-        return try {
-            database.commandQueries.selectByName(name).executeAsOneOrNull()?.toCommand()
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached command", e)
-            null
-        }
-    }
-    
-    override suspend fun insertCommand(command: Command) {
-        try {
-            val now = System.currentTimeMillis()
-            val templateJson = command.template?.toString()
-            val hintsJson = command.hints?.let { json.encodeToString(ListSerializer(kotlinx.serialization.serializer<String>()), it) }
-            
-            database.commandQueries.insertOrReplace(
-                name = command.name,
-                description = command.description,
-                templateJson = templateJson,
-                isSubtask = command.subtask,
-                hintsJson = hintsJson,
-                isMcp = command.mcp,
-                cachedAt = now
-            )
-        } catch (e: Exception) {
-            Napier.w("Failed to cache command", e)
-        }
-    }
-    
+
     override suspend fun insertCommands(commands: List<Command>) {
         try {
             database.transaction {
@@ -597,96 +461,6 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         return try {
             val threshold = System.currentTimeMillis() - maxAgeMs
             database.commandQueries.hasFreshCache(threshold).executeAsOne() > 0
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    // ==================== FileInfo ====================
-    
-    override suspend fun getFilesInDirectory(parentPath: String?): List<FileInfo> {
-        return try {
-            if (parentPath.isNullOrEmpty()) {
-                database.fileInfoQueries.selectRoot().executeAsList().map { it.toFileInfo() }
-            } else {
-                database.fileInfoQueries.selectByParent(parentPath).executeAsList().map { it.toFileInfo() }
-            }
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached files", e)
-            emptyList()
-        }
-    }
-    
-    override suspend fun getFileInfo(path: String): FileInfo? {
-        return try {
-            database.fileInfoQueries.selectByPath(path).executeAsOneOrNull()?.toFileInfo()
-        } catch (e: Exception) {
-            Napier.w("Failed to get cached file info", e)
-            null
-        }
-    }
-    
-    override suspend fun insertFileInfo(fileInfo: FileInfo, parentPath: String?) {
-        try {
-            val now = System.currentTimeMillis()
-            database.fileInfoQueries.insertOrReplace(
-                path = fileInfo.path,
-                name = fileInfo.name,
-                type = fileInfo.type,
-                size = fileInfo.size,
-                modifiedAt = fileInfo.modifiedAt,
-                parentPath = parentPath ?: "",
-                cachedAt = now
-            )
-        } catch (e: Exception) {
-            Napier.w("Failed to cache file info", e)
-        }
-    }
-    
-    override suspend fun insertFilesInDirectory(files: List<FileInfo>, parentPath: String?) {
-        try {
-            database.transaction {
-                // Clear existing files in this directory
-                database.fileInfoQueries.deleteByParent(parentPath ?: "")
-                
-                val now = System.currentTimeMillis()
-                files.forEach { fileInfo ->
-                    database.fileInfoQueries.insertOrReplace(
-                        path = fileInfo.path,
-                        name = fileInfo.name,
-                        type = fileInfo.type,
-                        size = fileInfo.size,
-                        modifiedAt = fileInfo.modifiedAt,
-                        parentPath = parentPath ?: "",
-                        cachedAt = now
-                    )
-                }
-            }
-        } catch (e: Exception) {
-            Napier.w("Failed to cache files", e)
-        }
-    }
-    
-    override suspend fun deleteFilesInDirectory(parentPath: String?) {
-        try {
-            database.fileInfoQueries.deleteByParent(parentPath ?: "")
-        } catch (e: Exception) {
-            Napier.w("Failed to delete files", e)
-        }
-    }
-    
-    override suspend fun deleteAllFiles() {
-        try {
-            database.fileInfoQueries.deleteAll()
-        } catch (e: Exception) {
-            Napier.w("Failed to delete all files", e)
-        }
-    }
-    
-    override suspend fun hasFileCache(parentPath: String?, maxAgeMs: Long): Boolean {
-        return try {
-            val threshold = System.currentTimeMillis() - maxAgeMs
-            database.fileInfoQueries.hasFreshCacheForPath(parentPath ?: "", threshold).executeAsOne() > 0
         } catch (e: Exception) {
             false
         }

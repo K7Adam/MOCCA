@@ -48,9 +48,8 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
  * Modern Top Bar and Divider components.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MODERN TOP BAR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Modern Top Bar reconstructed as an Expressive Morphing Floating Toolbar.
@@ -172,9 +171,8 @@ fun TerminalStatusLine(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TERMINAL DIVIDERS
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Standard horizontal divider.
@@ -237,9 +235,8 @@ fun TerminalSectionDivider(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // PANEL HEADER (for swipe panels)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Header for left/right swipe panels.
@@ -281,9 +278,8 @@ fun PanelHeader(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONNECTION QUALITY INDICATOR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Connection quality indicator showing network status.

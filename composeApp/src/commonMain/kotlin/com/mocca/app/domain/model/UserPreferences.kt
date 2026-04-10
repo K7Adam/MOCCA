@@ -12,16 +12,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Immutable
 data class UserPreferences(
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Session State
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Last active session ID - persisted for restoration on app restart */
     val lastSessionId: String? = null,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Appearance
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Show input/output token counts in chat messages */
     val showTokenCounts: Boolean = true,
@@ -37,10 +36,9 @@ data class UserPreferences(
     
     /** Hide/mask API keys in settings UI for security */
     val hideApiKeys: Boolean = true,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Chat
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Auto-scroll to bottom when new messages arrive */
     val autoScroll: Boolean = true,
@@ -50,20 +48,18 @@ data class UserPreferences(
     
     /** Show AI thinking/reasoning blocks in messages */
     val showThinkingBlocks: Boolean = true,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Connection
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Automatically reconnect when connection is lost */
     val autoReconnect: Boolean = true,
     
     /** Data saver mode - reduce network usage (disable background sync) */
     val dataSaverMode: Boolean = false,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Notifications
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Show notification when permission approval is required */
     val notifyPermissions: Boolean = true,
@@ -73,20 +69,18 @@ data class UserPreferences(
     
     /** Show notification when connection to server is lost */
     val notifyConnectionLost: Boolean = true,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Privacy & Security
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Enable screen security (prevent screenshots) */
     val screenSecurity: Boolean = false,
     
     /** Clear local cache when app exits */
     val clearCacheOnExit: Boolean = false,
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Updates
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Auto-check for app updates interval in minutes (0 = disabled, default 10 min) */
     val autoUpdateCheckIntervalMinutes: Int = 10

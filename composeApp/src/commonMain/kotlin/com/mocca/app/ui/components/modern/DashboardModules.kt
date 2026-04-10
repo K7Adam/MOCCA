@@ -30,9 +30,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // QUICK MODULE PREVIEWS (for specific module types)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * MCP Config module preview.

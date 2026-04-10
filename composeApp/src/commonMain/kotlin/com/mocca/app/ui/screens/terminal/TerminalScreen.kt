@@ -65,7 +65,7 @@ class TerminalScreen : Screen {
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                // ── TAB BAR ──────────────────────────────────────────────────
+
                 if (state.tabs.isNotEmpty()) {
                     TerminalTabBar(
                         tabs = state.tabs,
@@ -75,7 +75,6 @@ class TerminalScreen : Screen {
                     )
                 }
 
-                // ── CONTENT AREA ─────────────────────────────────────────────
                 when {
                     state.isLoadingTabs -> {
                         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

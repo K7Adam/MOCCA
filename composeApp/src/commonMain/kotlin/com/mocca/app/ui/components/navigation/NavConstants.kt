@@ -12,29 +12,27 @@ import androidx.compose.ui.unit.dp
  * to maintain optimal user experience and muscle memory.
  */
 object NavConstants {
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // ICON SIZING - NEVER CHANGE BETWEEN MODES
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Nav item icon size - MUST be same in all modes */
     val NavIconSize = 22.dp
     
     /** Nav item icon size for compact indicator (bottom of chat input) */
     val NavIconSizeCompact = 22.dp  // SAME as NavIconSize - ensures consistency
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // TOUCH TARGETS - Material Design 3 Minimum
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Minimum touch target width per Material Design 3 */
     val TouchTargetMinWidth = 48.dp
     
     /** Minimum touch target height per Material Design 3 */
     val TouchTargetMinHeight = 48.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // INDICATOR SIZING
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Sliding indicator width */
     val IndicatorWidth = 28.dp
@@ -47,20 +45,18 @@ object NavConstants {
     
     /** Indicator dot size for unselected items */
     val IndicatorDotSizeUnselected = 3.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // CONTAINER HEIGHTS
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Navigation-only mode height (compact) */
     val NavigationModeHeight = 68.dp
     
     /** Chat input mode minimum height (expanded) - includes nav row, adjusted for touch-optimized sizes */
     val ChatInputModeMinHeight = 170.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // NAV ROW HEIGHTS
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Height of the persistent nav row (icons + labels/indicator) */
     val NavRowHeight = 68.dp
@@ -70,10 +66,9 @@ object NavConstants {
     
     /** Spacer between nav items and indicator */
     val NavItemToIndicatorSpacing = 6.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // CHAT INPUT COMPONENT HEIGHTS
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Status bar height (model/agent selectors) - optimized for touch targets */
     val StatusBarHeight = 28.dp
@@ -84,12 +79,11 @@ object NavConstants {
     /** Input field maximum height */
     val InputFieldMaxHeight = 72.dp
     
-    /** Action toolbar height - optimized for touch targets */
-    val ActionToolbarHeight = 40.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+    /** Action toolbar height - maintains 48dp minimum touch targets */
+    val ActionToolbarHeight = 48.dp
+
     // TYPOGRAPHY
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Nav label font size */
     val NavLabelFontSize = 10.dp
@@ -99,10 +93,9 @@ object NavConstants {
     
     /** Nav label line height */
     val NavLabelLineHeight = 12.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // SPACING
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Spacing between icon and label */
     val IconToLabelSpacing = 2.dp
@@ -115,10 +108,9 @@ object NavConstants {
     
     /** Nav item internal padding vertical */
     val NavItemPaddingVertical = 2.dp
-    
-    // ═══════════════════════════════════════════════════════════════════════════
+
     // CHAT INPUT REFINED SIZING (Premium Polish - Optimized for Touch Targets)
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     /** Status bar chip height - optimized for touch targets */
     val StatusBarChipHeight = 24.dp
@@ -129,8 +121,8 @@ object NavConstants {
     /** Action toolbar button size (visual) - WCAG 2.5.5 minimum 48dp */
     val ActionButtonSize = 48.dp
     
-    /** Send button height - optimized for touch targets */
-    val SendButtonHeight = 32.dp
+    /** Send button height - maintains 48dp minimum touch targets */
+    val SendButtonHeight = 48.dp
     
     /** Send button icon size - slightly larger for better visibility */
     val SendIconSize = 16.dp

@@ -39,9 +39,8 @@ import kotlinx.coroutines.delay
  * Shows rotating quotes with fade animation.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // DEFAULT QUOTES
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 val defaultQuotes = listOf(
     "Built for what people want",
@@ -53,9 +52,8 @@ val defaultQuotes = listOf(
     "The future of development"
 )
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // QUOTE ROTATOR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Rotating quote display with fade animation.
@@ -151,9 +149,8 @@ fun QuoteRotator(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // ASCII ART
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * ASCII art globe/logo for the quote rotator section.

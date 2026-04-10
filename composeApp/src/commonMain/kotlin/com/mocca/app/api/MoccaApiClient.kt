@@ -308,9 +308,8 @@ class MoccaApiClient(
     suspend fun getProvidersConfig(): Result<ProvidersConfig> =
             safeCall("getProvidersConfig") { get("config/providers").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // OAUTH / AUTHENTICATION (Priority 1.1, 1.2)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Get available authentication methods for a provider.
@@ -360,9 +359,8 @@ class MoccaApiClient(
                 Unit
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // CONFIG WRITE (Priority 1.3)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Update configuration settings.
@@ -377,9 +375,8 @@ class MoccaApiClient(
                         .body()
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // COMMAND EXECUTION (Priority 1.4, 1.5)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Execute a slash command.
@@ -475,9 +472,8 @@ class MoccaApiClient(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION TODO (Priority 2.1)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Get todos for a session.
@@ -486,9 +482,8 @@ class MoccaApiClient(
     suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> =
             safeCall("getSessionTodos") { get("session/$sessionId/todo").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION SHARING (Priority 2.2)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Share a session publicly.
@@ -505,9 +500,8 @@ class MoccaApiClient(
     suspend fun unshareSession(sessionId: String): Result<Session> =
             safeCallNoRetry("unshareSession") { delete("session/$sessionId/share").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION SUMMARIZATION (Priority 2.3)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Summarize a session (generate title, summary).
@@ -516,9 +510,8 @@ class MoccaApiClient(
     suspend fun summarizeSession(sessionId: String): Result<Session> =
             safeCallNoRetry("summarizeSession") { post("session/$sessionId/summarize").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION INIT (Priority 2.4)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Initialize a session with system prompts and configuration.
@@ -534,9 +527,8 @@ class MoccaApiClient(
                         .body()
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // PROJECT MANAGEMENT (Priority 2.5)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** List available projects. */
     suspend fun listProjects(): Result<List<Project>> =
@@ -546,9 +538,8 @@ class MoccaApiClient(
     suspend fun getCurrentProject(): Result<Project> =
             safeCall("getCurrentProject") { get("project/current").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // DYNAMIC MCP (Priority 2.6)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Add a new MCP server dynamically.
@@ -564,17 +555,15 @@ class MoccaApiClient(
                 Unit
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // PATH ENDPOINT (Priority 2.8)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Get current working directory path. */
     suspend fun getCurrentPath(): Result<PathInfo> =
             safeCall("getCurrentPath") { get("path").body() }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // INSTANCE DISPOSAL (Priority 2.9)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Dispose an OpenCode instance gracefully. */
     suspend fun disposeInstance(): Result<Unit> =
@@ -583,9 +572,8 @@ class MoccaApiClient(
                 Unit
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // LOGGING ENDPOINT (Priority 2.10)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * Send a log entry to the server.
@@ -600,9 +588,8 @@ class MoccaApiClient(
                 Unit
             }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // FULL TOOL LIST (Priority 2.11)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /**
      * @deprecated This endpoint returns HTML, not JSON. Use [getToolIds] instead. The /tool
@@ -636,13 +623,6 @@ class MoccaApiClient(
 
     // Slash Commands
     suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") { get("command") }
-
-    // Formatters
-    suspend fun getFormatters(): Result<List<FormatterStatus>> =
-            safeRequest("getFormatters") { get("formatter") }
-
-    // LSP Status
-    suspend fun getLspStatus(): Result<List<LspStatus>> = safeRequest("getLspStatus") { get("lsp") }
 
     // VCS Info
     suspend fun getVcsInfo(): Result<VcsInfo> = safeCall("getVcsInfo") { get("vcs").body() }
@@ -757,9 +737,8 @@ class MoccaApiClient(
         api.execute { webSocket("terminal/$id/socket") { block() } }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // GLOBAL CONFIG (GET/PATCH /global/config)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Get global (cross-instance) application configuration. */
     suspend fun getGlobalConfig(): Result<GlobalAppConfig> =
@@ -774,17 +753,8 @@ class MoccaApiClient(
             }.body()
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // SKILLS
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    /** List available skills registered on the server. */
-    suspend fun listSkills(): Result<List<SkillInfo>> =
-        safeCall("listSkills") { get("skill").body() }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
     // PROVIDER AUTH REMOVAL
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Remove stored authentication credentials for a provider. */
     suspend fun deleteProviderAuth(providerId: String): Result<Unit> =
@@ -793,9 +763,8 @@ class MoccaApiClient(
             Unit
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // SESSION MESSAGE MANAGEMENT
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Delete a message from a session. */
     suspend fun deleteMessage(sessionId: String, messageId: String): Result<Unit> =
@@ -826,9 +795,8 @@ class MoccaApiClient(
             Unit
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // PROJECT UPDATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Update a project's settings. */
     suspend fun updateProject(projectId: String, update: ProjectUpdateRequest): Result<Project> =
@@ -839,9 +807,8 @@ class MoccaApiClient(
             }.body()
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // TERMINAL UPDATE / DELETE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Update terminal properties (title, dimensions). */
     suspend fun updateTerminal(id: String, update: PtyUpdateRequest): Result<Terminal> =
@@ -859,9 +826,8 @@ class MoccaApiClient(
             Unit
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // MCP OAUTH
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** Start MCP OAuth authentication flow for a server. */
     suspend fun startMcpAuth(name: String, request: McpAuthRequest): Result<McpOAuthState> =
@@ -902,50 +868,8 @@ class MoccaApiClient(
             Unit
         }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // WORKTREES (EXPERIMENTAL)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    /** List all worktrees for the current project. */
-    suspend fun listWorktrees(): Result<List<WorktreeInfo>> =
-        safeCall("listWorktrees") { get("experimental/worktree").body() }
-
-    /** Create a new worktree. */
-    suspend fun createWorktree(request: WorktreeCreateRequest): Result<WorktreeInfo> =
-        safeCallNoRetry("createWorktree") {
-            post("experimental/worktree") {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body()
-        }
-
-    /** Delete a worktree by ID. */
-    suspend fun deleteWorktree(id: String): Result<Unit> =
-        safeCallNoRetry("deleteWorktree") {
-            delete("experimental/worktree/$id")
-            Unit
-        }
-
-    /** Reset a worktree to a clean state. */
-    suspend fun resetWorktree(id: String, request: WorktreeResetRequest): Result<WorktreeInfo> =
-        safeCallNoRetry("resetWorktree") {
-            post("experimental/worktree/$id/reset") {
-                contentType(ContentType.Application.Json)
-                setBody(request)
-            }.body()
-        }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // CROSS-PROJECT SESSIONS (EXPERIMENTAL)
-    // ═══════════════════════════════════════════════════════════════════════════════
-
-    /** List sessions across all projects. */
-    suspend fun listCrossProjectSessions(): Result<List<CrossProjectSession>> =
-        safeCall("listCrossProjectSessions") { get("experimental/session").body() }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
     // MCP RESOURCES
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     /** List resources exposed by an MCP server. */
     suspend fun listMcpResources(name: String): Result<List<McpResource>> =

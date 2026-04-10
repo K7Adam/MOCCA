@@ -69,9 +69,8 @@ fun mergeCommands(apiCommands: List<Command>): List<Command> {
     return mergedCommands.sortedBy { it.name }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // COMMAND & SHELL EXECUTION
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Request body for POST /session/:id/command.

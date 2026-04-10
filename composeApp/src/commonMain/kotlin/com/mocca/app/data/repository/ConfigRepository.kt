@@ -49,9 +49,9 @@ class ConfigRepository(
             }
         )
     }.flowOn(Dispatchers.IO)
-    // ═══════════════════════════════════════════════════════════════════════
+
     // OAUTH & PROVIDER AUTHENTICATION (Priority 1.1)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Get available authentication methods for a provider.
@@ -100,9 +100,8 @@ class ConfigRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // MANUAL API KEY AUTHENTICATION (Priority 1.2)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Set provider authentication credentials manually (API key).
@@ -120,9 +119,8 @@ class ConfigRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // CONFIG WRITE (Priority 1.3)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Update configuration settings.
@@ -140,9 +138,8 @@ class ConfigRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // GLOBAL CONFIG (GET/PATCH /global/config)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Get global application config from /global/config.
@@ -178,9 +175,8 @@ class ConfigRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // PROVIDER AUTH REMOVAL (Priority 1.4)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Remove stored authentication credentials for a provider.

@@ -78,9 +78,8 @@ import com.mocca.app.ui.theme.innerShadow
  * Based on UI overhaul designs - 32dp rounded corners, clean aesthetic.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // BASIC TERMINAL INPUT (Pill-shaped, 32dp radius)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Basic input field with rounded corners.
@@ -196,9 +195,8 @@ internal object ChatInputDefaults {
     val MaxHeight: Dp = MinHeight + 20.dp.times(4)
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // COMMAND LINE INPUT (Modern pill-shaped variant)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Simple command line input for terminal screen.
@@ -215,9 +213,9 @@ fun CommandLineInput(
     enabled: Boolean = true,
     placeholder: String = "Enter command...",
     shape: Shape = AppShapes.input,
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // COMMAND HISTORY (Priority 5.3) - History navigation callbacks
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     onHistoryUp: (() -> Unit)? = null,
     onHistoryDown: (() -> Unit)? = null
 ) {
@@ -256,10 +254,9 @@ fun CommandLineInput(
                 }
             }
         )
-        
-        // ═══════════════════════════════════════════════════════════════════════════════
+
         // COMMAND HISTORY (Priority 5.3) - History navigation buttons
-        // ═══════════════════════════════════════════════════════════════════════════════
+
         if (onHistoryUp != null || onHistoryDown != null) {
             Column(
                 modifier = Modifier.padding(horizontal = AppSpacing.xs)

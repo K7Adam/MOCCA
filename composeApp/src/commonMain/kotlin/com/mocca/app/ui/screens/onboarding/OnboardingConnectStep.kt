@@ -119,7 +119,7 @@ internal fun OnboardingConnectStep(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            // ── Discovery Section ──────────────────────────────────────────────
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -217,7 +217,6 @@ internal fun OnboardingConnectStep(
 
             Spacer(modifier = Modifier.height(AppSpacing.md))
 
-            // ── Manual Entry Section ────────────────────────────────────────────
             if (!showManualEntry) {
                 MoccaOutlinedButton(
                     text = "Or enter server details manually",

@@ -106,7 +106,7 @@ fun PermissionBanner(
                     .fillMaxWidth()
                     .background(amberBg.copy(alpha = 0.15f))
             ) {
-                // ═══════════════ HEADER (Always visible) ═══════════════
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -185,7 +185,6 @@ fun PermissionBanner(
                     }
                 }
 
-                // ═══════════════ EXPANDED CONTENT ═══════════════
                 AnimatedVisibility(
                     visible = isExpanded,
                     enter = expandVertically(

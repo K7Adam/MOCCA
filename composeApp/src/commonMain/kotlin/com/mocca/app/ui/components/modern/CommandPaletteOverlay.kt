@@ -127,7 +127,7 @@ fun CommandPaletteOverlay(
                         onClick = {} // consume click so the scrim dismissal is blocked
                     )
             ) {
-                // ── Search field ──────────────────────────────────────────────
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -184,7 +184,6 @@ fun CommandPaletteOverlay(
                     color = AppColors.outline.copy(alpha = 0.5f)
                 )
 
-                // ── Results list ─────────────────────────────────────────────
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -252,7 +251,6 @@ fun CommandPaletteOverlay(
                     }
                 }
 
-                // ── Footer hint ──────────────────────────────────────────────
                 HorizontalDivider(
                     thickness = AppSpacing.borderThin,
                     color = AppColors.outline.copy(alpha = 0.3f)
@@ -290,9 +288,8 @@ fun CommandPaletteOverlay(
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Private helpers
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 private fun PaletteSection(label: String) {

@@ -158,7 +158,7 @@ fun ChatInputContent(
             .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ═══════════════ STATUS BAR (Premium Pill Chips) ═══════════════
+
         ChatInputStatusBar(
             modelName = modelName,
             agentName = agentName,
@@ -172,7 +172,6 @@ fun ChatInputContent(
             onModeSelected = onModeSelected
         )
 
-        // ═══════════════ INPUT AREA ═══════════════
         ChatInputTextFieldArea(
             inputText = inputText,
             onValueChange = handleValueChange,
@@ -191,7 +190,6 @@ fun ChatInputContent(
             onInputTextChange = onInputTextChange
         )
 
-        // ═══════════════ ATTACHMENT PREVIEW STRIP ═══════════════
         if (attachedFiles.isNotEmpty()) {
             AttachmentPreviewStrip(
                 files = attachedFiles,
@@ -199,7 +197,6 @@ fun ChatInputContent(
             )
         }
 
-        // ═══════════════ ACTION TOOLBAR (Cleaner, Grouped) ═══════════════
         HorizontalDivider(
             thickness = AppSpacing.borderThin,
             color = AppColors.outline.copy(alpha = 0.3f)

@@ -114,9 +114,8 @@ class OnboardingWizardModel(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Discovery (runs in background on CONNECT step)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun startDiscovery() {
         _state.update {
@@ -165,9 +164,8 @@ class OnboardingWizardModel(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Server Selection
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun selectServer(server: DiscoveredServer) {
         // mDNS-discovered servers don't have credentials — prompt user
@@ -223,9 +221,8 @@ class OnboardingWizardModel(
         connectWithConfig(withCreds.toServerConfig())
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Navigation
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun goToConnect() {
         _state.update {
@@ -283,9 +280,8 @@ class OnboardingWizardModel(
         // Navigation to MainScreen is handled by observing isSuccess in the UI
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Manual Entry
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun connectManual(host: String, port: Int, username: String, password: String, useHttps: Boolean = false) {
         Napier.i("[OnboardingWizard] connectManual called - host: $host, port: $port, useHttps: $useHttps")
@@ -336,9 +332,8 @@ class OnboardingWizardModel(
         connectWithConfig(config)
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Connection (with staged progress)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun connectWithConfig(config: ServerConfig) {
         Napier.i("[OnboardingWizard] connectWithConfig starting for: ${config.baseUrl}")
@@ -442,9 +437,8 @@ class OnboardingWizardModel(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Connection Result — success shows brief animation then auto-completes
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun onConnectionResult(success: Boolean, error: String?) {
         if (success) {

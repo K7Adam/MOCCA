@@ -28,11 +28,9 @@ import kotlinx.datetime.Clock
  * - Optimistic updates with rollback
  * 
  * Architecture:
- * ```
- * Server (SSE) → EventStreamRepository → StateCoordinator → State Stores → UI
+ * EventStreamRepository -> StateCoordinator -> State Stores -> UI
  *                                         ↓
  *                                   LocalCache (persistence)
- * ```
  * 
  * PRINCIPLES:
  * 1. All events flow through StateCoordinator
@@ -54,10 +52,9 @@ class StateCoordinator(
     private val databasePruner: com.mocca.app.data.local.DatabasePruner
 ) {
     private val coordinatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // ACTIVE SESSION TRACKING - Single source of truth
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val sessionMutex = Mutex()
     private val syncMutex = Mutex()  // Prevents concurrent sync operations
@@ -88,16 +85,14 @@ class StateCoordinator(
      * Used to trigger message refresh in state stores.
      */
     var onSessionIdle: ((sessionId: String) -> Unit)? = null
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CONNECTION STATE - Unified from ConnectionManager
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val connectionStatus: StateFlow<ConnectionStatus> = connectionManager.status
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // STREAMING STATE - From EventStreamRepository
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val streamingText: StateFlow<String> = eventStreamRepository.streamingText
     val isThinking: StateFlow<Boolean> = eventStreamRepository.isThinking
@@ -116,17 +111,15 @@ class StateCoordinator(
     val isSseConnected: StateFlow<Boolean> = eventStreamRepository.connectionStatus
         .map { it.isConnected }
         .stateIn(coordinatorScope, SharingStarted.Eagerly, false)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // PERMISSION/QUESTION STATE - From EventStreamRepository
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val pendingPermission: StateFlow<PermissionRequest?> = eventStreamRepository.pendingPermission
     val pendingQuestion: StateFlow<QuestionRequest?> = eventStreamRepository.pendingQuestion
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // EVENT BROADCAST - For state stores to subscribe
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _broadcastEvents = MutableSharedFlow<BroadcastEvent>(
         replay = 1,
@@ -185,32 +178,28 @@ class StateCoordinator(
                 else -> true
             }
         }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
+
     // SYNC STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _isSyncing = MutableStateFlow(false)
     val isSyncing: StateFlow<Boolean> = _isSyncing.asStateFlow()
     
     private val _lastSyncTime = MutableStateFlow<Long?>(null)
     val lastSyncTime: StateFlow<Long?> = _lastSyncTime.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // INTERNAL STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private var isInitialized = false
     private var syncJob: Job? = null
     private var eventObserverJob: Job? = null
     private var connectionObserverJob: Job? = null
     private var lifecycleObserverJob: Job? = null
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     init {
         Napier.i("[StateCoordinator] Initializing...")
@@ -282,10 +271,9 @@ class StateCoordinator(
             syncFromServer()
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SESSION MANAGEMENT
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Set the active session.
@@ -347,10 +335,9 @@ class StateCoordinator(
      * Get whether a session is being monitored.
      */
     fun isSessionMonitored(sessionId: String): Boolean = _monitoredSessionIds.value.contains(sessionId)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // EVENT OBSERVATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun startObservingEvents() {
         eventObserverJob = coordinatorScope.launch {
@@ -633,10 +620,9 @@ class StateCoordinator(
             )
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SYNC OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Called when app comes to foreground.
@@ -743,17 +729,15 @@ class StateCoordinator(
             }
         )
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // PERMISSION/QUESTION HANDLING
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     fun dismissPermission() = eventStreamRepository.dismissPermission()
     fun dismissQuestion() = eventStreamRepository.dismissQuestion()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SSE CONNECTION CONTROL
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     fun connectSse(sessionId: String? = null) {
         eventStreamRepository.connect(coordinatorScope, sessionId)
@@ -762,10 +746,9 @@ class StateCoordinator(
     fun disconnectSse() {
         eventStreamRepository.disconnect()
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CLEANUP
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     fun dispose() {
         eventObserverJob?.cancel()
@@ -775,30 +758,4 @@ class StateCoordinator(
         coordinatorScope.cancel()
         Napier.i("[StateCoordinator] Disposed")
     }
-}
-
-/**
- * Broadcast events for state stores to subscribe to.
- */
-sealed class BroadcastEvent {
-    /** Server event received */
-    data class ServerEvent(val event: com.mocca.app.domain.model.ServerEvent) : BroadcastEvent()
-    
-    /** Active session changed */
-    data class ActiveSessionChanged(val sessionId: String?) : BroadcastEvent()
-    
-    /** Connection state changed */
-    data class ConnectionStateChanged(val status: ConnectionStatus) : BroadcastEvent()
-    
-    /** Sync completed successfully */
-    data object SyncCompleted : BroadcastEvent()
-    
-    /** Sync failed */
-    data class SyncFailed(val error: String) : BroadcastEvent()
-    
-    /** Global (non-session) event received - installation updates, LSP diagnostics, etc. */
-    data class GlobalEvent(val event: com.mocca.app.domain.model.ServerEvent) : BroadcastEvent()
-    
-    /** Installation updated - triggers full cache invalidation and sync */
-    data object InstallationUpdated : BroadcastEvent()
 }

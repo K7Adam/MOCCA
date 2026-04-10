@@ -61,7 +61,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     .navigationBarsPadding()
                     .padding(AppSpacing.lg)
             ) {
-                // ── Header ─────────────────────────────────────────────────
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -96,7 +96,6 @@ data class McpResourceScreen(val serverName: String) : Screen {
 
                 Spacer(modifier = Modifier.height(AppSpacing.lg))
 
-                // ── Error ───────────────────────────────────────────────────
                 state.error?.let { err ->
                     Text(
                         text = "!! error: \"$err\"",
@@ -110,7 +109,6 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     Spacer(modifier = Modifier.height(AppSpacing.md))
                 }
 
-                // ── Content ─────────────────────────────────────────────────
                 when {
                     state.isLoading && state.resources.isEmpty() -> {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -180,7 +178,6 @@ data class McpResourceScreen(val serverName: String) : Screen {
                 }
             }
 
-            // ── Resource Content Overlay ─────────────────────────────────────
             if (state.selectedResource != null) {
                 McpResourceContentPanel(
                     resource = state.selectedResource!!,

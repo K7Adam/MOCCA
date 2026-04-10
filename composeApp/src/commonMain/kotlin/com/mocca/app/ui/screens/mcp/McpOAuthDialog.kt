@@ -69,7 +69,7 @@ fun McpOAuthDialog(
                 .padding(AppSpacing.lg),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
-            // ── Header ─────────────────────────────────────────────────────────
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Lock,
@@ -98,7 +98,6 @@ fun McpOAuthDialog(
                 color = AppColors.outline
             )
 
-            // ── Step 1: Auth URL ────────────────────────────────────────────────
             Text(
                 text = "// STEP_1: Open the authorization URL",
                 color = AppColors.statusOnline,
@@ -163,7 +162,6 @@ fun McpOAuthDialog(
                 color = AppColors.outline
             )
 
-            // ── Step 2: Paste code ──────────────────────────────────────────────
             Text(
                 text = "// STEP_2: Paste the authorization code",
                 color = AppColors.statusOnline,
@@ -200,7 +198,6 @@ fun McpOAuthDialog(
                 enabled = !isInProgress
             )
 
-            // ── Error ───────────────────────────────────────────────────────────
             oauthState.error?.let { err ->
                 Text(
                     text = "!! error: \"$err\"",
@@ -213,7 +210,6 @@ fun McpOAuthDialog(
                 )
             }
 
-            // ── Actions ─────────────────────────────────────────────────────────
             Row(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
                 modifier = Modifier.fillMaxWidth()

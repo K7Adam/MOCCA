@@ -18,9 +18,8 @@ import androidx.compose.runtime.ReadOnlyComposable
  * - Expressive motion and squircle-based shapes.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // COLOR SCHEME
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 private val AppColorScheme: ColorScheme = darkColorScheme(
     primary = AppColors.primary,
@@ -66,9 +65,8 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     scrim = AppColors.scrim
 )
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // THEME COMPOSABLE
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * MOCCA App Theme.
@@ -100,9 +98,8 @@ fun AppTheme(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // THEME ACCESSORS
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * MOCCA Theme — Unified access to Material 3 tokens and extended app attributes.

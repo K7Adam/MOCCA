@@ -17,10 +17,6 @@ insertRecent:
 INSERT OR REPLACE INTO RecentModel(providerId, modelId, lastUsedAt)
 VALUES (?, ?, ?);
 
--- Count records to enforce limit (optional usage, but good to have)
-countRecent:
-SELECT count(*) FROM RecentModel;
-
 -- Delete oldest records if count > 5 (trigger logic or manual cleanup)
 -- Manual cleanup query:
 deleteOldest:

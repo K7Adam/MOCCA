@@ -91,10 +91,9 @@ class SettingsScreenModel(
         loadServerConfig()
         loadCurrentProject()
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // User Preferences
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun loadUserPreferences() {
         screenModelScope.launch {
@@ -783,9 +782,8 @@ class SettingsScreenModel(
         _state.value = _state.value.copy(message = null)
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // PROJECT
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun loadCurrentProject() {
         screenModelScope.launch {

@@ -22,12 +22,9 @@ import com.mocca.app.ui.screens.mcp.McpScreenModel
 import com.mocca.app.ui.screens.mcp.McpResourceScreenModel
 import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
-import com.mocca.app.ui.screens.sessions.SessionsScreenModel
+
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
 import com.mocca.app.ui.screens.terminal.TerminalScreenModel
-import com.mocca.app.ui.screens.worktree.WorktreeScreenModel
-import com.mocca.app.ui.screens.sessions.CrossProjectSessionsScreenModel
-import com.mocca.app.ui.screens.skills.SkillsScreenModel
 import com.mocca.app.ui.screens.settings.FeatureFlagsScreenModel
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
@@ -82,9 +79,6 @@ val commonModule = module {
     singleOf(::FileRepository)
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
-    singleOf(::WorktreeRepository)
-    singleOf(::CrossProjectSessionsRepository)
-    singleOf(::SkillsRepository)
     singleOf(::SettingsRepository)
     singleOf(::PreferencesManager)
     single { ConfigRepository(get()) }
@@ -105,22 +99,13 @@ val commonModule = module {
     singleOf(::AgentRepository)
     singleOf(::ToolRepository)
     singleOf(::CommandRepository)
-    singleOf(::FormatterRepository)
-    singleOf(::LspRepository)
     singleOf(::SearchRepository)
     singleOf(::ProjectRepository)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // SYNC STATE MANAGER - Central hub for tracking sync health across all repos
-    // MUST come before StateCoordinator and repositories that report sync state
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    singleOf(::SyncStateManager)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
+
     // STATE COORDINATOR - Central hub for all event handling and state sync
     // NOTE: This MUST come after EventStreamRepository and ConnectionManager
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     single { 
         StateCoordinator(
@@ -136,17 +121,15 @@ val commonModule = module {
             databasePruner = get()
         )
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // REALTIME SYNC SERVICE - Periodic polling for data without SSE events
     // Handles: MCP servers, Providers, Git status, Tools, Commands
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     single {
         RealtimeSyncService(
             stateCoordinator = get(),
             connectionManager = get(),
-            syncStateManager = get(),
             mcpRepository = get(),
             gitRepository = get(),
             toolRepository = get(),
@@ -156,17 +139,15 @@ val commonModule = module {
             sessionRepository = get()
         )
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CENTRALIZED STATE STORES - Single source of truth for all app state
     // NOTE: These MUST come after StateCoordinator, RealtimeSyncService and all dependencies
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     single { 
         AppStateStore(
             localCache = get(),
             stateCoordinator = get(),
-            syncStateManager = get(),
             sessionRepository = get(),
             mcpRepository = get(),
             configRepository = get(),
@@ -217,14 +198,6 @@ val cacheModule = module {
  * ScreenModel/ViewModel module for presentation layer.
  */
 val screenModelModule = module {
-    // Sessions screen
-    factory {
-        SessionsScreenModel(
-            sessionRepository = get(),
-            connectionManager = get()
-        )
-    }
-    
     // Chat screen - accepts optional initialSessionId parameter
     // NOTE: Now includes appStateStore for single source of truth state management
     factory { params ->
@@ -325,13 +298,6 @@ val screenModelModule = module {
 
     // Terminal screen
     factory { TerminalScreenModel(get()) }
-
-    // Worktree screen
-    factoryOf(::WorktreeScreenModel)
-    factoryOf(::CrossProjectSessionsScreenModel)
-
-    // Skills screen
-    factoryOf(::SkillsScreenModel)
 
     // Feature flags screen
     factoryOf(::FeatureFlagsScreenModel)

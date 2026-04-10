@@ -35,9 +35,8 @@ import com.mocca.app.ui.theme.MoccaTheme
  * Modern styled text components.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // BASIC MODERN TEXT
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Basic modern text using system fonts.
@@ -155,9 +154,8 @@ fun TerminalMeta(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TYPEWRITER TEXT
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Text that types out character by character with optional blinking cursor.
@@ -284,9 +282,8 @@ fun TypewriterCycleText(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // BLINKING CURSOR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Blinking cursor block for terminal aesthetic.
@@ -318,9 +315,8 @@ fun BlinkingCursor(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONSOLE LOG LINE
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Console log line with status prefix like [DONE], [WAIT], [ERROR].

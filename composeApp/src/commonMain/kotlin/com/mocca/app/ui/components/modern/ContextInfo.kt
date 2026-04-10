@@ -36,9 +36,8 @@ import androidx.compose.material3.MaterialTheme
  * Modern design: Rounded cards, clean typography.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONTEXT INFO GRID (2x2 layout)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Context info grid showing MCP status, model, latency, port.
@@ -146,9 +145,8 @@ fun ContextInfoGrid(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONTEXT WINDOW BAR (usage progress bar)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Context window usage bar.
@@ -243,9 +241,8 @@ private fun formatTokenCount(count: Int): String {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONTEXT INFO CONTAINER (combines grid + usage bar)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Full context info container as shown in left panel mockup.

@@ -248,9 +248,8 @@ internal fun formatTime(timestamp: Long): String {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // SESSION SEARCH (Priority 5.6) - Search bar component
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 @Composable
 internal fun ModernSearchBar(

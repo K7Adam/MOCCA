@@ -46,9 +46,8 @@ object AppAnimations {
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // MOTION SCHEME TOKENS (M3 Expressive)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     val spatialDefault: FiniteAnimationSpec<Any>
         @Composable get() = MaterialTheme.motionScheme.defaultSpatialSpec()

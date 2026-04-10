@@ -11,9 +11,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// ═══════════════════════════════════════════════════════════════════════
 // UI STATE
-// ═══════════════════════════════════════════════════════════════════════
+
 
 data class FeatureFlagsUiState(
     val isLoading: Boolean = true,
@@ -24,9 +23,8 @@ data class FeatureFlagsUiState(
     val successMessage: String? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════
 // SCREEN MODEL
-// ═══════════════════════════════════════════════════════════════════════
+
 
 class FeatureFlagsScreenModel(
     private val configRepository: ConfigRepository

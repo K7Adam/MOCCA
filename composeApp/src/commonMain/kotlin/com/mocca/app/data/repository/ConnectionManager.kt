@@ -95,18 +95,16 @@ class ConnectionManager(
         observeNetworkState()
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // ApiExecutor Implementation
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     override suspend fun <T> execute(block: suspend HttpClient.() -> T): T {
         val client = currentClient ?: throw ConnectionException("Not connected to any server")
         return client.block()
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Connection Lifecycle
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     @Volatile
     private var isConnecting = false
@@ -224,9 +222,8 @@ class ConnectionManager(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Server Config Observation
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun observeActiveServer() {
         scope.launch {
@@ -273,9 +270,8 @@ class ConnectionManager(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Health Checks
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private suspend fun performHealthCheck(): Result<AppInfo?> {
         val config = _activeConfig.value
@@ -406,9 +402,8 @@ class ConnectionManager(
         return min(exponentialDelay, maxDelay) + jitter
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // HttpClient Factory
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     private fun createClient(config: ServerConfig): HttpClient {
         Napier.i("[ConnectionManager] Creating HttpClient for: ${config.baseUrl}")
@@ -446,9 +441,8 @@ class ConnectionManager(
         }
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════════
     // Utility
-    // ═══════════════════════════════════════════════════════════════════════════════
+
 
     fun getConnectionSummary(): String {
         return when (val state = _status.value) {

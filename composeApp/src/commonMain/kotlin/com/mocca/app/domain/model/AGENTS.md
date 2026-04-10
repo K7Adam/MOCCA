@@ -10,19 +10,22 @@ Core immutable data structures and sealed class hierarchies that define the MOCC
 ## KEY TYPES
 
 ### Config.kt
-- **`ServerConfig`**: Server profile — `id, name, host, port, username, password, isActive`. `baseUrl` is a computed property (`http://$host:$port`). No `connectionType`, `authType`, or `authToken`.
+- **`ServerConfig`**: Server profile — `id, name, host, port, username, password, isActive, useHttps: Boolean`. `baseUrl` is a computed property (`protocol = if (useHttps) "https" else "http"`, omits port 443 if standard). Computed properties: `displayType`, `hasCredentials`. No `connectionType`, `authType`, or `authToken`.
 - **`ConnectionStatus`** (sealed class): `NotConfigured`, `Disconnected(reason: String? = null)` (data class, NOT object), `Connecting`, `WaitingForNetwork`, `Reconnecting(attempt, maxAttempts)`, `Connected(serverInfo: AppInfo, latencyMs)`, `Error(message)`.
-- **`ConnectionQuality`** (enum): `EXCELLENT`, `GOOD`, `POOR`, `OFFLINE`, `UNKNOWN`.
-- **`Resource<T>`** (sealed class): `Success(data)`, `Loading(data?)`, `Error(message, data?)`.
+- **`ConnectionQuality`** (enum): `EXCELLENT`, `GOOD`, `DEGRADED`, `POOR`, `OFFLINE`, `UNKNOWN`.
+- **`Resource<T>`** (sealed class): `Success(data)`, `Loading(data?)`, `Error(message, data?, cause: Throwable?)`.
 
 ### VcsTypes.kt
-- **`VcsInfo`**: `dirty: Boolean = false`, `ahead: Int = 0`, `behind: Int = 0` — all NON-nullable with defaults. No `?:` elvis needed.
+- **`VcsInfo`**: `branch: String = ""` — NON-nullable with default. No `?:` elvis needed.
 
 ### GitTypes.kt
 - **`GitStatusResponse`**: Constructor params include `branch, upstream, ahead, behind, staged, unstaged, untracked, conflicted, stashes, clean`. `hasChanges` and `totalChanges` are computed properties (not constructor params).
 
 ### ServerDiscovery.kt
-- **`DiscoveredServer`**: Has `username` and `password` fields (not `authToken`).
+- **`DiscoveredServer`**: Has `username`, `password`, `useHttps`, and `source: DiscoverySource` fields (not `authToken`).
+
+### AppConfig.kt
+- **`GlobalAppConfig`**, **`AppConfigUpdate`**, **`FeatureFlags`**: Global application configuration models.
 
 ## CONVENTIONS
 - **Strict Immutability**: All domain models MUST be defined as `data class` using `val` properties. Mutable `var` properties are strictly prohibited to ensure thread safety and predictable state management within the MVI architecture.

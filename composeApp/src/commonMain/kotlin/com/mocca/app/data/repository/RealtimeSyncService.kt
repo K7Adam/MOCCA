@@ -66,7 +66,6 @@ import com.mocca.app.data.local.*
 class RealtimeSyncService(
     private val stateCoordinator: StateCoordinator,
     private val connectionManager: ConnectionManager,
-    private val syncStateManager: SyncStateManager,
     private val mcpRepository: McpRepository,
     private val gitRepository: GitRepository,
     private val toolRepository: ToolRepository,
@@ -272,26 +271,17 @@ class RealtimeSyncService(
         
         try {
             // Only show UI state for MANUAL sync
-            syncStateManager.startSync(repoNames.size)
+            // Removed syncStateManager calls
             
             repoNames.forEachIndexed { index, repoName ->
                 try {
-                    syncStateManager.updateSyncProgress(index, repoNames.size, repoName)
                     syncRepositorySilent(repoName)
-                    syncStateManager.updateRepoState(repoName, com.mocca.app.domain.model.SyncState.Fresh())
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     Napier.w("[RealtimeSync] $repoName manual sync failed", e)
                     errors[repoName] = e.message ?: "Unknown error"
-                    syncStateManager.updateRepoState(repoName, com.mocca.app.domain.model.SyncState.Failed(e.message ?: "Unknown error"))
                 }
-            }
-            
-            if (errors.isEmpty()) {
-                syncStateManager.markSyncComplete()
-            } else {
-                syncStateManager.markSyncFailed(errors)
             }
             
             _lastSyncTime.value = Clock.System.now().toEpochMilliseconds()
@@ -301,7 +291,6 @@ class RealtimeSyncService(
             throw e
         } catch (e: Exception) {
             Napier.e("[RealtimeSync] Manual sync failed", e)
-            syncStateManager.markSyncFailed(mapOf("global" to (e.message ?: "Critical failure")))
         } finally {
             _isSyncing.value = false
         }
@@ -321,11 +310,10 @@ class RealtimeSyncService(
             "providers" -> syncProvidersSilent()
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Silent Per-Repository Sync Functions
     // These update data WITHOUT emitting sync state to UI
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private suspend fun syncSessionsSilent() {
         try {

@@ -244,11 +244,6 @@ class SettingsScreen : Screen {
                     )
                 }
                 
-                // Skills Section
-                item {
-                    SkillsSection(navigator = navigator)
-                }
-                
                 // Experimental Section
                 item {
                     ExperimentalSection(navigator = navigator)
@@ -1138,36 +1133,6 @@ fun ServersSection(
         )
     }
 }
-@Composable
-fun SkillsSection(
-    navigator: Navigator,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Skills",
-            color = AppColors.onSurfaceVariant,
-            style = AppTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        SettingsCard(title = "Server Skills") {
-            Text(
-                text = "View agent skills registered on the OpenCode server.",
-                style = AppTypography.labelSmall,
-                color = AppColors.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(AppSpacing.sm))
-            MoccaButton(
-                text = "Browse Skills",
-                onClick = { navigator.push(com.mocca.app.ui.screens.skills.SkillsScreen) },
-                height = AppSpacing.buttonHeightCompact
-            )
-        }
-    }
-}
-
 @Composable
 fun SettingsCard(
     title: String,

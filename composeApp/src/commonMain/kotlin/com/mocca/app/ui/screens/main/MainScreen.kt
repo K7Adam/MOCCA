@@ -173,9 +173,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 Box(modifier = Modifier.fillMaxSize()) {
                     DynamicExpressiveBackground()
 
-                    // ═══════════════════════════════════════════════════════════════════
                     // Content area - full screen, unified bottom bar floats above
-                    // ═══════════════════════════════════════════════════════════════════
+
                     Scaffold(
                         modifier = Modifier.fillMaxSize(),
                         containerColor = Color.Transparent,
@@ -444,10 +443,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     }
                     // End of content wrapper
 
-
-                    // ═══════════════════════════════════════════════════════════════════════
                     // UNIFIED FLOATING BOTTOM BAR
-                    // ═══════════════════════════════════════════════════════════════════════
+
                     // Surface-based bottom bar with dynamic adaptation
                     // Nav row is ALWAYS visible; only chat input auto-hides on scroll
 

@@ -65,7 +65,7 @@ internal fun OnboardingConnectingStep(
         Spacer(modifier = Modifier.weight(0.2f))
 
         if (connectionStage == ConnectionStage.CONNECTED) {
-            // ── Success state ──────────────────────────────────────────────
+
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = "Connected",
@@ -95,7 +95,7 @@ internal fun OnboardingConnectingStep(
             )
 
         } else if (connectionStage == ConnectionStage.FAILED) {
-            // ── Error state ──────────────────────────────────────────────
+
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Failed",
@@ -140,7 +140,7 @@ internal fun OnboardingConnectingStep(
             )
 
         } else {
-            // ── Connecting state with staged progress ─────────────────────
+
             LoadingIndicator(
                 modifier = Modifier.size(48.dp),
                 color = AppColors.accent

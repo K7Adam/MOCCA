@@ -27,9 +27,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
-// ═══════════════════════════════════════════════════════════════════════
 // SCREEN
-// ═══════════════════════════════════════════════════════════════════════
+
 
 object FeatureFlagsScreen : Screen {
 
@@ -45,7 +44,7 @@ object FeatureFlagsScreen : Screen {
                 .background(AppColors.background)
                 .padding(AppSpacing.lg)
         ) {
-            // ── Header ─────────────────────────────────────────────────────────
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -61,7 +60,6 @@ object FeatureFlagsScreen : Screen {
 
             Spacer(modifier = Modifier.height(AppSpacing.lg))
 
-            // ── Error Banner ───────────────────────────────────────────────────
             val error = uiState.error ?: uiState.saveError
             if (error != null) {
                 Box(
@@ -81,7 +79,6 @@ object FeatureFlagsScreen : Screen {
                 Spacer(modifier = Modifier.height(AppSpacing.md))
             }
 
-            // ── Success Banner ─────────────────────────────────────────────────
             if (uiState.successMessage != null) {
                 LaunchedEffect(uiState.successMessage) {
                     kotlinx.coroutines.delay(2000)
@@ -113,7 +110,7 @@ object FeatureFlagsScreen : Screen {
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.sm),
                     contentPadding = PaddingValues(bottom = AppSpacing.xl)
                 ) {
-                    // ── Global Config Toggles ──────────────────────────────────
+
                     item {
                         Spacer(modifier = Modifier.height(AppSpacing.sm))
                         Text(
@@ -157,7 +154,6 @@ object FeatureFlagsScreen : Screen {
                         }
                     }
 
-                    // ── Experimental Flags (read-only from server) ─────────────
                     item {
                         Spacer(modifier = Modifier.height(AppSpacing.md))
                         Text(
@@ -248,7 +244,6 @@ object FeatureFlagsScreen : Screen {
                         }
                     }
 
-                    // ── Saving indicator ──────────────────────────────────────
                     if (uiState.isSaving) {
                         item {
                             Box(
@@ -278,9 +273,8 @@ object FeatureFlagsScreen : Screen {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
 // COMPOSABLES
-// ═══════════════════════════════════════════════════════════════════════
+
 
 @Composable
 private fun ExperimentalFlagRow(

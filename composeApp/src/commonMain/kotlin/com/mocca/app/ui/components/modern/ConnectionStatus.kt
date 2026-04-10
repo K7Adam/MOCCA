@@ -33,9 +33,8 @@ import androidx.compose.material3.MaterialTheme
  * Modern design: Rounded, friendly alerts.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONNECTION STATUS BANNER
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Full-width connection status banner.
@@ -157,9 +156,8 @@ private data class Quadruple<A, B, C, D>(
     val fourth: D
 )
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // INLINE STATUS INDICATOR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Compact inline status indicator for top bars.
@@ -193,9 +191,8 @@ fun InlineConnectionStatus(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // SSE STATUS INDICATOR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * SSE (Server-Sent Events) connection status indicator.
@@ -268,9 +265,8 @@ fun CombinedConnectionIndicator(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // NOT IMPLEMENTED BANNER
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * "Not yet implemented" placeholder banner.
@@ -307,9 +303,8 @@ fun NotImplementedBanner(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // EMPTY STATE
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Empty state placeholder for lists.
@@ -359,9 +354,8 @@ fun TerminalEmptyState(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // LOADING STATE
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Terminal-styled loading indicator.

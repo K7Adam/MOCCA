@@ -37,9 +37,8 @@ import androidx.compose.runtime.getValue
  * Based on UI overhaul designs - rounded corners, subtle backgrounds.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // ROLE BADGE (USER/AGENT labels - pill shaped)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Role badge - pill-shaped with light background.
@@ -101,9 +100,8 @@ fun OutlinedBadge(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // STATUS BADGE (with color indicator)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Status badge with colored indicator dot.
@@ -150,9 +148,8 @@ enum class ModernStatus {
     IDLE
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // STATUS DOT
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Simple status dot indicator.
@@ -235,9 +232,8 @@ fun StatusSquare(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TAG BADGE (for categories, file types, etc.)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Small tag badge - pill-shaped for inline metadata.
@@ -266,9 +262,8 @@ fun TerminalTag(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // CONNECTED/EDIT BADGES (modern pill-shaped)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Connected badge - pill-shaped success indicator.

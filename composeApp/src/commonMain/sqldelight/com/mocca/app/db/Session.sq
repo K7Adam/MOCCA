@@ -33,24 +33,6 @@ CREATE INDEX idx_session_internal_filter ON SessionEntity(title) WHERE
 selectAll:
 SELECT * FROM SessionEntity ORDER BY updatedAt DESC;
 
--- Select root sessions (no parent and not internal)
-selectRootSessions:
-SELECT * FROM SessionEntity 
-WHERE parentId IS NULL 
-AND title NOT LIKE 'Background:%' 
-AND title NOT LIKE 'look_at:%' 
-AND title NOT LIKE '%subagent%'
-ORDER BY updatedAt DESC;
-
--- Select child/internal sessions
-selectChildSessions:
-SELECT * FROM SessionEntity 
-WHERE parentId IS NOT NULL 
-OR title LIKE 'Background:%' 
-OR title LIKE 'look_at:%' 
-OR title LIKE '%subagent%'
-ORDER BY updatedAt DESC;
-
 -- Select session by ID
 selectById:
 SELECT * FROM SessionEntity WHERE id = ?;
@@ -72,9 +54,6 @@ DELETE FROM SessionEntity;
 updateStatus:
 UPDATE SessionEntity SET status = ?, updatedAt = ? WHERE id = ?;
 
--- Mark session as synced
-markSynced:
-UPDATE SessionEntity SET isSynced = 1 WHERE id = ?;
 
 -- Update last fetched timestamp (Cache Invalidation)
 updateLastFetched:

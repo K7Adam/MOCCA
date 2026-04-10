@@ -81,7 +81,7 @@ fun DashboardPanel(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-        // ─── DASHBOARD HEADER ──────────────────────────────────────────────
+
         PanelHeader(
             title = "Dashboard",
             modifier = headerModifier,
@@ -105,15 +105,8 @@ fun DashboardPanel(
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.md))
-        
-        // ─── SYNC STATUS ───────────────────────────────────────────────────
-        SyncStatusCard(
-            globalSyncState = state.globalSyncState,
-            repoSyncStates = state.repoSyncStates,
-            onRefreshClick = { screenModel.forceFullSync() }
-        )
-        
-        // ─── SSE STATUS INDICATOR ─────────────────────────────────────────
+
+
         // Show SSE connection status for real-time event streaming
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -128,8 +121,7 @@ fun DashboardPanel(
             )
             SseStatusIndicator(isConnected = state.isSseConnected)
         }
-        
-        // ─── MCP Servers ─────────────────────────────────────────────────
+
         McpConfigModule(
             servers = state.mcpServers.toMcpServerItems(),
             onConfigClick = onMcpConfigClick,
@@ -141,28 +133,24 @@ fun DashboardPanel(
                 }
             }
         )
-        
-        // ─── Git Status ──────────────────────────────────────────────────
+
         GitStatusModule(
             branchName = state.gitBranch,
             changedFiles = state.changedFilesCount, // Rich file status from global gitStatus
             onExpandClick = onGitClick
         )
-        
-        // ─── WORKSPACE (Projects + Agents merged) ────────────────────────
+
         WorkspaceModule(
             currentProject = state.currentProject,
             projects = state.projects,
             agents = state.agents
         )
-        
-        // ─── CAPABILITIES (Tools + Commands merged) ──────────────────────
+
         CapabilitiesModule(
             tools = state.tools,
             commands = state.commands
         )
-        
-        // ─── Quick Actions (centered at bottom) ───────────────────────────────
+
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
         Row(
@@ -295,9 +283,8 @@ private fun CapabilitiesModule(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // EXTENSION FUNCTIONS FOR DATA CONVERSION
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Convert MCP server status to UI items

@@ -39,7 +39,6 @@ import kotlinx.datetime.Clock
 class AppStateStore(
     private val localCache: LocalCache,
     private val stateCoordinator: StateCoordinator,
-    private val syncStateManager: SyncStateManager,
     private val sessionRepository: SessionRepository,
     private val mcpRepository: McpRepository,
     private val configRepository: ConfigRepository,
@@ -52,10 +51,9 @@ class AppStateStore(
     private val preferencesManager: PreferencesManager
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SESSION STATE - Reactive from DB + StateCoordinator updates
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _sessions = MutableStateFlow<List<Session>>(emptyList())
     val sessions: StateFlow<List<Session>> = _sessions.asStateFlow()
@@ -65,10 +63,9 @@ class AppStateStore(
     
     // Current active session (for chat screen)
     val currentSessionId: StateFlow<String?> = stateCoordinator.activeSessionId
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CONNECTION STATE - From StateCoordinator
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val connectionStatus: StateFlow<ConnectionStatus> = stateCoordinator.connectionStatus
     
@@ -77,10 +74,9 @@ class AppStateStore(
     
     // Convenience: true when SSE is connected (receiving real-time events)
     val isSseConnected: StateFlow<Boolean> = stateCoordinator.isSseConnected
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CONFIG STATE - Models, providers, agents
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _providerInfo = MutableStateFlow<ProviderResponse?>(null)
     val providerInfo: StateFlow<ProviderResponse?> = _providerInfo.asStateFlow()
@@ -105,56 +101,49 @@ class AppStateStore(
     
     private val _recentModels = MutableStateFlow<List<RecentModel>>(emptyList())
     val recentModels: StateFlow<List<RecentModel>> = _recentModels.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // MCP STATE - Reactive from McpRepository (updated by RealtimeSyncService)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _mcpServers = MutableStateFlow<Map<String, McpServerInfo>>(emptyMap())
     val mcpServers: StateFlow<Map<String, McpServerInfo>> = _mcpServers.asStateFlow()
     
     private val _isMcpLoading = MutableStateFlow(false)
     val isMcpLoading: StateFlow<Boolean> = _isMcpLoading.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // PROVIDER STATE - Reactive from ProviderRepository (updated by RealtimeSyncService)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _providers = MutableStateFlow<Resource<ProviderResponse>>(Resource.Loading())
     val providers: StateFlow<Resource<ProviderResponse>> = _providers.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // TOOL STATE - Reactive from ToolRepository (updated by RealtimeSyncService)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _tools = MutableStateFlow<Resource<List<String>>>(Resource.Loading())
     val tools: StateFlow<Resource<List<String>>> = _tools.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // COMMAND STATE - Reactive from CommandRepository (updated by RealtimeSyncService)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _commands = MutableStateFlow<Resource<List<Command>>>(Resource.Loading())
     val commands: StateFlow<Resource<List<Command>>> = _commands.asStateFlow()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // GIT/VCS STATE - Reactive from GitRepository (updated by RealtimeSyncService)
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private val _vcsInfo = MutableStateFlow<Resource<VcsInfo>>(Resource.Loading())
     val vcsInfo: StateFlow<Resource<VcsInfo>> = _vcsInfo.asStateFlow()
     
     val gitStatus: StateFlow<GitStatusResponse?> = localCache.observeGitStatus()
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // USER PREFERENCES - Reactive from PreferencesManager
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val userPreferences: StateFlow<UserPreferences> = preferencesManager.preferences
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SYNC STATE - From StateCoordinator + RealtimeSyncService
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     val isSyncing: StateFlow<Boolean> = combine(
         stateCoordinator.isSyncing,
@@ -162,48 +151,8 @@ class AppStateStore(
     ) { a, b -> a || b }.stateIn(storeScope, SharingStarted.Eagerly, false)
     
     val lastSyncTime: StateFlow<Long?> = realtimeSyncService.lastSyncTime
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // GLOBAL SYNC STATE - From SyncStateManager (Atomic Pulse)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    
-    /**
-     * Global sync state - the SINGLE source of truth for data freshness.
-     * This decouples "connection status" from "data freshness".
-     * 
-     * States:
-     * - NotSynced: Never synced
-     * - Syncing: Currently syncing (with progress)
-     * - Fresh: All data is fresh
-     * - Partial: Some data fresh, some stale
-     * - Failed: Critical failure
-     */
-    val globalSyncState: StateFlow<GlobalSyncState> = syncStateManager.globalState
-    
-    /**
-     * Per-repository sync states for granular visibility.
-     */
-    val repoSyncStates: StateFlow<Map<String, SyncState>> = syncStateManager.repoStates
-    
-    /**
-     * Human-readable sync status for UI display.
-     */
-    val syncStatusText: StateFlow<String> = syncStateManager.globalState
-        .map { state -> formatSyncState(state) }
-        .stateIn(storeScope, SharingStarted.Eagerly, "Not synced")
-    
-    /**
-     * Whether the app data is ready to use (at least partially synced).
-     */
-    val isDataReady: StateFlow<Boolean> = syncStateManager.globalState
-        .map { it.isUsable }
-        .stateIn(storeScope, SharingStarted.Eagerly, false)
-    
-    /**
-     * Whether all critical repositories are fresh.
-     */
-    val areCriticalReposFresh: Boolean
-        get() = syncStateManager.areCriticalReposFresh()
+
+
     
     /**
      * Trigger a full sync from server.
@@ -215,10 +164,9 @@ class AppStateStore(
     
     private var isInitialized = false
     private var isDataLoaded = false
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // INITIALIZATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     init {
         Napier.i("[AppStateStore] Initializing with StateCoordinator + RealtimeSyncService...")
@@ -530,10 +478,9 @@ class AppStateStore(
             }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // EVENT HANDLING
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     private fun handleBroadcastEvent(event: BroadcastEvent) {
         when (event) {
@@ -602,10 +549,9 @@ class AppStateStore(
             else -> { /* Other events handled by specialized stores */ }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SYNC OPERATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Load initial state from local cache.
@@ -831,10 +777,9 @@ class AppStateStore(
             }
         }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // STATE MUTATIONS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Set the current active session.
@@ -871,10 +816,9 @@ class AppStateStore(
     fun selectMode(modeId: String?) {
         _selectedModeId.value = modeId
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // DERIVED STATE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Get session groups (parent-child hierarchy).
@@ -940,20 +884,18 @@ class AppStateStore(
             )
         }.sortedByDescending { it.lastActivityTime }
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CLEANUP
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     fun dispose() {
         realtimeSyncService.stop()
         storeScope.cancel()
         Napier.i("[AppStateStore] Disposed")
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SYNC HELPERS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /**
      * Force a full sync from server.

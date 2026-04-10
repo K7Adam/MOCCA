@@ -83,10 +83,9 @@ class PreferencesManager(
     fun refresh() {
         loadPreferences()
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // Convenience accessors for common preference checks
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Whether to show token counts in chat */
     val showTokenCounts: Boolean get() = _preferences.value.showTokenCounts

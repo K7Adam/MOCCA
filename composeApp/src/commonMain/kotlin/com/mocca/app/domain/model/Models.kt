@@ -809,9 +809,8 @@ data class ServerErrorResponse(
     val status: Int? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // TODO LIST MODELS
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Session todo item.
@@ -843,9 +842,8 @@ enum class TodoPriority {
     @SerialName("low") LOW
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
 // SESSION OPERATIONS
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Request body for POST /session/:id/summarize.
@@ -873,9 +871,8 @@ data class InitSessionRequest(
     val modelID: String
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // CONFIG UPDATE
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Request body for PATCH /config.
@@ -897,9 +894,8 @@ data class ModelConfig(
     val reasoning: String? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // PROJECT MANAGEMENT
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Project information from /project endpoints.
@@ -942,9 +938,8 @@ data class PathInfo(
     val root: String? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // LOGGING
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Request body for POST /log.
@@ -958,9 +953,8 @@ data class LogEntry(
     val extra: Map<String, String>? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // TOOLS
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Full tool list response.
@@ -981,9 +975,8 @@ data class ToolDefinition(
     val category: String? = null
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // SESSION GROUPING MODELS
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Represents a parent session with its child sessions (forks/sub-agents).

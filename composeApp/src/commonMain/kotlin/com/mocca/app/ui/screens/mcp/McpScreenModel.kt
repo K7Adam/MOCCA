@@ -144,7 +144,6 @@ class McpScreenModel(
         _state.update { it.copy(error = null) }
     }
 
-    // ─── OAuth Flow ──────────────────────────────────────────────────────────
 
     /**
      * Start the OAuth flow for a given MCP server.

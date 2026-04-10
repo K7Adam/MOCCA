@@ -697,7 +697,7 @@ class EventStreamRepository(
                                 createdAt = System.currentTimeMillis(),
                                 isStreaming = true
                             )
-                            localCache.insertMessage(placeholder)
+                            localCache.insertMessages(listOf(placeholder))
                             Napier.d("Inserted placeholder streaming message: ${part.messageID}")
                         } catch (e: Exception) {
                             Napier.w("Could not insert placeholder message: ${e.message}")

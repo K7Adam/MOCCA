@@ -18,11 +18,15 @@ The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model
 ## SCREEN LIST
 | Screen | Logic Highlight | Description |
 |--------|-----------------|-------------|
+| `ProgressiveOnboardingScreen` | Onboarding | First-run experience and server connection setup. |
 | `MainScreen` | Panel Management | Host scaffold for the 3-panel UI. Manages global session state and `ConnectionStatus` observation. |
-| `GitScreen` | VCS Operations | Comprehensive Git UI. Uses OpenCode's `/vcs` endpoint for status and `executeShell()` for git commands. `GitDiffScreenModel` uses `getSessionDiffs(sessionId)` + `SessionRepository`. |
+| `ChatScreen` | Chat Interface | Active chat interface and message history. |
+| `GitScreen` | VCS Operations | Comprehensive Git UI. Uses OpenCode's `/vcs` endpoint for status and `executeShell()` for git commands. |
+| `GitDiffScreen` | Diff View | Uses `getSessionDiffs(sessionId)` + `SessionRepository`. |
 | `SettingsScreen` | Server Config | Configuration for OpenCode server host, port, username, and password. |
+| `FeatureFlagsScreen` | Dev Settings | Feature flags and experimental features. |
 | `McpScreen` | Tool Inspection | UI for managing MCP servers and viewing available tools. |
-| `ConsoleScreen` | SSH/WebSocket | Real-time terminal emulator for direct host access. |
+| `McpResourceScreen` | MCP Resources | Viewing specific MCP resources. |
 | `FilesScreen` | Explorer | Browsing and basic editing of the project workspace. |
 
 ## MVI ARCHITECTURE (STRICT)

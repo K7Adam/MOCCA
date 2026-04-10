@@ -25,20 +25,15 @@ interface LocalCache {
     fun observeAllSessions(): kotlinx.coroutines.flow.Flow<List<Session>>
 
     // Messages
-    suspend fun getMessages(sessionId: String): List<Message>
     suspend fun getMessagesPaged(sessionId: String, cursor: Long?, limit: Long): List<Message>
-    fun observeMessages(sessionId: String): kotlinx.coroutines.flow.Flow<List<Message>>
-    fun observeRecentMessages(sessionId: String, limit: Long): kotlinx.coroutines.flow.Flow<List<Message>> // Added
+    fun observeRecentMessages(sessionId: String, limit: Long): kotlinx.coroutines.flow.Flow<List<Message>>
     suspend fun getMessage(messageId: String): Message?
-    suspend fun insertMessage(message: Message)
-    suspend fun insertMessages(messages: List<Message>) // Added
-    suspend fun updateMessage(message: Message)
-    suspend fun deleteMessages(sessionId: String)
+    suspend fun insertMessages(messages: List<Message>)
+
     suspend fun deleteMessage(messageId: String)
     suspend fun pruneMessages(sessionId: String, keepCount: Long) // Added
     
     // Todos
-    suspend fun getSessionTodos(sessionId: String): List<com.mocca.app.domain.model.Todo>
     suspend fun insertSessionTodos(sessionId: String, todos: List<com.mocca.app.domain.model.Todo>)
     fun observeSessionTodos(sessionId: String): kotlinx.coroutines.flow.Flow<List<com.mocca.app.domain.model.Todo>>
     
@@ -68,29 +63,17 @@ interface LocalCache {
     
     // Agents
     suspend fun getAllAgents(): List<Agent>
-    suspend fun getVisibleAgents(): List<Agent>
-    suspend fun getAgent(name: String): Agent?
-    suspend fun insertAgent(agent: Agent)
     suspend fun insertAgents(agents: List<Agent>)
     suspend fun deleteAllAgents()
     suspend fun hasAgentCache(maxAgeMs: Long): Boolean
     
     // Commands
     suspend fun getAllCommands(): List<Command>
-    suspend fun getCommand(name: String): Command?
-    suspend fun insertCommand(command: Command)
     suspend fun insertCommands(commands: List<Command>)
     suspend fun deleteAllCommands()
     suspend fun hasCommandCache(maxAgeMs: Long): Boolean
     
     // FileInfo (file browser cache)
-    suspend fun getFilesInDirectory(parentPath: String?): List<FileInfo>
-    suspend fun getFileInfo(path: String): FileInfo?
-    suspend fun insertFileInfo(fileInfo: FileInfo, parentPath: String?)
-    suspend fun insertFilesInDirectory(files: List<FileInfo>, parentPath: String?)
-    suspend fun deleteFilesInDirectory(parentPath: String?)
-    suspend fun deleteAllFiles()
-    suspend fun hasFileCache(parentPath: String?, maxAgeMs: Long): Boolean
     
     // Recent Models
     suspend fun getRecentModels(): List<RecentModel>
@@ -105,7 +88,6 @@ interface LocalCache {
     fun getGitStatus(): GitStatusResponse?
     fun observeGitStatus(): kotlinx.coroutines.flow.StateFlow<GitStatusResponse?>
     fun saveGitStatus(status: GitStatusResponse)
-    fun clearGitStatus()
 }
 
 /**

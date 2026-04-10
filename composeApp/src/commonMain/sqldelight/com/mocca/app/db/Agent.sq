@@ -31,17 +31,9 @@ insertOrReplace:
 INSERT OR REPLACE INTO AgentEntity(name, mode, description, prompt, isNative, isHidden, color, modelProviderId, modelId, permissionsJson, optionsJson, cachedAt)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
--- Delete agent by name
-deleteByName:
-DELETE FROM AgentEntity WHERE name = ?;
-
 -- Delete all agents
 deleteAll:
 DELETE FROM AgentEntity;
-
--- Count agents
-countAgents:
-SELECT COUNT(*) FROM AgentEntity;
 
 -- Check cache freshness (returns 1 if any agent was cached within threshold)
 hasFreshCache:

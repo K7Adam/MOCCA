@@ -77,7 +77,7 @@ fun TodoListPanel(
             Column(
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // ═══════════════ HEADER (Always visible, clickable to expand/collapse) ═══════════════
+
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -136,8 +136,7 @@ fun TodoListPanel(
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                
-                // ═══════════════ EXPANDED CONTENT (Todo items) ═══════════════
+
                 AnimatedVisibility(
                     visible = isExpanded,
                     enter = expandVertically(

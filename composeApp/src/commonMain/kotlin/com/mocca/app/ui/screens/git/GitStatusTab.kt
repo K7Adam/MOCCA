@@ -34,7 +34,7 @@ internal fun GitStatusSummary(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // ── Status Summary Card ─────────────────────────────────────
+
         item {
             Surface(
                 color = AppColors.surfaceContainerHigh,
@@ -105,7 +105,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Staged Section ──────────────────────────────────────────
         if (status != null && status.staged.isNotEmpty()) {
             item {
                 Row(
@@ -159,7 +158,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Unstaged Section ────────────────────────────────────────
         if (status != null && status.unstaged.isNotEmpty()) {
             item {
                 Row(
@@ -230,7 +228,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Untracked Section ───────────────────────────────────────
         if (status != null && status.untracked.isNotEmpty()) {
             item {
                 Row(
@@ -283,7 +280,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Commit Button ───────────────────────────────────────────
         if (uiState.stagedCount > 0) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -296,7 +292,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Stashes Section ─────────────────────────────────────────
         if (uiState.stashes.isNotEmpty() || uiState.hasChanges) {
             item {
                 Spacer(modifier = Modifier.height(8.dp))
@@ -367,7 +362,6 @@ internal fun GitStatusSummary(
             }
         }
 
-        // ── Clean State ─────────────────────────────────────────────
         if (status?.clean == true && uiState.stashes.isEmpty()) {
             item {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {

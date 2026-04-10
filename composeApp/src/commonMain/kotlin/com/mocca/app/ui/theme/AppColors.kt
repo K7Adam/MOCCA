@@ -20,9 +20,8 @@ object AppColors {
     val AnchorTertiary = Color(0xFF8B9DC3)
     val DarkBackgroundSeed = Color(0xFF1A1A1A)
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // M3 PRIMARY TONAL SCALE (Accents)
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     val primary = Color(0xFF8B9DC3) // Tone 80
     val onPrimary = Color(0xFF1A2C4D) // Tone 20
@@ -30,18 +29,16 @@ object AppColors {
     val onPrimaryContainer = Color(0xFFC2D1F0) // Tone 90
     val inversePrimary = Color(0xFF3F517E) // Tone 40
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // M3 SECONDARY TONAL SCALE
-    // ═══════════════════════════════════════════════════════════════════════════
+
     
     val secondary = Color(0xFF8B9DC3) // Shared with primary for monochrome feel
     val onSecondary = Color(0xFF1A2C4D)
     val secondaryContainer = Color(0xFF272727) // Tone 20 Neutral
     val onSecondaryContainer = Color(0xFFA0A0A0) // Tone 70 Neutral
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // M3 NEUTRAL TONAL SCALE (Surfaces)
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     val background = Color(0xFF1A1A1A) // Tone 10
     val onBackground = Color(0xFFE8E8E8) // Tone 90
@@ -85,9 +82,8 @@ object AppColors {
     val textSecondary = onSurfaceVariant
     val grey = outlineVariant
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // EXTENDED UI COLORS
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     val success = Color(0xFF4CAF50)
     val warning = Color(0xFFFFB74D)

@@ -704,9 +704,8 @@ class SessionRepository(
         )
     }.flowOn(Dispatchers.IO)
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SESSION TODO LIST (Priority 2.1)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Get todos for a session, observing local cache and refreshing from network.
@@ -729,9 +728,8 @@ class SessionRepository(
         })
     }.flowOn(Dispatchers.IO)
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SESSION SHARING (Priority 2.2)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Share a session publicly.
@@ -767,9 +765,8 @@ class SessionRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SESSION SUMMARIZATION (Priority 2.3)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Summarize a session (generate title and summary).
@@ -788,9 +785,8 @@ class SessionRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SESSION INIT (Priority 2.4)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Initialize a session with system prompts and configuration.
@@ -818,9 +814,8 @@ class SessionRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SLASH COMMAND EXECUTION (Priority 1.4)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Execute a slash command.
@@ -843,9 +838,8 @@ class SessionRepository(
         )
     }
 
-    // ═══════════════════════════════════════════════════════════════════════
     // SHELL COMMAND EXECUTION (Priority 1.5)
-    // ═══════════════════════════════════════════════════════════════════════
+
 
     /**
      * Execute a shell command directly.

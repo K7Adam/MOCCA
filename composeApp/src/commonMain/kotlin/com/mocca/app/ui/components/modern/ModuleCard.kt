@@ -42,9 +42,8 @@ import com.mocca.app.ui.theme.innerShadow
  * Modern design: Rounded cards, clean headers.
  */
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MODULE CARD (Main container for dashboard modules)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Module card for the modular dashboard.
@@ -120,9 +119,8 @@ fun ModuleCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MODULE ROW ITEM (Item inside a module card)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Module row item with status indicator, text, and optional toggle.
@@ -202,9 +200,8 @@ fun ModuleRowItem(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TERMINAL TOGGLE (Rounded pill switch)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Modern toggle switch.
@@ -236,9 +233,8 @@ fun ModernToggle(
     )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MODULE ACTION BUTTON (for card headers)
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Outlined action button for module card headers.

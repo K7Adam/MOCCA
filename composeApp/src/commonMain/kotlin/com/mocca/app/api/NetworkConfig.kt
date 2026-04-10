@@ -7,10 +7,9 @@ package com.mocca.app.api
  * across the application and make configuration changes easier.
  */
 object NetworkConfig {
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // TIMEOUT CONFIGURATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Request timeout in milliseconds (2 minutes) */
     const val REQUEST_TIMEOUT_MS = 120_000L
@@ -20,10 +19,9 @@ object NetworkConfig {
     
     /** Socket timeout in milliseconds (2 minutes) */
     const val SOCKET_TIMEOUT_MS = 120_000L
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // HTTP CLIENT LIFECYCLE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Grace period before closing old HttpClient during recreation */
     const val CLIENT_GRACE_PERIOD_MS = 5_000L
@@ -33,10 +31,9 @@ object NetworkConfig {
     
     /** WebSocket ping interval (30 seconds) */
     const val WEBSOCKET_PING_INTERVAL_MS = 30_000L
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SSE (SERVER-SENT EVENTS) CONFIGURATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** SharedFlow buffer capacity for SSE events (increased for high-throughput sessions) */
     const val SSE_BUFFER_CAPACITY = 512
@@ -64,10 +61,9 @@ object NetworkConfig {
     
     /** Streaming text buffer max size before forced flush (OOM FIX: reduced from 100K→50K) */
     const val STREAMING_TEXT_MAX_SIZE = 50_000
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CONNECTION QUALITY THRESHOLDS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     object ConnectionQuality {
         /** Number of consecutive failures before marking as offline */
@@ -91,30 +87,27 @@ object NetworkConfig {
         /** Maximum latency history size */
         const val MAX_LATENCY_HISTORY = 20
     }
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // REQUEST DEDUPLICATION
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Maximum commands per minute for rate limiting */
     const val MAX_COMMANDS_PER_MINUTE = 10
     
     /** Rate limiting window in milliseconds (1 minute) */
     const val RATE_LIMIT_WINDOW_MS = 60_000L
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // RETRY POLICY
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Default max retries for idempotent operations */
     const val DEFAULT_MAX_RETRIES = 3
     
     /** Aggressive max retries for critical operations */
     const val AGGRESSIVE_MAX_RETRIES = 5
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // SERVER PORTS & ENDPOINTS
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** OpenCode server default port */
     const val OPENCODE_SERVER_PORT = 443
@@ -127,10 +120,9 @@ object NetworkConfig {
 
     /** OpenCode Default Password */
     const val DEFAULT_PASSWORD = "znvQ1lLbZ4LDvR/ieanta+WSlXP2Mo+feK7Snf+rBZkBur8k+lPmLFDRrX2dumaf"
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CIRCUIT BREAKER
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Failure threshold before opening circuit */
     const val CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
@@ -140,10 +132,9 @@ object NetworkConfig {
     
     /** Recovery timeout for half-open state (5 seconds) */
     const val CIRCUIT_BREAKER_RECOVERY_MS = 5_000L
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // APP LIFECYCLE
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Delay before pausing SSE when app goes to background (allows for quick returns) */
     const val BACKGROUND_PAUSE_DELAY_MS = 5_000L
@@ -153,10 +144,9 @@ object NetworkConfig {
     
     /** Normal health check interval when foregrounded (5 minutes) */
     const val FOREGROUND_HEALTH_CHECK_INTERVAL_MS = 5 * 60_000L
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     // CONNECTION QUALITY ADAPTIVE BEHAVIOR
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
     /** Heartbeat interval for excellent connection quality (60 seconds) */
     const val HEARTBEAT_EXCELLENT_MS = 60_000L

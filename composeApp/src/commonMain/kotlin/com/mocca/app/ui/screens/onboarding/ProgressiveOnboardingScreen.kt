@@ -199,9 +199,8 @@ class ProgressiveOnboardingScreen(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // Step Indicator — labeled circles connected by lines
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 private val stepLabels = listOf("Welcome", "Connect", "Connecting")
 

@@ -80,7 +80,7 @@ class ChatScreenModel(
     private val chatStateStore: ChatStateStore
 ) : ScreenModel {
     
-    private val configDelegate: ChatConfigDelegate by lazy { 
+    private val configDelegate by lazy {
         ChatConfigDelegateImpl(appStateStore, sessionRepository, agentRepository, screenModelScope) 
     }
     
@@ -170,8 +170,6 @@ class ChatScreenModel(
         syncDelegates()
         // Wait for lazy init
         screenModelScope.launch {
-            configDelegate.loadConfig()
-            configDelegate.loadRecentModels()
             if (initialSessionId != null) {
                 loadSession(initialSessionId)
             }
@@ -529,8 +527,6 @@ class ChatScreenModel(
         screenModelScope.launch {
             // isLoading is now synced from ChatStateStore
             loadMessages()
-            configDelegate.loadConfig()
-            configDelegate.loadRecentModels()
             loadTodos()
         }
     }

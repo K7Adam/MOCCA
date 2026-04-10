@@ -12,9 +12,8 @@ import androidx.compose.ui.unit.dp
  */
 object AppSpacing {
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // BASE SPACING SCALE (4dp/8dp grid — monotonically increasing)
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** 2dp - Minimal gap (micro adjustments) */
     val xxs: Dp = 2.dp
@@ -40,9 +39,8 @@ object AppSpacing {
     /** 48dp - Hero spacing */
     val xxxl: Dp = 48.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // SEMANTIC SPACING — Named tokens for common use cases
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Clearance above bottom navigation bar for scrollable content */
     val bottomBarClearance: Dp = 80.dp
@@ -59,9 +57,8 @@ object AppSpacing {
     /** Vertical spacing between items in a list */
     val listItemSpacing: Dp = 8.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // SCREEN PADDING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Screen horizontal padding - comfortable touch margins */
     val screenPaddingHorizontal: Dp = 16.dp
@@ -78,9 +75,8 @@ object AppSpacing {
     /** Screen bottom padding (above navigation) */
     val screenPaddingBottom: Dp = 16.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // CARD PADDING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Card internal padding */
     val cardPadding: Dp = 16.dp
@@ -94,9 +90,8 @@ object AppSpacing {
     /** Module card padding */
     val modulePadding: Dp = 16.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // LIST ITEM SPACING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** List item vertical padding */
     val listItemPaddingVertical: Dp = 12.dp
@@ -110,9 +105,8 @@ object AppSpacing {
     /** Gap between list items */
     val listItemGap: Dp = 6.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // COMPONENT GAPS
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Gap between icon and text */
     val iconTextGap: Dp = 8.dp
@@ -135,9 +129,8 @@ object AppSpacing {
     /** Gap between module cards */
     val moduleGap: Dp = 8.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // INPUT FIELD SPACING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Input field internal padding */
     val inputPadding: Dp = 12.dp
@@ -151,9 +144,8 @@ object AppSpacing {
     /** Input icon padding from edge */
     val inputIconPadding: Dp = 16.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // BUTTON PADDING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Button internal horizontal padding */
     val buttonPaddingHorizontal: Dp = 16.dp
@@ -173,9 +165,8 @@ object AppSpacing {
     /** Pill button vertical padding */
     val pillPaddingVertical: Dp = 6.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // BADGE/TAG PADDING
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Badge horizontal padding */
     val badgePaddingHorizontal: Dp = 6.dp
@@ -189,9 +180,8 @@ object AppSpacing {
     /** Tag/chip vertical padding */
     val tagPaddingVertical: Dp = 4.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // DIVIDER/SEPARATOR MARGINS
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Divider margin */
     val dividerMargin: Dp = 6.dp
@@ -202,9 +192,8 @@ object AppSpacing {
     /** Section header margin bottom */
     val sectionMarginBottom: Dp = 12.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // BORDER WIDTHS
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Thin border (1dp) - subtle outlines */
     val borderThin: Dp = 1.dp
@@ -218,9 +207,8 @@ object AppSpacing {
     /** Active indicator width */
     val activeIndicatorWidth: Dp = 1.5.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // COMPONENT SIZES
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Input field height */
     val inputHeight: Dp = 56.dp
@@ -282,9 +270,8 @@ object AppSpacing {
     /** Module card standard height */
     val moduleCardHeight: Dp = 160.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // ICON SIZES
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Icon size small */
     val iconSizeSmall: Dp = 16.dp
@@ -298,9 +285,8 @@ object AppSpacing {
     /** Icon size extra large */
     val iconSizeXLarge: Dp = 28.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // CORNER RADII (for convenience)
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Small corner radius */
     val cornerRadiusSmall: Dp = 8.dp
@@ -320,9 +306,8 @@ object AppSpacing {
     /** Pill corner radius */
     val cornerRadiusPill: Dp = 32.dp
 
-    // ═══════════════════════════════════════════════════════════════════════════
     // UNIFIED BOTTOM BAR DIMENSIONS
-    // ═══════════════════════════════════════════════════════════════════════════
+
 
     /** Navigation mode height (compact) */
     val bottomBarCompactHeight: Dp = 56.dp

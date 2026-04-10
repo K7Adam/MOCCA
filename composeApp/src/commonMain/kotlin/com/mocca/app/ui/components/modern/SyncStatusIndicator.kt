@@ -113,9 +113,8 @@ fun SyncStatusIndicator(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MINIMAL STATUS CARD - No progress bar, no flicker
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Minimal sync status card for dashboard.
@@ -224,9 +223,8 @@ fun SyncStatusCard(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // MINIMAL STATUS DOT - For connection indicators
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Minimal sync status dot for connection indicators.

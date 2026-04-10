@@ -109,10 +109,6 @@ kotlin {
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
 
-            // Paging 3
-            implementation(libs.paging.common)
-            implementation(libs.paging.compose)
-
             
         }
 

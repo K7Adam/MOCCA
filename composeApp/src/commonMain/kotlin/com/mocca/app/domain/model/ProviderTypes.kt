@@ -71,9 +71,8 @@ data class ProvidersConfig(
     val default: Map<String, String> = emptyMap()
 )
 
-// ═══════════════════════════════════════════════════════════════════════════
 // OAUTH & AUTHENTICATION
-// ═══════════════════════════════════════════════════════════════════════════
+
 
 /**
  * Provider authentication method descriptor.

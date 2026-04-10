@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ── ScreenModel ────────────────────────────────────────────────────────────────
 
 data class McpResourceScreenState(
     val resources: ImmutableList<McpResource> = persistentListOf(),

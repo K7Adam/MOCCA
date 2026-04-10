@@ -8,7 +8,6 @@ import kotlinx.collections.immutable.toImmutableList
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
-import com.mocca.app.data.repository.BroadcastEvent
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.repository.ProjectRepository
 import com.mocca.app.data.repository.StateCoordinator
@@ -56,12 +55,6 @@ class DashboardScreenModel(
         // Slash commands (from AppStateStore - auto-updated)
         val commands: Resource<ImmutableList<Command>> = Resource.Loading(),
         
-        // Formatters
-        val formatters: Resource<ImmutableList<FormatterStatus>> = Resource.Loading(),
-        
-        // LSP status
-        val lspStatus: Resource<ImmutableList<LspStatus>> = Resource.Loading(),
-        
         // VCS/Git info (from AppStateStore - auto-updated)
         val vcsInfo: Resource<VcsInfo> = Resource.Loading(),
         
@@ -70,12 +63,6 @@ class DashboardScreenModel(
         
         // MCP servers (from AppStateStore - auto-updated)
         val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading(),
-        
-        // Global sync state (from SyncStateManager)
-        val globalSyncState: GlobalSyncState = GlobalSyncState.NotSynced,
-        
-        // Per-repository sync states
-        val repoSyncStates: Map<String, SyncState> = emptyMap(),
         
         // SSE connection status (real-time event streaming)
         val isSseConnected: Boolean = false,
@@ -111,20 +98,17 @@ class DashboardScreenModel(
         val changedFilesCount: Int
             get() = gitStatus?.let { it.staged.size + it.unstaged.size + it.untracked.size } ?: 0
         
-        val activeLspServers: ImmutableList<LspStatus>
-            get() = ((lspStatus as? Resource.Success)?.data?.filter { it.isRunning } ?: emptyList()).toImmutableList()
-        
         val connectedMcpServers: ImmutableList<Pair<String, McpServerStatus>>
             get() = ((mcpServers as? Resource.Success)?.data
                 ?.filter { it.value.isConnected }
                 ?.map { it.key to it.value } ?: emptyList()).toImmutableList()
         
         val isLoading: Boolean
-            get() = isSyncing || listOf(providers, agents, tools, commands, formatters, lspStatus, vcsInfo, mcpServers)
+            get() = isSyncing || listOf(providers, agents, tools, commands, vcsInfo, mcpServers)
                 .any { it is Resource.Loading }
         
         val hasErrors: Boolean
-            get() = listOf(providers, agents, tools, commands, formatters, lspStatus, vcsInfo, mcpServers)
+            get() = listOf(providers, agents, tools, commands, vcsInfo, mcpServers)
                 .any { it is Resource.Error }
     }
     
@@ -258,20 +242,6 @@ class DashboardScreenModel(
         screenModelScope.launch {
             appStateStore.isSyncing.collect { isSyncing ->
                 _state.update { it.copy(isSyncing = isSyncing) }
-            }
-        }
-        
-        // Observe global sync state
-        screenModelScope.launch {
-            appStateStore.globalSyncState.collect { globalSyncState ->
-                _state.update { it.copy(globalSyncState = globalSyncState) }
-            }
-        }
-        
-        // Observe per-repository sync states
-        screenModelScope.launch {
-            appStateStore.repoSyncStates.collect { repoSyncStates ->
-                _state.update { it.copy(repoSyncStates = repoSyncStates) }
             }
         }
         

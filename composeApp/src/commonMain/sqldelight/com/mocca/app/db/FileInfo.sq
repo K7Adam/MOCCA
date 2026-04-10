@@ -32,10 +32,6 @@ insertOrReplace:
 INSERT OR REPLACE INTO FileInfoEntity(path, name, type, size, modifiedAt, parentPath, cachedAt)
 VALUES (?, ?, ?, ?, ?, ?, ?);
 
--- Delete file by path
-deleteByPath:
-DELETE FROM FileInfoEntity WHERE path = ?;
-
 -- Delete all files under a parent path
 deleteByParent:
 DELETE FROM FileInfoEntity WHERE parentPath = ?;
@@ -43,10 +39,6 @@ DELETE FROM FileInfoEntity WHERE parentPath = ?;
 -- Delete all files
 deleteAll:
 DELETE FROM FileInfoEntity;
-
--- Count files
-countFiles:
-SELECT COUNT(*) FROM FileInfoEntity;
 
 -- Check cache freshness for a directory
 hasFreshCacheForPath:

@@ -6,7 +6,7 @@
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
 
 ## OVERVIEW
-Android client for OpenCode AI agent. Neutral monochrome soft dark UI, offline-first architecture, single-server HTTP Basic Auth connection.
+Android client for OpenCode AI agent. Neutral monochrome soft dark UI, server-first with selective persistence, single-server HTTP Basic Auth connection.
 
 ## STRUCTURE
 ```
@@ -44,14 +44,14 @@ MOCCA/
 **See `.opencode/skills/` for detailed skill documentation.**
 
 ## CONNECTION ARCHITECTURE
-- **Server**: OpenCode (`opencode serve --port 4096`)
+- **Server**: OpenCode (`opencode serve --port 4096`) (default port is 4096, uses HTTP/HTTPS based on `useHttps` config)
 - **Auth**: HTTP Basic Auth
 - **Flow**: `ConnectionManager` owns `HttpClient` → Consumers use `ApiExecutor.execute {}`
-- **Status**: `NotConfigured`, `Disconnected`, `Connecting`, `Reconnecting`, `Connected`, `Error`
+- **Status**: `NotConfigured`, `Disconnected`, `Connecting`, `WaitingForNetwork`, `Reconnecting`, `Connected`, `Error`
 
 ## CONVENTIONS
 - **Architecture**: MVI (ScreenModel → StateFlow → UI)
-- **Offline-First**: Repositories return `Flow<Resource<T>>`
+- **Server-First**: Repositories use `Flow<Resource<T>>` for selective persistence
 - **Paths**: ALWAYS absolute paths
 - **Theme**: Soft Dark (`#1A1A1A`), neutral monochrome palette with subtle cool accent (`#8B9DC3`), rounded corners
 - **Surface Design**: Clean Material 3 Surface components with tonal elevation for depth

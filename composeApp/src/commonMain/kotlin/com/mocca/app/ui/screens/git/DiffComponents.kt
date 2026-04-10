@@ -23,9 +23,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
-// ─────────────────────────────────────────────────────────────────────────────
 // W4-T3: Diff mode toggle
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun DiffModeToggle(splitMode: Boolean, onToggle: () -> Unit) {
@@ -71,9 +70,8 @@ internal fun DiffModeTab(label: String, active: Boolean, onClick: () -> Unit) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // W4-T2: Summary bar across all files
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun DiffSummaryBar(diff: GitDiff) {
@@ -125,9 +123,8 @@ internal fun DiffSummaryBar(diff: GitDiff) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Diff content router (unified vs split)
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun DiffContent(diff: GitDiff, splitMode: Boolean) {
@@ -138,14 +135,13 @@ internal fun DiffContent(diff: GitDiff, splitMode: Boolean) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // File-level diff item with W4-T2 changes bar in header
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // ── File header ──────────────────────────────────────────────────
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -180,7 +176,6 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             }
         }
 
-        // ── Hunks ────────────────────────────────────────────────────────
         file.hunks.forEach { hunk ->
             // Hunk header row
             Box(
@@ -208,9 +203,8 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // W4-T2: Per-file changes bar composable (reusable)
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 fun DiffFileChangesBar(additions: Int, deletions: Int, modifier: Modifier = Modifier) {
@@ -246,9 +240,8 @@ fun DiffFileChangesBar(additions: Int, deletions: Int, modifier: Modifier = Modi
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Unified diff line
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
@@ -288,9 +281,8 @@ internal fun UnifiedDiffLine(line: com.mocca.app.domain.model.GitDiffLine) {
     }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // W4-T3: Split diff lines (side-by-side)
-// ─────────────────────────────────────────────────────────────────────────────
+
 
 @Composable
 internal fun SplitDiffLines(lines: List<com.mocca.app.domain.model.GitDiffLine>) {

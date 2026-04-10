@@ -106,8 +106,7 @@ fun ChatContent(
 
     // Auto-scroll state management
     val autoScrollState = rememberAutoScrollState(listState = listState)
-    
-    // ─── Hero Moments ─────────────────────────────────────────────────────────
+
     var currentHeroMoment by remember { mutableStateOf(HeroMomentType.NONE) }
 
     // Hero Moment: Connection Success
@@ -267,7 +266,7 @@ fun ChatContent(
                 .weight(1f)
                 .fillMaxWidth()
         ) {
-            // ─── Expressive Chained Hero Moment ───────────────────────────────────
+
             androidx.compose.animation.AnimatedVisibility(
                 visible = currentHeroMoment != HeroMomentType.NONE,
                 enter = fadeIn(MaterialTheme.motionScheme.fastSpatialSpec()) + 

@@ -57,10 +57,6 @@ insertOrReplace:
 INSERT OR REPLACE INTO MessageEntity(id, sessionId, role, parts, createdAt, model, cost, isRead, metadata, isStreaming)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
--- Fast update for streaming parts without replacing entire message
-updateStreamingParts:
-UPDATE MessageEntity SET parts = ? WHERE id = ? AND isStreaming = 1;
-
 -- Delete message by ID
 deleteById:
 DELETE FROM MessageEntity WHERE id = ?;
@@ -72,22 +68,6 @@ DELETE FROM MessageEntity WHERE sessionId = ?;
 -- Delete all messages
 deleteAll:
 DELETE FROM MessageEntity;
-
--- Count messages in session
-countBySession:
-SELECT COUNT(*) FROM MessageEntity WHERE sessionId = ?;
-
--- Count unread messages in session
-countUnread:
-SELECT COUNT(*) FROM MessageEntity WHERE sessionId = ? AND isRead = 0;
-
--- Mark all messages in session as read
-markAsRead:
-UPDATE MessageEntity SET isRead = 1 WHERE sessionId = ?;
-
--- Get last message in session
-selectLastBySession:
-SELECT * FROM MessageEntity WHERE sessionId = ? ORDER BY createdAt DESC LIMIT 1;
 
 -- Prune old messages, keeping the N most recent per session is hard in SQLite without window functions.
 -- Simpler: Delete messages older than timestamp.

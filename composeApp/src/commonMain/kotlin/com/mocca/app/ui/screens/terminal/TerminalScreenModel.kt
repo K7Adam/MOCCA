@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 
-// ─── State ───────────────────────────────────────────────────────────────────
 
 @Immutable
 data class TerminalTab(
@@ -48,7 +47,6 @@ data class TerminalState(
         get() = tabs.find { it.terminal.id == activeTabId }
 }
 
-// ─── ScreenModel ─────────────────────────────────────────────────────────────
 
 class TerminalScreenModel(
     private val apiClient: MoccaApiClient
@@ -62,7 +60,6 @@ class TerminalScreenModel(
     /** Receive coroutine jobs keyed by terminal ID */
     private val receiveJobs = mutableMapOf<String, Job>()
 
-    // ─── Lifecycle ───────────────────────────────────────────────────────────
 
     init {
         loadExistingTerminals()
@@ -76,7 +73,6 @@ class TerminalScreenModel(
         super.onDispose()
     }
 
-    // ─── Public Intent API ───────────────────────────────────────────────────
 
     /** Load all terminals that already exist on the server. */
     fun loadExistingTerminals() {
@@ -174,7 +170,6 @@ class TerminalScreenModel(
         }
     }
 
-    // ─── Private Helpers ─────────────────────────────────────────────────────
 
     private fun connectToTerminal(terminalId: String) {
         if (receiveJobs.containsKey(terminalId)) return

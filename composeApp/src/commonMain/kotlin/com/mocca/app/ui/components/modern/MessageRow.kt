@@ -125,7 +125,7 @@ private fun MessageHeader(isUser: Boolean, createdAt: Long, showTimestamps: Bool
     val icon = if (isUser) Icons.Default.Person else Icons.Default.SmartToy
     val label = if (isUser) "USER" else "AGENT"
     val color = if (isUser) AppColors.onSurfaceVariant else AppColors.primary
-    val iconDescription = if (isUser) "User message" else "Agent message"
+    val iconDescription = if (isUser) "User sender" else "Agent sender"
     val timeText = remember(createdAt) { formatTime(createdAt) }
 
     Row(

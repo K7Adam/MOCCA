@@ -7,7 +7,7 @@ Android client for the **OpenCode** AI agent. Kotlin Multiplatform + Compose Mul
 - **Session Management** — Real-time chat with streaming responses
 - **File & Git Operations** — Browse, edit, version control via OpenCode VCS endpoints
 - **Terminal Access** — WebSocket-based remote command execution
-- **Offline-First** — SQLDelight-backed caching for instant access
+- **Server-First** — Selective SQLDelight-backed persistence for durable data
 - **Auto-Update** — GitHub Releases integration
 
 ## Architecture
@@ -147,7 +147,7 @@ adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 ### Conventions
 
 - **Architecture**: MVI (ScreenModel → StateFlow → UI)
-- **Offline-First**: Repositories return `Flow<Resource<T>>`
+- **Server-First**: Repositories use `Flow<Resource<T>>` for selective persistence
 - **Paths**: ALWAYS use absolute paths
 - **Theme**: Soft Dark (`#1A1A1A`) with neutral palette, rounded corners, subtle cool accent
 

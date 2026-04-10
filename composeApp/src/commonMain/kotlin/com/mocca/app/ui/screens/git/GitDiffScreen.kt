@@ -60,7 +60,7 @@ data class GitDiffScreen(val path: String, val staged: Boolean = false) : Screen
                 .background(AppColors.background)
                 .padding(AppSpacing.lg)
         ) {
-            // ── Header row ────────────────────────────────────────────────
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically

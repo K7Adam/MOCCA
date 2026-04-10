@@ -34,27 +34,26 @@ class ChatConfigDelegateImpl(
     private val sessionRepository: SessionRepository,
     private val agentRepository: AgentRepository,
     private val scope: CoroutineScope
-) : ChatConfigDelegate {
-    
-    // ═══════════════════════════════════════════════════════════════════════════════
+) {
+
     // OBSERVE APP STATE STORE - Single Source of Truth
     // All state flows are derived from AppStateStore, not stored locally
-    // ═══════════════════════════════════════════════════════════════════════════════
+
     
-    override val providerInfo: StateFlow<ProviderResponse?> = appStateStore.providerInfo
-    override val selectedProviderId: StateFlow<String> = appStateStore.selectedProviderId
-    override val selectedModelId: StateFlow<String> = appStateStore.selectedModelId
-    override val selectedVariantId: StateFlow<String?> = appStateStore.selectedVariantId
-    override val modes: StateFlow<ImmutableList<Mode>> = appStateStore.modes
+    val providerInfo: StateFlow<ProviderResponse?> = appStateStore.providerInfo
+    val selectedProviderId: StateFlow<String> = appStateStore.selectedProviderId
+    val selectedModelId: StateFlow<String> = appStateStore.selectedModelId
+    val selectedVariantId: StateFlow<String?> = appStateStore.selectedVariantId
+    val modes: StateFlow<ImmutableList<Mode>> = appStateStore.modes
         .map { it.toImmutableList() }
         .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
-    override val selectedModeId: StateFlow<String?> = appStateStore.selectedModeId
-    override val modelName: StateFlow<String> = appStateStore.modelName
-    override val recentModels: StateFlow<ImmutableList<RecentModel>> = appStateStore.recentModels
+    val selectedModeId: StateFlow<String?> = appStateStore.selectedModeId
+    val modelName: StateFlow<String> = appStateStore.modelName
+    val recentModels: StateFlow<ImmutableList<RecentModel>> = appStateStore.recentModels
         .map { it.toImmutableList() }
         .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
     
-    override val commands: StateFlow<ImmutableList<Command>> = appStateStore.commands
+    val commands: StateFlow<ImmutableList<Command>> = appStateStore.commands
         .map { resource ->
             when (resource) {
                 is Resource.Success -> resource.data.toImmutableList()
@@ -65,7 +64,7 @@ class ChatConfigDelegateImpl(
         .stateIn(scope, SharingStarted.Eagerly, persistentListOf())
     
     // Agent name is derived from selected mode
-    override val agentName: StateFlow<String> = combine(
+    val agentName: StateFlow<String> = combine(
         appStateStore.selectedModeId,
         appStateStore.modes,
         appStateStore.agents
@@ -91,7 +90,7 @@ class ChatConfigDelegateImpl(
     }.stateIn(scope, SharingStarted.Eagerly, "--")
     
     // Max tokens derived from provider info and selected model
-    override val maxTokens: StateFlow<Int> = combine(
+    val maxTokens: StateFlow<Int> = combine(
         appStateStore.providerInfo,
         appStateStore.selectedProviderId,
         appStateStore.selectedModelId
@@ -104,32 +103,9 @@ class ChatConfigDelegateImpl(
     }.stateIn(scope, SharingStarted.Eagerly, 0)
 
     /**
-     * Load config - triggers AppStateStore to load data.
-     * This is called when the chat screen initializes.
-     * 
-     * IMPORTANT: Does NOT make direct API calls - checks connection first.
-     * Actual config loading is handled by AppStateStore when connected.
-     */
-    override fun loadConfig() {
-        // AppStateStore.loadConfig() is called on connection via observeConnectionState()
-        // We don't need to call sessionRepository.loadDefaultConfig() here anymore
-        // as it's already handled by AppStateStore.loadConfig() with proper connection guards
-        Napier.v("[ChatConfigDelegate] loadConfig() called - config is managed by AppStateStore")
-    }
-
-    /**
-     * Load recent models from AppStateStore.
-     */
-    override fun loadRecentModels() {
-        // Recent models are already observed from AppStateStore
-        // This method exists for backward compatibility
-        Napier.v("[ChatConfigDelegate] loadRecentModels() - state observed from AppStateStore")
-    }
-
-    /**
      * Select a model - delegates to AppStateStore.
      */
-    override fun selectModel(providerId: String, modelId: String) {
+    fun selectModel(providerId: String, modelId: String) {
         Napier.i("[ChatConfigDelegate] selectModel: $providerId / $modelId")
         
         // Update AppStateStore (single source of truth)
@@ -147,7 +123,7 @@ class ChatConfigDelegateImpl(
     /**
      * Select a variant - delegates to AppStateStore.
      */
-    override fun selectVariant(variantId: String?) {
+    fun selectVariant(variantId: String?) {
         Napier.v("[ChatConfigDelegate] selectVariant: $variantId")
         appStateStore.selectVariant(variantId)
     }
@@ -155,7 +131,7 @@ class ChatConfigDelegateImpl(
     /**
      * Select a mode - delegates to AppStateStore.
      */
-    override fun selectMode(modeId: String?) {
+    fun selectMode(modeId: String?) {
         val newModeId = modeId ?: "build"
         Napier.i("[ChatConfigDelegate] selectMode: $newModeId")
         

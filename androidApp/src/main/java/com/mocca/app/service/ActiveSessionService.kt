@@ -58,10 +58,6 @@ class ActiveSessionService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val binder = LocalBinder()
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Session State Management - Thread-safe
-    // ─────────────────────────────────────────────────────────────────────────
-
     /** Per-session state stored in service */
     data class SessionState(
         val sessionId: String,
@@ -86,20 +82,12 @@ class ActiveSessionService : Service() {
     private val _activeSessionIds = MutableStateFlow<Set<String>>(emptySet())
     val activeSessionIds: StateFlow<Set<String>> = _activeSessionIds.asStateFlow()
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Theme Colors
-    // ─────────────────────────────────────────────────────────────────────────
-
     // Note: accentGreen is intentionally retained here as a semantic success color 
     // for completed tasks in notifications, rather than a general brand accent.
     private val accentGreen = Color.parseColor("#00D9A5")
     private val amberColor = Color.parseColor("#FFB800")
     private val greyColor = Color.parseColor("#666666")
     private val darkGreyColor = Color.parseColor("#333333")
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Constants
-    // ─────────────────────────────────────────────────────────────────────────
 
     companion object {
         // Channel IDs
@@ -135,10 +123,6 @@ class ActiveSessionService : Service() {
         private const val SECONDS_PER_MINUTE = 60L
         private const val MILLIS_PER_SECOND = 1000L
 
-        // ─────────────────────────────────────────────────────────────────────
-        // Public API - Start/Stop Service (Intent-based for external callers)
-        // ─────────────────────────────────────────────────────────────────────
-
         fun start(context: Context, sessionId: String, sessionTitle: String? = null) {
             val intent = Intent(context, ActiveSessionService::class.java).apply {
                 action = ACTION_START
@@ -162,10 +146,6 @@ class ActiveSessionService : Service() {
             }
             context.startService(intent)
         }
-
-        // ─────────────────────────────────────────────────────────────────────
-        // Public API - Permission/Question Notifications
-        // ─────────────────────────────────────────────────────────────────────
 
         fun showPermissionNotification(
             context: Context,
@@ -331,10 +311,6 @@ class ActiveSessionService : Service() {
         val priority: String // "high", "medium", "low"
     )
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Binder API - Instance methods for notification updates
-    // ─────────────────────────────────────────────────────────────────────────
-
     inner class LocalBinder : Binder() {
         fun getService(): ActiveSessionService = this@ActiveSessionService
     }
@@ -413,10 +389,6 @@ class ActiveSessionService : Service() {
 
     private var isForeground = false
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Service Lifecycle
-    // ─────────────────────────────────────────────────────────────────────────
-
     override fun onCreate() {
         super.onCreate()
         createAllNotificationChannels()
@@ -493,10 +465,6 @@ class ActiveSessionService : Service() {
         serviceScope.cancel()
         Napier.i("[ActiveSessionService] Service destroyed")
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Notification Management
-    // ─────────────────────────────────────────────────────────────────────────
 
     private fun promoteToForeground() {
         val notification = buildSummaryNotification()
@@ -755,10 +723,6 @@ class ActiveSessionService : Service() {
         val secs = seconds % SECONDS_PER_MINUTE
         return if (minutes > 0) "${minutes}m ${secs}s" else "${secs}s"
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Notification Channels
-    // ─────────────────────────────────────────────────────────────────────────
 
     private fun createAllNotificationChannels() {
         val notificationManager = getSystemService(NotificationManager::class.java)

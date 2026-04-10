@@ -33,9 +33,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.theme.*
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TAB BAR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 @Composable
 internal fun TerminalTabBar(
@@ -139,9 +138,8 @@ internal fun TerminalTabItem(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // TERMINAL CONTENT AREA
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 @Composable
 internal fun TerminalContent(
@@ -160,7 +158,7 @@ internal fun TerminalContent(
     )
 
     Column(modifier = modifier.background(AppColors.background)) {
-        // ── OUTPUT AREA ───────────────────────────────────────────────────────
+
         val outputScrollState = rememberScrollState(Int.MAX_VALUE)
 
         // Scroll to bottom whenever output changes
@@ -226,7 +224,6 @@ internal fun TerminalContent(
 
         HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
 
-        // ── INPUT BAR ─────────────────────────────────────────────────────────
         TerminalInputBar(
             isEnabled = tab.isConnected,
             onInput = onInput
@@ -234,9 +231,8 @@ internal fun TerminalContent(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // INPUT BAR
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 @Composable
 internal fun TerminalInputBar(
@@ -305,9 +301,8 @@ internal fun TerminalInputBar(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
 // EMPTY STATE
-// ═══════════════════════════════════════════════════════════════════════════════
+
 
 @Composable
 internal fun TerminalEmptyState(
