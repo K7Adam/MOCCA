@@ -13,7 +13,6 @@ Ktor-based networking layer providing REST and SSE connectivity to a single Open
 - **MoccaApiClient.kt**: Primary client for all OpenCode REST endpoints (Sessions, Messages, Files, VCS, Shell commands). Uses `ApiExecutor` for all requests.
 - **MoccaSseClient.kt**: Resilient SSE handler for real-time events and streaming.
 - **NetworkConfig.kt**: Timeout constants and network configuration.
-- **CircuitBreaker.kt**: Circuit breaker pattern for resilient API calls.
 - **RetryPolicy.kt**: Exponential backoff retry logic for transient failures.
 - **GitHubApiClient.kt**: Client for GitHub Releases API (app auto-update feature).
 - **Platform.kt**: Platform detection utilities.
