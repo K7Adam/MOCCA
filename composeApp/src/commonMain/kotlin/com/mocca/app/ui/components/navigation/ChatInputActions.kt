@@ -29,7 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -92,7 +96,9 @@ internal fun ChatInputActionToolbar(
                 text = "/",
                 isActive = showCommandPalette,
                 onClick = onCommandPaletteToggle,
-                contentDescription = "Toggle command palette"
+                contentDescription = "Toggle command palette",
+                selectedState = showCommandPalette,
+                stateDescriptionText = if (showCommandPalette) "Expanded" else "Collapsed"
             )
         }
 
@@ -101,7 +107,9 @@ internal fun ChatInputActionToolbar(
             text = "!",
             isActive = shellMode,
             onClick = onShellModeToggle,
-            contentDescription = "Toggle shell mode"
+            contentDescription = "Toggle shell mode",
+            selectedState = shellMode,
+            stateDescriptionText = if (shellMode) "On" else "Off"
         )
 
         // P plan mode button
@@ -109,7 +117,9 @@ internal fun ChatInputActionToolbar(
             text = "P",
             isActive = planMode,
             onClick = onPlanModeToggle,
-            contentDescription = "Toggle plan mode"
+            contentDescription = "Toggle plan mode",
+            selectedState = planMode,
+            stateDescriptionText = if (planMode) "On" else "Off"
         )
 
         // History up button
@@ -179,7 +189,9 @@ private fun ToggleActionButton(
     text: String,
     isActive: Boolean,
     onClick: () -> Unit,
-    contentDescription: String? = null
+    contentDescription: String? = null,
+    selectedState: Boolean? = null,
+    stateDescriptionText: String? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     Box(
@@ -197,11 +209,12 @@ private fun ToggleActionButton(
                 indication = null,
                 onClick = onClick
             )
-            .then(
-                if (contentDescription != null) {
-                    Modifier.semantics { this.contentDescription = contentDescription }
-                } else Modifier
-            ),
+            .semantics {
+                role = Role.Button
+                contentDescription?.let { this.contentDescription = it }
+                selectedState?.let { this.selected = it }
+                stateDescriptionText?.let { this.stateDescription = it }
+            },
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -226,7 +239,10 @@ private fun AgentMentionButton(
         ToggleActionButton(
             text = "@",
             isActive = showAgentPalette,
-            onClick = { showAgentPalette = !showAgentPalette }
+            onClick = { showAgentPalette = !showAgentPalette },
+            contentDescription = "Toggle agent palette",
+            selectedState = showAgentPalette,
+            stateDescriptionText = if (showAgentPalette) "Expanded" else "Collapsed"
         )
 
         // Agent dropdown menu (stable positioning)

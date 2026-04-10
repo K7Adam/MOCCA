@@ -78,7 +78,8 @@ class SettingsScreen : Screen {
                 MoccaIconButton(
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
-                    iconColor = AppColors.onSurfaceVariant
+                    iconColor = AppColors.onSurfaceVariant,
+                    contentDescription = "Back"
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Text(

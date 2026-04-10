@@ -56,7 +56,7 @@ internal fun GitStatusSummary(
                         ) {
                             Icon(
                                 Icons.Default.Source,
-                                contentDescription = null,
+                                contentDescription = "Current branch",
                                 tint = AppColors.primary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -135,7 +135,7 @@ internal fun GitStatusSummary(
                     icon = {
                         Icon(
                             imageVector = statusIcon(change.status),
-                            contentDescription = null,
+                            contentDescription = gitFileStatusDescription(change.status),
                             tint = gitAccentColor(change.status),
                             modifier = Modifier.size(20.dp)
                         )
@@ -192,7 +192,7 @@ internal fun GitStatusSummary(
                     icon = {
                         Icon(
                             imageVector = statusIcon(change.status),
-                            contentDescription = null,
+                            contentDescription = gitFileStatusDescription(change.status),
                             tint = AppColors.statusWaiting,
                             modifier = Modifier.size(20.dp)
                         )
@@ -258,7 +258,7 @@ internal fun GitStatusSummary(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.FiberNew,
-                            contentDescription = null,
+                            contentDescription = "New file",
                             tint = AppColors.white.copy(alpha = 0.3f),
                             modifier = Modifier.size(20.dp)
                         )
@@ -327,7 +327,7 @@ internal fun GitStatusSummary(
                     icon = {
                         Icon(
                             imageVector = Icons.Default.Inventory2,
-                            contentDescription = null,
+                            contentDescription = "Stash entry",
                             tint = AppColors.white.copy(alpha = 0.3f),
                             modifier = Modifier.size(20.dp)
                         )
@@ -396,6 +396,18 @@ internal fun statusIcon(status: GitFileStatus): androidx.compose.ui.graphics.vec
         GitFileStatus.COPIED -> Icons.Default.ContentCopy
         GitFileStatus.UNMERGED -> Icons.AutoMirrored.Filled.CallMerge
         GitFileStatus.UNKNOWN -> Icons.AutoMirrored.Filled.HelpOutline
+    }
+}
+
+private fun gitFileStatusDescription(status: GitFileStatus): String {
+    return when (status) {
+        GitFileStatus.ADDED -> "Added file"
+        GitFileStatus.MODIFIED -> "Modified file"
+        GitFileStatus.DELETED -> "Deleted file"
+        GitFileStatus.RENAMED -> "Renamed file"
+        GitFileStatus.COPIED -> "Copied file"
+        GitFileStatus.UNMERGED -> "Unmerged file"
+        GitFileStatus.UNKNOWN -> "Unknown file status"
     }
 }
 

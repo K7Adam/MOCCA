@@ -44,6 +44,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -115,6 +119,10 @@ fun PersistentNavRow(
                             indication = null, // No ripple for cleaner look
                             onClick = { onItemClick(item.panelState) }
                         )
+                        .semantics {
+                            role = Role.Tab
+                            selected = isSelected
+                        }
                         .onGloballyPositioned { coords ->
                             val center = coords.size.width / 2f
                             if (index == 0) firstItemCenterPx = coords.localToRoot(

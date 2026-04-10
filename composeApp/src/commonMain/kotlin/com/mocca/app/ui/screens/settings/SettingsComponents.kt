@@ -56,6 +56,15 @@ enum class ServerConnectionStatus {
     FAILED
 }
 
+private fun serverConnectionStatusDescription(status: ServerConnectionStatus): String {
+    return when (status) {
+        ServerConnectionStatus.UNKNOWN -> "Connection status unknown"
+        ServerConnectionStatus.CHECKING -> "Checking connection"
+        ServerConnectionStatus.CONNECTED -> "Connection successful"
+        ServerConnectionStatus.FAILED -> "Connection failed"
+    }
+}
+
 /**
  * Terminal server card with connection status and actions
  */
@@ -154,7 +163,7 @@ fun TerminalServerCard(
 
                 Icon(
                     imageVector = statusIcon,
-                    contentDescription = null,
+                    contentDescription = serverConnectionStatusDescription(connectionStatus),
                     tint = statusColor,
                     modifier = Modifier.size(14.dp)
                 )
