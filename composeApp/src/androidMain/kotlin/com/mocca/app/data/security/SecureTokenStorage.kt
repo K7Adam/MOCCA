@@ -12,17 +12,8 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Android implementation of SecureTokenStorage using Android Keystore.
- * 
- * This class provides hardware-backed encryption for sensitive authentication tokens,
- * ensuring they are protected even if the device is compromised.
- * 
- * SECURITY FEATURES:
- * - Uses Android Keystore (hardware-backed when available)
- * - AES-256 encryption with GCM mode
- * - Random IV for each encryption operation
- * - Base64 encoding for database storage
- * - Automatic key generation and management
+ * Android Keystore-backed AES-256-GCM encryption for auth tokens.
+ * Hardware-backed when the device supports it.
  */
 class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
     
@@ -44,7 +35,6 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
     }
     
     init {
-        // Generate key if it doesn't exist
         if (!keyStore.containsAlias(KEY_ALIAS)) {
             generateKey()
         }
@@ -82,9 +72,6 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
         }
     }
     
-    /**
-     * Get the secret key from the Keystore.
-     */
     private fun getSecretKey(): SecretKey {
         val entry = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
         return entry?.secretKey ?: throw IllegalStateException("Secret key not found in Keystore")
@@ -104,12 +91,10 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
             val iv = cipher.iv
             val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
             
-            // Combine IV + ciphertext
             val combined = ByteArray(iv.size + ciphertext.size)
             System.arraycopy(iv, 0, combined, 0, iv.size)
             System.arraycopy(ciphertext, 0, combined, iv.size, ciphertext.size)
             
-            // Base64 encode with prefix for reliable identification
             ENCRYPTION_PREFIX + Base64.getEncoder().encodeToString(combined)
         } catch (e: Exception) {
             Napier.e("$TAG: Encryption failed", e)
@@ -127,7 +112,6 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
      */
     override fun decrypt(ciphertext: String): String {
         return try {
-            // Strip encryption prefix if present
             val payload = if (ciphertext.startsWith(ENCRYPTION_PREFIX)) {
                 ciphertext.substring(ENCRYPTION_PREFIX.length)
             } else {
@@ -136,7 +120,6 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
             
             val combined = Base64.getDecoder().decode(payload)
             
-            // Extract IV and ciphertext
             val iv = combined.copyOfRange(0, GCM_IV_LENGTH)
             val encrypted = combined.copyOfRange(GCM_IV_LENGTH, combined.size)
             
@@ -171,7 +154,6 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
                 keyStore.deleteEntry(KEY_ALIAS)
                 Napier.i("$TAG: Deleted encryption key from Keystore")
             }
-            // Generate new key for future use
             generateKey()
         } catch (e: Exception) {
             Napier.e("$TAG: Failed to clear key", e)
