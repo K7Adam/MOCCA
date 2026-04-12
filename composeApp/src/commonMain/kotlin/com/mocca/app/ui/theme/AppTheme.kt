@@ -19,9 +19,6 @@ import androidx.compose.ui.text.font.FontFamily
  * - Expressive motion and squircle-based shapes.
  */
 
-// COLOR SCHEME
-
-
 private val AppColorScheme: ColorScheme = darkColorScheme(
     primary = AppColors.primary,
     onPrimary = AppColors.onPrimary,
@@ -66,8 +63,6 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     scrim = AppColors.scrim
 )
 
-// COMPOSITION LOCALS
-
 /**
  * CompositionLocal for user-selected code font family.
  * Provided by AppTheme based on user preferences.
@@ -75,9 +70,6 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
 val LocalCodeFontFamily = androidx.compose.runtime.staticCompositionLocalOf<FontFamily> {
     FontFamily.Monospace
 }
-
-// THEME COMPOSABLE
-
 
 /**
  * MOCCA App Theme.
@@ -114,42 +106,24 @@ fun AppTheme(
     }
 }
 
-// THEME ACCESSORS
-
-
 /**
  * MOCCA Theme — Unified access to Material 3 tokens and extended app attributes.
  */
 object MoccaTheme {
-    /**
-     * Extended colors not available in the standard Material 3 ColorScheme.
-     */
     val extendedColors: ExtendedAppColors
         @Composable
         @ReadOnlyComposable
         get() = LocalExtendedColors.current
 
-    /**
-     * Spacing tokens for consistent layout.
-     */
     val spacing: AppSpacing
         get() = AppSpacing
 
-    /**
-     * Typography tokens (Material 3 scale + custom tokens).
-     */
     val typography: AppTypography
         get() = AppTypography
 
-    /**
-     * Shape tokens (Squircle and Material 3 foundations).
-     */
     val shapes: AppShapes
         get() = AppShapes
 
-    /**
-     * Color tokens (Direct access to the AppColors object).
-     */
     val colors: AppColors
         get() = AppColors
 }

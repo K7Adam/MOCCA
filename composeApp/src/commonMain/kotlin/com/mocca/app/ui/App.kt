@@ -53,8 +53,6 @@ import org.koin.compose.koinInject
 fun App() {
     // Simple heuristic: could be improved with actual device info via expect/actual
     val performance = remember { AppPerformance(tier = PerformanceTier.HIGH) }
-    
-    // Inject PreferencesManager to get user code font preference
     val preferencesManager = koinInject<PreferencesManager>()
     val preferences by preferencesManager.preferences.collectAsState()
     
@@ -73,21 +71,20 @@ fun App() {
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
         ) {
             if (!isLoaded) {
-                // Branded splash while loading server config from DB
                 SplashScreen()
             } else {
                 SharedTransitionLayout {
                     CompositionLocalProvider(
                         LocalSharedTransitionScope provides this
                     ) {
-                        val startScreen = if (activeConfig != null && activeConfig!!.host.isNotBlank()) {
+                        val config = activeConfig
+                        val startScreen = if (config != null && config.host.isNotBlank()) {
                             MainScreen()
                         } else {
                             ProgressiveOnboardingScreen()
                         }
 
                         Navigator(startScreen) { navigator ->
-                            // Use ModernTransitions for expressive screen navigation
                             val transitionSpec = ModernTransitions.expressiveFadeScale()
                             
                             androidx.compose.animation.AnimatedContent(
@@ -106,11 +103,6 @@ fun App() {
         }
     }
 }
-
-/**
- * Brief branded splash shown while the server config loads from the database.
- * Matches the onboarding's visual language for a seamless transition.
- */
 
 @Composable
 private fun SplashScreen() {

@@ -4,7 +4,6 @@ import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import mocca.composeapp.generated.resources.Res
@@ -22,10 +21,6 @@ import org.jetbrains.compose.resources.Font
  * Uses Space Grotesk for display/headlines and JetBrains Mono for code.
  */
 object AppTypography {
-
-    // ---------------------------------------------------------------------------
-    // FONT FAMILIES
-    // ---------------------------------------------------------------------------
 
     val displayFamily: FontFamily
         @Composable get() = FontFamily(Font(Res.font.space_grotesk_regular))
@@ -58,10 +53,6 @@ object AppTypography {
 
     /** Preview text for font picker — rendered in the chosen font */
     val fontPreviewText: String = "fun main() { println(42) }"
-
-    // ---------------------------------------------------------------------------
-    // M3 TYPOGRAPHY TOKENS (15-token scale)
-    // ---------------------------------------------------------------------------
 
     val displayLarge: TextStyle @Composable get() = TextStyle(
         fontFamily = displayFamily,
@@ -188,13 +179,6 @@ object AppTypography {
         letterSpacing = (-1.5).sp
     )
 
-    // ---------------------------------------------------------------------------
-    // APP SPECIFIC STYLES (Custom Tokens)
-    // ---------------------------------------------------------------------------
-
-    /**
-     * Code text style — uses user-selected code font from AppTheme.
-     */
     val code: TextStyle @Composable get() = TextStyle(
         fontFamily = LocalCodeFontFamily.current,
         fontWeight = FontWeight.Normal,
