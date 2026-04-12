@@ -398,15 +398,13 @@ private fun GodFileViewer(
                     )
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (hasUnsavedChanges && isEditing) "$fileName *" else fileName,
-                                style = AppTypography.titleSmall,
-                                color = AppColors.onSurface,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        if (language != "plaintext") {
+                        Text(
+                            text = if (hasUnsavedChanges && isEditing) "$fileName *" else fileName,
+                            style = AppTypography.titleSmall,
+                            color = AppColors.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        if (language != DEFAULT_LANGUAGE) {
                             Text(
                                 text = language,
                                 style = AppTypography.labelSmall,
@@ -593,6 +591,7 @@ private val BINARY_EXTENSIONS = setOf(
 )
 
 private const val MAX_EDITABLE_FILE_SIZE_CHARS = 256 * 1024
+private const val DEFAULT_LANGUAGE = "plaintext"
 
 private fun isBinaryFile(fileName: String): Boolean {
     val extension = fileName.substringAfterLast('.', "").lowercase()
