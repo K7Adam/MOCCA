@@ -13,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -31,7 +30,6 @@ actual fun CodeEditorView(
     onReady: () -> Unit,
     modifier: Modifier,
 ) {
-    val context = LocalContext.current
     val currentOnContentChanged by rememberUpdatedState(onContentChanged)
     val currentOnReady by rememberUpdatedState(onReady)
 
@@ -103,20 +101,16 @@ actual fun CodeEditorView(
     // Pause / resume WebView with the correct Compose lifecycle owner
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
-        var registeredObserver: LifecycleEventObserver? = null
-        val lc = lifecycleOwner.lifecycle
-        LifecycleEventObserver { _, event ->
+        val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_PAUSE -> webViewRef?.onPause()
                 Lifecycle.Event.ON_RESUME -> webViewRef?.onResume()
                 else -> {}
             }
-        }.also { obs ->
-            registeredObserver = obs
-            lc.addObserver(obs)
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
-            registeredObserver?.let { obs -> lc.removeObserver(obs) }
+            lifecycleOwner.lifecycle.removeObserver(observer)
             webViewRef?.destroy()
             webViewRef = null
         }
@@ -127,10 +121,7 @@ actual fun CodeEditorView(
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Holds the last values pushed into the WebView so we can skip redundant
- * `evaluateJavascript` calls (which would reset cursor position in edit mode).
- */
+/** Tracks content sent to WebView to avoid redundant updates that reset cursor. */
 private class SentContentState {
     @Volatile var lastSentContent: String = ""
     @Volatile var lastSentLanguage: String = ""
