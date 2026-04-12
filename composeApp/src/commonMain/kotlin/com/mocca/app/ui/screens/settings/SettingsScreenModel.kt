@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlinx.datetime.Clock as KtClock
 
 @Immutable
 
@@ -92,17 +91,13 @@ class SettingsScreenModel(
         loadCurrentProject()
     }
 
-    // User Preferences
-
-    
     private fun loadUserPreferences() {
         screenModelScope.launch {
             val prefs = settingsRepository.getUserPreferences()
             _state.value = _state.value.copy(preferences = prefs)
         }
     }
-    
-    // Appearance
+
     fun setShowTokenCounts(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setShowTokenCounts(value)
@@ -157,8 +152,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
-    // Chat
+
     fun setAutoScroll(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setAutoScroll(value)
@@ -186,7 +180,6 @@ class SettingsScreenModel(
         }
     }
     
-    // Connection
     fun setAutoReconnect(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setAutoReconnect(value)
@@ -195,7 +188,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
+
     fun setDataSaverMode(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setDataSaverMode(value)
@@ -204,8 +197,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
-    // Notifications
+
     fun setNotifyPermissions(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setNotifyPermissions(value)
@@ -214,7 +206,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
+
     fun setNotifySessionComplete(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setNotifySessionComplete(value)
@@ -223,7 +215,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
+
     fun setNotifyConnectionLost(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setNotifyConnectionLost(value)
@@ -232,8 +224,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
-    // Privacy
+
     fun setScreenSecurity(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setScreenSecurity(value)
@@ -242,7 +233,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
+
     fun setClearCacheOnExit(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setClearCacheOnExit(value)
@@ -251,8 +242,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
-    // Updates
+
     fun setAutoUpdateCheckInterval(minutes: Int) {
         screenModelScope.launch {
             val clampedValue = minutes.coerceIn(UserPreferences.AUTO_UPDATE_INTERVAL_RANGE)
@@ -262,8 +252,7 @@ class SettingsScreenModel(
             preferencesManager.updatePreferences(newPrefs)
         }
     }
-    
-    // Clear Cache
+
     fun showClearCacheDialog() {
         _state.value = _state.value.copy(showClearCacheDialog = true)
     }
@@ -362,23 +351,10 @@ class SettingsScreenModel(
         }
     }
     
-    // Remote Config Logic
     fun loadRemoteConfig() {
-        screenModelScope.launch {
-            // Only try if connected
-            if (_state.value.activeConnectionState is ConnectionStatus.Connected) {
-                // Load providers for auth configuration
-                loadProviders()
-            }
-        }
+        // Remote config loading is triggered via loadAuthMethods when user selects a provider
     }
-    
-    private fun loadProviders() {
-        screenModelScope.launch {
-            // Provider auth methods are loaded lazily per provider selection.
-        }
-    }
-    
+
     fun loadAuthMethods(providerId: String) {
         screenModelScope.launch {
             _state.value = _state.value.copy(selectedProviderId = providerId, authLoading = true)
@@ -420,9 +396,6 @@ class SettingsScreenModel(
     fun setManualKey(providerId: String, key: String) {
         screenModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            val credentials = ProviderCredentials.ApiKey(key) // Default to ApiKey type
-            // Note: For OpenAI/Anthropic specific types, we might need logic to choose.
-            // But ApiKey is usually generic enough or we check providerId.
             val specificCredentials = when(providerId) {
                 "openai" -> ProviderCredentials.OpenAI(key)
                 "anthropic" -> ProviderCredentials.Anthropic(key)
@@ -780,10 +753,7 @@ class SettingsScreenModel(
         _state.value = _state.value.copy(message = null)
     }
 
-    // PROJECT
-
-
-    private fun loadCurrentProject() {
+private fun loadCurrentProject() {
         screenModelScope.launch {
             projectRepository.getCurrentProject().collect { resource ->
                 when (resource) {

@@ -10,36 +10,22 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.QuestionMark
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Surface
+
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mocca.app.api.NetworkConfig
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.screens.settings.sections.AppearanceSection
@@ -142,12 +128,11 @@ class SettingsScreen : Screen {
                             onSaveProjectPath = { screenModel.saveProjectPath() }
                         )
                     }
-                    
+
                     item {
                         Column {
                             Spacer(modifier = Modifier.height(AppSpacing.lg))
-                            
-                            // Info note about server-side configuration
+
                             Text(
                                 text = "Provider and model are configured on the OpenCode server.",
                                 color = AppColors.outline,
