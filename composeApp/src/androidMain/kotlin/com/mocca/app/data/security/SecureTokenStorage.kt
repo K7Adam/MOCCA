@@ -34,6 +34,9 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
         private const val GCM_TAG_LENGTH = 128
         private const val GCM_IV_LENGTH = 12
         private const val AES_KEY_SIZE = 256
+
+        /** Prefix added to all encrypted values for reliable identification. */
+        const val ENCRYPTION_PREFIX = "ENC:"
     }
     
     private val keyStore: KeyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply {
@@ -106,8 +109,8 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
             System.arraycopy(iv, 0, combined, 0, iv.size)
             System.arraycopy(ciphertext, 0, combined, iv.size, ciphertext.size)
             
-            // Base64 encode for storage
-            Base64.getEncoder().encodeToString(combined)
+            // Base64 encode with prefix for reliable identification
+            ENCRYPTION_PREFIX + Base64.getEncoder().encodeToString(combined)
         } catch (e: Exception) {
             Napier.e("$TAG: Encryption failed", e)
             throw e
@@ -117,12 +120,21 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
     /**
      * Decrypt an encrypted token.
      * 
+     * Accepts both the new ENC:-prefixed format and legacy raw encrypted payloads.
+     *
      * @param ciphertext Base64-encoded encrypted data (IV + ciphertext + auth tag)
      * @return The decrypted plaintext token
      */
     override fun decrypt(ciphertext: String): String {
         return try {
-            val combined = Base64.getDecoder().decode(ciphertext)
+            // Strip encryption prefix if present
+            val payload = if (ciphertext.startsWith(ENCRYPTION_PREFIX)) {
+                ciphertext.substring(ENCRYPTION_PREFIX.length)
+            } else {
+                ciphertext
+            }
+            
+            val combined = Base64.getDecoder().decode(payload)
             
             // Extract IV and ciphertext
             val iv = combined.copyOfRange(0, GCM_IV_LENGTH)
@@ -141,17 +153,12 @@ class SecureTokenStorageImpl(context: Context) : SecureTokenStorage {
     }
     
     /**
-     * Check if a string appears to be encrypted (Base64 encoded).
-     * This is a heuristic check to determine if data needs decryption.
+     * Check if a string was encrypted by this implementation.
+     * Uses the ENC: prefix for deterministic identification.
      */
     override fun isEncrypted(data: String?): Boolean {
         if (data.isNullOrEmpty()) return false
-        return try {
-            Base64.getDecoder().decode(data)
-            true
-        } catch (e: IllegalArgumentException) {
-            false
-        }
+        return data.startsWith(ENCRYPTION_PREFIX)
     }
     
     /**

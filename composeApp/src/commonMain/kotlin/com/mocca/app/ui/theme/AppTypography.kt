@@ -10,6 +10,10 @@ import androidx.compose.ui.unit.sp
 import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.space_grotesk_regular
 import mocca.composeapp.generated.resources.jetbrains_mono_regular
+import mocca.composeapp.generated.resources.jetbrains_mono_bold
+import mocca.composeapp.generated.resources.fira_code_regular
+import mocca.composeapp.generated.resources.fira_code_bold
+import mocca.composeapp.generated.resources.source_code_pro_regular
 import org.jetbrains.compose.resources.Font
 
 /**
@@ -27,7 +31,33 @@ object AppTypography {
         @Composable get() = FontFamily(Font(Res.font.space_grotesk_regular))
 
     val monoFamily: FontFamily
-        @Composable get() = FontFamily(Font(Res.font.jetbrains_mono_regular))
+        @Composable get() = FontFamily(
+            Font(Res.font.jetbrains_mono_regular),
+            Font(Res.font.jetbrains_mono_bold, FontWeight.Bold)
+        )
+
+    /**
+     * Returns the monospace FontFamily for the given user preference key.
+     * Falls back to JetBrains Mono if key is unknown.
+     */
+    @Composable
+    fun monoFamilyFor(fontKey: String): FontFamily = when (fontKey) {
+        "fira_code" -> FontFamily(
+            Font(Res.font.fira_code_regular),
+            Font(Res.font.fira_code_bold, FontWeight.Bold)
+        )
+        "source_code_pro" -> FontFamily(
+            Font(Res.font.source_code_pro_regular)
+        )
+        "system_mono" -> FontFamily.Monospace
+        else -> FontFamily(
+            Font(Res.font.jetbrains_mono_regular),
+            Font(Res.font.jetbrains_mono_bold, FontWeight.Bold)
+        )
+    }
+
+    /** Preview text for font picker — rendered in the chosen font */
+    val fontPreviewText: String = "fun main() { println(42) }"
 
     // ---------------------------------------------------------------------------
     // M3 TYPOGRAPHY TOKENS (15-token scale)
@@ -162,16 +192,22 @@ object AppTypography {
     // APP SPECIFIC STYLES (Custom Tokens)
     // ---------------------------------------------------------------------------
 
+    /**
+     * Code text style — uses user-selected code font from AppTheme.
+     */
     val code: TextStyle @Composable get() = TextStyle(
-        fontFamily = monoFamily,
+        fontFamily = LocalCodeFontFamily.current,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
         lineHeight = 20.sp,
         letterSpacing = 0.sp
     )
 
+    /**
+     * Small code text style — uses user-selected code font from AppTheme.
+     */
     val codeSmall: TextStyle @Composable get() = TextStyle(
-        fontFamily = monoFamily,
+        fontFamily = LocalCodeFontFamily.current,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
         lineHeight = 18.sp,
@@ -194,8 +230,11 @@ object AppTypography {
         letterSpacing = 0.5.sp
     )
 
+    /**
+     * Monospace label style — uses user-selected code font from AppTheme.
+     */
     val monoLabel: TextStyle @Composable get() = TextStyle(
-        fontFamily = monoFamily,
+        fontFamily = LocalCodeFontFamily.current,
         fontWeight = FontWeight.Normal,
         fontSize = 10.sp,
         lineHeight = 14.sp,

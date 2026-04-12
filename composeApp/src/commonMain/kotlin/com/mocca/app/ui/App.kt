@@ -1,11 +1,11 @@
 package com.mocca.app.ui
 
-import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Icon
@@ -36,30 +35,33 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.transitions.SlideTransition
+import com.mocca.app.data.repository.PreferencesManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
+import com.mocca.app.ui.navigation.ModernTransitions
 import com.mocca.app.ui.screens.main.MainScreen
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppPerformance
 import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
-import org.koin.compose.koinInject
-
-import com.mocca.app.ui.navigation.ModernTransitions
-
-import com.mocca.app.ui.theme.AppPerformance
 import com.mocca.app.ui.theme.PerformanceTier
+import org.koin.compose.koinInject
 
 @Composable
 fun App() {
     // Simple heuristic: could be improved with actual device info via expect/actual
     val performance = remember { AppPerformance(tier = PerformanceTier.HIGH) }
     
-    AppTheme(performance = performance) {
+    // Inject PreferencesManager to get user code font preference
+    val preferencesManager = koinInject<PreferencesManager>()
+    val preferences by preferencesManager.preferences.collectAsState()
+    
+    AppTheme(
+        performance = performance,
+        codeFontFamilyKey = { preferences.codeFontFamily }
+    ) {
         val serverConfigRepository = koinInject<ServerConfigRepository>()
         val isLoaded by serverConfigRepository.isLoaded.collectAsState()
         val activeConfig by serverConfigRepository.activeServer.collectAsState()

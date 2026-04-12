@@ -5,5 +5,5 @@ appId: com.mocca.app
 ---
 # Wait for a stable app landmark (main panel or onboarding)
 - extendedWaitUntil:
-    visible: "(SEND|SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    visible: "(SEND|SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 30000

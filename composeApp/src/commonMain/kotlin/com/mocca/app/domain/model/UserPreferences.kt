@@ -36,6 +36,9 @@ data class UserPreferences(
     
     /** Hide/mask API keys in settings UI for security */
     val hideApiKeys: Boolean = true,
+    
+    /** Code font family key — matches a curated list in AppTypography */
+    val codeFontFamily: String = DEFAULT_CODE_FONT,
 
     // Chat
 
@@ -96,6 +99,17 @@ data class UserPreferences(
     val fontScalePercent: Int get() = (validFontScale * 100).toInt()
     
     companion object {
+        /** Default code font identifier */
+        const val DEFAULT_CODE_FONT = "jetbrains_mono"
+        
+        /** All available code font identifiers */
+        val CODE_FONT_OPTIONS = listOf(
+            "jetbrains_mono" to "JetBrains Mono",
+            "fira_code" to "Fira Code",
+            "source_code_pro" to "Source Code Pro",
+            "system_mono" to "System Monospace"
+        )
+        
         /** Default preferences */
         val DEFAULT = UserPreferences()
         

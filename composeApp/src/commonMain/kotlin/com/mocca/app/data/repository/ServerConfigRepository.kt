@@ -30,6 +30,11 @@ class ServerConfigRepository(
     private val localCache: LocalCache,
     private val secureTokenStorage: SecureTokenStorage? = null
 ) {
+    private data class PasswordReadResult(
+        val password: String,
+        val shouldMigrate: Boolean
+    )
+
     private val _activeServer = MutableStateFlow<ServerConfig?>(null)
     val activeServer: StateFlow<ServerConfig?> = _activeServer.asStateFlow()
 
@@ -50,19 +55,32 @@ class ServerConfigRepository(
     private fun loadActiveServer() {
         runBlocking(Dispatchers.IO) {
             try {
-                val config = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
+                val rawConfig = localCache.getActiveServerConfig()
                 
                 // If no server configured, create default only for emulator (physical devices stay null)
-                if (config == null) {
+                if (rawConfig == null) {
                     val default = createDefaultConfig()
                     if (default != null) {
+                        val passwordRead = readPasswordCompatibility(default.password, default.id)
+                        val config = default.copy(password = passwordRead.password)
+
                         localCache.insertServerConfig(default)
-                        _activeServer.value = default
+                        if (passwordRead.shouldMigrate) {
+                            migratePasswordToNewFormat(config)
+                        }
+                        _activeServer.value = config
                     } else {
                         // Physical device — no default config, onboarding required
                         _activeServer.value = null
                     }
                     return@runBlocking
+                }
+                
+                val passwordRead = readPasswordCompatibility(rawConfig.password, rawConfig.id)
+                val config = rawConfig.copy(password = passwordRead.password)
+
+                if (passwordRead.shouldMigrate) {
+                    migratePasswordToNewFormat(config)
                 }
                 
                 // Migration: If on physical device (empty default host) and using emulator IP,
@@ -90,42 +108,84 @@ class ServerConfigRepository(
     }
     
     /**
-     * Decrypt server config password if it's encrypted.
-     * 
-     * SECURITY: Checks if the password was encrypted by this app (has specific prefix)
-     * and decrypts it using SecureTokenStorage. If decryption fails or password is not
-     * app-encrypted, returns original config with password intact.
+     * Compatibility read path for stored passwords.
+     *
+     * Supports three states:
+     * 1. ENC: prefix → decrypt and fail soft to empty password on true failure
+     * 2. Legacy encrypted without prefix → one controlled decrypt probe, then mark for migration
+     * 3. Plaintext legacy value → return as-is and mark for migration to ENC:
      */
-    private fun decryptConfigIfNeeded(config: ServerConfig): ServerConfig {
-        if (secureTokenStorage == null || config.password.isEmpty()) {
-            return config
+    private fun readPasswordCompatibility(storedPassword: String, serverId: String): PasswordReadResult {
+        if (secureTokenStorage == null || storedPassword.isEmpty()) {
+            return PasswordReadResult(
+                password = storedPassword,
+                shouldMigrate = false
+            )
         }
-        
-        return try {
-            if (secureTokenStorage.isEncrypted(config.password)) {
-                // Try to decrypt - if it fails, the password might be plaintext
-                val decryptedPassword = secureTokenStorage.decrypt(config.password)
-                config.copy(password = decryptedPassword)
-            } else {
-                // Password is not encrypted (plaintext from manual entry), return as-is
-                config
+
+        if (secureTokenStorage.isEncrypted(storedPassword)) {
+            return try {
+                PasswordReadResult(
+                    password = secureTokenStorage.decrypt(storedPassword),
+                    shouldMigrate = false
+                )
+            } catch (e: Exception) {
+                Napier.w("Failed to decrypt ENC: password for server $serverId, clearing", e)
+                PasswordReadResult(
+                    password = "",
+                    shouldMigrate = false
+                )
             }
+        }
+
+        return try {
+            val decryptedPassword = secureTokenStorage.decrypt(storedPassword)
+            Napier.i("Detected legacy encrypted password for server $serverId; scheduling ENC: migration")
+            PasswordReadResult(
+                password = decryptedPassword,
+                shouldMigrate = true
+            )
+        } catch (_: Exception) {
+            PasswordReadResult(
+                password = storedPassword,
+                shouldMigrate = true
+            )
+        }
+    }
+    
+    /**
+     * Re-encrypt a decrypted password using the new ENC: prefix scheme.
+     * Called when a config is read from DB without the ENC: prefix — covers both
+     * plaintext values and legacy encrypted values that were already decrypted by
+     * decryptConfigIfNeeded().
+     * Silently logs failures — the password still works in memory.
+     */
+    private suspend fun migratePasswordToNewFormat(config: ServerConfig) {
+        if (secureTokenStorage == null || config.password.isEmpty()) return
+        
+        try {
+            val encryptedPassword = secureTokenStorage.encrypt(config.password)
+            localCache.insertServerConfig(config.copy(password = encryptedPassword))
+            Napier.i("Migrated password to ENC: format for server ${config.id}")
         } catch (e: Exception) {
-            // Decryption failed - password is likely plaintext, not app-encrypted
-            Napier.d("Password for server ${config.id} appears to be plaintext (not app-encrypted), using as-is")
-            // Return config with original password intact
-            config
+            Napier.w("Failed to migrate password for server ${config.id}", e)
         }
     }
 
     /**
      * Get all configured servers.
-     * 
-     * SECURITY: Auth tokens are decrypted before being returned.
+     * Decrypts encrypted passwords and migrates plaintext ones.
      */
     suspend fun getAllServers(): List<ServerConfig> {
         return try {
-            localCache.getAllServerConfigs().map { decryptConfigIfNeeded(it) }
+            localCache.getAllServerConfigs().map { raw ->
+                val passwordRead = readPasswordCompatibility(raw.password, raw.id)
+                val config = raw.copy(password = passwordRead.password)
+                if (passwordRead.shouldMigrate) {
+                    migratePasswordToNewFormat(config)
+                }
+                config
+            }
         } catch (e: Exception) {
             Napier.w("Failed to get servers", e)
             emptyList()
@@ -171,7 +231,15 @@ class ServerConfigRepository(
         try {
             localCache.deleteServerConfig(serverId)
             if (_activeServer.value?.id == serverId) {
-                _activeServer.value = localCache.getActiveServerConfig()?.let { decryptConfigIfNeeded(it) }
+                val raw = localCache.getActiveServerConfig()
+                _activeServer.value = raw?.let {
+                    val passwordRead = readPasswordCompatibility(it.password, it.id)
+                    val config = it.copy(password = passwordRead.password)
+                    if (passwordRead.shouldMigrate) {
+                        migratePasswordToNewFormat(config)
+                    }
+                    config
+                }
             }
         } catch (e: Exception) {
             Napier.e("Failed to delete server", e)
@@ -184,7 +252,15 @@ class ServerConfigRepository(
     suspend fun setActiveServer(serverId: String) {
         try {
             localCache.setActiveServerConfig(serverId)
-            _activeServer.value = localCache.getServerConfig(serverId)?.let { decryptConfigIfNeeded(it) }
+            val raw = localCache.getServerConfig(serverId)
+            if (raw != null) {
+                val passwordRead = readPasswordCompatibility(raw.password, raw.id)
+                val config = raw.copy(password = passwordRead.password)
+                if (passwordRead.shouldMigrate) {
+                    migratePasswordToNewFormat(config)
+                }
+                _activeServer.value = config
+            }
         } catch (e: Exception) {
             Napier.e("Failed to set active server", e)
         }
@@ -197,7 +273,7 @@ class ServerConfigRepository(
      * SECURITY: Returns the cached config with decrypted auth token (if applicable).
      */
     fun getActiveServerConfig(): ServerConfig? {
-        return _activeServer.value?.let { decryptConfigIfNeeded(it) }
+        return _activeServer.value
     }
 
     /**

@@ -46,6 +46,19 @@ class FileRepository(
     }
 
     /**
+     * Save file content via server API.
+     */
+    suspend fun saveFile(path: String, content: String): Resource<Unit> {
+        return apiClient.updateFile(path, content).fold(
+            onSuccess = { Resource.Success(it) },
+            onFailure = { error ->
+                Napier.e("Failed to save file", error)
+                Resource.Error(error.message ?: "Failed to save file")
+            }
+        )
+    }
+
+    /**
      * Get file status (git + diagnostics).
      */
     suspend fun getFileStatus(path: String): Resource<FileStatus> {

@@ -140,6 +140,15 @@ class SettingsScreenModel(
         }
     }
     
+    fun setCodeFontFamily(fontKey: String) {
+        screenModelScope.launch {
+            settingsRepository.setCodeFontFamily(fontKey)
+            val newPrefs = _state.value.preferences.copy(codeFontFamily = fontKey)
+            _state.value = _state.value.copy(preferences = newPrefs)
+            preferencesManager.updatePreferences(newPrefs)
+        }
+    }
+    
     fun setHideApiKeys(value: Boolean) {
         screenModelScope.launch {
             settingsRepository.setHideApiKeys(value)
@@ -284,6 +293,7 @@ class SettingsScreenModel(
             settingsRepository.setCompactMode(defaults.compactMode)
             settingsRepository.setFontScale(defaults.fontScale)
             settingsRepository.setHideApiKeys(defaults.hideApiKeys)
+            settingsRepository.setCodeFontFamily(defaults.codeFontFamily)
             settingsRepository.setAutoScroll(defaults.autoScroll)
             settingsRepository.setConfirmDelete(defaults.confirmDelete)
             settingsRepository.setShowThinkingBlocks(defaults.showThinkingBlocks)
@@ -365,19 +375,7 @@ class SettingsScreenModel(
     
     private fun loadProviders() {
         screenModelScope.launch {
-            // We need a way to get providers. 
-            // Since we don't have direct access to MoccaApiClient here (it's inside Repos),
-            // we should probably add getProviders to ConfigRepository or similar.
-            // For now, let's assume we can add it to ConfigRepository or use existing one.
-            // Wait, ConfigRepository doesn't have getProviders. 
-            // But SessionRepository does (via getProviderInfo). 
-            // Let's rely on ConfigRepository having it, or add it.
-            // Actually, let's just fetch auth methods for known providers if we can't list them easily.
-            // BETTER: Add getProviders to ConfigRepository or inject ProviderRepository if it exists.
-            // Modules.kt has singleOf(::ProviderRepository). Let's use that if possible, but I can't change constructor easily without breaking DI.
-            // I'll skip fetching the full provider list for now and just allow user to type provider ID or 
-            // use a hardcoded list of common ones (anthropic, openai, github) for the UI prototype.
-            // Ideally, we'd fetch from /config/providers.
+            // Provider auth methods are loaded lazily per provider selection.
         }
     }
     

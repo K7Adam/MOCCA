@@ -24,6 +24,7 @@ class SettingsRepository(
         const val KEY_COMPACT_MODE = "compact_mode"
         const val KEY_FONT_SCALE = "font_scale"
         const val KEY_HIDE_API_KEYS = "hide_api_keys"
+        const val KEY_CODE_FONT_FAMILY = "code_font_family"
         
         // Chat
         const val KEY_AUTO_SCROLL = "auto_scroll"
@@ -101,6 +102,7 @@ class SettingsRepository(
             compactMode = getBoolean(KEY_COMPACT_MODE, false),
             fontScale = getFloat(KEY_FONT_SCALE, 1.0f),
             hideApiKeys = getBoolean(KEY_HIDE_API_KEYS, true),
+            codeFontFamily = getString(KEY_CODE_FONT_FAMILY, UserPreferences.DEFAULT_CODE_FONT),
             autoScroll = getBoolean(KEY_AUTO_SCROLL, true),
             confirmDelete = getBoolean(KEY_CONFIRM_DELETE, true),
             showThinkingBlocks = getBoolean(KEY_SHOW_THINKING_BLOCKS, true),
@@ -132,6 +134,11 @@ class SettingsRepository(
 
     suspend fun getHideApiKeys(): Boolean = getBoolean(KEY_HIDE_API_KEYS, true)
     suspend fun setHideApiKeys(value: Boolean) = setBoolean(KEY_HIDE_API_KEYS, value)
+
+    suspend fun getCodeFontFamily(): String = getString(KEY_CODE_FONT_FAMILY, UserPreferences.DEFAULT_CODE_FONT)
+    suspend fun setCodeFontFamily(value: String) = withContext(Dispatchers.IO) {
+        localCache.saveSetting(KEY_CODE_FONT_FAMILY, value)
+    }
 
     // Chat Settings
 
@@ -206,5 +213,9 @@ class SettingsRepository(
 
     private suspend fun setInt(key: String, value: Int) = withContext(Dispatchers.IO) {
         localCache.saveSetting(key, value.toString())
+    }
+
+    private suspend fun getString(key: String, default: String): String = withContext(Dispatchers.IO) {
+        localCache.getSetting(key) ?: default
     }
 }

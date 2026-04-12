@@ -1,15 +1,23 @@
 package com.mocca.app.ui.screens.settings.sections
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.UserPreferences
-import com.mocca.app.ui.components.modern.ModuleCard
-import com.mocca.app.ui.components.modern.ModuleRowItem
+import com.mocca.app.ui.screens.settings.SettingsCard
+import com.mocca.app.ui.screens.settings.SettingsRowItem
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -18,7 +26,7 @@ import com.mocca.app.ui.theme.AppTypography
  * Settings section: Appearance
  * 
  * Display preferences (token counts, timestamps, compact mode, API key masking),
- * font scale slider.
+ * font scale slider, and code font family picker.
  */
 @Composable
 fun AppearanceSection(
@@ -28,6 +36,7 @@ fun AppearanceSection(
     onSetCompactMode: (Boolean) -> Unit,
     onSetHideApiKeys: (Boolean) -> Unit,
     onSetFontScale: (Float) -> Unit,
+    onSetCodeFontFamily: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -39,10 +48,9 @@ fun AppearanceSection(
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "Display") {
-            // Show Token Counts
-            ModuleRowItem(
-                title = "Show token counts",
+        SettingsCard(title = "Display") {
+            SettingsRowItem(
+                title = "Show Token Counts",
                 subtitle = "Display input/output tokens in chat",
                 isEnabled = preferences.showTokenCounts,
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
@@ -51,8 +59,8 @@ fun AppearanceSection(
             HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Show Timestamps
-            ModuleRowItem(
-                title = "Show timestamps",
+            SettingsRowItem(
+                title = "Show Timestamps",
                 subtitle = "Display message timestamps",
                 isEnabled = preferences.showTimestamps,
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
@@ -61,8 +69,8 @@ fun AppearanceSection(
             HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Compact Mode
-            ModuleRowItem(
-                title = "Compact mode",
+            SettingsRowItem(
+                title = "Compact Mode",
                 subtitle = "Reduced padding for higher density",
                 isEnabled = preferences.compactMode,
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
@@ -71,8 +79,8 @@ fun AppearanceSection(
             HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
             
             // Hide API Keys
-            ModuleRowItem(
-                title = "Hide API keys",
+            SettingsRowItem(
+                title = "Hide API Keys",
                 subtitle = "Mask sensitive keys in settings",
                 isEnabled = preferences.hideApiKeys,
                 onToggle = { onSetHideApiKeys(!preferences.hideApiKeys) }
@@ -82,7 +90,7 @@ fun AppearanceSection(
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Font Scale Slider
-        ModuleCard(title = "Font size") {
+        SettingsCard(title = "Font Size") {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -90,7 +98,7 @@ fun AppearanceSection(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Text scale",
+                        text = "Text Scale",
                         color = AppColors.onSurface,
                         style = AppTypography.bodyMedium
                     )
@@ -107,13 +115,13 @@ fun AppearanceSection(
                 // Font scale slider
                 var sliderValue by remember { mutableStateOf(preferences.fontScale) }
                 
-                androidx.compose.material3.Slider(
+                Slider(
                     value = sliderValue,
                     onValueChange = { sliderValue = it },
                     onValueChangeFinished = { onSetFontScale(sliderValue) },
                     valueRange = 0.8f..1.4f,
                     steps = 5,
-                    colors = androidx.compose.material3.SliderDefaults.colors(
+                    colors = SliderDefaults.colors(
                         thumbColor = AppColors.primary,
                         activeTrackColor = AppColors.primary,
                         inactiveTrackColor = AppColors.onSurfaceVariantDark
@@ -128,6 +136,68 @@ fun AppearanceSection(
                     Text("Small", color = AppColors.outline, style = AppTypography.labelSmall)
                     Text("Default", color = AppColors.outline, style = AppTypography.labelSmall)
                     Text("Large", color = AppColors.outline, style = AppTypography.labelSmall)
+                }
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(AppSpacing.cardGap))
+        
+        // Code Font Picker
+        SettingsCard(title = "Code Font") {
+            Text(
+                text = "Font used in code editor, terminal, and file viewer",
+                color = AppColors.onSurfaceVariant,
+                style = AppTypography.labelSmall
+            )
+            
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+            
+            UserPreferences.CODE_FONT_OPTIONS.forEachIndexed { index, (key, displayName) ->
+                val isSelected = preferences.codeFontFamily == key
+                val fontFamily = AppTypography.monoFamilyFor(key)
+                
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onSetCodeFontFamily(key) }
+                        .padding(vertical = AppSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .background(
+                                color = if (isSelected) AppColors.primary else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = if (isSelected) 0.dp else 1.5.dp,
+                                color = if (isSelected) AppColors.primary else AppColors.outline,
+                                shape = CircleShape
+                            )
+                    )
+                    
+                    Spacer(modifier = Modifier.width(AppSpacing.md))
+                    
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = displayName,
+                            color = if (isSelected) AppColors.primary else AppColors.onSurface,
+                            style = AppTypography.bodyMedium,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = AppTypography.fontPreviewText,
+                            color = AppColors.onSurfaceVariant,
+                            style = AppTypography.code.copy(fontFamily = fontFamily),
+                            maxLines = 1
+                        )
+                    }
+                }
+                
+                if (index < UserPreferences.CODE_FONT_OPTIONS.lastIndex) {
+                    HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
                 }
             }
         }

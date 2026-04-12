@@ -127,6 +127,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.lifecycle.runtime)
             implementation(libs.androidx.lifecycle.process)
+            implementation(libs.androidx.webkit)
             implementation(libs.compose.components.uiToolingPreview)
             implementation(libs.kotlinx.serialization.json)
             

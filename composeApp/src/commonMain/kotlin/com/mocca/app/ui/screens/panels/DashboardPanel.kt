@@ -3,6 +3,7 @@ package com.mocca.app.ui.screens.panels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.runtime.Composable
@@ -151,16 +153,48 @@ fun DashboardPanel(
             commands = state.commands
         )
 
+        ProcessModule(
+            processes = state.systemMonitor.processes,
+            hasActiveSession = state.hasActiveSession,
+            isRefreshing = state.systemMonitor.isRefreshing,
+            lastUpdatedAt = state.systemMonitor.lastUpdatedAt
+        )
+
+        PortModule(
+            ports = state.systemMonitor.ports,
+            hasActiveSession = state.hasActiveSession,
+            isRefreshing = state.systemMonitor.isRefreshing,
+            lastUpdatedAt = state.systemMonitor.lastUpdatedAt
+        )
+
+        ResourceModule(
+            resources = state.systemMonitor.resources,
+            hasActiveSession = state.hasActiveSession,
+            isRefreshing = state.systemMonitor.isRefreshing,
+            lastUpdatedAt = state.systemMonitor.lastUpdatedAt,
+            refreshInterval = state.systemMonitor.refreshInterval,
+            onRefreshIntervalClick = screenModel::cycleSystemMonitorRefreshInterval
+        )
+
         Spacer(modifier = Modifier.height(AppSpacing.md))
         
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg, Alignment.CenterHorizontally)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             MoccaCompactButton(
                 text = "Settings",
                 icon = Icons.Default.Settings,
                 onClick = onSettingsClick,
+                modifier = Modifier.weight(1f),
+                textColor = AppColors.onSurface,
+                backgroundColor = AppColors.surfaceContainerHigh
+            )
+            MoccaCompactButton(
+                text = "Files",
+                icon = Icons.Default.Folder,
+                onClick = onFilesClick,
+                modifier = Modifier.weight(1f),
                 textColor = AppColors.onSurface,
                 backgroundColor = AppColors.surfaceContainerHigh
             )
@@ -168,6 +202,7 @@ fun DashboardPanel(
                 text = "Terminal",
                 icon = Icons.Default.Terminal,
                 onClick = onTerminalClick,
+                modifier = Modifier.weight(1f),
                 textColor = AppColors.primary,
                 backgroundColor = AppColors.surfaceContainerHigh
             )

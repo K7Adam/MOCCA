@@ -1,5 +1,3 @@
-@file:Suppress("DEPRECATION")
-
 package com.mocca.app.ui.screens.settings
 
 import androidx.compose.foundation.background
@@ -29,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
@@ -45,6 +42,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.api.NetworkConfig
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.components.modern.*
+import com.mocca.app.ui.screens.settings.sections.AppearanceSection
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -187,7 +185,8 @@ class SettingsScreen : Screen {
                         onSetShowTimestamps = { screenModel.setShowTimestamps(it) },
                         onSetCompactMode = { screenModel.setCompactMode(it) },
                         onSetHideApiKeys = { screenModel.setHideApiKeys(it) },
-                        onSetFontScale = { screenModel.setFontScale(it) }
+                        onSetFontScale = { screenModel.setFontScale(it) },
+                        onSetCodeFontFamily = { screenModel.setCodeFontFamily(it) }
                     )
                 }
                 
@@ -527,119 +526,6 @@ fun AppUpdatesSection(
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
-        }
-    }
-}
-@Composable
-fun AppearanceSection(
-    preferences: UserPreferences,
-    onSetShowTokenCounts: (Boolean) -> Unit,
-    onSetShowTimestamps: (Boolean) -> Unit,
-    onSetCompactMode: (Boolean) -> Unit,
-    onSetHideApiKeys: (Boolean) -> Unit,
-    onSetFontScale: (Float) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Appearance",
-            color = AppColors.onSurfaceVariant,
-            style = AppTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        SettingsCard(title = "Display") {
-            // Show Token Counts
-            SettingsRowItem(
-                title = "Show Token Counts",
-                subtitle = "Display input/output tokens in chat",
-                isEnabled = preferences.showTokenCounts,
-                onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Show Timestamps
-            SettingsRowItem(
-                title = "Show Timestamps",
-                subtitle = "Display message timestamps",
-                isEnabled = preferences.showTimestamps,
-                onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Compact Mode
-            SettingsRowItem(
-                title = "Compact Mode",
-                subtitle = "Reduced padding for higher density",
-                isEnabled = preferences.compactMode,
-                onToggle = { onSetCompactMode(!preferences.compactMode) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Hide API Keys
-            SettingsRowItem(
-                title = "Hide API Keys",
-                subtitle = "Mask sensitive keys in settings",
-                isEnabled = preferences.hideApiKeys,
-                onToggle = { onSetHideApiKeys(!preferences.hideApiKeys) }
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(AppSpacing.cardGap))
-        
-        // Font Scale Slider
-        SettingsCard(title = "Font Size") {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Text Scale",
-                        color = AppColors.onSurface,
-                        style = AppTypography.bodyMedium
-                    )
-                    Text(
-                        text = "${preferences.fontScalePercent}%",
-                        color = AppColors.primary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                
-                // Font scale slider
-                var sliderValue by remember { mutableStateOf(preferences.fontScale) }
-                
-                androidx.compose.material3.Slider(
-                    value = sliderValue,
-                    onValueChange = { sliderValue = it },
-                    onValueChangeFinished = { onSetFontScale(sliderValue) },
-                    valueRange = 0.8f..1.4f,
-                    steps = 5,
-                    colors = androidx.compose.material3.SliderDefaults.colors(
-                        thumbColor = AppColors.primary,
-                        activeTrackColor = AppColors.primary,
-                        inactiveTrackColor = AppColors.onSurfaceVariantDark
-                    )
-                )
-                
-                // Labels
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Small", color = AppColors.outline, style = AppTypography.labelSmall)
-                    Text("Default", color = AppColors.outline, style = AppTypography.labelSmall)
-                    Text("Large", color = AppColors.outline, style = AppTypography.labelSmall)
-                }
-            }
         }
     }
 }

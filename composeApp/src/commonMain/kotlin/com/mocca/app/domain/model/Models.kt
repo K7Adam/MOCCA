@@ -652,7 +652,7 @@ data class FileInfo(
 @Serializable
 @Immutable
 data class FileContent(
-    val path: String,
+    val path: String = "",
     val content: String,
     val language: String? = null
 )

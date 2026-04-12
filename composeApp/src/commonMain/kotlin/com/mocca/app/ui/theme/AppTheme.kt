@@ -7,6 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.text.font.FontFamily
 
 /**
  * MOCCA App Theme — Material 3 Expressive.
@@ -65,22 +66,37 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     scrim = AppColors.scrim
 )
 
+// COMPOSITION LOCALS
+
+/**
+ * CompositionLocal for user-selected code font family.
+ * Provided by AppTheme based on user preferences.
+ */
+val LocalCodeFontFamily = androidx.compose.runtime.staticCompositionLocalOf<FontFamily> {
+    FontFamily.Monospace
+}
+
 // THEME COMPOSABLE
 
 
 /**
  * MOCCA App Theme.
+ * 
+ * @param codeFontFamilyKey The user preference key for the code font (e.g., "jetbrains_mono", "fira_code")
  */
 @Composable
 fun AppTheme(
     performance: AppPerformance = AppPerformance(),
+    codeFontFamilyKey: () -> String = { "jetbrains_mono" },
     content: @Composable () -> Unit
 ) {
     val extendedColors = ExtendedAppColors()
+    val codeFontFamily = AppTypography.monoFamilyFor(codeFontFamilyKey())
 
     CompositionLocalProvider(
         LocalExtendedColors provides extendedColors,
-        LocalAppPerformance provides performance
+        LocalAppPerformance provides performance,
+        LocalCodeFontFamily provides codeFontFamily
     ) {
         val motionScheme = if (performance.useExpressiveMotion) {
             MotionScheme.expressive()

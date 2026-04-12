@@ -10,7 +10,7 @@ tags:
 
 # Verify main UI is displayed
 - extendedWaitUntil:
-    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
+    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 15000
 
 # Take screenshot for verification

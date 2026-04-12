@@ -101,6 +101,7 @@ val commonModule = module {
     singleOf(::CommandRepository)
     singleOf(::SearchRepository)
     singleOf(::ProjectRepository)
+    singleOf(::SystemMonitorRepository)
 
 
     // STATE COORDINATOR - Central hub for all event handling and state sync
@@ -292,7 +293,8 @@ val screenModelModule = module {
             appStateStore = get(),
             stateCoordinator = get(),
             mcpRepository = get(),
-            projectRepository = get()
+            projectRepository = get(),
+            systemMonitorRepository = get()
         )
     }
 
