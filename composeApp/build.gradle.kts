@@ -10,11 +10,6 @@ plugins {
 // Compose Compiler configuration for stability and metrics
 composeCompiler {
     stabilityConfigurationFiles.add(layout.projectDirectory.file("compose-stability.conf"))
-    
-    // Strong Skipping Mode is enabled by default in Kotlin 2.0+
-    // No need to specify featureFlags explicitly
-    
-    // Enable Compose metrics for performance analysis
     metricsDestination = layout.buildDirectory.dir("compose_metrics")
     reportsDestination = layout.buildDirectory.dir("compose_reports")
 }
@@ -108,8 +103,6 @@ kotlin {
             // FileKit for cross-platform file picking
             implementation(libs.filekit.core)
             implementation(libs.filekit.compose)
-
-            
         }
 
         commonTest.dependencies {
@@ -130,8 +123,6 @@ kotlin {
             implementation(libs.androidx.webkit)
             implementation(libs.compose.components.uiToolingPreview)
             implementation(libs.kotlinx.serialization.json)
-            
-            
         }
     }
 }
