@@ -3,9 +3,6 @@ package com.mocca.app.data.repository
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.domain.model.UserPreferences
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 class SettingsRepository(
@@ -49,18 +46,10 @@ class SettingsRepository(
     }
 
     // Session State
-
-
-    /**
-     * Get the last active session ID for restoration.
-     */
     suspend fun getLastSessionId(): String? = withContext(Dispatchers.IO) {
         localCache.getSetting(KEY_LAST_SESSION_ID)
     }
 
-    /**
-     * Save the last active session ID.
-     */
     suspend fun saveLastSessionId(sessionId: String?) = withContext(Dispatchers.IO) {
         if (sessionId.isNullOrBlank()) {
             localCache.deleteSetting(KEY_LAST_SESSION_ID)
@@ -70,8 +59,6 @@ class SettingsRepository(
     }
 
     // GitHub Token
-
-
     suspend fun getGitHubToken(): String? = withContext(Dispatchers.IO) {
         localCache.getSetting(KEY_GITHUB_TOKEN)
     }
@@ -89,11 +76,6 @@ class SettingsRepository(
     }
 
     // User Preferences (typed getters/setters)
-
-
-    /**
-     * Load all user preferences with defaults.
-     */
     suspend fun getUserPreferences(): UserPreferences = withContext(Dispatchers.IO) {
         UserPreferences(
             lastSessionId = getLastSessionId(),
@@ -118,8 +100,6 @@ class SettingsRepository(
     }
 
     // Appearance Settings
-
-
     suspend fun getShowTokenCounts(): Boolean = getBoolean(KEY_SHOW_TOKEN_COUNTS, true)
     suspend fun setShowTokenCounts(value: Boolean) = setBoolean(KEY_SHOW_TOKEN_COUNTS, value)
 
@@ -141,8 +121,6 @@ class SettingsRepository(
     }
 
     // Chat Settings
-
-
     suspend fun getAutoScroll(): Boolean = getBoolean(KEY_AUTO_SCROLL, true)
     suspend fun setAutoScroll(value: Boolean) = setBoolean(KEY_AUTO_SCROLL, value)
 
@@ -153,8 +131,6 @@ class SettingsRepository(
     suspend fun setShowThinkingBlocks(value: Boolean) = setBoolean(KEY_SHOW_THINKING_BLOCKS, value)
 
     // Connection Settings
-
-
     suspend fun getAutoReconnect(): Boolean = getBoolean(KEY_AUTO_RECONNECT, true)
     suspend fun setAutoReconnect(value: Boolean) = setBoolean(KEY_AUTO_RECONNECT, value)
 
@@ -162,8 +138,6 @@ class SettingsRepository(
     suspend fun setDataSaverMode(value: Boolean) = setBoolean(KEY_DATA_SAVER_MODE, value)
 
     // Notification Settings
-
-
     suspend fun getNotifyPermissions(): Boolean = getBoolean(KEY_NOTIFY_PERMISSIONS, true)
     suspend fun setNotifyPermissions(value: Boolean) = setBoolean(KEY_NOTIFY_PERMISSIONS, value)
 
@@ -174,8 +148,6 @@ class SettingsRepository(
     suspend fun setNotifyConnectionLost(value: Boolean) = setBoolean(KEY_NOTIFY_CONNECTION_LOST, value)
 
     // Privacy Settings
-
-
     suspend fun getScreenSecurity(): Boolean = getBoolean(KEY_SCREEN_SECURITY, false)
     suspend fun setScreenSecurity(value: Boolean) = setBoolean(KEY_SCREEN_SECURITY, value)
 
@@ -183,14 +155,10 @@ class SettingsRepository(
     suspend fun setClearCacheOnExit(value: Boolean) = setBoolean(KEY_CLEAR_CACHE_ON_EXIT, value)
 
     // Update Settings
-
-
     suspend fun getAutoUpdateCheckInterval(): Int = getInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, 10)
     suspend fun setAutoUpdateCheckInterval(value: Int) = setInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, value)
 
     // Helper Methods
-
-
     private suspend fun getBoolean(key: String, default: Boolean): Boolean = withContext(Dispatchers.IO) {
         localCache.getSetting(key)?.toBooleanStrictOrNull() ?: default
     }

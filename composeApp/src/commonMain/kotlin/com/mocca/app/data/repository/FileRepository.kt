@@ -6,15 +6,9 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-/**
- * Repository for file operations.
- */
 class FileRepository(
     private val apiClient: MoccaApiClient
 ) {
-    /**
-     * List files in a directory.
-     */
     fun listFiles(path: String = ""): Flow<Resource<List<FileInfo>>> = flow {
         emit(Resource.Loading())
         
@@ -30,9 +24,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Get file content.
-     */
     suspend fun getFileContent(path: String): Resource<FileContent> {
         return apiClient.getFileContent(path).fold(
             onSuccess = { content ->
@@ -45,9 +36,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Save file content via server API.
-     */
     suspend fun saveFile(path: String, content: String): Resource<Unit> {
         return apiClient.updateFile(path, content).fold(
             onSuccess = { Resource.Success(it) },
@@ -58,9 +46,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Get file status (git + diagnostics).
-     */
     suspend fun getFileStatus(path: String): Resource<FileStatus> {
         return apiClient.getFileStatus(path).fold(
             onSuccess = { status ->
@@ -73,9 +58,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Search for text in files.
-     */
     fun searchText(query: String, path: String = ""): Flow<Resource<List<SearchResult>>> = flow {
         emit(Resource.Loading())
         
@@ -91,9 +73,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Find files by name pattern.
-     */
     fun findFiles(pattern: String): Flow<Resource<List<String>>> = flow {
         emit(Resource.Loading())
         
@@ -109,9 +88,6 @@ class FileRepository(
         )
     }
 
-    /**
-     * Find symbols in workspace.
-     */
     fun findSymbols(query: String): Flow<Resource<List<SymbolResult>>> = flow {
         emit(Resource.Loading())
         
