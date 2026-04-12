@@ -30,7 +30,6 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
-import cafe.adriel.voyager.core.model.screenModelScope
 
 /**
  * Common Koin modules shared across all platforms.
@@ -38,7 +37,6 @@ import cafe.adriel.voyager.core.model.screenModelScope
  * Uses StateCoordinator as the single source of truth for event dispatch and state synchronization.
  */
 val commonModule = module {
-    // ... rest of file
     // ConnectionManager — single source of truth for connection + ApiExecutor
     single {
         ConnectionManager(
