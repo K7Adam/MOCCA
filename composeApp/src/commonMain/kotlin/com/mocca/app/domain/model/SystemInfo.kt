@@ -28,18 +28,14 @@ data class SystemResources(
     val diskTotal: Long? = null
 ) {
     val memoryUsageFraction: Float?
-        get() = memoryUsed?.let { used ->
-            memoryTotal?.takeIf { it > 0 }?.let { total ->
-                (used.toDouble() / total.toDouble()).toFloat().coerceIn(0f, 1f)
-            }
-        }
+        get() = if (memoryTotal != null && memoryTotal > 0 && memoryUsed != null) {
+            (memoryUsed.toFloat() / memoryTotal.toFloat()).coerceIn(0f, 1f)
+        } else null
 
     val diskUsageFraction: Float?
-        get() = diskUsed?.let { used ->
-            diskTotal?.takeIf { it > 0 }?.let { total ->
-                (used.toDouble() / total.toDouble()).toFloat().coerceIn(0f, 1f)
-            }
-        }
+        get() = if (diskTotal != null && diskTotal > 0 && diskUsed != null) {
+            (diskUsed.toFloat() / diskTotal.toFloat()).coerceIn(0f, 1f)
+        } else null
 }
 
 enum class MonitorRefreshInterval(

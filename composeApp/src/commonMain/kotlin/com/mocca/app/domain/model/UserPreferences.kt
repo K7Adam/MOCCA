@@ -12,16 +12,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Immutable
 data class UserPreferences(
-
-    // Session State
-
-    
     /** Last active session ID - persisted for restoration on app restart */
     val lastSessionId: String? = null,
 
-    // Appearance
-
-    
     /** Show input/output token counts in chat messages */
     val showTokenCounts: Boolean = true,
     
@@ -40,9 +33,6 @@ data class UserPreferences(
     /** Code font family key — matches a curated list in AppTypography */
     val codeFontFamily: String = DEFAULT_CODE_FONT,
 
-    // Chat
-
-    
     /** Auto-scroll to bottom when new messages arrive */
     val autoScroll: Boolean = true,
     
@@ -52,18 +42,12 @@ data class UserPreferences(
     /** Show AI thinking/reasoning blocks in messages */
     val showThinkingBlocks: Boolean = true,
 
-    // Connection
-
-    
     /** Automatically reconnect when connection is lost */
     val autoReconnect: Boolean = true,
     
     /** Data saver mode - reduce network usage (disable background sync) */
     val dataSaverMode: Boolean = false,
 
-    // Notifications
-
-    
     /** Show notification when permission approval is required */
     val notifyPermissions: Boolean = true,
     
@@ -73,29 +57,17 @@ data class UserPreferences(
     /** Show notification when connection to server is lost */
     val notifyConnectionLost: Boolean = true,
 
-    // Privacy & Security
-
-    
     /** Enable screen security (prevent screenshots) */
     val screenSecurity: Boolean = false,
     
     /** Clear local cache when app exits */
     val clearCacheOnExit: Boolean = false,
 
-    // Updates
-
-    
     /** Auto-check for app updates interval in minutes (0 = disabled, default 10 min) */
     val autoUpdateCheckIntervalMinutes: Int = 10
 ) {
-    /**
-     * Font scale clamped to valid range.
-     */
     val validFontScale: Float get() = fontScale.coerceIn(0.8f, 1.4f)
     
-    /**
-     * Font scale percentage for display (80% to 140%)
-     */
     val fontScalePercent: Int get() = (validFontScale * 100).toInt()
     
     companion object {

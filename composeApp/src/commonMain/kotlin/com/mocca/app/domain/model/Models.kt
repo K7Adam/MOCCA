@@ -809,9 +809,6 @@ data class ServerErrorResponse(
     val status: Int? = null
 )
 
-// TODO LIST MODELS
-
-
 /**
  * Session todo item.
  * Used for tracking agent task progress.
