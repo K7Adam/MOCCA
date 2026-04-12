@@ -57,7 +57,6 @@ fun DashboardPanel(
     onSkillsClick: () -> Unit = {},
     onSkillClick: (String) -> Unit = {},
     onTerminalClick: () -> Unit = {}
-    // NOTE: onRefreshAll removed - SSE drives all live state, no manual refresh needed
 ) {
     val state by screenModel.state.collectAsState()
     val scrollState = rememberScrollState()
@@ -105,11 +104,9 @@ fun DashboardPanel(
                 }
             }
         )
-        
+
         Spacer(modifier = Modifier.height(AppSpacing.md))
 
-
-        // Show SSE connection status for real-time event streaming
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -138,7 +135,7 @@ fun DashboardPanel(
 
         GitStatusModule(
             branchName = state.gitBranch,
-            changedFiles = state.changedFilesCount, // Rich file status from global gitStatus
+            changedFiles = state.changedFilesCount,
             onExpandClick = onGitClick
         )
 
@@ -210,7 +207,6 @@ fun DashboardPanel(
         
         Spacer(modifier = Modifier.weight(1f))
         
-        // Bottom padding for floating bottom bar clearance
         Spacer(modifier = Modifier.height(AppSpacing.bottomBarClearance))
     }
 }
@@ -318,12 +314,8 @@ private fun CapabilitiesModule(
     }
 }
 
-// EXTENSION FUNCTIONS FOR DATA CONVERSION
+// EXTENSION FUNCTION
 
-
-/**
- * Convert MCP server status to UI items
- */
 private fun Resource<Map<String, com.mocca.app.domain.model.McpServerStatus>>.toMcpServerItems(): List<McpServerItem> {
     return when (this) {
         is Resource.Success -> data.map { (name, status) ->

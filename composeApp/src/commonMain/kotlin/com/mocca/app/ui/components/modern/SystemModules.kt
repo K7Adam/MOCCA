@@ -281,24 +281,14 @@ private fun <T> SystemModuleStatus(
     val text = when {
         !hasActiveSession -> "Start a session to view system info"
         resource is Resource.Loading && resource.data == null -> "Collecting remote snapshot..."
-        resource is Resource.Error && resource.data != null -> buildString {
-            append("Showing last known values")
-            lastUpdatedAt?.let {
-                append(" • stale at ")
-                append(TimeFormatter.formatTimeWithSeconds(it))
-            }
+        resource is Resource.Error && resource.data != null -> {
+            val base = "Showing last known values"
+            lastUpdatedAt?.let { "$base • stale at ${TimeFormatter.formatTimeWithSeconds(it)}" } ?: base
         }
         resource.dataOrNull() == null -> emptyLabel
-        else -> buildString {
-            if (isRefreshing) {
-                append("Refreshing...")
-            } else {
-                append("Live snapshot")
-            }
-            lastUpdatedAt?.let {
-                append(" • ")
-                append(TimeFormatter.formatTimeWithSeconds(it))
-            }
+        else -> {
+            val status = if (isRefreshing) "Refreshing..." else "Live snapshot"
+            lastUpdatedAt?.let { "$status • ${TimeFormatter.formatTimeWithSeconds(it)}" } ?: status
         }
     }
 
@@ -324,7 +314,7 @@ private fun formatBytes(bytes: Long): String {
     var unitIndex = 0
     while (value >= 1024 && unitIndex < units.lastIndex) {
         value /= 1024.0
-        unitIndex += 1
+        unitIndex++
     }
     val rounded = if (value >= 10 || unitIndex == 0) {
         value.toInt().toString()

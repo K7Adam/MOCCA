@@ -24,16 +24,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
-/**
- * ScreenModel for DashboardPanel.
- * 
- * IMPORTANT: This now observes AppStateStore for ALL data.
- * NO manual refresh calls are needed - all updates are automatic via:
- * - StateCoordinator (SSE events for sessions, messages)
- * - RealtimeSyncService (periodic polling for MCP, providers, tools, git)
- * 
- * The dashboard will ALWAYS show fresh data without any user action.
- */
+/** Dashboard screen model. Observes AppStateStore for auto-updates. */
 class DashboardScreenModel(
     private val appStateStore: AppStateStore,
     private val stateCoordinator: StateCoordinator,
@@ -53,41 +44,20 @@ class DashboardScreenModel(
     )
     
     @Immutable
-    
     data class State(
-        // Provider data (from AppStateStore - auto-updated)
+        // From AppStateStore (auto-updated)
         val providers: Resource<ProviderResponse> = Resource.Loading(),
-        
-        // Projects (from AppStateStore - auto-updated)
         val projects: Resource<ImmutableList<Project>> = Resource.Loading(),
         val currentProject: Resource<Project> = Resource.Loading(),
-        
-        // Agents (from AppStateStore - auto-updated)
         val agents: Resource<ImmutableList<Agent>> = Resource.Loading(),
-        
-        // Tools (from AppStateStore - auto-updated)
         val tools: Resource<ImmutableList<String>> = Resource.Loading(),
-        
-        // Slash commands (from AppStateStore - auto-updated)
         val commands: Resource<ImmutableList<Command>> = Resource.Loading(),
-        
-        // VCS/Git info (from AppStateStore - auto-updated)
         val vcsInfo: Resource<VcsInfo> = Resource.Loading(),
-        
-        // Full Git Status (from AppStateStore - auto-updated)
         val gitStatus: GitStatusResponse? = null,
-        
-        // MCP servers (from AppStateStore - auto-updated)
         val mcpServers: Resource<Map<String, McpServerStatus>> = Resource.Loading(),
-
         val currentSessionId: String? = null,
-
         val systemMonitor: SystemMonitorState = SystemMonitorState(),
-         
-        // SSE connection status (real-time event streaming)
         val isSseConnected: Boolean = false,
-        
-        // Sync state
         val isSyncing: Boolean = false
     ) {
         // Derived properties for UI convenience
@@ -140,21 +110,14 @@ class DashboardScreenModel(
     private var systemMonitorJob: Job? = null
     
     init {
-        // Start observing centralized state from AppStateStore
         observeAppStateStore()
         observeEvents()
         observeConnectionState()
         observeActiveSession()
         startSystemMonitorPolling()
-         
-        // Start the sync service (if not already started)
         appStateStore.start()
     }
     
-    /**
-     * Observe connection state and trigger data loading when connected.
-     * This prevents premature API calls before connection is established.
-     */
     private fun observeConnectionState() {
         screenModelScope.launch {
             stateCoordinator.connectionStatus.collect { status ->
@@ -166,12 +129,7 @@ class DashboardScreenModel(
         }
     }
     
-    /**
-     * Load projects data only when connected.
-     * This is called once when connection is established.
-     */
     private fun loadProjectsWhenConnected() {
-        // Observe projects - only start collecting when connected
         screenModelScope.launch {
             projectRepository.getProjects().collect { projects ->
                 val mapped = when (projects) {
@@ -183,7 +141,6 @@ class DashboardScreenModel(
             }
         }
         
-        // Observe currentProject
         screenModelScope.launch {
             projectRepository.getCurrentProject().collect { cp ->
                 _state.update { it.copy(currentProject = cp) }
@@ -191,31 +148,19 @@ class DashboardScreenModel(
         }
     }
     
-    /**
-     * Observe centralized state from AppStateStore.
-     * All data updates automatically - NO manual refresh needed.
-     * 
-     * NOTE: Projects are observed separately in loadProjectsWhenConnected() 
-     * to prevent premature API calls before connection is established.
-     */
     private fun observeAppStateStore() {
-        // Observe providers
         screenModelScope.launch {
             appStateStore.providers.collect { providers ->
                 _state.update { it.copy(providers = providers) }
             }
         }
         
-        // Projects are observed via loadProjectsWhenConnected() - DO NOT observe here
-        
-        // Observe agents
         screenModelScope.launch {
             appStateStore.agents.collect { agents ->
                 _state.update { it.copy(agents = Resource.Success(agents.toImmutableList())) }
             }
         }
         
-        // Observe tools
         screenModelScope.launch {
             appStateStore.tools.collect { tools ->
                 val mapped = when (tools) {
@@ -227,7 +172,6 @@ class DashboardScreenModel(
             }
         }
         
-        // Observe commands
         screenModelScope.launch {
             appStateStore.commands.collect { commands ->
                 val mapped = when (commands) {
@@ -239,21 +183,18 @@ class DashboardScreenModel(
             }
         }
         
-        // Observe VCS/Git info
         screenModelScope.launch {
             appStateStore.vcsInfo.collect { vcsInfo ->
                 _state.update { it.copy(vcsInfo = vcsInfo) }
             }
         }
 
-        // Observe Git status (full status including changed file counts)
         screenModelScope.launch {
             appStateStore.gitStatus.collect { gitStatus ->
                 _state.update { it.copy(gitStatus = gitStatus) }
             }
         }
         
-        // Observe MCP servers
         screenModelScope.launch {
             appStateStore.mcpServers.collect { servers ->
                 _state.update { state ->
@@ -264,14 +205,12 @@ class DashboardScreenModel(
             }
         }
         
-        // Observe sync state
         screenModelScope.launch {
             appStateStore.isSyncing.collect { isSyncing ->
                 _state.update { it.copy(isSyncing = isSyncing) }
             }
         }
         
-        // Observe SSE connection status (real-time event streaming)
         screenModelScope.launch {
             appStateStore.isSseConnected.collect { isSseConnected ->
                 _state.update { it.copy(isSseConnected = isSseConnected) }
@@ -300,15 +239,13 @@ class DashboardScreenModel(
     }
     
     private fun observeEvents() {
-        // Observe file events for Git refresh
         screenModelScope.launch {
             stateCoordinator.broadcastEvents.collect { broadcastEvent ->
                 when (broadcastEvent) {
                     is BroadcastEvent.ServerEvent -> {
                         val event = broadcastEvent.event
                         if (event is ServerEvent.FileEdited || event is ServerEvent.FileWatcherUpdated) {
-                            // Git status will be refreshed by RealtimeSyncService
-                            // No manual action needed
+                            // Git status refreshed by sync service
                         }
                     }
                     else -> {}
@@ -393,49 +330,28 @@ class DashboardScreenModel(
         }
     }
     
-    /**
-     * Trigger an immediate sync.
-     * This is optional - data syncs automatically.
-     */
     fun syncNow() {
         appStateStore.syncFromServer()
     }
     
-    /**
-     * Force a full sync of all data.
-     * Use when user explicitly requests refresh.
-     */
     fun forceFullSync() {
         appStateStore.forceFullSync()
         refreshSystemMonitor()
     }
     
-    /**
-     * Called when app comes to foreground.
-     */
     fun onForeground() {
         appStateStore.onForeground()
     }
     
-    /**
-     * Connect to an MCP server.
-     * Delegates to McpRepository which will update AppStateStore via StateFlow.
-     */
     fun connectMcpServer(name: String) {
         screenModelScope.launch {
             mcpRepository.connect(name)
-            // MCP servers StateFlow will update automatically
         }
     }
     
-    /**
-     * Disconnect from an MCP server.
-     * Delegates to McpRepository which will update AppStateStore via StateFlow.
-     */
     fun disconnectMcpServer(name: String) {
         screenModelScope.launch {
             mcpRepository.disconnect(name)
-            // MCP servers StateFlow will update automatically
         }
     }
 }
