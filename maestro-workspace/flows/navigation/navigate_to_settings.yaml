@@ -19,20 +19,14 @@ tags:
 - waitForAnimationToEnd:
     timeout: 2000
 
-# Scroll dashboard to quick actions row
+# Scroll dashboard to find Settings
 - swipe:
     direction: UP
     duration: 450
 
-- waitForAnimationToEnd:
-    timeout: 1500
-
 - swipe:
     direction: UP
     duration: 450
-
-- waitForAnimationToEnd:
-    timeout: 1500
 
 # Tap on Settings button
 - retry:
