@@ -57,7 +57,12 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     )
                 },
                 trailing = {
-                    IconButton(onClick = { screenModel.removeRemote(remote.name) }) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .moccaClickable(onClick = { screenModel.removeRemote(remote.name) }, pressedScale = 0.92f),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.error.copy(alpha = 0.6f))
                     }
                 }
@@ -118,7 +123,12 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     )
                 },
                 trailing = {
-                    IconButton(onClick = { screenModel.deleteTag(tag) }) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .moccaClickable(onClick = { screenModel.deleteTag(tag) }, pressedScale = 0.92f),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = AppColors.error.copy(alpha = 0.6f))
                     }
                 }

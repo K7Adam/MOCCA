@@ -38,6 +38,7 @@ import com.mocca.app.ui.components.editor.CodeEditorView
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import mocca.composeapp.generated.resources.Res
 import mocca.composeapp.generated.resources.*
 
@@ -77,9 +78,12 @@ class FilesScreen : Screen {
                         )
                     },
                     actions = {
-                        IconButton(
-                            onClick = { screenModel.loadFiles(state.currentPath) },
-                            modifier = Modifier.minimumInteractiveComponentSize()
+                        Box(
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .size(40.dp)
+                                .moccaClickable(onClick = { screenModel.loadFiles(state.currentPath) }, pressedScale = 0.92f),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.Refresh,
@@ -172,12 +176,13 @@ private fun GodBreadcrumbBar(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             if (canNavigateUp) {
-                IconButton(
-                    onClick = onNavigateUp,
+                Box(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
                         .size(48.dp)
                         .background(AppColors.surfaceVariant, AppShapes.circle)
+                        .moccaClickable(onClick = onNavigateUp, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -247,6 +252,10 @@ private fun GodFilesList(
                 GodListItem(
                     title = file.name,
                     subtitle = if (file.isDirectory) "Folder" else formatFileSize(file.size ?: 0),
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                        placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ),
                     icon = {
                         Icon(
                             imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
@@ -415,13 +424,13 @@ private fun GodFileViewer(
                     // Edit/Save button — only for editable text files
                     if (!isBinary && !isTooLarge) {
                         if (isEditing) {
-                            IconButton(
-                                onClick = onSave,
-                                enabled = !isSaving,
+                            Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
                                     .size(48.dp)
                                     .background(AppColors.primary, AppShapes.circle)
+                                    .moccaClickable(onClick = onSave, enabled = !isSaving, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 if (isSaving) {
                                     CircularProgressIndicator(
@@ -438,12 +447,12 @@ private fun GodFileViewer(
                                     )
                                 }
                             }
-                            IconButton(
-                                onClick = onToggleEdit,
-                                enabled = !isSaving,
+                            Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
                                     .size(48.dp)
+                                    .moccaClickable(onClick = onToggleEdit, enabled = !isSaving, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Close,
@@ -453,12 +462,13 @@ private fun GodFileViewer(
                                 )
                             }
                         } else {
-                            IconButton(
-                                onClick = onToggleEdit,
+                            Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
                                     .size(48.dp)
                                     .background(AppColors.surfaceVariant, AppShapes.circle)
+                                    .moccaClickable(onClick = onToggleEdit, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Edit,
@@ -470,9 +480,12 @@ private fun GodFileViewer(
                         }
                     }
                     // Refresh button
-                    IconButton(
-                        onClick = onRefreshFile,
-                        modifier = Modifier.minimumInteractiveComponentSize()
+                    Box(
+                        modifier = Modifier
+                            .minimumInteractiveComponentSize()
+                            .size(40.dp)
+                            .moccaClickable(onClick = onRefreshFile, pressedScale = 0.92f),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Refresh,
@@ -482,11 +495,12 @@ private fun GodFileViewer(
                         )
                     }
                     // Close button
-                    IconButton(
-                        onClick = onClose,
+                    Box(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
                             .size(48.dp)
+                            .moccaClickable(onClick = onClose, pressedScale = 0.92f),
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Close,

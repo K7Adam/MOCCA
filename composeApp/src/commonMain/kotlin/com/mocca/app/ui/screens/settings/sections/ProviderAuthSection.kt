@@ -1,9 +1,14 @@
 package com.mocca.app.ui.screens.settings.sections
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -12,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import com.mocca.app.domain.model.ProviderAuthMethod
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
-import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlinx.collections.immutable.ImmutableList
@@ -78,10 +82,24 @@ fun ProviderAuthSection(
                     )
                 }
                 
-                if (isExpanded) {
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = expandVertically(
+                        expandFrom = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeIn(
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
+                    ),
+                    exit = shrinkVertically(
+                        shrinkTowards = Alignment.Top,
+                        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                    ) + fadeOut(
+                        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()
+                    )
+                ) {
                     Column(modifier = Modifier.padding(start = AppSpacing.md, bottom = AppSpacing.md)) {
                         val methods = providerAuthMethods[providerId]
-                        
+
                         if (authLoading && selectedProviderId == providerId) {
                             Text("Loading auth methods...", color = AppColors.outline, style = AppTypography.labelSmall)
                         } else {
@@ -89,7 +107,7 @@ fun ProviderAuthSection(
                             if (methods?.any { it.type == "oauth" } == true) {
                                 MoccaButton(
                                     text = "Connect (OAuth)",
-                                    onClick = { 
+                                    onClick = {
                                         onStartOAuth(providerId) { url ->
                                             openUrl(url)
                                         }
@@ -101,7 +119,7 @@ fun ProviderAuthSection(
                                 Text("— or —", color = AppColors.outline, style = AppTypography.labelSmall)
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))
                             }
-                            
+
                             // Manual Key Input
                             MoccaInput(
                                 value = manualKey,

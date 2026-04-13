@@ -73,7 +73,12 @@ class GitScreen : Screen {
                         )
                     },
                     actions = {
-                        IconButton(onClick = { /* More actions */ }) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .moccaClickable(onClick = { /* More actions */ }, pressedScale = 0.92f),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Icon(Icons.Default.MoreVert, contentDescription = "More", tint = AppColors.onSurface)
                         }
                     }

@@ -87,7 +87,6 @@ fun ContextHistoryPanel(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .animateContentSize(animationSpec = MaterialTheme.motionScheme.fastSpatialSpec())
             .padding(AppSpacing.lg)
     ) {
         // Agent header
@@ -248,6 +247,10 @@ private fun ConversationHistorySection(
                             group = group,
                             isActive = isActive,
                             isRunning = isRunning,
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                            ),
                             onSessionClick = onSessionClick,
                             onExpandToggle = { onGroupExpandToggle(group.parent.id) }
                         )
@@ -270,6 +273,10 @@ private fun ConversationHistorySection(
                         val isRunning = runningSessionIds.contains(session.id)
                         
                         MoccaSessionCard(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                            ),
                             isActive = isActive,
                             onClick = { onSessionClick(session) }
                         ) {

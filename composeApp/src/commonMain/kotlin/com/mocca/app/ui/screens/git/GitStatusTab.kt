@@ -141,9 +141,12 @@ internal fun GitStatusSummary(
                         )
                     },
                     trailing = {
-                        IconButton(
-                            onClick = { screenModel.unstageFile(change.path) },
-                            modifier = Modifier.minimumInteractiveComponentSize()
+                        Box(
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .size(40.dp)
+                                .moccaClickable(onClick = { screenModel.unstageFile(change.path) }, pressedScale = 0.92f),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.Remove,
@@ -199,9 +202,12 @@ internal fun GitStatusSummary(
                     },
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            IconButton(
-                                onClick = { screenModel.stageFile(change.path) },
-                                modifier = Modifier.minimumInteractiveComponentSize()
+                            Box(
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .size(40.dp)
+                                    .moccaClickable(onClick = { screenModel.stageFile(change.path) }, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Add,
@@ -210,9 +216,12 @@ internal fun GitStatusSummary(
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
-                            IconButton(
-                                onClick = { screenModel.discardFile(change.path) },
-                                modifier = Modifier.minimumInteractiveComponentSize()
+                            Box(
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .size(40.dp)
+                                    .moccaClickable(onClick = { screenModel.discardFile(change.path) }, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.AutoMirrored.Filled.Undo,
@@ -264,9 +273,12 @@ internal fun GitStatusSummary(
                         )
                     },
                     trailing = {
-                        IconButton(
-                            onClick = { screenModel.stageFile(path) },
-                            modifier = Modifier.minimumInteractiveComponentSize()
+                        Box(
+                            modifier = Modifier
+                                .minimumInteractiveComponentSize()
+                                .size(40.dp)
+                                .moccaClickable(onClick = { screenModel.stageFile(path) }, pressedScale = 0.92f),
+                            contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 Icons.Default.Add,
@@ -334,9 +346,12 @@ internal fun GitStatusSummary(
                     },
                     trailing = {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            IconButton(
-                                onClick = { screenModel.popStash(stash.index) },
-                                modifier = Modifier.minimumInteractiveComponentSize()
+                            Box(
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .size(40.dp)
+                                    .moccaClickable(onClick = { screenModel.popStash(stash.index) }, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Unarchive,
@@ -345,9 +360,12 @@ internal fun GitStatusSummary(
                                     modifier = Modifier.size(18.dp)
                                 )
                             }
-                            IconButton(
-                                onClick = { screenModel.dropStash(stash.index) },
-                                modifier = Modifier.minimumInteractiveComponentSize()
+                            Box(
+                                modifier = Modifier
+                                    .minimumInteractiveComponentSize()
+                                    .size(40.dp)
+                                    .moccaClickable(onClick = { screenModel.dropStash(stash.index) }, pressedScale = 0.92f),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     Icons.Default.Delete,

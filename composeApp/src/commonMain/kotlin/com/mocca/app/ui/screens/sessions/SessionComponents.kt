@@ -35,6 +35,7 @@ import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.AppTypography
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
@@ -147,7 +148,7 @@ internal fun MoccaSessionCard(
         .clip(AppShapes.medium)
         .background(bgColor, AppShapes.medium)
         .border(AppSpacing.borderThin, borderColor, AppShapes.medium)
-        .clickable(onClick = onClick)
+        .moccaClickable(onClick = onClick, pressedScale = 0.98f)
 
     val finalModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
         with(sharedTransitionScope) {

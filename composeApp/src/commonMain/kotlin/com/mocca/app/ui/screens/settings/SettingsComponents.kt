@@ -2,7 +2,6 @@ package com.mocca.app.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -29,6 +28,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Status indicator dot
@@ -94,7 +94,7 @@ fun TerminalServerCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onActivate)
+                .moccaClickable(onClick = onActivate, pressedScale = 0.99f)
                 .background(if (isActive) AppColors.primary.copy(alpha = 0.1f) else Color.Transparent)
                 .padding(AppSpacing.md),
             verticalAlignment = Alignment.CenterVertically
@@ -147,10 +147,7 @@ fun TerminalServerCard(
                 modifier = Modifier
                     .weight(1f)
                     .heightIn(min = 48.dp)
-                    .clickable(
-                        onClickLabel = "Check connection for ${server.name}",
-                        onClick = onCheckConnection
-                    )
+                    .moccaClickable(onClick = onCheckConnection, pressedScale = 0.99f)
                     .padding(horizontal = AppSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {

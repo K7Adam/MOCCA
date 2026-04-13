@@ -5,7 +5,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -31,6 +30,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.*
 
 // TAB BAR
@@ -90,7 +90,7 @@ internal fun TerminalTabItem(
             .height(44.dp)
             .widthIn(min = 90.dp, max = 180.dp)
             .background(bgColor)
-            .clickable(onClick = onSelected)
+            .moccaClickable(onClick = onSelected, pressedScale = 0.98f)
             .padding(horizontal = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -124,7 +124,7 @@ internal fun TerminalTabItem(
                 modifier = Modifier
                     .size(20.dp)
                     .clip(AppShapes.circle)
-                    .clickable(onClick = onClosed),
+                    .moccaClickable(onClick = onClosed, pressedScale = 0.9f),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -281,15 +281,20 @@ internal fun TerminalInputBar(
         )
 
         // Send button
-        IconButton(
-            onClick = {
-                if (inputText.isNotEmpty() && isEnabled) {
-                    onInput(inputText + "\n")
-                    inputText = ""
-                }
-            },
-            modifier = Modifier.size(32.dp),
-            enabled = isEnabled && inputText.isNotEmpty()
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .moccaClickable(
+                    onClick = {
+                        if (inputText.isNotEmpty() && isEnabled) {
+                            onInput(inputText + "\n")
+                            inputText = ""
+                        }
+                    },
+                    enabled = isEnabled && inputText.isNotEmpty(),
+                    pressedScale = 0.92f
+                ),
+            contentAlignment = Alignment.Center
         ) {
             Icon(
                 Icons.AutoMirrored.Filled.Send,

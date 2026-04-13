@@ -22,6 +22,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 // W4-T3: Diff mode toggle
 
@@ -53,10 +54,10 @@ internal fun DiffModeTab(label: String, active: Boolean, onClick: () -> Unit) {
                 if (active) AppColors.primary.copy(alpha = 0.2f) else AppColors.background,
                 AppShapes.pill
             )
-            .clickable(
+            .moccaClickable(
+                onClick = onClick,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
+                pressedScale = 0.97f
             )
             .padding(horizontal = 10.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center

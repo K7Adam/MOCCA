@@ -78,7 +78,6 @@ fun DashboardPanel(
         modifier = modifier
             .fillMaxSize()
             .padding(AppSpacing.lg)
-            .animateContentSize(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec())
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {

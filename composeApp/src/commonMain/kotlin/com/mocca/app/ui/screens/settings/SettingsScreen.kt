@@ -2,7 +2,6 @@ package com.mocca.app.ui.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +32,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import kotlinx.collections.immutable.ImmutableList
 
 class SettingsScreen : Screen {
@@ -83,67 +83,102 @@ class SettingsScreen : Screen {
             ) {
                 // Servers Section
                 item {
-                    ServersSection(
-                        servers = state.servers,
-                        activeServerId = state.activeServerId,
-                        connectionStatuses = state.connectionStatuses,
-                        onActivate = { screenModel.setActiveServer(it) },
-                        onEdit = { screenModel.editServer(it) },
-                        onDelete = { screenModel.deleteServer(it) },
-                        onCheckConnection = { screenModel.checkServerConnection(it) },
-                        onAddNewServer = { screenModel.addNewServer() }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        ServersSection(
+                            servers = state.servers,
+                            activeServerId = state.activeServerId,
+                            connectionStatuses = state.connectionStatuses,
+                            onActivate = { screenModel.setActiveServer(it) },
+                            onEdit = { screenModel.editServer(it) },
+                            onDelete = { screenModel.deleteServer(it) },
+                            onCheckConnection = { screenModel.checkServerConnection(it) },
+                            onAddNewServer = { screenModel.addNewServer() }
+                        )
+                    }
                 }
                 
                 // Provider Authentication Section
                 item {
-                    ProviderAuthSection(
-                        providerAuthMethods = state.providerAuthMethods,
-                        selectedProviderId = state.selectedProviderId,
-                        authLoading = state.authLoading,
-                        onLoadAuthMethods = { screenModel.loadAuthMethods(it) },
-                        onStartOAuth = { providerId, openUrl -> screenModel.startOAuth(providerId, openUrl) },
-                        onSaveManualKey = { providerId, key -> screenModel.setManualKey(providerId, key) },
-                        onRemoveAuth = { screenModel.removeProviderAuth(it) },
-                        openUrl = { uriHandler.openUri(it) }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        ProviderAuthSection(
+                            providerAuthMethods = state.providerAuthMethods,
+                            selectedProviderId = state.selectedProviderId,
+                            authLoading = state.authLoading,
+                            onLoadAuthMethods = { screenModel.loadAuthMethods(it) },
+                            onStartOAuth = { providerId, openUrl -> screenModel.startOAuth(providerId, openUrl) },
+                            onSaveManualKey = { providerId, key -> screenModel.setManualKey(providerId, key) },
+                            onRemoveAuth = { screenModel.removeProviderAuth(it) },
+                            openUrl = { uriHandler.openUri(it) }
+                        )
+                    }
                 }
                 
                 // App Configuration Section
                 item {
-                    AppConfigSection(
-                        serverDefaultProvider = state.serverDefaultProvider,
-                        serverDefaultModel = state.serverDefaultModel,
-                        serverModes = state.serverModes
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        AppConfigSection(
+                            serverDefaultProvider = state.serverDefaultProvider,
+                            serverDefaultModel = state.serverDefaultModel,
+                            serverModes = state.serverModes
+                        )
+                    }
                 }
                 
                 // Project Section
                 state.currentProject?.let { project ->
                     item {
-                        ProjectSection(
-                            currentProject = project,
-                            editingProjectPath = state.editingProjectPath,
-                            onSetEditingProjectPath = { screenModel.setEditingProjectPath(it) },
-                            onSaveProjectPath = { screenModel.saveProjectPath() }
-                        )
+                        Box(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                            )
+                        ) {
+                            ProjectSection(
+                                currentProject = project,
+                                editingProjectPath = state.editingProjectPath,
+                                onSetEditingProjectPath = { screenModel.setEditingProjectPath(it) },
+                                onSaveProjectPath = { screenModel.saveProjectPath() }
+                            )
+                        }
                     }
 
                     item {
-                        Column {
-                            Spacer(modifier = Modifier.height(AppSpacing.lg))
+                        Box(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                            )
+                        ) {
+                            Column {
+                                Spacer(modifier = Modifier.height(AppSpacing.lg))
 
-                            Text(
-                                text = "Provider and model are configured on the OpenCode server.",
-                                color = AppColors.outline,
-                                style = AppTypography.labelSmall
-                            )
-                            Spacer(modifier = Modifier.height(AppSpacing.xs))
-                            Text(
-                                text = "Update these settings via /config command in OpenCode.",
-                                color = AppColors.outline,
-                                style = AppTypography.labelSmall
-                            )
+                                Text(
+                                    text = "Provider and model are configured on the OpenCode server.",
+                                    color = AppColors.outline,
+                                    style = AppTypography.labelSmall
+                                )
+                                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                                Text(
+                                    text = "Update these settings via /config command in OpenCode.",
+                                    color = AppColors.outline,
+                                    style = AppTypography.labelSmall
+                                )
+                            }
                         }
                     }
                 }
@@ -151,87 +186,143 @@ class SettingsScreen : Screen {
                 // Server Info Section
                 state.serverVersion?.let { version ->
                     item {
-                        SettingsCard(title = "OpenCode Server Info") {
-                            SettingsRowItem(
-                                title = "Server Version",
-                                subtitle = version,
-                                isEnabled = true,
-                                showToggle = false
+                        Box(
+                            modifier = Modifier.animateItem(
+                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                             )
+                        ) {
+                            SettingsCard(title = "OpenCode Server Info") {
+                                SettingsRowItem(
+                                    title = "Server Version",
+                                    subtitle = version,
+                                    isEnabled = true,
+                                    showToggle = false
+                                )
+                            }
                         }
                     }
                 }
                 
                 // Appearance Section
                 item {
-                    AppearanceSection(
-                        preferences = state.preferences,
-                        onSetShowTokenCounts = { screenModel.setShowTokenCounts(it) },
-                        onSetShowTimestamps = { screenModel.setShowTimestamps(it) },
-                        onSetCompactMode = { screenModel.setCompactMode(it) },
-                        onSetHideApiKeys = { screenModel.setHideApiKeys(it) },
-                        onSetFontScale = { screenModel.setFontScale(it) },
-                        onSetCodeFontFamily = { screenModel.setCodeFontFamily(it) }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        AppearanceSection(
+                            preferences = state.preferences,
+                            onSetShowTokenCounts = { screenModel.setShowTokenCounts(it) },
+                            onSetShowTimestamps = { screenModel.setShowTimestamps(it) },
+                            onSetCompactMode = { screenModel.setCompactMode(it) },
+                            onSetHideApiKeys = { screenModel.setHideApiKeys(it) },
+                            onSetFontScale = { screenModel.setFontScale(it) },
+                            onSetCodeFontFamily = { screenModel.setCodeFontFamily(it) }
+                        )
+                    }
                 }
                 
                 // Chat Section
                 item {
-                    ChatSection(
-                        preferences = state.preferences,
-                        onSetAutoScroll = { screenModel.setAutoScroll(it) },
-                        onSetConfirmDelete = { screenModel.setConfirmDelete(it) },
-                        onSetShowThinkingBlocks = { screenModel.setShowThinkingBlocks(it) }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        ChatSection(
+                            preferences = state.preferences,
+                            onSetAutoScroll = { screenModel.setAutoScroll(it) },
+                            onSetConfirmDelete = { screenModel.setConfirmDelete(it) },
+                            onSetShowThinkingBlocks = { screenModel.setShowThinkingBlocks(it) }
+                        )
+                    }
                 }
                 
                 // Notifications Section
                 item {
-                    NotificationsSection(
-                        preferences = state.preferences,
-                        onSetNotifyPermissions = { screenModel.setNotifyPermissions(it) },
-                        onSetNotifySessionComplete = { screenModel.setNotifySessionComplete(it) },
-                        onSetNotifyConnectionLost = { screenModel.setNotifyConnectionLost(it) }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        NotificationsSection(
+                            preferences = state.preferences,
+                            onSetNotifyPermissions = { screenModel.setNotifyPermissions(it) },
+                            onSetNotifySessionComplete = { screenModel.setNotifySessionComplete(it) },
+                            onSetNotifyConnectionLost = { screenModel.setNotifyConnectionLost(it) }
+                        )
+                    }
                 }
                 
                 // Connection Section
                 item {
-                    ConnectionSection(
-                        preferences = state.preferences,
-                        onSetAutoReconnect = { screenModel.setAutoReconnect(it) },
-                        onSetDataSaverMode = { screenModel.setDataSaverMode(it) }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        ConnectionSection(
+                            preferences = state.preferences,
+                            onSetAutoReconnect = { screenModel.setAutoReconnect(it) },
+                            onSetDataSaverMode = { screenModel.setDataSaverMode(it) }
+                        )
+                    }
                 }
                 
                 // Privacy & Security Section
                 item {
-                    PrivacySecuritySection(
-                        preferences = state.preferences,
-                        onSetScreenSecurity = { screenModel.setScreenSecurity(it) },
-                        onSetClearCacheOnExit = { screenModel.setClearCacheOnExit(it) },
-                        onShowClearCacheDialog = { screenModel.showClearCacheDialog() },
-                        onResetPreferences = { screenModel.resetPreferencesToDefaults() }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        PrivacySecuritySection(
+                            preferences = state.preferences,
+                            onSetScreenSecurity = { screenModel.setScreenSecurity(it) },
+                            onSetClearCacheOnExit = { screenModel.setClearCacheOnExit(it) },
+                            onShowClearCacheDialog = { screenModel.showClearCacheDialog() },
+                            onResetPreferences = { screenModel.resetPreferencesToDefaults() }
+                        )
+                    }
                 }
                 
                 // App Updates Section
                 item {
-                    AppUpdatesSection(
-                        githubToken = state.githubToken,
-                        githubTokenStatus = state.githubTokenStatus,
-                        isValidatingToken = state.isValidatingToken,
-                        isLoading = state.isLoading,
-                        message = state.message,
-                        onSaveToken = { screenModel.saveGitHubToken(it) },
-                        onValidateToken = { screenModel.validateGitHubToken() },
-                        onCheckUpdates = { screenModel.checkForUpdates() }
-                    )
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        AppUpdatesSection(
+                            githubToken = state.githubToken,
+                            githubTokenStatus = state.githubTokenStatus,
+                            isValidatingToken = state.isValidatingToken,
+                            isLoading = state.isLoading,
+                            message = state.message,
+                            onSaveToken = { screenModel.saveGitHubToken(it) },
+                            onValidateToken = { screenModel.validateGitHubToken() },
+                            onCheckUpdates = { screenModel.checkForUpdates() }
+                        )
+                    }
                 }
                 
                 // Experimental Section
                 item {
-                    ExperimentalSection(navigator = navigator)
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        ExperimentalSection(navigator = navigator)
+                    }
                 }
             }
         
@@ -883,12 +974,12 @@ fun ProviderAuthSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { 
+                        .moccaClickable(onClick = {
                             isExpanded = !isExpanded
                             if (isExpanded) {
                                 onLoadAuthMethods(providerId)
                             }
-                        }
+                        }, pressedScale = 0.99f)
                         .padding(vertical = AppSpacing.sm),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
@@ -1089,16 +1180,10 @@ fun SettingsRowItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                        indication = androidx.compose.material3.ripple(color = AppColors.white.copy(alpha = 0.1f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+            .moccaClickable(
+                onClick = onClick,
+                pressedScale = 0.99f,
+                rippleColor = AppColors.white.copy(alpha = 0.1f)
             )
             .padding(vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically

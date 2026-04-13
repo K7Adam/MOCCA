@@ -30,6 +30,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.McpResource
 import com.mocca.app.domain.model.McpResourceContent
 import com.mocca.app.ui.components.modern.MoccaIconButton
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -205,7 +206,7 @@ private fun McpResourceItem(
             .clip(AppShapes.card)
             .background(AppColors.surfaceVariant.copy(alpha = 0.5f), AppShapes.card)
             .border(AppSpacing.borderThin, borderColor.copy(alpha = 0.4f), AppShapes.card)
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(AppSpacing.md)
     ) {
         Row(

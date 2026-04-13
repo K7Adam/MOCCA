@@ -37,9 +37,15 @@ class TerminalScreen : Screen {
                     subtitle = state.activeTab?.let { "${state.cols}×${state.rows}" },
                     actions = {
                         // New tab button
-                        IconButton(
-                            onClick = { screenModel.createTab() },
-                            modifier = Modifier.size(40.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .moccaClickable(
+                                    onClick = { screenModel.createTab() },
+                                    enabled = !state.isCreatingTab,
+                                    pressedScale = 0.92f
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
                             if (state.isCreatingTab) {
                                 LoadingIndicator(

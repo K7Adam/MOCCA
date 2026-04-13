@@ -43,6 +43,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 @Composable
 internal fun SetupChecklist() {
@@ -147,7 +148,7 @@ internal fun ServerListItem(
             .clip(AppShapes.card)
             .background(backgroundColor, AppShapes.card)
             .border(AppSpacing.borderThin, borderColor, AppShapes.card)
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -224,7 +225,7 @@ internal fun ErrorMessage(
             style = AppTypography.labelSmall,
             color = AppColors.primary,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.clickable(onClick = onRetry)
+            modifier = Modifier.moccaClickable(onClick = onRetry, pressedScale = 0.98f)
         )
     }
 }
@@ -293,7 +294,7 @@ internal fun CredentialDialog(
                 text = "Cancel",
                 style = AppTypography.bodyMedium,
                 color = AppColors.onSurfaceVariant,
-                modifier = Modifier.clickable(onClick = onDismiss)
+                modifier = Modifier.moccaClickable(onClick = onDismiss, pressedScale = 0.98f)
             )
         }
     )

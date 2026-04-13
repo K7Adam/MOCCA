@@ -2,7 +2,6 @@ package com.mocca.app.ui.screens.mcp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -23,6 +22,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 @Composable
 internal fun McpServerCard(
@@ -44,7 +44,7 @@ internal fun McpServerCard(
             .clip(AppShapes.card)
             .background(AppColors.surfaceVariant.copy(alpha = 0.5f), AppShapes.card)
             .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), AppShapes.card)
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(AppSpacing.md)
     ) {
         Row(
@@ -173,7 +173,12 @@ internal fun McpErrorBanner(
             style = AppTypography.bodySmall,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = onDismiss) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .moccaClickable(onClick = onDismiss, pressedScale = 0.92f),
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Dismiss",
