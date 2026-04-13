@@ -3,9 +3,7 @@ package com.mocca.app.ui.components.modern
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,13 +23,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.SplitButtonLayout
 import androidx.compose.material3.SplitButtonDefaults
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -46,6 +42,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.focusBorder
+import com.mocca.app.ui.theme.moccaClickable
 
 object MoccaButtonDefaults {
     val Height: Dp = 48.dp
@@ -73,15 +70,6 @@ fun MoccaButton(
     showArrow: Boolean = false
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // State-of-the-art M3 Expressive scale motion
-    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = scaleSpec,
-        label = "buttonScale"
-    )
 
     val bgColor = if (enabled) backgroundColor else disabledBackgroundColor
     val txtColor = if (enabled) textColor else disabledTextColor
@@ -91,20 +79,15 @@ fun MoccaButton(
         modifier = modifier
             .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
-            .scale(scale)
             .background(bgColor, AppShapes.pill)
             .focusBorder(interactionSource)
             .semantics { role = Role.Button }
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+            .moccaClickable(
+                onClick = onClick,
+                interactionSource = interactionSource,
+                pressedScale = 0.94f,
+                rippleColor = Color.Black.copy(alpha = 0.2f),
+                enabled = enabled
             )
             .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
@@ -223,14 +206,7 @@ fun MoccaOutlinedButton(
     icon: ImageVector? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
     val isFocused by interactionSource.collectIsFocusedAsState()
-    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.94f else 1f,
-        animationSpec = scaleSpec,
-        label = "buttonScaleOutlined"
-    )
 
     val brdColor = if (enabled) {
         if (isFocused) AppColors.primary else borderColor
@@ -243,20 +219,15 @@ fun MoccaOutlinedButton(
         modifier = modifier
             .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
-            .scale(scale)
             .background(Color.Transparent, AppShapes.pill)
             .border(currentBorderWidth, brdColor, AppShapes.pill)
             .semantics { role = Role.Button }
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(color = AppColors.primary.copy(alpha = 0.2f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+            .moccaClickable(
+                onClick = onClick,
+                interactionSource = interactionSource,
+                pressedScale = 0.94f,
+                rippleColor = AppColors.primary.copy(alpha = 0.2f),
+                enabled = enabled
             )
             .padding(horizontal = MoccaButtonDefaults.PaddingHorizontal),
         contentAlignment = Alignment.Center
@@ -297,13 +268,6 @@ fun MoccaCompactButton(
     icon: ImageVector? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scaleSpec = MaterialTheme.motionScheme.fastSpatialSpec<Float>()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
-        animationSpec = scaleSpec,
-        label = "buttonScaleCompact"
-    )
 
     val bgColor = if (enabled) backgroundColor else AppColors.onSurfaceVariantDark
     val txtColor = if (enabled) textColor else AppColors.onSurfaceVariant
@@ -312,20 +276,15 @@ fun MoccaCompactButton(
         modifier = modifier
             .heightIn(min = MoccaButtonDefaults.Height)
             .height(height)
-            .scale(scale)
             .background(bgColor, AppShapes.pill)
             .focusBorder(interactionSource)
             .semantics { role = Role.Button }
-            .then(
-                if (enabled) {
-                    Modifier.clickable(
-                        interactionSource = interactionSource,
-                        indication = ripple(color = Color.Black.copy(alpha = 0.2f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+            .moccaClickable(
+                onClick = onClick,
+                interactionSource = interactionSource,
+                pressedScale = 0.92f,
+                rippleColor = Color.Black.copy(alpha = 0.2f),
+                enabled = enabled
             )
             .padding(horizontal = paddingHorizontal),
         contentAlignment = Alignment.Center

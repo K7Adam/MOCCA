@@ -57,6 +57,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Rich chat input field with status bar and action toolbar.
@@ -179,8 +180,11 @@ fun RichChatInput(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(
-                modifier = Modifier
-                    .clickable(enabled = providerResponse != null) { showModelSelector = true },
+                modifier = Modifier.moccaClickable(
+                    onClick = { showModelSelector = true },
+                    enabled = providerResponse != null,
+                    pressedScale = 0.98f
+                ),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
@@ -189,7 +193,7 @@ fun RichChatInput(
             }
             if (variants.isNotEmpty()) {
                 Row(
-                    modifier = Modifier.clickable { showVariantSelector = true },
+                    modifier = Modifier.moccaClickable(onClick = { showVariantSelector = true }, pressedScale = 0.98f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                 ) {
@@ -198,7 +202,7 @@ fun RichChatInput(
                 }
             }
             Row(
-                modifier = Modifier.clickable { /* Toggle Agent Logic */ },
+                modifier = Modifier.moccaClickable(onClick = { /* Toggle Agent Logic */ }, pressedScale = 0.98f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {

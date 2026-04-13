@@ -23,6 +23,7 @@ import com.mocca.app.domain.model.RecentModel
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -353,7 +354,11 @@ private fun ProviderSection(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(enabled = enabled) { onModelSelected(modelId) }
+                        .moccaClickable(
+                            onClick = { onModelSelected(modelId) },
+                            enabled = enabled,
+                            pressedScale = 0.99f
+                        )
                         .background(
                             if (isSelected) 
                                 AppColors.primary.copy(alpha = 0.2f) 

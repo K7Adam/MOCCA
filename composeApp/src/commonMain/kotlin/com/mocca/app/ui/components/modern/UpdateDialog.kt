@@ -23,6 +23,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 @Composable
 fun UpdateDialog(
@@ -110,20 +111,24 @@ fun UpdateDialog(
                                 color = AppColors.onSurfaceVariant
                             )
 
-                            IconButton(
-                                onClick = {
-                                    // Build text to copy including logs and error
-                                    val textToCopy = buildString {
-                                        logs.forEach { log ->
-                                            appendLine("> $log")
-                                        }
-                                        if (error != null) {
-                                            appendLine("> ERROR: $error")
-                                        }
-                                    }
-                                    clipboardManager.setText(AnnotatedString(textToCopy))
-                                },
-                                modifier = Modifier.size(20.dp)
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .moccaClickable(
+                                        onClick = {
+                                            val textToCopy = buildString {
+                                                logs.forEach { log ->
+                                                    appendLine("> $log")
+                                                }
+                                                if (error != null) {
+                                                    appendLine("> ERROR: $error")
+                                                }
+                                            }
+                                            clipboardManager.setText(AnnotatedString(textToCopy))
+                                        },
+                                        pressedScale = 0.9f
+                                    ),
+                                contentAlignment = Alignment.Center
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.ContentCopy,

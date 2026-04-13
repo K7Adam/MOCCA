@@ -34,6 +34,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -132,7 +133,7 @@ private fun ForkMessageRow(
             .fillMaxWidth()
             .background(AppColors.surfaceVariant, AppShapes.small)
             .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.4f), AppShapes.small)
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
     ) {
         Column {

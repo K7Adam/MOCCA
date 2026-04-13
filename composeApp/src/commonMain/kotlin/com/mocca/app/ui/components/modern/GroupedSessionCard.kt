@@ -47,6 +47,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -364,7 +365,7 @@ private fun ChildSessionCard(
                 else AppColors.outline,
                 shape = AppShapes.medium
             )
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically

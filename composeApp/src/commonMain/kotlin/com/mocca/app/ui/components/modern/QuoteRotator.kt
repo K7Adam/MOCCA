@@ -7,7 +7,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.SizeTransform
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import androidx.compose.animation.core.tween
 import kotlinx.coroutines.delay
 
 /**
@@ -76,7 +74,8 @@ fun QuoteRotator(
 ) {
     var currentIndex by remember { mutableStateOf(0) }
     
-    LaunchedEffect(Unit) {
+    LaunchedEffect(quotes, intervalMs, isLoading) {
+        if (quotes.isEmpty() || isLoading) return@LaunchedEffect
         while (true) {
             delay(intervalMs)
             currentIndex = (currentIndex + 1) % quotes.size
@@ -92,8 +91,8 @@ fun QuoteRotator(
         // Loading indicator (shown under ASCII art when loading)
         AnimatedVisibility(
             visible = isLoading,
-            enter = fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(1000))
+            enter = fadeIn(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec()),
+            exit = fadeOut(animationSpec = MaterialTheme.motionScheme.fastEffectsSpec())
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -113,17 +112,19 @@ fun QuoteRotator(
         }
         
         // Rotating quote with fade animation (only show when NOT loading)
+        val fadeInSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val fadeOutSpec = MaterialTheme.motionScheme.fastEffectsSpec<Float>()
+        val contentFadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec<Float>()
         AnimatedVisibility(
             visible = !isLoading,
-            enter = fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(1000))
+            enter = fadeIn(animationSpec = fadeInSpec),
+            exit = fadeOut(animationSpec = fadeOutSpec)
         ) {
             AnimatedContent(
                 targetState = currentIndex,
                 transitionSpec = {
-                    (fadeIn(animationSpec = tween(1000)) togetherWith
-                        fadeOut(animationSpec = tween(1000)))
-                        .using(SizeTransform(clip = true))
+                    fadeIn(animationSpec = contentFadeInSpec) togetherWith
+                        fadeOut(animationSpec = fadeOutSpec)
                 },
                 label = "quoteAnimation"
             ) { index ->

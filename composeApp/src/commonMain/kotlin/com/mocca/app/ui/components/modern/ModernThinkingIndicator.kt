@@ -2,14 +2,10 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.material3.MaterialTheme
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,8 +40,6 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
 
 /**
@@ -117,20 +111,12 @@ private fun ExpandableThinkingPreview(content: String) {
             .clickable { expanded = !expanded }
             .padding(AppSpacing.md)
     ) {
-        AnimatedContent(
-            targetState = displayContent,
-            transitionSpec = {
-                fadeIn(animationSpec = tween(1000)) togetherWith fadeOut(animationSpec = tween(1000))
-            },
-            label = "thinkingContent"
-        ) { text ->
-            Text(
-                text = text,
-                color = AppColors.onSurfaceVariant,
-                style = AppTypography.bodySmall,
-                fontFamily = AppTypography.monoFamily
-            )
-        }
+        Text(
+            text = displayContent,
+            color = AppColors.onSurfaceVariant,
+            style = AppTypography.bodySmall,
+            fontFamily = AppTypography.monoFamily
+        )
         
         if (lines.size > 1) {
             Spacer(modifier = Modifier.height(AppSpacing.sm))

@@ -26,6 +26,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import kotlinx.datetime.Clock
@@ -142,7 +143,12 @@ fun SyncStatusCard(
                 modifier = modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                IconButton(onClick = onRefreshClick) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .moccaClickable(onClick = onRefreshClick, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Refresh",

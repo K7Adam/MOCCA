@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -94,10 +95,11 @@ fun GitStatusModule(
 ) {
     ModuleCard(
         title = "GIT STATUS",
-        modifier = modifier.clickable(
+        modifier = modifier.moccaClickable(
+            onClick = onExpandClick,
             interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(bounded = true, color = Color.White.copy(alpha = 0.1f)),
-            onClick = onExpandClick
+            rippleColor = Color.White.copy(alpha = 0.1f),
+            pressedScale = 0.99f
         ),
         actionButton = {
             MoccaIconButton(

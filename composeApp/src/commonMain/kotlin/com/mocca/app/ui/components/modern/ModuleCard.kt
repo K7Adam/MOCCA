@@ -2,7 +2,6 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.ripple
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -34,6 +32,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 import com.mocca.app.ui.theme.innerShadow
 
@@ -141,16 +140,10 @@ fun ModuleRowItem(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .then(
-                if (onClick != null) {
-                    Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
-                        onClick = onClick
-                    )
-                } else {
-                    Modifier
-                }
+            .moccaClickable(
+                onClick = onClick,
+                pressedScale = 0.99f,
+                rippleColor = AppColors.white.copy(alpha = 0.1f)
             )
             .padding(vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
@@ -250,10 +243,10 @@ fun ModuleActionButton(
             .heightIn(min = 48.dp)
             .clip(AppShapes.small)
             .border(AppSpacing.borderThin, AppColors.outline, AppShapes.small)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = AppColors.white.copy(alpha = 0.1f)),
-                onClick = onClick
+            .moccaClickable(
+                onClick = onClick,
+                pressedScale = 0.97f,
+                rippleColor = AppColors.white.copy(alpha = 0.1f)
             )
             .padding(horizontal = AppSpacing.sm, vertical = 4.dp),
         contentAlignment = Alignment.Center

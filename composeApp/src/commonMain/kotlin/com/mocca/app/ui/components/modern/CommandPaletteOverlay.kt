@@ -45,6 +45,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Full-screen command palette overlay, equivalent to OpenCode Web Cmd+K modal.
@@ -170,10 +171,10 @@ fun CommandPaletteOverlay(
                             tint = AppColors.outline,
                             modifier = Modifier
                                 .size(16.dp)
-                                .clickable(
+                                .moccaClickable(
+                                    onClick = { query = "" },
                                     interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    onClick = { query = "" }
+                                    pressedScale = 0.92f
                                 )
                         )
                     }
@@ -317,10 +318,10 @@ private fun CommandPaletteItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
+            .moccaClickable(
+                onClick = onClick,
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick
+                pressedScale = 0.99f
             )
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
