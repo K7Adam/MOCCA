@@ -1,15 +1,9 @@
 package com.mocca.app.ui.screens.main
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.runtime.CompositionLocalProvider
-import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +20,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
 
@@ -45,10 +40,10 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.NavConstants
 import com.mocca.app.ui.theme.AppShapes
 
+import com.mocca.app.ui.navigation.PanelProgressHolder
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
-import com.mocca.app.ui.navigation.ModernTransitions
 import com.mocca.app.ui.screens.chat.ChatContent
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.chat.ScrollDirection
@@ -78,6 +73,7 @@ import com.mocca.app.ui.components.modern.QuoteRotator
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.components.modern.ScrollToBottomButton
 import com.mocca.app.ui.components.modern.UpdateDialog
+import com.mocca.app.ui.theme.LocalAppPerformance
 
 /**
  * Main screen with swipe panel navigation.
@@ -138,10 +134,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         }
 
         val panelState = rememberPanelState()
-
-
-        // Track real-time drag progress for animated indicator (0.0 = right, 0.5 = center, 1.0 = left)
-        var dragProgress by remember { mutableFloatStateOf(0.5f) }
+        val progressHolder = remember { PanelProgressHolder() }
+        val hapticFeedback = LocalHapticFeedback.current
+        var lastSnappedPanelState by remember { mutableStateOf(panelState.state) }
 
         // Track scroll direction for chat input auto-hide
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
@@ -153,6 +148,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
         // Reset chat-specific state
         LaunchedEffect(panelState.state) {
+            if (panelState.state != lastSnappedPanelState) {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                lastSnappedPanelState = panelState.state
+            }
+
             if (panelState.state != PanelState.CENTER) {
                 scrollDirection = ScrollDirection.IDLE
                 showScrollToBottom = false
@@ -160,104 +160,89 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        val panelTransition = ModernTransitions.panelTransition()
+        val performance = LocalAppPerformance.current
 
-        AnimatedContent(
-            targetState = panelState.state,
-            label = "panelTransition",
-            transitionSpec = { panelTransition }
-        ) { targetPanelState ->
-            CompositionLocalProvider(
-                LocalNavAnimatedVisibilityScope provides this
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    DynamicExpressiveBackground()
+        Box(modifier = Modifier.fillMaxSize()) {
+            if (performance.useAmbientEffects) {
+                DynamicExpressiveBackground()
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(AppColors.background)
+                )
+            }
 
-                    // Content area - full screen, unified bottom bar floats above
+            // Content area - full screen, unified bottom bar floats above
 
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        containerColor = Color.Transparent,
-                        bottomBar = {
-                            val sharedTransitionScope = LocalSharedTransitionScope.current
-                            val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                containerColor = Color.Transparent,
+                bottomBar = {
+                    val bottomBarModifier = Modifier.navigationBarsPadding()
 
-                            val bottomBarModifier =
-                                if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-                                    with(sharedTransitionScope) {
-                                        Modifier
-                                            .navigationBarsPadding()
-                                            .sharedBounds(
-                                                rememberSharedContentState(key = "bottom_bar"),
-                                                animatedVisibilityScope = animatedVisibilityScope
-                                            )
-                                    }
-                                } else {
-                                    Modifier
-                                        .navigationBarsPadding()
-                                }
-
-                            Box(
-                                modifier = Modifier.padding(
-                                    horizontal = AppSpacing.screenPaddingHorizontalCompact,
-                                    vertical = AppSpacing.sm
-                                )
-                            ) {
-                                Surface(
-                                    modifier = bottomBarModifier.fillMaxWidth(),
-                                    color = AppColors.surfaceContainer,
-                                    shape = AppShapes.extraLarge
-                                ) {
-                                    PersistentNavRow(
-                                        dragProgress = dragProgress,
-                                        onItemClick = { panelState.state = it },
-                                        showLabels = true,
-                                        isAgentRunning = !chatState.isSessionIdle,
-                                        modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
-                                    )
-                                }
-                            }
+                    Box(
+                        modifier = Modifier.padding(
+                            horizontal = AppSpacing.screenPaddingHorizontal,
+                            vertical = AppSpacing.xs
+                        )
+                    ) {
+                        Surface(
+                            modifier = bottomBarModifier.fillMaxWidth(),
+                            color = AppColors.surfaceContainer,
+                            shape = AppShapes.extraLarge,
+                            tonalElevation = 2.dp
+                        ) {
+                        PersistentNavRow(
+                                dragProgress = progressHolder.dragProgress,
+                                onItemClick = { panelState.state = it },
+                                showLabels = true,
+                                isAgentRunning = !chatState.isSessionIdle,
+                                modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
+                            )
                         }
-                    ) { paddingValues ->
-                        SwipePanelLayout(
-                            modifier = Modifier.fillMaxSize().padding(paddingValues),
-                            leftPanel = {
-                                ContextHistoryPanel(
-                                    modifier = Modifier.fillMaxHeight()
-                                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
-                                    sessions = state.sessions,
-                                    sessionGroups = state.sessionGroups,
-                                    runningSessionIds = state.runningSessionIds,
-                                    currentSessionId = state.currentSessionId,
-                                    mcpStatus = state.mcpStatus,
-                                    model = chatState.modelName,
-                                    latency = state.latency,
-                                    port = state.port,
-                                    usedTokens = chatState.contextWindowUsage,
-                                    maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
-                                    agentName = chatState.agentName,
-                                    appVersion = state.appVersion,
-                                    isCreatingSession = state.isCreatingSession,
-                                    loadingSessionId = state.loadingSessionId,
-                                    newlyCreatedSessionId = state.newlyCreatedSessionId,
-                                    isRefreshing = state.isLoading,
-                                    onSessionClick = { session ->
-                                        screenModel.selectSession(session.id) {
-                                            panelState.closePanel()
-                                        }
-                                    },
-                                    onNewSessionClick = {
-                                        screenModel.createSession {
-                                            panelState.closePanel()
-                                        }
-                                    },
-                                    onRefresh = { screenModel.refreshAll() },
-                                    onGroupExpandToggle = { groupId ->
-                                        screenModel.toggleGroupExpanded(groupId)
-                                    }
-                                )
+                    }
+                }
+            ) { paddingValues ->
+                SwipePanelLayout(
+                    modifier = Modifier.fillMaxSize().padding(paddingValues),
+                    leftPanel = {
+                        ContextHistoryPanel(
+                            modifier = Modifier.fillMaxHeight()
+                                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
+                            sessions = state.sessions,
+                            sessionGroups = state.sessionGroups,
+                            runningSessionIds = state.runningSessionIds,
+                            currentSessionId = state.currentSessionId,
+                            mcpStatus = state.mcpStatus,
+                            model = chatState.modelName,
+                            latency = state.latency,
+                            port = state.port,
+                            usedTokens = chatState.contextWindowUsage,
+                            maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
+                            agentName = chatState.agentName,
+                            appVersion = state.appVersion,
+                            isCreatingSession = state.isCreatingSession,
+                            loadingSessionId = state.loadingSessionId,
+                            newlyCreatedSessionId = state.newlyCreatedSessionId,
+                            isRefreshing = state.isLoading,
+                            onSessionClick = { session ->
+                                screenModel.selectSession(session.id) {
+                                    panelState.closePanel()
+                                }
                             },
-                            centerPanel = {
+                            onNewSessionClick = {
+                                screenModel.createSession {
+                                    panelState.closePanel()
+                                }
+                            },
+                            onRefresh = { screenModel.refreshAll() },
+                            onGroupExpandToggle = { groupId ->
+                                screenModel.toggleGroupExpanded(groupId)
+                            }
+                        )
+                    },
+                    centerPanel = {
                                 // Show ChatContent if session is selected (input disabled when not connected)
                                 if (state.currentSessionId != null) {
                                     Column(modifier = Modifier.fillMaxSize()) {
@@ -423,33 +408,23 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                                         }
                                     }
                                 }
-                            },
-                            rightPanel = {
-                                DashboardPanel(
-                                    screenModel = dashboardScreenModel,
-                                    onMcpConfigClick = { navigator.push(McpScreen()) },
-                                    onSettingsClick = { navigator.push(SettingsScreen()) },
-                                    onGitClick = { navigator.push(GitScreen()) },
-                                    onFilesClick = { navigator.push(FilesScreen()) },
-                                    onSkillsClick = { },
-                                    onSkillClick = { },
-                                    onTerminalClick = { navigator.push(TerminalScreen()) }
-                                )
-                            },
-                            panelState = panelState.state,
-                            onPanelStateChange = { panelState.state = it },
-                            onDragProgressChange = { progress -> dragProgress = progress }
+                    },
+                    rightPanel = {
+                        DashboardPanel(
+                            screenModel = dashboardScreenModel,
+                            onMcpConfigClick = { navigator.push(McpScreen()) },
+                            onSettingsClick = { navigator.push(SettingsScreen()) },
+                            onGitClick = { navigator.push(GitScreen()) },
+                            onFilesClick = { navigator.push(FilesScreen()) },
+                            onSkillsClick = { },
+                            onSkillClick = { },
+                            onTerminalClick = { navigator.push(TerminalScreen()) }
                         )
-                    }
-                    // End of content wrapper
-
-                    // UNIFIED FLOATING BOTTOM BAR
-
-                    // Surface-based bottom bar with dynamic adaptation
-                    // Nav row is ALWAYS visible; only chat input auto-hides on scroll
-
-                    // Bottom bar is now handled by Scaffold
-                }
+                    },
+                    panelState = panelState.state,
+                    onPanelStateChange = { panelState.state = it },
+                    progressHolder = progressHolder
+                )
             }
         }
     }
