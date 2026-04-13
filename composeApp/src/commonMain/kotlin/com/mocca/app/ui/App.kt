@@ -1,10 +1,14 @@
 package com.mocca.app.ui
 
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -26,12 +30,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
@@ -46,13 +53,13 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppPerformance
 import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.theme.PerformanceTier
+import com.mocca.app.ui.theme.detectPerformanceTier
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 @Composable
 fun App() {
-    // Simple heuristic: could be improved with actual device info via expect/actual
-    val performance = remember { AppPerformance(tier = PerformanceTier.HIGH) }
+    val performance = remember { AppPerformance(tier = detectPerformanceTier()) }
     val preferencesManager = koinInject<PreferencesManager>()
     val preferences by preferencesManager.preferences.collectAsState()
     
@@ -85,8 +92,12 @@ fun App() {
                         }
 
                         Navigator(startScreen) { navigator ->
-                            val transitionSpec = ModernTransitions.expressiveFadeScale()
-                            
+                            val transitionSpec = if (performance.useHeavyNavigationMotion) {
+                                ModernTransitions.expressiveFadeScale()
+                            } else {
+                                ModernTransitions.rootScreenFade()
+                            }
+                             
                             androidx.compose.animation.AnimatedContent(
                                 targetState = navigator.lastItem,
                                 transitionSpec = { transitionSpec },
@@ -106,9 +117,52 @@ fun App() {
 
 @Composable
 private fun SplashScreen() {
+    var entrancePhase by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        delay(100)
+        entrancePhase = 1
+        delay(500)
+        entrancePhase = 2
+        delay(350)
+        entrancePhase = 3
+    }
+
+    val iconScale by animateFloatAsState(
+        targetValue = if (entrancePhase >= 1) 1f else 0.8f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "iconScale"
+    )
+    val iconAlpha by animateFloatAsState(
+        targetValue = if (entrancePhase >= 1) 1f else 0f,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        label = "iconAlpha"
+    )
+    val textAlpha by animateFloatAsState(
+        targetValue = if (entrancePhase >= 2) 1f else 0f,
+        animationSpec = tween(300, easing = FastOutSlowInEasing),
+        label = "textAlpha"
+    )
+    val textOffsetY by animateFloatAsState(
+        targetValue = if (entrancePhase >= 2) 0f else 12f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioNoBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "textOffsetY"
+    )
+    val loadingAlpha by animateFloatAsState(
+        targetValue = if (entrancePhase >= 3) 1f else 0f,
+        animationSpec = tween(250),
+        label = "loadingAlpha"
+    )
+
     val infiniteTransition = rememberInfiniteTransition(label = "splash")
     val breatheAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
+        initialValue = 0.85f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(2000, easing = LinearEasing),
@@ -128,7 +182,11 @@ private fun SplashScreen() {
             tint = AppColors.accent,
             modifier = Modifier
                 .size(64.dp)
-                .alpha(breatheAlpha)
+                .graphicsLayer {
+                    scaleX = iconScale
+                    scaleY = iconScale
+                    alpha = iconAlpha * if (entrancePhase >= 3) breatheAlpha else 1f
+                }
         )
 
         Spacer(modifier = Modifier.height(AppSpacing.lg))
@@ -137,13 +195,21 @@ private fun SplashScreen() {
             text = "MOCCA",
             style = AppTypography.headlineMedium,
             color = AppColors.white,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.graphicsLayer {
+                translationY = textOffsetY * density
+                alpha = textAlpha
+            }
         )
 
         Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
         LoadingIndicator(
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier
+                .size(32.dp)
+                .graphicsLayer {
+                    alpha = loadingAlpha
+                },
             color = AppColors.accent
         )
     }
