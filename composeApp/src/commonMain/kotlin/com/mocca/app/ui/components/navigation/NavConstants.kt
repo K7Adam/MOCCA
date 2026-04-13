@@ -35,7 +35,7 @@ object NavConstants {
 
     
     /** Sliding indicator width */
-    val IndicatorWidth = 28.dp
+    val IndicatorWidth = 32.dp
     
     /** Sliding indicator height */
     val IndicatorHeight = 4.dp

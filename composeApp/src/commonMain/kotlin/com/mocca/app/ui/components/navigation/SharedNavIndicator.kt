@@ -1,47 +1,56 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
-import kotlin.math.roundToInt
+import com.mocca.app.ui.theme.AppShapes
 
 /**
  * Shared sliding indicator component for bottom navigation.
- * 
- * This indicator slides smoothly in real-time as the user swipes between panels,
- * providing visual feedback for the current position in the 3-panel layout.
- * 
- * The indicator is used in both Navigation and ChatInput modes to ensure
- * consistent visual behavior.
- *
- * @param dragProgress Real-time drag progress: 0.0 (TOOLS/RIGHT) -> 0.5 (CHAT/CENTER) -> 1.0 (SESSIONS/LEFT)
- * @param travelDistancePx Total pixel distance between first and last nav item centers
- * @param modifier Modifier for styling
+ * Uses graphicsLayer for offset — skips recomposition during drag.
  */
 @Composable
 fun SharedNavIndicator(
     dragProgress: Float,
     travelDistancePx: Float,
+    isSettled: Boolean,
     modifier: Modifier = Modifier
 ) {
+    val rawOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
+    val animatedOffsetPx by animateFloatAsState(
+        targetValue = rawOffsetPx,
+        animationSpec = if (isSettled) {
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        } else {
+            snap()
+        },
+        label = "indicatorOffset"
+    )
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(NavConstants.IndicatorHeight),
         contentAlignment = Alignment.Center
     ) {
-        // Subtle track background for visibility
+        // Subtle track background
         Box(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -51,20 +60,13 @@ fun SharedNavIndicator(
                     shape = AppShapes.extraSmall
                 )
         )
-        
-        // Active indicator pill that slides with drag progress
+
+        // Active indicator pill — follows drag directly, then springs on settle
         Box(
             modifier = Modifier
                 .width(NavConstants.IndicatorWidth)
                 .height(NavConstants.IndicatorHeight)
-                .offset {
-                    // Calculate offset: 
-                    // - At progress 0.0 (TOOLS/Right): indicator is at +travelDistance/2
-                    // - At progress 0.5 (CHAT/Center): indicator is at 0
-                    // - At progress 1.0 (SESSIONS/Left): indicator is at -travelDistance/2
-                    val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
-                    IntOffset(xOffsetPx.roundToInt(), 0)
-                }
+                .graphicsLayer { translationX = animatedOffsetPx }
                 .background(
                     color = AppColors.primary,
                     shape = RoundedCornerShape(2.dp)

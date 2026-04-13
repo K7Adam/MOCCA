@@ -1,15 +1,14 @@
 package com.mocca.app.ui.components.navigation
 
-import androidx.compose.material3.MaterialTheme
-
-import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Computer
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,9 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -55,11 +55,7 @@ import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-import com.mocca.app.ui.navigation.LocalSharedTransitionScope
-import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
+import com.mocca.app.ui.theme.moccaClickable
 import kotlin.math.abs
 
 /**
@@ -87,9 +83,10 @@ fun PersistentNavRow(
     modifier: Modifier = Modifier
 ) {
     val items = defaultBottomNavItems
-    var travelDistancePx by remember { mutableFloatStateOf(0f) }
-    var firstItemCenterPx by remember { mutableFloatStateOf(0f) }
-    var lastItemCenterPx by remember { mutableFloatStateOf(0f) }
+    var rowWidthPx by remember { mutableFloatStateOf(0f) }
+    val isSettled = abs(dragProgress - 0f) < 0.05f ||
+        abs(dragProgress - 0.5f) < 0.05f ||
+        abs(dragProgress - 1f) < 0.05f
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -100,7 +97,10 @@ fun PersistentNavRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f), // Allow the row to take all available space above the indicator
+                .weight(1f)
+                .onSizeChanged { size ->
+                    rowWidthPx = size.width.toFloat()
+                },
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
@@ -111,30 +111,16 @@ fun PersistentNavRow(
 
                 Box(
                     modifier = Modifier
-                        .weight(1f) // 1/3 width
-                        .fillMaxHeight() // Fill available height in the row
+                        .weight(1f)
+                        .fillMaxHeight()
                         .focusBorder(interactionSource)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null, // No ripple for cleaner look
-                            onClick = { onItemClick(item.panelState) }
+                        .moccaClickable(
+                            onClick = { onItemClick(item.panelState) },
+                            interactionSource = interactionSource
                         )
                         .semantics {
                             role = Role.Tab
                             selected = isSelected
-                        }
-                        .onGloballyPositioned { coords ->
-                            val center = coords.size.width / 2f
-                            if (index == 0) firstItemCenterPx = coords.localToRoot(
-                                Offset(center, 0f)
-                            ).x
-                            if (index == items.size - 1) lastItemCenterPx = coords.localToRoot(
-                                Offset(center, 0f)
-                            ).x
-
-                            if (firstItemCenterPx != 0f && lastItemCenterPx != 0f) {
-                                travelDistancePx = lastItemCenterPx - firstItemCenterPx
-                            }
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -154,7 +140,8 @@ fun PersistentNavRow(
         // Shared sliding indicator
         SharedNavIndicator(
             dragProgress = dragProgress,
-            travelDistancePx = travelDistancePx
+            travelDistancePx = rowWidthPx * 2f / 3f,
+            isSettled = isSettled
         )
     }
 }
@@ -172,7 +159,6 @@ fun PersistentNavRow(
  * @param onClick Callback when clicked
  * @param isAgentRunning Whether to show the agent running indicator (pulsing dot)
  */
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun PersistentNavItem(
     item: BottomNavItem,
@@ -181,45 +167,24 @@ private fun PersistentNavItem(
     showLabel: Boolean,
     isAgentRunning: Boolean = false
 ) {
-    val sharedTransitionScope = LocalSharedTransitionScope.current
-    val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
-
-    // Animated color transition
-    val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
-        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+    val transition = updateTransition(isSelected, label = "navItem")
+    val iconColor by transition.animateColor(
+        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
         label = "iconColor"
-    )
-
-    val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
-        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+    ) { selected -> if (selected) AppColors.primary else AppColors.outline }
+    val textColor by transition.animateColor(
+        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
         label = "textColor"
-    )
-
-    // Scale based on proximity - same animation regardless of label visibility
-    val targetScale = 1.0f + (proximity * 0.12f)
-    val scale by animateFloatAsState(
-        targetValue = targetScale,
-        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+    ) { selected -> if (selected) AppColors.primary else AppColors.outline }
+    val scale by transition.animateFloat(
+        transitionSpec = { MaterialTheme.motionScheme.fastSpatialSpec() },
         label = "scale"
-    )
-
-    val itemModifier = if (sharedTransitionScope != null && animatedVisibilityScope != null) {
-        with(sharedTransitionScope) {
-            Modifier.sharedBounds(
-                rememberSharedContentState(key = "nav_item_${item.panelState}"),
-                animatedVisibilityScope = animatedVisibilityScope
-            )
-        }
-    } else {
-        Modifier
-    }
+    ) { selected -> 1.0f + (if (selected) proximity else 0f) * 0.08f }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
-        modifier = itemModifier
+        modifier = Modifier
             // CRITICAL: Fixed touch target size - NEVER changes
             .defaultMinSize(
                 minWidth = NavConstants.TouchTargetMinWidth,
@@ -229,7 +194,10 @@ private fun PersistentNavItem(
                 horizontal = NavConstants.NavItemPaddingHorizontal,
                 vertical = NavConstants.NavItemPaddingVertical
             )
-            .scale(scale)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
     ) {
         // Icon with optional running indicator
         Box {
@@ -245,19 +213,19 @@ private fun PersistentNavItem(
             if (isAgentRunning) {
                 val infiniteTransition = rememberInfiniteTransition(label = "agentPulse")
                 val pulseScale by infiniteTransition.animateFloat(
-                    initialValue = 0.8f,
-                    targetValue = 1.2f,
+                    initialValue = 0.92f,
+                    targetValue = 1.08f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(2000, easing = LinearEasing),
+                        animation = tween(1400, easing = LinearEasing),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseScale"
                 )
                 val pulseAlpha by infiniteTransition.animateFloat(
-                    initialValue = 0.6f,
-                    targetValue = 1f,
+                    initialValue = 0.55f,
+                    targetValue = 0.9f,
                     animationSpec = infiniteRepeatable(
-                        animation = tween(2000, easing = LinearEasing),
+                        animation = tween(1400, easing = LinearEasing),
                         repeatMode = RepeatMode.Reverse
                     ),
                     label = "pulseAlpha"
