@@ -16,13 +16,13 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import com.mocca.app.ui.theme.moccaClickable
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.mocca.app.ui.components.modern.MoccaTextButton
@@ -104,7 +104,12 @@ internal fun TerminalErrorOverlay(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f)
                 )
-                IconButton(onClick = onDismiss) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .moccaClickable(onClick = onDismiss, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(imageVector = Icons.Default.Close, contentDescription = "Dismiss", tint = AppColors.onSurface)
                 }
             }
@@ -152,7 +157,12 @@ internal fun SessionDisposedBanner(
                 )
             }
         }
-        IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .moccaClickable(onClick = onDismiss, pressedScale = 0.92f),
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
                 Icons.Filled.Close,
                 contentDescription = "Dismiss",

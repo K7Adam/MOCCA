@@ -52,14 +52,14 @@ fun rememberAutoScrollState(
     listState: LazyListState,
     enabled: Boolean = true
 ): AutoScrollState {
-    val isAtBottom by remember(listState) {
+    val isAtBottom by remember(listState, enabled) {
         derivedStateOf {
             if (!enabled) true
             else listState.firstVisibleItemIndex <= BOTTOM_THRESHOLD
         }
     }
 
-    val userHasScrolledUp by remember(listState) {
+    val userHasScrolledUp by remember(listState, enabled) {
         derivedStateOf {
             if (!enabled) false
             else {
@@ -68,7 +68,7 @@ fun rememberAutoScrollState(
         }
     }
 
-    val shouldAutoScroll by remember(listState) {
+    val shouldAutoScroll by remember(listState, enabled) {
         derivedStateOf {
             if (!enabled) false
             else isAtBottom

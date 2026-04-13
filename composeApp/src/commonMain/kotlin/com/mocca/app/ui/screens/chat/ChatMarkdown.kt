@@ -32,10 +32,10 @@ fun MarkdownText(
         inlineCodeBackground = AppColors.surfaceContainer,
         linkText = AppColors.primary
     )
-    
+
     val mdTypography = markdownTypography(
         text = style,
-        code = style.copy( color = AppColors.primary, fontFamily = FontFamily.Monospace),
+        code = style.copy(color = AppColors.primary, fontFamily = FontFamily.Monospace),
         h1 = AppTypography.headlineMedium.copy(color = color, fontWeight = FontWeight.Bold),
         h2 = AppTypography.headlineSmall.copy(color = color, fontWeight = FontWeight.Bold),
         h3 = AppTypography.titleLarge.copy(color = color, fontWeight = FontWeight.Bold),

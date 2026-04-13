@@ -6,12 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
 import com.mocca.app.ui.components.ErrorScreen
@@ -49,16 +51,10 @@ fun ChatContent(
     scrollToBottomTrigger: Long = 0L
 ) {
     val state by screenModel.state.collectAsState()
-    val inputText by screenModel.inputText.collectAsState()
     val streamingText by screenModel.streamingText.collectAsState()
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
-    val editingPart by screenModel.editingPart.collectAsState()
-    val showForkDialog by screenModel.showForkDialog.collectAsState()
-    val showShareDialog by screenModel.showShareDialog.collectAsState()
 
     val listState = rememberLazyListState()
-    @Suppress("DEPRECATION")
-    val clipboard = LocalClipboardManager.current
     val haptic = LocalHapticFeedback.current
 
     val navigator = LocalNavigator.current
@@ -197,69 +193,6 @@ fun ChatContent(
             .fillMaxSize()
     ) {
         
-        if (showShareDialog) {
-            val isShared = state.session?.shareID != null
-            val shareUrl = if (isShared) "https://opencode.dev/s/${state.session?.shareID}" else ""
-            
-            AlertDialog(
-                onDismissRequest = { screenModel.dismissShareDialog() },
-                containerColor = AppColors.surfaceContainerHigh,
-                shape = AppShapes.dialog,
-                title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.onSurface) },
-                text = {
-                    Column {
-                        if (isShared) {
-                            Text("This session is publicly accessible.", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
-                            Spacer(modifier = Modifier.height(AppSpacing.md))
-                            MoccaInput(
-                                value = shareUrl,
-                                onValueChange = {},
-                                showPrompt = false,
-                                enabled = false 
-                            )
-                        } else {
-                            Text("Make this session publicly accessible?", color = AppColors.onSurface, style = AppTypography.bodyMedium)
-                        }
-                    }
-                },
-                confirmButton = {
-                    if (isShared) {
-                        MoccaCompactButton(
-                            text = "COPY LINK",
-                            onClick = { 
-                                clipboard.setText(AnnotatedString(shareUrl))
-                                screenModel.dismissShareDialog()
-                            }
-                        )
-                    } else {
-                        MoccaCompactButton(
-                            text = "SHARE PUBLICLY",
-                            onClick = { 
-                                screenModel.shareSession()
-                            }
-                        )
-                    }
-                },
-                dismissButton = {
-                    if (isShared) {
-                        MoccaTextButton(
-                            text = "UNSHARE",
-                            onClick = { 
-                                screenModel.unshareSession()
-                                screenModel.dismissShareDialog()
-                            },
-                            textColor = AppColors.error
-                        )
-                    } else {
-                        MoccaTextButton(
-                            text = "CANCEL",
-                            onClick = { screenModel.dismissShareDialog() }
-                        )
-                    }
-                }
-            )
-        }
-        
         // Main content area with sticky overlays
         Box(
             modifier = Modifier
@@ -297,182 +230,327 @@ fun ChatContent(
                 }
             }
 
-            // Sticky Todo Panel at top (zIndex ensures it stays above messages)
-            TodoListPanel(
-                todos = state.todos,
-                isVisible = state.showTodoPanel,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .zIndex(10f)
+            ChatOverlayHost(screenModel = screenModel)
+
+            ChatMessagePane(
+                screenModel = screenModel,
+                listState = listState,
+                aggregatedMessages = aggregatedMessages,
+                streamingText = streamingText,
+                isLoading = state.isLoading,
+                error = state.error,
+                isSending = state.isSending,
+                isThinking = state.isThinking,
+                thinkingContent = state.thinkingContent,
+                thinkingElapsedMs = state.thinkingElapsedMs,
+                showTimestamps = state.showTimestamps,
+                showTokenCounts = state.showTokenCounts,
+                onFileClick = onFileClick
             )
-            
-            // Sticky Permission Banner below todo panel
-            state.pendingPermission?.let { permission ->
-                PermissionBanner(
-                    permission = permission,
-                    onApprove = { screenModel.approvePermission() },
-                    onApproveAlways = { screenModel.approvePermissionAlways() },
-                    onDeny = { screenModel.denyPermission() },
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = if (state.showTodoPanel && state.todos.isNotEmpty()) 56.dp else 0.dp)
-                        .zIndex(11f)
-                )
+
+            QuestionDialogHost(screenModel = screenModel)
+        }
+
+        ShareSessionDialogHost(screenModel = screenModel)
+        EditMessagePartDialogHost(screenModel = screenModel)
+        ForkSessionDialogHost(screenModel = screenModel)
+    }
+}
+
+@Composable
+private fun BoxScope.ChatOverlayHost(
+    screenModel: ChatScreenModel
+) {
+    val state by screenModel.state.collectAsState()
+
+    TodoListPanel(
+        todos = state.todos,
+        isVisible = state.showTodoPanel,
+        modifier = Modifier
+            .align(Alignment.TopCenter)
+            .zIndex(10f)
+    )
+
+    state.pendingPermission?.let { permission ->
+        PermissionBanner(
+            permission = permission,
+            onApprove = { screenModel.approvePermission() },
+            onApproveAlways = { screenModel.approvePermissionAlways() },
+            onDeny = { screenModel.denyPermission() },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = if (state.showTodoPanel && state.todos.isNotEmpty()) 56.dp else 0.dp)
+                .zIndex(11f)
+        )
+    }
+
+    if (state.session?.isReverted == true) {
+        RevertedSessionBanner(
+            onResume = { screenModel.unrevertSession() }
+        )
+    }
+
+    if (state.sessionDisposed) {
+        SessionDisposedBanner(
+            reason = state.disposalReason ?: "Server session ended",
+            onDismiss = { screenModel.dismissDisposal() },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .zIndex(12f)
+        )
+    }
+
+    state.error?.let { error ->
+        TerminalErrorOverlay(
+            error = error,
+            onDismiss = { screenModel.clearError() }
+        )
+    }
+}
+
+@Composable
+private fun ChatMessagePane(
+    screenModel: ChatScreenModel,
+    listState: LazyListState,
+    aggregatedMessages: List<Message>,
+    streamingText: String,
+    isLoading: Boolean,
+    error: String?,
+    isSending: Boolean,
+    isThinking: Boolean,
+    thinkingContent: String,
+    thinkingElapsedMs: Long,
+    showTimestamps: Boolean,
+    showTokenCounts: Boolean,
+    onFileClick: (String) -> Unit
+) {
+    if (isLoading && aggregatedMessages.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.lg),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        ) {
+            repeat(3) { MessageSkeleton() }
+        }
+    } else if (error != null && aggregatedMessages.isEmpty()) {
+        ErrorScreen(message = error) {
+            screenModel.retry()
+        }
+    } else if (aggregatedMessages.isEmpty()) {
+        EmptySessionState()
+    } else {
+        val displayMessages by remember(aggregatedMessages) {
+            derivedStateOf {
+                aggregatedMessages.filter { msg ->
+                    msg.role == MessageRole.USER || msg.parts.isNotEmpty()
+                }
             }
-            
-            if (state.session?.isReverted == true) {
-                RevertedSessionBanner(
-                    onResume = { screenModel.unrevertSession() }
-                )
+        }
+
+        LazyColumn(
+            state = listState,
+            reverseLayout = true,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+            contentPadding = PaddingValues(
+                top = 0.dp,
+                bottom = AppSpacing.bottomBarExpandedMinHeight + 56.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        ) {
+            item(
+                key = "bottom_spacer",
+                contentType = "spacer"
+            ) { Spacer(modifier = Modifier.height(32.dp)) }
+
+            if (isSending && streamingText.isEmpty() && !isThinking) {
+                item(
+                    key = "processing_indicator",
+                    contentType = "processing"
+                ) { ModernProcessingIndicator() }
             }
 
-            if (state.sessionDisposed) {
-                SessionDisposedBanner(
-                    reason = state.disposalReason ?: "Server session ended",
-                    onDismiss = { screenModel.dismissDisposal() },
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .zIndex(12f)
-                )
-            }
-            
-            state.error?.let { error ->
-                TerminalErrorOverlay(
-                    error = error,
-                    onDismiss = { screenModel.clearError() }
-                )
-            }
-            
-            if (state.isLoading && aggregatedMessages.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = AppSpacing.screenPaddingHorizontal, vertical = AppSpacing.lg),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+            if (isThinking) {
+                item(
+                    key = "thinking_indicator",
+                    contentType = "thinking"
                 ) {
-                    repeat(3) { MessageSkeleton() }
+                    ModernThinkingIndicator(
+                        thinkingContent = thinkingContent,
+                        elapsedMs = thinkingElapsedMs
+                    )
                 }
-            } else if (state.error != null && aggregatedMessages.isEmpty()) {
-                ErrorScreen(message = state.error ?: "UNKNOWN_ERROR") {
-                    screenModel.retry()
-                }
-            } else if (aggregatedMessages.isEmpty()) {
-                EmptySessionState()
-            } else {
-                // SSE-driven content - no manual refresh needed
-                val displayMessages by remember(aggregatedMessages) {
-                    derivedStateOf {
-                        aggregatedMessages.filter { msg ->
-                            msg.role == MessageRole.USER || msg.parts.isNotEmpty()
-                        }
-                    }
+            }
+
+            if (streamingText.isNotEmpty()) {
+                item(
+                    key = "streaming_message",
+                    contentType = "streaming"
+                ) { ModernStreamingMessage(text = streamingText) }
+            }
+
+            val reversedMessages = displayMessages.asReversed()
+            itemsIndexed(
+                items = reversedMessages,
+                key = { _, it -> it.id },
+                contentType = { _, _ -> "message" }
+            ) { index, message ->
+                val nextMessage = reversedMessages.getOrNull(index + 1)
+                val prevMessage = reversedMessages.getOrNull(index - 1)
+
+                val isFirstInGroup = prevMessage == null ||
+                    prevMessage.role != message.role ||
+                    (message.createdAt - prevMessage.createdAt) > 300_000
+
+                val showDateHeader = if (nextMessage == null) {
+                    TimeFormatter.formatDate(message.createdAt)
+                } else {
+                    val nextDate = TimeFormatter.formatDate(nextMessage.createdAt)
+                    val currentDate = TimeFormatter.formatDate(message.createdAt)
+                    if (nextDate != currentDate) currentDate else null
                 }
 
-                LazyColumn(
-                    state = listState,
-                    reverseLayout = true,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = AppSpacing.screenPaddingHorizontal),
-                    contentPadding = PaddingValues(
-                        top = 0.dp,
-                        // Add extra clearance to ensure the last message clears the compact floating bottom bar (170dp min height)
-                        bottom = AppSpacing.bottomBarExpandedMinHeight + 56.dp
+                MessageRow(
+                    message = message,
+                    modifier = Modifier.animateItem(
+                        fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                        placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                     ),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
-                ) {
-                    item(
-                        key = "bottom_spacer",
-                        contentType = "spacer"
-                    ) { Spacer(modifier = Modifier.height(32.dp)) }
-
-                    if (state.isSending && streamingText.isEmpty() && !state.isThinking) {
-                        item(
-                            key = "processing_indicator",
-                            contentType = "processing"
-                        ) { ModernProcessingIndicator() }
-                    }
-                    
-                    if (state.isThinking) {
-                        item(
-                            key = "thinking_indicator",
-                            contentType = "thinking"
-                        ) {
-                            ModernThinkingIndicator(
-                                thinkingContent = state.thinkingContent,
-                                elapsedMs = state.thinkingElapsedMs
-                            )
-                        }
-                    }
-                    
-                    if (streamingText.isNotEmpty()) {
-                        item(
-                            key = "streaming_message",
-                            contentType = "streaming"
-                        ) { ModernStreamingMessage(text = streamingText) }
-                    }
-                    
-                    items(
-                        items = displayMessages.asReversed(),
-                        key = { it.id },
-                        contentType = { "message" }
-                    ) { message ->
-                        val index = displayMessages.indexOf(message)
-                        val nextMessage = if (index < displayMessages.size - 1) displayMessages[index + 1] else null
-                        val prevMessage = if (index > 0) displayMessages[index - 1] else null
-                        
-                        val isFirstInGroup = prevMessage == null || 
-                            prevMessage.role != message.role || 
-                            (message.createdAt - prevMessage.createdAt) > 300_000
-                        
-                        val showDateHeader = if (nextMessage == null) {
-                            TimeFormatter.formatDate(message.createdAt)
-                        } else {
-                            val nextDate = TimeFormatter.formatDate(nextMessage.createdAt)
-                            val currentDate = TimeFormatter.formatDate(message.createdAt)
-                            if (nextDate != currentDate) currentDate else null
-                        }
-
-                        MessageRow(
-                            message = message,
-                            isFirstInGroup = isFirstInGroup,
-                            dateHeader = showDateHeader,
-                            onFork = { screenModel.openForkDialog() },
-                            onRevert = { screenModel.revertSession(message) },
-                            showTimestamps = state.showTimestamps,
-                            showTokenCounts = state.showTokenCounts,
-                            onDelete = { screenModel.deleteMessage(message) },
-                            onDeletePart = { partId -> screenModel.deleteMessagePart(message, partId) },
-                            onEditPart = { part -> screenModel.showEditPart(message, part) },
-                            onFileClick = onFileClick
-                        )
-                    }
-                }
-            }
-            
-            // Permission banner is now handled by sticky PermissionBanner above
-            
-            editingPart?.let { (_, part) ->
-                EditMessagePartDialog(
-                    part = part,
-                    onConfirm = { content -> screenModel.commitEditPart(content) },
-                    onDismiss = { screenModel.dismissEditPart() }
-                )
-            }
-            if (showForkDialog) {
-                ForkSessionDialog(
-                    messages = aggregatedMessages,
-                    onFork = { message -> screenModel.forkSession(message) },
-                    onDismiss = { screenModel.dismissForkDialog() }
-                )
-            }
-            state.pendingQuestion?.let { question ->
-                QuestionDialog(
-                    request = question,
-                    onAnswer = { answers -> screenModel.answerQuestion(answers) },
-                    onReject = { screenModel.rejectQuestion() }
+                    isFirstInGroup = isFirstInGroup,
+                    dateHeader = showDateHeader,
+                    onFork = { screenModel.openForkDialog() },
+                    onRevert = { screenModel.revertSession(message) },
+                    showTimestamps = showTimestamps,
+                    showTokenCounts = showTokenCounts,
+                    onDelete = { screenModel.deleteMessage(message) },
+                    onDeletePart = { partId -> screenModel.deleteMessagePart(message, partId) },
+                    onEditPart = { part -> screenModel.showEditPart(message, part) },
+                    onFileClick = onFileClick
                 )
             }
         }
     }
+}
+
+@Composable
+private fun QuestionDialogHost(
+    screenModel: ChatScreenModel
+) {
+    val state by screenModel.state.collectAsState()
+
+    state.pendingQuestion?.let { question ->
+        QuestionDialog(
+            request = question,
+            onAnswer = { answers -> screenModel.answerQuestion(answers) },
+            onReject = { screenModel.rejectQuestion() }
+        )
+    }
+}
+
+@Composable
+private fun ShareSessionDialogHost(
+    screenModel: ChatScreenModel
+) {
+    val showShareDialog by screenModel.showShareDialog.collectAsState()
+
+    if (!showShareDialog) return
+
+    val state by screenModel.state.collectAsState()
+    @Suppress("DEPRECATION")
+    val clipboard = LocalClipboardManager.current
+
+    val isShared = state.session?.shareID != null
+    val shareUrl = if (isShared) "https://opencode.dev/s/${state.session?.shareID}" else ""
+
+    AlertDialog(
+        onDismissRequest = { screenModel.dismissShareDialog() },
+        containerColor = AppColors.surfaceContainerHigh,
+        shape = AppShapes.dialog,
+        title = { Text(if (isShared) "SESSION SHARED" else "SHARE SESSION", style = AppTypography.labelMedium, color = AppColors.onSurface) },
+        text = {
+            Column {
+                if (isShared) {
+                    Text("This session is publicly accessible.", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
+                    Spacer(modifier = Modifier.height(AppSpacing.md))
+                    MoccaInput(
+                        value = shareUrl,
+                        onValueChange = {},
+                        showPrompt = false,
+                        enabled = false
+                    )
+                } else {
+                    Text("Make this session publicly accessible?", color = AppColors.onSurface, style = AppTypography.bodyMedium)
+                }
+            }
+        },
+        confirmButton = {
+            if (isShared) {
+                MoccaCompactButton(
+                    text = "COPY LINK",
+                    onClick = {
+                        clipboard.setText(AnnotatedString(shareUrl))
+                        screenModel.dismissShareDialog()
+                    }
+                )
+            } else {
+                MoccaCompactButton(
+                    text = "SHARE PUBLICLY",
+                    onClick = {
+                        screenModel.shareSession()
+                    }
+                )
+            }
+        },
+        dismissButton = {
+            if (isShared) {
+                MoccaTextButton(
+                    text = "UNSHARE",
+                    onClick = {
+                        screenModel.unshareSession()
+                        screenModel.dismissShareDialog()
+                    },
+                    textColor = AppColors.error
+                )
+            } else {
+                MoccaTextButton(
+                    text = "CANCEL",
+                    onClick = { screenModel.dismissShareDialog() }
+                )
+            }
+        }
+    )
+}
+
+@Composable
+private fun EditMessagePartDialogHost(
+    screenModel: ChatScreenModel
+) {
+    val editingPart by screenModel.editingPart.collectAsState()
+
+    editingPart?.let { (_, part) ->
+        EditMessagePartDialog(
+            part = part,
+            onConfirm = { content -> screenModel.commitEditPart(content) },
+            onDismiss = { screenModel.dismissEditPart() }
+        )
+    }
+}
+
+@Composable
+private fun ForkSessionDialogHost(
+    screenModel: ChatScreenModel
+) {
+    val showForkDialog by screenModel.showForkDialog.collectAsState()
+
+    if (!showForkDialog) return
+
+    val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
+
+    ForkSessionDialog(
+        messages = aggregatedMessages,
+        onFork = { message -> screenModel.forkSession(message) },
+        onDismiss = { screenModel.dismissForkDialog() }
+    )
 }
