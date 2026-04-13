@@ -2,7 +2,6 @@ package com.mocca.app.ui.components.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,6 +28,7 @@ import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.moccaClickable
 
 @Composable
 internal fun AttachmentPreviewStrip(
@@ -87,10 +87,10 @@ internal fun AttachmentPreviewChip(
                 .align(Alignment.TopEnd)
                 .clip(CircleShape)
                 .background(AppColors.error)
-                .clickable(
+                .moccaClickable(
+                    onClick = onRemove,
                     interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onRemove
+                    pressedScale = 0.9f
                 ),
             contentAlignment = Alignment.Center
         ) {

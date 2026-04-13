@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.abs
@@ -193,10 +194,10 @@ private fun CompactNavItem(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier
             .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
-            .clickable(
+            .moccaClickable(
+                onClick = onClick,
                 interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
+                pressedScale = 0.96f
             )
             .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs)
             .scale(scale)

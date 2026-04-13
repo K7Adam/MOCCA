@@ -2,7 +2,6 @@ package com.mocca.app.ui.components.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -35,6 +34,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Status bar with model/agent/variant pill chip selectors.
@@ -73,7 +73,7 @@ internal fun ChatInputStatusBar(
                     color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.pill
                 )
-                .clickable(enabled = providerResponse != null, onClick = onModelSelectorClick)
+                .moccaClickable(onClick = onModelSelectorClick, enabled = providerResponse != null, pressedScale = 0.97f)
                 .padding(horizontal = AppSpacing.sm),
             contentAlignment = Alignment.Center
         ) {
@@ -111,7 +111,7 @@ internal fun ChatInputStatusBar(
                         color = AppColors.outline.copy(alpha = 0.3f),
                         shape = AppShapes.pill
                     )
-                    .clickable(onClick = onVariantSelectorClick)
+                    .moccaClickable(onClick = onVariantSelectorClick, pressedScale = 0.97f)
                     .padding(horizontal = AppSpacing.sm),
                 contentAlignment = Alignment.Center
             ) {
@@ -172,7 +172,7 @@ private fun AgentSelectorChip(
                     color = AppColors.outline.copy(alpha = 0.3f),
                     shape = AppShapes.pill
                 )
-                .clickable { showAgentMenu = true }
+                .moccaClickable(onClick = { showAgentMenu = true }, pressedScale = 0.97f)
                 .padding(horizontal = AppSpacing.sm),
             contentAlignment = Alignment.Center
         ) {

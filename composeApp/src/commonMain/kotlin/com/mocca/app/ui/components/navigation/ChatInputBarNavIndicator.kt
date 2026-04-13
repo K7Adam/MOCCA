@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import kotlin.math.abs
@@ -89,10 +90,10 @@ internal fun ChatInputBarNavIndicator(
                                 onTravelDistanceChanged(lastItemCenterPx - firstItemCenterPx)
                             }
                         }
-                        .clickable(
+                        .moccaClickable(
+                            onClick = { onItemClick(item.panelState) },
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null,
-                            onClick = { onItemClick(item.panelState) }
+                            pressedScale = 0.96f
                         ),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center

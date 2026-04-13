@@ -2,7 +2,6 @@ package com.mocca.app.ui.components.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +42,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Action toolbar for ChatInputContent — quick actions (@ / ! P ↑ ↓), attachment, send/abort.
@@ -155,11 +155,7 @@ internal fun ChatInputActionToolbar(
                     color = AppColors.surface.copy(alpha = 0.3f),
                     shape = AppShapes.pill
                 )
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onAttachClick
-                ),
+                .moccaClickable(onClick = onAttachClick, pressedScale = 0.94f),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -204,10 +200,10 @@ private fun ToggleActionButton(
             .then(
                 if (isActive) Modifier.border(AppSpacing.borderThin, AppColors.primary, AppShapes.pill) else Modifier
             )
-            .clickable(
+            .moccaClickable(
+                onClick = onClick,
                 interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
+                pressedScale = 0.94f
             )
             .semantics {
                 role = Role.Button
@@ -311,10 +307,7 @@ private fun SendButton(
                     Modifier.background(AppColors.surface.copy(alpha = 0.5f), AppShapes.pill)
                 }
             )
-            .clickable(
-                enabled = canSend,
-                onClick = onClick
-            )
+            .moccaClickable(onClick = onClick, enabled = canSend, pressedScale = 0.95f)
             .padding(horizontal = AppSpacing.md),
         contentAlignment = Alignment.Center
     ) {
@@ -345,7 +338,7 @@ private fun AbortButton(onClick: () -> Unit) {
         modifier = Modifier
             .height(NavConstants.SendButtonHeight)
             .background(AppColors.error, AppShapes.pill)
-            .clickable(onClick = onClick)
+            .moccaClickable(onClick = onClick, pressedScale = 0.95f)
             .padding(horizontal = AppSpacing.md),
         contentAlignment = Alignment.Center
     ) {

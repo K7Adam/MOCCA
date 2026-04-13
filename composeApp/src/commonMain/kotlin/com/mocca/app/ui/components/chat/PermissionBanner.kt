@@ -110,10 +110,11 @@ fun PermissionBanner(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(
+                        .moccaClickable(
+                            onClick = { isExpanded = !isExpanded },
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { isExpanded = !isExpanded }
+                            pressedScale = 0.99f
+                        )
                         .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween

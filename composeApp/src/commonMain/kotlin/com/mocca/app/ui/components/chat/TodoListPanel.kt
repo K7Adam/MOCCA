@@ -31,6 +31,7 @@ import com.mocca.app.domain.model.TodoStatus
 import androidx.compose.material3.Surface
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Surface with surfaceContainer background.
@@ -81,10 +82,11 @@ fun TodoListPanel(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable(
+                        .moccaClickable(
+                            onClick = { isExpanded = !isExpanded },
                             interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) { isExpanded = !isExpanded }
+                            pressedScale = 0.99f
+                        )
                         .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween

@@ -6,7 +6,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -19,11 +18,15 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * MOCCA GodBlocks - High-fidelity UI primitives for the "God Mode" aesthetic.
@@ -57,11 +60,13 @@ fun GodHeader(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (onBackClick != null) {
-                IconButton(
-                    onClick = onBackClick,
+                Box(
                     modifier = Modifier
                         .size(40.dp)
                         .background(AppColors.primary, AppShapes.circle)
+                        .semantics { role = Role.Button }
+                        .moccaClickable(onClick = onBackClick, pressedScale = 0.92f),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -185,7 +190,7 @@ fun GodListItem(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+            .moccaClickable(onClick = onClick, pressedScale = 0.98f),
         color = Color.Transparent,
         shape = AppShapes.large
     ) {

@@ -259,7 +259,7 @@ fun ChatInputBar(
                         
                         Box(
                             modifier = Modifier
-                                .clickable(onClick = { showCommandPalette = !showCommandPalette })
+                                .moccaClickable(onClick = { showCommandPalette = !showCommandPalette }, pressedScale = 0.96f)
                                 .padding(horizontal = AppSpacing.xs)
                         ) {
                             Text(

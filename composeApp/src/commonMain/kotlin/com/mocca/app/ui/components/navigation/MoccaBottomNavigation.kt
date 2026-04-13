@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.roundToInt
@@ -152,10 +153,10 @@ fun MoccaBottomNavigation(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable(
+                            .moccaClickable(
+                                onClick = { onItemClick(item.panelState) },
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null, // No ripple for cleaner look
-                                onClick = { onItemClick(item.panelState) }
+                                pressedScale = 0.96f
                             )
                             .onGloballyPositioned { coords ->
                                 // Calculate the center of this item relative to the parent Row

@@ -1,6 +1,5 @@
 package com.mocca.app.ui.components.navigation
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +24,7 @@ import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
  * Status bar row for ChatInputBar showing model, variant, and agent selectors.
@@ -64,7 +64,11 @@ internal fun ChatInputBarStatusRow(
     ) {
         // Model selector
         Row(
-            modifier = Modifier.clickable(enabled = providerResponse != null) { onModelSelectorClick() },
+            modifier = Modifier.moccaClickable(
+                onClick = onModelSelectorClick,
+                enabled = providerResponse != null,
+                pressedScale = 0.98f
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
@@ -87,7 +91,7 @@ internal fun ChatInputBarStatusRow(
         // Variant selector (if available)
         if (variants.isNotEmpty()) {
             Row(
-                modifier = Modifier.clickable { onVariantSelectorClick() },
+                modifier = Modifier.moccaClickable(onClick = onVariantSelectorClick, pressedScale = 0.98f),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
             ) {
@@ -108,7 +112,7 @@ internal fun ChatInputBarStatusRow(
         // Agent selector
         var showAgentSelector by remember { mutableStateOf(false) }
         Row(
-            modifier = Modifier.clickable { showAgentSelector = true },
+            modifier = Modifier.moccaClickable(onClick = { showAgentSelector = true }, pressedScale = 0.98f),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
