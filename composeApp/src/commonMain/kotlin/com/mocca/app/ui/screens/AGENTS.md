@@ -1,42 +1,60 @@
 # UI & SCREENS KNOWLEDGE BASE
 
-**Scope:** UI Screens, MVI Architecture, Navigation
+**Updated:** 2026-04-12
+**Scope:** UI screens, screen models, navigation shell
 
-**Relevant Skills:** `taste-skill-compose` (UI/UX), `kotlin-best-practices` (MVI architecture)
+**Relevant Skills:** `taste-skill-compose`, `material3-expressive-compose`, `kotlin-best-practices`
 
 ## OVERVIEW
-The UI layer is built with **Compose Multiplatform** using a strict **MVI (Model-View-Intent)** architecture. Navigation is managed by **Voyager**, and state is held in **ScreenModels** which are injected via Koin. All screens follow a **Compact Modern M3 Surface-based** design aesthetic with neutral monochrome palette.
+Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` is the app shell; most other screens are feature leaves hanging off the chat/dashboard/session flow.
 
 ## NAVIGATION
-- **Voyager Stack**: The app uses `Navigator` for screen transitions. Access it via `LocalNavigator.currentOrThrow`.
-- **Panel System**: `MainScreen` implements a `SwipePanelLayout` for a 3-panel experience:
-    - **Left Swipe (Context)**: Session list, model info, and token usage.
-    - **Center (Focus)**: Active chat interface and message history.
-    - **Right Swipe (Dashboard)**: Modular tools dashboard (Git status, MCP servers, Tools).
-- **Settings Access**: The **Settings** screen is reachable exclusively via the **Dashboard swipe** (Right panel) by clicking the `[SETTINGS]` button.
+- **Voyager**: `Navigator` drives screen transitions; use `LocalNavigator.currentOrThrow`
+- **App shell**: `MainScreen` hosts a 3-panel `SwipePanelLayout`
+  - Left: context/session history
+  - Center: active chat
+  - Right: dashboard tools
+- **Settings path**: dashboard panel -> `[SETTINGS]` -> `SettingsScreen`
+- **Shared transitions**: root `App()` wraps navigation in `SharedTransitionLayout`
+
+## WHERE TO LOOK
+| Task | Location | Notes |
+|------|----------|-------|
+| App shell | `main/MainScreen.kt` | Panel host + bottom bar |
+| App shell logic | `main/MainScreenModel.kt` | Aggregates app/chat state |
+| Chat UX | `chat/` | Main user workflow |
+| Files explorer | `files/` | Viewer/editor flow |
+| Git tools | `git/` | Status + diff workflows |
+| MCP tooling | `mcp/` | MCP status/resources |
+| Onboarding | `onboarding/` | First-run and connection setup |
+| Settings subtree | `settings/` | Dedicated AGENTS.md there |
+| Dashboard panels | `panels/` | Context/history + dashboard modules |
 
 ## SCREEN LIST
-| Screen | Logic Highlight | Description |
-|--------|-----------------|-------------|
-| `ProgressiveOnboardingScreen` | Onboarding | First-run experience and server connection setup. |
-| `MainScreen` | Panel Management | Host scaffold for the 3-panel UI. Manages global session state and `ConnectionStatus` observation. |
-| `ChatScreen` | Chat Interface | Active chat interface and message history. |
-| `GitScreen` | VCS Operations | Comprehensive Git UI. Uses OpenCode's `/vcs` endpoint for status and `executeShell()` for git commands. |
-| `GitDiffScreen` | Diff View | Uses `getSessionDiffs(sessionId)` + `SessionRepository`. |
-| `SettingsScreen` | Server Config | Configuration for OpenCode server host, port, username, and password. |
-| `FeatureFlagsScreen` | Dev Settings | Feature flags and experimental features. |
-| `McpScreen` | Tool Inspection | UI for managing MCP servers and viewing available tools. |
-| `McpResourceScreen` | MCP Resources | Viewing specific MCP resources. |
-| `FilesScreen` | Explorer | Browsing and basic editing of the project workspace. |
+| Screen | Role |
+|--------|------|
+| `ProgressiveOnboardingScreen` | First-run connection setup |
+| `MainScreen` | 3-panel shell + update/dialog coordination |
+| `ChatScreen` | Active session/messages |
+| `GitScreen` / `GitDiffScreen` | VCS UI over OpenCode endpoints |
+| `FilesScreen` | Browse + edit workspace files |
+| `McpScreen` / `McpResourceScreen` | MCP inspection |
+| `SettingsScreen` / `FeatureFlagsScreen` | Preferences + server-side config |
+| `TerminalScreen` | Terminal session UI |
 
-## MVI ARCHITECTURE (STRICT)
-- **State**: Every `ScreenModel` exposes a single, immutable `StateFlow<State>`. 
-- **Observation**: UI observes state via `val state by screenModel.state.collectAsState()`.
-- **ScreenModel**: All business logic, repository calls, and state transitions MUST happen here.
-- **DI**: Use `koinScreenModel<T>()` inside the Composable `Content()` function to retrieve the model.
+## MVI RULES
+- `ScreenModel` owns repository calls, validation, and state transitions
+- UI observes immutable `StateFlow` only
+- Prefer simple screen constructor params (IDs/keys), then load inside the model
+- `koinScreenModel<T>()` is the standard DI entry inside `Content()`
+
+## TESTING NOTES
+- New leaf screens should usually get a matching Maestro navigation flow or coverage in an existing plan
+- `maestro-workspace/flows/navigation/` is the current screen reachability baseline
+- Shared selectors belong in `composeApp/.../ui/TestTags.kt`, not ad-hoc string duplication
 
 ## ANTI-PATTERNS
-- **NEVER put logic in Composables**: No validation, no network calls, no state manipulation in `@Composable` functions.
-- **NEVER expose MutableStateFlow**: Keep the mutable state private in the `ScreenModel`; only expose the read-only `StateFlow`.
-- **AVOID complex navigation params**: Pass IDs or simple strings in `Screen` constructors. Let the `ScreenModel` load the data.
-- **DO NOT block the main thread**: Always use `screenModelScope.launch` for asynchronous operations.
+- NEVER put business logic in composables
+- NEVER expose `MutableStateFlow` publicly
+- AVOID complex navigation params when an ID load will do
+- DO NOT block the main thread; use `screenModelScope.launch`

@@ -1,84 +1,104 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-03-26
-**Commit:** 8dc9171
+**Updated:** 2026-04-12
+**Commit:** 55cf8e0
 **Project:** MOCCA (Mobile OpenCode Companion App)
-**Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight
+**Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight + Material 3 Expressive
 
 ## OVERVIEW
-Android client for OpenCode AI agent. Neutral monochrome soft dark UI, server-first with selective persistence, single-server HTTP Basic Auth connection.
+Android client for OpenCode AI agent. Server-first state pipeline, Android bootstrap shell, Compose Multiplatform UI, and emulator-driven Maestro verification.
 
 ## STRUCTURE
 ```
 MOCCA/
-├── androidApp/           # Entry (MainActivity, Manifest)
-├── composeApp/           # 90% of code
+├── androidApp/           # Android bootstrap, Manifest, services, notification wiring
+├── composeApp/           # Shared app code + androidMain implementations
 │   └── src/commonMain/kotlin/com/mocca/app/
-│       ├── api/          # Ktor, SSE, ApiExecutor
-│       ├── data/         # Repositories + SQLDelight
-│       ├── domain/       # Models (immutable)
-│       └── ui/           # Screens, Components
-├── maestro-workspace/    # E2E UI tests (YAML)
-└── .opencode/skills/     # Agent skills
+│       ├── api/          # Ktor clients, retry, SSE support
+│       ├── data/         # LocalCache, repositories, state stores
+│       ├── discovery/    # Cross-platform server discovery contracts
+│       ├── domain/       # Models, events, sync contracts
+│       ├── ui/           # App shell, screens, components, theme
+│       └── util/         # Shared formatters, lifecycle/network abstractions
+├── maestro-workspace/    # Emulator-only E2E flows, subflows, test plans
+└── .opencode/skills/     # Project skills
 ```
 
 ## WHERE TO LOOK
-| Task | Location |
-|------|----------|
-| Entry Point | `androidApp/.../MoccaApp.kt` |
-| Root UI | `composeApp/.../ui/App.kt` |
-| Connection | `composeApp/.../data/repository/ConnectionManager.kt` |
-| API Client | `composeApp/.../api/MoccaApiClient.kt` |
-| Git Operations | `composeApp/.../data/repository/GitRepository.kt` |
-| DB Schema | `composeApp/.../data/db/*.sq` |
-| E2E Tests | `maestro-workspace/flows/` |
+| Task | Location | Notes |
+|------|----------|-------|
+| Android bootstrap | `androidApp/src/main/java/com/mocca/app/MoccaApp.kt` | Koin startup + lifecycle observer |
+| Android launcher | `androidApp/src/main/java/com/mocca/app/MainActivity.kt` | Edge-to-edge + deep links + `App()` |
+| Root Compose shell | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/App.kt` | Splash, theme, navigator start screen |
+| DI graph | `composeApp/src/commonMain/kotlin/com/mocca/app/di/Modules.kt` | Declaration order matters |
+| Connection lifecycle | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/ConnectionManager.kt` | Owns `HttpClient` + health checks |
+| Event fanout | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/StateCoordinator.kt` | SSE -> stores -> UI backbone |
+| Global UI state | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/AppStateStore.kt` | Non-chat app state |
+| Chat UI state | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/ChatStateStore.kt` | Messages, streaming, permissions |
+| Silent polling sync | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/RealtimeSyncService.kt` | Non-SSE refresh loop |
+| Theme tokens | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/theme/` | Dedicated AGENTS.md there |
+| Settings subtree | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/settings/` | Dedicated AGENTS.md there |
+| DB schema | `composeApp/src/commonMain/sqldelight/com/mocca/app/db/*.sq` | 9 SQLDelight tables |
+| E2E tests | `maestro-workspace/` | Dedicated AGENTS.md there |
+
+## STARTUP CHAIN
+- `AndroidManifest.xml` -> `MoccaApp` -> `startKoin(...)`
+- `MainActivity` -> `setContent { App() }`
+- `App()` waits for `ServerConfigRepository.isLoaded`
+- Start screen: configured server -> `MainScreen`, otherwise `ProgressiveOnboardingScreen`
+- `ConnectionManager.onConnectionEstablished` wires into `StateCoordinator.start()` + `syncFromServer()`
+
+## CROSS-CUTTING ARCHITECTURE
+- **Event pipeline**: `EventStreamRepository` -> `StateCoordinator` -> `BroadcastEvent` -> `AppStateStore` / `ChatStateStore` -> ScreenModels -> UI
+- **Dual sync model**: SSE for sessions/messages + `RealtimeSyncService` for MCP/providers/git/tools/commands/agents
+- **Platform abstractions**: `NetworkObserver`, `AppLifecycleObserver`, `ServerDiscovery`, `SecureTokenStorage`, `NotificationTracker`
+- **Global helpers**: `PreferencesManager`, `GlobalActivityManager`, `UpdateNotifier`, `DatabasePruner`, `TestTags`
 
 ## SKILLS
 | Skill | Use When |
 |-------|----------|
-| `kotlin-best-practices` | KMP architecture, MVI, DI patterns |
-| `taste-skill-compose` | UI/UX design, animations, theming, M3 design |
-| `material3-expressive-compose` | Compose UI implementation/refactors with MOCCA dark theme + Material 3 Expressive constraints |
-| `android-mcp` | Device automation, ADB commands |
-
-**See `.opencode/skills/` for detailed skill documentation.**
-
-## CONNECTION ARCHITECTURE
-- **Server**: OpenCode (`opencode serve --port 4096`) (default port is 4096, uses HTTP/HTTPS based on `useHttps` config)
-- **Auth**: HTTP Basic Auth
-- **Flow**: `ConnectionManager` owns `HttpClient` → Consumers use `ApiExecutor.execute {}`
-- **Status**: `NotConfigured`, `Disconnected`, `Connecting`, `WaitingForNetwork`, `Reconnecting`, `Connected`, `Error`
+| `kotlin-best-practices` | KMP architecture, repositories, domain/state contracts |
+| `taste-skill-compose` | UI/UX composition, hierarchy, interaction polish |
+| `material3-expressive-compose` | Material 3 Expressive token work, theming, component refactors |
+| `android-mcp` | Emulator startup, install, Maestro, log capture |
 
 ## CONVENTIONS
-- **Architecture**: MVI (ScreenModel → StateFlow → UI)
-- **Server-First**: Repositories use `Flow<Resource<T>>` for selective persistence
-- **Paths**: ALWAYS absolute paths
-- **Theme**: Soft Dark (`#1A1A1A`), neutral monochrome palette with subtle cool accent (`#8B9DC3`), rounded corners
-- **Surface Design**: Clean Material 3 Surface components with tonal elevation for depth
+- **Architecture**: MVI (`ScreenModel -> StateFlow -> UI`), no logic in composables
+- **Network**: Consumers use `ApiExecutor.execute {}`; `ConnectionManager` is the only `HttpClient` owner
+- **Persistence**: Repositories depend on `LocalCache`, not raw DB drivers
+- **Theme**: `AppTheme`, `AppColors`, `AppTypography`, `AppShapes`; Material 3 defaults are not the source of truth
+- **Testing**: Local UI QA uses visible emulator first; CI uses headless emulator via GitHub Actions
+- **Paths**: Use absolute paths in scripts and agent docs
 
 ## ANTI-PATTERNS (STRICT)
+- NEVER hold `HttpClient` references outside `ConnectionManager`
+- NEVER put validation/network/state mutation directly in composables
 - NEVER use `RectangleShape` for interactive elements
-- NEVER hold `HttpClient` references — use `ApiExecutor.execute {}`
-- NEVER use relative paths
-- NEVER block main thread
+- NEVER mix `MaterialTheme.colorScheme` / `MaterialTheme.shapes` into app primitives
+- NEVER block the main thread
+- NEVER use relative paths in scripts/automation docs
 - DO NOT add iOS/Desktop targets
-- DO NOT use physical device for `android-mcp` tasks
+- DO NOT use physical devices for `android-mcp` or Maestro host-connectivity checks
 
 ## COMMANDS
 ```bash
-# Start emulator (local visible window)
+# Start visible emulator
 .\maestro-workspace\start-emulator.ps1
 
-# Build
+# Build debug APK
 .\gradlew.bat :androidApp:assembleDebug
 
-# E2E Tests
+# Run smoke plan on running emulator
 .\maestro-workspace\run-emulator-tests.ps1 maestro-workspace/testplans/smoke.yaml
 
-# Logcat
+# Generate screenshot catalog
+.\maestro-workspace\capture-screenshot-catalog.ps1
+
+# Filter logcat for app warnings/errors
 adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 ```
 
-## EMULATOR WORKFLOW (AGENTIC)
-- **Local agent runs**: use visible emulator (`.\maestro-workspace\start-emulator.ps1`), then execute Maestro via `run-emulator-tests.ps1`.
-- **CI runs**: emulator is headless in GitHub Actions workflow (`.github/workflows/maestro-tests.yml`).
+## NOTES
+- `gradle.properties` is tuned for constrained RAM (`workers.max=1`, configuration cache on)
+- `Modules.kt` ordering is not cosmetic; moving coordinator/state-store registrations can break bootstrap
+- Root README has newer theme wording than the old root AGENTS did; keep AGENTS aligned with current Material 3 Expressive setup
