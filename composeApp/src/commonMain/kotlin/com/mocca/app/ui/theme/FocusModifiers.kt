@@ -1,8 +1,10 @@
 package com.mocca.app.ui.theme
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -29,9 +31,14 @@ fun Modifier.focusBorder(
     width: androidx.compose.ui.unit.Dp = 2.dp
 ): Modifier {
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val animatedColor by animateColorAsState(
+        targetValue = if (isFocused) color else Color.Transparent,
+        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
+        label = "focusBorderColor"
+    )
 
-    return if (isFocused) {
-        this.border(width, color, shape)
+    return if (animatedColor.alpha > 0f) {
+        this.border(width, animatedColor, shape)
     } else {
         this
     }
