@@ -38,12 +38,11 @@ internal fun McpServerCard(
         else -> AppColors.onSurfaceVariant
     }
     
-    Column(
+Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.card)
-            .background(AppColors.surfaceVariant.copy(alpha = 0.5f), AppShapes.card)
-            .border(AppSpacing.borderThin, statusColor.copy(alpha = 0.3f), AppShapes.card)
+            .background(AppColors.bgRaised, AppShapes.card)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(AppSpacing.md)
     ) {

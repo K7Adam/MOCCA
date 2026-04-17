@@ -142,6 +142,7 @@ fun UnifiedFloatingBottomBar(
     attachedFiles: List<AttachedFile> = emptyList(),
     onRemoveAttachment: (AttachedFile) -> Unit = {},
     onAttachClick: () -> Unit = {},
+    onExportClick: () -> Unit = {},
     // Commands
     commands: List<Command> = emptyList(),
     onCommandSelected: (Command) -> Unit = {},
@@ -209,7 +210,7 @@ fun UnifiedFloatingBottomBar(
         
         Surface(
             modifier = containerModifier,
-            color = AppColors.surfaceContainer,
+            color = AppColors.bgBase,
             shape = AppShapes.extraLarge
         ) {
             Column(
@@ -237,10 +238,16 @@ fun UnifiedFloatingBottomBar(
                         inputText = inputText,
                         onInputTextChange = onInputTextChange,
                         onSendClick = onSendClick,
+                        onExportClick = onExportClick,
+                        onMicClick = {},
                         inputEnabled = inputEnabled,
                         placeholder = placeholder,
                         isSessionIdle = isSessionIdle,
                         onAbortClick = onAbortClick,
+                        isVoiceListening = false,
+                        isVoiceAvailable = false,
+                        voicePermissionRequestToken = 0,
+                        onVoicePermissionResult = {},
                         modelName = modelName,
                         agentName = agentName,
                         providerResponse = providerResponse,

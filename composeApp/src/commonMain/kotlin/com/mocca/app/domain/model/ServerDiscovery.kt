@@ -39,7 +39,34 @@ data class DiscoveredServer(
      */
     val isTailscale: Boolean
         get() = host.contains(".tail") && host.contains(".ts.net")
-    
+
+    /** Whether a password is already available for direct connection. */
+    val hasCredentials: Boolean
+        get() = password.isNotBlank()
+
+    /** Display-friendly connection type derived from the discovered host. */
+    val displayType: String
+        get() = when {
+            host == NetworkConfig.DEFAULT_HOST_IP -> "Emulator"
+            host == "localhost" || host == "127.0.0.1" -> "Local"
+            host.endsWith(".ts.net") -> "Tailscale"
+            host.matches(Regex("""\d+\.\d+\.\d+\.\d+""")) -> "LAN"
+            else -> "Remote"
+        }
+
+    /** Human-readable protocol label for onboarding/status surfaces. */
+    val protocolLabel: String
+        get() = if (useHttps) "HTTPS" else "HTTP"
+
+    /** Human-readable discovery source label for onboarding/status surfaces. */
+    val sourceLabel: String
+        get() = when (source) {
+            DiscoverySource.MDNS -> "mDNS"
+            DiscoverySource.MANUAL -> "Manual"
+            DiscoverySource.SAVED -> "Saved"
+            DiscoverySource.EMULATOR_AUTO -> "Emulator"
+        }
+     
     fun toServerConfig(id: String = name.lowercase().replace(" ", "-")): ServerConfig {
         return ServerConfig(
             id = id,

@@ -37,6 +37,10 @@ import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Welcome step — app branding, setup checklist, and entry options.
+ *
+ * Discovery-first flow: the primary CTA scans for nearby OpenCode servers
+ * and imports their config automatically. Manual entry remains available
+ * as a secondary fallback.
  */
 @Composable
 internal fun OnboardingWelcomeStep(
@@ -100,7 +104,7 @@ internal fun OnboardingWelcomeStep(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Action buttons (bottom-aligned)
+        // Action buttons (bottom-aligned) — discovery-first ordering
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -108,13 +112,21 @@ internal fun OnboardingWelcomeStep(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             MoccaButton(
-                text = "Auto-Discover Servers",
+                text = "Find & Connect to Server",
                 onClick = onAutoDiscover,
                 modifier = Modifier.fillMaxWidth()
             )
 
+            Text(
+                text = "Scans your network and saved configs for OpenCode servers",
+                style = AppTypography.labelSmall,
+                color = AppColors.outline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             MoccaOutlinedButton(
-                text = "Enter Server Manually",
+                text = "Enter Server Address Manually",
                 onClick = onManualEntry,
                 modifier = Modifier.fillMaxWidth()
             )

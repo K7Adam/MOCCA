@@ -12,9 +12,11 @@ import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.provider.AndroidAppVersionProvider
 import com.mocca.app.domain.provider.AppVersionProvider
 import com.mocca.app.util.AndroidAppLifecycleObserver
+import com.mocca.app.util.AndroidVoiceInputProvider
 import com.mocca.app.util.AppLifecycleObserver
 import com.mocca.app.util.NetworkObserver
 import com.mocca.app.util.NetworkObserverImpl
+import com.mocca.app.util.VoiceInputProvider
 import okio.Path.Companion.toPath
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
@@ -35,6 +37,7 @@ val androidModule = module {
     
     // Override with Android Keystore implementation
     single<SecureTokenStorage> { SecureTokenStorageImpl(androidContext()) }
+    single<VoiceInputProvider> { AndroidVoiceInputProvider(androidContext()) }
     
     // Server discovery for auto-discovery of OpenCode servers
     single<com.mocca.app.discovery.ServerDiscovery> { ServerDiscoveryManager(androidContext()) }

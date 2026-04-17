@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FloatingToolbarDefaults
@@ -66,6 +67,7 @@ fun ChatInputBar(
     attachedFiles: List<AttachedFile>,
     onRemoveAttachment: (AttachedFile) -> Unit,
     onAttachClick: () -> Unit,
+    onExportClick: () -> Unit,
     // Commands
     commands: List<Command>,
     onCommandSelected: (Command) -> Unit,
@@ -248,12 +250,43 @@ fun ChatInputBar(
                             .padding(horizontal = AppSpacing.md),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        MoccaIconButton(
-                            icon = Icons.Default.AttachFile,
-                            onClick = onAttachClick,
-                            size = 32.dp,
-                            iconColor = AppColors.onSurfaceVariant
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = AppColors.surface.copy(alpha = 0.3f),
+                                    shape = AppShapes.pill
+                                )
+                                .moccaClickable(onClick = onAttachClick, pressedScale = 0.96f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AttachFile,
+                                contentDescription = "Attach file",
+                                tint = AppColors.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(AppSpacing.xs))
+
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(
+                                    color = AppColors.surface.copy(alpha = 0.3f),
+                                    shape = AppShapes.pill
+                                )
+                                .moccaClickable(onClick = onExportClick, pressedScale = 0.96f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Export chat to Markdown",
+                                tint = AppColors.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
 
                         Spacer(modifier = Modifier.width(AppSpacing.xs))
                         

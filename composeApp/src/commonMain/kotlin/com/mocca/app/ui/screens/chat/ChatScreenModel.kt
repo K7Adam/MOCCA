@@ -6,6 +6,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.*
 import com.mocca.app.domain.model.*
 import com.mocca.app.ui.screens.chat.delegates.*
+import com.mocca.app.util.ChatExporter
+import com.mocca.app.util.VoiceInputProvider
 import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
@@ -77,7 +79,8 @@ class ChatScreenModel(
     private val commandRepository: CommandRepository,
     private val agentRepository: AgentRepository,
     private val appStateStore: AppStateStore,
-    private val chatStateStore: ChatStateStore
+    private val chatStateStore: ChatStateStore,
+    private val voiceInputProvider: VoiceInputProvider
 ) : ScreenModel {
     
     private val configDelegate by lazy {
@@ -133,6 +136,14 @@ class ChatScreenModel(
     
     private val _showShareDialog = MutableStateFlow(false)
     val showShareDialog: StateFlow<Boolean> = _showShareDialog.asStateFlow()
+
+    private val _showExportDialog = MutableStateFlow(false)
+    val showExportDialog: StateFlow<Boolean> = _showExportDialog.asStateFlow()
+
+    val voiceInputState: StateFlow<VoiceInputState> = voiceInputProvider.state
+
+    private val _voicePermissionRequestToken = MutableStateFlow(0)
+    val voicePermissionRequestToken: StateFlow<Int> = _voicePermissionRequestToken.asStateFlow()
 
     fun togglePlanMode() {
         val newModeId = if (_state.value.isPlanMode) null else "plan"
@@ -307,6 +318,18 @@ class ChatScreenModel(
                 _state.update { it.copy(connectionStatus = status) }
             }
         }
+
+        // 7. Voice input state
+        screenModelScope.launch {
+            voiceInputProvider.state.collect { state ->
+                when (state) {
+                    is VoiceInputState.PartialResult -> _inputText.value = state.text
+                    is VoiceInputState.FinalResult -> _inputText.value = state.text
+                    is VoiceInputState.NeedsPermission -> _voicePermissionRequestToken.update { it + 1 }
+                    else -> Unit
+                }
+            }
+        }
     }
 
     fun loadSession(newSessionId: String) {
@@ -334,6 +357,21 @@ class ChatScreenModel(
     }
 
     fun updateInputText(text: String) { _inputText.value = text }
+    fun toggleVoiceInput() {
+        when (voiceInputProvider.state.value) {
+            is VoiceInputState.Listening -> voiceInputProvider.stopListening()
+            is VoiceInputState.NeedsPermission -> _voicePermissionRequestToken.update { it + 1 }
+            is VoiceInputState.NotAvailable -> Unit
+            else -> voiceInputProvider.startListening()
+        }
+    }
+
+    fun onVoicePermissionResult(granted: Boolean) {
+        if (granted) {
+            voiceInputProvider.startListening()
+        }
+    }
+
     fun selectModel(p: String, m: String) = configDelegate.selectModel(p, m)
     fun selectVariant(v: String?) = configDelegate.selectVariant(v)
     fun selectMode(m: String?) = configDelegate.selectMode(m)
@@ -523,6 +561,26 @@ class ChatScreenModel(
         }
     }
 
+    fun exportChatToMarkdown(): String {
+        val sessionTitle = _state.value.session?.title ?: "Chat Export"
+        val messages = aggregatedMessages.value.toList()
+        return ChatExporter.exportSessionToMarkdown(sessionTitle, messages)
+    }
+
+    fun openExportDialog() {
+        _showExportDialog.value = true
+    }
+
+    fun dismissExportDialog() {
+        _showExportDialog.value = false
+    }
+
+    fun exportToClipboard() {
+        val markdown = exportChatToMarkdown()
+        // Export to clipboard - actual clipboard operation handled in UI layer
+        dismissExportDialog()
+    }
+
     fun refreshData() {
         screenModelScope.launch {
             // isLoading is now synced from ChatStateStore
@@ -542,5 +600,6 @@ class ChatScreenModel(
     override fun onDispose() {
         // StateCoordinator manages SSE lifecycle, no need to disconnect here
         // The session will remain monitored for notifications
+        voiceInputProvider.release()
     }
 }

@@ -32,10 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.ToolState
 import com.mocca.app.ui.components.RichToolCard
+import com.mocca.app.ui.components.chat.InlineDiffViewer
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.util.DiffParser
 
 // ---------------------------------------------------------------------------
 // Tool result & grouped tool calls
@@ -75,11 +77,15 @@ fun ModernToolResultBlock(part: MessagePart.ToolResult) {
         AnimatedVisibility(visible = expanded) {
             Column {
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
-                Text(
-                    text = part.result,
-                    color = AppColors.onSurfaceDim,
-                    style = AppTypography.bodySmall
-                )
+                if (DiffParser.looksLikeDiff(part.result)) {
+                    InlineDiffViewer(diffText = part.result)
+                } else {
+                    Text(
+                        text = part.result,
+                        color = AppColors.onSurfaceDim,
+                        style = AppTypography.bodySmall
+                    )
+                }
             }
         }
     }

@@ -3,6 +3,7 @@ package com.mocca.app.ui.screens.onboarding
 import cafe.adriel.voyager.core.model.ScreenModel
 import com.mocca.app.api.NetworkConfig
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.discovery.DiscoveryResult
@@ -23,15 +24,16 @@ import kotlinx.coroutines.launch
 /**
  * ScreenModel for the progressive onboarding wizard.
  *
- * Simplified 3-step flow:
- * - WELCOME: Brand intro + setup checklist
- * - CONNECT: Auto-discovery (background) + server list + manual entry
- * - CONNECTING: Staged progress with auto-navigation on success
+ * Discovery-first 3-step flow:
+ * - WELCOME: Brand intro + setup checklist with quick-start reference
+ * - CONNECT: Auto-discovery (background) + server list + manual entry fallback
+ * - CONNECTING: Staged progress (save → resolve → auth → config import → API test) with auto-navigation on success
  */
 class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val connectionManager: ConnectionManager,
-    private val serverDiscovery: ServerDiscovery? = null
+    private val serverDiscovery: ServerDiscovery? = null,
+    private val appStateStore: AppStateStore
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(OnboardingWizardState())
@@ -383,6 +385,7 @@ class OnboardingWizardModel(
                 // Poll connection status with timeout
                 val maxAttempts = 15  // 15 * 500ms = 7.5s timeout
                 var attempts = 0
+                var isConnected = false
                 while (attempts < maxAttempts) {
                     delay(500)
                     val status = connectionManager.status.value
@@ -390,8 +393,8 @@ class OnboardingWizardModel(
                     when (status) {
                         is ConnectionStatus.Connected -> {
                             Napier.i("[OnboardingWizard] CONNECTED to ${config.name}")
-                            onConnectionResult(true, null)
-                            return@launch
+                            isConnected = true
+                            break
                         }
                         is ConnectionStatus.Error -> {
                             Napier.e("[OnboardingWizard] Connection ERROR: ${status.message}")
@@ -412,8 +415,39 @@ class OnboardingWizardModel(
                     }
                 }
 
-                // Timeout
-                onConnectionResult(false, "Connection timed out. Is OpenCode running?")
+                if (!isConnected) {
+                    // Timeout
+                    onConnectionResult(false, "Connection timed out. Is OpenCode running?")
+                    return@launch
+                }
+
+                // Stage 5: Import config (providers, models, agents)
+                // Now that we are connected, wait for providers to be loaded by AppStateStore
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.IMPORTING_CONFIG,
+                        connectionProgress = "Importing providers and models..."
+                    )
+                }
+                
+                var providerAttempts = 0
+                while (providerAttempts < 10) {
+                    delay(500)
+                    val providers = appStateStore.providers.value
+                    if (providers is com.mocca.app.domain.model.Resource.Success) {
+                        val providerCount = providers.data.all.size
+                        _state.update {
+                            it.copy(
+                                connectionProgress = "Imported $providerCount providers!"
+                            )
+                        }
+                        delay(800)
+                        break
+                    }
+                    providerAttempts++
+                }
+
+                onConnectionResult(true, null)
             } catch (e: Exception) {
                 Napier.e("Connection failed", e)
                 val friendlyMessage = when {

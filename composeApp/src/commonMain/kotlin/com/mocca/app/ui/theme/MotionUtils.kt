@@ -14,27 +14,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 
 /**
- * Adaptive Motion Constants for M3 Expressive 2026.
- * These are used to throttle motion complexity based on device capabilities.
- */
-object AppMotion {
-    // Spatial (Scale/Move)
-    val fastSpatial = 200 // ms
-    val standardSpatial = 300 // ms
-    val slowSpatial = 500 // ms
-
-    // Effects (Fade/Color)
-    val fastEffects = 150 // ms
-    val standardEffects = 250 // ms
-
-    // Spring Constants (Expressive)
-    val dampingRatio = 0.8f
-    val stiffnessLow = 200f
-    val stiffnessMedium = 500f
-    val stiffnessHigh = 1500f
-}
-
-/**
  * Custom modifier for M3 Expressive scale interaction.
  * Provides a consistent "squish" effect across the app.
  */

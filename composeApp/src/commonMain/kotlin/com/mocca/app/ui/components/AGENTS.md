@@ -9,7 +9,7 @@
 Shared UI library implementing the **Modern M3 Surface Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Soft Dark" aesthetic with neutral monochrome palette.
 
 ## SURFACE-BASED COMPONENTS
-- Use M3 Surface with tonalElevation for depth
+- Prefer `tonalElevation` for depth. `shadowElevation` acceptable for modals (dialogs, modal sheets) needing extra visual separation.
 - Card components use surface container hierarchy (surface, surfaceContainer, surfaceContainerHigh)
 - NO blur effects, NO glassmorphism, NO backdrop sampling
 
@@ -52,7 +52,7 @@ The `ConnectionStatus` sealed class (defined in `Config.kt`) drives the connecti
 - `Error(message)` — Connection error
 
 ## ANTI-PATTERNS
-- **Material 3 Mixing**: NEVER use `MaterialTheme.colorScheme` or `MaterialTheme.shapes`. Use `AppColors` and `AppShapes`.
+- **Material 3 Mixing**: In feature/UI code, use `AppColors`, `AppShapes`, `AppTypography` instead of `MaterialTheme.colorScheme`/`MaterialTheme.shapes`. Theme bridge code (`AppTheme.kt`) may use MaterialTheme APIs for provisioning.
 - **RectangleShape for Interactive Elements**: NEVER use `RectangleShape` for buttons, cards, or inputs. Use `AppShapes.pill`, `AppShapes.card`, or `AppShapes.medium`.
 - **Legacy Components**: Use `PermissionRequestDialog` instead of legacy confirmation systems.
 - **Color Literals**: Avoid `Color(0xFF...)`. Always use `AppColors`.

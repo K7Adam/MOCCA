@@ -106,7 +106,7 @@ internal fun OnboardingConnectStep(
     ) {
         // Header
         Text(
-            text = "CONNECT TO SERVER",
+            text = "FIND YOUR SERVER",
             style = AppTypography.headlineSmall,
             color = AppColors.onSurface,
             fontWeight = FontWeight.Bold,
@@ -138,7 +138,7 @@ internal fun OnboardingConnectStep(
                             .then(if (isDiscovering) Modifier.alpha(scanAlpha) else Modifier)
                     )
                     Text(
-                        text = if (isDiscovering) "Scanning network..." else "Available Servers",
+                        text = if (isDiscovering) "Scanning for OpenCode servers..." else "Discovered Servers",
                         style = AppTypography.labelLarge,
                         color = if (isDiscovering) AppColors.accent else AppColors.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
@@ -153,13 +153,23 @@ internal fun OnboardingConnectStep(
 
                 if (!isDiscovering) {
                     MoccaOutlinedButton(
-                        text = "Refresh",
+                        text = "Scan Again",
                         onClick = onRefreshDiscovery,
                         height = AppSpacing.buttonHeightSmall,
                         icon = Icons.Default.Refresh
                     )
                 }
             }
+
+            Text(
+                text = if (discoveredServers.isNotEmpty()) {
+                    "Tap a server to connect. MOCCA will import its providers and models automatically."
+                } else {
+                    "Scanning saved configs and your local network for OpenCode servers."
+                },
+                style = AppTypography.labelSmall,
+                color = AppColors.outline
+            )
 
             // Server list
             if (discoveredServers.isNotEmpty()) {
@@ -175,9 +185,7 @@ internal fun OnboardingConnectStep(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(AppColors.surfaceVariant, AppSpacing.let { 
-                            AppShapes.medium 
-                        })
+                        .background(AppColors.bgRaised, AppShapes.medium)
                         .padding(AppSpacing.xl),
                     contentAlignment = Alignment.Center
                 ) {
@@ -192,15 +200,21 @@ internal fun OnboardingConnectStep(
                             modifier = Modifier.size(32.dp)
                         )
                         Text(
-                            text = "No servers found on your network",
+                            text = "No OpenCode servers found",
                             style = AppTypography.bodyMedium,
                             color = AppColors.onSurfaceVariant,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Make sure OpenCode is running, or enter server details manually",
+                            text = "Make sure OpenCode is running on your computer, or enter the address manually below.",
                             style = AppTypography.bodySmall,
                             color = AppColors.outline,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = "Quick start: scripts/mocca-serve.ps1 (Windows) or scripts/mocca-serve.sh (macOS/Linux)",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.accent,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -219,7 +233,7 @@ internal fun OnboardingConnectStep(
 
             if (!showManualEntry) {
                 MoccaOutlinedButton(
-                    text = "Or enter server details manually",
+                    text = "Enter address manually",
                     onClick = onToggleManualEntry,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -238,6 +252,12 @@ internal fun OnboardingConnectStep(
                         style = AppTypography.labelMedium,
                         color = AppColors.onSurfaceVariant,
                         fontWeight = FontWeight.Medium
+                    )
+
+                    Text(
+                        text = "Enter your OpenCode server address if discovery didn't find it.",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.outline
                     )
 
                     // Host + Port row

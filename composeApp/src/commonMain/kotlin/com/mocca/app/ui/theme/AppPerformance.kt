@@ -1,6 +1,8 @@
 package com.mocca.app.ui.theme
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
 /**
  * Performance tier of the current device.
@@ -50,6 +52,12 @@ data class AppPerformance(
             PerformanceTier.MEDIUM -> 50
             PerformanceTier.HIGH -> 100
         }
+
+    val lazyListCacheAhead: Dp
+        get() = (maxListCacheSize * 6).coerceIn(120, 600).dp
+
+    val lazyListCacheBehind: Dp
+        get() = (maxListCacheSize * 3).coerceIn(60, 300).dp
 }
 
 val LocalAppPerformance = staticCompositionLocalOf { AppPerformance() }

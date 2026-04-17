@@ -657,8 +657,26 @@ class MoccaApiClient(
             }
 
     // Search
-    suspend fun searchText(query: String, path: String = ""): Result<List<SearchResult>> =
+    suspend fun searchText(query: String, path: String = ""): Result<List<ApiSearchResult>> =
             safeCall("searchText") {
+                get("find") {
+                            parameter("query", query)
+                            if (path.isNotEmpty()) {
+                                parameter("path", path)
+                            }
+                        }
+                        .body()
+            }
+
+    /**
+     * Grep-style content search backed by the existing /find endpoint.
+     * Context enrichment is handled client-side after matches are returned.
+     */
+    suspend fun searchGrep(
+            query: String,
+            path: String = ""
+    ): Result<List<ApiSearchResult>> =
+            safeCall("searchGrep") {
                 get("find") {
                             parameter("query", query)
                             if (path.isNotEmpty()) {
@@ -671,7 +689,7 @@ class MoccaApiClient(
     suspend fun findFiles(pattern: String): Result<List<String>> =
             safeCall("findFiles") { get("find/file") { parameter("pattern", pattern) }.body() }
 
-    suspend fun findSymbols(query: String): Result<List<SymbolResult>> =
+    suspend fun findSymbols(query: String): Result<List<ApiSymbolResult>> =
             safeCall("findSymbols") { get("find/symbol") { parameter("query", query) }.body() }
 
     // MCP Operations

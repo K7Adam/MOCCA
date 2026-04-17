@@ -23,4 +23,9 @@ object FormatUtils {
             else -> count.toString()
         }
     }
+
+    fun formatCost(cost: Double): String {
+        return if (cost < 0.01 && cost > 0.0) "<$0.01"
+        else "$${"%.2f".format(cost)}"
+    }
 }

@@ -42,16 +42,13 @@ import com.mocca.app.ui.theme.AppShapes
 
 import com.mocca.app.ui.navigation.PanelProgressHolder
 import com.mocca.app.ui.navigation.PanelState
-import com.mocca.app.ui.navigation.SwipePanelLayout
 import com.mocca.app.ui.navigation.rememberPanelState
-import com.mocca.app.ui.screens.chat.ChatContent
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.chat.ScrollDirection
+import com.mocca.app.domain.model.SearchMode
 import com.mocca.app.ui.screens.files.FilesScreen
 import com.mocca.app.ui.screens.git.GitScreen
 import com.mocca.app.ui.screens.mcp.McpScreen
-import com.mocca.app.ui.screens.panels.ContextHistoryPanel
-import com.mocca.app.ui.screens.panels.DashboardPanel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.screens.settings.SettingsScreen
@@ -65,13 +62,8 @@ import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import kotlinx.coroutines.launch
-import com.mocca.app.ui.components.modern.ConnectionBannerStatus
-import com.mocca.app.ui.components.modern.ConnectionStatusBanner
-import com.mocca.app.ui.components.modern.MoccaIconButton
 import com.mocca.app.ui.components.modern.ModernTopBar
-import com.mocca.app.ui.components.modern.QuoteRotator
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
-import com.mocca.app.ui.components.modern.ScrollToBottomButton
 import com.mocca.app.ui.components.modern.UpdateDialog
 import com.mocca.app.ui.theme.LocalAppPerformance
 
@@ -92,6 +84,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Use a stable ChatScreenModel instance and reload content when session changes
         val chatScreenModel = koinScreenModel<ChatScreenModel>()
         val chatState by chatScreenModel.state.collectAsState()
+        val aggregatedMessages by chatScreenModel.aggregatedMessages.collectAsState()
         val inputText by chatScreenModel.inputText.collectAsState()
         val shellMode by chatScreenModel.shellMode.collectAsState()
 
@@ -145,6 +138,40 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         var showScrollToBottom by remember { mutableStateOf(false) }
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
+        var showGlobalSearch by remember { mutableStateOf(false) }
+        var globalSearchQuery by remember { mutableStateOf("") }
+        var targetMessageId by remember { mutableStateOf<String?>(null) }
+
+        val trimmedGlobalSearchQuery = globalSearchQuery.trim()
+        val sessionSearchResults = remember(trimmedGlobalSearchQuery, state.sessions) {
+            if (trimmedGlobalSearchQuery.isBlank()) {
+                emptyList()
+            } else {
+                state.sessions
+                    .filter { session -> session.matchesGlobalSearch(trimmedGlobalSearchQuery) }
+                    .take(8)
+            }
+        }
+        val messageSearchResults = remember(trimmedGlobalSearchQuery, aggregatedMessages, state.currentSessionId) {
+            if (trimmedGlobalSearchQuery.isBlank() || state.currentSessionId == null) {
+                emptyList()
+            } else {
+                aggregatedMessages
+                    .asReversed()
+                    .mapNotNull { message -> message.toGlobalSearchMatch(trimmedGlobalSearchQuery) }
+                    .take(8)
+            }
+        }
+
+        fun clearGlobalSearch() {
+            globalSearchQuery = ""
+            screenModel.searchFiles("")
+        }
+
+        fun dismissGlobalSearch() {
+            showGlobalSearch = false
+            clearGlobalSearch()
+        }
 
         // Reset chat-specific state
         LaunchedEffect(panelState.state) {
@@ -160,6 +187,49 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
+        val mainPanels = rememberMainScreenPanels(
+            MainScreenPanelScope(
+                navigator = navigator,
+                screenModel = screenModel,
+                chatScreenModel = chatScreenModel,
+                dashboardScreenModel = dashboardScreenModel,
+                state = state,
+                chatState = chatState,
+                inputText = inputText,
+                shellMode = shellMode,
+                panelState = panelState,
+                onAttachClick = { filePickerLauncher.launch() },
+                scrollToBottomTrigger = scrollToBottomTrigger,
+                showScrollToBottom = showScrollToBottom,
+                hasNewMessagesWhileScrolledUp = hasNewMessagesWhileScrolledUp,
+                onScrollDirectionChange = { direction -> scrollDirection = direction },
+                onScrollToBottomStateChange = { show, hasNew ->
+                    showScrollToBottom = show
+                    hasNewMessagesWhileScrolledUp = hasNew
+                },
+                onScrollToBottomClick = {
+                    scrollToBottomTrigger += 1L
+                    showScrollToBottom = false
+                    hasNewMessagesWhileScrolledUp = false
+                },
+                onRetryConnection = { screenModel.retryConnection() },
+                onOpenSetup = {
+                    navigator.push(
+                        ProgressiveOnboardingScreen(
+                            isSetupMode = true,
+                            connectionError = state.connectionError
+                        )
+                    )
+                },
+                onSessionTabSelected = { sessionId -> screenModel.selectSession(sessionId) },
+                onSearchClick = { showGlobalSearch = true },
+                targetMessageId = targetMessageId,
+                onTargetMessageHandled = { targetMessageId = null }
+            )
+        )
+        val navItems = remember(mainPanels) {
+            MainScreenPanelRegistry.navigationItems(mainPanels)
+        }
         val performance = LocalAppPerformance.current
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -189,13 +259,14 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     ) {
                         Surface(
                             modifier = bottomBarModifier.fillMaxWidth(),
-                            color = AppColors.surfaceContainer,
+                            color = AppColors.bgBase,
                             shape = AppShapes.extraLarge,
-                            tonalElevation = 2.dp
+                            tonalElevation = 0.dp
                         ) {
                         PersistentNavRow(
                                 dragProgress = progressHolder.dragProgress,
                                 onItemClick = { panelState.state = it },
+                                items = navItems,
                                 showLabels = true,
                                 isAgentRunning = !chatState.isSessionIdle,
                                 modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
@@ -204,226 +275,54 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     }
                 }
             ) { paddingValues ->
-                SwipePanelLayout(
-                    modifier = Modifier.fillMaxSize().padding(paddingValues),
-                    leftPanel = {
-                        ContextHistoryPanel(
-                            modifier = Modifier.fillMaxHeight()
-                                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Vertical + WindowInsetsSides.Start)),
-                            sessions = state.sessions,
-                            sessionGroups = state.sessionGroups,
-                            runningSessionIds = state.runningSessionIds,
-                            currentSessionId = state.currentSessionId,
-                            mcpStatus = state.mcpStatus,
-                            model = chatState.modelName,
-                            latency = state.latency,
-                            port = state.port,
-                            usedTokens = chatState.contextWindowUsage,
-                            maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
-                            agentName = chatState.agentName,
-                            appVersion = state.appVersion,
-                            isCreatingSession = state.isCreatingSession,
-                            loadingSessionId = state.loadingSessionId,
-                            newlyCreatedSessionId = state.newlyCreatedSessionId,
-                            isRefreshing = state.isLoading,
-                            onSessionClick = { session ->
-                                screenModel.selectSession(session.id) {
-                                    panelState.closePanel()
-                                }
-                            },
-                            onNewSessionClick = {
-                                screenModel.createSession {
-                                    panelState.closePanel()
-                                }
-                            },
-                            onRefresh = { screenModel.refreshAll() },
-                            onGroupExpandToggle = { groupId ->
-                                screenModel.toggleGroupExpanded(groupId)
-                            }
-                        )
-                    },
-                    centerPanel = {
-                                // Show ChatContent if session is selected (input disabled when not connected)
-                                if (state.currentSessionId != null) {
-                                    Column(modifier = Modifier.fillMaxSize()) {
-                                        val currentSession = state.sessions.find { it.id == state.currentSessionId }
-                                        ModernTopBar(
-                                            title = currentSession?.title ?: "Chat",
-                                            sessionId = state.currentSessionId,
-                                            actions = {
-                                                MoccaIconButton(
-                                                    icon = Icons.Default.Share,
-                                                    onClick = { chatScreenModel.openShareDialog() },
-                                                    contentDescription = if (chatState.session?.shareID != null) {
-                                                        "Shared session options"
-                                                    } else {
-                                                        "Share session"
-                                                    },
-                                                    iconColor = if (chatState.session?.shareID != null) {
-                                                        AppColors.primary
-                                                    } else {
-                                                        AppColors.onSurface
-                                                    },
-                                                    borderColor = if (chatState.session?.shareID != null) {
-                                                        AppColors.primary.copy(alpha = 0.45f)
-                                                    } else {
-                                                        AppColors.outline.copy(alpha = 0.35f)
-                                                    }
-                                                )
-                                            }
-                                        )
-
-                                        // Connection status banner at top when not connected
-                                        if (!state.isConnected) {
-                                            ConnectionStatusBanner(
-                                                status = when {
-                                                    state.isConnecting -> ConnectionBannerStatus.Connecting(
-                                                        attempt = state.connectionAttempt,
-                                                        maxAttempts = state.maxConnectionAttempts
-                                                    )
-
-                                                    state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
-                                                    state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
-                                                    else -> ConnectionBannerStatus.Disconnected()
-                                                },
-                                                onRetryClick = { screenModel.retryConnection() },
-                                                onSetupClick = {
-                                                    navigator.push(
-                                                        ProgressiveOnboardingScreen(
-                                                            isSetupMode = true,
-                                                            connectionError = state.connectionError
-                                                        )
-                                                    )
-                                                }
-                                            )
-                                        }
-
-                                        // Chat content (input will be disabled based on connection status)
-                                        Box(modifier = Modifier.weight(1f)) {
-                                            ChatContent(
-                                                screenModel = chatScreenModel,
-                                                onScrollDirectionChange = { direction: ScrollDirection ->
-                                                    scrollDirection = direction
-                                                },
-                                                onScrollToBottomStateChange = { show, hasNew ->
-                                                    showScrollToBottom = show
-                                                    hasNewMessagesWhileScrolledUp = hasNew
-                                                },
-                                                scrollToBottomTrigger = scrollToBottomTrigger
-                                            )
-
-                                            ScrollToBottomButton(
-                                                isVisible = showScrollToBottom,
-                                                hasNewMessages = hasNewMessagesWhileScrolledUp,
-                                                onClick = {
-                                                    scrollToBottomTrigger += 1L
-                                                    showScrollToBottom = false
-                                                    hasNewMessagesWhileScrolledUp = false
-                                                },
-                                                modifier = Modifier
-                                                    .align(Alignment.BottomCenter)
-                                                    .padding(bottom = AppSpacing.lg)
-                                            )
-                                        }
-
-                                        Surface(
-                                            modifier = Modifier.fillMaxWidth().imePadding(),
-                                            color = Color.Transparent
-                                        ) {
-                                            ChatInputContent(
-                                                inputText = inputText,
-                                                onInputTextChange = { chatScreenModel.updateInputText(it) },
-                                                onSendClick = { chatScreenModel.sendMessage() },
-                                                inputEnabled = chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && chatState.isSessionIdle,
-                                                placeholder = "Type a message...",
-                                                isSessionIdle = chatState.isSessionIdle,
-                                                onAbortClick = { chatScreenModel.abortSession() },
-                                                modelName = chatState.modelName,
-                                                agentName = chatState.agentName,
-                                                providerResponse = chatState.providerInfo,
-                                                selectedProviderId = chatState.selectedProviderId,
-                                                selectedModelId = chatState.selectedModelId,
-                                                onModelSelected = { providerId, modelId ->
-                                                    chatScreenModel.selectModel(
-                                                        providerId,
-                                                        modelId
-                                                    )
-                                                },
-                                                variants = chatState.availableVariants,
-                                                selectedVariantId = chatState.selectedVariantId,
-                                                onVariantSelected = { chatScreenModel.selectVariant(it) },
-                                                modes = chatState.modes,
-                                                selectedModeId = chatState.selectedModeId,
-                                                onModeSelected = { chatScreenModel.selectMode(it) },
-                                                attachedFiles = chatState.attachedFiles,
-                                                onRemoveAttachment = { chatScreenModel.removeAttachment(it) },
-                                                onAttachClick = { filePickerLauncher.launch() },
-                                                commands = chatState.commands,
-                                                onCommandSelected = { chatScreenModel.executeCommand(it) },
-                                                onModeSelectedForMention = { chatScreenModel.selectMode(it.id) },
-                                                shellMode = shellMode,
-                                                onShellModeToggle = { chatScreenModel.toggleShellMode() },
-                                                onHistoryUp = { chatScreenModel.navigateHistoryUp() },
-                                                onHistoryDown = { chatScreenModel.navigateHistoryDown() }
-                                            )
-                                        }
-                                    }
-                                } else {
-                                    // Empty state - no session selected
-                                    Box(modifier = Modifier.fillMaxSize()) {
-                                        if (!state.isConnected) {
-                                            ConnectionStatusBanner(
-                                                status = when {
-                                                    state.isConnecting -> ConnectionBannerStatus.Connecting(
-                                                        attempt = state.connectionAttempt,
-                                                        maxAttempts = state.maxConnectionAttempts
-                                                    )
-
-                                                    state.isWaitingForNetwork -> ConnectionBannerStatus.WaitingForNetwork
-                                                    state.connectionError != null -> ConnectionBannerStatus.Error(state.connectionError!!)
-                                                    else -> ConnectionBannerStatus.Disconnected()
-                                                },
-                                                onRetryClick = { screenModel.retryConnection() },
-                                                onSetupClick = {
-                                                    navigator.push(
-                                                        ProgressiveOnboardingScreen(
-                                                            isSetupMode = true,
-                                                            connectionError = state.connectionError
-                                                        )
-                                                    )
-                                                }
-                                            )
-                                        }
-
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            QuoteRotator(
-                                                versionText = state.appVersion,
-                                                serverText = if (state.isConnected) "Local server" else null,
-                                                isLoading = state.isLoadingSession || state.isCreatingSession,
-                                                loadingText = if (state.isCreatingSession) "Creating session..." else "Loading session..."
-                                            )
-                                        }
-                                    }
-                                }
-                    },
-                    rightPanel = {
-                        DashboardPanel(
-                            screenModel = dashboardScreenModel,
-                            onMcpConfigClick = { navigator.push(McpScreen()) },
-                            onSettingsClick = { navigator.push(SettingsScreen()) },
-                            onGitClick = { navigator.push(GitScreen()) },
-                            onFilesClick = { navigator.push(FilesScreen()) },
-                            onSkillsClick = { },
-                            onSkillClick = { },
-                            onTerminalClick = { navigator.push(TerminalScreen()) }
-                        )
-                    },
+                MainScreenPanelHost(
+                    panels = mainPanels,
                     panelState = panelState.state,
                     onPanelStateChange = { panelState.state = it },
-                    progressHolder = progressHolder
+                    progressHolder = progressHolder,
+                    paddingValues = paddingValues
+                )
+            }
+
+            if (showGlobalSearch) {
+                GlobalSearchOverlay(
+                    query = globalSearchQuery,
+                    sessionResults = sessionSearchResults,
+                    messageResults = messageSearchResults,
+                    fileSearchMode = state.fileSearchMode,
+                    fileResults = state.fileSearchResults,
+                    fileContentResults = state.fileContentSearchResults,
+                    isFileSearchLoading = state.isFileSearchLoading,
+                    fileSearchError = state.fileSearchError,
+                    currentSessionTitle = state.sessions
+                        .find { it.id == state.currentSessionId }
+                        ?.title,
+                    onQueryChange = { nextQuery ->
+                        globalSearchQuery = nextQuery
+                        screenModel.searchFiles(nextQuery)
+                    },
+                    onFileSearchModeChange = { mode ->
+                        if (mode != SearchMode.SYMBOL) {
+                            screenModel.updateFileSearchMode(mode, globalSearchQuery)
+                        }
+                    },
+                    onDismiss = { dismissGlobalSearch() },
+                    onSessionClick = { session ->
+                        targetMessageId = null
+                        screenModel.selectSession(session.id)
+                        dismissGlobalSearch()
+                    },
+                    onMessageClick = { result ->
+                        targetMessageId = result.messageId
+                        if (state.currentSessionId != result.sessionId) {
+                            screenModel.selectSession(result.sessionId)
+                        }
+                        dismissGlobalSearch()
+                    },
+                    onFileClick = {
+                        navigator.push(FilesScreen())
+                        dismissGlobalSearch()
+                    }
                 )
             }
         }

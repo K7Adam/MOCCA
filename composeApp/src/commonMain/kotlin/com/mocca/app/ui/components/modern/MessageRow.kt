@@ -23,10 +23,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.Message
@@ -47,6 +50,7 @@ import com.mocca.app.ui.screens.chat.MarkdownText
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.util.ChatExporter
 import com.mocca.app.util.FormatUtils
 
 private fun formatTime(timestamp: Long): String {
@@ -59,13 +63,13 @@ fun MessageRow(
     modifier: Modifier = Modifier,
     isFirstInGroup: Boolean = true,
     dateHeader: String? = null,
-    onFork: () -> Unit = {},
-    onRevert: () -> Unit = {},
+    onFork: (() -> Unit)? = null,
+    onRevert: (() -> Unit)? = null,
     showTimestamps: Boolean = true,
     showTokenCounts: Boolean = true,
-    onDelete: () -> Unit = {},
+    onDelete: (() -> Unit)? = null,
     onDeletePart: (String) -> Unit = {},
-    onEditPart: (MessagePart) -> Unit = {},
+    onEditPart: ((MessagePart) -> Unit)? = null,
     onFileClick: ((String) -> Unit)? = null
 ) {
     val isUser = message.role == MessageRole.USER
@@ -217,7 +221,7 @@ private fun AgentMessageContent(
             }
 
             if (showTokenCounts && message.tokens != null) {
-                TokenCountFooter(tokens = message.tokens)
+                TokenCountFooter(tokens = message.tokens, cost = message.cost)
             }
         }
     }
@@ -250,58 +254,115 @@ private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> U
 }
 
 @Composable
-private fun TokenCountFooter(tokens: TokenUsage) {
-    if (tokens.input <= 0 && tokens.output <= 0) return
+private fun TokenCountFooter(tokens: TokenUsage, cost: Double? = null) {
+    if (tokens.input <= 0 && tokens.output <= 0 && cost == null) return
 
-    Spacer(modifier = Modifier.height(AppSpacing.xs))
-    HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f), thickness = 0.5.dp)
     Spacer(modifier = Modifier.height(AppSpacing.xs))
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs, Alignment.End),
         verticalAlignment = Alignment.CenterVertically
     ) {
         if (tokens.input > 0) {
-            Text(
-                text = "IN: ${FormatUtils.formatCompactNumber(tokens.input)}",
-                color = AppColors.outline,
-                style = AppTypography.labelExtraSmall,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
+            TokenChip("IN", FormatUtils.formatCompactNumber(tokens.input), AppColors.outline)
         }
         if (tokens.output > 0) {
-            Text(
-                text = "OUT: ${FormatUtils.formatCompactNumber(tokens.output)}",
-                color = AppColors.primary.copy(alpha = 0.7f),
-                style = AppTypography.labelExtraSmall,
-                fontWeight = FontWeight.Medium
-            )
+            TokenChip("OUT", FormatUtils.formatCompactNumber(tokens.output), AppColors.primary.copy(alpha = 0.7f))
         }
         if (tokens.reasoning > 0) {
-            Spacer(modifier = Modifier.width(AppSpacing.sm))
-            Text(
-                text = "REASON: ${FormatUtils.formatCompactNumber(tokens.reasoning)}",
-                color = AppColors.primary.copy(alpha = 0.5f),
-                style = AppTypography.labelExtraSmall,
-                fontWeight = FontWeight.Medium
-            )
+            TokenChip("THINK", FormatUtils.formatCompactNumber(tokens.reasoning), AppColors.primary.copy(alpha = 0.5f))
+        }
+        tokens.cache?.let { cache ->
+            if (cache.read > 0 || cache.write > 0) {
+                val cacheText = buildString {
+                    if (cache.read > 0) append("${FormatUtils.formatCompactNumber(cache.read)}R")
+                    if (cache.read > 0 && cache.write > 0) append("/")
+                    if (cache.write > 0) append("${FormatUtils.formatCompactNumber(cache.write)}W")
+                }
+                TokenChip("CACHE", cacheText, AppColors.accentGreen.copy(alpha = 0.7f))
+            }
+        }
+        cost?.let { c ->
+            if (c > 0.0) {
+                TokenChip("", FormatUtils.formatCost(c), AppColors.warning)
+            }
         }
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun TokenChip(label: String, value: String, color: Color) {
+    Box(
+        modifier = Modifier
+            .background(AppColors.bgRaised, AppShapes.badge)
+            .padding(horizontal = AppSpacing.xs, vertical = 1.dp)
+    ) {
+        Text(
+            text = if (label.isNotEmpty()) "$label: $value" else value,
+            color = color,
+            style = AppTypography.labelExtraSmall,
+            fontWeight = FontWeight.Medium
+        )
+    }
+}
+
+private fun Message.buildCopyText(): String {
+    return parts.mapNotNull { part ->
+        when (part) {
+            is MessagePart.Text -> part.text.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.Reasoning -> part.content.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.Thinking -> part.content.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.ToolInvocation -> buildString {
+                append("Tool: ${part.name}")
+                val input = part.input.trim()
+                if (input.isNotEmpty()) {
+                    append("\n")
+                    append(input)
+                }
+            }.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.ToolResult -> part.result.trim().takeIf { it.isNotEmpty() }?.let { "Result:\n$it" }
+            is MessagePart.File -> part.filename?.trim()?.takeIf { it.isNotEmpty() }?.let { "File: $it" }
+            is MessagePart.SubTask -> null
+        }
+    }.joinToString("\n\n")
+}
+
+private fun Message.buildExportText(): String {
+    return ChatExporter.exportSessionToMarkdown(
+        sessionTitle = "Message Export",
+        messages = listOf(this)
+    ).trim()
+}
+
 @Composable
 private fun MessageContextMenu(
     expanded: Boolean,
     message: Message,
     onDismiss: () -> Unit,
-    onFork: () -> Unit,
-    onRevert: () -> Unit,
-    onDelete: () -> Unit,
-    onEditPart: (MessagePart) -> Unit
+    onFork: (() -> Unit)?,
+    onRevert: (() -> Unit)?,
+    onDelete: (() -> Unit)?,
+    onEditPart: ((MessagePart) -> Unit)?
 ) {
     if (!expanded) return
+
+    @Suppress("DEPRECATION")
+    val clipboardManager = LocalClipboardManager.current
+    val copyText = remember(message.parts) { message.buildCopyText() }
+    val exportText = remember(message.id, message.role, message.createdAt, message.parts) { message.buildExportText() }
+    val editablePart = remember(message.parts) { message.parts.filterIsInstance<MessagePart.Text>().firstOrNull() }
+    val editAction = onEditPart
+    val forkAction = onFork
+    val revertAction = onRevert
+    val deleteAction = onDelete
+    val canCopy = copyText.isNotBlank()
+    val canEdit = editablePart != null && editAction != null
+    val canFork = forkAction != null
+    val canRevert = revertAction != null
+    val canDelete = deleteAction != null
+    val canExport = exportText.isNotBlank()
+
+    if (!canCopy && !canEdit && !canFork && !canRevert && !canDelete && !canExport) return
 
     Box(
         modifier = Modifier
@@ -309,53 +370,95 @@ private fun MessageContextMenu(
             .padding(vertical = AppSpacing.xs),
         contentAlignment = Alignment.Center
     ) {
-        androidx.compose.material3.HorizontalFloatingToolbar(
-            expanded = expanded,
-            modifier = Modifier.clip(AppShapes.pill),
-            colors = androidx.compose.material3.FloatingToolbarDefaults.standardFloatingToolbarColors(),
+        Surface(
+            color = AppColors.bgRaised,
             shape = AppShapes.pill,
-            content = {
-                Row(
-                    modifier = Modifier.padding(horizontal = AppSpacing.sm),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (canCopy) {
                     MoccaIconButton(
                         icon = Icons.Default.ContentCopy,
-                        onClick = { /* Copy action */ onDismiss() },
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(copyText))
+                            onDismiss()
+                        },
                         iconColor = AppColors.onSurfaceVariant,
                         contentDescription = "Copy message",
                         size = 32.dp
                     )
+                }
 
+                if (canEdit) {
+                    MoccaIconButton(
+                        icon = Icons.Default.Edit,
+                        onClick = {
+                            editAction(editablePart)
+                            onDismiss()
+                        },
+                        iconColor = AppColors.onSurfaceVariant,
+                        contentDescription = "Edit message",
+                        size = 32.dp
+                    )
+                }
+
+                if (canFork) {
                     MoccaIconButton(
                         icon = Icons.Default.Refresh,
-                        onClick = { onFork(); onDismiss() },
+                        onClick = {
+                            forkAction()
+                            onDismiss()
+                        },
                         iconColor = AppColors.onSurfaceVariant,
                         contentDescription = "Fork from message",
                         size = 32.dp
                     )
+                }
 
-                    val textParts = message.parts.filterIsInstance<MessagePart.Text>()
-                    if (textParts.isNotEmpty()) {
-                        MoccaIconButton(
-                            icon = Icons.Default.Edit,
-                            onClick = { onEditPart(textParts.first()); onDismiss() },
-                            iconColor = AppColors.onSurfaceVariant,
-                            contentDescription = "Edit message",
-                            size = 32.dp
-                        )
-                    }
+                if (canRevert) {
+                    MoccaIconButton(
+                        icon = Icons.Default.Undo,
+                        onClick = {
+                            revertAction()
+                            onDismiss()
+                        },
+                        iconColor = AppColors.onSurfaceVariant,
+                        contentDescription = "Revert to message",
+                        size = 32.dp
+                    )
+                }
 
+                if (canExport) {
+                    MoccaIconButton(
+                        icon = Icons.Default.Share,
+                        onClick = {
+                            clipboardManager.setText(AnnotatedString(exportText))
+                            onDismiss()
+                        },
+                        iconColor = AppColors.onSurfaceVariant,
+                        contentDescription = "Export message as Markdown",
+                        size = 32.dp
+                    )
+                }
+
+                if (canDelete) {
                     MoccaIconButton(
                         icon = Icons.Default.Delete,
-                        onClick = { onDelete(); onDismiss() },
+                        onClick = {
+                            deleteAction()
+                            onDismiss()
+                        },
                         iconColor = AppColors.error,
                         contentDescription = "Delete message",
                         size = 32.dp
                     )
                 }
             }
-        )
+        }
     }
 }

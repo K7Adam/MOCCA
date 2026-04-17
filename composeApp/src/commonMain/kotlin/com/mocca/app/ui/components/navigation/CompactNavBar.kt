@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Computer
@@ -48,8 +50,6 @@ import androidx.compose.ui.unit.sp
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.moccaClickable
-import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.AppTypography
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -128,20 +128,20 @@ fun CompactNavBar(
                 .height(4.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Subtle track background for visibility
+            // Borderless track — depth through background layer contrast
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .height(1.dp)
                     .background(
-                        color = AppColors.outline.copy(alpha = 0.3f),
+                        color = AppColors.bgOverlay,
                         shape = AppShapes.extraSmall
                     )
             )
-            // Active indicator
+            // Active indicator pill
             Box(
                 modifier = Modifier
-                    .width(28.dp)
+                    .width(36.dp)
                     .height(4.dp)
                     .offset {
                         val xOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
@@ -149,7 +149,7 @@ fun CompactNavBar(
                     }
                     .background(
                         color = AppColors.primary,
-                        shape = RoundedCornerShape(2.dp)
+                        shape = AppShapes.pill
                     )
             )
         }
@@ -170,13 +170,13 @@ private fun CompactNavItem(
 
     // Animated color transition
     val iconColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
+        targetValue = if (isSelected) AppColors.primary else AppColors.fgMuted,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "iconColor"
     )
 
     val textColor by animateColorAsState(
-        targetValue = if (isSelected) AppColors.primary else AppColors.outline,
+        targetValue = if (isSelected) AppColors.onBackground else AppColors.fgMuted,
         animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
         label = "textColor"
     )

@@ -114,7 +114,7 @@ curl -u opencode:your_password http://<host>:4096/global/health
 | Koin | 4.1.1 |
 | Voyager | 1.1.0-beta03 |
 | AGP | 9.0.0-rc03 |
-| M3 Expressive | 1.4.0-alpha05 |
+| M3 Expressive | 1.5.0-alpha15 (via CMP 1.11.0-alpha04) |
 
 ### Project Structure
 

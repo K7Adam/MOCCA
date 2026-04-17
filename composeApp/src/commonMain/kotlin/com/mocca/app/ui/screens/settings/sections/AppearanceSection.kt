@@ -1,11 +1,9 @@
 package com.mocca.app.ui.screens.settings.sections
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -56,7 +54,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTokenCounts(!preferences.showTokenCounts) }
             )
             
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             
             // Show Timestamps
             SettingsRowItem(
@@ -66,7 +64,7 @@ fun AppearanceSection(
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
             )
             
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             
             // Compact Mode
             SettingsRowItem(
@@ -76,7 +74,7 @@ fun AppearanceSection(
                 onToggle = { onSetCompactMode(!preferences.compactMode) }
             )
             
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             
             // Hide API Keys
             SettingsRowItem(
@@ -167,12 +165,7 @@ fun AppearanceSection(
                         modifier = Modifier
                             .size(18.dp)
                             .background(
-                                color = if (isSelected) AppColors.primary else Color.Transparent,
-                                shape = CircleShape
-                            )
-                            .border(
-                                width = if (isSelected) 0.dp else 1.5.dp,
-                                color = if (isSelected) AppColors.primary else AppColors.outline,
+                                color = if (isSelected) AppColors.primary else AppColors.bgRaised,
                                 shape = CircleShape
                             )
                     )
@@ -197,7 +190,7 @@ fun AppearanceSection(
                 }
                 
                 if (index < UserPreferences.CODE_FONT_OPTIONS.lastIndex) {
-                    HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
+                    Spacer(modifier = Modifier.height(AppSpacing.xs))
                 }
             }
         }

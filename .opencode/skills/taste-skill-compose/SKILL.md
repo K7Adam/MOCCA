@@ -22,9 +22,10 @@ Use this skill for visual/interaction improvements where structure already exist
 
 1. Prefer calm, neutral surfaces and subtle accent usage.
 2. Use rounded interactive shapes; never use `RectangleShape` for controls.
-3. Keep animations brief and meaningful (state change feedback only).
+3. Keep animations brief and meaningful (state change feedback only). Use `MaterialTheme.motionScheme` tokens for consistent motion.
 4. Preserve accessibility basics (tap targets, contrast, readable text hierarchy).
 5. Reuse existing component patterns before inventing new visual primitives.
+6. Simple UI-only transforms in composables (date formatting, derived display strings) are acceptable. Business logic stays in ScreenModel/repository layers.
 
 ## Pairing guidance
 

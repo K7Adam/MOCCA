@@ -34,11 +34,11 @@ object NavConstants {
     // INDICATOR SIZING
 
     
-    /** Sliding indicator width */
-    val IndicatorWidth = 32.dp
+    /** Sliding indicator width — wider for borderless pill shape */
+    val IndicatorWidth = 48.dp
     
     /** Sliding indicator height */
-    val IndicatorHeight = 4.dp
+    val IndicatorHeight = 2.dp
     
     /** Indicator dot size for selected item */
     val IndicatorDotSize = 4.dp
@@ -64,8 +64,8 @@ object NavConstants {
     /** Height of nav indicator section */
     val NavIndicatorSectionHeight = 10.dp
     
-    /** Spacer between nav items and indicator */
-    val NavItemToIndicatorSpacing = 6.dp
+    /** Spacer between nav items and indicator — tighter for borderless feel */
+    val NavItemToIndicatorSpacing = 4.dp
 
     // CHAT INPUT COMPONENT HEIGHTS
 

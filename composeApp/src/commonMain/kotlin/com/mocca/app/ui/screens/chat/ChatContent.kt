@@ -5,6 +5,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -13,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,6 +26,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Icon
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.MessagePart
 import com.mocca.app.domain.model.MessageRole
@@ -43,18 +48,27 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 
 enum class HeroMomentType { NONE, CONNECTED, COMPLETED }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatContent(
     screenModel: ChatScreenModel,
     onScrollDirectionChange: (ScrollDirection) -> Unit = {},
     onScrollToBottomStateChange: (showButton: Boolean, hasNewMessages: Boolean) -> Unit = { _, _ -> },
-    scrollToBottomTrigger: Long = 0L
+    scrollToBottomTrigger: Long = 0L,
+    targetMessageId: String? = null,
+    onTargetMessageHandled: () -> Unit = {}
 ) {
     val state by screenModel.state.collectAsState()
     val streamingText by screenModel.streamingText.collectAsState()
     val aggregatedMessages by screenModel.aggregatedMessages.collectAsState()
+    val performance = LocalAppPerformance.current
 
-    val listState = rememberLazyListState()
+    val listState = rememberLazyListState(
+        cacheWindow = LazyLayoutCacheWindow(
+            ahead = performance.lazyListCacheAhead,
+            behind = performance.lazyListCacheBehind
+        )
+    )
     val haptic = LocalHapticFeedback.current
 
     val navigator = LocalNavigator.current
@@ -245,13 +259,16 @@ fun ChatContent(
                 thinkingElapsedMs = state.thinkingElapsedMs,
                 showTimestamps = state.showTimestamps,
                 showTokenCounts = state.showTokenCounts,
-                onFileClick = onFileClick
+                onFileClick = onFileClick,
+                targetMessageId = targetMessageId,
+                onTargetMessageHandled = onTargetMessageHandled
             )
 
             QuestionDialogHost(screenModel = screenModel)
         }
 
-        ShareSessionDialogHost(screenModel = screenModel)
+ShareSessionDialogHost(screenModel = screenModel)
+        ExportChatDialogHost(screenModel = screenModel)
         EditMessagePartDialogHost(screenModel = screenModel)
         ForkSessionDialogHost(screenModel = screenModel)
     }
@@ -322,7 +339,9 @@ private fun ChatMessagePane(
     thinkingElapsedMs: Long,
     showTimestamps: Boolean,
     showTokenCounts: Boolean,
-    onFileClick: (String) -> Unit
+    onFileClick: (String) -> Unit,
+    targetMessageId: String?,
+    onTargetMessageHandled: () -> Unit
 ) {
     if (isLoading && aggregatedMessages.isEmpty()) {
         Column(
@@ -345,6 +364,21 @@ private fun ChatMessagePane(
                 aggregatedMessages.filter { msg ->
                     msg.role == MessageRole.USER || msg.parts.isNotEmpty()
                 }
+            }
+        }
+        val reversedMessages = remember(displayMessages) { displayMessages.asReversed() }
+
+        LaunchedEffect(targetMessageId, reversedMessages, isSending, isThinking, streamingText) {
+            val messageId = targetMessageId ?: return@LaunchedEffect
+            val targetIndex = reversedMessages.indexOfFirst { it.id == messageId }
+            if (targetIndex >= 0) {
+                val prefixItemCount = 1 +
+                    (if (isSending && streamingText.isEmpty() && !isThinking) 1 else 0) +
+                    (if (isThinking) 1 else 0) +
+                    (if (streamingText.isNotEmpty()) 1 else 0)
+
+                listState.animateScrollToItem(prefixItemCount + targetIndex)
+                onTargetMessageHandled()
             }
         }
 
@@ -391,7 +425,6 @@ private fun ChatMessagePane(
                 ) { ModernStreamingMessage(text = streamingText) }
             }
 
-            val reversedMessages = displayMessages.asReversed()
             itemsIndexed(
                 items = reversedMessages,
                 key = { _, it -> it.id },
@@ -552,5 +585,48 @@ private fun ForkSessionDialogHost(
         messages = aggregatedMessages,
         onFork = { message -> screenModel.forkSession(message) },
         onDismiss = { screenModel.dismissForkDialog() }
+    )
+}
+
+@Composable
+private fun ExportChatDialogHost(
+    screenModel: ChatScreenModel
+) {
+    val showExportDialog by screenModel.showExportDialog.collectAsState()
+
+    if (!showExportDialog) return
+
+    val state by screenModel.state.collectAsState()
+    @Suppress("DEPRECATION")
+    val clipboard = LocalClipboardManager.current
+
+    AlertDialog(
+        onDismissRequest = { screenModel.dismissExportDialog() },
+        containerColor = AppColors.surfaceContainerHigh,
+        shape = AppShapes.dialog,
+        title = { Text("EXPORT CHAT", style = AppTypography.labelMedium, color = AppColors.onSurface) },
+        text = {
+            Text(
+                "Copy chat to clipboard as Markdown?",
+                color = AppColors.onSurface,
+                style = AppTypography.bodyMedium
+            )
+        },
+        confirmButton = {
+            MoccaCompactButton(
+                text = "COPY",
+                onClick = {
+                    val markdown = screenModel.exportChatToMarkdown()
+                    clipboard.setText(AnnotatedString(markdown))
+                    screenModel.dismissExportDialog()
+                }
+            )
+        },
+        dismissButton = {
+            MoccaTextButton(
+                text = "CANCEL",
+                onClick = { screenModel.dismissExportDialog() }
+            )
+        }
     )
 }

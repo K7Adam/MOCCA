@@ -12,14 +12,14 @@ import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.ServerConfig
 
 /**
- * Steps in the progressive onboarding wizard (simplified 3-step flow).
+ * Steps in the progressive onboarding wizard (discovery-first 3-step flow).
  */
 enum class OnboardingStep {
-    /** Welcome screen with branding and setup checklist */
+    /** Welcome screen with branding and quick-start setup checklist */
     WELCOME,
-    /** Server connection — discovery + manual entry in one screen */
+    /** Server discovery (primary) + manual entry (fallback) */
     CONNECT,
-    /** Active connection attempt with staged progress */
+    /** Staged connection with config import */
     CONNECTING
 }
 
@@ -92,6 +92,7 @@ enum class ConnectionStage {
     RESOLVING_SERVER,
     AUTHENTICATING,
     TESTING_API,
+    IMPORTING_CONFIG,
     CONNECTED,
     FAILED
 }

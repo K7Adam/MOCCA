@@ -91,7 +91,10 @@ fun GroupedSessionCard(
             val parentModifier = Modifier
                 .fillMaxWidth()
                 .clip(AppShapes.sessionCard)
-                .background(AppColors.surfaceContainerHigh, AppShapes.sessionCard)
+                .background(
+                    if (isActive) AppColors.bgOverlay else AppColors.bgRaised,
+                    AppShapes.sessionCard
+                )
             
             val borderModifier = if (isRunning) {
                 parentModifier.border(
@@ -100,11 +103,7 @@ fun GroupedSessionCard(
                     shape = AppShapes.sessionCard
                 )
             } else {
-                parentModifier.border(
-                    width = AppSpacing.borderThin,
-                    color = AppColors.outline.copy(alpha = 0.3f),
-                    shape = AppShapes.sessionCard
-                )
+                parentModifier
             }
             
             Column(
@@ -320,17 +319,17 @@ private fun StackedChildPreview(
                         if (hasRunningChild && i == visibleStacks - 1) {
                             AppColors.primary
                         } else {
-                            AppColors.surfaceContainerHigh
+                            AppColors.bgBase
                         }
                     )
-                    .border(
-                        width = 1.dp,
-                        color = if (hasRunningChild && i == visibleStacks - 1) {
-                            AppColors.primary
-                        } else {
-                            AppColors.outline.copy(alpha = 0.3f)
-                        },
-                        shape = AppShapes.small
+                    .then(
+                        if (hasRunningChild && i == visibleStacks - 1) {
+                            Modifier.border(
+                                width = 1.dp,
+                                color = AppColors.primary,
+                                shape = AppShapes.small
+                            )
+                        } else Modifier
                     )
             )
         }
@@ -357,13 +356,17 @@ private fun ChildSessionCard(
             .clip(AppShapes.medium)
             .background(
                 if (isRunning) AppColors.primary.copy(alpha = 0.1f)
-                else AppColors.surfaceVariant
+                else AppColors.bgBase,
+                AppShapes.medium
             )
-            .border(
-                width = 1.dp,
-                color = if (isRunning) AppColors.primary.copy(alpha = 0.3f)
-                else AppColors.outline,
-                shape = AppShapes.medium
+            .then(
+                if (isRunning) {
+                    Modifier.border(
+                        width = 1.dp,
+                        color = AppColors.primary.copy(alpha = 0.3f),
+                        shape = AppShapes.medium
+                    )
+                } else Modifier
             )
             .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(horizontal = 12.dp, vertical = 10.dp),

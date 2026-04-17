@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,17 +50,6 @@ fun SharedNavIndicator(
             .height(NavConstants.IndicatorHeight),
         contentAlignment = Alignment.Center
     ) {
-        // Subtle track background
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .height(1.dp)
-                .background(
-                    color = AppColors.outline.copy(alpha = 0.3f),
-                    shape = AppShapes.extraSmall
-                )
-        )
-
         // Active indicator pill — follows drag directly, then springs on settle
         Box(
             modifier = Modifier
@@ -69,7 +58,7 @@ fun SharedNavIndicator(
                 .graphicsLayer { translationX = animatedOffsetPx }
                 .background(
                     color = AppColors.primary,
-                    shape = RoundedCornerShape(2.dp)
+                    shape = AppShapes.pill
                 )
         )
     }

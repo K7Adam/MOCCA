@@ -76,6 +76,8 @@ fun getItems(): Flow<Resource<List<Item>>> = flow {
 }.flowOn(Dispatchers.IO) // ALWAYS use IO dispatcher
 ```
 
+This pattern is **mandatory** for primary user-facing data (sessions, messages, config). It is **optional** for infrequently-changing secondary data (agent list, providers, diffs) where a direct API call without caching suffices.
+
 ### 2. ApiExecutor Pattern
 Repositories that need HTTP access depend on `ApiExecutor` (interface), NOT on `HttpClient` directly. `ConnectionManager` implements `ApiExecutor` and manages the underlying `HttpClient` with proper auth headers and lifecycle.
 
@@ -93,7 +95,7 @@ Some specific lookups return a `suspend Resource<T>` instead of a Flow. These st
 *   **SessionRepository.getSession(sessionId: String)**: Returns `Resource<Session>`. It attempts to fetch from the network and updates the cache if found, falling back to the local cache if the network request fails or the item isn't in the network response.
 
 ### 4. Threading Guidelines
-**NEVER block the main thread.**
+**NEVER block the main thread.** Use `Dispatchers.IO` for blocking DB/file/network I/O. Not required for non-blocking suspend calls already dispatched appropriately.
 - Repositories must be thread-safe and offload heavy I/O to `Dispatchers.IO`.
 - Use `.flowOn(Dispatchers.IO)` for all `Flow` builders.
 - Use `withContext(Dispatchers.IO)` for all `suspend` functions that interact with the network or database.
@@ -104,4 +106,4 @@ Some specific lookups return a `suspend Resource<T>` instead of a Flow. These st
 - **Stale Cache**: Forgetting to update `LocalCache` after a successful network fetch.
 - **Direct API Leakage**: UI calling `MoccaApiClient` directly, bypassing the repository's caching logic.
 - **In-Memory Only**: Storing critical business state in repository variables instead of persisting to `LocalCache`.
-- **Holding HttpClient**: Consumers must NEVER hold an `HttpClient` reference. Always use `ApiExecutor.execute {}`.
+- **Holding HttpClient**: Consumers must NEVER hold an `HttpClient` reference. Always use `ApiExecutor.execute {}`. Exception: `GitHubApiClient` holds its own `HttpClient` for external GitHub API calls (not the OpenCode server).

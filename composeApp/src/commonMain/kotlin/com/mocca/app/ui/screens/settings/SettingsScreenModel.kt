@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
 @Immutable
@@ -56,6 +57,10 @@ data class SettingsState(
     val serverDefaultProvider: String? = null,
     val serverDefaultModel: String? = null,
     val serverModes: ImmutableList<Mode> = persistentListOf(),
+    val isSyncingConfig: Boolean = false,
+    val configSyncMessage: String = "Waiting to sync server config",
+    val configLastSyncedAt: Long? = null,
+    val configSyncFailed: Boolean = false,
     // User Preferences
     val preferences: UserPreferences = UserPreferences.DEFAULT,
     // Clear Cache Dialog
@@ -306,11 +311,30 @@ class SettingsScreenModel(
      */
     private fun loadServerConfig() {
         screenModelScope.launch {
-            // Load config for default model
+            val currentState = _state.value
+            val loadedProviderIds = currentState.providerAuthMethods.keys.toList()
+            _state.value = currentState.copy(
+                isSyncingConfig = true,
+                configSyncFailed = false,
+                configSyncMessage = if (currentState.configLastSyncedAt == null) {
+                    "Loading server config..."
+                } else {
+                    "Refreshing server config..."
+                }
+            )
+
+            var configLoaded = false
+            var providersLoaded = false
+            var providerAuthRefreshed = 0
+            var configError: String? = null
+            var providersError: String? = null
+            val providerAuthErrors = mutableListOf<String>()
+
             configRepository.getConfig().collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         val config = resource.data
+                        configLoaded = true
                         _state.value = _state.value.copy(
                             serverConfig = config,
                             serverDefaultModel = config.model,
@@ -319,6 +343,7 @@ class SettingsScreenModel(
                         Napier.i { "Server config loaded: defaultModel=${config.model}, modes=${config.modes.size}" }
                     }
                     is Resource.Error -> {
+                        configError = resource.message
                         Napier.w { "Failed to load server config: ${resource.message}" }
                     }
                     is Resource.Loading -> {
@@ -326,21 +351,19 @@ class SettingsScreenModel(
                     }
                 }
             }
-        }
-
-        // Load providers config for default provider
-        screenModelScope.launch {
             configRepository.getProvidersConfig().collect { resource ->
                 when (resource) {
                     is Resource.Success -> {
                         val config = resource.data
                         val defaultProvider = config.default.entries.firstOrNull()?.key
+                        providersLoaded = true
                         _state.value = _state.value.copy(
                             serverDefaultProvider = defaultProvider
                         )
                         Napier.i { "Providers config loaded: defaultProvider=$defaultProvider, providers=${config.providers.size}" }
                     }
                     is Resource.Error -> {
+                        providersError = resource.message
                         Napier.w { "Failed to load providers config: ${resource.message}" }
                     }
                     is Resource.Loading -> {
@@ -348,7 +371,57 @@ class SettingsScreenModel(
                     }
                 }
             }
+
+            loadedProviderIds.forEach { providerId ->
+                configRepository.getProviderAuthMethods(providerId).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> {
+                            providerAuthRefreshed += 1
+                            _state.value = _state.value.copy(
+                                providerAuthMethods = (_state.value.providerAuthMethods + (providerId to resource.data.toImmutableList())).toImmutableMap()
+                            )
+                        }
+                        is Resource.Error -> {
+                            providerAuthErrors += "$providerId: ${resource.message}"
+                        }
+                        is Resource.Loading -> Unit
+                    }
+                }
+            }
+
+            val syncedAt = if (configLoaded || providersLoaded || providerAuthRefreshed > 0) {
+                Clock.System.now().toEpochMilliseconds()
+            } else {
+                _state.value.configLastSyncedAt
+            }
+            val syncMessage = when {
+                configLoaded && providersLoaded -> buildString {
+                    append("Imported current /config defaults and provider settings")
+                    if (providerAuthRefreshed > 0) {
+                        append("; refreshed auth for $providerAuthRefreshed opened provider")
+                        if (providerAuthRefreshed != 1) append('s')
+                    }
+                }
+                configLoaded -> "Imported /config defaults; provider settings were unavailable"
+                providersLoaded -> "Imported provider settings; app defaults were unavailable"
+                providerAuthRefreshed > 0 -> "Refreshed auth methods for $providerAuthRefreshed opened provider" + if (providerAuthRefreshed == 1) "" else "s"
+                else -> listOfNotNull(configError, providersError)
+                    .plus(providerAuthErrors.takeIf { it.isNotEmpty() }?.joinToString(" • "))
+                    .joinToString(" • ")
+                    .ifBlank { "Unable to reach server config" }
+            }
+
+            _state.value = _state.value.copy(
+                isSyncingConfig = false,
+                configSyncMessage = syncMessage,
+                configLastSyncedAt = syncedAt,
+                configSyncFailed = !configLoaded && !providersLoaded && providerAuthRefreshed == 0
+            )
         }
+    }
+
+    fun syncServerConfig() {
+        loadServerConfig()
     }
     
     fun loadRemoteConfig() {
@@ -623,7 +696,7 @@ class SettingsScreenModel(
     }
     
     fun addNewServer() {
-        val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val now = Clock.System.now().toEpochMilliseconds()
         val newServer = ServerConfig(
             id = now.toString(),
             name = "New Server",

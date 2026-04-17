@@ -19,6 +19,7 @@ import com.mocca.app.domain.model.mergeCommands
 import com.mocca.app.ui.components.modern.CommandPaletteOverlay
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
+import com.mocca.app.ui.components.voice.RequestVoicePermissionEffect
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 
@@ -64,6 +65,8 @@ fun ChatInputContent(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    onExportClick: () -> Unit,
+    onMicClick: () -> Unit,
     inputEnabled: Boolean,
     placeholder: String,
     // Agent state
@@ -101,6 +104,10 @@ fun ChatInputContent(
     // Prompt history navigation
     onHistoryUp: () -> Unit = {},
     onHistoryDown: () -> Unit = {},
+    isVoiceListening: Boolean = false,
+    isVoiceAvailable: Boolean = false,
+    voicePermissionRequestToken: Int = 0,
+    onVoicePermissionResult: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
     alpha: Float = 1f
 ) {
@@ -209,6 +216,10 @@ fun ChatInputContent(
             onSendClick = onSendClick,
             onAbortClick = onAbortClick,
             onAttachClick = onAttachClick,
+            onMicClick = onMicClick,
+            onExportClick = onExportClick,
+            isListening = isVoiceListening,
+            isVoiceAvailable = isVoiceAvailable,
             modes = modes,
             selectedModeId = selectedModeId,
             onModeSelectedForMention = onModeSelectedForMention,
@@ -267,4 +278,9 @@ fun ChatInputContent(
             onDismiss = { showCommandPalette = false }
         )
     }
+
+    RequestVoicePermissionEffect(
+        requestToken = voicePermissionRequestToken,
+        onResult = onVoicePermissionResult
+    )
 }

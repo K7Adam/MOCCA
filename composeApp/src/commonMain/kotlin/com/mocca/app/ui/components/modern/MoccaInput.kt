@@ -97,8 +97,8 @@ fun MoccaInput(
     singleLine: Boolean = true,
     showPrompt: Boolean = false, // Modern design doesn't use terminal prompts
     backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.outline,
-    borderWidth: Dp = AppSpacing.borderThin,
+    borderColor: Color = Color.Transparent, // Transparent - use background contrast; focus uses animated color
+    borderWidth: Dp = 0.dp,
     shape: Shape = AppShapes.input,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,

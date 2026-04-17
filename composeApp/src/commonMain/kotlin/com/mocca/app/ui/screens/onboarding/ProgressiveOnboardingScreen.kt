@@ -74,9 +74,10 @@ class ProgressiveOnboardingScreen(
         val serverConfigRepository = koinInject<ServerConfigRepository>()
         val connectionManager = koinInject<ConnectionManager>()
         val serverDiscovery = koinInject<ServerDiscovery>()
+        val appStateStore = koinInject<com.mocca.app.data.repository.AppStateStore>()
 
         val screenModel = rememberScreenModel {
-            OnboardingWizardModel(serverConfigRepository, connectionManager, serverDiscovery)
+            OnboardingWizardModel(serverConfigRepository, connectionManager, serverDiscovery, appStateStore)
         }
 
         val state by screenModel.state.collectAsState()

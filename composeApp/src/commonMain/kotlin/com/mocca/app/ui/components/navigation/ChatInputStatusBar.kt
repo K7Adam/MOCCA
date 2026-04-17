@@ -62,15 +62,10 @@ internal fun ChatInputStatusBar(
     ) {
         // Model selector - styled as pill chip
         Box(
-            modifier = Modifier
+modifier = Modifier
                 .height(NavConstants.StatusBarChipHeight)
                 .background(
-                    color = AppColors.surface.copy(alpha = 0.5f),
-                    shape = AppShapes.pill
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = AppColors.outline.copy(alpha = 0.3f),
+                    color = AppColors.bgRaised,
                     shape = AppShapes.pill
                 )
                 .moccaClickable(onClick = onModelSelectorClick, enabled = providerResponse != null, pressedScale = 0.97f)
@@ -97,18 +92,13 @@ internal fun ChatInputStatusBar(
             }
         }
 
-        // Variant selector (if available) - pill chip
+// Variant selector (if available) - pill chip
         if (variants.isNotEmpty()) {
             Box(
                 modifier = Modifier
                     .height(NavConstants.StatusBarChipHeight)
                     .background(
-                        color = AppColors.surface.copy(alpha = 0.5f),
-                        shape = AppShapes.pill
-                    )
-                    .border(
-                        width = 0.5.dp,
-                        color = AppColors.outline.copy(alpha = 0.3f),
+                        color = AppColors.bgRaised,
                         shape = AppShapes.pill
                     )
                     .moccaClickable(onClick = onVariantSelectorClick, pressedScale = 0.97f)
@@ -158,18 +148,13 @@ private fun AgentSelectorChip(
     selectedModeId: String?,
     onModeSelected: (String?) -> Unit
 ) {
-    Box {
+Box {
         var showAgentMenu by remember { mutableStateOf(false) }
         Box(
             modifier = Modifier
                 .height(NavConstants.StatusBarChipHeight)
                 .background(
-                    color = AppColors.surface.copy(alpha = 0.5f),
-                    shape = AppShapes.pill
-                )
-                .border(
-                    width = 0.5.dp,
-                    color = AppColors.outline.copy(alpha = 0.3f),
+                    color = AppColors.bgRaised,
                     shape = AppShapes.pill
                 )
                 .moccaClickable(onClick = { showAgentMenu = true }, pressedScale = 0.97f)

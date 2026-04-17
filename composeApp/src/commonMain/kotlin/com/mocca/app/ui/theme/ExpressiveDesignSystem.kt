@@ -21,27 +21,6 @@ import kotlin.math.sin
  * Designed by Pickle Rick. Jerry-free zone.
  */
 
-@Composable
-fun ExpressiveBentoCard(
-    modifier: Modifier = Modifier,
-    containerColor: Color = MoccaTheme.colors.surfaceContainer,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Surface(
-        modifier = modifier,
-        color = containerColor,
-        shape = AppShapes.extraLarge,
-        tonalElevation = 2.dp,
-        shadowElevation = 0.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(AppSpacing.lg),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.md),
-            content = content
-        )
-    }
-}
-
 /**
  * GPU-efficient Dynamic Mesh Background for premium M3 Expressive aesthetics.
  */

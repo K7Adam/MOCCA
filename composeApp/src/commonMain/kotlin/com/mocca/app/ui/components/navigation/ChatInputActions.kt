@@ -16,6 +16,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -55,6 +57,10 @@ internal fun ChatInputActionToolbar(
     onSendClick: () -> Unit,
     onAbortClick: () -> Unit,
     onAttachClick: () -> Unit,
+    onMicClick: () -> Unit,
+    onExportClick: () -> Unit,
+    isListening: Boolean,
+    isVoiceAvailable: Boolean,
     // @ mention palette
     modes: List<Mode>,
     selectedModeId: String?,
@@ -138,6 +144,31 @@ internal fun ChatInputActionToolbar(
             contentDescription = "History down"
         )
 
+        if (isVoiceAvailable) {
+            Box(
+                modifier = Modifier
+                    .size(NavConstants.ActionButtonSize)
+                    .background(
+                        color = if (isListening) AppColors.primary.copy(alpha = 0.2f)
+                        else AppColors.surface.copy(alpha = 0.3f),
+                        shape = AppShapes.pill
+                    )
+                    .then(
+                        if (isListening) Modifier.border(AppSpacing.borderThin, AppColors.primary, AppShapes.pill)
+                        else Modifier
+                    )
+                    .moccaClickable(onClick = onMicClick, pressedScale = 0.94f),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Mic,
+                    contentDescription = if (isListening) "Stop voice input" else "Start voice input",
+                    tint = if (isListening) AppColors.primary else AppColors.onSurfaceVariant,
+                    modifier = Modifier.size(NavConstants.ActionIconSize)
+                )
+            }
+        }
+
         // Subtle separator
         VerticalDivider(
             modifier = Modifier
@@ -167,6 +198,25 @@ internal fun ChatInputActionToolbar(
         }
 
         Spacer(modifier = Modifier.weight(1f))
+
+        // Export chat button
+        Box(
+            modifier = Modifier
+                .size(NavConstants.ActionButtonSize)
+                .background(
+                    color = AppColors.surface.copy(alpha = 0.3f),
+                    shape = AppShapes.pill
+                )
+                .moccaClickable(onClick = onExportClick, pressedScale = 0.94f),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.ContentCopy,
+                contentDescription = "Export chat to Markdown",
+                tint = AppColors.onSurfaceVariant,
+                modifier = Modifier.size(NavConstants.ActionIconSize)
+            )
+        }
 
         // RIGHT: Send/Abort button (transforms based on agent state)
         if (isSessionIdle) {

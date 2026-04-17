@@ -14,16 +14,18 @@ Theme/token source of truth for MOCCA: Material 3 Expressive shell, custom dark 
 | Typography | `AppTypography.kt` | App fonts + code font selection |
 | Shapes | `AppShapes.kt` | Squircle/card/pill definitions |
 | Spacing | `AppSpacing.kt` | Layout constants used across screens |
-| Motion | `AppAnimations.kt`, `MotionUtils.kt` | Expressive vs standard motion |
+| Motion | `MotionUtils.kt` | Expressive vs standard motion |
 | Adaptive tuning | `AppPerformance.kt` | Performance-sensitive theme toggles |
 | Focus polish | `FocusModifiers.kt` | Accessibility/focus affordances |
 
 ## CONVENTIONS
-- `AppTheme {}` wraps the app; screens/components consume app tokens rather than inventing their own
+- `AppTheme {}` wraps the app; screens/components consume app tokens rather than inventing their own. Theme bridge code in `AppTheme.kt` may use `MaterialTheme.colorScheme` to provision the M3 shell. Feature/UI code uses `AppColors`/`AppShapes`.
 - Use `AppColors`, `AppTypography`, `AppShapes`, `AppSpacing` directly for project styling
 - `MoccaTheme` exists for unified token access outside plain composable parameter chains
 - Code/editor font comes from `LocalCodeFontFamily` via preferences, not hardcoded monospace assumptions
+- For motion/animation: `MaterialTheme.motionScheme` is the standard API.
 - Expressive motion is allowed, but `AppPerformance` can downgrade to standard motion
+- Prefer `tonalElevation` for depth. `shadowElevation` acceptable for modals needing extra separation.
 
 ## ANTI-PATTERNS
 - Never treat raw Material defaults as the source of truth

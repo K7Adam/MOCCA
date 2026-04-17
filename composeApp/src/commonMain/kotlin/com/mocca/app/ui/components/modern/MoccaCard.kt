@@ -37,9 +37,9 @@ import com.mocca.app.ui.theme.*
 fun MoccaCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.outline,
-    borderWidth: Dp = AppSpacing.borderThin,
+    backgroundColor: Color = AppColors.bgRaised,
+    borderColor: Color = Color.Transparent,
+    borderWidth: Dp = 0.dp,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
     isLoading: Boolean = false,
@@ -71,9 +71,9 @@ fun MoccaCard(
 fun MoccaCardElevated(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.outlineVariant,
-    borderWidth: Dp = AppSpacing.borderThin,
+    backgroundColor: Color = AppColors.bgOverlay,
+    borderColor: Color = Color.Transparent,
+    borderWidth: Dp = 0.dp,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
@@ -96,9 +96,9 @@ fun MoccaCardElevated(
 fun StatusMonitorCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    backgroundColor: Color = AppColors.surfaceContainer,
-    borderColor: Color = AppColors.outline,
-    borderWidth: Dp = AppSpacing.borderThin,
+    backgroundColor: Color = AppColors.bgOverlay,
+    borderColor: Color = Color.Transparent,
+    borderWidth: Dp = 0.dp,
     contentPadding: Dp = AppSpacing.cardPaddingLarge,
     shape: Shape = AppShapes.extraLarge,
     content: @Composable ColumnScope.() -> Unit
@@ -109,7 +109,6 @@ fun StatusMonitorCard(
             .clip(shape)
             .background(backgroundColor, shape)
             .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.15f), blur = 20.dp)
-            .border(borderWidth, borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
     ) {
@@ -156,8 +155,8 @@ fun MoccaSessionCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     isActive: Boolean = false,
-    backgroundColor: Color = AppColors.surfaceContainerHigh,
-    borderColor: Color = AppColors.surfaceContainerHighest.copy(alpha = 0.3f),
+    backgroundColor: Color = AppColors.bgRaised,
+    borderColor: Color = Color.Transparent,
     activeIndicatorColor: Color = AppColors.primary,
     activeIndicatorWidth: Dp = AppSpacing.activeIndicatorWidth,
     contentPadding: Dp = AppSpacing.cardPadding,
@@ -170,10 +169,9 @@ fun MoccaSessionCard(
             .fillMaxWidth()
             .clip(shape)
             .background(
-                if (isActive) AppColors.surfaceContainerHighest else backgroundColor,
+                if (isActive) AppColors.bgOverlay else backgroundColor,
                 shape
             )
-            .border(AppSpacing.borderThin, if (isActive) activeIndicatorColor else borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.97f, interactionSource = interactionSource)
             .padding(contentPadding),
@@ -185,8 +183,8 @@ fun MoccaSessionCard(
 fun ModuleToolCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    backgroundColor: Color = AppColors.moduleBackground,
-    borderColor: Color = AppColors.outline,
+    backgroundColor: Color = AppColors.surfaceContainer,
+    borderColor: Color = Color.Transparent,
     contentPadding: Dp = AppSpacing.modulePadding,
     shape: Shape = AppShapes.moduleCard,
     content: @Composable ColumnScope.() -> Unit
@@ -196,7 +194,6 @@ fun ModuleToolCard(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .border(AppSpacing.borderThin, borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.96f, interactionSource = interactionSource)
             .padding(contentPadding),
@@ -208,8 +205,8 @@ fun ModuleToolCard(
 fun SurfaceCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
-    backgroundColor: Color = AppColors.surfaceContainerHigh,
-    borderColor: Color = AppColors.outline,
+    backgroundColor: Color = AppColors.bgRaised,
+    borderColor: Color = Color.Transparent,
     contentPadding: Dp = AppSpacing.cardPadding,
     shape: Shape = AppShapes.card,
     content: @Composable ColumnScope.() -> Unit
@@ -219,7 +216,6 @@ fun SurfaceCard(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .border(AppSpacing.borderThin, borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
             .padding(contentPadding),

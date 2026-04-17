@@ -187,6 +187,12 @@ internal fun OnboardingConnectingStep(
                     isActive = connectionStage == ConnectionStage.TESTING_API,
                     index = 3
                 )
+                StageItem(
+                    label = "Importing server config...",
+                    isComplete = connectionStage.ordinal > ConnectionStage.IMPORTING_CONFIG.ordinal,
+                    isActive = connectionStage == ConnectionStage.IMPORTING_CONFIG,
+                    index = 4
+                )
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.xxl))

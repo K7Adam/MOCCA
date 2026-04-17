@@ -2,6 +2,7 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "AGENTS.md",
+    ".agents/skills/mocca-android-agent-workflow/SKILL.md",
     "composeApp/src/commonMain/kotlin/com/mocca/app/**/AGENTS.md",
     "maestro-workspace/AGENTS.md"
   ],
@@ -35,6 +36,18 @@
     "mocca-logcat": {
       "description": "Collect filtered warning logcat",
       "template": "Run `adb logcat -c && adb logcat *:W | findstr \"mocca|Exception\"` and summarize relevant errors."
+    },
+    "mocca-agent-tooling": {
+      "description": "Check and bootstrap Android CLI, Android skills, and Android Knowledge Base integration",
+      "template": "Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA\\scripts\\setup-android-agent-tooling.ps1'`. If Android CLI is missing, report the official download page and continue using the repo-native Gradle/Maestro commands."
+    },
+    "mocca-android-describe": {
+      "description": "Describe MOCCA with Android CLI when available",
+      "template": "Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA\\scripts\\android-cli.ps1' describe --project_dir='C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA'`. Use the JSON artifact paths it returns to locate APK outputs and build targets."
+    },
+    "mocca-android-docs": {
+      "description": "Search Android Knowledge Base before Android API or tooling changes",
+      "template": "Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File 'C:\\Users\\ruzaq\\AndroidStudioProjects\\MOCCA\\scripts\\android-cli.ps1' docs search '<task-specific query>'`, choose the most relevant `kb://` result, then run the same wrapper with `docs fetch '<kb://result>'`. Use fetched guidance over model memory for Android APIs, Compose, Gradle/AGP, R8, Play Billing, edge-to-edge, emulator, or performance work."
     }
   },
   "mcp": {

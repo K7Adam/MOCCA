@@ -4,7 +4,6 @@ import com.mocca.app.api.NetworkConfig
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,9 +33,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.domain.model.DiscoverySource
+import com.mocca.app.ui.components.modern.OutlinedBadge
 import com.mocca.app.ui.components.modern.MoccaButton
 import com.mocca.app.ui.components.modern.MoccaInput
 import com.mocca.app.ui.theme.AppColors
@@ -50,33 +51,32 @@ internal fun SetupChecklist() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
+            .background(AppColors.bgRaised, AppShapes.card)
             .padding(AppSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         Text(
-            text = "SETUP CHECKLIST",
+            text = "GET STARTED",
             style = AppTypography.labelSmall,
             color = AppColors.onSurfaceVariant
         )
         
         ChecklistItem(
             number = "1",
-            text = "Install OpenCode on your computer",
-            subtext = "Download from github.com/opencode-ai/opencode"
+            text = "Start OpenCode on your computer",
+            subtext = "Quick start: run scripts/mocca-serve.ps1 (Windows) or .sh (macOS/Linux)"
         )
         
         ChecklistItem(
             number = "2",
-            text = "Start the OpenCode server",
-            subtext = "opencode serve --port 4242"
+            text = "Find your server automatically",
+            subtext = "MOCCA scans for nearby OpenCode servers and imports their config"
         )
         
         ChecklistItem(
             number = "3",
-            text = "Connect from this app",
-            subtext = "Auto-discover or enter server details manually"
+            text = "Start chatting",
+            subtext = "Providers and models are imported from your server automatically"
         )
     }
 }
@@ -139,49 +139,101 @@ internal fun ServerListItem(
         DiscoverySource.EMULATOR_AUTO -> Icons.Default.Refresh
     }
     
-    val borderColor = if (isSelected) AppColors.primary else AppColors.outline
-    val backgroundColor = if (isSelected) AppColors.primary.copy(alpha = 0.1f) else AppColors.surfaceVariant
-    
-    Row(
+    val backgroundColor = if (isSelected) AppColors.primary.copy(alpha = 0.1f) else AppColors.bgRaised
+    val actionLabel = when (server.source) {
+        DiscoverySource.SAVED, DiscoverySource.MANUAL -> "Connect"
+        DiscoverySource.MDNS, DiscoverySource.EMULATOR_AUTO -> "Add & Connect"
+    }
+    val connectionHint = when {
+        server.source == DiscoverySource.MDNS && !server.hasCredentials ->
+            "Add credentials, save this server, then connect"
+        server.hasCredentials -> "Saved credentials available for direct connect"
+        else -> "Uses ${server.username} and current saved settings"
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(AppShapes.card)
             .background(backgroundColor, AppShapes.card)
-            .border(AppSpacing.borderThin, borderColor, AppShapes.card)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f)
             .padding(AppSpacing.md),
-        verticalAlignment = Alignment.CenterVertically
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
     ) {
-        Icon(
-            imageVector = sourceIcon,
-            contentDescription = null,
-            tint = if (isSelected) AppColors.primary else AppColors.onSurfaceVariant,
-            modifier = Modifier.size(24.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(AppSpacing.md))
-        
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = server.name,
-                style = AppTypography.bodyMedium,
-                color = if (isSelected) AppColors.primary else AppColors.onSurface,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-            )
-            
-            Text(
-                text = server.baseUrl,
-                style = AppTypography.bodySmall,
-                color = AppColors.onSurfaceVariant
-            )
-        }
-        
-        if (isSelected) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        ) {
             Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Selected",
-                tint = AppColors.primary,
-                modifier = Modifier.size(20.dp)
+                imageVector = sourceIcon,
+                contentDescription = null,
+                tint = if (isSelected) AppColors.primary else AppColors.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                ) {
+                    Text(
+                        text = server.name,
+                        style = AppTypography.bodyMedium,
+                        color = if (isSelected) AppColors.primary else AppColors.onSurface,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Selected",
+                            tint = AppColors.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = server.baseUrl,
+                    style = AppTypography.bodySmall,
+                    color = AppColors.onSurfaceVariant
+                )
+
+                Text(
+                    text = "Host ${server.host} · Port ${server.port}",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.outline
+                )
+
+                Text(
+                    text = "${server.sourceLabel} · ${server.protocolLabel} · ${server.displayType}",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.onSurfaceVariant
+                )
+
+                Text(
+                    text = connectionHint,
+                    style = AppTypography.labelSmall,
+                    color = if (isSelected) AppColors.primary else AppColors.outline
+                )
+            }
+
+            OutlinedBadge(
+                text = actionLabel,
+                modifier = Modifier.moccaClickable(onClick = onClick, pressedScale = 0.98f),
+                backgroundColor = if (isSelected) AppColors.primary.copy(alpha = 0.14f) else AppColors.surfaceContainerHigh,
+                textColor = AppColors.primary,
+                borderColor = if (isSelected) AppColors.primary else AppColors.outline
             )
         }
     }
@@ -198,7 +250,6 @@ internal fun ErrorMessage(
             .fillMaxWidth()
             .clip(AppShapes.card)
             .background(AppColors.error.copy(alpha = 0.1f), AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.error, AppShapes.card)
             .padding(AppSpacing.md),
         verticalAlignment = Alignment.CenterVertically
     ) {

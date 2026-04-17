@@ -63,7 +63,7 @@ fun ModuleCard(
             .clip(AppShapes.moduleCard)
             .background(AppColors.moduleBackground, AppShapes.moduleCard)
             .innerShadow(AppShapes.moduleCard, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
-            .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.3f), AppShapes.moduleCard)
+            // Borderless: using bgRaised for visual separation instead of border
     ) {
         // Header
         Row(
@@ -238,11 +238,11 @@ fun ModuleActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+Box(
         modifier = modifier
             .heightIn(min = 48.dp)
             .clip(AppShapes.small)
-            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.small)
+            .background(AppColors.bgRaised, AppShapes.small)
             .moccaClickable(
                 onClick = onClick,
                 pressedScale = 0.97f,

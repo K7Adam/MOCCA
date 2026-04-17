@@ -22,7 +22,7 @@ detekt = "1.23.6"
 slf4j = "2.0.16"
 filekit = "0.12.0"
 compose-material3-expressive = "1.11.0-alpha04"
-graphics-shapes = "1.0.1"
+graphics-shapes = "1.1.0"
 
 [libraries]
 graphics-shapes = { module = "androidx.graphics:graphics-shapes", version.ref = "graphics-shapes" }

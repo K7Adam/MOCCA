@@ -1,7 +1,6 @@
 package com.mocca.app.ui.theme
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
@@ -65,6 +64,25 @@ object AppColors {
     val surfaceContainer = Color(0xFF202020) // Tone 12
     val surfaceContainerHigh = Color(0xFF272727) // Tone 17
     val surfaceContainerHighest = Color(0xFF303030) // Tone 22
+
+    // ---------------------------------------------------------------------------
+    // BORDERLESS DESIGN SYSTEM — "Depth Through Color, Not Lines"
+    // ---------------------------------------------------------------------------
+    // Background layer tokens: each step up adds visual separation without borders
+    val bgBase = Color(0xFF1A1A1A)         // Base layer (matches background)
+    val bgRaised = Color(0xFF212121)       // Raised surface — one step up from base
+    val bgOverlay = Color(0xFF2A2A2A)      // Overlay/modal background
+    val bgElevated = Color(0xFF353535)     // Elevated elements (FABs, floating cards)
+
+    // Foreground opacity hierarchy: text importance through opacity, not color
+    val fgMuted = onBackground.copy(alpha = 0.6f)   // Secondary text
+    val fgSubtle = onBackground.copy(alpha = 0.4f)   // Tertiary/hint text
+
+    // Diff viewer tokens (Wave 2 diff viewer)
+    val diffAdditionLine = Color(0xFF22C55E)         // Bright green for diff additions
+    val diffDeletionLine = Color(0xFFEF4444)          // Bright red for diff deletions
+    val diffHunkHeader = onBackground.copy(alpha = 0.3f)  // Muted for @@ hunks
+    val diffFileHeader = primary.copy(alpha = 0.8f)        // Accent for file paths
 
     val moduleBackground = surfaceContainer
 
@@ -136,58 +154,3 @@ object AppColors {
     val shimmerHighlight = Color(0xFF383838)
     val shimmerAccent = Color(0x158B9DC3)
 }
-
-/**
- * Semantic state-layer opacity tokens for Material 3 Expressive.
- * Used to replace hard-coded alpha values across components.
- */
-@Immutable
-object AppOpacity {
-    const val hover = 0.08f
-    const val focus = 0.12f
-    const val press = 0.12f
-    const val drag = 0.16f
-    const val selected = 0.12f
-    const val disabled = 0.38f
-    const val subtle = 0.05f
-    const val medium = 0.15f
-    const val prominent = 0.30f
-    const val scrim = 0.80f
-}
-
-/**
- * Extended app colors accessible via CompositionLocal.
- */
-@Immutable
-data class ExtendedAppColors(
-    val statusOnline: Color = AppColors.statusOnline,
-    val statusOffline: Color = AppColors.statusOffline,
-    val statusWaiting: Color = AppColors.statusWaiting,
-    val statusThinking: Color = AppColors.statusThinking,
-    val statusProcessing: Color = AppColors.statusProcessing,
-    val diffAddition: Color = AppColors.diffAddition,
-    val diffDeletion: Color = AppColors.diffDeletion,
-    val diffAdditionText: Color = AppColors.diffAdditionText,
-    val diffDeletionText: Color = AppColors.diffDeletionText,
-    val badgeBackground: Color = AppColors.badgeBackground,
-    val badgeText: Color = AppColors.badgeText,
-    val greyDark: Color = AppColors.greyDark,
-    val grey: Color = AppColors.grey,
-    val greyLight: Color = AppColors.greyLight,
-    val accent: Color = AppColors.accent,
-    val accentBright: Color = AppColors.accentBright,
-    val accentGreen: Color = AppColors.accentGreen,
-    val syntaxKeyword: Color = AppColors.syntaxKeyword,
-    val syntaxFunction: Color = AppColors.syntaxFunction,
-    val syntaxString: Color = AppColors.syntaxString,
-    val syntaxType: Color = AppColors.syntaxType,
-    val syntaxComment: Color = AppColors.syntaxComment,
-    val fileTsx: Color = AppColors.fileTsx,
-    val fileCss: Color = AppColors.fileCss,
-    val fileJson: Color = AppColors.fileJson,
-    val shimmerBase: Color = AppColors.shimmerBase,
-    val shimmerHighlight: Color = AppColors.shimmerHighlight,
-    val shimmerAccent: Color = AppColors.shimmerAccent,
-)
-
-val LocalExtendedColors = staticCompositionLocalOf { ExtendedAppColors() }

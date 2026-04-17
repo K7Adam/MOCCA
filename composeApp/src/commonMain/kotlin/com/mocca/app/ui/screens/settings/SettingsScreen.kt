@@ -33,6 +33,7 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
+import com.mocca.app.util.TimeFormatter
 import kotlinx.collections.immutable.ImmutableList
 
 class SettingsScreen : Screen {
@@ -132,9 +133,17 @@ class SettingsScreen : Screen {
                         )
                     ) {
                         AppConfigSection(
+                            activeConnectionState = state.activeConnectionState,
                             serverDefaultProvider = state.serverDefaultProvider,
                             serverDefaultModel = state.serverDefaultModel,
-                            serverModes = state.serverModes
+                            serverModes = state.serverModes,
+                            isSyncingConfig = state.isSyncingConfig,
+                            configSyncMessage = state.configSyncMessage,
+                            configLastSyncedAt = state.configLastSyncedAt,
+                            configSyncFailed = state.configSyncFailed,
+                            loadedProviderAuthCount = state.providerAuthMethods.size,
+                            canSyncConfig = state.activeConnectionState.isConnected,
+                            onSyncConfig = { screenModel.syncServerConfig() }
                         )
                     }
                 }
@@ -378,9 +387,17 @@ class SettingsScreen : Screen {
 
 @Composable
 fun AppConfigSection(
+    activeConnectionState: ConnectionStatus,
     serverDefaultProvider: String?,
     serverDefaultModel: String?,
     serverModes: ImmutableList<Mode>,
+    isSyncingConfig: Boolean,
+    configSyncMessage: String,
+    configLastSyncedAt: Long?,
+    configSyncFailed: Boolean,
+    loadedProviderAuthCount: Int,
+    canSyncConfig: Boolean,
+    onSyncConfig: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -395,6 +412,81 @@ fun AppConfigSection(
         SettingsCard(title = "Global Defaults") {
             val defaultProvider = serverDefaultProvider ?: "Not set"
             val defaultModel = serverDefaultModel ?: "Not set"
+            val syncColor = when {
+                isSyncingConfig -> AppColors.statusWaiting
+                configSyncFailed -> AppColors.error
+                configLastSyncedAt != null -> AppColors.statusOnline
+                else -> AppColors.onSurfaceVariant
+            }
+            val syncStatus = when {
+                isSyncingConfig -> "Syncing..."
+                configSyncFailed -> "Needs attention"
+                configLastSyncedAt != null -> "Imported"
+                else -> "Idle"
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Config import",
+                        color = AppColors.outline,
+                        style = AppTypography.labelSmall
+                    )
+                    Spacer(modifier = Modifier.height(AppSpacing.xs))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .background(syncColor, CircleShape)
+                        )
+                        Text(
+                            text = syncStatus,
+                            color = syncColor,
+                            style = AppTypography.labelSmall
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(AppSpacing.xs))
+                    Text(
+                        text = configSyncMessage,
+                        color = AppColors.onSurfaceVariant,
+                        style = AppTypography.labelSmall
+                    )
+                    configLastSyncedAt?.let {
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+                        Text(
+                            text = "Last synced ${TimeFormatter.formatTimeAgo(it)} • ${TimeFormatter.formatTimeWithSeconds(it)}",
+                            color = AppColors.outline,
+                            style = AppTypography.labelSmall
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(AppSpacing.md))
+
+                MoccaButton(
+                    text = if (isSyncingConfig) "Syncing" else "Sync Config",
+                    onClick = onSyncConfig,
+                    enabled = canSyncConfig && !isSyncingConfig,
+                    height = AppSpacing.buttonHeightCompact
+                )
+            }
+
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+
+            Text(
+                text = "Loaded provider auth methods: $loadedProviderAuthCount",
+                color = AppColors.outline,
+                style = AppTypography.labelSmall
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
 
             // Display current defaults from server
             Row(
@@ -458,6 +550,18 @@ fun AppConfigSection(
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
+            if (!canSyncConfig) {
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
+                Text(
+                    text = if (activeConnectionState.isConnected) {
+                        "Config sync is available."
+                    } else {
+                        "Connect to the active server above to sync the latest config snapshot. This action only refreshes existing server-backed config and does not change local display preferences."
+                    },
+                    color = AppColors.outline,
+                    style = AppTypography.labelSmall
+                )
+            }
         }
     }
 }
@@ -1108,8 +1212,7 @@ fun SettingsCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(AppShapes.moduleCard)
-            .background(AppColors.surfaceVariant, AppShapes.moduleCard)
-            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.moduleCard)
+            .background(AppColors.bgRaised, AppShapes.moduleCard)
     ) {
         // Header
         Row(

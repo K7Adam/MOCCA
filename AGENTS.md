@@ -21,6 +21,8 @@ MOCCA/
 │       ├── ui/           # App shell, screens, components, theme
 │       └── util/         # Shared formatters, lifecycle/network abstractions
 ├── maestro-workspace/    # Emulator-only E2E flows, subflows, test plans
+├── .agent/skills/        # Android Studio skill compatibility adapters
+├── .agents/skills/       # Cross-agent skills shared by Codex/OpenCode/Gemini/Windsurf-capable clients
 └── .opencode/skills/     # Project skills
 ```
 
@@ -50,7 +52,7 @@ MOCCA/
 
 ## CROSS-CUTTING ARCHITECTURE
 - **Event pipeline**: `EventStreamRepository` -> `StateCoordinator` -> `BroadcastEvent` -> `AppStateStore` / `ChatStateStore` -> ScreenModels -> UI
-- **Dual sync model**: SSE for sessions/messages + `RealtimeSyncService` for MCP/providers/git/tools/commands/agents
+- **Dual sync model**: SSE for sessions/messages + `RealtimeSyncService` for MCP/providers/git/tools/commands/agents. The Server-First pattern (Cache → Network → Update → Emit) is mandatory for primary user-facing data (sessions, messages) and optional for infrequently-changing secondary data (agent list, providers, diffs).
 - **Platform abstractions**: `NetworkObserver`, `AppLifecycleObserver`, `ServerDiscovery`, `SecureTokenStorage`, `NotificationTracker`
 - **Global helpers**: `PreferencesManager`, `GlobalActivityManager`, `UpdateNotifier`, `DatabasePruner`, `TestTags`
 
@@ -61,21 +63,34 @@ MOCCA/
 | `taste-skill-compose` | UI/UX composition, hierarchy, interaction polish |
 | `material3-expressive-compose` | Material 3 Expressive token work, theming, component refactors |
 | `android-mcp` | Emulator startup, install, Maestro, log capture |
+| `mocca-android-agent-workflow` | Android CLI, Android skills, Android Knowledge Base, and cross-tool agent workflow |
+
+## ANDROID AGENT TOOLING
+- Shared agent entrypoint: `.agents/skills/mocca-android-agent-workflow/SKILL.md`
+- Android Studio compatibility adapter: `.agent/skills/mocca-android-agent-workflow/SKILL.md` points back to the shared entrypoint.
+- Android CLI wrapper: `C:\Users\ruzaq\AndroidStudioProjects\MOCCA\scripts\android-cli.ps1` delegates to `android` on `PATH` or the installed bundle in `C:\Users\ruzaq\.android\cli`.
+- Setup/check script: `C:\Users\ruzaq\AndroidStudioProjects\MOCCA\scripts\setup-android-agent-tooling.ps1`
+- Use Android CLI when available for `android update`, `android init`, `android skills add --all`, `android describe --project_dir=...`, and `android docs search` / `android docs fetch`.
+- If `android` is not visible in the active shell, use `powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\Users\ruzaq\AndroidStudioProjects\MOCCA\scripts\android-cli.ps1" ...`.
+- On Windows, do not rely on `android emulator`; Android CLI 0.7 documents that command as disabled. Use `maestro-workspace/start-emulator.ps1` and `maestro-workspace/run-emulator-tests.ps1` for MOCCA emulator workflows.
+- Before changing Android platform APIs, AGP/Gradle behavior, Compose, Navigation, R8, Play Billing, edge-to-edge, emulator automation, or performance guidance, query the Android Knowledge Base with `android docs search` and fetch the relevant `kb://` result.
 
 ## CONVENTIONS
 - **Architecture**: MVI (`ScreenModel -> StateFlow -> UI`), no logic in composables
 - **Network**: Consumers use `ApiExecutor.execute {}`; `ConnectionManager` is the only `HttpClient` owner
 - **Persistence**: Repositories depend on `LocalCache`, not raw DB drivers
 - **Theme**: `AppTheme`, `AppColors`, `AppTypography`, `AppShapes`; Material 3 defaults are not the source of truth
+- **Elevation**: Prefer `tonalElevation` for depth. `shadowElevation` is acceptable for modals (dialogs, modal sheets) that need extra visual separation
+- **Motion**: For motion/animation, `MaterialTheme.motionScheme` is the standard API. Do not create custom animation constant objects
 - **Testing**: Local UI QA uses visible emulator first; CI uses headless emulator via GitHub Actions
 - **Paths**: Use absolute paths in scripts and agent docs
 
 ## ANTI-PATTERNS (STRICT)
-- NEVER hold `HttpClient` references outside `ConnectionManager`
-- NEVER put validation/network/state mutation directly in composables
+- NEVER hold `HttpClient` references outside `ConnectionManager` (exception: `GitHubApiClient` holds its own `HttpClient` for external GitHub API calls, not the OpenCode server)
+- NEVER put validation/network/state mutation directly in composables (simple UI-only transforms like date formatting or derived display strings are acceptable)
 - NEVER use `RectangleShape` for interactive elements
-- NEVER mix `MaterialTheme.colorScheme` / `MaterialTheme.shapes` into app primitives
-- NEVER block the main thread
+- NEVER mix `MaterialTheme.colorScheme` / `MaterialTheme.shapes` into app primitives in feature/UI code — use `AppColors`, `AppShapes`, `AppTypography` instead. Theme bridge code (`AppTheme.kt`) legitimately uses `MaterialTheme.colorScheme` to provision the M3 shell.
+- NEVER block the main thread; use `Dispatchers.IO` for blocking DB/file/network I/O (not required for non-blocking suspend calls)
 - NEVER use relative paths in scripts/automation docs
 - DO NOT add iOS/Desktop targets
 - DO NOT use physical devices for `android-mcp` or Maestro host-connectivity checks

@@ -78,11 +78,11 @@ import kotlin.math.abs
 fun PersistentNavRow(
     dragProgress: Float,
     onItemClick: (PanelState) -> Unit,
+    items: List<BottomNavItem> = defaultBottomNavItems,
     showLabels: Boolean = true,
     isAgentRunning: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val items = defaultBottomNavItems
     var rowWidthPx by remember { mutableFloatStateOf(0f) }
     val isSettled = abs(dragProgress - 0f) < 0.05f ||
         abs(dragProgress - 0.5f) < 0.05f ||
@@ -171,15 +171,19 @@ private fun PersistentNavItem(
     val iconColor by transition.animateColor(
         transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
         label = "iconColor"
-    ) { selected -> if (selected) AppColors.primary else AppColors.outline }
+    ) { selected -> if (selected) AppColors.onBackground else AppColors.fgMuted }
     val textColor by transition.animateColor(
         transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
         label = "textColor"
-    ) { selected -> if (selected) AppColors.primary else AppColors.outline }
+    ) { selected -> if (selected) AppColors.onBackground else AppColors.fgSubtle }
+    val bgColor by transition.animateColor(
+        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
+        label = "bgColor"
+    ) { selected -> if (selected) AppColors.bgRaised else androidx.compose.ui.graphics.Color.Transparent }
     val scale by transition.animateFloat(
         transitionSpec = { MaterialTheme.motionScheme.fastSpatialSpec() },
         label = "scale"
-    ) { selected -> 1.0f + (if (selected) proximity else 0f) * 0.08f }
+    ) { selected -> 1.0f + (if (selected) proximity else 0f) * 0.05f }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -190,14 +194,18 @@ private fun PersistentNavItem(
                 minWidth = NavConstants.TouchTargetMinWidth,
                 minHeight = NavConstants.TouchTargetMinHeight
             )
-            .padding(
-                horizontal = NavConstants.NavItemPaddingHorizontal,
-                vertical = NavConstants.NavItemPaddingVertical
-            )
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
             }
+            .background(
+                color = bgColor,
+                shape = AppShapes.medium
+            )
+            .padding(
+                horizontal = NavConstants.NavItemPaddingHorizontal,
+                vertical = NavConstants.NavItemPaddingVertical
+            )
     ) {
         // Icon with optional running indicator
         Box {

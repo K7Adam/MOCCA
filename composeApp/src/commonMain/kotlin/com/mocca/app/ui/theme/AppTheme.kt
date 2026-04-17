@@ -6,7 +6,6 @@ import androidx.compose.material3.MotionScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.text.font.FontFamily
 
 /**
@@ -82,11 +81,9 @@ fun AppTheme(
     codeFontFamilyKey: () -> String = { "jetbrains_mono" },
     content: @Composable () -> Unit
 ) {
-    val extendedColors = ExtendedAppColors()
     val codeFontFamily = AppTypography.monoFamilyFor(codeFontFamilyKey())
 
     CompositionLocalProvider(
-        LocalExtendedColors provides extendedColors,
         LocalAppPerformance provides performance,
         LocalCodeFontFamily provides codeFontFamily
     ) {
@@ -110,11 +107,6 @@ fun AppTheme(
  * MOCCA Theme — Unified access to Material 3 tokens and extended app attributes.
  */
 object MoccaTheme {
-    val extendedColors: ExtendedAppColors
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalExtendedColors.current
-
     val spacing: AppSpacing
         get() = AppSpacing
 

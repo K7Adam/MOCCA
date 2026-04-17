@@ -58,7 +58,7 @@ class FileRepository(
         )
     }
 
-    fun searchText(query: String, path: String = ""): Flow<Resource<List<SearchResult>>> = flow {
+    fun searchText(query: String, path: String = ""): Flow<Resource<List<ApiSearchResult>>> = flow {
         emit(Resource.Loading())
         
         val result = apiClient.searchText(query, path)
@@ -88,7 +88,7 @@ class FileRepository(
         )
     }
 
-    fun findSymbols(query: String): Flow<Resource<List<SymbolResult>>> = flow {
+    fun findSymbols(query: String): Flow<Resource<List<ApiSymbolResult>>> = flow {
         emit(Resource.Loading())
         
         val result = apiClient.findSymbols(query)

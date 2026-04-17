@@ -11,6 +11,7 @@ import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.ChatStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.McpRepository
+import com.mocca.app.data.repository.SearchRepository
 import com.mocca.app.data.repository.SessionRepository
 import com.mocca.app.data.repository.UpdateCheckScheduler
 import com.mocca.app.data.repository.UpdateNotifier
@@ -18,6 +19,10 @@ import com.mocca.app.data.repository.UpdateRepository
 import com.mocca.app.domain.model.McpServerInfo
 import com.mocca.app.domain.model.Message
 import com.mocca.app.domain.model.Resource
+import com.mocca.app.domain.model.FileContentSearchResult
+import com.mocca.app.domain.model.FileSearchResult
+import com.mocca.app.domain.model.SearchMode
+import com.mocca.app.domain.model.SearchQuery
 import com.mocca.app.domain.model.Session
 import com.mocca.app.domain.model.SessionGroup
 import com.mocca.app.domain.model.SessionRunningState
@@ -25,13 +30,17 @@ import com.mocca.app.domain.model.SessionStatus
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.DownloadStatus
 import com.mocca.app.domain.model.ServerEvent
+import com.mocca.app.domain.model.UnifiedSearchResult
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -47,6 +56,11 @@ data class MainScreenState(
     val currentSessionId: String? = null,
     val sessions: ImmutableList<Session> = persistentListOf(),
     val messages: ImmutableList<Message> = persistentListOf(),
+    val isFileSearchLoading: Boolean = false,
+    val fileSearchMode: SearchMode = SearchMode.FILE_PATTERN,
+    val fileSearchResults: ImmutableList<FileSearchResult> = persistentListOf(),
+    val fileContentSearchResults: ImmutableList<FileContentSearchResult> = persistentListOf(),
+    val fileSearchError: String? = null,
     
     // Input state
     val inputText: String = "",
@@ -126,6 +140,7 @@ class MainScreenModel(
     private val initialSessionId: String?,
     private val appStateStore: AppStateStore,
     private val sessionRepository: SessionRepository,
+    private val searchRepository: SearchRepository,
     private val connectionManager: ConnectionManager,
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,
@@ -133,6 +148,8 @@ class MainScreenModel(
     private val updateCheckScheduler: UpdateCheckScheduler,
     private val appVersionProvider: AppVersionProvider
 ) : ScreenModel {
+
+    private var fileSearchJob: Job? = null
     
     private val _state = MutableStateFlow(MainScreenState(currentSessionId = initialSessionId))
     val state: StateFlow<MainScreenState> = _state.asStateFlow()
@@ -654,6 +671,98 @@ class MainScreenModel(
     fun updateInputText(text: String) {
         _state.update { it.copy(inputText = text) }
     }
+
+    fun searchFiles(query: String) {
+        val trimmedQuery = query.trim()
+        fileSearchJob?.cancel()
+
+        if (trimmedQuery.isEmpty()) {
+            _state.update {
+                it.copy(
+                    isFileSearchLoading = false,
+                    fileSearchMode = it.fileSearchMode,
+                    fileSearchResults = persistentListOf(),
+                    fileContentSearchResults = persistentListOf(),
+                    fileSearchError = null
+                )
+            }
+            return
+        }
+
+        val searchQuery = SearchQuery(
+            query = if (_state.value.fileSearchMode == SearchMode.FILE_PATTERN) {
+                buildFileSearchPattern(trimmedQuery)
+            } else {
+                trimmedQuery
+            },
+            mode = _state.value.fileSearchMode,
+            contextLines = 2
+        )
+
+        fileSearchJob = screenModelScope.launch {
+            delay(180)
+            when (searchQuery.mode) {
+                SearchMode.FILE_PATTERN,
+                SearchMode.TEXT_CONTENT -> {
+                    searchRepository.search(searchQuery).collect { resource ->
+                        when (resource) {
+                            is Resource.Loading<*> -> _state.update {
+                                it.copy(
+                                    isFileSearchLoading = true,
+                                    fileSearchResults = persistentListOf(),
+                                    fileContentSearchResults = persistentListOf(),
+                                    fileSearchError = null
+                                )
+                            }
+
+                            is Resource.Success<*> -> {
+                                val result = resource.data as? UnifiedSearchResult
+                                _state.update {
+                                    it.copy(
+                                        isFileSearchLoading = false,
+                                        fileSearchResults = result?.fileResults
+                                            ?.take(12)
+                                            ?.toImmutableList()
+                                            ?: persistentListOf(),
+                                        fileContentSearchResults = result?.textResults
+                                            ?.take(12)
+                                            ?.toImmutableList()
+                                            ?: persistentListOf(),
+                                        fileSearchError = null
+                                    )
+                                }
+                            }
+
+                            is Resource.Error<*> -> _state.update {
+                                it.copy(
+                                    isFileSearchLoading = false,
+                                    fileSearchResults = persistentListOf(),
+                                    fileContentSearchResults = persistentListOf(),
+                                    fileSearchError = resource.message
+                                )
+                            }
+                        }
+                    }
+                }
+
+                SearchMode.SYMBOL -> Unit
+            }
+        }
+    }
+
+    fun updateFileSearchMode(mode: SearchMode, query: String) {
+        if (mode == SearchMode.SYMBOL) return
+        _state.update {
+            it.copy(
+                fileSearchMode = mode,
+                fileSearchResults = persistentListOf(),
+                fileContentSearchResults = persistentListOf(),
+                fileSearchError = null,
+                isFileSearchLoading = false
+            )
+        }
+        searchFiles(query)
+    }
     
     fun togglePlanMode() {
         _state.update { it.copy(isPlanMode = !it.isPlanMode) }
@@ -728,7 +837,12 @@ class MainScreenModel(
     
     override fun onDispose() {
         // Stop periodic update checks
+        fileSearchJob?.cancel()
         updateCheckScheduler.stop()
         // State is maintained in AppStateStore, no need to disconnect
+    }
+
+    private fun buildFileSearchPattern(query: String): String {
+        return if (query.any { it in "*?[]" }) query else "*$query*"
     }
 }

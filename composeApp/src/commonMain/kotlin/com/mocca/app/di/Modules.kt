@@ -26,6 +26,8 @@ import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
 import com.mocca.app.ui.screens.terminal.TerminalScreenModel
 import com.mocca.app.ui.screens.settings.FeatureFlagsScreenModel
+import com.mocca.app.util.NoOpVoiceInputProvider
+import com.mocca.app.util.VoiceInputProvider
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -100,6 +102,7 @@ val commonModule = module {
     singleOf(::SearchRepository)
     singleOf(::ProjectRepository)
     singleOf(::SystemMonitorRepository)
+    single<VoiceInputProvider> { NoOpVoiceInputProvider }
 
 
     // STATE COORDINATOR - Central hub for all event handling and state sync
@@ -208,7 +211,8 @@ val screenModelModule = module {
             commandRepository = get(),
             agentRepository = get(),
             appStateStore = get(),
-            chatStateStore = get()
+            chatStateStore = get(),
+            voiceInputProvider = get()
         )
     }
     
@@ -267,6 +271,7 @@ val screenModelModule = module {
             initialSessionId = params.getOrNull(),
             appStateStore = get(),
             sessionRepository = get(),
+            searchRepository = get(),
             connectionManager = get(),
             mcpRepository = get(),
             updateRepository = get(),
@@ -281,7 +286,8 @@ val screenModelModule = module {
         OnboardingWizardModel(
             serverConfigRepository = get(),
             connectionManager = get(),
-            serverDiscovery = getOrNull()
+            serverDiscovery = getOrNull(),
+            appStateStore = get()
         )
     }
     
