@@ -5,6 +5,14 @@ import com.mocca.app.api.GitHubApiClient
 import com.mocca.app.api.MoccaApiClient
 import com.mocca.app.api.MoccaSseClient
 import com.mocca.app.api.RetryPolicy
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeHealthChecker
+import com.mocca.app.bridge.connection.BridgePairingIntentStore
+import com.mocca.app.bridge.connection.BridgeTargetRepository
+import com.mocca.app.bridge.connection.BridgeTargetStore
+import com.mocca.app.bridge.connection.BridgeTransportFactory
+import com.mocca.app.bridge.connection.LocalCacheBridgeTargetStore
+import com.mocca.app.bridge.opencode.BridgeRuntimeBootstrapper
 import com.mocca.app.data.GlobalActivityManager
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.local.LocalCacheFactory
@@ -28,6 +36,9 @@ import com.mocca.app.ui.screens.terminal.TerminalScreenModel
 import com.mocca.app.ui.screens.settings.FeatureFlagsScreenModel
 import com.mocca.app.util.NoOpVoiceInputProvider
 import com.mocca.app.util.VoiceInputProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -49,6 +60,7 @@ val commonModule = module {
 
     // Bind ApiExecutor interface to ConnectionManager
     single<ApiExecutor> { get<ConnectionManager>() }
+    single<BridgeHealthChecker> { get<ConnectionManager>() }
 
     // API Clients — use ApiExecutor (no direct HttpClient references)
     single {
@@ -84,6 +96,17 @@ val commonModule = module {
     single { ConfigRepository(get()) }
     singleOf(::UpdateRepository)
     singleOf(::GitHubApiClient)
+    single<BridgeTransportFactory> { get<ConnectionManager>() }
+    singleOf(::BridgePairingIntentStore)
+    single {
+        BridgeConnectionManager(
+            targetRepository = get(),
+            transportFactory = get(),
+            scope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
+            healthChecker = get()
+        )
+    }
+    singleOf(::BridgeRuntimeBootstrapper)
     
     // Global update notifier - allows any screen to trigger update dialog
     singleOf(::UpdateNotifier)
@@ -190,6 +213,14 @@ val cacheModule = module {
     single {
         ServerConfigRepository(get(), get())
     }
+
+    single<BridgeTargetStore> {
+        LocalCacheBridgeTargetStore(get())
+    }
+
+    single {
+        BridgeTargetRepository(get())
+    }
     
     single {
         DatabasePruner(get())
@@ -287,7 +318,8 @@ val screenModelModule = module {
             serverConfigRepository = get(),
             connectionManager = get(),
             serverDiscovery = getOrNull(),
-            appStateStore = get()
+            appStateStore = get(),
+            bridgeConnectionManager = get()
         )
     }
     

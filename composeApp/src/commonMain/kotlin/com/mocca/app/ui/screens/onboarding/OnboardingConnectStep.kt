@@ -1,7 +1,5 @@
 package com.mocca.app.ui.screens.onboarding
 
-import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -14,6 +12,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,11 +26,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -72,6 +75,11 @@ internal fun OnboardingConnectStep(
     selectedServer: DiscoveredServer?,
     onServerSelected: (DiscoveredServer) -> Unit,
     onManualConnect: (host: String, port: Int, username: String, password: String, useHttps: Boolean) -> Unit,
+    bridgePairingPayload: String,
+    onBridgePairingPayloadChange: (String) -> Unit,
+    onBridgePairingConnect: () -> Unit,
+    onBridgePairingPayloadScanned: (String) -> Unit,
+    onBridgePairingError: (String) -> Unit,
     onRefreshDiscovery: () -> Unit,
     onToggleManualEntry: () -> Unit,
     onBack: () -> Unit,
@@ -119,6 +127,117 @@ internal fun OnboardingConnectStep(
                 .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                shape = AppShapes.card,
+                color = AppColors.surfaceContainerHigh,
+                tonalElevation = 2.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(AppSpacing.lg),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Terminal,
+                            contentDescription = null,
+                            tint = AppColors.accent,
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                            ) {
+                                Text(
+                                    text = "MOCCA CLI",
+                                    style = AppTypography.labelLarge,
+                                    color = AppColors.onSurface,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .background(AppColors.accent.copy(alpha = 0.16f), AppShapes.pill)
+                                        .padding(horizontal = AppSpacing.sm, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = "Recommended",
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.accent,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+                            Text(
+                                text = "Run npx mocca-cli, scan the QR code, and MOCCA will start OpenCode for you.",
+                                style = AppTypography.labelSmall,
+                                color = AppColors.outline
+                            )
+                        }
+                    }
+
+                    MoccaInput(
+                        value = bridgePairingPayload,
+                        onValueChange = onBridgePairingPayloadChange,
+                        label = "Pairing link",
+                        placeholder = "mocca://bridge/connect?...",
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        if (maxWidth < 360.dp) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                            ) {
+                                BridgeQrScanButton(
+                                    enabled = true,
+                                    onPayloadScanned = onBridgePairingPayloadScanned,
+                                    onError = onBridgePairingError,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                MoccaButton(
+                                    text = "Connect",
+                                    icon = if (bridgePairingPayload.isBlank()) Icons.Default.Link else Icons.Default.PlayArrow,
+                                    onClick = onBridgePairingConnect,
+                                    enabled = bridgePairingPayload.isNotBlank(),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                            ) {
+                                BridgeQrScanButton(
+                                    enabled = true,
+                                    onPayloadScanned = onBridgePairingPayloadScanned,
+                                    onError = onBridgePairingError,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                MoccaButton(
+                                    text = "Connect",
+                                    icon = if (bridgePairingPayload.isBlank()) Icons.Default.Link else Icons.Default.PlayArrow,
+                                    onClick = onBridgePairingConnect,
+                                    enabled = bridgePairingPayload.isNotBlank(),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "This enables local OpenCode config, providers, agents, commands, MCP and fast session APIs through the CLI bridge.",
+                        style = AppTypography.labelSmall,
+                        color = AppColors.onSurfaceVariant
+                    )
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -206,13 +325,13 @@ internal fun OnboardingConnectStep(
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Make sure OpenCode is running on your computer, or enter the address manually below.",
+                            text = "Use MOCCA CLI for the simplest setup, or enter an existing OpenCode server manually below.",
                             style = AppTypography.bodySmall,
                             color = AppColors.outline,
                             textAlign = TextAlign.Center
                         )
                         Text(
-                            text = "Quick start: scripts/mocca-serve.ps1 (Windows) or scripts/mocca-serve.sh (macOS/Linux)",
+                            text = "Quick start: npx mocca-cli",
                             style = AppTypography.labelSmall,
                             color = AppColors.accent,
                             textAlign = TextAlign.Center
@@ -260,25 +379,48 @@ internal fun OnboardingConnectStep(
                         color = AppColors.outline
                     )
 
-                    // Host + Port row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
-                    ) {
-                        MoccaInput(
-                            value = host,
-                            onValueChange = { host = it },
-                            label = "Host / IP",
-                            placeholder = "192.168.1.100",
-                            modifier = Modifier.weight(2f)
-                        )
-                        MoccaInput(
-                            value = port,
-                            onValueChange = { port = it },
-                            label = "Port",
-                            placeholder = "4242",
-                            modifier = Modifier.weight(1f)
-                        )
+                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                        if (maxWidth < 360.dp) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                            ) {
+                                MoccaInput(
+                                    value = host,
+                                    onValueChange = { host = it },
+                                    label = "Host / IP",
+                                    placeholder = "192.168.1.100",
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                MoccaInput(
+                                    value = port,
+                                    onValueChange = { port = it },
+                                    label = "Port",
+                                    placeholder = "4242",
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+                            ) {
+                                MoccaInput(
+                                    value = host,
+                                    onValueChange = { host = it },
+                                    label = "Host / IP",
+                                    placeholder = "192.168.1.100",
+                                    modifier = Modifier.weight(2f)
+                                )
+                                MoccaInput(
+                                    value = port,
+                                    onValueChange = { port = it },
+                                    label = "Port",
+                                    placeholder = "4242",
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
                     }
 
                     MoccaInput(

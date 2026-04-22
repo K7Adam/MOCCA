@@ -43,7 +43,9 @@ import com.mocca.app.ui.theme.AppTypography
 @Composable
 internal fun OnboardingConnectingStep(
     connectionStage: ConnectionStage,
+    connectionMode: OnboardingConnectionMode,
     connectionProgress: String,
+    bridgeValidationSummary: BridgeValidationSummary?,
     error: String?,
     isSuccess: Boolean,
     onRetry: () -> Unit,
@@ -78,7 +80,11 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.xl))
 
             Text(
-                text = "Connected!",
+                text = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
+                    "MOCCA CLI Connected"
+                } else {
+                    "Connected!"
+                },
                 style = AppTypography.headlineMedium,
                 color = AppColors.success,
                 fontWeight = FontWeight.Bold,
@@ -88,7 +94,10 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
 
             Text(
-                text = "Launching MOCCA...",
+                text = bridgeValidationSummary?.let { summary ->
+                    "${summary.credentialCount} providers · ${summary.agentCount} agents · " +
+                        "${summary.commandCount} commands · ${summary.mcpServerCount} MCP"
+                } ?: "Launching MOCCA...",
                 style = AppTypography.bodyMedium,
                 color = AppColors.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -149,46 +158,77 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
             Text(
-                text = "Connecting...",
+                text = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
+                    "Connecting CLI..."
+                } else {
+                    "Connecting..."
+                },
                 style = AppTypography.headlineMedium,
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
+            if (connectionProgress.isNotBlank()) {
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Text(
+                    text = connectionProgress,
+                    style = AppTypography.bodySmall,
+                    color = AppColors.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
             // Staged progress items
+            val labels = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
+                listOf(
+                    "Reading pairing link...",
+                    "Checking CLI health...",
+                    "Verifying pairing code...",
+                    "Starting OpenCode runtime...",
+                    "Importing OpenCode config..."
+                )
+            } else {
+                listOf(
+                    "Saving configuration...",
+                    "Resolving server...",
+                    "Authenticating...",
+                    "Testing API connection...",
+                    "Importing server config..."
+                )
+            }
             Column(
                 modifier = Modifier.fillMaxWidth(0.8f),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
             ) {
                 StageItem(
-                    label = "Saving configuration...",
+                    label = labels[0],
                     isComplete = connectionStage.ordinal > ConnectionStage.SAVING_CONFIG.ordinal,
                     isActive = connectionStage == ConnectionStage.SAVING_CONFIG,
                     index = 0
                 )
                 StageItem(
-                    label = "Resolving server...",
+                    label = labels[1],
                     isComplete = connectionStage.ordinal > ConnectionStage.RESOLVING_SERVER.ordinal,
                     isActive = connectionStage == ConnectionStage.RESOLVING_SERVER,
                     index = 1
                 )
                 StageItem(
-                    label = "Authenticating...",
+                    label = labels[2],
                     isComplete = connectionStage.ordinal > ConnectionStage.AUTHENTICATING.ordinal,
                     isActive = connectionStage == ConnectionStage.AUTHENTICATING,
                     index = 2
                 )
                 StageItem(
-                    label = "Testing API connection...",
+                    label = labels[3],
                     isComplete = connectionStage.ordinal > ConnectionStage.TESTING_API.ordinal,
                     isActive = connectionStage == ConnectionStage.TESTING_API,
                     index = 3
                 )
                 StageItem(
-                    label = "Importing server config...",
+                    label = labels[4],
                     isComplete = connectionStage.ordinal > ConnectionStage.IMPORTING_CONFIG.ordinal,
                     isActive = connectionStage == ConnectionStage.IMPORTING_CONFIG,
                     index = 4

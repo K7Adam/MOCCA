@@ -41,6 +41,7 @@ data class OnboardingWizardState(
     // Connection state
     val connectionProgress: String = "",
     val connectionStage: ConnectionStage = ConnectionStage.SAVING_CONFIG,
+    val connectionMode: OnboardingConnectionMode = OnboardingConnectionMode.OPENCODE_SERVER,
     val isConnected: Boolean = false,
     val isSuccess: Boolean = false,
     
@@ -55,7 +56,11 @@ data class OnboardingWizardState(
     val credentialServer: DiscoveredServer? = null,
     
     // Manual entry expansion state
-    val showManualEntry: Boolean = false
+    val showManualEntry: Boolean = false,
+
+    // MOCCA CLI direct bridge pairing
+    val bridgePairingPayload: String = "",
+    val bridgeValidationSummary: BridgeValidationSummary? = null
 ) {
     val canProceed: Boolean
         get() = when (currentStep) {
@@ -83,6 +88,23 @@ data class OnboardingWizardState(
             return (savedAsDiscovered + discoveredServers).distinctBy { it.baseUrl }.toImmutableList()
         }
 }
+
+enum class OnboardingConnectionMode {
+    OPENCODE_SERVER,
+    MOCCA_CLI_BRIDGE
+}
+
+@Immutable
+data class BridgeValidationSummary(
+    val opencodeAvailable: Boolean,
+    val opencodeVersion: String?,
+    val runtimeBaseUrl: String?,
+    val configFileCount: Int,
+    val credentialCount: Int,
+    val agentCount: Int,
+    val commandCount: Int,
+    val mcpServerCount: Int
+)
 
 /**
  * Connection stages for the staged progress indicator.
@@ -114,6 +136,10 @@ sealed class OnboardingAction {
     data object GoToConnect : OnboardingAction()
     data object GoToManualEntry : OnboardingAction()
     data object Connect : OnboardingAction()
+    data class BridgePairingPayloadChanged(val payload: String) : OnboardingAction()
+    data class BridgePairingPayloadReceived(val payload: String) : OnboardingAction()
+    data object ConnectBridgePairingPayload : OnboardingAction()
+    data class BridgePairingError(val message: String) : OnboardingAction()
     data object RetryConnection : OnboardingAction()
     data object Back : OnboardingAction()
     data object Skip : OnboardingAction()

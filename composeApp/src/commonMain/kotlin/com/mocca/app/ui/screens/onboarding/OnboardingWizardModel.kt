@@ -3,6 +3,11 @@ package com.mocca.app.ui.screens.onboarding
 import cafe.adriel.voyager.core.model.ScreenModel
 import com.mocca.app.api.NetworkConfig
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
+import com.mocca.app.bridge.opencode.BridgeFeatureUnavailableException
+import com.mocca.app.bridge.opencode.BridgeResponseException
+import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
 import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
@@ -33,7 +38,8 @@ class OnboardingWizardModel(
     private val serverConfigRepository: ServerConfigRepository,
     private val connectionManager: ConnectionManager,
     private val serverDiscovery: ServerDiscovery? = null,
-    private val appStateStore: AppStateStore
+    private val appStateStore: AppStateStore,
+    private val bridgeConnectionManager: BridgeConnectionManager? = null
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(OnboardingWizardState())
@@ -76,6 +82,10 @@ class OnboardingWizardModel(
             is OnboardingAction.GoToConnect -> goToConnect()
             is OnboardingAction.GoToManualEntry -> goToManualEntry()
             is OnboardingAction.Connect -> connect()
+            is OnboardingAction.BridgePairingPayloadChanged -> updateBridgePairingPayload(action.payload)
+            is OnboardingAction.BridgePairingPayloadReceived -> connectBridgePairingPayload(action.payload)
+            is OnboardingAction.ConnectBridgePairingPayload -> connectBridgePairingPayload()
+            is OnboardingAction.BridgePairingError -> onBridgePairingError(action.message)
             is OnboardingAction.RetryConnection -> retryConnection()
             is OnboardingAction.Back -> goBack()
             is OnboardingAction.Skip -> skipOnboarding()
@@ -192,6 +202,7 @@ class OnboardingWizardModel(
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
                 connectionStage = ConnectionStage.SAVING_CONFIG,
+                connectionMode = OnboardingConnectionMode.OPENCODE_SERVER,
                 connectionProgress = "Connecting to ${server.name}...",
                 error = null
             )
@@ -215,6 +226,7 @@ class OnboardingWizardModel(
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
                 connectionStage = ConnectionStage.SAVING_CONFIG,
+                connectionMode = OnboardingConnectionMode.OPENCODE_SERVER,
                 connectionProgress = "Connecting to ${withCreds.name}...",
                 error = null
             )
@@ -263,6 +275,7 @@ class OnboardingWizardModel(
                 needsCredentials = false,
                 credentialServer = null,
                 isSuccess = false,
+                bridgeValidationSummary = null,
                 connectionStage = ConnectionStage.SAVING_CONFIG
             )
         }
@@ -326,6 +339,7 @@ class OnboardingWizardModel(
                 currentStep = OnboardingStep.CONNECTING,
                 isLoading = true,
                 connectionStage = ConnectionStage.SAVING_CONFIG,
+                connectionMode = OnboardingConnectionMode.OPENCODE_SERVER,
                 connectionProgress = "Connecting to $protocol://$host:$effectivePort...",
                 error = null
             )
@@ -471,6 +485,191 @@ class OnboardingWizardModel(
         }
     }
 
+    private fun updateBridgePairingPayload(payload: String) {
+        _state.update {
+            it.copy(
+                bridgePairingPayload = payload,
+                error = null
+            )
+        }
+    }
+
+    private fun onBridgePairingError(message: String) {
+        _state.update {
+            it.copy(
+                error = message,
+                bridgeValidationSummary = null
+            )
+        }
+    }
+
+    private fun connectBridgePairingPayload(payload: String = _state.value.bridgePairingPayload) {
+        val pairingPayload = payload.trim()
+        if (pairingPayload.isBlank()) {
+            _state.update { it.copy(error = "MOCCA CLI pairing link is required") }
+            return
+        }
+
+        val manager = bridgeConnectionManager
+        if (manager == null) {
+            _state.update { it.copy(error = "MOCCA CLI bridge is not available on this build") }
+            return
+        }
+
+        _state.update {
+            it.copy(
+                currentStep = OnboardingStep.CONNECTING,
+                isLoading = true,
+                error = null,
+                connectionMode = OnboardingConnectionMode.MOCCA_CLI_BRIDGE,
+                connectionStage = ConnectionStage.SAVING_CONFIG,
+                connectionProgress = "Reading MOCCA CLI pairing link...",
+                bridgePairingPayload = pairingPayload,
+                bridgeValidationSummary = null
+            )
+        }
+
+        screenModelScope.launch {
+            try {
+                delay(150)
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.RESOLVING_SERVER,
+                        connectionProgress = "Checking MOCCA CLI health..."
+                    )
+                }
+
+                manager.connectFromPairingPayload(pairingPayload)
+
+                val status = manager.status.value
+                if (status !is BridgeConnectionStatus.Connected) {
+                    val message = when (status) {
+                        is BridgeConnectionStatus.Error -> status.message
+                        BridgeConnectionStatus.NotConfigured -> "MOCCA CLI pairing target is missing"
+                        else -> "MOCCA CLI bridge connection failed"
+                    }
+                    onConnectionResult(false, message)
+                    return@launch
+                }
+
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.AUTHENTICATING,
+                        connectionProgress = "Verifying pairing code..."
+                    )
+                }
+
+                val client = manager.client.value
+                    ?: error("MOCCA CLI bridge connected without an active client")
+                val repository = OpenCodeBridgeRepository(client)
+
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.TESTING_API,
+                        connectionProgress = "Starting OpenCode runtime..."
+                    )
+                }
+                val capabilities = status.capabilities
+                if (!capabilities.ai.opencodeConfigSnapshot) {
+                    throw BridgeFeatureUnavailableException("ai.config.snapshot")
+                }
+                if (!capabilities.ai.opencodeRuntime) {
+                    throw BridgeFeatureUnavailableException("ai.runtime.ensure")
+                }
+
+                val runtime = repository.ensureOpenCodeRuntime()
+                val runtimeServer = runtime.server
+                val cliServerConfig = ServerConfig(
+                    id = "mocca-cli-${runtimeServer.host}-${runtimeServer.port}",
+                    name = "MOCCA CLI (${runtimeServer.host})",
+                    host = runtimeServer.host,
+                    port = runtimeServer.port,
+                    username = runtimeServer.username,
+                    password = runtimeServer.password,
+                    isActive = true,
+                    useHttps = runtimeServer.useHttps
+                )
+                serverConfigRepository.saveServer(cliServerConfig)
+                connectionManager.connect(cliServerConfig)
+                waitForServerConnection()
+
+                _state.update {
+                    it.copy(
+                        connectionStage = ConnectionStage.IMPORTING_CONFIG,
+                        connectionProgress = "Importing local OpenCode configuration..."
+                    )
+                }
+                val snapshot = repository.fetchOpenCodeConfigSnapshot()
+                if (!snapshot.installed.available) {
+                    val detail = snapshot.installed.error?.let { ": $it" }.orEmpty()
+                    error("OpenCode is not available on your computer$detail")
+                }
+                val credentials = repository.fetchCredentials()
+                val agents = repository.fetchAgents()
+                val commands = repository.fetchCommands()
+                val mcpServers = repository.fetchMcpServers()
+
+                val summary = BridgeValidationSummary(
+                    opencodeAvailable = snapshot.installed.available,
+                    opencodeVersion = snapshot.installed.version,
+                    runtimeBaseUrl = runtimeServer.baseUrl,
+                    configFileCount = snapshot.configFiles.size,
+                    credentialCount = credentials.size,
+                    agentCount = agents.size,
+                    commandCount = commands.size,
+                    mcpServerCount = mcpServers.size
+                )
+
+                _state.update {
+                    it.copy(
+                        bridgeValidationSummary = summary,
+                        connectionProgress = "Imported ${summary.credentialCount} providers, " +
+                            "${summary.agentCount} agents, ${summary.commandCount} commands, " +
+                            "${summary.mcpServerCount} MCP servers."
+                    )
+                }
+                delay(800)
+                onConnectionResult(true, null)
+            } catch (error: BridgeResponseException) {
+                onConnectionResult(false, error.message ?: "MOCCA CLI bridge request failed")
+            } catch (error: BridgeFeatureUnavailableException) {
+                onConnectionResult(false, "MOCCA CLI does not expose ${error.feature}")
+            } catch (error: Exception) {
+                Napier.e("MOCCA CLI bridge connection failed", error)
+                onConnectionResult(false, bridgeFriendlyMessage(error))
+            }
+        }
+    }
+
+    private suspend fun waitForServerConnection() {
+        val maxAttempts = 24
+        repeat(maxAttempts) { attempt ->
+            delay(250)
+            when (val status = connectionManager.status.value) {
+                is ConnectionStatus.Connected -> return
+                is ConnectionStatus.Error -> error(status.message)
+                is ConnectionStatus.Disconnected -> error(
+                    status.reason ?: "OpenCode runtime disconnected"
+                )
+                else -> Napier.d("[OnboardingWizard] Waiting for CLI OpenCode runtime ($attempt/$maxAttempts)")
+            }
+        }
+        error("MOCCA CLI started OpenCode, but the app could not reach it. Check that both devices are on the same network.")
+    }
+
+    private fun bridgeFriendlyMessage(error: Exception): String {
+        val message = error.message ?: return "MOCCA CLI bridge connection failed"
+        return when {
+            message.contains("Connection refused", ignoreCase = true) ->
+                "MOCCA CLI is not reachable. Is npx mocca-cli running on your computer?"
+            message.contains("timeout", ignoreCase = true) ->
+                "MOCCA CLI did not respond in time. Check that both devices are on the same network."
+            message.contains("pairing", ignoreCase = true) ->
+                message
+            else -> message
+        }
+    }
+
     // Connection Result — success shows brief animation then auto-completes
 
 
@@ -496,17 +695,26 @@ class OnboardingWizardModel(
                     isLoading = false,
                     connectionStage = ConnectionStage.FAILED,
                     error = error ?: "Connection failed",
-                    currentStep = OnboardingStep.CONNECT
+                    currentStep = OnboardingStep.CONNECTING
                 )
             }
         }
     }
 
     private fun retryConnection() {
+        val current = _state.value
         _state.update {
-            it.copy(error = null, isLoading = true, connectionStage = ConnectionStage.SAVING_CONFIG)
+            it.copy(
+                error = null,
+                isLoading = true,
+                connectionStage = ConnectionStage.SAVING_CONFIG
+            )
         }
-        connect()
+        if (current.connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
+            connectBridgePairingPayload(current.bridgePairingPayload)
+        } else {
+            connect()
+        }
     }
 
     fun reset() {

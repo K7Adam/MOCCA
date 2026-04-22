@@ -4,6 +4,12 @@ import com.mocca.app.api.ApiExecutor
 import com.mocca.app.api.ConnectionException
 import com.mocca.app.api.NetworkConfig
 import com.mocca.app.api.getHttpEngine
+import com.mocca.app.bridge.client.BridgeTransport
+import com.mocca.app.bridge.client.DirectBridgeTarget
+import com.mocca.app.bridge.connection.BridgeHealth
+import com.mocca.app.bridge.connection.BridgeHealthChecker
+import com.mocca.app.bridge.connection.BridgeTransportFactory
+import com.mocca.app.bridge.connection.KtorBridgeTransport
 import com.mocca.app.domain.model.AppInfo
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.ServerConfig
@@ -14,6 +20,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.header
+import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.http.HttpHeaders
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.WebSockets
@@ -57,13 +64,16 @@ import kotlin.math.min
 class ConnectionManager(
     private val serverConfigRepository: ServerConfigRepository,
     private val networkObserver: NetworkObserver? = null
-) : ApiExecutor {
+) : ApiExecutor, BridgeTransportFactory, BridgeHealthChecker {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val clientMutex = Mutex()
 
     @Volatile
     private var currentClient: HttpClient? = null
+
+    @Volatile
+    private var bridgeClient: HttpClient? = null
 
     private val _status = MutableStateFlow<ConnectionStatus>(ConnectionStatus.NotConfigured)
     val status: StateFlow<ConnectionStatus> = _status.asStateFlow()
@@ -101,6 +111,23 @@ class ConnectionManager(
     override suspend fun <T> execute(block: suspend HttpClient.() -> T): T {
         val client = currentClient ?: throw ConnectionException("Not connected to any server")
         return client.block()
+    }
+
+    override suspend fun open(target: DirectBridgeTarget): BridgeTransport {
+        val client = clientMutex.withLock {
+            bridgeClient ?: createBridgeClient().also { bridgeClient = it }
+        }
+        val session = client.webSocketSession {
+            url(target.websocketUrl)
+        }
+        return KtorBridgeTransport(session)
+    }
+
+    override suspend fun check(target: DirectBridgeTarget): BridgeHealth {
+        val client = clientMutex.withLock {
+            bridgeClient ?: createBridgeClient().also { bridgeClient = it }
+        }
+        return client.get(target.healthUrl).body()
     }
 
     // Connection Lifecycle
@@ -170,6 +197,8 @@ class ConnectionManager(
             clientMutex.withLock {
                 currentClient?.close()
                 currentClient = null
+                bridgeClient?.close()
+                bridgeClient = null
             }
             _status.value = ConnectionStatus.Disconnected()
             _activeConfig.value = null
@@ -235,6 +264,8 @@ class ConnectionManager(
                     clientMutex.withLock {
                         currentClient?.close()
                         currentClient = null
+                        bridgeClient?.close()
+                        bridgeClient = null
                     }
                     _status.value = ConnectionStatus.NotConfigured
                     lastSuccessfulCheckMs = null
@@ -438,6 +469,22 @@ class ConnectionManager(
             }
             install(WebSockets)
             install(io.ktor.client.plugins.sse.SSE)
+        }
+    }
+
+    private fun createBridgeClient(): HttpClient {
+        Napier.i("[ConnectionManager] Creating MOCCA CLI bridge HttpClient")
+        return HttpClient(getHttpEngine()) {
+            expectSuccess = true
+            install(HttpTimeout) {
+                requestTimeoutMillis = NetworkConfig.REQUEST_TIMEOUT_MS
+                connectTimeoutMillis = NetworkConfig.CONNECT_TIMEOUT_MS
+                socketTimeoutMillis = NetworkConfig.SOCKET_TIMEOUT_MS
+            }
+            install(ContentNegotiation) {
+                json(json)
+            }
+            install(WebSockets)
         }
     }
 

@@ -48,6 +48,8 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import org.koin.compose.koinInject
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import androidx.compose.animation.core.tween
@@ -75,9 +77,18 @@ class ProgressiveOnboardingScreen(
         val connectionManager = koinInject<ConnectionManager>()
         val serverDiscovery = koinInject<ServerDiscovery>()
         val appStateStore = koinInject<com.mocca.app.data.repository.AppStateStore>()
+        val bridgeConnectionManager = koinInject<BridgeConnectionManager>()
+        val bridgePairingIntentStore = koinInject<BridgePairingIntentStore>()
+        val pendingBridgePairingPayload by bridgePairingIntentStore.pendingPayload.collectAsState()
 
         val screenModel = rememberScreenModel {
-            OnboardingWizardModel(serverConfigRepository, connectionManager, serverDiscovery, appStateStore)
+            OnboardingWizardModel(
+                serverConfigRepository = serverConfigRepository,
+                connectionManager = connectionManager,
+                serverDiscovery = serverDiscovery,
+                appStateStore = appStateStore,
+                bridgeConnectionManager = bridgeConnectionManager
+            )
         }
 
         val state by screenModel.state.collectAsState()
@@ -98,6 +109,12 @@ class ProgressiveOnboardingScreen(
                     navigator.replace(MainScreen())
                 }
             }
+        }
+
+        LaunchedEffect(pendingBridgePairingPayload) {
+            val payload = pendingBridgePairingPayload ?: return@LaunchedEffect
+            bridgePairingIntentStore.consume(payload)
+            screenModel.onAction(OnboardingAction.BridgePairingPayloadReceived(payload))
         }
 
         // Credential dialog
@@ -172,6 +189,19 @@ class ProgressiveOnboardingScreen(
                                 OnboardingAction.ManualConnect(host, port, username, password, useHttps)
                             )
                         },
+                        bridgePairingPayload = state.bridgePairingPayload,
+                        onBridgePairingPayloadChange = { payload ->
+                            screenModel.onAction(OnboardingAction.BridgePairingPayloadChanged(payload))
+                        },
+                        onBridgePairingConnect = {
+                            screenModel.onAction(OnboardingAction.ConnectBridgePairingPayload)
+                        },
+                        onBridgePairingPayloadScanned = { payload ->
+                            screenModel.onAction(OnboardingAction.BridgePairingPayloadReceived(payload))
+                        },
+                        onBridgePairingError = { message ->
+                            screenModel.onAction(OnboardingAction.BridgePairingError(message))
+                        },
                         onRefreshDiscovery = {
                             screenModel.onAction(OnboardingAction.StartDiscovery)
                         },
@@ -184,7 +214,9 @@ class ProgressiveOnboardingScreen(
                     )
                     OnboardingStep.CONNECTING -> OnboardingConnectingStep(
                         connectionStage = state.connectionStage,
+                        connectionMode = state.connectionMode,
                         connectionProgress = state.connectionProgress,
+                        bridgeValidationSummary = state.bridgeValidationSummary,
                         error = state.error,
                         isSuccess = state.isSuccess,
                         onRetry = {

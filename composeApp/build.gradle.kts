@@ -107,6 +107,7 @@ kotlin {
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
 
         androidMain.dependencies {
@@ -123,6 +124,7 @@ kotlin {
             implementation(libs.androidx.webkit)
             implementation(libs.compose.components.uiToolingPreview)
             implementation(libs.kotlinx.serialization.json)
+            implementation(libs.play.services.code.scanner)
         }
     }
 }

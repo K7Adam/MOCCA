@@ -15,6 +15,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
+import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.App
@@ -27,6 +28,7 @@ import org.koin.android.ext.android.inject
 
 class MainActivity : ComponentActivity() {
     private val configRepository: ConfigRepository by inject()
+    private val bridgePairingIntentStore: BridgePairingIntentStore by inject()
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -75,6 +77,12 @@ class MainActivity : ComponentActivity() {
     
     private fun handleIntent(intent: Intent?) {
         val uri = intent?.data
+        if (uri != null && uri.scheme == "mocca" && uri.host == "bridge") {
+            bridgePairingIntentStore.submit(uri.toString())
+            Toast.makeText(this, "Connecting MOCCA CLI...", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         if (uri != null && uri.scheme == "mocca" && uri.host == "oauth") {
             // mocca://oauth?code=...&state=...&provider=...
             val code = uri.getQueryParameter("code")

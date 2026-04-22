@@ -2,6 +2,7 @@
 .gradle/
 build/
 node_modules/
+cli/dist/
 
 # Android
 local.properties

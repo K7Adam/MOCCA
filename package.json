@@ -1,5 +1,12 @@
 {
   "name": "mocca-android",
   "version": "1.0.0",
-  "private": true
+  "private": true,
+  "workspaces": [
+    "cli"
+  ],
+  "scripts": {
+    "cli:test": "npm test --workspace @mocca/cli",
+    "cli:build": "npm run build --workspace @mocca/cli"
+  }
 }

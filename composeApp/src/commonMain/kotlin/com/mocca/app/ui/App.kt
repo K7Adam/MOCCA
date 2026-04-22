@@ -42,6 +42,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
+import com.mocca.app.bridge.connection.BridgeTargetRepository
+import com.mocca.app.bridge.opencode.BridgeRuntimeBootstrapper
 import com.mocca.app.data.repository.PreferencesManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
@@ -54,6 +56,7 @@ import com.mocca.app.ui.theme.AppPerformance
 import com.mocca.app.ui.theme.AppTheme
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.detectPerformanceTier
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
@@ -68,8 +71,30 @@ fun App() {
         codeFontFamilyKey = { preferences.codeFontFamily }
     ) {
         val serverConfigRepository = koinInject<ServerConfigRepository>()
+        val bridgeTargetRepository = koinInject<BridgeTargetRepository>()
+        val bridgeRuntimeBootstrapper = koinInject<BridgeRuntimeBootstrapper>()
         val isLoaded by serverConfigRepository.isLoaded.collectAsState()
         val activeConfig by serverConfigRepository.activeServer.collectAsState()
+        val bridgeTargetLoaded by bridgeTargetRepository.isLoaded.collectAsState()
+        val activeBridgeTarget by bridgeTargetRepository.activeTarget.collectAsState()
+        var attemptedInitialBridgeBootstrap by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(Unit) {
+            bridgeTargetRepository.load()
+        }
+
+        LaunchedEffect(bridgeTargetLoaded) {
+            if (!bridgeTargetLoaded || attemptedInitialBridgeBootstrap > 0) {
+                return@LaunchedEffect
+            }
+            attemptedInitialBridgeBootstrap = 1
+            val target = activeBridgeTarget ?: return@LaunchedEffect
+            try {
+                bridgeRuntimeBootstrapper.ensureRuntimeServer(target)
+            } catch (error: Exception) {
+                Napier.w("MOCCA CLI runtime bootstrap failed", error)
+            }
+        }
 
         Box(
             modifier = Modifier
@@ -77,7 +102,7 @@ fun App() {
                 .background(AppColors.background)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
         ) {
-            if (!isLoaded) {
+            if (!isLoaded || !bridgeTargetLoaded) {
                 SplashScreen()
             } else {
                 SharedTransitionLayout {
@@ -85,7 +110,7 @@ fun App() {
                         LocalSharedTransitionScope provides this
                     ) {
                         val config = activeConfig
-                        val startScreen = if (config != null && config.host.isNotBlank()) {
+                        val startScreen = if ((config != null && config.host.isNotBlank()) || activeBridgeTarget != null) {
                             MainScreen()
                         } else {
                             ProgressiveOnboardingScreen()
