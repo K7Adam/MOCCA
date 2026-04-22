@@ -3,9 +3,12 @@ import { createRequest } from "../src/protocol/message";
 import { createBridgeRouter } from "../src/server/router";
 import type { OpenCodeRuntimeBridge } from "../src/opencode/runtimeServer";
 
+const TEST_PROJECT_DIR = process.cwd();
+
 describe("MOCCA CLI request router", () => {
   it("reports bridge capabilities without exposing implementation details", async () => {
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => ({ installed: { available: true, command: "opencode", version: "1.14.19" } }),
     });
 
@@ -41,6 +44,7 @@ describe("MOCCA CLI request router", () => {
       mcpServers: [],
     };
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => snapshot,
     });
 
@@ -69,6 +73,7 @@ describe("MOCCA CLI request router", () => {
       mcpServers: [{ name: "filesystem", type: "local", enabled: true }],
     };
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => snapshot,
     });
 
@@ -121,6 +126,7 @@ describe("MOCCA CLI request router", () => {
       }),
     });
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => ({}),
       openCodeRuntime: runtime,
     });
@@ -165,6 +171,7 @@ describe("MOCCA CLI request router", () => {
       createSession: async (payload) => ({ id: "ses-2", title: (payload as { title?: string }).title }),
     });
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => ({}),
       openCodeRuntime: runtime,
     });
@@ -191,18 +198,19 @@ describe("MOCCA CLI request router", () => {
 
   it("returns typed errors for unknown requests", async () => {
     const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
       configSnapshotProvider: async () => ({}),
     });
 
     const response = await router.handleRequest(createRequest({
       id: "req-missing",
-      ns: "git",
+      ns: "diagnostics",
       action: "status",
     }));
 
     expect(response).toMatchObject({
       id: "req-missing",
-      ns: "git",
+      ns: "diagnostics",
       action: "status",
       ok: false,
       error: {

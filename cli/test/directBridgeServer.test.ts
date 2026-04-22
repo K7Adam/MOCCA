@@ -6,6 +6,8 @@ import { startDirectBridgeServer, type DirectBridgeServer } from "../src/server/
 import { createRequest } from "../src/protocol/message";
 import type { OpenCodeRuntimeBridge, OpenCodeRuntimeEvent } from "../src/opencode/runtimeServer";
 
+const TEST_PROJECT_DIR = process.cwd();
+
 describe("direct CLI bridge server", () => {
   let server: DirectBridgeServer | undefined;
 
@@ -16,6 +18,7 @@ describe("direct CLI bridge server", () => {
 
   it("accepts a paired websocket client and handles protocol requests", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -42,6 +45,7 @@ describe("direct CLI bridge server", () => {
 
   it("exposes a QR-ready pairing URL for the active server address", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -57,6 +61,7 @@ describe("direct CLI bridge server", () => {
 
   it("uses an advertised host for user-facing URLs while binding to a different host", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       advertiseHost: "192.168.0.42",
       port: 0,
@@ -75,6 +80,7 @@ describe("direct CLI bridge server", () => {
 
   it("rejects a client with the wrong pairing code", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -90,6 +96,7 @@ describe("direct CLI bridge server", () => {
 
   it("returns a typed error for invalid JSON frames", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -115,6 +122,7 @@ describe("direct CLI bridge server", () => {
 
   it("exposes health metadata without requiring a websocket pairing code", async () => {
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -143,6 +151,7 @@ describe("direct CLI bridge server", () => {
       },
     });
     server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
       host: "127.0.0.1",
       port: 0,
       pairingCode: "123456",
@@ -179,6 +188,7 @@ describe("direct CLI bridge server", () => {
 
     try {
       server = await startDirectBridgeServer({
+        projectDir: TEST_PROJECT_DIR,
         host: "127.0.0.1",
         port: blockedPort,
         pairingCode: "123456",

@@ -3,6 +3,7 @@
 build/
 node_modules/
 cli/dist/
+cli/pty/target/
 
 # Android
 local.properties

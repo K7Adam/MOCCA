@@ -7,12 +7,18 @@
     "mocca-cli": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "npm run build:ts && npm run build:pty",
+    "build:ts": "tsc -p tsconfig.json",
+    "build:pty": "node scripts/pty-cargo.mjs build",
     "dev": "tsx src/index.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:pty": "node scripts/pty-cargo.mjs test"
   },
   "dependencies": {
     "@opencode-ai/sdk": "^1.14.19",
+    "chokidar": "^5.0.0",
+    "fast-glob": "^3.3.3",
+    "ignore": "^7.0.5",
     "jsonc-parser": "^3.3.1",
     "qrcode-terminal": "^0.12.0",
     "ws": "^8.18.0"

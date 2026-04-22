@@ -6,9 +6,11 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -159,11 +161,11 @@ internal fun TerminalContent(
 
     Column(modifier = modifier.background(AppColors.background)) {
 
-        val outputScrollState = rememberScrollState(Int.MAX_VALUE)
+        val outputListState = rememberLazyListState()
 
-        // Scroll to bottom whenever output changes
-        LaunchedEffect(tab.output) {
-            outputScrollState.animateScrollTo(Int.MAX_VALUE)
+        LaunchedEffect(tab.grid.scrollbackLength, tab.grid.rowData.size) {
+            val last = (tab.grid.rowData.size - 1).coerceAtLeast(0)
+            outputListState.scrollToItem(last)
         }
 
         Box(
@@ -206,19 +208,33 @@ internal fun TerminalContent(
                     )
                 }
             } else {
-                // Terminal output text — horizontally scrollable for wide output
                 val hScrollState = rememberScrollState()
-                Text(
-                    text = tab.output.ifEmpty {
-                        if (tab.isConnecting) "Connecting..." else ""
-                    },
-                    style = monoStyle,
+                LazyColumn(
+                    state = outputListState,
                     modifier = Modifier
                         .fillMaxSize()
                         .horizontalScroll(hScrollState)
-                        .verticalScroll(outputScrollState)
-                        .padding(4.dp)
-                )
+                        .padding(4.dp),
+                    userScrollEnabled = true
+                ) {
+                    if (tab.isConnecting && tab.grid.rowData.all { it.text.isBlank() }) {
+                        item(key = "connecting", contentType = "terminal-status") {
+                            Text("Connecting...", style = monoStyle)
+                        }
+                    }
+                    items(
+                        items = tab.grid.rowData,
+                        key = { row -> row.index },
+                        contentType = { "terminal-row" }
+                    ) { row ->
+                        Text(
+                            text = row.text,
+                            style = monoStyle,
+                            softWrap = false,
+                            modifier = Modifier.height(18.dp)
+                        )
+                    }
+                }
             }
         }
 

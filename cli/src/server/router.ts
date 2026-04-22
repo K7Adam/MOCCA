@@ -7,8 +7,16 @@ import {
   type MoccaResponse,
 } from "../protocol/message.js";
 import type { OpenCodeRuntimeBridge, OpenCodeRuntimeEvent } from "../opencode/runtimeServer.js";
+import { ConfirmationStore } from "../capabilities/common/confirmation.js";
+import { EventSequencer } from "../capabilities/common/eventSequencer.js";
+import { toErrorCode, toErrorDetails } from "../capabilities/common/errors.js";
+import { FileSystemCapability } from "../capabilities/fs/fsCapability.js";
+import { GitCapability } from "../capabilities/git/gitCapability.js";
+import { SystemCapability } from "../capabilities/system/systemCapability.js";
+import { TerminalCapability } from "../capabilities/terminal/terminalCapability.js";
 
 export type BridgeRouterOptions = {
+  projectDir: string;
   configSnapshotProvider: () => Promise<unknown>;
   openCodeRuntime?: OpenCodeRuntimeBridge;
   eventSink?: (event: MoccaEvent) => void;
@@ -16,7 +24,7 @@ export type BridgeRouterOptions = {
 
 export type BridgeRouter = {
   handleRequest(request: MoccaRequest): Promise<MoccaResponse>;
-  close(): void;
+  close(): Promise<void>;
 };
 
 const SUPPORTED_NAMESPACES = [
@@ -36,20 +44,63 @@ const SUPPORTED_NAMESPACES = [
 ];
 
 export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
-  let nextEventSeq = 0;
+  const eventSequencer = new EventSequencer();
+  const confirmationStore = new ConfirmationStore();
+  const fsCapability = new FileSystemCapability({
+    projectDir: options.projectDir,
+    confirmationStore,
+    eventSequencer,
+    eventSink: options.eventSink,
+  });
+  void fsCapability.loadIgnoreFile();
+  const gitCapability = new GitCapability({
+    projectDir: options.projectDir,
+    confirmationStore,
+    eventSequencer,
+    eventSink: options.eventSink,
+  });
+  const terminalCapability = new TerminalCapability({
+    projectDir: options.projectDir,
+    confirmationStore,
+    eventSequencer,
+    eventSink: options.eventSink,
+  });
+  const systemCapability = new SystemCapability({
+    projectDir: options.projectDir,
+    confirmationStore,
+    eventSequencer,
+    eventSink: options.eventSink,
+  });
   const unsubscribeRuntime = options.openCodeRuntime?.subscribe((event) => {
-    options.eventSink?.(toBridgeRuntimeEvent(event, nextEventSeq++));
+    options.eventSink?.(toBridgeRuntimeEvent(event, eventSequencer.next("ai")));
   });
 
   return {
     async handleRequest(request: MoccaRequest): Promise<MoccaResponse> {
       try {
+        const capabilityResponse = await fsCapability.handle(request)
+          ?? await gitCapability.handle(request)
+          ?? await terminalCapability.handle(request)
+          ?? await systemCapability.handle(request);
+        if (capabilityResponse != null) {
+          return capabilityResponse;
+        }
+
         if (request.ns === "system" && request.action === "capabilities") {
           return createResponse(request, {
             ok: true,
             payload: {
               protocolVersion: PROTOCOL_VERSION,
               namespaces: SUPPORTED_NAMESPACES,
+              fs: fsCapability.capabilities,
+              git: gitCapability.capabilities,
+              terminal: terminalCapability.capabilities,
+              process: systemCapability.capabilities.process,
+              ports: systemCapability.capabilities.ports,
+              monitor: systemCapability.capabilities.monitor,
+              safety: {
+                confirmationRequired: true,
+              },
               ai: {
                 opencodeConfigSnapshot: true,
                 opencodeRuntime: options.openCodeRuntime != null,
@@ -196,14 +247,17 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
         return createResponse(request, {
           ok: false,
           error: {
-            code: readErrorCode(error),
+            code: toErrorCode(error),
             message: error instanceof Error ? error.message : String(error),
+            details: toErrorDetails(error),
           },
         });
       }
     },
-    close(): void {
+    async close(): Promise<void> {
       unsubscribeRuntime?.();
+      await terminalCapability.close();
+      await fsCapability.close();
     },
   };
 }
@@ -233,11 +287,4 @@ function readArrayProjection(snapshot: unknown, key: string): unknown[] {
 
   const value = (snapshot as Record<string, unknown>)[key];
   return Array.isArray(value) ? value : [];
-}
-
-function readErrorCode(error: unknown): string {
-  if (typeof error === "object" && error != null && "code" in error && typeof error.code === "string") {
-    return error.code;
-  }
-  return "bridge_request_failed";
 }

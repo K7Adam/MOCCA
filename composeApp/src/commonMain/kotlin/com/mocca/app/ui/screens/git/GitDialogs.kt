@@ -52,6 +52,46 @@ internal fun GitOverlays(uiState: GitUiState, screenModel: GitScreenModel) {
         )
     }
 
+    uiState.pendingConfirmation?.let { pending ->
+        AlertDialog(
+            onDismissRequest = { screenModel.cancelPendingOperation() },
+            containerColor = AppColors.surfaceContainerHigh,
+            title = {
+                Text(
+                    "Confirm action",
+                    style = AppTypography.labelLarge,
+                    color = AppColors.onSurface
+                )
+            },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
+                    Text(
+                        text = pending.risk,
+                        style = AppTypography.bodyMedium,
+                        color = AppColors.onSurfaceVariant
+                    )
+                    Text(
+                        text = pending.target,
+                        style = AppTypography.labelSmall,
+                        color = AppColors.error
+                    )
+                }
+            },
+            confirmButton = {
+                GodButton(
+                    text = "Confirm",
+                    onClick = { screenModel.confirmPendingOperation() },
+                    containerColor = AppColors.error,
+                    contentColor = AppColors.background
+                )
+            },
+            dismissButton = {
+                MoccaTextButton(text = "Cancel", onClick = { screenModel.cancelPendingOperation() })
+            },
+            shape = AppShapes.dialog
+        )
+    }
+
     toastMessage?.let { message ->
         Box(
             modifier = Modifier

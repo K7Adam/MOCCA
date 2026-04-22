@@ -3,34 +3,41 @@ package com.mocca.app.ui.screens.terminal
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
-import com.mocca.app.api.MoccaApiClient
+import com.mocca.app.bridge.client.requestPayload
+import com.mocca.app.bridge.client.requireClient
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.domain.model.Terminal
+import com.mocca.app.domain.model.TerminalGrid
+import com.mocca.app.domain.model.TerminalGridFrame
 import io.github.aakira.napier.Napier
-import io.ktor.websocket.Frame
-import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
-import io.ktor.websocket.readText
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.cancel
-
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 
 @Immutable
 data class TerminalTab(
     val terminal: Terminal,
-    val output: String = "",
+    val grid: TerminalGrid = TerminalGrid(),
     val isConnecting: Boolean = false,
     val isConnected: Boolean = false,
     val error: String? = null
 ) {
     val displayTitle: String
-        get() = terminal.shell?.let { shell ->
-            val name = shell.substringAfterLast("/")
-            if (name.isNotBlank()) name else "Terminal"
-        } ?: "Terminal"
+        get() = grid.title
+            ?: terminal.shell?.substringAfterLast("/")?.substringAfterLast("\\")?.takeIf { it.isNotBlank() }
+            ?: "Terminal"
 }
 
 @Immutable
@@ -47,190 +54,257 @@ data class TerminalState(
         get() = tabs.find { it.terminal.id == activeTabId }
 }
 
-
 class TerminalScreenModel(
-    private val apiClient: MoccaApiClient
+    private val bridgeConnectionManager: BridgeConnectionManager,
+    private val json: Json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 ) : ScreenModel {
 
     private val _state = MutableStateFlow(TerminalState())
     val state: StateFlow<TerminalState> = _state.asStateFlow()
 
-    /** Active WebSocket sessions keyed by terminal ID */
-    private val wsSessions = mutableMapOf<String, DefaultClientWebSocketSession>()
-    /** Receive coroutine jobs keyed by terminal ID */
-    private val receiveJobs = mutableMapOf<String, Job>()
-
-
     init {
+        observeBridgeEvents()
         loadExistingTerminals()
     }
 
-    override fun onDispose() {
-        receiveJobs.values.forEach { it.cancel() }
-        receiveJobs.clear()
-        wsSessions.values.forEach { it.cancel() }
-        wsSessions.clear()
-        super.onDispose()
-    }
-
-
-    /** Load all terminals that already exist on the server. */
     fun loadExistingTerminals() {
         screenModelScope.launch {
             _state.update { it.copy(isLoadingTabs = true, globalError = null) }
-            apiClient.listTerminals().onSuccess { terminals ->
-                val tabs = terminals.map { TerminalTab(terminal = it) }
-                _state.update { s ->
-                    s.copy(
+            try {
+                val client = bridgeConnectionManager.requireClient("terminal.list")
+                val terminals = client.requestPayload<List<TerminalListItem>>("terminal", "list", json = json)
+                val tabs = terminals.map { item ->
+                    TerminalTab(
+                        terminal = Terminal(id = item.id, shell = item.shell),
+                        grid = TerminalGrid(cols = item.cols, rows = item.rows, title = item.title),
+                        isConnected = !item.exited
+                    )
+                }
+                _state.update { state ->
+                    state.copy(
                         tabs = tabs,
-                        activeTabId = s.activeTabId ?: tabs.firstOrNull()?.terminal?.id,
+                        activeTabId = state.activeTabId ?: tabs.firstOrNull()?.terminal?.id,
                         isLoadingTabs = false
                     )
                 }
-                // Auto-connect to existing terminals
-                tabs.forEach { tab -> connectToTerminal(tab.terminal.id) }
-            }.onFailure { e ->
-                Napier.e("[TerminalScreenModel] loadExistingTerminals failed: \${e.message}")
-                _state.update { it.copy(isLoadingTabs = false, globalError = e.message) }
+                tabs.forEach { tab -> requestSnapshot(tab.terminal.id) }
+            } catch (error: Exception) {
+                Napier.e("[TerminalScreenModel] loadExistingTerminals failed: ${error.message}", error)
+                _state.update { it.copy(isLoadingTabs = false, globalError = error.toUiMessage("Unable to load terminals")) }
             }
         }
     }
 
-    /** Create a new terminal tab. */
     fun createTab() {
         screenModelScope.launch {
-            _state.update { it.copy(isCreatingTab = true) }
-            apiClient.createTerminal().onSuccess { terminal ->
-                val newTab = TerminalTab(terminal = terminal)
-                _state.update { s ->
-                    s.copy(
-                        tabs = s.tabs + newTab,
+            _state.update { it.copy(isCreatingTab = true, globalError = null) }
+            try {
+                val client = bridgeConnectionManager.requireClient("terminal.spawn")
+                val terminal = client.requestPayload<TerminalSpawnResponse>(
+                    ns = "terminal",
+                    action = "spawn",
+                    payload = json.encodeToJsonElement(TerminalSpawnRequest(cols = _state.value.cols, rows = _state.value.rows)),
+                    json = json
+                )
+                val tab = TerminalTab(
+                    terminal = Terminal(id = terminal.id, shell = terminal.shell),
+                    grid = TerminalGrid(cols = terminal.cols, rows = terminal.rows, title = terminal.title),
+                    isConnected = true
+                )
+                _state.update { state ->
+                    state.copy(
+                        tabs = state.tabs.filterNot { it.terminal.id == terminal.id } + tab,
                         activeTabId = terminal.id,
                         isCreatingTab = false
                     )
                 }
-                connectToTerminal(terminal.id)
-                resizeTerminal(terminal.id, _state.value.cols, _state.value.rows)
-            }.onFailure { e ->
-                Napier.e("[TerminalScreenModel] createTab failed: \${e.message}")
-                _state.update { it.copy(isCreatingTab = false, globalError = e.message) }
+                requestSnapshot(terminal.id)
+            } catch (error: Exception) {
+                Napier.e("[TerminalScreenModel] createTab failed: ${error.message}", error)
+                _state.update { it.copy(isCreatingTab = false, globalError = error.toUiMessage("Unable to create terminal")) }
             }
         }
     }
 
-    /** Close and delete a terminal tab. */
     fun closeTab(terminalId: String) {
         screenModelScope.launch {
-            disconnectFromTerminal(terminalId)
-            apiClient.deleteTerminal(terminalId).onFailure { e ->
-                Napier.w("[TerminalScreenModel] deleteTerminal $terminalId failed: \${e.message}")
+            try {
+                val client = bridgeConnectionManager.requireClient("terminal.kill")
+                client.request(
+                    ns = "terminal",
+                    action = "kill",
+                    payload = json.encodeToJsonElement(TerminalIdRequest(terminalId))
+                )
+            } catch (error: Exception) {
+                Napier.w("[TerminalScreenModel] terminal.kill failed: ${error.message}", error)
             }
-            _state.update { s ->
-                val remaining = s.tabs.filter { it.terminal.id != terminalId }
-                val newActive = when {
-                    s.activeTabId != terminalId -> s.activeTabId
-                    remaining.isNotEmpty() -> remaining.last().terminal.id
-                    else -> null
-                }
-                s.copy(tabs = remaining, activeTabId = newActive)
-            }
+            removeTab(terminalId)
         }
     }
 
-    /** Switch focus to a different tab. Lazy-connects if not yet connected. */
     fun selectTab(terminalId: String) {
         _state.update { it.copy(activeTabId = terminalId) }
-        val tab = _state.value.tabs.find { it.terminal.id == terminalId }
-        if (tab != null && !tab.isConnected && !tab.isConnecting) {
-            connectToTerminal(terminalId)
-        }
+        requestSnapshot(terminalId)
     }
 
-    /** Send keyboard input to a terminal's WebSocket. */
     fun sendInput(terminalId: String, text: String) {
         screenModelScope.launch {
-            val ws = wsSessions[terminalId]
-            if (ws != null) {
-                try {
-                    ws.send(Frame.Text(text))
-                } catch (e: Exception) {
-                    Napier.e("[TerminalScreenModel] sendInput failed for $terminalId: \${e.message}")
-                }
-            } else {
-                Napier.w("[TerminalScreenModel] sendInput: no WS for $terminalId")
+            try {
+                val client = bridgeConnectionManager.requireClient("terminal.write")
+                client.request(
+                    ns = "terminal",
+                    action = "write",
+                    payload = json.encodeToJsonElement(TerminalWriteRequest(terminalId = terminalId, data = text))
+                )
+            } catch (error: Exception) {
+                Napier.e("[TerminalScreenModel] sendInput failed: ${error.message}", error)
+                updateTab(terminalId) { it.copy(error = error.toUiMessage("Unable to send input")) }
             }
         }
     }
 
-    /** Notify the server that the terminal view has been resized. */
     fun notifyResize(cols: Int, rows: Int) {
         _state.update { it.copy(cols = cols, rows = rows) }
         _state.value.tabs.forEach { tab ->
-            resizeTerminal(tab.terminal.id, cols, rows)
+            screenModelScope.launch {
+                try {
+                    val client = bridgeConnectionManager.requireClient("terminal.resize")
+                    client.request(
+                        ns = "terminal",
+                        action = "resize",
+                        payload = json.encodeToJsonElement(TerminalResizeBridgeRequest(tab.terminal.id, cols, rows))
+                    )
+                } catch (error: Exception) {
+                    Napier.w("[TerminalScreenModel] resize failed: ${error.message}", error)
+                }
+            }
         }
     }
 
-
-    private fun connectToTerminal(terminalId: String) {
-        if (receiveJobs.containsKey(terminalId)) return
-        updateTab(terminalId) { it.copy(isConnecting = true, error = null) }
-        val job = screenModelScope.launch {
-            try {
-                apiClient.connectToTerminal(terminalId) {
-                    wsSessions[terminalId] = this
-                    updateTab(terminalId) { it.copy(isConnecting = false, isConnected = true) }
-                    // Receive loop
-                    for (frame in incoming) {
-                        if (frame is Frame.Text) {
-                            appendOutput(terminalId, frame.readText())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun observeBridgeEvents() {
+        screenModelScope.launch {
+            bridgeConnectionManager.client
+                .flatMapLatest { client -> client?.events ?: flowOf() }
+                .filter { it.ns == "terminal" }
+                .collectLatest { event ->
+                    val payload = event.payload ?: return@collectLatest
+                    when (event.event) {
+                        "terminal.spawned" -> {
+                            val spawned = json.decodeFromJsonElement<TerminalSpawnedEvent>(payload)
+                            upsertTab(spawned)
+                        }
+                        "terminal.state" -> {
+                            val frame = json.decodeFromJsonElement<TerminalGridFrame>(payload)
+                            updateTab(frame.terminalId) { tab ->
+                                tab.copy(
+                                    grid = tab.grid.apply(frame),
+                                    isConnecting = false,
+                                    isConnected = true,
+                                    error = null
+                                )
+                            }
+                        }
+                        "terminal.exited" -> {
+                            val exited = json.decodeFromJsonElement<TerminalExitedEvent>(payload)
+                            updateTab(exited.terminalId) { it.copy(isConnected = false, isConnecting = false) }
+                        }
+                        "terminal.error" -> {
+                            val terminalError = json.decodeFromJsonElement<TerminalErrorEvent>(payload)
+                            updateTab(terminalError.terminalId) { it.copy(error = terminalError.message, isConnecting = false) }
                         }
                     }
                 }
-            } catch (e: Exception) {
-                Napier.e("[TerminalScreenModel] WS error for $terminalId: \${e.message}")
-                updateTab(terminalId) {
-                    it.copy(isConnecting = false, isConnected = false, error = e.message)
-                }
-            } finally {
-                wsSessions.remove(terminalId)
-                receiveJobs.remove(terminalId)
-                updateTab(terminalId) { it.copy(isConnected = false) }
-            }
         }
-        receiveJobs[terminalId] = job
     }
 
-    private fun disconnectFromTerminal(terminalId: String) {
-        receiveJobs.remove(terminalId)?.cancel()
-        // Cancelling the receive job tears down the WS connection
-        wsSessions.remove(terminalId)
-        updateTab(terminalId) { it.copy(isConnected = false, isConnecting = false) }
+    private fun requestSnapshot(terminalId: String) {
+        screenModelScope.launch {
+            try {
+                val client = bridgeConnectionManager.requireClient("terminal.snapshot")
+                val frame = client.requestPayload<TerminalGridFrame>(
+                    ns = "terminal",
+                    action = "snapshot",
+                    payload = json.encodeToJsonElement(TerminalIdRequest(terminalId)),
+                    json = json
+                )
+                updateTab(terminalId) { it.copy(grid = it.grid.apply(frame), isConnected = true) }
+            } catch (error: Exception) {
+                Napier.w("[TerminalScreenModel] snapshot failed: ${error.message}", error)
+            }
+        }
+    }
+
+    private fun upsertTab(event: TerminalSpawnedEvent) {
+        _state.update { state ->
+            val tab = TerminalTab(
+                terminal = Terminal(id = event.terminalId, shell = event.shell),
+                grid = TerminalGrid(cols = event.cols, rows = event.rows, title = event.title),
+                isConnected = true
+            )
+            state.copy(
+                tabs = state.tabs.filterNot { it.terminal.id == event.terminalId } + tab,
+                activeTabId = state.activeTabId ?: event.terminalId
+            )
+        }
+    }
+
+    private fun removeTab(terminalId: String) {
+        _state.update { state ->
+            val remaining = state.tabs.filter { it.terminal.id != terminalId }
+            state.copy(
+                tabs = remaining,
+                activeTabId = when {
+                    state.activeTabId != terminalId -> state.activeTabId
+                    remaining.isNotEmpty() -> remaining.last().terminal.id
+                    else -> null
+                }
+            )
+        }
     }
 
     private fun updateTab(terminalId: String, transform: (TerminalTab) -> TerminalTab) {
-        _state.update { s ->
-            s.copy(tabs = s.tabs.map { tab ->
+        _state.update { state ->
+            state.copy(tabs = state.tabs.map { tab ->
                 if (tab.terminal.id == terminalId) transform(tab) else tab
             })
         }
     }
 
-    private fun appendOutput(terminalId: String, chunk: String) {
-        _state.update { s ->
-            s.copy(tabs = s.tabs.map { tab ->
-                if (tab.terminal.id == terminalId) {
-                    val newOutput = (tab.output + chunk).takeLast(50_000)
-                    tab.copy(output = newOutput)
-                } else tab
-            })
-        }
-    }
-
-    private fun resizeTerminal(terminalId: String, cols: Int, rows: Int) {
-        screenModelScope.launch {
-            apiClient.resizeTerminal(terminalId, cols, rows).onFailure { e ->
-                Napier.w("[TerminalScreenModel] resize $terminalId failed: \${e.message}")
-            }
+    private fun Exception.toUiMessage(fallback: String): String {
+        return when (this) {
+            is BridgeResponseException -> message ?: fallback
+            else -> message ?: fallback
         }
     }
 }
+
+@Serializable
+private data class TerminalSpawnRequest(val cols: Int, val rows: Int)
+
+@Serializable
+private data class TerminalSpawnResponse(val id: String, val shell: String? = null, val title: String? = null, val cols: Int, val rows: Int)
+
+@Serializable
+private data class TerminalListItem(val id: String, val shell: String? = null, val title: String? = null, val cols: Int = 120, val rows: Int = 40, val exited: Boolean = false)
+
+@Serializable
+private data class TerminalIdRequest(val terminalId: String)
+
+@Serializable
+private data class TerminalWriteRequest(val terminalId: String, val data: String)
+
+@Serializable
+private data class TerminalResizeBridgeRequest(val terminalId: String, val cols: Int, val rows: Int)
+
+@Serializable
+private data class TerminalSpawnedEvent(val terminalId: String, val shell: String? = null, val title: String? = null, val cols: Int, val rows: Int)
+
+@Serializable
+private data class TerminalExitedEvent(val terminalId: String)
+
+@Serializable
+private data class TerminalErrorEvent(val terminalId: String, val message: String)

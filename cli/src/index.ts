@@ -27,6 +27,7 @@ if (args[0] === "snapshot") {
   });
 
   const server = await startDirectBridgeServer({
+    projectDir: process.cwd(),
     host,
     advertiseHost,
     port,

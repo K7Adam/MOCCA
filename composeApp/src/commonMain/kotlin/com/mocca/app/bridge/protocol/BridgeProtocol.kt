@@ -46,7 +46,14 @@ data class BridgeError(
 data class BridgeCapabilities(
     val protocolVersion: Int,
     val namespaces: List<String>,
-    val ai: BridgeAiCapabilities = BridgeAiCapabilities()
+    val ai: BridgeAiCapabilities = BridgeAiCapabilities(),
+    val fs: BridgeFsCapabilities = BridgeFsCapabilities(),
+    val git: BridgeGitCapabilities = BridgeGitCapabilities(),
+    val terminal: BridgeTerminalCapabilities = BridgeTerminalCapabilities(),
+    val process: BridgeProcessCapabilities = BridgeProcessCapabilities(),
+    val ports: BridgePortsCapabilities = BridgePortsCapabilities(),
+    val monitor: BridgeMonitorCapabilities = BridgeMonitorCapabilities(),
+    val safety: BridgeSafetyCapabilities = BridgeSafetyCapabilities()
 )
 
 @Serializable
@@ -55,6 +62,63 @@ data class BridgeAiCapabilities(
     val opencodeRuntime: Boolean = false,
     val sessions: Boolean = false,
     val messages: Boolean = false
+)
+
+@Serializable
+data class BridgeFsCapabilities(
+    val native: Boolean = false,
+    val watch: Boolean = false,
+    val chunkedRead: Boolean = false,
+    val binaryMetadata: Boolean = false
+)
+
+@Serializable
+data class BridgeGitCapabilities(
+    val native: Boolean = false,
+    val porcelainV2: Boolean = false,
+    val queuedWrites: Boolean = false
+)
+
+@Serializable
+data class BridgeTerminalCapabilities(
+    val ptyGrid: Boolean = false,
+    val dirtyRows: Boolean = false,
+    val sidecar: String? = null
+)
+
+@Serializable
+data class BridgeProcessCapabilities(
+    val native: Boolean = false,
+    val kill: Boolean = false
+)
+
+@Serializable
+data class BridgePortsCapabilities(
+    val native: Boolean = false
+)
+
+@Serializable
+data class BridgeMonitorCapabilities(
+    val native: Boolean = false
+)
+
+@Serializable
+data class BridgeSafetyCapabilities(
+    val confirmationRequired: Boolean = false
+)
+
+@Serializable
+data class BridgeConfirmation(
+    val operationId: String
+)
+
+@Serializable
+data class BridgeConfirmationDetails(
+    val operationId: String,
+    val action: String,
+    val target: String,
+    val risk: String,
+    val expiresAt: Long
 )
 
 @Serializable

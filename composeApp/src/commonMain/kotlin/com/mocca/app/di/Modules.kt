@@ -267,16 +267,14 @@ val screenModelModule = module {
     // Git screen
     factory {
         GitScreenModel(
-            gitRepository = get(),
-            stateCoordinator = get()
+            gitRepository = get()
         )
     }
     
     // Git Diff screen
     factory { params ->
         GitDiffScreenModel(
-            gitRepository = get(),
-            sessionRepository = get()
+            gitRepository = get()
         )
     }
     

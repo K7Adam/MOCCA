@@ -118,7 +118,7 @@ export async function startDirectBridgeServer(options: DirectBridgeServerOptions
     },
     pairingCode: options.pairingCode,
     close: async () => {
-      router.close();
+      await router.close();
       await options.openCodeRuntime?.close();
       await closeWebsocketServer(websocketServer);
       await closeHttpServer(httpServer);

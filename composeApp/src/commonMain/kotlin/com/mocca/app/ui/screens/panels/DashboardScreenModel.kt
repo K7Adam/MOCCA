@@ -260,9 +260,7 @@ class DashboardScreenModel(
             while (isActive) {
                 val snapshot = _state.value
                 val interval = snapshot.systemMonitor.refreshInterval.pollMs
-                val sessionId = snapshot.currentSessionId
-
-                if (interval == null || sessionId.isNullOrBlank()) {
+                if (interval == null) {
                     delay(1_000)
                     continue
                 }
@@ -284,7 +282,6 @@ class DashboardScreenModel(
     }
 
     private fun refreshSystemMonitor() {
-        val sessionId = _state.value.currentSessionId ?: return
         if (_state.value.systemMonitor.refreshInterval == MonitorRefreshInterval.OFF) return
         if (_state.value.systemMonitor.isRefreshing) return
 
@@ -294,9 +291,9 @@ class DashboardScreenModel(
                 state.copy(systemMonitor = state.systemMonitor.copy(isRefreshing = true))
             }
 
-            val processesDeferred = async { systemMonitorRepository.getProcesses(sessionId) }
-            val portsDeferred = async { systemMonitorRepository.getPorts(sessionId) }
-            val resourcesDeferred = async { systemMonitorRepository.getSystemResources(sessionId) }
+            val processesDeferred = async { systemMonitorRepository.getProcesses() }
+            val portsDeferred = async { systemMonitorRepository.getPorts() }
+            val resourcesDeferred = async { systemMonitorRepository.getSystemResources() }
 
             val processes = processesDeferred.await().toImmutableListResource()
             val ports = portsDeferred.await().toImmutableListResource()

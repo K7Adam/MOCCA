@@ -1,8 +1,10 @@
 package com.mocca.app.domain.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.Serializable
 
 @Immutable
+@Serializable
 data class ProcessInfo(
     val pid: String,
     val command: String,
@@ -12,6 +14,7 @@ data class ProcessInfo(
 )
 
 @Immutable
+@Serializable
 data class PortInfo(
     val port: Int,
     val protocol: String,
@@ -20,6 +23,7 @@ data class PortInfo(
 )
 
 @Immutable
+@Serializable
 data class SystemResources(
     val cpuPercent: Float? = null,
     val memoryUsed: Long? = null,
