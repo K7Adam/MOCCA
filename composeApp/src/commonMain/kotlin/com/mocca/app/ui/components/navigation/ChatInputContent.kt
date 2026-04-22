@@ -1,9 +1,33 @@
 package com.mocca.app.ui.components.navigation
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +35,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.window.PopupProperties
 import com.mocca.app.domain.model.AttachedFile
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
@@ -21,44 +56,13 @@ import com.mocca.app.ui.components.modern.ModelSelectorDialog
 import com.mocca.app.ui.components.modern.VariantSelectorDialog
 import com.mocca.app.ui.components.voice.RequestVoicePermissionEffect
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.moccaClickable
 
 /**
- * Chat input content component - the content that appears ABOVE the persistent nav row.
- * 
- * This component contains:
- * - Status bar with model/agent/variant selectors
- * - Text input field
- * - Action toolbar with attachment and send buttons
- * 
- * The navigation row is handled separately by PersistentNavRow to ensure
- * consistent sizing and positioning across all modes.
- *
- * @param inputText Current input text
- * @param onInputTextChange Callback when input text changes
- * @param onSendClick Callback when send button is clicked
- * @param inputEnabled Whether input is enabled
- * @param placeholder Placeholder text for input field
- * @param modelName Current model name
- * @param agentName Current agent name
- * @param providerResponse Available providers and models
- * @param selectedProviderId Currently selected provider ID
- * @param selectedModelId Currently selected model ID
- * @param onModelSelected Callback when model is selected
- * @param variants Available variants
- * @param selectedVariantId Currently selected variant ID
- * @param onVariantSelected Callback when variant is selected
- * @param modes Available modes/agents
- * @param selectedModeId Currently selected mode ID
- * @param onModeSelected Callback when mode is selected
- * @param attachedFiles Currently attached files
- * @param onRemoveAttachment Callback to remove an attachment
- * @param onAttachClick Callback to open file picker
- * @param commands Available terminal commands
- * @param onCommandSelected Callback when command is selected
- * @param onModeSelectedForMention Callback when mode is selected via @mention
- * @param modifier Modifier for styling
- * @param alpha Alpha value for animation
+ * Chat composer content above the persistent navigation row.
  */
 @Composable
 fun ChatInputContent(
@@ -69,39 +73,30 @@ fun ChatInputContent(
     onMicClick: () -> Unit,
     inputEnabled: Boolean,
     placeholder: String,
-    // Agent state
     isSessionIdle: Boolean = true,
     onAbortClick: () -> Unit = {},
-    // Model/Agent selection
     modelName: String,
     agentName: String,
     providerResponse: ProviderResponse?,
     selectedProviderId: String,
     selectedModelId: String,
     onModelSelected: (String, String) -> Unit,
-    // Variants
     variants: List<String>,
     selectedVariantId: String?,
     onVariantSelected: (String) -> Unit,
-    // Modes
     modes: List<Mode>,
     selectedModeId: String?,
     onModeSelected: (String?) -> Unit,
-    // Attachments
     attachedFiles: List<AttachedFile>,
     onRemoveAttachment: (AttachedFile) -> Unit,
     onAttachClick: () -> Unit,
-    // Commands
     commands: List<Command>,
     onCommandSelected: (Command) -> Unit,
     onModeSelectedForMention: (Mode) -> Unit,
-    // Shell mode
     shellMode: Boolean = false,
     onShellModeToggle: () -> Unit = {},
-    // Plan mode
     planMode: Boolean = false,
     onPlanModeToggle: () -> Unit = {},
-    // Prompt history navigation
     onHistoryUp: () -> Unit = {},
     onHistoryDown: () -> Unit = {},
     isVoiceListening: Boolean = false,
@@ -114,32 +109,25 @@ fun ChatInputContent(
     var showModelSelector by remember { mutableStateOf(false) }
     var showVariantSelector by remember { mutableStateOf(false) }
     var isInputFocused by remember { mutableStateOf(false) }
-    
-    // Text-triggered suggestions state
     var showTextSuggestions by remember { mutableStateOf(false) }
     var suggestionQuery by remember { mutableStateOf("") }
-    var isCommandSuggestion by remember { mutableStateOf(true) } // true = commands, false = modes
-    
-    // Manual palette triggers (for / and @ buttons)
+    var isCommandSuggestion by remember { mutableStateOf(true) }
     var showCommandPalette by remember { mutableStateOf(false) }
 
-    // Merge API commands with built-in commands
     val mergedCommands = remember(commands) { mergeCommands(commands) }
-    
-    // Calculate filtered suggestions based on current query
     val filteredCommands = remember(mergedCommands, suggestionQuery) {
         val query = suggestionQuery.lowercase()
-        if (query.isEmpty()) mergedCommands
-        else mergedCommands.filter { it.name.lowercase().contains(query) }
+        if (query.isEmpty()) mergedCommands else mergedCommands.filter { it.name.lowercase().contains(query) }
     }
-    
     val filteredModes = remember(modes, suggestionQuery) {
         val query = suggestionQuery.lowercase()
-        if (query.isEmpty()) modes
-        else modes.filter { it.name.lowercase().contains(query) || it.id.lowercase().contains(query) }
+        if (query.isEmpty()) modes else modes.filter {
+            it.name.lowercase().contains(query) || it.id.lowercase().contains(query)
+        }
     }
+    val hasSendPayload = inputText.isNotBlank() || attachedFiles.isNotEmpty()
+    val canSend = inputEnabled && isSessionIdle && hasSendPayload
 
-    // Handle input changes for suggestions
     val handleValueChange = { newValue: String ->
         onInputTextChange(newValue)
         if (newValue.startsWith("/")) {
@@ -156,16 +144,18 @@ fun ChatInputContent(
                 showTextSuggestions = false
             }
         }
-        if (newValue.isEmpty()) showTextSuggestions = false
+        if (newValue.isEmpty()) {
+            showTextSuggestions = false
+        }
     }
 
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer { this.alpha = alpha }
             .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-
         ChatInputStatusBar(
             modelName = modelName,
             agentName = agentName,
@@ -179,68 +169,87 @@ fun ChatInputContent(
             onModeSelected = onModeSelected
         )
 
-        ChatInputTextFieldArea(
-            inputText = inputText,
-            onValueChange = handleValueChange,
-            inputEnabled = inputEnabled,
-            placeholder = placeholder,
-            onInputFocusChanged = { isInputFocused = it },
-            showTextSuggestions = showTextSuggestions,
-            onDismissSuggestions = { showTextSuggestions = false },
-            isCommandSuggestion = isCommandSuggestion,
-            suggestionQuery = suggestionQuery,
-            filteredCommands = filteredCommands,
-            filteredModes = filteredModes,
-            selectedModeId = selectedModeId,
-            onCommandSelected = onCommandSelected,
-            onModeSelectedForMention = onModeSelectedForMention,
-            onInputTextChange = onInputTextChange
-        )
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
 
-        if (attachedFiles.isNotEmpty()) {
-            AttachmentPreviewStrip(
-                files = attachedFiles,
-                onRemove = onRemoveAttachment
+        ComposerSurface(
+            focused = isInputFocused,
+            canSend = canSend,
+            isVoiceListening = isVoiceListening,
+            inputEnabled = inputEnabled
+        ) {
+            if (attachedFiles.isNotEmpty()) {
+                AttachmentPreviewStrip(files = attachedFiles, onRemove = onRemoveAttachment)
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Bottom,
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            ) {
+                ComposerIconButton(
+                    icon = Icons.Default.Add,
+                    contentDescription = "Attach file",
+                    onClick = onAttachClick,
+                    enabled = inputEnabled
+                )
+
+                ChatInputTextFieldArea(
+                    modifier = Modifier.weight(1f),
+                    inputText = inputText,
+                    onValueChange = handleValueChange,
+                    onSendRequest = { if (canSend) onSendClick() },
+                    canSend = canSend,
+                    inputEnabled = inputEnabled,
+                    placeholder = placeholder,
+                    onInputFocusChanged = { isInputFocused = it },
+                    showTextSuggestions = showTextSuggestions,
+                    onDismissSuggestions = { showTextSuggestions = false },
+                    isCommandSuggestion = isCommandSuggestion,
+                    suggestionQuery = suggestionQuery,
+                    filteredCommands = filteredCommands,
+                    filteredModes = filteredModes,
+                    selectedModeId = selectedModeId,
+                    onCommandSelected = onCommandSelected,
+                    onModeSelectedForMention = onModeSelectedForMention,
+                    onInputTextChange = onInputTextChange
+                )
+
+                ComposerIconButton(
+                    icon = Icons.Default.Mic,
+                    contentDescription = if (isVoiceListening) "Stop voice input" else "Start voice input",
+                    onClick = onMicClick,
+                    enabled = inputEnabled && isVoiceAvailable,
+                    active = isVoiceListening
+                )
+
+                if (isSessionIdle) {
+                    ComposerSendButton(canSend = canSend, onClick = onSendClick)
+                } else {
+                    ComposerAbortButton(onClick = onAbortClick)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+            ComposerToolRow(
+                modes = modes,
+                selectedModeId = selectedModeId,
+                onModeSelectedForMention = onModeSelectedForMention,
+                showCommandPalette = showCommandPalette,
+                onCommandPaletteToggle = { showCommandPalette = !showCommandPalette },
+                shellMode = shellMode,
+                onShellModeToggle = onShellModeToggle,
+                planMode = planMode,
+                onPlanModeToggle = onPlanModeToggle,
+                onHistoryUp = onHistoryUp,
+                onHistoryDown = onHistoryDown,
+                onExportClick = onExportClick,
+                inputEnabled = inputEnabled
             )
         }
-
-        HorizontalDivider(
-            thickness = AppSpacing.borderThin,
-            color = AppColors.outline.copy(alpha = 0.3f)
-        )
-
-        ChatInputActionToolbar(
-            inputText = inputText,
-            inputEnabled = inputEnabled,
-            isSessionIdle = isSessionIdle,
-            onSendClick = onSendClick,
-            onAbortClick = onAbortClick,
-            onAttachClick = onAttachClick,
-            onMicClick = onMicClick,
-            onExportClick = onExportClick,
-            isListening = isVoiceListening,
-            isVoiceAvailable = isVoiceAvailable,
-            modes = modes,
-            selectedModeId = selectedModeId,
-            onModeSelectedForMention = onModeSelectedForMention,
-            showCommandPalette = showCommandPalette,
-            onCommandPaletteToggle = { showCommandPalette = !showCommandPalette },
-            shellMode = shellMode,
-            onShellModeToggle = onShellModeToggle,
-            planMode = planMode,
-            onPlanModeToggle = onPlanModeToggle,
-            onHistoryUp = onHistoryUp,
-            onHistoryDown = onHistoryDown
-        )
-
-        // Subtle divider before nav row
-        HorizontalDivider(
-            thickness = AppSpacing.borderThin,
-            color = AppColors.outline.copy(alpha = 0.3f)
-        )
     }
 
-    // Model selector dialog
     if (showModelSelector && providerResponse != null) {
         ModelSelectorDialog(
             providerResponse = providerResponse,
@@ -252,7 +261,6 @@ fun ChatInputContent(
         )
     }
 
-    // Variant selector dialog
     if (showVariantSelector) {
         VariantSelectorDialog(
             variants = variants,
@@ -262,13 +270,12 @@ fun ChatInputContent(
         )
     }
 
-    // Full-screen command palette overlay (triggered by / button)
     if (showCommandPalette) {
         CommandPaletteOverlay(
             commands = mergedCommands,
             modes = modes,
-            onCommandSelected = { cmd ->
-                onCommandSelected(cmd)
+            onCommandSelected = { command ->
+                onCommandSelected(command)
                 showCommandPalette = false
             },
             onModeSelected = { mode ->
@@ -283,4 +290,337 @@ fun ChatInputContent(
         requestToken = voicePermissionRequestToken,
         onResult = onVoicePermissionResult
     )
+}
+
+@Composable
+private fun ComposerSurface(
+    focused: Boolean,
+    canSend: Boolean,
+    isVoiceListening: Boolean,
+    inputEnabled: Boolean,
+    content: @Composable () -> Unit
+) {
+    val targetBorderColor = when {
+        !inputEnabled -> AppColors.outline.copy(alpha = 0.16f)
+        isVoiceListening -> AppColors.primary.copy(alpha = 0.75f)
+        canSend -> AppColors.primary.copy(alpha = 0.48f)
+        focused -> AppColors.outline.copy(alpha = 0.42f)
+        else -> AppColors.outline.copy(alpha = 0.22f)
+    }
+    val borderColor by animateColorAsState(
+        targetValue = targetBorderColor,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "composerBorderColor"
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(AppShapes.extraLarge)
+            .background(AppColors.bgRaised, AppShapes.extraLarge)
+            .border(AppSpacing.borderThin, borderColor, AppShapes.extraLarge)
+            .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.sm)
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun ComposerToolRow(
+    modes: List<Mode>,
+    selectedModeId: String?,
+    onModeSelectedForMention: (Mode) -> Unit,
+    showCommandPalette: Boolean,
+    onCommandPaletteToggle: () -> Unit,
+    shellMode: Boolean,
+    onShellModeToggle: () -> Unit,
+    planMode: Boolean,
+    onPlanModeToggle: () -> Unit,
+    onHistoryUp: () -> Unit,
+    onHistoryDown: () -> Unit,
+    onExportClick: () -> Unit,
+    inputEnabled: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        AgentToolButton(
+            modes = modes,
+            selectedModeId = selectedModeId,
+            onModeSelectedForMention = onModeSelectedForMention,
+            enabled = inputEnabled
+        )
+        ComposerTextButton(
+            text = "/",
+            active = showCommandPalette,
+            contentDescription = "Open command palette",
+            onClick = onCommandPaletteToggle,
+            enabled = inputEnabled
+        )
+        ComposerTextButton(
+            text = "!",
+            active = shellMode,
+            contentDescription = "Toggle shell mode",
+            onClick = onShellModeToggle,
+            enabled = inputEnabled
+        )
+        ComposerTextButton(
+            text = "P",
+            active = planMode,
+            contentDescription = "Toggle plan mode",
+            onClick = onPlanModeToggle,
+            enabled = inputEnabled
+        )
+        ComposerIconButton(
+            icon = Icons.Default.KeyboardArrowUp,
+            contentDescription = "Previous prompt",
+            onClick = onHistoryUp,
+            enabled = inputEnabled,
+            size = NavConstants.CompactActionButtonSize,
+            iconSize = AppSpacing.iconSizeSmall
+        )
+        ComposerIconButton(
+            icon = Icons.Default.KeyboardArrowDown,
+            contentDescription = "Next prompt",
+            onClick = onHistoryDown,
+            enabled = inputEnabled,
+            size = NavConstants.CompactActionButtonSize,
+            iconSize = AppSpacing.iconSizeSmall
+        )
+        ComposerIconButton(
+            icon = Icons.Default.ContentCopy,
+            contentDescription = "Export chat to Markdown",
+            onClick = onExportClick,
+            enabled = true,
+            size = NavConstants.CompactActionButtonSize,
+            iconSize = AppSpacing.iconSizeSmall
+        )
+    }
+}
+
+@Composable
+private fun AgentToolButton(
+    modes: List<Mode>,
+    selectedModeId: String?,
+    onModeSelectedForMention: (Mode) -> Unit,
+    enabled: Boolean
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        ComposerTextButton(
+            text = "@",
+            active = expanded,
+            contentDescription = "Open agent mention menu",
+            onClick = { expanded = !expanded },
+            enabled = enabled
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            properties = PopupProperties(focusable = false),
+            modifier = Modifier
+                .background(AppColors.surfaceContainerHigh, AppShapes.medium)
+                .border(AppSpacing.borderThin, AppColors.outline.copy(alpha = 0.5f), AppShapes.medium)
+        ) {
+            if (modes.isEmpty()) {
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "No agents available",
+                            style = AppTypography.labelSmall,
+                            color = AppColors.outline
+                        )
+                    },
+                    onClick = { expanded = false }
+                )
+            } else {
+                modes.forEach { mode ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    mode.name.uppercase(),
+                                    style = AppTypography.labelSmall,
+                                    color = if (mode.id == selectedModeId) AppColors.primary else AppColors.onSurfaceVariant
+                                )
+                                mode.description?.let { description ->
+                                    Text(
+                                        description,
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.outline,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        },
+                        onClick = {
+                            onModeSelectedForMention(mode)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ComposerIconButton(
+    icon: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    active: Boolean = false,
+    size: Dp = NavConstants.ActionButtonSize,
+    iconSize: Dp = NavConstants.ActionIconSize
+) {
+    val containerColor = when {
+        active -> AppColors.primary.copy(alpha = 0.2f)
+        enabled -> AppColors.surfaceContainerHigh.copy(alpha = 0.84f)
+        else -> AppColors.surfaceContainer.copy(alpha = 0.46f)
+    }
+    val iconColor = when {
+        active -> AppColors.primary
+        enabled -> AppColors.onSurfaceVariant
+        else -> AppColors.fgSubtle
+    }
+
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(AppShapes.pill)
+            .background(containerColor, AppShapes.pill)
+            .then(if (active) Modifier.border(AppSpacing.borderThin, AppColors.primary, AppShapes.pill) else Modifier)
+            .moccaClickable(onClick = onClick, enabled = enabled, pressedScale = 0.94f)
+            .semantics {
+                role = Role.Button
+                this.contentDescription = contentDescription
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(iconSize)
+        )
+    }
+}
+
+@Composable
+private fun ComposerTextButton(
+    text: String,
+    active: Boolean,
+    contentDescription: String,
+    onClick: () -> Unit,
+    enabled: Boolean
+) {
+    val containerColor = when {
+        active -> AppColors.primary.copy(alpha = 0.2f)
+        enabled -> AppColors.surfaceContainerHigh.copy(alpha = 0.84f)
+        else -> AppColors.surfaceContainer.copy(alpha = 0.46f)
+    }
+    val textColor = when {
+        active -> AppColors.primary
+        enabled -> AppColors.onSurfaceVariant
+        else -> AppColors.fgSubtle
+    }
+
+    Box(
+        modifier = Modifier
+            .size(NavConstants.CompactActionButtonSize)
+            .clip(AppShapes.pill)
+            .background(containerColor, AppShapes.pill)
+            .then(if (active) Modifier.border(AppSpacing.borderThin, AppColors.primary, AppShapes.pill) else Modifier)
+            .moccaClickable(onClick = onClick, enabled = enabled, pressedScale = 0.94f)
+            .semantics {
+                role = Role.Button
+                this.contentDescription = contentDescription
+                this.selected = active
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            style = AppTypography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+private fun ComposerSendButton(
+    canSend: Boolean,
+    onClick: () -> Unit
+) {
+    val containerColor by animateColorAsState(
+        targetValue = if (canSend) AppColors.primary else AppColors.surfaceContainerHigh.copy(alpha = 0.58f),
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "composerSendContainerColor"
+    )
+    val iconColor by animateColorAsState(
+        targetValue = if (canSend) AppColors.onPrimary else AppColors.fgSubtle,
+        animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec(),
+        label = "composerSendIconColor"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (canSend) 1f else 0.92f,
+        animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
+        label = "composerSendScale"
+    )
+
+    Box(
+        modifier = Modifier
+            .size(NavConstants.SendButtonHeight)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(AppShapes.pill)
+            .background(containerColor, AppShapes.pill)
+            .moccaClickable(onClick = onClick, enabled = canSend, pressedScale = 0.95f)
+            .semantics {
+                role = Role.Button
+                contentDescription = "Send message"
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.Send,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(NavConstants.SendIconSize)
+        )
+    }
+}
+
+@Composable
+private fun ComposerAbortButton(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(NavConstants.SendButtonHeight)
+            .clip(AppShapes.pill)
+            .background(AppColors.error, AppShapes.pill)
+            .moccaClickable(onClick = onClick, pressedScale = 0.95f)
+            .semantics {
+                role = Role.Button
+                contentDescription = "Abort current response"
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = null,
+            tint = AppColors.onSurface,
+            modifier = Modifier.size(NavConstants.SendIconSize)
+        )
+    }
 }

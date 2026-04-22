@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -17,6 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.window.PopupProperties
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
@@ -31,8 +40,11 @@ import com.mocca.app.ui.theme.AppTypography
  */
 @Composable
 internal fun ChatInputTextFieldArea(
+    modifier: Modifier = Modifier,
     inputText: String,
     onValueChange: (String) -> Unit,
+    onSendRequest: () -> Unit = {},
+    canSend: Boolean = false,
     inputEnabled: Boolean,
     placeholder: String,
     onInputFocusChanged: (Boolean) -> Unit,
@@ -49,7 +61,7 @@ internal fun ChatInputTextFieldArea(
     onInputTextChange: (String) -> Unit
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .heightIn(min = NavConstants.InputFieldMinHeight, max = NavConstants.InputFieldMaxHeight)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.xs)
@@ -60,11 +72,31 @@ internal fun ChatInputTextFieldArea(
         BasicTextField(
             value = inputText,
             onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .onPreviewKeyEvent { event ->
+                    val isEnter = event.key == Key.Enter || event.key == Key.NumPadEnter
+                    if (!isEnter || event.isShiftPressed) {
+                        false
+                    } else {
+                        if (event.type == KeyEventType.KeyUp && canSend) {
+                            onSendRequest()
+                        }
+                        true
+                    }
+                },
             enabled = inputEnabled,
             textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
             cursorBrush = SolidColor(AppColors.primary),
             interactionSource = interactionSource,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
+            keyboardActions = KeyboardActions(
+                onSend = {
+                    if (canSend) {
+                        onSendRequest()
+                    }
+                }
+            ),
             decorationBox = { innerTextField ->
                 Box {
                     if (inputText.isEmpty()) {

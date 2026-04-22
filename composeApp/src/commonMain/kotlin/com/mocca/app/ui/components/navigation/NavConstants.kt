@@ -52,8 +52,8 @@ object NavConstants {
     /** Navigation-only mode height (compact) */
     val NavigationModeHeight = 68.dp
     
-    /** Chat input mode minimum height (expanded) - includes nav row, adjusted for touch-optimized sizes */
-    val ChatInputModeMinHeight = 170.dp
+    /** Chat input mode minimum height (expanded) - includes nav row and the two-row composer */
+    val ChatInputModeMinHeight = 220.dp
 
     // NAV ROW HEIGHTS
 
@@ -120,6 +120,9 @@ object NavConstants {
     
     /** Action toolbar button size (visual) - WCAG 2.5.5 minimum 48dp */
     val ActionButtonSize = 48.dp
+
+    /** Secondary composer action size */
+    val CompactActionButtonSize = 40.dp
     
     /** Send button height - maintains 48dp minimum touch targets */
     val SendButtonHeight = 48.dp

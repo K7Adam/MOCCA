@@ -391,14 +391,25 @@ class ChatScreenModel(
 
     fun sendMessage() {
         val rawText = _inputText.value.trim()
-        if (rawText.isEmpty()) return
+        val currentAttachments = _state.value.attachedFiles
+        if (rawText.isEmpty() && currentAttachments.isEmpty()) return
+
+        val messageText = rawText.ifEmpty {
+            if (currentAttachments.size == 1) {
+                "Please review the attached file."
+            } else {
+                "Please review the attached files."
+            }
+        }
         // Prepend '!' prefix when shell mode is active
-        val text = if (_shellMode.value && !rawText.startsWith("!")) "!$rawText" else rawText
+        val text = if (_shellMode.value && rawText.isNotEmpty() && !messageText.startsWith("!")) "!$messageText" else messageText
         // Push to prompt history (most-recent first, cap at 50)
-        _promptHistory.value = (listOf(rawText) + _promptHistory.value).take(50)
+        if (rawText.isNotEmpty()) {
+            _promptHistory.value = (listOf(rawText) + _promptHistory.value).take(50)
+        }
         _historyIndex.value = -1
         
-        if (text.startsWith("/")) {
+        if (currentAttachments.isEmpty() && text.startsWith("/")) {
             val parts = text.drop(1).split(" ", limit = 2)
             val command = parts.getOrNull(0) ?: ""
             val args = parts.getOrNull(1)
@@ -418,7 +429,6 @@ class ChatScreenModel(
         
         screenModelScope.launch {
             _inputText.value = ""
-            val currentAttachments = _state.value.attachedFiles
             clearAttachments()
             
             val result = chatStateStore.sendMessage(
@@ -432,6 +442,7 @@ class ChatScreenModel(
             
             if (result.isFailure) {
                 _inputText.value = rawText // Restore original text on failure
+                _state.update { it.copy(attachedFiles = currentAttachments) }
             }
         }
     }
