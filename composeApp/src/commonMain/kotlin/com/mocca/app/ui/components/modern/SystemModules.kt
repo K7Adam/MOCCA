@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,10 +47,12 @@ fun ProcessModule(
             isRefreshing = isRefreshing
         )
 
-        val items = if (hasActiveSession) {
-            processes.dataOrNull().orEmpty().sortedByDescending { it.cpu ?: Float.MIN_VALUE }
-        } else {
-            emptyList()
+        val items = remember(processes, hasActiveSession) {
+            if (hasActiveSession) {
+                processes.dataOrNull().orEmpty().sortedByDescending { it.cpu ?: Float.MIN_VALUE }
+            } else {
+                emptyList()
+            }
         }
         if (items.isNotEmpty()) {
             Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -87,7 +90,9 @@ fun PortModule(
             isRefreshing = isRefreshing
         )
 
-        val items = if (hasActiveSession) ports.dataOrNull().orEmpty() else emptyList()
+        val items = remember(ports, hasActiveSession) {
+            if (hasActiveSession) ports.dataOrNull().orEmpty() else emptyList()
+        }
         if (items.isNotEmpty()) {
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             items.take(6).forEachIndexed { index, port ->
@@ -279,7 +284,7 @@ private fun <T> SystemModuleStatus(
     isRefreshing: Boolean
 ) {
     val text = when {
-        !hasActiveSession -> "Start a session to view system info"
+        !hasActiveSession -> "Connect MOCCA CLI to view system info"
         resource is Resource.Loading && resource.data == null -> "Collecting remote snapshot..."
         resource is Resource.Error && resource.data != null -> {
             val base = "Showing last known values"

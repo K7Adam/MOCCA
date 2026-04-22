@@ -319,11 +319,11 @@ class MainScreenModel(
                         }
                     },
                     onFailure = { e: Throwable ->
-                        Napier.w("Failed to check for updates", e)
+                        Napier.w("Failed to check for updates: ${e.message}")
                     }
                 )
             } catch (e: Exception) {
-                 Napier.e("Error checking for updates", e)
+                 Napier.w("Error checking for updates: ${e.message}")
             }
         }
     }
@@ -413,11 +413,11 @@ class MainScreenModel(
                         }
                     },
                     onFailure = { e: Throwable ->
-                        Napier.w("Manual update check failed", e)
+                        Napier.w("Manual update check failed: ${e.message}")
                     }
                 )
             } catch (e: Exception) {
-                Napier.e("Error during manual update check", e)
+                Napier.w("Error during manual update check: ${e.message}")
             }
         }
     }

@@ -28,6 +28,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.url
 import io.ktor.http.HttpStatusCode
 import io.ktor.client.plugins.ClientRequestException
+import io.ktor.client.plugins.ServerResponseException
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -315,28 +316,32 @@ class ConnectionManager(
             Napier.i("[ConnectionManager] Health check SUCCESS: ${appInfo.version}")
             Result.success(appInfo)
         } catch (e: ClientRequestException) {
-            Napier.e("[ConnectionManager] Health check HTTP ERROR: ${e.response.status}", e)
+            Napier.w("[ConnectionManager] Health check HTTP ERROR: ${e.response.status} for ${config?.baseUrl}")
             if (e.response.status == HttpStatusCode.Unauthorized) {
                 Result.failure(Exception("Authentication failed (401). Check username/password."))
             } else {
                 Result.failure(Exception("Server returned ${e.response.status}"))
             }
+        } catch (e: ServerResponseException) {
+            Napier.w("[ConnectionManager] Health check SERVER ERROR: ${e.response.status} for ${config?.baseUrl}")
+            Result.failure(Exception("ServerResponseException: Server returned ${e.response.status}"))
         } catch (e: CancellationException) {
             Napier.w("[ConnectionManager] Health check CANCELLED")
             throw e
         } catch (e: ConnectionException) {
-            Napier.e("[ConnectionManager] Health check CONNECTION ERROR: ${e.message}", e)
+            Napier.w("[ConnectionManager] Health check CONNECTION ERROR: ${e.message}")
             Result.failure(Exception("Connection failed: ${e.message}"))
         } catch (e: Exception) {
             val errorMsg = e.message ?: "Unknown error"
             val errorType = e::class.simpleName
-            Napier.e("[ConnectionManager] Health check UNKNOWN ERROR: $errorType - $errorMsg", e)
             // Log full stack trace for SSL errors
             if (errorMsg.contains("SSL", ignoreCase = true) || 
                 errorMsg.contains("Certificate", ignoreCase = true) ||
                 errorMsg.contains("Trust", ignoreCase = true) ||
                 errorMsg.contains("Handshake", ignoreCase = true)) {
                 Napier.e("[ConnectionManager] SSL/TLS ERROR DETAILS: ${e.stackTraceToString()}")
+            } else {
+                Napier.w("[ConnectionManager] Health check failed: $errorType - $errorMsg")
             }
             Result.failure(Exception("$errorType: $errorMsg"))
         }

@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
+import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.bridge.connection.BridgeTargetRepository
 import com.mocca.app.bridge.opencode.BridgeRuntimeBootstrapper
 import com.mocca.app.data.repository.PreferencesManager
@@ -71,10 +72,12 @@ fun App() {
         codeFontFamilyKey = { preferences.codeFontFamily }
     ) {
         val serverConfigRepository = koinInject<ServerConfigRepository>()
+        val bridgePairingIntentStore = koinInject<BridgePairingIntentStore>()
         val bridgeTargetRepository = koinInject<BridgeTargetRepository>()
         val bridgeRuntimeBootstrapper = koinInject<BridgeRuntimeBootstrapper>()
         val isLoaded by serverConfigRepository.isLoaded.collectAsState()
         val activeConfig by serverConfigRepository.activeServer.collectAsState()
+        val pendingBridgePairingPayload by bridgePairingIntentStore.pendingPayload.collectAsState()
         val bridgeTargetLoaded by bridgeTargetRepository.isLoaded.collectAsState()
         val activeBridgeTarget by bridgeTargetRepository.activeTarget.collectAsState()
         var attemptedInitialBridgeBootstrap by remember { mutableIntStateOf(0) }
@@ -83,8 +86,8 @@ fun App() {
             bridgeTargetRepository.load()
         }
 
-        LaunchedEffect(bridgeTargetLoaded) {
-            if (!bridgeTargetLoaded || attemptedInitialBridgeBootstrap > 0) {
+        LaunchedEffect(bridgeTargetLoaded, pendingBridgePairingPayload) {
+            if (!bridgeTargetLoaded || pendingBridgePairingPayload != null || attemptedInitialBridgeBootstrap > 0) {
                 return@LaunchedEffect
             }
             attemptedInitialBridgeBootstrap = 1
@@ -110,13 +113,22 @@ fun App() {
                         LocalSharedTransitionScope provides this
                     ) {
                         val config = activeConfig
-                        val startScreen = if ((config != null && config.host.isNotBlank()) || activeBridgeTarget != null) {
-                            MainScreen()
-                        } else {
-                            ProgressiveOnboardingScreen()
+                        val startScreen = when {
+                            pendingBridgePairingPayload != null -> ProgressiveOnboardingScreen()
+                            (config != null && config.host.isNotBlank()) || activeBridgeTarget != null -> MainScreen()
+                            else -> ProgressiveOnboardingScreen()
                         }
 
                         Navigator(startScreen) { navigator ->
+                            LaunchedEffect(pendingBridgePairingPayload) {
+                                if (
+                                    pendingBridgePairingPayload != null &&
+                                    navigator.lastItem !is ProgressiveOnboardingScreen
+                                ) {
+                                    navigator.push(ProgressiveOnboardingScreen(isSetupMode = true))
+                                }
+                            }
+
                             val transitionSpec = if (performance.useHeavyNavigationMotion) {
                                 ModernTransitions.expressiveFadeScale()
                             } else {

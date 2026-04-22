@@ -151,21 +151,21 @@ fun DashboardPanel(
 
         ProcessModule(
             processes = state.systemMonitor.processes,
-            hasActiveSession = state.hasActiveSession,
+            hasActiveSession = state.systemMonitor.isAvailable,
             isRefreshing = state.systemMonitor.isRefreshing,
             lastUpdatedAt = state.systemMonitor.lastUpdatedAt
         )
 
         PortModule(
             ports = state.systemMonitor.ports,
-            hasActiveSession = state.hasActiveSession,
+            hasActiveSession = state.systemMonitor.isAvailable,
             isRefreshing = state.systemMonitor.isRefreshing,
             lastUpdatedAt = state.systemMonitor.lastUpdatedAt
         )
 
         ResourceModule(
             resources = state.systemMonitor.resources,
-            hasActiveSession = state.hasActiveSession,
+            hasActiveSession = state.systemMonitor.isAvailable,
             isRefreshing = state.systemMonitor.isRefreshing,
             lastUpdatedAt = state.systemMonitor.lastUpdatedAt,
             refreshInterval = state.systemMonitor.refreshInterval,

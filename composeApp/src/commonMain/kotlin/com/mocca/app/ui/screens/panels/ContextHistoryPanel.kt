@@ -92,35 +92,38 @@ fun ContextHistoryPanel(
 ) {
     val isMcpOnline = mcpStatus.equals("ONLINE", ignoreCase = true)
 
-    // Filter sessions based on search query
-    val filteredSessions = if (searchQuery.isNotBlank()) {
-        sessions.filter { session ->
-            session.title?.contains(searchQuery, ignoreCase = true) == true ||
-            session.id.contains(searchQuery, ignoreCase = true)
+    val filteredSessions = remember(searchQuery, sessions) {
+        if (searchQuery.isNotBlank()) {
+            sessions.filter { session ->
+                session.title?.contains(searchQuery, ignoreCase = true) == true ||
+                    session.id.contains(searchQuery, ignoreCase = true)
+            }
+        } else {
+            sessions
         }
-    } else {
-        sessions
     }
 
-    val filteredGroups = if (searchQuery.isNotBlank() && sessionGroups.isNotEmpty()) {
-        sessionGroups.map { group ->
-            val filteredParent = group.parent.title?.contains(searchQuery, ignoreCase = true) == true ||
-                group.parent.id.contains(searchQuery, ignoreCase = true)
-            val filteredChildren = group.children.filter { child ->
-                child.title?.contains(searchQuery, ignoreCase = true) == true ||
-                child.id.contains(searchQuery, ignoreCase = true)
-            }
-            if (filteredParent || filteredChildren.isNotEmpty()) {
-                group.copy(
-                    children = filteredChildren,
-                    parent = if (filteredParent) group.parent else group.parent.copy(
-                        title = "Untitled Session"
+    val filteredGroups = remember(searchQuery, sessionGroups) {
+        if (searchQuery.isNotBlank() && sessionGroups.isNotEmpty()) {
+            sessionGroups.map { group ->
+                val filteredParent = group.parent.title?.contains(searchQuery, ignoreCase = true) == true ||
+                    group.parent.id.contains(searchQuery, ignoreCase = true)
+                val filteredChildren = group.children.filter { child ->
+                    child.title?.contains(searchQuery, ignoreCase = true) == true ||
+                        child.id.contains(searchQuery, ignoreCase = true)
+                }
+                if (filteredParent || filteredChildren.isNotEmpty()) {
+                    group.copy(
+                        children = filteredChildren,
+                        parent = if (filteredParent) group.parent else group.parent.copy(
+                            title = "Untitled Session"
+                        )
                     )
-                )
-            } else null
-        }.filterNotNull()
-    } else {
-        sessionGroups
+                } else null
+            }.filterNotNull()
+        } else {
+            sessionGroups
+        }
     }
 
     Column(
@@ -282,8 +285,8 @@ private fun ConversationHistorySection(
                 modifier = Modifier.fillMaxSize()
             ) {
             if (useGroupedView) {
-                val groupedByDate = groupSessionGroupsByDate(sessionGroups)
-                val dateGroups = groupedByDate.keys.toList()
+                val groupedByDate = remember(sessionGroups) { groupSessionGroupsByDate(sessionGroups) }
+                val dateGroups = remember(groupedByDate) { groupedByDate.keys.toList() }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -291,14 +294,15 @@ private fun ConversationHistorySection(
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     dateGroups.forEach { dateGroup ->
-                        item(key = "header_${dateGroup.name}") {
+                        item(key = "header_${dateGroup.name}", contentType = "date_header") {
                             DateGroupHeader(dateLabel = dateGroup.label)
                         }
 
                         val groupsInDate = groupedByDate[dateGroup] ?: emptyList()
                         items(
                             items = groupsInDate,
-                            key = { it.parent.id }
+                            key = { it.parent.id },
+                            contentType = { "session_group" }
                         ) { group ->
                             val isActive = group.parent.id == currentSessionId ||
                                 group.children.any { it.id == currentSessionId }
@@ -320,8 +324,8 @@ private fun ConversationHistorySection(
             }
 } else {
                 // Flat session view with date grouping (fallback)
-                val groupedByDate = groupSessionsByDate(sessions)
-                val dateGroups = groupedByDate.keys.toList()
+                val groupedByDate = remember(sessions) { groupSessionsByDate(sessions) }
+                val dateGroups = remember(groupedByDate) { groupedByDate.keys.toList() }
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -330,7 +334,7 @@ private fun ConversationHistorySection(
                 ) {
                     dateGroups.forEach { dateGroup ->
                         // Date group header
-                        item(key = "header_${dateGroup.name}") {
+                        item(key = "header_${dateGroup.name}", contentType = "date_header") {
                             DateGroupHeader(dateLabel = dateGroup.label)
                         }
 
@@ -338,7 +342,8 @@ private fun ConversationHistorySection(
                         val sessionsInGroup = groupedByDate[dateGroup] ?: emptyList()
                         items(
                             items = sessionsInGroup,
-                            key = { it.id }
+                            key = { it.id },
+                            contentType = { "session" }
                         ) { session ->
                             val isNewSession = session.id == newlyCreatedSessionId
                             val isLoading = session.id == loadingSessionId

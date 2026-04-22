@@ -47,7 +47,7 @@ class ServerConfigRepository(
 
     /**
      * Load the active server from cache.
-     * Also handles migration from old emulator-only default to Tailscale default for physical devices.
+     * A missing server is a valid first-run state: QR pairing or manual onboarding must create one.
      * 
      * SECURITY: If the stored auth token is encrypted, it will be decrypted using
      * SecureTokenStorage before being returned.
@@ -57,22 +57,9 @@ class ServerConfigRepository(
             try {
                 val rawConfig = localCache.getActiveServerConfig()
                 
-                // If no server configured, create default only for emulator (physical devices stay null)
+                // No implicit default: stale host presets can race QR pairing and flood health checks.
                 if (rawConfig == null) {
-                    val default = createDefaultConfig()
-                    if (default != null) {
-                        val passwordRead = readPasswordCompatibility(default.password, default.id)
-                        val config = default.copy(password = passwordRead.password)
-
-                        localCache.insertServerConfig(default)
-                        if (passwordRead.shouldMigrate) {
-                            migratePasswordToNewFormat(config)
-                        }
-                        _activeServer.value = config
-                    } else {
-                        // Physical device — no default config, onboarding required
-                        _activeServer.value = null
-                    }
+                    _activeServer.value = null
                     return@runBlocking
                 }
                 
@@ -98,9 +85,7 @@ class ServerConfigRepository(
                 }
             } catch (e: Exception) {
                 Napier.w("Failed to load active server", e)
-                // Set default config (null for physical devices)
-                val default = createDefaultConfig()
-                _activeServer.value = default
+                _activeServer.value = null
             } finally {
                 _isLoaded.value = true
             }
@@ -278,28 +263,13 @@ class ServerConfigRepository(
 
     /**
      * Create a default server configuration.
-     * - Android emulator: Uses NetworkConfig.DEFAULT_HOST_IP.
-     * - Physical devices: Returns null — onboarding must be completed first.
+     *
+     * MOCCA no longer creates an implicit OpenCode server target. QR pairing with
+     * the MOCCA CLI is the canonical zero-config path, and direct server profiles
+     * should be created explicitly through onboarding/settings.
      */
     fun createDefaultConfig(): ServerConfig? {
-        val defaultHost = getPlatformDefaultHost()
-        
-        return if (defaultHost.isNotEmpty()) {
-            // Android emulator defaults
-            ServerConfig(
-                id = "default",
-                name = "Local Server",
-                host = defaultHost,
-                port = NetworkConfig.OPENCODE_SERVER_PORT,
-                username = NetworkConfig.DEFAULT_USERNAME,
-                password = NetworkConfig.DEFAULT_PASSWORD,
-                isActive = true,
-                useHttps = true
-            )
-        } else {
-            // Physical device - return null, requires onboarding
-            null
-        }
+        return null
     }
     
     /**

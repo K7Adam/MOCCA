@@ -59,21 +59,14 @@ class MoccaSseClient(
                 this.incoming
                     .buffer(32)  // OOM FIX: Reduced from 100→32 to limit SSE buffer memory
                     .collect { sseEvent ->
-                    Napier.v(">>> SSE Event received: id=${sseEvent.id}, event=${sseEvent.event}, data length=${sseEvent.data?.length ?: 0}")
-                    
                     val data = sseEvent.data
                     if (data.isNullOrBlank()) {
-                        Napier.v(">>> SSE event has no data, skipping")
                         return@collect
                     }
-                    
-                    Napier.v(">>> Raw SSE Data (${data.length} bytes): ${data.take(150)}...")
-                    
+
                     try {
                         val event = parseEvent(data)
-                        Napier.v(">>> Parsed event type: ${event.type}")
                         send(event)
-                        Napier.v(">>> Event sent to flow successfully")
                     } catch (e: Exception) {
                         Napier.w(">>> Failed to parse SSE event: ${data.take(100)}", e)
                         send(ServerEvent.Unknown(type = "parse_error", rawData = data))

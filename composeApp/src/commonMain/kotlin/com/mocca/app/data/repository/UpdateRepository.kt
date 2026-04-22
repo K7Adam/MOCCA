@@ -102,7 +102,7 @@ class UpdateRepository(
             },
             onFailure = { e ->
                 val errorMessage = e.message ?: "Unknown error"
-                Napier.e("Update check failed: $errorMessage", e, tag = "UpdateRepository")
+                Napier.w("Update check failed: $errorMessage", tag = "UpdateRepository")
                 
                 // Determine token status from error
                 val tokenStatus = when {

@@ -24,6 +24,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
+private const val SYSTEM_MONITOR_UNAVAILABLE_MESSAGE = "Connect MOCCA CLI to enable system monitor"
+
 /** Dashboard screen model. Observes AppStateStore for auto-updates. */
 class DashboardScreenModel(
     private val appStateStore: AppStateStore,
@@ -40,7 +42,8 @@ class DashboardScreenModel(
         val resources: Resource<SystemResources> = Resource.Loading(),
         val refreshInterval: MonitorRefreshInterval = MonitorRefreshInterval.SECONDS_15,
         val lastUpdatedAt: Long? = null,
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
+        val isAvailable: Boolean = false
     )
     
     @Immutable
@@ -114,6 +117,7 @@ class DashboardScreenModel(
         observeEvents()
         observeConnectionState()
         observeActiveSession()
+        observeNativeMonitorAvailability()
         startSystemMonitorPolling()
         appStateStore.start()
     }
@@ -237,6 +241,30 @@ class DashboardScreenModel(
             }
         }
     }
+
+    private fun observeNativeMonitorAvailability() {
+        screenModelScope.launch {
+            systemMonitorRepository.nativeMonitorAvailable.collect { available ->
+                _state.update { state ->
+                    val nextMonitor = if (available) {
+                        state.systemMonitor.copy(isAvailable = true)
+                    } else {
+                        state.systemMonitor.copy(
+                            processes = state.systemMonitor.processes.toUnavailableMonitorResource(),
+                            ports = state.systemMonitor.ports.toUnavailableMonitorResource(),
+                            resources = state.systemMonitor.resources.toUnavailableMonitorResource(),
+                            isRefreshing = false,
+                            isAvailable = false
+                        )
+                    }
+                    state.copy(systemMonitor = nextMonitor)
+                }
+                if (available) {
+                    refreshSystemMonitor()
+                }
+            }
+        }
+    }
     
     private fun observeEvents() {
         screenModelScope.launch {
@@ -265,6 +293,12 @@ class DashboardScreenModel(
                     continue
                 }
 
+                if (!systemMonitorRepository.isNativeMonitorAvailable()) {
+                    markSystemMonitorUnavailable()
+                    delay(1_000)
+                    continue
+                }
+
                 refreshSystemMonitor()
                 delay(interval)
             }
@@ -284,6 +318,10 @@ class DashboardScreenModel(
     private fun refreshSystemMonitor() {
         if (_state.value.systemMonitor.refreshInterval == MonitorRefreshInterval.OFF) return
         if (_state.value.systemMonitor.isRefreshing) return
+        if (!systemMonitorRepository.isNativeMonitorAvailable()) {
+            markSystemMonitorUnavailable()
+            return
+        }
 
         screenModelScope.launch {
             val current = _state.value.systemMonitor
@@ -309,15 +347,33 @@ class DashboardScreenModel(
                         ports = mergeResource(state.systemMonitor.ports, ports),
                         resources = mergeResource(state.systemMonitor.resources, resources),
                         lastUpdatedAt = updatedAt,
-                        isRefreshing = false
+                        isRefreshing = false,
+                        isAvailable = true
                     )
                 )
             }
         }
     }
 
+    private fun markSystemMonitorUnavailable() {
+        _state.update { state ->
+            state.copy(
+                systemMonitor = state.systemMonitor.copy(
+                    processes = state.systemMonitor.processes.toUnavailableMonitorResource(),
+                    ports = state.systemMonitor.ports.toUnavailableMonitorResource(),
+                    resources = state.systemMonitor.resources.toUnavailableMonitorResource(),
+                    isRefreshing = false,
+                    isAvailable = false
+                )
+            )
+        }
+    }
+
     private fun <T> Resource<List<T>>.toImmutableListResource(): Resource<ImmutableList<T>> =
         map { it.toImmutableList() }
+
+    private fun <T> Resource<T>.toUnavailableMonitorResource(): Resource<T> =
+        Resource.Error(SYSTEM_MONITOR_UNAVAILABLE_MESSAGE, dataOrNull())
 
     private fun <T> mergeResource(current: Resource<T>, incoming: Resource<T>): Resource<T> {
         return when (incoming) {
