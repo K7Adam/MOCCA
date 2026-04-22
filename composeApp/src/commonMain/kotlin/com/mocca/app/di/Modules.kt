@@ -88,7 +88,11 @@ val commonModule = module {
             localCache = get()
         )
     }
-    singleOf(::FileRepository)
+    single {
+        FileRepository(
+            bridgeConnectionManager = get()
+        )
+    }
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
     singleOf(::SettingsRepository)
@@ -124,7 +128,11 @@ val commonModule = module {
     singleOf(::CommandRepository)
     singleOf(::SearchRepository)
     singleOf(::ProjectRepository)
-    singleOf(::SystemMonitorRepository)
+    single {
+        SystemMonitorRepository(
+            bridgeConnectionManager = get()
+        )
+    }
     single<VoiceInputProvider> { NoOpVoiceInputProvider }
 
 
