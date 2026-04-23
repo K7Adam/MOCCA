@@ -41,7 +41,6 @@ class AppStateStore(
     private val stateCoordinator: StateCoordinator,
     private val sessionRepository: SessionRepository,
     private val mcpRepository: McpRepository,
-    private val configRepository: ConfigRepository,
     private val agentRepository: AgentRepository,
     private val providerRepository: ProviderRepository,
     private val toolRepository: ToolRepository,
@@ -80,32 +79,8 @@ class AppStateStore(
     // Convenience: true when SSE is connected (receiving real-time events)
     val isSseConnected: StateFlow<Boolean> = stateCoordinator.isSseConnected
 
-    // CONFIG STATE - Models, providers, agents
-
-    
-    private val _providerInfo = MutableStateFlow<ProviderResponse?>(null)
-    val providerInfo: StateFlow<ProviderResponse?> = _providerInfo.asStateFlow()
-    
-    private val _selectedProviderId = MutableStateFlow("")
-    val selectedProviderId: StateFlow<String> = _selectedProviderId.asStateFlow()
-    
-    private val _selectedModelId = MutableStateFlow("")
-    val selectedModelId: StateFlow<String> = _selectedModelId.asStateFlow()
-    
-    private val _selectedVariantId = MutableStateFlow<String?>(null)
-    val selectedVariantId: StateFlow<String?> = _selectedVariantId.asStateFlow()
-    
-    private val _modes = MutableStateFlow<List<Mode>>(emptyList())
-    val modes: StateFlow<List<Mode>> = _modes.asStateFlow()
-    
-    private val _selectedModeId = MutableStateFlow<String?>(null)
-    val selectedModeId: StateFlow<String?> = _selectedModeId.asStateFlow()
-    
     private val _agents = MutableStateFlow<List<Agent>>(emptyList())
     val agents: StateFlow<List<Agent>> = _agents.asStateFlow()
-    
-    private val _recentModels = MutableStateFlow<List<RecentModel>>(emptyList())
-    val recentModels: StateFlow<List<RecentModel>> = _recentModels.asStateFlow()
 
     // MCP STATE - Reactive from McpRepository (updated by RealtimeSyncService)
 
@@ -241,13 +216,6 @@ class AppStateStore(
                     Napier.v("[AppStateStore] Sessions updated from cache: ${sessions.size}")
                 }
         }
-        
-        // Observe recent models from DB
-        storeScope.launch {
-            localCache.getRecentModels().let { models ->
-                _recentModels.value = models
-            }
-        }
     }
     
     /**
@@ -271,81 +239,22 @@ class AppStateStore(
             }
         }
         
-        // Observe providers from ProviderRepository - set default model when loaded
+        // Observe providers from ProviderRepository.
         storeScope.launch {
             providerRepository.cachedProviders.collect { providers ->
-                if (providers != null && _selectedModelId.value.isEmpty()) {
-                    // Set default model from loaded providers
-                    setDefaultModelFromProviders(providers)
-                }
+                _providers.value = providers?.let { Resource.Success(it) } ?: Resource.Loading()
             }
         }
         
-        // Observe agents from AgentRepository - set default mode and derive modes
+        // Observe agents from AgentRepository.
         storeScope.launch {
             agentRepository.cachedAgents.collect { agents ->
-                if (agents.isNotEmpty()) {
-                    // Update agents list
-                    _agents.value = agents
-                    // Derive modes from agents if not already set
-                    if (_modes.value.isEmpty()) {
-                        val derivedModes = agents
-                            .filter { !it.hidden }
-                            .map { agent ->
-                                Mode(
-                                    id = agent.name,
-                                    name = agent.name,
-                                    description = agent.description
-                                )
-                            }
-                        _modes.value = derivedModes
-                        Napier.i("[AppStateStore] Derived ${derivedModes.size} modes from agents")
-                    }
-                    // Set default mode if not set
-                    if (_selectedModeId.value == null) {
-                        val defaultMode = sessionRepository.getDefaultMode()
-                        val modes = _modes.value
-                        _selectedModeId.value = if (modes.any { it.id == defaultMode }) {
-                            defaultMode
-                        } else {
-                            modes.firstOrNull()?.id
-                        }
-                        Napier.i("[AppStateStore] Set default mode from agents: ${_selectedModeId.value}")
-                    }
-                }
+                _agents.value = agents
             }
         }
         
         // Git/VCS info is observed via loadVcsInfoWhenConnected() below
         // This prevents premature network calls before connection is established
-    }
-    
-    /**
-     * Set default model and provider from loaded providers response.
-     * This is called when providers are loaded via RealtimeSyncService.
-     */
-    private fun setDefaultModelFromProviders(providers: ProviderResponse) {
-        // First check if we have cached defaults from SessionRepository
-        val (cachedModelId, cachedProviderId) = sessionRepository.getDefaultModelProvider()
-        if (cachedModelId.isNotEmpty() && cachedProviderId.isNotEmpty()) {
-            _selectedProviderId.value = cachedProviderId
-            _selectedModelId.value = cachedModelId
-            Napier.i("[AppStateStore] Set default model from cache: $cachedProviderId / $cachedModelId")
-            return
-        }
-        
-        // Fallback: Find first available model from providers
-        providers.all.firstOrNull { provider ->
-            (provider.models as? Map<*, *>)?.isNotEmpty() == true
-        }?.let { provider ->
-            val modelsMap = provider.models as? Map<*, *> ?: return@let
-            val firstModelId = modelsMap.keys.firstOrNull()?.toString()
-            if (firstModelId != null) {
-                _selectedProviderId.value = provider.id
-                _selectedModelId.value = firstModelId
-                Napier.i("[AppStateStore] Set default model from providers: ${provider.id} / $firstModelId")
-            }
-        }
     }
     
     /**
@@ -375,7 +284,6 @@ class AppStateStore(
      * PERFORMANCE: Loads data in PARALLEL using async/awaitAll.
      * Total time = max(all API calls) instead of sum(all API calls).
      * 
-     * NOTE: loadConfig() already loads provider info, so loadProviders() is NOT called here.
      */
     private fun loadAllData() {
         // Guard: Only load data if connected
@@ -399,7 +307,6 @@ class AppStateStore(
             }
             coroutineScope {
                 listOf(
-                    async { loadConfig() },      // Contains getProviderInfo() - 4.4s
                     async { loadAgents() },      // Independent
                     async { loadTools() },       // Independent
                     async { loadCommands() }     // Independent
@@ -577,55 +484,11 @@ class AppStateStore(
                 // Sessions are loaded via DB observer
                 val sessions = localCache.getAllSessions()
                 _sessions.value = sessions.sortedByDescending { it.updatedAt }
-                
-                // Load recent models
-                val recentModels = localCache.getRecentModels()
-                _recentModels.value = recentModels
-                Napier.i("[AppStateStore] Loaded ${recentModels.size} recent models from cache")
-                
-                // Set default model/provider from most recent
-                recentModels.firstOrNull()?.let { recent ->
-                    if (_selectedModelId.value.isEmpty()) {
-                        _selectedModelId.value = recent.modelId
-                        _selectedProviderId.value = recent.providerId
-                        sessionRepository.setDefaultModel(recent.modelId, recent.providerId)
-                        Napier.i("[AppStateStore] Set default model from cache: ${recent.providerId} / ${recent.modelId}")
-                    } else {
-                        Napier.i("[AppStateStore] Selected model already set: ${_selectedModelId.value}")
-                    }
-                } ?: run {
-                    Napier.i("[AppStateStore] No recent models in cache")
-                }
 
                 // Load agents from cache
                 val agents = localCache.getAllAgents()
                 if (agents.isNotEmpty()) {
                     _agents.value = agents
-                    // Derive modes if empty
-                    if (_modes.value.isEmpty()) {
-                        val derivedModes = agents
-                            .filter { !it.hidden }
-                            .map { agent ->
-                                Mode(
-                                    id = agent.name,
-                                    name = agent.name,
-                                    description = agent.description
-                                )
-                            }
-                        _modes.value = derivedModes
-                    }
-                    
-                    // Set default mode if not set
-                    if (_selectedModeId.value == null) {
-                        val defaultMode = sessionRepository.getDefaultMode()
-                        val modes = _modes.value
-                        _selectedModeId.value = if (modes.any { it.id == defaultMode }) {
-                            defaultMode
-                        } else {
-                            modes.firstOrNull()?.id
-                        }
-                        Napier.i("[AppStateStore] Set default mode from cache: ${_selectedModeId.value}")
-                    }
                     Napier.i("[AppStateStore] Loaded ${agents.size} agents from cache")
                 }
 
@@ -644,97 +507,7 @@ class AppStateStore(
     }
     
     /**
-     * Load config from server (providers, models, modes).
-     * Also loads default model/provider from server config.
-     * GUARDED by connection check.
-     */
-    private fun loadConfig() {
-        // Guard: Only load if connected
-        val isConnected = connectionStatus.value.isConnected
-        Napier.i("[AppStateStore] loadConfig() called - isConnected: $isConnected")
-        
-        if (!isConnected) {
-            Napier.w("[AppStateStore] Skipping loadConfig() - not connected")
-            return
-        }
-        
-        storeScope.launch {
-            Napier.i("[AppStateStore] Loading default config from server...")
-            
-            // First, load default config from server (sets default model/provider)
-            try {
-                sessionRepository.loadDefaultConfig()
-                Napier.i("[AppStateStore] Default config loaded from server")
-                
-                // IMMEDIATELY set the model from the loaded config - don't wait for provider info!
-                val (modelId, providerId) = sessionRepository.getDefaultModelProvider()
-                if (modelId.isNotEmpty() && _selectedModelId.value.isEmpty()) {
-                    _selectedModelId.value = modelId
-                    _selectedProviderId.value = providerId
-                    Napier.i("[AppStateStore] Default model set immediately: $providerId / $modelId")
-                }
-            } catch (e: com.mocca.app.api.ConnectionException) {
-                Napier.e("[AppStateStore] loadDefaultConfig failed - connection lost: ${e.message}")
-                return@launch
-            } catch (e: Exception) {
-                Napier.e("[AppStateStore] Failed to load default config: ${e.message}")
-            }
-            
-            // Load provider info in parallel with modes (non-blocking for model display)
-            val providerJob = async {
-                Napier.i("[AppStateStore] Loading provider info...")
-                sessionRepository.getProviderInfo().fold(
-                    onSuccess = { info ->
-                        _providerInfo.value = info
-                        Napier.i("[AppStateStore] Provider info loaded: ${info.all.size} providers")
-                        
-                        // Fallback: try to find first available model if still not set
-                        if (_selectedModelId.value.isEmpty()) {
-                            info.all.firstOrNull { provider ->
-                                (provider.models as? Map<*, *>)?.isNotEmpty() == true
-                            }?.let { provider ->
-                                val modelsMap = provider.models as? Map<*, *> ?: return@let
-                                val firstModelId = modelsMap.keys.firstOrNull()?.toString()
-                                if (firstModelId != null) {
-                                    _selectedProviderId.value = provider.id
-                                    _selectedModelId.value = firstModelId
-                                    Napier.i("[AppStateStore] Fallback model set: ${provider.id} / $firstModelId")
-                                }
-                            }
-                        }
-                    },
-                    onFailure = { 
-                        Napier.e("[AppStateStore] Failed to load provider info: ${it.message}")
-                    }
-                )
-            }
-            
-            // Load modes from server in parallel
-            val modesJob = async {
-                Napier.i("[AppStateStore] Loading modes...")
-                sessionRepository.getModes().fold(
-                    onSuccess = { modes ->
-                        _modes.value = modes
-                        Napier.i("[AppStateStore] Modes loaded: ${modes.size} modes")
-                        if (_selectedModeId.value == null && modes.isNotEmpty()) {
-                            _selectedModeId.value = modes.first().id
-                            Napier.i("[AppStateStore] Default mode set: ${modes.first().id}")
-                        }
-                    },
-                    onFailure = { 
-                        Napier.e("[AppStateStore] Failed to load modes: ${it.message}")
-                    }
-                )
-            }
-            
-            // Wait for both to complete
-            awaitAll(providerJob, modesJob)
-        }
-    }
-    
-    /**
      * Load agents from server.
-     * Also derives modes from agents if modes endpoint hasn't provided any.
      * GUARDED by connection check.
      */
     private fun loadAgents() {
@@ -755,32 +528,6 @@ class AppStateStore(
                         val agents = resource.data
                         _agents.value = agents
                         Napier.i("[AppStateStore] Agents loaded: ${agents.size} agents")
-                        
-                        // If we don't have modes yet, derive them from agents
-                        if (_modes.value.isEmpty() && agents.isNotEmpty()) {
-                            val derivedModes = agents
-                                .filter { !it.hidden }
-                                .map { agent ->
-                                    Mode(
-                                        id = agent.name,
-                                        name = agent.name,
-                                        description = agent.description
-                                    )
-                                }
-                            _modes.value = derivedModes
-                            Napier.i("[AppStateStore] Derived ${derivedModes.size} modes from agents")
-                            
-                            // Set default mode if not set
-                            if (_selectedModeId.value == null && derivedModes.isNotEmpty()) {
-                                val defaultMode = sessionRepository.getDefaultMode()
-                                _selectedModeId.value = if (derivedModes.any { it.id == defaultMode }) {
-                                    defaultMode
-                                } else {
-                                    derivedModes.first().id
-                                }
-                                Napier.i("[AppStateStore] Default mode set from agents: ${_selectedModeId.value}")
-                            }
-                        }
                     }
                     is Resource.Error -> {
                         Napier.e("[AppStateStore] Failed to load agents: ${resource.message}")
@@ -803,35 +550,6 @@ class AppStateStore(
         stateCoordinator.setActiveSession(sessionId)
     }
     
-    /**
-     * Select a model/provider combination.
-     */
-    fun selectModel(providerId: String, modelId: String) {
-        _selectedProviderId.value = providerId
-        _selectedModelId.value = modelId
-        _selectedVariantId.value = null
-        
-        // Save to recent models
-        storeScope.launch {
-            localCache.insertRecentModel(RecentModel(providerId, modelId, Clock.System.now().toEpochMilliseconds()))
-            _recentModels.value = localCache.getRecentModels()
-        }
-    }
-    
-    /**
-     * Select a variant.
-     */
-    fun selectVariant(variantId: String?) {
-        _selectedVariantId.value = variantId
-    }
-    
-    /**
-     * Select a mode.
-     */
-    fun selectMode(modeId: String?) {
-        _selectedModeId.value = modeId
-    }
-
     // DERIVED STATE
 
     
@@ -847,22 +565,6 @@ class AppStateStore(
      */
     val hasAnyRunningSession: StateFlow<Boolean> = runningSessionIds.map { it.isNotEmpty() }
         .stateIn(storeScope, SharingStarted.Eagerly, false)
-    
-    /**
-     * Model display name for UI.
-     */
-    val modelName: StateFlow<String> = _selectedModelId.map { modelId ->
-        modelId.ifEmpty { "--" }.uppercase().replace("-", " ").take(30)
-    }.stateIn(storeScope, SharingStarted.Eagerly, "--")
-    
-    /**
-     * Mode display name for UI.
-     */
-    val modeName: StateFlow<String> = combine(_selectedModeId, _modes) { modeId, modes ->
-        modeId?.let { id ->
-            modes.find { it.id == id }?.description ?: id.uppercase()
-        } ?: "--"
-    }.stateIn(storeScope, SharingStarted.Eagerly, "--")
     
     /**
      * Build session groups from flat session list.

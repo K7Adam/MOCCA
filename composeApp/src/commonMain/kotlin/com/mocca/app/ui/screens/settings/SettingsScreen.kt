@@ -82,7 +82,25 @@ class SettingsScreen : Screen {
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.sectionGap),
                 contentPadding = PaddingValues(top = AppSpacing.lg, bottom = AppSpacing.screenPaddingBottom)
             ) {
-                // Servers Section
+                item {
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
+                        )
+                    ) {
+                        CliConnectionSection(
+                            uiState = state.cliConnectionUi,
+                            aiConfigState = state.aiConfigState,
+                            onRefreshRuntime = { screenModel.syncServerConfig() },
+                            onReconnect = { screenModel.reconnectCliBridge() },
+                            onDisconnect = { screenModel.disconnectCliBridge() },
+                            onForget = { screenModel.forgetCliBridgeTarget() }
+                        )
+                    }
+                }
+
+                // Legacy Servers Section
                 item {
                     Box(
                         modifier = Modifier.animateItem(
@@ -133,6 +151,7 @@ class SettingsScreen : Screen {
                         )
                     ) {
                         AppConfigSection(
+                            isCliAuthoritative = state.bridgeTarget != null,
                             activeConnectionState = state.activeConnectionState,
                             serverDefaultProvider = state.serverDefaultProvider,
                             serverDefaultModel = state.serverDefaultModel,
@@ -173,27 +192,18 @@ class SettingsScreen : Screen {
                                 placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                             )
                         ) {
-                            Column {
-                                Spacer(modifier = Modifier.height(AppSpacing.lg))
-
-                                Text(
-                                    text = "Provider and model are configured on the OpenCode server.",
-                                    color = AppColors.outline,
-                                    style = AppTypography.labelSmall
-                                )
-                                Spacer(modifier = Modifier.height(AppSpacing.xs))
-                                Text(
-                                    text = "Update these settings via /config command in OpenCode.",
-                                    color = AppColors.outline,
-                                    style = AppTypography.labelSmall
-                                )
-                            }
+                            Text(
+                                text = "The active MOCCA CLI project controls native files, git, terminal and AI runtime state.",
+                                color = AppColors.outline,
+                                style = AppTypography.labelSmall
+                            )
                         }
                     }
                 }
                 
                 // Server Info Section
-                state.serverVersion?.let { version ->
+                if (state.bridgeTarget == null) {
+                    state.serverVersion?.let { version ->
                     item {
                         Box(
                             modifier = Modifier.animateItem(
@@ -201,7 +211,7 @@ class SettingsScreen : Screen {
                                 placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
                             )
                         ) {
-                            SettingsCard(title = "OpenCode Server Info") {
+                            SettingsCard(title = "Legacy OpenCode Server Info") {
                                 SettingsRowItem(
                                     title = "Server Version",
                                     subtitle = version,
@@ -211,6 +221,7 @@ class SettingsScreen : Screen {
                             }
                         }
                     }
+                }
                 }
                 
                 // Appearance Section
@@ -386,7 +397,99 @@ class SettingsScreen : Screen {
 }
 
 @Composable
+fun CliConnectionSection(
+    uiState: CliConnectionUiState,
+    aiConfigState: AiConfigState,
+    onRefreshRuntime: () -> Unit,
+    onReconnect: () -> Unit,
+    onDisconnect: () -> Unit,
+    onForget: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = "MOCCA CLI",
+            color = AppColors.onSurfaceVariant,
+            style = AppTypography.labelSmall
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+        SettingsCard(title = uiState.headline) {
+            Text(
+                text = uiState.statusLabel,
+                color = when {
+                    uiState.statusLabel.contains("Connected", ignoreCase = true) -> AppColors.statusOnline
+                    uiState.statusLabel.contains("Connecting", ignoreCase = true) -> AppColors.statusWaiting
+                    uiState.statusLabel.contains("failed", ignoreCase = true) -> AppColors.error
+                    else -> AppColors.onSurfaceVariant
+                },
+                style = AppTypography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
+            Text(
+                text = uiState.supportingText,
+                color = AppColors.onSurfaceVariant,
+                style = AppTypography.bodySmall
+            )
+
+            uiState.endpointLabel?.let { SettingsRowItem(title = "Endpoint", subtitle = it, showToggle = false) }
+            uiState.networkLabel?.let { SettingsRowItem(title = "Network", subtitle = it, showToggle = false) }
+            uiState.projectLabel?.let { SettingsRowItem(title = "Project", subtitle = it, showToggle = false) }
+            if (uiState.capabilitySummary.isNotBlank()) {
+                SettingsRowItem(title = "Capabilities", subtitle = uiState.capabilitySummary, showToggle = false)
+            }
+            aiConfigState.errorMessage?.let {
+                SettingsRowItem(title = "Runtime", subtitle = it, showToggle = false)
+            }
+
+            Spacer(modifier = Modifier.height(AppSpacing.md))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+            ) {
+                MoccaButton(
+                    text = "Refresh",
+                    onClick = onRefreshRuntime,
+                    modifier = Modifier.weight(1f),
+                    height = AppSpacing.buttonHeightCompact
+                )
+                if (uiState.canReconnect) {
+                    MoccaOutlinedButton(
+                        text = "Reconnect",
+                        onClick = onReconnect,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            if (uiState.canForget) {
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+                ) {
+                    MoccaOutlinedButton(
+                        text = "Disconnect",
+                        onClick = onDisconnect,
+                        modifier = Modifier.weight(1f)
+                    )
+                    MoccaOutlinedButton(
+                        text = "Forget",
+                        onClick = onForget,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun AppConfigSection(
+    isCliAuthoritative: Boolean,
     activeConnectionState: ConnectionStatus,
     serverDefaultProvider: String?,
     serverDefaultModel: String?,
@@ -471,7 +574,7 @@ fun AppConfigSection(
                 Spacer(modifier = Modifier.width(AppSpacing.md))
 
                 MoccaButton(
-                    text = if (isSyncingConfig) "Syncing" else "Sync Config",
+                    text = if (isSyncingConfig) "Syncing" else if (isCliAuthoritative) "Refresh Runtime" else "Sync Config",
                     onClick = onSyncConfig,
                     enabled = canSyncConfig && !isSyncingConfig,
                     height = AppSpacing.buttonHeightCompact
@@ -540,13 +643,21 @@ fun AppConfigSection(
 
             // Info note about server-side configuration
             Text(
-                text = "Provider and model are configured on the OpenCode server.",
+                text = if (isCliAuthoritative) {
+                    "This configuration is read from your local OpenCode setup through MOCCA CLI."
+                } else {
+                    "Provider and model are configured on the OpenCode server."
+                },
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
-                text = "Update these settings via /config command in OpenCode.",
+                text = if (isCliAuthoritative) {
+                    "Refresh after editing local opencode.json/jsonc or switching the active CLI project."
+                } else {
+                    "Update these settings via /config command in OpenCode."
+                },
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
@@ -1172,7 +1283,7 @@ fun ServersSection(
 ) {
     Column(modifier = modifier) {
         Text(
-            text = "Servers",
+            text = "Legacy OpenCode Servers",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
@@ -1193,7 +1304,7 @@ fun ServersSection(
         }
         
         MoccaButton(
-            text = "Add Server",
+            text = "Add Legacy Server",
             onClick = onAddNewServer,
             modifier = Modifier.fillMaxWidth(),
             height = AppSpacing.buttonHeightCompact

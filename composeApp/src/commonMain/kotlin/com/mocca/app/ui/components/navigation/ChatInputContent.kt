@@ -79,8 +79,6 @@ fun ChatInputContent(
     modelName: String,
     agentName: String,
     modelPickerState: ModelPickerUiState = ModelPickerUiState(),
-    selectedProviderId: String,
-    selectedModelId: String,
     onModelSelected: (String, String) -> Unit,
     variants: List<AiModelVariantOption>,
     selectedVariantId: String?,

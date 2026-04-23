@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mocca.app.api.NetworkConfig
+import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.bridge.client.DirectBridgeNetwork
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.ui.components.modern.MoccaButton
@@ -92,10 +93,11 @@ internal fun OnboardingConnectStep(
     val scrollState = rememberScrollState()
 
     // Manual entry fields
-    var host by remember { mutableStateOf(NetworkConfig.DEFAULT_HOST_IP) }
+    val defaultHost = remember { getPlatformDefaultHost() }
+    var host by remember { mutableStateOf(defaultHost) }
     var port by remember { mutableStateOf(NetworkConfig.OPENCODE_SERVER_PORT.toString()) }
     var username by remember { mutableStateOf(NetworkConfig.DEFAULT_USERNAME) }
-    var password by remember { mutableStateOf(NetworkConfig.DEFAULT_PASSWORD) }
+    var password by remember { mutableStateOf("") }
     var useHttps by remember { mutableStateOf(false) }
 
     // Scanning animation
@@ -403,7 +405,7 @@ internal fun OnboardingConnectStep(
                                     value = host,
                                     onValueChange = { host = it },
                                     label = "Host / IP",
-                                    placeholder = "192.168.1.100",
+                                    placeholder = defaultHost.ifBlank { "server.local or 192.168.1.100" },
                                     modifier = Modifier.fillMaxWidth()
                                 )
                                 MoccaInput(
@@ -423,7 +425,7 @@ internal fun OnboardingConnectStep(
                                     value = host,
                                     onValueChange = { host = it },
                                     label = "Host / IP",
-                                    placeholder = "192.168.1.100",
+                                    placeholder = defaultHost.ifBlank { "server.local or 192.168.1.100" },
                                     modifier = Modifier.weight(2f)
                                 )
                                 MoccaInput(
@@ -448,7 +450,7 @@ internal fun OnboardingConnectStep(
                         value = password,
                         onValueChange = { password = it },
                         label = "Password",
-                        placeholder = "Enter server password"
+                        placeholder = "Leave empty if none"
                     )
 
                     // HTTPS toggle

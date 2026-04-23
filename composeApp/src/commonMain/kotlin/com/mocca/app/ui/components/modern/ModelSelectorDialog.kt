@@ -17,32 +17,11 @@ import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AiModelOption
 import com.mocca.app.domain.model.AiProviderOption
 import com.mocca.app.domain.model.ModelPickerUiState
-import com.mocca.app.domain.model.ProviderResponse
-import com.mocca.app.domain.model.RecentModel
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
-
-@Composable
-fun ModelSelectorDialog(
-    providerResponse: ProviderResponse,
-    selectedProviderId: String,
-    selectedModelId: String,
-    onModelSelected: (providerId: String, modelId: String) -> Unit,
-    recentModels: List<RecentModel> = emptyList(),
-    onDismiss: () -> Unit
-) {
-    ModelSelectorDialog(
-        state = providerResponse.toPickerState(selectedProviderId, selectedModelId, recentModels),
-        onModelSelected = onModelSelected,
-        onDismiss = onDismiss
-    )
-}
 
 @Composable
 fun ModelSelectorDialog(
@@ -339,44 +318,3 @@ private fun ModelRow(
 
 private fun String.normalizeModelQuery(): String =
     lowercase().trim().replace(Regex("[\\s_-]+"), " ")
-
-private fun ProviderResponse.toPickerState(
-    selectedProviderId: String,
-    selectedModelId: String,
-    recentModels: List<RecentModel>
-): ModelPickerUiState {
-    val providers = all.map { provider ->
-        val models = (provider.models as? JsonObject).orEmpty().map { (modelId, value) ->
-            val modelObject = value as? JsonObject
-            AiModelOption(
-                providerId = provider.id,
-                id = modelId,
-                name = modelObject?.get("name")?.jsonPrimitive?.contentOrNull ?: modelId
-            )
-        }.sortedBy { it.name }
-        AiProviderOption(
-            id = provider.id,
-            name = provider.name,
-            source = provider.source,
-            connected = provider.id in connected || models.isNotEmpty(),
-            models = models
-        )
-    }
-    return ModelPickerUiState(
-        providers = providers,
-        selectedProviderId = selectedProviderId,
-        selectedModelId = selectedModelId,
-        recentModels = recentModels.mapNotNull { recent ->
-            val provider = providers.firstOrNull { it.id == recent.providerId } ?: return@mapNotNull null
-            val model = provider.models.firstOrNull { it.id == recent.modelId } ?: return@mapNotNull null
-            com.mocca.app.domain.model.AiRecentModel(
-                projectKey = "legacy",
-                providerId = recent.providerId,
-                modelId = recent.modelId,
-                displayName = model.name,
-                providerName = provider.name,
-                lastUsedAt = recent.lastUsedAt
-            )
-        }
-    )
-}

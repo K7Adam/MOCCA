@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.mocca.app.api.NetworkConfig
+import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
@@ -200,10 +201,11 @@ fun TerminalServerEditDialog(
     onDismiss: () -> Unit
 ) {
     var name by remember { mutableStateOf(server.name.ifBlank { "DigitalOcean OpenCode" }) }
-    var host by remember { mutableStateOf(server.host.ifBlank { NetworkConfig.DEFAULT_HOST_IP }) }
+    val defaultHost = remember { getPlatformDefaultHost() }
+    var host by remember { mutableStateOf(server.host.ifBlank { defaultHost }) }
     var port by remember { mutableStateOf(if (server.port == 0) NetworkConfig.OPENCODE_SERVER_PORT.toString() else server.port.toString()) }
     var username by remember { mutableStateOf(server.username.ifBlank { NetworkConfig.DEFAULT_USERNAME }) }
-    var password by remember { mutableStateOf(server.password.ifBlank { NetworkConfig.DEFAULT_PASSWORD }) }
+    var password by remember { mutableStateOf(server.password) }
 
     val focusManager = LocalFocusManager.current
 
@@ -237,8 +239,8 @@ fun TerminalServerEditDialog(
                     value = host,
                     onValueChange = { host = it },
                     label = "Host",
-                    placeholder = NetworkConfig.DEFAULT_HOST_IP,
-                    hint = "Tailscale hostname, LAN IP, or localhost",
+                    placeholder = defaultHost.ifBlank { "server.local or 192.168.1.10" },
+                    hint = "MOCCA CLI target, Tailscale hostname, LAN IP, or emulator host",
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )

@@ -18,7 +18,8 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 
 class SearchRepository(
-    private val apiClient: MoccaApiClient
+    private val apiClient: MoccaApiClient,
+    private val fileRepository: FileRepository
 ) {
 
     private fun String.toFileSearchResult(): FileSearchResult {
@@ -32,14 +33,9 @@ class SearchRepository(
     // --- Existing search methods ---
 
     fun searchFiles(pattern: String): Flow<Resource<List<String>>> = flow {
-        emit(Resource.Loading())
-        apiClient.findFiles(pattern).fold(
-            onSuccess = { results -> emit(Resource.Success(results)) },
-            onFailure = { error ->
-                Napier.e("File search failed", error)
-                emit(Resource.Error(error.message ?: "File search failed"))
-            }
-        )
+        fileRepository.findFiles(pattern).collect { resource ->
+            emit(resource)
+        }
     }.flowOn(Dispatchers.IO)
 
     fun searchSymbols(query: String): Flow<Resource<List<ApiSymbolResult>>> = flow {
@@ -54,14 +50,9 @@ class SearchRepository(
     }.flowOn(Dispatchers.IO)
 
     fun searchText(query: String, path: String = ""): Flow<Resource<List<ApiSearchResult>>> = flow {
-        emit(Resource.Loading())
-        apiClient.searchText(query, path).fold(
-            onSuccess = { results -> emit(Resource.Success(results)) },
-            onFailure = { error ->
-                Napier.e("Text search failed", error)
-                emit(Resource.Error(error.message ?: "Text search failed"))
-            }
-        )
+        fileRepository.searchText(query, path).collect { resource ->
+            emit(resource)
+        }
     }.flowOn(Dispatchers.IO)
 
     // --- T26: Enhanced glob/grep search methods ---
@@ -71,17 +62,13 @@ class SearchRepository(
      * into [FileSearchResult] for consistent UI rendering.
      */
     fun searchGlob(pattern: String): Flow<Resource<List<FileSearchResult>>> = flow {
-        emit(Resource.Loading())
-        apiClient.findFiles(pattern).fold(
-            onSuccess = { paths ->
-                val results = paths.map { rawPath -> rawPath.toFileSearchResult() }
-                emit(Resource.Success(results))
-            },
-            onFailure = { error ->
-                Napier.e("Glob search failed", error)
-                emit(Resource.Error(error.message ?: "Glob search failed"))
+        fileRepository.findFiles(pattern).collect { resource ->
+            when (resource) {
+                is Resource.Success -> emit(Resource.Success(resource.data.map { rawPath -> rawPath.toFileSearchResult() }))
+                is Resource.Error -> emit(Resource.Error(resource.message))
+                is Resource.Loading -> emit(Resource.Loading())
             }
-        )
+        }
     }.flowOn(Dispatchers.IO)
 
     /**
@@ -93,16 +80,13 @@ class SearchRepository(
         path: String = "",
         contextLines: Int = 3
     ): Flow<Resource<List<FileContentSearchResult>>> = flow {
-        emit(Resource.Loading())
-        apiClient.searchGrep(query, path).fold(
-            onSuccess = { results ->
-                emit(Resource.Success(results.toContentSearchResults(contextLines)))
-            },
-            onFailure = { error ->
-                Napier.e("Grep search failed", error)
-                emit(Resource.Error(error.message ?: "Grep search failed"))
+        fileRepository.searchText(query, path).collect { resource ->
+            when (resource) {
+                is Resource.Success -> emit(Resource.Success(resource.data.toContentSearchResults(contextLines)))
+                is Resource.Error -> emit(Resource.Error(resource.message))
+                is Resource.Loading -> emit(Resource.Loading())
             }
-        )
+        }
     }.flowOn(Dispatchers.IO)
 
     /**
@@ -113,34 +97,36 @@ class SearchRepository(
         emit(Resource.Loading())
         when (query.mode) {
             SearchMode.FILE_PATTERN -> {
-                apiClient.findFiles(query.query).fold(
-                    onSuccess = { paths ->
-                        val fileResults = paths.map { rawPath -> rawPath.toFileSearchResult() }
-                        emit(Resource.Success(UnifiedSearchResult(
-                            mode = query.mode,
-                            fileResults = fileResults
-                        )))
-                    },
-                    onFailure = { error ->
-                        Napier.e("Unified file search failed", error)
-                        emit(Resource.Error(error.message ?: "File pattern search failed"))
+                fileRepository.findFiles(query.query).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> emit(
+                            Resource.Success(
+                                UnifiedSearchResult(
+                                    mode = query.mode,
+                                    fileResults = resource.data.map { rawPath -> rawPath.toFileSearchResult() }
+                                )
+                            )
+                        )
+                        is Resource.Error -> emit(Resource.Error(resource.message))
+                        is Resource.Loading -> emit(Resource.Loading())
                     }
-                )
+                }
             }
             SearchMode.TEXT_CONTENT -> {
-                apiClient.searchGrep(query.query, query.path)
-                    .fold(
-                        onSuccess = { results ->
-                            emit(Resource.Success(UnifiedSearchResult(
-                                mode = query.mode,
-                                textResults = results.toContentSearchResults(query.contextLines)
-                            )))
-                        },
-                        onFailure = { error ->
-                            Napier.e("Unified text search failed", error)
-                            emit(Resource.Error(error.message ?: "Text search failed"))
-                        }
-                    )
+                fileRepository.searchText(query.query, query.path).collect { resource ->
+                    when (resource) {
+                        is Resource.Success -> emit(
+                            Resource.Success(
+                                UnifiedSearchResult(
+                                    mode = query.mode,
+                                    textResults = resource.data.toContentSearchResults(query.contextLines)
+                                )
+                            )
+                        )
+                        is Resource.Error -> emit(Resource.Error(resource.message))
+                        is Resource.Loading -> emit(Resource.Loading())
+                    }
+                }
             }
             SearchMode.SYMBOL -> {
                 apiClient.findSymbols(query.query).fold(
@@ -165,18 +151,16 @@ class SearchRepository(
      */
     suspend fun fetchFileContext(filePath: String, aroundLine: Int, contextSize: Int = 3): Resource<List<String>> =
         withContext(Dispatchers.IO) {
-            apiClient.getFileContent(filePath).fold(
-                onSuccess = { content ->
-                    val lines = content.content.lines()
+            when (val content = fileRepository.getFileContent(filePath)) {
+                is Resource.Success -> {
+                    val lines = content.data.content.lines()
                     val start = maxOf(0, aroundLine - contextSize - 1)
                     val end = minOf(lines.size, aroundLine + contextSize)
                     Resource.Success(lines.subList(start, end))
-                },
-                onFailure = { error ->
-                    Napier.e("Context fetch failed for $filePath", error)
-                    Resource.Error(error.message ?: "Failed to fetch file context")
                 }
-            )
+                is Resource.Error -> Resource.Error(content.message)
+                is Resource.Loading -> Resource.Error("Failed to fetch file context")
+            }
         }
 
     private suspend fun List<ApiSearchResult>.toContentSearchResults(
@@ -194,7 +178,10 @@ class SearchRepository(
         }
 
         return map { result ->
-            val fileContent = apiClient.getFileContent(result.file).getOrNull()?.content
+            val fileContent = when (val content = fileRepository.getFileContent(result.file)) {
+                is Resource.Success -> content.data.content
+                else -> null
+            }
             val lines = fileContent?.lines().orEmpty()
             val targetIndex = (result.line - 1).coerceAtLeast(0)
             val beforeStart = (targetIndex - contextSize).coerceAtLeast(0)

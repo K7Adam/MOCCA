@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.onboarding
 
 import com.mocca.app.api.NetworkConfig
+import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.bridge.client.DirectBridgeNetwork
 
 import androidx.compose.runtime.Immutable
@@ -47,10 +48,10 @@ data class OnboardingWizardState(
     val isSuccess: Boolean = false,
     
     // Manual entry (fallback)
-    val manualHost: String = NetworkConfig.DEFAULT_HOST_IP,
+    val manualHost: String = getPlatformDefaultHost(),
     val manualPort: String = NetworkConfig.OPENCODE_SERVER_PORT.toString(),
     val manualUsername: String = NetworkConfig.DEFAULT_USERNAME,
-    val manualPassword: String = NetworkConfig.DEFAULT_PASSWORD,
+    val manualPassword: String = "",
     
     // Credential prompt (for mDNS-discovered servers without credentials)
     val needsCredentials: Boolean = false,

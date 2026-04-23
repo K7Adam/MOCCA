@@ -574,60 +574,6 @@ class SessionRepository(
         )
     }
     
-    suspend fun loadDefaultConfig() {
-        Napier.v("[SessionRepository] loadDefaultConfig ignored; AiRuntimeConfigRepository owns AI defaults")
-    }
-    
-    /**
-     * Set the default model and provider for chat.
-     */
-    fun setDefaultModel(modelId: String, providerId: String) {
-        Napier.v("[SessionRepository] setDefaultModel ignored; AiRuntimeConfigRepository owns AI selection")
-    }
-    
-    /**
-     * Set the default mode for chat.
-     */
-    fun setDefaultMode(mode: String) {
-        Napier.v("[SessionRepository] setDefaultMode ignored; AiRuntimeConfigRepository owns AI selection")
-    }
-    
-    /**
-     * Get available providers with their models.
-     */
-    suspend fun getProviderInfo(): Result<ProviderResponse> {
-        return apiClient.getProviderInfo()
-    }
-    
-    /**
-     * Get available modes.
-     */
-    suspend fun getModes(): Result<List<Mode>> {
-        return apiClient.getModes()
-    }
-    
-    /**
-     * Get current default model and provider IDs.
-     */
-    fun getDefaultModelProvider(): Pair<String, String> {
-        return "" to ""
-    }
-    
-    /**
-     * Get current default mode.
-     */
-    fun getDefaultMode(): String {
-        return ""
-    }
-    
-    /**
-     * Get current model/agent display info.
-     * Returns pair of (modelName, agentName) for UI display.
-     */
-    fun getCurrentModelInfo(): Pair<String, String>? {
-        return null
-    }
-    
     /**
      * Get session diffs (file changes made during session).
      * @param sessionId The session ID

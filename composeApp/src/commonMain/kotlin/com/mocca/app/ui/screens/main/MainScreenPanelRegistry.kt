@@ -310,8 +310,6 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     modelName = scope.chatState.modelName,
                     agentName = scope.chatState.agentName,
                     modelPickerState = scope.chatState.modelPickerState,
-                    selectedProviderId = scope.chatState.selectedProviderId,
-                    selectedModelId = scope.chatState.selectedModelId,
                     onModelSelected = { providerId, modelId ->
                         scope.chatScreenModel.selectModel(providerId, modelId)
                     },

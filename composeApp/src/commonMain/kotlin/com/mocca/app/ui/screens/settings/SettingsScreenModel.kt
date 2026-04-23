@@ -9,6 +9,11 @@ import kotlinx.collections.immutable.toImmutableMap
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.api.getHttpEngine
+import com.mocca.app.bridge.client.DirectBridgeTarget
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
+import com.mocca.app.bridge.connection.BridgeTargetRepository
+import com.mocca.app.data.repository.AiRuntimeConfigRepository
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ConfigRepository
 import com.mocca.app.data.repository.PreferencesManager
@@ -27,6 +32,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -41,6 +47,13 @@ data class SettingsState(
     val message: String? = null,
     val connectionStatuses: Map<String, ServerConnectionStatus> = emptyMap(),
     val activeConnectionState: ConnectionStatus = ConnectionStatus.NotConfigured,
+    val bridgeTarget: DirectBridgeTarget? = null,
+    val bridgeConnectionState: BridgeConnectionStatus = BridgeConnectionStatus.NotConfigured,
+    val cliConnectionUi: CliConnectionUiState = CliConnectionUiState(
+        headline = "MOCCA CLI",
+        statusLabel = "Not configured",
+        supportingText = "Pair with mocca-cli to unlock native AI, files, git and terminal."
+    ),
     val githubToken: String = "",
     val githubTokenStatus: GitHubTokenStatus? = null,
     val isValidatingToken: Boolean = false,
@@ -61,6 +74,7 @@ data class SettingsState(
     val configSyncMessage: String = "Waiting to sync server config",
     val configLastSyncedAt: Long? = null,
     val configSyncFailed: Boolean = false,
+    val aiConfigState: AiConfigState = AiConfigState(),
     // User Preferences
     val preferences: UserPreferences = UserPreferences.DEFAULT,
     // Clear Cache Dialog
@@ -72,10 +86,13 @@ data class SettingsState(
 
 class SettingsScreenModel(
     private val serverConfigRepository: ServerConfigRepository,
+    private val bridgeTargetRepository: BridgeTargetRepository,
+    private val bridgeConnectionManager: BridgeConnectionManager,
     private val connectionManager: ConnectionManager,
     private val updateRepository: UpdateRepository,
     private val settingsRepository: SettingsRepository,
     private val configRepository: ConfigRepository,
+    private val aiRuntimeConfigRepository: AiRuntimeConfigRepository,
     private val updateNotifier: UpdateNotifier,
     private val preferencesManager: PreferencesManager,
     private val projectRepository: ProjectRepository
@@ -89,6 +106,8 @@ class SettingsScreenModel(
         loadGitHubToken()
         loadUserPreferences()
         observeActiveServer()
+        observeBridgeState()
+        observeAiRuntimeConfig()
         observeActiveConnectionState()
         // Load remote config if connected
         loadRemoteConfig()
@@ -100,6 +119,81 @@ class SettingsScreenModel(
         screenModelScope.launch {
             val prefs = settingsRepository.getUserPreferences()
             _state.value = _state.value.copy(preferences = prefs)
+        }
+    }
+
+    private fun observeBridgeState() {
+        screenModelScope.launch {
+            combine(
+                bridgeTargetRepository.activeTarget,
+                bridgeConnectionManager.status,
+                aiRuntimeConfigRepository.configState
+            ) { target, bridgeStatus, aiConfigState ->
+                Triple(target, bridgeStatus, aiConfigState)
+            }.collect { (target, bridgeStatus, aiConfigState) ->
+                _state.value = _state.value.copy(
+                    bridgeTarget = target,
+                    bridgeConnectionState = bridgeStatus,
+                    cliConnectionUi = buildCliConnectionUiState(
+                        target = target,
+                        bridgeStatus = bridgeStatus,
+                        aiConfigState = aiConfigState
+                    )
+                )
+            }
+        }
+    }
+
+    private fun observeAiRuntimeConfig() {
+        screenModelScope.launch {
+            aiRuntimeConfigRepository.configState.collect { config ->
+                val snapshot = config.snapshot
+                val defaultProviderName = config.effectiveSelection?.displayProvider
+                    ?: snapshot?.findProvider(snapshot.defaultSelection.providerId)?.name
+                val defaultModelName = config.effectiveSelection?.displayModel
+                    ?: snapshot?.findModel(
+                        snapshot.defaultSelection.providerId,
+                        snapshot.defaultSelection.modelId
+                    )?.name
+                val modeOptions = snapshot?.modes
+                    ?.map { Mode(id = it.id, name = it.name, description = it.description) }
+                    ?.ifEmpty {
+                        snapshot.agents
+                            .filterNot { it.hidden }
+                            .map { agent ->
+                                Mode(
+                                    id = agent.id,
+                                    name = agent.name,
+                                    description = agent.description
+                                )
+                            }
+                    }
+                    .orEmpty()
+                    .toImmutableList()
+
+                val syncMessage = when (config.status) {
+                    AiConfigStatus.LOADING -> "Refreshing local OpenCode runtime config via MOCCA CLI..."
+                    AiConfigStatus.READY -> "Runtime config imported from MOCCA CLI"
+                    AiConfigStatus.UPDATE_REQUIRED -> config.errorMessage
+                        ?: "Update MOCCA CLI to expose normalized AI config."
+                    AiConfigStatus.ERROR -> config.errorMessage ?: "Unable to load runtime config"
+                }
+
+                _state.value = _state.value.copy(
+                    aiConfigState = config,
+                    serverDefaultProvider = defaultProviderName,
+                    serverDefaultModel = defaultModelName,
+                    serverModes = modeOptions,
+                    isSyncingConfig = config.status == AiConfigStatus.LOADING,
+                    configSyncFailed = config.status == AiConfigStatus.ERROR,
+                    configSyncMessage = syncMessage,
+                    configLastSyncedAt = if (snapshot != null && config.status != AiConfigStatus.LOADING) {
+                        Clock.System.now().toEpochMilliseconds()
+                    } else {
+                        _state.value.configLastSyncedAt
+                    }
+                )
+            }
         }
     }
 
@@ -310,6 +404,9 @@ class SettingsScreenModel(
      * Load server configuration (default provider, model, modes) from /config endpoint.
      */
     private fun loadServerConfig() {
+        if (bridgeTargetRepository.activeTarget.value != null) {
+            return
+        }
         screenModelScope.launch {
             val currentState = _state.value
             val loadedProviderIds = currentState.providerAuthMethods.keys.toList()
@@ -421,7 +518,18 @@ class SettingsScreenModel(
     }
 
     fun syncServerConfig() {
-        loadServerConfig()
+        screenModelScope.launch {
+            if (bridgeConnectionManager.status.value is BridgeConnectionStatus.Connected) {
+                _state.value = _state.value.copy(
+                    isSyncingConfig = true,
+                    configSyncFailed = false,
+                    configSyncMessage = "Refreshing local OpenCode runtime config via MOCCA CLI..."
+                )
+                aiRuntimeConfigRepository.refresh(force = true)
+            } else {
+                loadServerConfig()
+            }
+        }
     }
     
     fun loadRemoteConfig() {
@@ -596,16 +704,7 @@ class SettingsScreenModel(
 
     private fun loadGitHubToken() {
         screenModelScope.launch {
-            var token = settingsRepository.getGitHubToken()
-            
-            // TEMPORARY PAT FOR DEVELOPMENT
-            if (token.isNullOrBlank()) {
-                val tempPat = "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"
-                settingsRepository.saveGitHubToken(tempPat)
-                token = tempPat
-            }
-            
-            // token is guaranteed non-null after the above check
+            val token = settingsRepository.getGitHubToken().orEmpty()
             _state.value = _state.value.copy(githubToken = token)
             
             if (!token.isNullOrBlank()) {
@@ -798,6 +897,31 @@ class SettingsScreenModel(
             _state.value.servers.forEach { server ->
                 checkServerConnection(server)
             }
+        }
+    }
+
+    fun reconnectCliBridge() {
+        screenModelScope.launch {
+            _state.value = _state.value.copy(message = "Reconnecting MOCCA CLI...")
+            bridgeConnectionManager.connect()
+            if (bridgeConnectionManager.status.value is BridgeConnectionStatus.Connected) {
+                aiRuntimeConfigRepository.refresh(force = true)
+            }
+        }
+    }
+
+    fun disconnectCliBridge() {
+        screenModelScope.launch {
+            bridgeConnectionManager.disconnect()
+            _state.value = _state.value.copy(message = "MOCCA CLI disconnected")
+        }
+    }
+
+    fun forgetCliBridgeTarget() {
+        screenModelScope.launch {
+            bridgeConnectionManager.disconnect()
+            bridgeTargetRepository.clear()
+            _state.value = _state.value.copy(message = "Saved MOCCA CLI target removed")
         }
     }
     

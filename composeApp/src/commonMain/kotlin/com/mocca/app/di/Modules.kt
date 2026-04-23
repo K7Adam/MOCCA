@@ -21,7 +21,6 @@ import com.mocca.app.data.repository.*
 import com.mocca.app.data.repository.McpRepository
 import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.data.security.NoOpSecureTokenStorage
-import com.mocca.app.ui.screens.chat.delegates.*
 import com.mocca.app.ui.screens.files.FilesScreenModel
 import com.mocca.app.ui.screens.git.GitDiffScreenModel
 import com.mocca.app.ui.screens.git.GitScreenModel
@@ -128,7 +127,7 @@ val commonModule = module {
     singleOf(::AgentRepository)
     singleOf(::ToolRepository)
     singleOf(::CommandRepository)
-    singleOf(::SearchRepository)
+    single { SearchRepository(apiClient = get(), fileRepository = get()) }
     singleOf(::ProjectRepository)
     single {
         SystemMonitorRepository(
@@ -184,7 +183,6 @@ val commonModule = module {
             stateCoordinator = get(),
             sessionRepository = get(),
             mcpRepository = get(),
-            configRepository = get(),
             agentRepository = get(),
             providerRepository = get(),
             toolRepository = get(),
@@ -264,10 +262,13 @@ val screenModelModule = module {
     factory {
         SettingsScreenModel(
             serverConfigRepository = get(),
+            bridgeTargetRepository = get(),
+            bridgeConnectionManager = get(),
             connectionManager = get(),
             updateRepository = get(),
             settingsRepository = get(),
             configRepository = get(),
+            aiRuntimeConfigRepository = get(),
             projectRepository = get(),
             updateNotifier = get(),
             preferencesManager = get()
@@ -311,6 +312,7 @@ val screenModelModule = module {
             appStateStore = get(),
             sessionRepository = get(),
             searchRepository = get(),
+            aiRuntimeConfigRepository = get(),
             connectionManager = get(),
             mcpRepository = get(),
             updateRepository = get(),

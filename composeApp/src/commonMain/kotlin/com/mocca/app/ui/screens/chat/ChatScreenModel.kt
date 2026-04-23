@@ -37,14 +37,11 @@ data class ChatState(
     val effectiveSelection: AiEffectiveSelection? = null,
     val modelPickerState: ModelPickerUiState = ModelPickerUiState(),
     val variantPickerState: VariantPickerUiState = VariantPickerUiState(),
-    val selectedProviderId: String = "",
-    val selectedModelId: String = "",
     val selectedVariantId: String? = null,
     val modes: ImmutableList<Mode> = persistentListOf(),
     val selectedModeId: String? = null,
     val attachedFiles: ImmutableList<AttachedFile> = persistentListOf(),
     val commands: ImmutableList<Command> = persistentListOf(),
-    val recentModels: ImmutableList<RecentModel> = persistentListOf(),
     val todos: ImmutableList<Todo> = persistentListOf(),
     val showTodoPanel: Boolean = false,
     val maxTokens: Int = 0,
@@ -259,8 +256,7 @@ class ChatScreenModel(
                 aiRuntimeConfigRepository.configState,
                 aiRuntimeConfigRepository.effectiveSelection,
                 aiRuntimeConfigRepository.modelPickerState,
-                aiRuntimeConfigRepository.variantPickerState,
-                aiRuntimeConfigRepository.recentModels
+                aiRuntimeConfigRepository.variantPickerState
             ) { args ->
                 val config = args[0] as AiConfigState
                 val effective = args[1] as AiEffectiveSelection?
@@ -273,8 +269,6 @@ class ChatScreenModel(
                     effectiveSelection = effective,
                     modelPickerState = modelPicker,
                     variantPickerState = variantPicker,
-                    selectedProviderId = effective?.providerId.orEmpty(),
-                    selectedModelId = effective?.modelId.orEmpty(),
                     selectedVariantId = effective?.variantId,
                     modes = modes,
                     selectedModeId = effective?.agentId ?: effective?.modeId,

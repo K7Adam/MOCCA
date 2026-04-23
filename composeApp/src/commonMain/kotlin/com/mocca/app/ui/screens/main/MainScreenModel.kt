@@ -8,6 +8,7 @@ import kotlinx.collections.immutable.toImmutableList
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.AppStateStore
+import com.mocca.app.data.repository.AiRuntimeConfigRepository
 import com.mocca.app.data.repository.ChatStateStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.McpRepository
@@ -32,6 +33,7 @@ import com.mocca.app.domain.model.DownloadStatus
 import com.mocca.app.domain.model.ServerEvent
 import com.mocca.app.domain.model.UnifiedSearchResult
 import com.mocca.app.domain.model.UpdateInfo
+import com.mocca.app.domain.model.deriveAiShellStatus
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
@@ -143,6 +145,7 @@ class MainScreenModel(
     private val appStateStore: AppStateStore,
     private val sessionRepository: SessionRepository,
     private val searchRepository: SearchRepository,
+    private val aiRuntimeConfigRepository: AiRuntimeConfigRepository,
     private val connectionManager: ConnectionManager,
     private val mcpRepository: McpRepository,
     private val updateRepository: UpdateRepository,
@@ -239,19 +242,23 @@ class MainScreenModel(
             }
         }
         
-        // Observe model/mode info
+        // Observe model/mode info from the normalized AI runtime config.
         screenModelScope.launch {
-            appStateStore.modelName.collect { modelName ->
-                _state.update { it.copy(modelName = modelName) }
+            combine(
+                aiRuntimeConfigRepository.configState,
+                aiRuntimeConfigRepository.effectiveSelection
+            ) { configState, effectiveSelection ->
+                deriveAiShellStatus(configState, effectiveSelection)
+            }.collect { shellStatus ->
+                _state.update {
+                    it.copy(
+                        modelName = shellStatus.modelName,
+                        agentName = shellStatus.agentName
+                    )
+                }
             }
         }
-        
-        screenModelScope.launch {
-            appStateStore.modeName.collect { modeName ->
-                _state.update { it.copy(agentName = modeName) }
-            }
-        }
-        
+
         // Observe sync state
         screenModelScope.launch {
             appStateStore.isSyncing.collect { isSyncing ->
