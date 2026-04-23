@@ -34,6 +34,7 @@ import com.mocca.app.domain.model.UnifiedSearchResult
 import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.provider.AppVersionProvider
 import io.github.aakira.napier.Napier
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * State for the main screen.
@@ -166,17 +168,15 @@ class MainScreenModel(
         observeConnectionState()
         observeMcpServers()
         observeUpdateNotifications()
-        checkForUpdates()
         
-        // Start periodic update checks
-        updateCheckScheduler.start()
+        // Keep GitHub update checks off the critical startup path.
+        screenModelScope.launch {
+            delay(5 * 60_000L)
+            updateCheckScheduler.start()
+        }
         
         // Sync initial state
         appStateStore.start()
-        
-        if (initialSessionId != null) {
-            loadMessages(initialSessionId)
-        }
     }
     
     /**
@@ -191,7 +191,6 @@ class MainScreenModel(
                 // Only update if we don't have an explicit initialSessionId or if it changed
                 if (sessionId != null && _state.value.currentSessionId == null) {
                     _state.update { it.copy(currentSessionId = sessionId) }
-                    loadMessages(sessionId)
                     Napier.i("[MainScreenModel] Restored session from store: $sessionId")
                 }
             }
@@ -200,10 +199,21 @@ class MainScreenModel(
         // Observe sessions
         screenModelScope.launch {
             appStateStore.sessions.collect { sessions ->
-                _state.update { current ->
-                    current.copy(
-                        sessions = sessions.toImmutableList(),
-                        sessionGroups = buildSessionGroups(sessions, current.runningSessionIds, current.expandedGroupIds).toImmutableList()
+                val current = _state.value
+                val sessionList = withContext(Dispatchers.Default) {
+                    sessions.toImmutableList()
+                }
+                val sessionGroups = withContext(Dispatchers.Default) {
+                    buildSessionGroups(
+                        sessions = sessions,
+                        runningIds = current.runningSessionIds,
+                        expandedIds = current.expandedGroupIds
+                    ).toImmutableList()
+                }
+                _state.update {
+                    it.copy(
+                        sessions = sessionList,
+                        sessionGroups = sessionGroups
                     )
                 }
             }
@@ -212,10 +222,18 @@ class MainScreenModel(
         // Observe running sessions
         screenModelScope.launch {
             appStateStore.runningSessionIds.collect { runningIds ->
-                _state.update { current ->
-                    current.copy(
+                val current = _state.value
+                val sessionGroups = withContext(Dispatchers.Default) {
+                    buildSessionGroups(
+                        sessions = current.sessions,
+                        runningIds = runningIds,
+                        expandedIds = current.expandedGroupIds
+                    ).toImmutableList()
+                }
+                _state.update {
+                    it.copy(
                         runningSessionIds = runningIds,
-                        sessionGroups = buildSessionGroups(current.sessions, runningIds, current.expandedGroupIds).toImmutableList()
+                        sessionGroups = sessionGroups
                     )
                 }
             }
@@ -557,24 +575,6 @@ class MainScreenModel(
         }
     }
     
-    private fun loadMessages(sessionId: String) {
-        screenModelScope.launch {
-            sessionRepository.getMessages(sessionId).collect { resource ->
-                when (resource) {
-                    is Resource.Loading<*> -> { /* Already loading sessions */ }
-                    is Resource.Success<*> -> _state.update {
-                        @Suppress("UNCHECKED_CAST")
-                        val messages = (resource.data as? List<Message>) ?: emptyList()
-                        it.copy(messages = messages.toImmutableList())
-                    }
-                    is Resource.Error<*> -> _state.update { 
-                        it.copy(error = resource.message)
-                    }
-                }
-            }
-        }
-    }
-    
     /**
      * Select a session and navigate to chat.
      * @param sessionId The session ID to select
@@ -593,15 +593,10 @@ class MainScreenModel(
         // Update session ID immediately for optimistic UI
         _state.update { it.copy(currentSessionId = sessionId) }
         
-        // Load messages in background
-        screenModelScope.launch {
-            loadMessages(sessionId)
-            // Clear loading state after messages load
-            _state.update { it.copy(
-                loadingSessionId = null,
-                isLoadingSession = false
-            )}
-        }
+        _state.update { it.copy(
+            loadingSessionId = null,
+            isLoadingSession = false
+        )}
     }
     
     /**
@@ -829,10 +824,7 @@ class MainScreenModel(
     fun refreshAll() {
         appStateStore.syncFromServer()
         
-        // Also reload messages for current session if any
-        _state.value.currentSessionId?.let { sessionId ->
-            loadMessages(sessionId)
-        }
+        // Chat history is owned by ChatStateStore; refreshAll only syncs shared app state.
     }
     
     override fun onDispose() {

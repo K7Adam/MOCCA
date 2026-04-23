@@ -52,6 +52,11 @@ class AppStateStore(
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    private companion object {
+        const val INITIAL_DASHBOARD_SYNC_DELAY_MS = 10_000L
+        const val VCS_INFO_START_DELAY_MS = 15_000L
+    }
+
     // SESSION STATE - Reactive from DB + StateCoordinator updates
 
     
@@ -164,6 +169,8 @@ class AppStateStore(
     
     private var isInitialized = false
     private var isDataLoaded = false
+    private var loadAllDataJob: Job? = null
+    private var vcsInfoJob: Job? = null
 
     // INITIALIZATION
 
@@ -346,7 +353,14 @@ class AppStateStore(
      * Called from observeConnectionState() when connected.
      */
     private fun startObservingVcsInfo() {
-        storeScope.launch {
+        if (vcsInfoJob?.isActive == true) {
+            return
+        }
+        vcsInfoJob = storeScope.launch {
+            delay(VCS_INFO_START_DELAY_MS)
+            if (!connectionStatus.value.isConnected) {
+                return@launch
+            }
             gitRepository.getVcsInfo().collect { resource ->
                 _vcsInfo.value = resource
             }
@@ -376,7 +390,13 @@ class AppStateStore(
         Napier.i("[AppStateStore] Loading all data from server in parallel...")
         
         // Load all data in parallel using structured concurrency
-        storeScope.launch {
+        loadAllDataJob?.cancel()
+        loadAllDataJob = storeScope.launch {
+            delay(INITIAL_DASHBOARD_SYNC_DELAY_MS)
+            if (!connectionStatus.value.isConnected) {
+                Napier.w("[AppStateStore] Deferred loadAllData skipped - not connected")
+                return@launch
+            }
             coroutineScope {
                 listOf(
                     async { loadConfig() },      // Contains getProviderInfo() - 4.4s
@@ -494,13 +514,6 @@ class AppStateStore(
                     startObservingVcsInfo()
                     isDataLoaded = true
                 }
-                
-                // Refresh Git status and other repository polling
-                storeScope.launch {
-                    gitRepository.getVcsInfo().collect { resource ->
-                        _vcsInfo.value = resource
-                    }
-                }
             }
             is BroadcastEvent.SyncFailed -> {
                 Napier.w("[AppStateStore] Sync failed: ${event.error}")
@@ -510,6 +523,8 @@ class AppStateStore(
                 // Reset data loaded flag when disconnected
                 if (!event.status.isConnected) {
                     isDataLoaded = false
+                    vcsInfoJob?.cancel()
+                    vcsInfoJob = null
                 }
             }
             is BroadcastEvent.ActiveSessionChanged -> {
@@ -890,6 +905,7 @@ class AppStateStore(
     
     fun dispose() {
         realtimeSyncService.stop()
+        vcsInfoJob?.cancel()
         storeScope.cancel()
         Napier.i("[AppStateStore] Disposed")
     }

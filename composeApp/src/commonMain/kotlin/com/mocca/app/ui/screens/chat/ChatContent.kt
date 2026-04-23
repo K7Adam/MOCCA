@@ -108,7 +108,7 @@ fun ChatContent(
         }
     }
     
-    LaunchedEffect(streamingText) {
+    LaunchedEffect(streamingText.isNotEmpty()) {
         if (streamingText.isNotEmpty()) {
             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
         }
@@ -190,8 +190,10 @@ fun ChatContent(
         onScrollToBottomStateChange(showScrollToBottom, hasNewMessagesWhileScrolledUp)
     }
 
-    LaunchedEffect(isAtTop) {
-        if (isAtTop) screenModel.loadMoreMessages()
+    LaunchedEffect(isAtTop, aggregatedMessages.size) {
+        if (isAtTop && aggregatedMessages.size >= 80) {
+            screenModel.loadMoreMessages()
+        }
     }
 
     // Allow parent (MainScreen) to trigger scroll-to-bottom

@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import com.mocca.app.domain.model.*
 import com.mocca.app.api.*
@@ -87,6 +89,8 @@ class RealtimeSyncService(
     
     private val _lastSyncTime = MutableStateFlow<Long?>(null)
     val lastSyncTime: StateFlow<Long?> = _lastSyncTime.asStateFlow()
+
+    private var lastGitSyncMs: Long? = null
     
     // Track if service is started
     private var isStarted = false
@@ -110,6 +114,7 @@ class RealtimeSyncService(
         // Do initial sync if connected (SILENT)
         if (connectionManager.status.value.isConnected) {
             serviceScope.launch {
+                delay(CONNECTION_SYNC_START_DELAY_MS)
                 performSilentSync("initial")
             }
         }
@@ -181,12 +186,15 @@ class RealtimeSyncService(
     private fun startConnectionObserver() {
         connectionObserverJob?.cancel()
         connectionObserverJob = serviceScope.launch {
-            connectionManager.status.collect { status ->
-                if (status.isConnected) {
+            connectionManager.status
+                .map { it.isConnected }
+                .distinctUntilChanged()
+                .filter { it }
+                .collect {
+                    delay(CONNECTION_SYNC_START_DELAY_MS)
                     Napier.i("[RealtimeSync] Connection established - silent sync")
                     performSilentSync("connection")
                 }
-            }
         }
         
         sessionObserverJob?.cancel()
@@ -195,13 +203,14 @@ class RealtimeSyncService(
                 .filterNotNull()
                 .distinctUntilChanged()
                 .collectLatest { sessionId ->
-                    Napier.i("[RealtimeSync] Active session ID received ($sessionId) - eager silent Git sync")
+                    Napier.i("[RealtimeSync] Active session ID received ($sessionId) - deferred silent Git sync")
+                    delay(ACTIVE_SESSION_GIT_SYNC_DELAY_MS)
                     try {
                         syncGitSilent()
                     } catch (e: CancellationException) {
                         throw e
                     } catch (e: Exception) {
-                        Napier.w("[RealtimeSync] Eager Git sync failed: ${e.message}")
+                        Napier.w("[RealtimeSync] Deferred Git sync failed: ${e.message}")
                     }
                 }
         }
@@ -216,6 +225,12 @@ class RealtimeSyncService(
             Napier.v("[RealtimeSync] Already syncing, skipping ($reason)")
             return
         }
+        val now = Clock.System.now().toEpochMilliseconds()
+        val lastSync = _lastSyncTime.value
+        if (lastSync != null && now - lastSync < MIN_SYNC_INTERVAL_MS) {
+            Napier.v("[RealtimeSync] Recent sync exists, skipping ($reason)")
+            return
+        }
         
         _isSyncing.value = true
         Napier.v("[RealtimeSync] Silent sync started (reason=$reason)")
@@ -225,7 +240,8 @@ class RealtimeSyncService(
             // NOTE: Sessions are handled by SSE, NOT by polling
             val repoNames = specificRepos ?: listOf(
                 // "sessions" removed - handled by SSE (SessionUpdated, MessageUpdated events)
-                "git", "mcp", "tools", "agents", "commands", "providers"
+                // "git" is synced after an active session settles because it requires a live CLI bridge.
+                "mcp", "tools", "agents", "commands", "providers"
             )
             
             // Sync each repository silently
@@ -326,6 +342,14 @@ class RealtimeSyncService(
     }
     
     private suspend fun syncGitSilent() {
+        val now = Clock.System.now().toEpochMilliseconds()
+        val lastGitSync = lastGitSyncMs
+        if (lastGitSync != null && now - lastGitSync < MIN_GIT_SYNC_INTERVAL_MS) {
+            Napier.v("[RealtimeSync] Recent Git sync exists, skipping")
+            return
+        }
+        lastGitSyncMs = now
+
         try {
             gitRepository.refresh()
             
@@ -433,5 +457,9 @@ class RealtimeSyncService(
          * Minimum interval between syncs (prevents spam).
          */
         const val MIN_SYNC_INTERVAL_MS = 5_000L
+
+        private const val MIN_GIT_SYNC_INTERVAL_MS = 10_000L
+        private const val CONNECTION_SYNC_START_DELAY_MS = 15_000L
+        private const val ACTIVE_SESSION_GIT_SYNC_DELAY_MS = 15_000L
     }
 }

@@ -11,8 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Settings
@@ -59,7 +58,6 @@ fun DashboardPanel(
     onTerminalClick: () -> Unit = {}
 ) {
     val state by screenModel.state.collectAsState()
-    val scrollState = rememberScrollState()
     val sharedTransitionScope = LocalSharedTransitionScope.current
     val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
 
@@ -74,139 +72,150 @@ fun DashboardPanel(
         Modifier
     }
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .padding(AppSpacing.lg)
-            .verticalScroll(scrollState),
+            .padding(horizontal = AppSpacing.lg, vertical = AppSpacing.lg),
+        contentPadding = PaddingValues(bottom = AppSpacing.bottomBarClearance + AppSpacing.md),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
-
-        PanelHeader(
-            title = "Dashboard",
-            modifier = headerModifier,
-            icon = {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(AppShapes.medium)
-                        .background(AppColors.surfaceContainer, AppShapes.medium)
-                        .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.GridView,
-                        contentDescription = null,
-                        tint = AppColors.onSurface,
-                        modifier = Modifier.size(24.dp)
-                    )
+        item(key = "dashboard-header", contentType = "dashboard-header") {
+            PanelHeader(
+                title = "Dashboard",
+                modifier = headerModifier,
+                icon = {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(AppShapes.medium)
+                            .background(AppColors.surfaceContainer, AppShapes.medium)
+                            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.GridView,
+                            contentDescription = null,
+                            tint = AppColors.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
-            }
-        )
-
-        Spacer(modifier = Modifier.height(AppSpacing.md))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Real-time events",
-                style = AppTypography.labelSmall,
-                color = AppColors.onSurfaceVariant,
-                fontWeight = FontWeight.Bold
             )
-            SseStatusIndicator(isConnected = state.isSseConnected)
         }
 
-        McpConfigModule(
-            servers = state.mcpServers.toMcpServerItems(),
-            onConfigClick = onMcpConfigClick,
-            onServerToggle = { name, connect ->
-                if (connect) {
-                    screenModel.connectMcpServer(name)
-                } else {
-                    screenModel.disconnectMcpServer(name)
-                }
+        item(key = "dashboard-realtime", contentType = "dashboard-status") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Real-time events",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold
+                )
+                SseStatusIndicator(isConnected = state.isSseConnected)
             }
-        )
+        }
 
-        GitStatusModule(
-            branchName = state.gitBranch,
-            changedFiles = state.changedFilesCount,
-            onExpandClick = onGitClick
-        )
-
-        WorkspaceModule(
-            currentProject = state.currentProject,
-            projects = state.projects,
-            agents = state.agents
-        )
-
-        CapabilitiesModule(
-            tools = state.tools,
-            commands = state.commands
-        )
-
-        ProcessModule(
-            processes = state.systemMonitor.processes,
-            hasActiveSession = state.systemMonitor.isAvailable,
-            isRefreshing = state.systemMonitor.isRefreshing,
-            lastUpdatedAt = state.systemMonitor.lastUpdatedAt
-        )
-
-        PortModule(
-            ports = state.systemMonitor.ports,
-            hasActiveSession = state.systemMonitor.isAvailable,
-            isRefreshing = state.systemMonitor.isRefreshing,
-            lastUpdatedAt = state.systemMonitor.lastUpdatedAt
-        )
-
-        ResourceModule(
-            resources = state.systemMonitor.resources,
-            hasActiveSession = state.systemMonitor.isAvailable,
-            isRefreshing = state.systemMonitor.isRefreshing,
-            lastUpdatedAt = state.systemMonitor.lastUpdatedAt,
-            refreshInterval = state.systemMonitor.refreshInterval,
-            onRefreshIntervalClick = screenModel::cycleSystemMonitorRefreshInterval
-        )
-
-        Spacer(modifier = Modifier.height(AppSpacing.md))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
-        ) {
-            MoccaCompactButton(
-                text = "Settings",
-                icon = Icons.Default.Settings,
-                onClick = onSettingsClick,
-                modifier = Modifier.weight(1f),
-                textColor = AppColors.onSurface,
-                backgroundColor = AppColors.surfaceContainerHigh
-            )
-            MoccaCompactButton(
-                text = "Files",
-                icon = Icons.Default.Folder,
-                onClick = onFilesClick,
-                modifier = Modifier.weight(1f),
-                textColor = AppColors.onSurface,
-                backgroundColor = AppColors.surfaceContainerHigh
-            )
-            MoccaCompactButton(
-                text = "Terminal",
-                icon = Icons.Default.Terminal,
-                onClick = onTerminalClick,
-                modifier = Modifier.weight(1f),
-                textColor = AppColors.primary,
-                backgroundColor = AppColors.surfaceContainerHigh
+        item(key = "dashboard-mcp", contentType = "dashboard-module") {
+            McpConfigModule(
+                servers = state.mcpServers.toMcpServerItems(),
+                onConfigClick = onMcpConfigClick,
+                onServerToggle = { name, connect ->
+                    if (connect) {
+                        screenModel.connectMcpServer(name)
+                    } else {
+                        screenModel.disconnectMcpServer(name)
+                    }
+                }
             )
         }
-        
-        Spacer(modifier = Modifier.weight(1f))
-        
-        Spacer(modifier = Modifier.height(AppSpacing.bottomBarClearance))
+
+        item(key = "dashboard-git", contentType = "dashboard-module") {
+            GitStatusModule(
+                branchName = state.gitBranch,
+                changedFiles = state.changedFilesCount,
+                onExpandClick = onGitClick
+            )
+        }
+
+        item(key = "dashboard-workspace", contentType = "dashboard-module") {
+            WorkspaceModule(
+                currentProject = state.currentProject,
+                projects = state.projects,
+                agents = state.agents
+            )
+        }
+
+        item(key = "dashboard-capabilities", contentType = "dashboard-module") {
+            CapabilitiesModule(
+                tools = state.tools,
+                commands = state.commands
+            )
+        }
+
+        item(key = "dashboard-process", contentType = "dashboard-module") {
+            ProcessModule(
+                processes = state.systemMonitor.processes,
+                hasActiveSession = state.systemMonitor.isAvailable,
+                isRefreshing = state.systemMonitor.isRefreshing,
+                lastUpdatedAt = state.systemMonitor.lastUpdatedAt
+            )
+        }
+
+        item(key = "dashboard-ports", contentType = "dashboard-module") {
+            PortModule(
+                ports = state.systemMonitor.ports,
+                hasActiveSession = state.systemMonitor.isAvailable,
+                isRefreshing = state.systemMonitor.isRefreshing,
+                lastUpdatedAt = state.systemMonitor.lastUpdatedAt
+            )
+        }
+
+        item(key = "dashboard-resources", contentType = "dashboard-module") {
+            ResourceModule(
+                resources = state.systemMonitor.resources,
+                hasActiveSession = state.systemMonitor.isAvailable,
+                isRefreshing = state.systemMonitor.isRefreshing,
+                lastUpdatedAt = state.systemMonitor.lastUpdatedAt,
+                refreshInterval = state.systemMonitor.refreshInterval,
+                onRefreshIntervalClick = screenModel::cycleSystemMonitorRefreshInterval
+            )
+        }
+
+        item(key = "dashboard-actions", contentType = "dashboard-actions") {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+            ) {
+                MoccaCompactButton(
+                    text = "Settings",
+                    icon = Icons.Default.Settings,
+                    onClick = onSettingsClick,
+                    modifier = Modifier.weight(1f),
+                    textColor = AppColors.onSurface,
+                    backgroundColor = AppColors.surfaceContainerHigh
+                )
+                MoccaCompactButton(
+                    text = "Files",
+                    icon = Icons.Default.Folder,
+                    onClick = onFilesClick,
+                    modifier = Modifier.weight(1f),
+                    textColor = AppColors.onSurface,
+                    backgroundColor = AppColors.surfaceContainerHigh
+                )
+                MoccaCompactButton(
+                    text = "Terminal",
+                    icon = Icons.Default.Terminal,
+                    onClick = onTerminalClick,
+                    modifier = Modifier.weight(1f),
+                    textColor = AppColors.primary,
+                    backgroundColor = AppColors.surfaceContainerHigh
+                )
+            }
+        }
     }
 }
 

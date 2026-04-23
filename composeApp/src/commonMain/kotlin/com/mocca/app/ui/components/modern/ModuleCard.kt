@@ -32,6 +32,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.LocalAppPerformance
 import com.mocca.app.ui.theme.moccaClickable
 
 import com.mocca.app.ui.theme.innerShadow
@@ -57,12 +58,19 @@ fun ModuleCard(
     actionButton: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(AppShapes.moduleCard)
             .background(AppColors.moduleBackground, AppShapes.moduleCard)
-            .innerShadow(AppShapes.moduleCard, color = AppColors.white.copy(alpha = 0.05f), blur = 2.dp)
+            .innerShadow(
+                enabled = useDecorativeShadows,
+                shape = AppShapes.moduleCard,
+                color = AppColors.white.copy(alpha = 0.05f),
+                blur = 2.dp
+            )
             // Borderless: using bgRaised for visual separation instead of border
     ) {
         // Header

@@ -47,3 +47,26 @@ fun Modifier.innerShadow(
         )
     }
 }
+
+fun Modifier.innerShadow(
+    enabled: Boolean,
+    shape: Shape,
+    color: Color = Color.Black.copy(alpha = 0.3f),
+    blur: Dp = 4.dp,
+    offsetY: Dp = 2.dp,
+    offsetX: Dp = 0.dp,
+    spread: Dp = 0.0.dp
+): Modifier {
+    return if (enabled) {
+        innerShadow(
+            shape = shape,
+            color = color,
+            blur = blur,
+            offsetY = offsetY,
+            offsetX = offsetX,
+            spread = spread
+        )
+    } else {
+        this
+    }
+}

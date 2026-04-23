@@ -20,6 +20,7 @@ import com.mocca.app.ui.navigation.PanelProgressHolder
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
+import com.mocca.app.ui.theme.LocalAppPerformance
 
 @Composable
 internal fun MainScreenPanelHost(
@@ -39,14 +40,20 @@ internal fun MainScreenPanelHost(
         PanelState.CENTER -> 0.5f
         PanelState.LEFT_OPEN -> 1f
     }
-    val animatedProgress by animateFloatAsState(
-        targetValue = targetProgress,
-        animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-        label = "mainScreenPanelProgress"
-    )
+    val performance = LocalAppPerformance.current
+    val panelProgress = if (performance.useHeavyNavigationMotion) {
+        val animatedProgress by animateFloatAsState(
+            targetValue = targetProgress,
+            animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
+            label = "mainScreenPanelProgress"
+        )
+        animatedProgress
+    } else {
+        targetProgress
+    }
 
-    LaunchedEffect(animatedProgress) {
-        progressHolder.updateProgress(animatedProgress)
+    LaunchedEffect(panelProgress) {
+        progressHolder.updateProgress(panelProgress)
     }
 
     Box(

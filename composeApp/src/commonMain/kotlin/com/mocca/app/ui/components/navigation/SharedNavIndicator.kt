@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.LocalAppPerformance
 
 /**
  * Shared sliding indicator component for bottom navigation.
@@ -31,18 +32,23 @@ fun SharedNavIndicator(
     modifier: Modifier = Modifier
 ) {
     val rawOffsetPx = (travelDistancePx / 2f) * (1.0f - 2.0f * dragProgress)
-    val animatedOffsetPx by animateFloatAsState(
-        targetValue = rawOffsetPx,
-        animationSpec = if (isSettled) {
-            spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMedium
-            )
-        } else {
-            snap()
-        },
-        label = "indicatorOffset"
-    )
+    val offsetPx = if (LocalAppPerformance.current.useHeavyNavigationMotion) {
+        val animatedOffsetPx by animateFloatAsState(
+            targetValue = rawOffsetPx,
+            animationSpec = if (isSettled) {
+                spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            } else {
+                snap()
+            },
+            label = "indicatorOffset"
+        )
+        animatedOffsetPx
+    } else {
+        rawOffsetPx
+    }
 
     Box(
         modifier = modifier
@@ -55,7 +61,7 @@ fun SharedNavIndicator(
             modifier = Modifier
                 .width(NavConstants.IndicatorWidth)
                 .height(NavConstants.IndicatorHeight)
-                .graphicsLayer { translationX = animatedOffsetPx }
+                .graphicsLayer { translationX = offsetPx }
                 .background(
                     color = AppColors.primary,
                     shape = AppShapes.pill

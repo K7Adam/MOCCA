@@ -47,6 +47,7 @@ import com.mocca.app.bridge.connection.BridgeTargetRepository
 import com.mocca.app.bridge.opencode.BridgeRuntimeBootstrapper
 import com.mocca.app.data.repository.PreferencesManager
 import com.mocca.app.data.repository.ServerConfigRepository
+import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.navigation.ModernTransitions
 import com.mocca.app.ui.screens.main.MainScreen
@@ -108,45 +109,74 @@ fun App() {
             if (!isLoaded || !bridgeTargetLoaded) {
                 SplashScreen()
             } else {
-                SharedTransitionLayout {
-                    CompositionLocalProvider(
-                        LocalSharedTransitionScope provides this
-                    ) {
-                        val config = activeConfig
-                        val startScreen = when {
-                            pendingBridgePairingPayload != null -> ProgressiveOnboardingScreen()
-                            (config != null && config.host.isNotBlank()) || activeBridgeTarget != null -> MainScreen()
-                            else -> ProgressiveOnboardingScreen()
-                        }
+                val config = activeConfig
+                val startScreen = when {
+                    pendingBridgePairingPayload != null -> ProgressiveOnboardingScreen()
+                    (config != null && config.host.isNotBlank()) || activeBridgeTarget != null -> MainScreen()
+                    else -> ProgressiveOnboardingScreen()
+                }
 
-                        Navigator(startScreen) { navigator ->
-                            LaunchedEffect(pendingBridgePairingPayload) {
-                                if (
-                                    pendingBridgePairingPayload != null &&
-                                    navigator.lastItem !is ProgressiveOnboardingScreen
-                                ) {
-                                    navigator.push(ProgressiveOnboardingScreen(isSetupMode = true))
-                                }
-                            }
-
-                            val transitionSpec = if (performance.useHeavyNavigationMotion) {
-                                ModernTransitions.expressiveFadeScale()
-                            } else {
-                                ModernTransitions.rootScreenFade()
-                            }
-                             
-                            androidx.compose.animation.AnimatedContent(
-                                targetState = navigator.lastItem,
-                                transitionSpec = { transitionSpec },
-                                label = "expressive_screen_transition"
-                            ) { screen ->
-                                navigator.saveableState("transition", screen) {
-                                    screen.Content()
-                                }
-                            }
+                if (performance.useHeavyNavigationMotion) {
+                    SharedTransitionLayout {
+                        CompositionLocalProvider(
+                            LocalSharedTransitionScope provides this
+                        ) {
+                            MoccaNavigator(
+                                startScreen = startScreen,
+                                pendingBridgePairingPayload = pendingBridgePairingPayload,
+                                animatedRootTransitions = true
+                            )
                         }
                     }
+                } else {
+                    CompositionLocalProvider(
+                        LocalSharedTransitionScope provides null,
+                        LocalNavAnimatedVisibilityScope provides null
+                    ) {
+                        MoccaNavigator(
+                            startScreen = startScreen,
+                            pendingBridgePairingPayload = pendingBridgePairingPayload,
+                            animatedRootTransitions = false
+                        )
+                    }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoccaNavigator(
+    startScreen: cafe.adriel.voyager.core.screen.Screen,
+    pendingBridgePairingPayload: String?,
+    animatedRootTransitions: Boolean
+) {
+    Navigator(startScreen) { navigator ->
+        LaunchedEffect(pendingBridgePairingPayload) {
+            if (
+                pendingBridgePairingPayload != null &&
+                navigator.lastItem !is ProgressiveOnboardingScreen
+            ) {
+                navigator.push(ProgressiveOnboardingScreen(isSetupMode = true))
+            }
+        }
+
+        if (animatedRootTransitions) {
+            val transitionSpec = ModernTransitions.expressiveFadeScale()
+
+            androidx.compose.animation.AnimatedContent(
+                targetState = navigator.lastItem,
+                transitionSpec = { transitionSpec },
+                label = "expressive_screen_transition"
+            ) { screen ->
+                navigator.saveableState("transition", screen) {
+                    screen.Content()
+                }
+            }
+        } else {
+            val screen = navigator.lastItem
+            navigator.saveableState("screen", screen) {
+                screen.Content()
             }
         }
     }

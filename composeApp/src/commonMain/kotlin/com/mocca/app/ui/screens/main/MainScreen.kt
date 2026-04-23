@@ -87,6 +87,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val aggregatedMessages by chatScreenModel.aggregatedMessages.collectAsState()
         val inputText by chatScreenModel.inputText.collectAsState()
         val shellMode by chatScreenModel.shellMode.collectAsState()
+        val voicePermissionRequestToken by chatScreenModel.voicePermissionRequestToken.collectAsState()
+        val voiceInputState by chatScreenModel.voiceInputState.collectAsState()
 
         // Reload chat session when ID changes
         androidx.compose.runtime.LaunchedEffect(state.currentSessionId) {
@@ -197,6 +199,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 chatState = chatState,
                 inputText = inputText,
                 shellMode = shellMode,
+                voicePermissionRequestToken = voicePermissionRequestToken,
+                voiceInputState = voiceInputState,
                 panelState = panelState,
                 onAttachClick = { filePickerLauncher.launch() },
                 scrollToBottomTrigger = scrollToBottomTrigger,

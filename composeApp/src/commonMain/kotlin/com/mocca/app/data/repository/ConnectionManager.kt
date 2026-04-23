@@ -67,7 +67,7 @@ class ConnectionManager(
     private val networkObserver: NetworkObserver? = null
 ) : ApiExecutor, BridgeTransportFactory, BridgeHealthChecker {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val clientMutex = Mutex()
 
     @Volatile
@@ -116,7 +116,7 @@ class ConnectionManager(
 
     override suspend fun open(target: DirectBridgeTarget): BridgeTransport {
         val client = clientMutex.withLock {
-            bridgeClient ?: createBridgeClient().also { bridgeClient = it }
+            bridgeClient ?: withContext(Dispatchers.Default) { createBridgeClient() }.also { bridgeClient = it }
         }
         val session = client.webSocketSession {
             url(target.websocketUrl)
@@ -126,7 +126,7 @@ class ConnectionManager(
 
     override suspend fun check(target: DirectBridgeTarget): BridgeHealth {
         val client = clientMutex.withLock {
-            bridgeClient ?: createBridgeClient().also { bridgeClient = it }
+            bridgeClient ?: withContext(Dispatchers.Default) { createBridgeClient() }.also { bridgeClient = it }
         }
         return client.get(target.healthUrl).body()
     }
@@ -145,11 +145,10 @@ class ConnectionManager(
     fun connect(config: ServerConfig) {
         // Guard against redundant connection attempts to the same server
         val current = _activeConfig.value
-        if (isConnecting && current?.id == config.id &&
-            current.host == config.host && current.port == config.port &&
-            current.username == config.username && current.password == config.password
-        ) {
-            Napier.d("[ConnectionManager] Already connecting to ${config.baseUrl}, skipping duplicate connect()")
+        val sameConfig = current.isSameEndpointAs(config)
+        val currentStatus = _status.value
+        if (sameConfig && (isConnecting || currentStatus.isConnected || currentStatus.isConnecting)) {
+            Napier.d("[ConnectionManager] Already using ${config.baseUrl}, skipping duplicate connect()")
             return
         }
         isConnecting = true
@@ -537,4 +536,14 @@ class ConnectionManager(
          */
         private const val PERIODIC_CHECK_INTERVAL_MS = 30 * 1000L // 30 seconds
     }
+}
+
+private fun ServerConfig?.isSameEndpointAs(other: ServerConfig): Boolean {
+    return this != null &&
+        id == other.id &&
+        host == other.host &&
+        port == other.port &&
+        username == other.username &&
+        password == other.password &&
+        useHttps == other.useHttps
 }

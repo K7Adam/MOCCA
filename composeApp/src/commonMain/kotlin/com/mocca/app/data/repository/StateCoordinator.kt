@@ -53,6 +53,11 @@ class StateCoordinator(
 ) {
     private val coordinatorScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
+    private companion object {
+        const val MESSAGE_UPDATE_FETCH_LIMIT = 20
+        const val MIN_FULL_SYNC_INTERVAL_MS = 5_000L
+    }
+
     // ACTIVE SESSION TRACKING - Single source of truth
 
     
@@ -197,6 +202,7 @@ class StateCoordinator(
     private var eventObserverJob: Job? = null
     private var connectionObserverJob: Job? = null
     private var lifecycleObserverJob: Job? = null
+    private var lastFullSyncStartedMs: Long? = null
 
     // INITIALIZATION
 
@@ -524,7 +530,7 @@ class StateCoordinator(
                         localCache.updateSessionStatus(messageInfo.sessionID, "running")
                         val existingMessage = localCache.getMessage(messageInfo.id)
                         if (existingMessage == null) {
-                            moccaApiClient.getMessages(messageInfo.sessionID).onSuccess { responses ->
+                            moccaApiClient.getMessages(messageInfo.sessionID, MESSAGE_UPDATE_FETCH_LIMIT).onSuccess { responses ->
                                 val messages = responses.map { Message.fromResponse(it) }
                                 localCache.insertMessages(messages)
                             }
@@ -672,6 +678,13 @@ class StateCoordinator(
                     Napier.v("[StateCoordinator] Already syncing, skipping")
                     return@launch
                 }
+                val now = Clock.System.now().toEpochMilliseconds()
+                val lastStarted = lastFullSyncStartedMs
+                if (lastStarted != null && now - lastStarted < MIN_FULL_SYNC_INTERVAL_MS) {
+                    Napier.v("[StateCoordinator] Full sync skipped - recent sync already started")
+                    return@launch
+                }
+                lastFullSyncStartedMs = now
                 
                 _isSyncing.value = true
                 Napier.i("[StateCoordinator] Starting full sync...")

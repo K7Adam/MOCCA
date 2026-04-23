@@ -1,9 +1,9 @@
 package com.mocca.app.ui.screens.main
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Computer
@@ -12,8 +12,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +21,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
+import com.mocca.app.domain.model.VoiceInputState
 import com.mocca.app.ui.components.navigation.BottomNavItem
 import com.mocca.app.ui.navigation.PanelStateHolder
 import com.mocca.app.ui.navigation.PanelState
@@ -56,6 +57,8 @@ internal data class MainScreenPanelScope(
     val chatState: com.mocca.app.ui.screens.chat.ChatState,
     val inputText: String,
     val shellMode: Boolean,
+    val voicePermissionRequestToken: Int,
+    val voiceInputState: VoiceInputState,
     val panelState: PanelStateHolder,
     val onAttachClick: () -> Unit,
     val scrollToBottomTrigger: Long,
@@ -77,7 +80,6 @@ internal object MainScreenPanelRegistry {
     const val CHAT_PANEL_ID = "chat"
     const val DASHBOARD_PANEL_ID = "dashboard"
 
-    @Composable
     fun getAll(scope: MainScreenPanelScope): List<MainPanelDefinition> {
         return listOf(
             MainPanelDefinition(
@@ -185,7 +187,24 @@ internal object MainScreenPanelRegistry {
 
 @Composable
 internal fun rememberMainScreenPanels(scope: MainScreenPanelScope): List<MainPanelDefinition> {
-    return MainScreenPanelRegistry.getAll(scope)
+    return remember(
+        scope.navigator,
+        scope.screenModel,
+        scope.chatScreenModel,
+        scope.dashboardScreenModel,
+        scope.state,
+        scope.chatState,
+        scope.inputText,
+        scope.shellMode,
+        scope.voicePermissionRequestToken,
+        scope.voiceInputState,
+        scope.scrollToBottomTrigger,
+        scope.showScrollToBottom,
+        scope.hasNewMessagesWhileScrolledUp,
+        scope.targetMessageId
+    ) {
+        MainScreenPanelRegistry.getAll(scope)
+    }
 }
 
 @Composable
@@ -273,7 +292,7 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                 color = Color.Transparent
             ) {
                 com.mocca.app.ui.components.navigation.ChatInputContent(
-                    voicePermissionRequestToken = scope.chatScreenModel.voicePermissionRequestToken.collectAsState().value,
+                    voicePermissionRequestToken = scope.voicePermissionRequestToken,
                     onVoicePermissionResult = { scope.chatScreenModel.onVoicePermissionResult(it) },
                     inputText = scope.inputText,
                     onInputTextChange = { scope.chatScreenModel.updateInputText(it) },
@@ -283,8 +302,8 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     inputEnabled = scope.chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && scope.chatState.isSessionIdle,
                     placeholder = "Type a message...",
                     isSessionIdle = scope.chatState.isSessionIdle,
-                    isVoiceListening = scope.chatScreenModel.voiceInputState.collectAsState().value is com.mocca.app.domain.model.VoiceInputState.Listening,
-                    isVoiceAvailable = scope.chatScreenModel.voiceInputState.collectAsState().value !is com.mocca.app.domain.model.VoiceInputState.NotAvailable,
+                    isVoiceListening = scope.voiceInputState is VoiceInputState.Listening,
+                    isVoiceAvailable = scope.voiceInputState !is VoiceInputState.NotAvailable,
                     onAbortClick = { scope.chatScreenModel.abortSession() },
                     modelName = scope.chatState.modelName,
                     agentName = scope.chatState.agentName,
@@ -355,15 +374,18 @@ private fun MainSessionTabs(
 ) {
     if (sessions.isEmpty()) return
 
-    Row(
+    LazyRow(
         modifier = Modifier
             .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
             .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs),
         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        sessions.forEach { session ->
+        items(
+            items = sessions,
+            key = { session -> session.id },
+            contentType = { "session-tab" }
+        ) { session ->
             val selected = session.id == selectedSessionId
             Surface(
                 shape = AppShapes.pill,

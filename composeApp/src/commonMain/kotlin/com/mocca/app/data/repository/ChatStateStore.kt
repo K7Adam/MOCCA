@@ -6,6 +6,8 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 
 /**
@@ -28,6 +30,12 @@ class ChatStateStore(
     private val sessionRepository: SessionRepository
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    private companion object {
+        const val INITIAL_MESSAGE_FETCH_LIMIT = 80
+        const val CHILD_MESSAGE_FETCH_LIMIT = 50
+        const val RELOAD_COOLDOWN_MS = 2_500L
+    }
 
     // SESSION STATE
 
@@ -144,6 +152,8 @@ class ChatStateStore(
     // Conflated channel: rapid reloadMessages() calls collapse to one pending reload.
     // CONFLATED means only the latest value survives — no queue buildup, no concurrent fetches.
     private val reloadChannel = Channel<String>(Channel.CONFLATED)
+    private val reloadMutex = Mutex()
+    private val lastReloadMs = mutableMapOf<String, Long>()
 
     // INITIALIZATION
 
@@ -251,10 +261,8 @@ class ChatStateStore(
                 Napier.v("[ChatStateStore] Active session changed to: ${event.sessionId}")
             }
             is BroadcastEvent.SyncCompleted -> {
-                // Reload messages on sync complete if we have a session
-                _currentSessionId.value?.let { sessionId ->
-                    reloadMessages(sessionId)
-                }
+                // Full app sync refreshes session metadata. Chat history is loaded by loadSession
+                // and SSE/idle events; reloading here caused duplicate startup fetches.
             }
             else -> {}
         }
@@ -364,26 +372,26 @@ class ChatStateStore(
         storeScope.launch {
             for (sessionId in reloadChannel) {
                 try {
+                    if (_currentSessionId.value != sessionId || !shouldRunReload(sessionId)) {
+                        continue
+                    }
                     Napier.i("[ChatStateStore] Fetching messages for session: $sessionId")
-                    sessionRepository.getMessages(sessionId, 100).collect { resource ->
-                        when (resource) {
-                            is Resource.Success -> {
-                                Napier.i("[ChatStateStore] Fetched \${resource.data.size} messages for session: $sessionId")
-                                // DB observer will update _messages
+                    val result = sessionRepository.refreshMessages(sessionId, INITIAL_MESSAGE_FETCH_LIMIT)
+                    result.fold(
+                        onSuccess = { messages ->
+                            Napier.i("[ChatStateStore] Fetched ${messages.size} messages for session: $sessionId")
+                            if (_messages.value.isEmpty()) {
+                                _isLoading.value = false
                             }
-                            is Resource.Error -> {
-                                Napier.e("[ChatStateStore] Failed to fetch messages: \${resource.message}")
-                                // Only set error if we have no cached data
-                                if (_messages.value.isEmpty()) {
-                                    _error.value = resource.message
-                                    _isLoading.value = false
-                                }
-                            }
-                            is Resource.Loading -> {
-                                // Loading state handled by DB observer
+                        },
+                        onFailure = { error ->
+                            Napier.e("[ChatStateStore] Failed to fetch messages: ${error.message}")
+                            if (_messages.value.isEmpty()) {
+                                _error.value = error.message ?: "Failed to fetch messages"
+                                _isLoading.value = false
                             }
                         }
-                    }
+                    )
                 } catch (e: OutOfMemoryError) {
                     Napier.e("[ChatStateStore] OOM while fetching messages for $sessionId — skipping", e)
                     // Don't set error state — cached messages are still shown
@@ -427,10 +435,25 @@ class ChatStateStore(
     
     private fun loadChildMessages(childSessionId: String) {
         storeScope.launch {
-            sessionRepository.getMessages(childSessionId, 50).collect { resource ->
-                if (resource is Resource.Success) {
-                    _childMessages.value = _childMessages.value + (childSessionId to resource.data)
+            try {
+                val cached = withContext(Dispatchers.IO) {
+                    localCache.getMessagesPaged(childSessionId, null, CHILD_MESSAGE_FETCH_LIMIT.toLong()).asReversed()
                 }
+                if (cached.isNotEmpty()) {
+                    _childMessages.value = _childMessages.value + (childSessionId to cached)
+                }
+
+                sessionRepository.refreshMessages(childSessionId, CHILD_MESSAGE_FETCH_LIMIT)
+                    .onSuccess { messages ->
+                        _childMessages.value = _childMessages.value + (childSessionId to messages)
+                    }
+                    .onFailure { error ->
+                        Napier.w("[ChatStateStore] Failed to load child messages: ${error.message}")
+                    }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Napier.w("[ChatStateStore] Failed to load child messages", e)
             }
         }
     }
@@ -508,6 +531,19 @@ class ChatStateStore(
         return sessionRepository.abortSession(sessionId).also { result ->
             if (result.isSuccess) {
                 _isSending.value = false
+            }
+        }
+    }
+
+    private suspend fun shouldRunReload(sessionId: String): Boolean {
+        val now = Clock.System.now().toEpochMilliseconds()
+        return reloadMutex.withLock {
+            val lastRun = lastReloadMs[sessionId]
+            if (lastRun != null && now - lastRun < RELOAD_COOLDOWN_MS) {
+                false
+            } else {
+                lastReloadMs[sessionId] = now
+                true
             }
         }
     }

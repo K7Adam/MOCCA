@@ -72,6 +72,7 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.LocalAppPerformance
 import com.mocca.app.ui.theme.innerShadow
 /**
  * Modern MOCCA input components with pill-shaped design.
@@ -106,6 +107,7 @@ fun MoccaInput(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
     
     val animatedBorderColor by animateColorAsState(
         targetValue = if (isFocused) AppColors.primary else borderColor,
@@ -132,7 +134,12 @@ fun MoccaInput(
                 .height(AppSpacing.inputHeight)
                 .clip(shape)
                 .background(backgroundColor, shape)
-                .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.5f), blur = 8.dp)
+                .innerShadow(
+                    enabled = useDecorativeShadows,
+                    shape = shape,
+                    color = Color.Black.copy(alpha = 0.5f),
+                    blur = 8.dp
+                )
                 .border(animatedBorderWidth, animatedBorderColor, shape)
                 .padding(horizontal = AppSpacing.inputPaddingHorizontal)
         ) {
@@ -219,12 +226,19 @@ fun CommandLineInput(
     onHistoryUp: (() -> Unit)? = null,
     onHistoryDown: (() -> Unit)? = null
 ) {
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
+
     Row(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(AppColors.surfaceContainer, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.5f), blur = 8.dp)
+            .innerShadow(
+                enabled = useDecorativeShadows,
+                shape = shape,
+                color = Color.Black.copy(alpha = 0.5f),
+                blur = 8.dp
+            )
             .border(AppSpacing.borderThin, AppColors.outline, shape)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically

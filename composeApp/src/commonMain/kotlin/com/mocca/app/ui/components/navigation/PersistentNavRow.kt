@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
@@ -55,6 +56,7 @@ import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.theme.LocalAppPerformance
 import com.mocca.app.ui.theme.moccaClickable
 import kotlin.math.abs
 
@@ -167,23 +169,41 @@ private fun PersistentNavItem(
     showLabel: Boolean,
     isAgentRunning: Boolean = false
 ) {
-    val transition = updateTransition(isSelected, label = "navItem")
-    val iconColor by transition.animateColor(
-        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
-        label = "iconColor"
-    ) { selected -> if (selected) AppColors.onBackground else AppColors.fgMuted }
-    val textColor by transition.animateColor(
-        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
-        label = "textColor"
-    ) { selected -> if (selected) AppColors.onBackground else AppColors.fgSubtle }
-    val bgColor by transition.animateColor(
-        transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
-        label = "bgColor"
-    ) { selected -> if (selected) AppColors.bgRaised else androidx.compose.ui.graphics.Color.Transparent }
-    val scale by transition.animateFloat(
-        transitionSpec = { MaterialTheme.motionScheme.fastSpatialSpec() },
-        label = "scale"
-    ) { selected -> 1.0f + (if (selected) proximity else 0f) * 0.05f }
+    val useAnimatedSelection = LocalAppPerformance.current.useHeavyNavigationMotion
+    val iconColor: Color
+    val textColor: Color
+    val bgColor: Color
+    val scale: Float
+
+    if (useAnimatedSelection) {
+        val transition = updateTransition(isSelected, label = "navItem")
+        val animatedIconColor by transition.animateColor(
+            transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
+            label = "iconColor"
+        ) { selected -> if (selected) AppColors.onBackground else AppColors.fgMuted }
+        val animatedTextColor by transition.animateColor(
+            transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
+            label = "textColor"
+        ) { selected -> if (selected) AppColors.onBackground else AppColors.fgSubtle }
+        val animatedBgColor by transition.animateColor(
+            transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
+            label = "bgColor"
+        ) { selected -> if (selected) AppColors.bgRaised else Color.Transparent }
+        val animatedScale by transition.animateFloat(
+            transitionSpec = { MaterialTheme.motionScheme.fastSpatialSpec() },
+            label = "scale"
+        ) { selected -> 1.0f + (if (selected) proximity else 0f) * 0.05f }
+
+        iconColor = animatedIconColor
+        textColor = animatedTextColor
+        bgColor = animatedBgColor
+        scale = animatedScale
+    } else {
+        iconColor = if (isSelected) AppColors.onBackground else AppColors.fgMuted
+        textColor = if (isSelected) AppColors.onBackground else AppColors.fgSubtle
+        bgColor = if (isSelected) AppColors.bgRaised else Color.Transparent
+        scale = 1f
+    }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

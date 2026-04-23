@@ -32,6 +32,11 @@ class SessionRepository(
     private var defaultModelId: String = "" // Loaded dynamically from loadDefaultConfig()
     private var defaultProviderId: String = "anthropic"
     private var defaultMode: String = "build"
+
+    private companion object {
+        const val DEFAULT_MESSAGE_FETCH_LIMIT = 80
+        const val MAX_MESSAGE_FETCH_LIMIT = 200
+    }
     
     /**
      * Get all sessions with offline-first strategy.
@@ -216,6 +221,8 @@ class SessionRepository(
      */
     fun getMessages(sessionId: String, limit: Long = 50, fetchLimit: Int? = null): Flow<Resource<List<Message>>> = channelFlow {
         send(Resource.Loading())
+        val boundedFetchLimit = (fetchLimit ?: limit.coerceIn(1, MAX_MESSAGE_FETCH_LIMIT.toLong()).toInt())
+            .coerceIn(1, MAX_MESSAGE_FETCH_LIMIT)
 
         // 1. Memory cache
         cacheMutex.withLock { memoryCache[sessionId] }?.let {
@@ -240,7 +247,7 @@ class SessionRepository(
 
         // 3. Network Refresh - fetch latest from server
         launch {
-            val result = apiClient.getMessages(sessionId, fetchLimit)
+            val result = apiClient.getMessages(sessionId, boundedFetchLimit)
             result.fold(
                 onSuccess = { responses ->
                     val messages = responses.map { Message.fromResponse(it) }
@@ -260,11 +267,30 @@ class SessionRepository(
     }.flowOn(Dispatchers.IO)
 
     /**
+     * One-shot refresh used by screen stores that already own a DB observer.
+     * This avoids adding a second permanent observer and keeps startup history bounded.
+     */
+    suspend fun refreshMessages(
+        sessionId: String,
+        fetchLimit: Int = DEFAULT_MESSAGE_FETCH_LIMIT
+    ): Result<List<Message>> = withContext(Dispatchers.IO) {
+        val boundedFetchLimit = fetchLimit.coerceIn(1, MAX_MESSAGE_FETCH_LIMIT)
+        apiClient.getMessages(sessionId, boundedFetchLimit).map { responses ->
+            val messages = responses.map { Message.fromResponse(it) }
+            if (messages.isNotEmpty()) {
+                localCache.insertMessages(messages)
+            }
+            messages
+        }
+    }
+
+    /**
      * Fast-sync: Fetches only the most recent N messages and updates the local cache.
      * Use this when a session goes idle to avoid full history refetch.
      */
     suspend fun syncLatestMessages(sessionId: String, keepLimit: Int = 5): Result<Unit> = withContext(Dispatchers.IO) {
-        val result = apiClient.getMessages(sessionId, keepLimit)
+        val boundedKeepLimit = keepLimit.coerceIn(1, MAX_MESSAGE_FETCH_LIMIT)
+        val result = apiClient.getMessages(sessionId, boundedKeepLimit)
         result.fold(
             onSuccess = { responses ->
                 val messages = responses.map { Message.fromResponse(it) }
@@ -711,21 +737,22 @@ class SessionRepository(
      * Get todos for a session, observing local cache and refreshing from network.
      */
     fun getSessionTodos(sessionId: String): Flow<Resource<List<Todo>>> = flow {
-        // Observe local cache
-        emitAll(localCache.observeSessionTodos(sessionId).map { localTodos ->
-            
-            // Trigger background refresh if we haven't already just fetched them
-            // In a real app we might debounce this or check a 'lastFetchedAt' timestamp
-            repositoryScope.launch {
-                apiClient.getSessionTodos(sessionId).onSuccess { remoteTodos ->
+        emit(Resource.Loading())
+
+        repositoryScope.launch {
+            apiClient.getSessionTodos(sessionId)
+                .onSuccess { remoteTodos ->
                     localCache.insertSessionTodos(sessionId, remoteTodos)
-                }.onFailure { e ->
+                }
+                .onFailure { e ->
                     Napier.w("Background todo sync failed for session $sessionId", e)
                 }
-            }
-            
-            Resource.Success(localTodos)
-        })
+        }
+
+        emitAll(
+            localCache.observeSessionTodos(sessionId)
+                .map { localTodos -> Resource.Success(localTodos) }
+        )
     }.flowOn(Dispatchers.IO)
 
     // SESSION SHARING (Priority 2.2)

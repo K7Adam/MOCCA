@@ -46,11 +46,17 @@ fun MoccaCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.25f), blur = 12.dp)
+            .innerShadow(
+                enabled = useDecorativeShadows,
+                shape = shape,
+                color = Color.Black.copy(alpha = 0.25f),
+                blur = 12.dp
+            )
             .border(borderWidth, borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
@@ -79,11 +85,17 @@ fun MoccaCardElevated(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
     Column(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.4f), blur = 16.dp)
+            .innerShadow(
+                enabled = useDecorativeShadows,
+                shape = shape,
+                color = Color.Black.copy(alpha = 0.4f),
+                blur = 16.dp
+            )
             .border(borderWidth, borderColor, shape)
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f, rippleColor = AppColors.primary.copy(alpha = 0.15f), interactionSource = interactionSource)
@@ -104,11 +116,17 @@ fun StatusMonitorCard(
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
+    val useDecorativeShadows = LocalAppPerformance.current.useHeavyNavigationMotion
     Box(
         modifier = modifier
             .clip(shape)
             .background(backgroundColor, shape)
-            .innerShadow(shape = shape, color = Color.Black.copy(alpha = 0.15f), blur = 20.dp)
+            .innerShadow(
+                enabled = useDecorativeShadows,
+                shape = shape,
+                color = Color.Black.copy(alpha = 0.15f),
+                blur = 20.dp
+            )
             .focusBorder(interactionSource, shape)
             .moccaClickable(onClick = onClick, pressedScale = 0.98f, interactionSource = interactionSource)
     ) {

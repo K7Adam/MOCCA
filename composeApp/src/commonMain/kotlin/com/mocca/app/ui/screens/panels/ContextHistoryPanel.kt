@@ -1,8 +1,5 @@
 package com.mocca.app.ui.screens.panels
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.draw.scale
@@ -312,10 +309,6 @@ private fun ConversationHistorySection(
                                 group = group,
                                 isActive = isActive,
                                 isRunning = isRunning,
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                                    placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                                ),
                                 onSessionClick = onSessionClick,
                                 onExpandToggle = { onGroupExpandToggle(group.parent.id) }
                             )
@@ -351,10 +344,6 @@ private fun ConversationHistorySection(
                             val isRunning = runningSessionIds.contains(session.id)
 
                             MoccaSessionCard(
-                                modifier = Modifier.animateItem(
-                                    fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                                    placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                                ),
                                 isActive = isActive,
                                 onClick = { onSessionClick(session) }
                             ) {
@@ -439,12 +428,6 @@ private fun NewSessionButton(
     onClick: () -> Unit,
     isLoading: Boolean = false
 ) {
-    val borderColor by animateColorAsState(
-        targetValue = if (isLoading) AppColors.statusWaiting else AppColors.outline.copy(alpha = 0.3f),
-        animationSpec = MaterialTheme.motionScheme.fastEffectsSpec(),
-        label = "borderColor"
-    )
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
