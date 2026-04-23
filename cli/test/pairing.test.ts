@@ -19,4 +19,13 @@ describe("MOCCA CLI pairing payload", () => {
       useTls: true,
     })).toBe("mocca://bridge/connect?v=1&host=mocca+pc.local&port=443&pairingCode=a+b%2Bc%2F%3F&tls=1");
   });
+
+  it("marks Tailscale pairing links with an explicit network hint", () => {
+    expect(createPairingUrl({
+      host: "100.86.20.31",
+      port: 17653,
+      pairingCode: "123456",
+      network: "tailscale",
+    })).toBe("mocca://bridge/connect?v=1&host=100.86.20.31&port=17653&pairingCode=123456&tls=0&network=tailscale");
+  });
 });

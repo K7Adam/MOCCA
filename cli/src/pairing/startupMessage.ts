@@ -4,6 +4,7 @@ export type StartupMessageOptions = {
   healthUrl: string;
   websocketUrl: string;
   qrCode: string;
+  networkMode?: "lan" | "tailscale";
 };
 
 export function formatStartupMessage(options: StartupMessageOptions): string {
@@ -12,6 +13,7 @@ export function formatStartupMessage(options: StartupMessageOptions): string {
     "",
     options.qrCode.trimEnd(),
     "",
+    ...(options.networkMode != null ? [`Network: ${formatNetworkMode(options.networkMode)}`] : []),
     `Pairing code: ${options.pairingCode}`,
     `Pairing URL: ${options.pairingUrl}`,
     `Health: ${options.healthUrl}`,
@@ -19,4 +21,8 @@ export function formatStartupMessage(options: StartupMessageOptions): string {
     "OpenCode runtime starts automatically after pairing.",
     "Press Ctrl+C to stop.",
   ].join("\n");
+}
+
+function formatNetworkMode(networkMode: "lan" | "tailscale"): string {
+  return networkMode === "tailscale" ? "Tailscale" : "LAN";
 }

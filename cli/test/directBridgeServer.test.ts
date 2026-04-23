@@ -78,6 +78,24 @@ describe("direct CLI bridge server", () => {
     );
   });
 
+  it("marks Tailscale pairing URLs when the server runs in Tailscale mode", async () => {
+    server = await startDirectBridgeServer({
+      projectDir: TEST_PROJECT_DIR,
+      host: "127.0.0.1",
+      advertiseHost: "100.86.20.31",
+      networkMode: "tailscale",
+      port: 0,
+      pairingCode: "123456",
+      configSnapshotProvider: async () => ({}),
+    });
+
+    const healthUrl = new URL(server.urls.healthUrl);
+
+    expect(server.urls.pairingUrl).toBe(
+      `mocca://bridge/connect?v=1&host=100.86.20.31&port=${healthUrl.port}&pairingCode=123456&tls=0&network=tailscale`,
+    );
+  });
+
   it("rejects a client with the wrong pairing code", async () => {
     server = await startDirectBridgeServer({
       projectDir: TEST_PROJECT_DIR,

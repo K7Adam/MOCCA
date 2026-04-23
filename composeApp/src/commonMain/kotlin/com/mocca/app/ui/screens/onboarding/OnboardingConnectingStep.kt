@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.Text
@@ -25,14 +26,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.background
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 import com.mocca.app.ui.components.modern.MoccaButton
 import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
@@ -45,6 +49,7 @@ internal fun OnboardingConnectingStep(
     connectionStage: ConnectionStage,
     connectionMode: OnboardingConnectionMode,
     connectionProgress: String,
+    bridgePairingNetwork: DirectBridgeNetwork?,
     bridgeValidationSummary: BridgeValidationSummary?,
     error: String?,
     isSuccess: Boolean,
@@ -91,7 +96,15 @@ internal fun OnboardingConnectingStep(
                 textAlign = TextAlign.Center
             )
 
+            if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE &&
+                bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE
+            ) {
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                TailscaleConnectionBadge()
+            }
+
             Spacer(modifier = Modifier.height(AppSpacing.sm))
+
 
             Text(
                 text = bridgeValidationSummary?.let { summary ->
@@ -179,6 +192,13 @@ internal fun OnboardingConnectingStep(
                 )
             }
 
+            if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE &&
+                bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE
+            ) {
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                TailscaleConnectionBadge()
+            }
+
             Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
             // Staged progress items
@@ -244,6 +264,30 @@ internal fun OnboardingConnectingStep(
         }
 
         Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun TailscaleConnectionBadge() {
+    Row(
+        modifier = Modifier
+            .background(AppColors.accent.copy(alpha = 0.12f), AppShapes.pill)
+            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Lock,
+            contentDescription = null,
+            tint = AppColors.accent,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = "Tailscale",
+            style = AppTypography.labelMedium,
+            color = AppColors.accent,
+            fontWeight = FontWeight.SemiBold
+        )
     }
 }
 

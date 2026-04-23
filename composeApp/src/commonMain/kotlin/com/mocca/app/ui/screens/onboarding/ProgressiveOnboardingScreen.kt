@@ -190,6 +190,7 @@ class ProgressiveOnboardingScreen(
                             )
                         },
                         bridgePairingPayload = state.bridgePairingPayload,
+                        bridgePairingNetwork = state.bridgePairingNetwork,
                         onBridgePairingPayloadChange = { payload ->
                             screenModel.onAction(OnboardingAction.BridgePairingPayloadChanged(payload))
                         },
@@ -216,6 +217,7 @@ class ProgressiveOnboardingScreen(
                         connectionStage = state.connectionStage,
                         connectionMode = state.connectionMode,
                         connectionProgress = state.connectionProgress,
+                        bridgePairingNetwork = state.bridgePairingNetwork,
                         bridgeValidationSummary = state.bridgeValidationSummary,
                         error = state.error,
                         isSuccess = state.isSuccess,

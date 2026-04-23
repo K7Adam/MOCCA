@@ -3,6 +3,7 @@ export type PairingUrlOptions = {
   port: number;
   pairingCode: string;
   useTls?: boolean;
+  network?: "lan" | "tailscale";
 };
 
 export function createPairingUrl(options: PairingUrlOptions): string {
@@ -18,6 +19,9 @@ export function createPairingUrl(options: PairingUrlOptions): string {
   params.set("port", String(options.port));
   params.set("pairingCode", options.pairingCode);
   params.set("tls", options.useTls === true ? "1" : "0");
+  if (options.network != null) {
+    params.set("network", options.network);
+  }
   return `mocca://bridge/connect?${params.toString()}`;
 }
 

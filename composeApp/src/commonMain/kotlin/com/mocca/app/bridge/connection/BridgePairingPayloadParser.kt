@@ -1,5 +1,6 @@
 package com.mocca.app.bridge.connection
 
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 import com.mocca.app.bridge.client.DirectBridgeTarget
 
 class BridgePairingPayloadException(
@@ -25,7 +26,8 @@ object BridgePairingPayloadParser {
             host = params.required("host"),
             port = params.requiredPort("port"),
             pairingCode = params.required("pairingCode"),
-            useTls = params["tls"] == "1" || params["tls"].equals("true", ignoreCase = true)
+            useTls = params["tls"] == "1" || params["tls"].equals("true", ignoreCase = true),
+            network = params["network"]?.toBridgeNetwork()
         )
     }
 
@@ -106,5 +108,13 @@ object BridgePairingPayloadParser {
             }
         }
         return bytes.toByteArray().decodeToString()
+    }
+
+    private fun String.toBridgeNetwork(): DirectBridgeNetwork {
+        return when (lowercase()) {
+            "lan" -> DirectBridgeNetwork.LAN
+            "tailscale", "tailnet" -> DirectBridgeNetwork.TAILSCALE
+            else -> throw BridgePairingPayloadException("Pairing payload has invalid network")
+        }
     }
 }

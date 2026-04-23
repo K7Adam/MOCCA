@@ -1,6 +1,7 @@
 package com.mocca.app.ui.screens.onboarding
 
 import com.mocca.app.api.NetworkConfig
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
@@ -60,6 +61,7 @@ data class OnboardingWizardState(
 
     // MOCCA CLI direct bridge pairing
     val bridgePairingPayload: String = "",
+    val bridgePairingNetwork: DirectBridgeNetwork? = null,
     val bridgeValidationSummary: BridgeValidationSummary? = null
 ) {
     val canProceed: Boolean

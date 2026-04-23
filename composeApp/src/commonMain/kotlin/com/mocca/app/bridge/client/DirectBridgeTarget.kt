@@ -6,11 +6,18 @@ const val DIRECT_BRIDGE_WEBSOCKET_PATH = "/v1/ws"
 const val DIRECT_BRIDGE_HEALTH_PATH = "/v1/health"
 
 @Serializable
+enum class DirectBridgeNetwork {
+    LAN,
+    TAILSCALE
+}
+
+@Serializable
 data class DirectBridgeTarget(
     val host: String,
     val port: Int,
     val pairingCode: String,
-    val useTls: Boolean = false
+    val useTls: Boolean = false,
+    val network: DirectBridgeNetwork? = null
 ) {
     init {
         require(host.isNotBlank()) { "Bridge host must not be blank" }

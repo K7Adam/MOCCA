@@ -19,4 +19,17 @@ describe("CLI startup message", () => {
     expect(message).toContain("WebSocket: ws://192.168.0.10:17653/v1/ws?pairingCode=123456");
     expect(message).toContain("OpenCode runtime starts automatically after pairing.");
   });
+
+  it("includes network mode when the CLI was started for a specific network", () => {
+    const message = formatStartupMessage({
+      pairingCode: "123456",
+      pairingUrl: "mocca://bridge/connect?v=1&host=100.86.20.31&port=17653&pairingCode=123456&tls=0&network=tailscale",
+      healthUrl: "http://100.86.20.31:17653/v1/health",
+      websocketUrl: "ws://100.86.20.31:17653/v1/ws?pairingCode=123456",
+      qrCode: "QR-CODE",
+      networkMode: "tailscale",
+    });
+
+    expect(message).toContain("Network: Tailscale");
+  });
 });

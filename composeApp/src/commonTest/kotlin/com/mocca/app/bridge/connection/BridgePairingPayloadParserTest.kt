@@ -1,5 +1,6 @@
 package com.mocca.app.bridge.connection
 
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -15,6 +16,16 @@ class BridgePairingPayloadParserTest {
         assertEquals(17653, target.port)
         assertEquals("123456", target.pairingCode)
         assertEquals(false, target.useTls)
+    }
+
+    @Test
+    fun parsesExplicitTailscaleNetworkHint() {
+        val target = BridgePairingPayloadParser.parse(
+            "mocca://bridge/connect?v=1&host=100.86.20.31&port=17653&pairingCode=123456&tls=0&network=tailscale"
+        )
+
+        assertEquals("100.86.20.31", target.host)
+        assertEquals(DirectBridgeNetwork.TAILSCALE, target.network)
     }
 
     @Test
@@ -48,6 +59,9 @@ class BridgePairingPayloadParserTest {
         }
         assertFailsWith<BridgePairingPayloadException> {
             BridgePairingPayloadParser.parse("mocca://bridge/connect?v=1&host=192.168.0.42&port=99999&pairingCode=123456")
+        }
+        assertFailsWith<BridgePairingPayloadException> {
+            BridgePairingPayloadParser.parse("mocca://bridge/connect?v=1&host=192.168.0.42&port=17653&pairingCode=123456&network=vpn")
         }
         assertFailsWith<BridgePairingPayloadException> {
             BridgePairingPayloadParser.parse("https://mocca.local/not-a-bridge-url")

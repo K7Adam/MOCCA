@@ -11,6 +11,7 @@ const HEALTH_PATH = "/v1/health";
 export type DirectBridgeServerOptions = BridgeRouterOptions & {
   host: string;
   advertiseHost?: string;
+  networkMode?: "lan" | "tailscale";
   port: number;
   pairingCode: string;
   fallbackToRandomPort?: boolean;
@@ -108,6 +109,7 @@ export async function startDirectBridgeServer(options: DirectBridgeServerOptions
     port: address.port,
     pairingCode: options.pairingCode,
     useTls: false,
+    network: options.networkMode,
   });
 
   return {

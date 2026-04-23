@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { selectAdvertiseHost } from "../src/pairing/networkHost";
+import { selectAdvertiseHost, selectTailscaleAdvertiseHost } from "../src/pairing/networkHost";
 
 describe("bridge advertise host selection", () => {
   it("keeps explicit non-wildcard bind hosts", () => {
@@ -34,5 +34,32 @@ describe("bridge advertise host selection", () => {
     expect(selectAdvertiseHost("::", {
       lo: [{ address: "::1", family: "IPv6", internal: true }],
     })).toBe("127.0.0.1");
+  });
+
+  it("selects a Tailscale IPv4 address when Tailscale mode is requested", () => {
+    expect(selectTailscaleAdvertiseHost({
+      WLAN: [{ address: "192.168.0.39", family: "IPv4", internal: false }],
+      Tailscale: [{ address: "100.86.20.31", family: "IPv4", internal: false }],
+    })).toBe("100.86.20.31");
+  });
+
+  it("prefers a named Tailscale adapter over other 100.64.0.0/10 adapters", () => {
+    expect(selectTailscaleAdvertiseHost({
+      "VPN Tunnel": [{ address: "100.90.1.20", family: "IPv4", internal: false }],
+      Tailscale: [{ address: "100.86.20.31", family: "IPv4", internal: false }],
+    })).toBe("100.86.20.31");
+  });
+
+  it("does not treat every 100.64.0.0/10 adapter as Tailscale", () => {
+    expect(selectTailscaleAdvertiseHost({
+      "Carrier CGNAT": [{ address: "100.86.20.31", family: "IPv4", internal: false }],
+    })).toBeUndefined();
+  });
+
+  it("returns undefined for Tailscale mode when no tailnet address exists", () => {
+    expect(selectTailscaleAdvertiseHost({
+      WLAN: [{ address: "192.168.0.39", family: "IPv4", internal: false }],
+      lo: [{ address: "127.0.0.1", family: "IPv4", internal: true }],
+    })).toBeUndefined();
   });
 });

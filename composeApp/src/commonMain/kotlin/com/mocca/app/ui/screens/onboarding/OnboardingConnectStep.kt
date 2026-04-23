@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -51,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mocca.app.api.NetworkConfig
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 import com.mocca.app.domain.model.DiscoveredServer
 import com.mocca.app.ui.components.modern.MoccaButton
 import com.mocca.app.ui.components.modern.MoccaInput
@@ -76,6 +79,7 @@ internal fun OnboardingConnectStep(
     onServerSelected: (DiscoveredServer) -> Unit,
     onManualConnect: (host: String, port: Int, username: String, password: String, useHttps: Boolean) -> Unit,
     bridgePairingPayload: String,
+    bridgePairingNetwork: DirectBridgeNetwork?,
     onBridgePairingPayloadChange: (String) -> Unit,
     onBridgePairingConnect: () -> Unit,
     onBridgePairingPayloadScanned: (String) -> Unit,
@@ -188,6 +192,16 @@ internal fun OnboardingConnectStep(
                         placeholder = "mocca://bridge/connect?...",
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    AnimatedVisibility(
+                        visible = bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE,
+                        enter = fadeIn(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()) +
+                            expandVertically(animationSpec = MaterialTheme.motionScheme.defaultSpatialSpec()),
+                        exit = fadeOut(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec()) +
+                            shrinkVertically(animationSpec = MaterialTheme.motionScheme.defaultEffectsSpec())
+                    ) {
+                        BridgeNetworkHint()
+                    }
 
                     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                         if (maxWidth < 360.dp) {
@@ -501,5 +515,40 @@ internal fun OnboardingConnectStep(
                 .fillMaxWidth()
                 .padding(bottom = AppSpacing.lg)
         )
+    }
+}
+
+@Composable
+private fun BridgeNetworkHint() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppColors.accent.copy(alpha = 0.12f), AppShapes.medium)
+            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Lock,
+            contentDescription = null,
+            tint = AppColors.accent,
+            modifier = Modifier.size(18.dp)
+        )
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(
+                text = "Tailscale bridge detected",
+                style = AppTypography.labelMedium,
+                color = AppColors.onSurface,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = "MOCCA will connect through your tailnet instead of local Wi-Fi discovery.",
+                style = AppTypography.labelSmall,
+                color = AppColors.onSurfaceVariant
+            )
+        }
     }
 }

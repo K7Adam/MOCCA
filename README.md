@@ -39,7 +39,31 @@ OpenCode Server (HTTP Basic Auth)
 - Android SDK (API 36)
 - OpenCode CLI installed
 
-### 2. Start OpenCode Server
+### 2. Start MOCCA CLI Bridge
+
+The recommended connection path is the MOCCA CLI bridge. Start it in the project directory and scan the printed QR code in the Android app:
+
+```bash
+mocca-cli
+```
+
+For Tailscale pairing, use the dedicated network shortcut. The CLI automatically detects the Tailscale `100.x.x.x` address and writes it into the QR code:
+
+```bash
+mocca-cli tailscale
+# or:
+mocca-cli --tailscale
+```
+
+Tailscale mode uses the local `tailscale ip -4` command first and marks the QR link as `network=tailscale`, so the app does not have to guess based on the IP address alone.
+
+If port `17653` is already in use:
+
+```bash
+mocca-cli tailscale --port 17654
+```
+
+### Legacy: Start OpenCode Server Directly
 
 ```bash
 # Set credentials (optional — default: username "opencode", no password)
@@ -68,11 +92,13 @@ adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
 
 ### 4. Configure Connection
 
+Recommended: scan the MOCCA CLI QR code from the app onboarding flow. Manual host entry is only needed for legacy/direct server setups.
+
 | Method | Host | Notes |
 |--------|------|-------|
 | **Emulator** | `10.0.2.2` | Auto-detected, no config needed |
 | **LAN** | Your machine's IP | Requires `--hostname 0.0.0.0` |
-| **Tailscale** | Tailscale hostname/IP | Both devices must be on Tailscale |
+| **Tailscale** | Tailscale hostname/IP | Prefer `mocca-cli tailscale`; both devices must be on Tailscale |
 
 **Settings** → Dashboard (right swipe) → `[SETTINGS]` → Enter host, port, username, password.
 

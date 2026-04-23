@@ -3,8 +3,11 @@ package com.mocca.app.ui.screens.onboarding
 import cafe.adriel.voyager.core.model.ScreenModel
 import com.mocca.app.api.NetworkConfig
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.bridge.client.DirectBridgeNetwork
 import com.mocca.app.bridge.connection.BridgeConnectionManager
 import com.mocca.app.bridge.connection.BridgeConnectionStatus
+import com.mocca.app.bridge.connection.BridgePairingPayloadException
+import com.mocca.app.bridge.connection.BridgePairingPayloadParser
 import com.mocca.app.bridge.opencode.BridgeFeatureUnavailableException
 import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
@@ -275,6 +278,7 @@ class OnboardingWizardModel(
                 needsCredentials = false,
                 credentialServer = null,
                 isSuccess = false,
+                bridgePairingNetwork = parseBridgeNetworkHint(it.bridgePairingPayload),
                 bridgeValidationSummary = null,
                 connectionStage = ConnectionStage.SAVING_CONFIG
             )
@@ -489,6 +493,7 @@ class OnboardingWizardModel(
         _state.update {
             it.copy(
                 bridgePairingPayload = payload,
+                bridgePairingNetwork = parseBridgeNetworkHint(payload),
                 error = null
             )
         }
@@ -525,6 +530,7 @@ class OnboardingWizardModel(
                 connectionStage = ConnectionStage.SAVING_CONFIG,
                 connectionProgress = "Reading MOCCA CLI pairing link...",
                 bridgePairingPayload = pairingPayload,
+                bridgePairingNetwork = parseBridgeNetworkHint(pairingPayload),
                 bridgeValidationSummary = null
             )
         }
@@ -667,6 +673,17 @@ class OnboardingWizardModel(
             message.contains("pairing", ignoreCase = true) ->
                 message
             else -> message
+        }
+    }
+
+    private fun parseBridgeNetworkHint(payload: String): DirectBridgeNetwork? {
+        if (payload.isBlank()) return null
+        return try {
+            BridgePairingPayloadParser.parse(payload).network
+        } catch (_: BridgePairingPayloadException) {
+            null
+        } catch (_: IllegalArgumentException) {
+            null
         }
     }
 
