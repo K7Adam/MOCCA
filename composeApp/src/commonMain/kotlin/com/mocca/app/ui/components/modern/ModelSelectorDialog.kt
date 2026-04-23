@@ -1,8 +1,6 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,23 +11,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.mocca.app.ui.theme.AppShapes
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
-import com.mocca.app.domain.model.ProviderInfo
+import com.mocca.app.domain.model.AiModelOption
+import com.mocca.app.domain.model.AiProviderOption
+import com.mocca.app.domain.model.ModelPickerUiState
 import com.mocca.app.domain.model.ProviderResponse
 import com.mocca.app.domain.model.RecentModel
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
 import kotlinx.serialization.json.JsonObject
-
-/**
- * Terminal-styled model selection dialog.
- * Shows available providers and their models for selection.
- */
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 @Composable
 fun ModelSelectorDialog(
@@ -40,7 +37,42 @@ fun ModelSelectorDialog(
     recentModels: List<RecentModel> = emptyList(),
     onDismiss: () -> Unit
 ) {
+    ModelSelectorDialog(
+        state = providerResponse.toPickerState(selectedProviderId, selectedModelId, recentModels),
+        onModelSelected = onModelSelected,
+        onDismiss = onDismiss
+    )
+}
+
+@Composable
+fun ModelSelectorDialog(
+    state: ModelPickerUiState,
+    onModelSelected: (providerId: String, modelId: String) -> Unit,
+    onDismiss: () -> Unit
+) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var searchQuery by remember { mutableStateOf("") }
+    val normalizedQuery = remember(searchQuery) { searchQuery.normalizeModelQuery() }
+    val filteredProviders = remember(state.providers, normalizedQuery) {
+        if (normalizedQuery.isEmpty()) {
+            state.providers
+        } else {
+            state.providers.mapNotNull { provider ->
+                val providerMatches = provider.name.normalizeModelQuery().contains(normalizedQuery) ||
+                    provider.id.normalizeModelQuery().contains(normalizedQuery)
+                val models = provider.models.filter { model ->
+                    providerMatches ||
+                        model.name.normalizeModelQuery().contains(normalizedQuery) ||
+                        model.id.normalizeModelQuery().contains(normalizedQuery)
+                }
+                when {
+                    providerMatches -> provider
+                    models.isNotEmpty() -> provider.copy(models = models)
+                    else -> null
+                }
+            }
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -56,7 +88,6 @@ fun ModelSelectorDialog(
                 .fillMaxWidth()
                 .fillMaxHeight(0.85f)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -66,7 +97,7 @@ fun ModelSelectorDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "// SELECT MODEL",
+                    text = "Select Model",
                     style = AppTypography.titleMedium,
                     color = AppColors.onSurface,
                     fontWeight = FontWeight.Bold
@@ -77,15 +108,9 @@ fun ModelSelectorDialog(
                     iconColor = AppColors.onSurfaceVariant
                 )
             }
-            
-            HorizontalDivider(
-                thickness = AppSpacing.borderThin,
-                color = AppColors.outline
-            )
-            
-            // Search bar
-            var searchQuery by remember { mutableStateOf("") }
-            
+
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -93,24 +118,17 @@ fun ModelSelectorDialog(
                     .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "> ",
-                    style = AppTypography.bodySmall,
-                    color = AppColors.primary
-                )
                 androidx.compose.foundation.text.BasicTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     textStyle = AppTypography.bodySmall.copy(color = AppColors.onSurface),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = AppSpacing.xs),
+                    modifier = Modifier.weight(1f),
                     singleLine = true,
                     decorationBox = { innerTextField ->
                         Box {
                             if (searchQuery.isEmpty()) {
                                 Text(
-                                    text = "Search models...",
+                                    text = "Search models",
                                     style = AppTypography.bodySmall,
                                     color = AppColors.onSurfaceVariantDark
                                 )
@@ -128,155 +146,85 @@ fun ModelSelectorDialog(
                     )
                 }
             }
-            
-            HorizontalDivider(
-                thickness = AppSpacing.borderThin,
-                color = AppColors.outline
-            )
-            
-            // Provider/Model list
+
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(AppSpacing.sm)
             ) {
-                // Only show authenticated providers (those in the connected list)
-                val authenticatedProviders = providerResponse.all.filter { 
-                    it.id in providerResponse.connected 
-                }
-                
-                // Apply search filter with normalization (spaces = hyphens = underscores)
-                val rawQuery = searchQuery.lowercase().trim()
-                val query = rawQuery.replace(Regex("[\\s_-]+"), " ")
-                
-                fun normalizeForSearch(text: String): String = 
-                    text.lowercase().replace(Regex("[\\s_-]+"), " ")
-                
-                val filteredProviders = if (query.isEmpty()) {
-                    authenticatedProviders
-                } else {
-                    authenticatedProviders.filter { provider ->
-                        val normalizedProvider = normalizeForSearch(provider.name)
-                        val matchesProvider = normalizedProvider.contains(query) ||
-                            normalizeForSearch(provider.id).contains(query)
-                        val models = (provider.models as? JsonObject)?.keys?.toList() ?: emptyList()
-                        val matchesModel = models.any { normalizeForSearch(it).contains(query) }
-                        matchesProvider || matchesModel
+                state.current?.let { current ->
+                    item(key = "current", contentType = "section-header") {
+                        SectionLabel("Current")
+                    }
+                    item(key = "current-${current.providerId}-${current.modelId}", contentType = "model-row") {
+                        ModelRow(
+                            providerName = current.providerName,
+                            model = AiModelOption(
+                                providerId = current.providerId,
+                                id = current.modelId,
+                                name = current.modelName
+                            ),
+                            selected = true,
+                            onClick = {
+                                onModelSelected(current.providerId, current.modelId)
+                                onDismiss()
+                            }
+                        )
                     }
                 }
-                
-                // Show Recent Models if any
-                if (recentModels.isNotEmpty() && query.isEmpty()) {
-                   item {
-                       Text(
-                           text = "// RECENT",
-                           style = AppTypography.labelSmall,
-                           color = AppColors.primary,
-                           modifier = Modifier.padding(
-                               start = AppSpacing.sm,
-                               top = AppSpacing.sm,
-                               bottom = AppSpacing.xs
-                           )
-                       )
-                   }
-                   
-                   recentModels.forEach { recent ->
-                       item {
-                           val isSelected = recent.providerId == selectedProviderId && recent.modelId == selectedModelId
-                           Row(
-                               modifier = Modifier
-                                   .fillMaxWidth()
-                                   .clickable { 
-                                       onModelSelected(recent.providerId, recent.modelId)
-                                       onDismiss()
-                                   }
-                                   .background(
-                                       if (isSelected) 
-                                           AppColors.primary.copy(alpha = 0.2f) 
-                                       else 
-                                           AppColors.background
-                                   )
-                                   .padding(
-                                       horizontal = AppSpacing.md,
-                                       vertical = AppSpacing.xs
-                                   ),
-                               horizontalArrangement = Arrangement.SpaceBetween,
-                               verticalAlignment = Alignment.CenterVertically
-                           ) {
-                               Text(
-                                   text = "> ${recent.modelId.uppercase()} [${recent.providerId.uppercase()}]",
-                                   style = AppTypography.bodySmall,
-                                   color = if (isSelected) AppColors.primary else AppColors.onSurface
-                               )
-                           }
-                       }
-                   }
-                   
-                   item {
-                       HorizontalDivider(
-                           thickness = AppSpacing.borderThin,
-                           color = AppColors.outline,
-                           modifier = Modifier.padding(vertical = AppSpacing.sm)
-                       )
-                   }
+
+                if (state.recentModels.isNotEmpty() && normalizedQuery.isEmpty()) {
+                    item(key = "recent", contentType = "section-header") { SectionLabel("Recent") }
+                    items(
+                        items = state.recentModels,
+                        key = { recent -> "recent-${recent.providerId}-${recent.modelId}" },
+                        contentType = { "model-row" }
+                    ) { recent ->
+                        ModelRow(
+                            providerName = recent.providerName,
+                            model = AiModelOption(
+                                providerId = recent.providerId,
+                                id = recent.modelId,
+                                name = recent.displayName
+                            ),
+                            selected = recent.providerId == state.selectedProviderId &&
+                                recent.modelId == state.selectedModelId,
+                            onClick = {
+                                onModelSelected(recent.providerId, recent.modelId)
+                                onDismiss()
+                            }
+                        )
+                    }
                 }
 
                 if (filteredProviders.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "// CONNECTED",
-                            style = AppTypography.labelSmall,
-                            color = AppColors.primary,
-                            modifier = Modifier.padding(
-                                start = AppSpacing.sm,
-                                top = AppSpacing.sm,
-                                bottom = AppSpacing.xs
-                            )
-                        )
-                    }
-                    
-                    filteredProviders.forEach { provider ->
-                        item {
-                            ProviderSection(
-                                provider = provider,
-                                selectedProviderId = selectedProviderId,
-                                selectedModelId = selectedModelId,
-                                onModelSelected = { modelId ->
-                                    onModelSelected(provider.id, modelId)
-                                    onDismiss()
-                                },
-                                searchQuery = query
-                            )
-                        }
-                    }
-                } else if (query.isNotEmpty()) {
-                    // No search results
-                    item {
-                        Text(
-                            text = "// NO MATCHES",
-                            style = AppTypography.labelSmall,
-                            color = AppColors.onSurfaceVariant,
-                            modifier = Modifier.padding(AppSpacing.md)
+                    item(key = "providers", contentType = "section-header") { SectionLabel("Connected Providers") }
+                    items(
+                        items = filteredProviders,
+                        key = { provider -> "provider-${provider.id}" },
+                        contentType = { "provider-section" }
+                    ) { provider ->
+                        ProviderSection(
+                            provider = provider,
+                            selectedProviderId = state.selectedProviderId,
+                            selectedModelId = state.selectedModelId,
+                            forceExpanded = normalizedQuery.isNotEmpty(),
+                            onModelSelected = { modelId ->
+                                onModelSelected(provider.id, modelId)
+                                onDismiss()
+                            }
                         )
                     }
                 } else {
-                    // No authenticated providers
-                    item {
+                    item(key = "empty", contentType = "empty") {
                         Text(
-                            text = "// NO PROVIDERS CONFIGURED",
-                            style = AppTypography.labelSmall,
+                            text = state.errorMessage ?: "No configured provider",
+                            style = AppTypography.bodySmall,
                             color = AppColors.onSurfaceVariant,
                             modifier = Modifier.padding(AppSpacing.md)
-                        )
-                        Text(
-                            text = "Configure providers in opencode settings.",
-                            style = AppTypography.bodySmall,
-                            color = AppColors.onSurfaceVariantDark,
-                            modifier = Modifier.padding(
-                                start = AppSpacing.md,
-                                top = AppSpacing.xs
-                            )
                         )
                     }
                 }
@@ -286,114 +234,149 @@ fun ModelSelectorDialog(
 }
 
 @Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text = text.uppercase(),
+        style = AppTypography.labelSmall,
+        color = AppColors.primary,
+        modifier = Modifier.padding(start = AppSpacing.sm, top = AppSpacing.sm, bottom = AppSpacing.xs)
+    )
+}
+
+@Composable
 private fun ProviderSection(
-    provider: ProviderInfo,
-    selectedProviderId: String,
-    selectedModelId: String,
-    onModelSelected: (modelId: String) -> Unit,
-    enabled: Boolean = true,
-    searchQuery: String = ""
+    provider: AiProviderOption,
+    selectedProviderId: String?,
+    selectedModelId: String?,
+    forceExpanded: Boolean,
+    onModelSelected: (modelId: String) -> Unit
 ) {
-    // Auto-expand when search is active, otherwise use manual toggle state
-    var manualExpanded by remember { mutableStateOf(provider.id == selectedProviderId) }
-    val expanded = searchQuery.isNotEmpty() || manualExpanded
-    
+    var manualExpanded by remember(provider.id) { mutableStateOf(provider.id == selectedProviderId) }
+    val expanded = forceExpanded || manualExpanded
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = AppSpacing.xs)
     ) {
-        // Provider header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable { manualExpanded = !manualExpanded }
+                .moccaClickable(onClick = { manualExpanded = !manualExpanded }, pressedScale = 0.99f)
                 .background(
-                    if (provider.id == selectedProviderId) 
-                        AppColors.surface 
-                    else 
-                        AppColors.background
+                    if (provider.id == selectedProviderId) AppColors.surface else AppColors.background
                 )
                 .padding(AppSpacing.sm),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = if (expanded) "[-]" else "[+]",
-                    style = AppTypography.bodySmall,
-                    color = AppColors.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(AppSpacing.sm))
-                Text(
-                    text = provider.name.uppercase(),
-                    style = AppTypography.bodyMedium,
-                    color = if (enabled) AppColors.onSurface else AppColors.onSurfaceVariantDark,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
             Text(
-                text = "${provider.modelCount} models",
+                text = provider.name.uppercase(),
+                style = AppTypography.bodyMedium,
+                color = if (provider.connected) AppColors.onSurface else AppColors.onSurfaceVariantDark,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${provider.models.size} models",
                 style = AppTypography.labelSmall,
                 color = AppColors.onSurfaceVariant
             )
         }
-        
-        // Model list (when expanded)
+
         if (expanded) {
-            val allModels = (provider.models as? JsonObject)?.keys?.toList() ?: emptyList()
-            fun normalizeForSearch(text: String): String = 
-                text.lowercase().replace(Regex("[\\s_-]+"), " ")
-            val normalizedQuery = searchQuery.replace(Regex("[\\s_-]+"), " ")
-            val models = if (searchQuery.isEmpty()) allModels else {
-                allModels.filter { normalizeForSearch(it).contains(normalizedQuery) }
-            }
-            models.forEach { modelId ->
-                val isSelected = provider.id == selectedProviderId && modelId == selectedModelId
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .moccaClickable(
-                            onClick = { onModelSelected(modelId) },
-                            enabled = enabled,
-                            pressedScale = 0.99f
-                        )
-                        .background(
-                            if (isSelected) 
-                                AppColors.primary.copy(alpha = 0.2f) 
-                            else 
-                                AppColors.background
-                        )
-                        .padding(
-                            start = AppSpacing.xl,
-                            end = AppSpacing.md,
-                            top = AppSpacing.xs,
-                            bottom = AppSpacing.xs
-                        ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "> ${modelId.replace("-", " ").uppercase()}",
-                        style = AppTypography.bodySmall,
-                        color = when {
-                            isSelected -> AppColors.primary
-                            enabled -> AppColors.onSurfaceVariantLight
-                            else -> AppColors.onSurfaceVariantDark
-                        }
-                    )
-                    
-                    if (isSelected) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = "Selected",
-                            tint = AppColors.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
+            provider.models.forEach { model ->
+                ModelRow(
+                    providerName = provider.name,
+                    model = model,
+                    selected = provider.id == selectedProviderId && model.id == selectedModelId,
+                    onClick = { onModelSelected(model.id) }
+                )
             }
         }
     }
+}
+
+@Composable
+private fun ModelRow(
+    providerName: String,
+    model: AiModelOption,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .moccaClickable(onClick = onClick, pressedScale = 0.99f)
+            .background(if (selected) AppColors.primary.copy(alpha = 0.18f) else AppColors.background)
+            .padding(start = AppSpacing.xl, end = AppSpacing.md, top = AppSpacing.xs, bottom = AppSpacing.xs),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = model.name.ifBlank { model.id },
+                style = AppTypography.bodySmall,
+                color = if (selected) AppColors.primary else AppColors.onSurfaceVariantLight,
+                maxLines = 1
+            )
+            Text(
+                text = providerName,
+                style = AppTypography.labelSmall,
+                color = AppColors.outline,
+                maxLines = 1
+            )
+        }
+        if (selected) {
+            Icon(
+                Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = AppColors.primary,
+                modifier = Modifier.size(16.dp)
+            )
+        }
+    }
+}
+
+private fun String.normalizeModelQuery(): String =
+    lowercase().trim().replace(Regex("[\\s_-]+"), " ")
+
+private fun ProviderResponse.toPickerState(
+    selectedProviderId: String,
+    selectedModelId: String,
+    recentModels: List<RecentModel>
+): ModelPickerUiState {
+    val providers = all.map { provider ->
+        val models = (provider.models as? JsonObject).orEmpty().map { (modelId, value) ->
+            val modelObject = value as? JsonObject
+            AiModelOption(
+                providerId = provider.id,
+                id = modelId,
+                name = modelObject?.get("name")?.jsonPrimitive?.contentOrNull ?: modelId
+            )
+        }.sortedBy { it.name }
+        AiProviderOption(
+            id = provider.id,
+            name = provider.name,
+            source = provider.source,
+            connected = provider.id in connected || models.isNotEmpty(),
+            models = models
+        )
+    }
+    return ModelPickerUiState(
+        providers = providers,
+        selectedProviderId = selectedProviderId,
+        selectedModelId = selectedModelId,
+        recentModels = recentModels.mapNotNull { recent ->
+            val provider = providers.firstOrNull { it.id == recent.providerId } ?: return@mapNotNull null
+            val model = provider.models.firstOrNull { it.id == recent.modelId } ?: return@mapNotNull null
+            com.mocca.app.domain.model.AiRecentModel(
+                projectKey = "legacy",
+                providerId = recent.providerId,
+                modelId = recent.modelId,
+                displayName = model.name,
+                providerName = provider.name,
+                lastUsedAt = recent.lastUsedAt
+            )
+        }
+    )
 }

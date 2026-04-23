@@ -29,7 +29,70 @@ describe("MOCCA CLI request router", () => {
         namespaces: expect.arrayContaining(["system", "ai"]),
         ai: {
           opencodeConfigSnapshot: true,
+          configNormalized: true,
+          providers: true,
+          agents: true,
+          modes: true,
+          selectionDefaults: true,
+          variantForwarding: true,
+          configEvents: true,
         },
+      },
+    });
+  });
+
+  it("returns normalized AI runtime config through ai.config.get", async () => {
+    const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
+      configSnapshotProvider: async () => ({
+        installed: { available: true, command: "opencode", version: "1.14.19" },
+        effective: { model: "anthropic/claude-3-5", plugins: [], tools: {}, raw: {} },
+        configFiles: [],
+        credentials: [],
+        agents: [{ name: "build", primary: true }],
+        commands: [],
+        mcpServers: [],
+      }),
+      openCodeRuntime: createFakeRuntime({
+        listProviders: async () => ({
+          all: [{
+            id: "anthropic",
+            name: "Anthropic",
+            models: {
+              "claude-3-5": {
+                name: "Claude 3.5",
+                variants: {
+                  fast: { name: "Fast" },
+                },
+              },
+            },
+          }],
+          connected: ["anthropic"],
+        }),
+        listAgents: async () => [{ id: "build", name: "Build", primary: true }],
+      }),
+    });
+
+    await expect(router.handleRequest(createRequest({
+      id: "req-ai-config",
+      ns: "ai",
+      action: "config.get",
+    }))).resolves.toMatchObject({
+      ok: true,
+      payload: {
+        source: "mocca-cli",
+        defaultSelection: {
+          providerId: "anthropic",
+          modelId: "claude-3-5",
+          agentId: "build",
+        },
+        providers: [{
+          id: "anthropic",
+          models: [{
+            id: "claude-3-5",
+            variants: [{ id: "fast" }],
+          }],
+        }],
       },
     });
   });
@@ -193,6 +256,41 @@ describe("MOCCA CLI request router", () => {
     }))).resolves.toMatchObject({
       ok: true,
       payload: { id: "ses-2", title: "New" },
+    });
+  });
+
+  it("forwards validated message selection fields through ai.messages.send", async () => {
+    let forwardedPayload: unknown;
+    const runtime = createFakeRuntime({
+      sendMessage: async (payload) => {
+        forwardedPayload = payload;
+        return { ack: true };
+      },
+    });
+    const router = createBridgeRouter({
+      projectDir: TEST_PROJECT_DIR,
+      configSnapshotProvider: async () => ({}),
+      openCodeRuntime: runtime,
+    });
+
+    await expect(router.handleRequest(createRequest({
+      id: "req-send",
+      ns: "ai",
+      action: "messages.send",
+      payload: {
+        sessionId: "ses-1",
+        text: "hello",
+        model: { providerID: "anthropic", modelID: "claude-3-5" },
+        variant: "fast",
+        agent: "build",
+      },
+    }))).resolves.toMatchObject({ ok: true, payload: { ack: true } });
+
+    expect(forwardedPayload).toMatchObject({
+      sessionId: "ses-1",
+      model: { providerID: "anthropic", modelID: "claude-3-5" },
+      variant: "fast",
+      agent: "build",
     });
   });
 

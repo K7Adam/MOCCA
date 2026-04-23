@@ -152,18 +152,23 @@ export class OpenCodeRuntimeManager implements OpenCodeRuntimeBridge {
     const client = await this.ensureClient();
     const body = readOptionalRecord(payload);
     const sessionId = readRequiredString(body.sessionId ?? body.sessionID ?? body.id, "sessionId");
-    const text = readRequiredString(body.text, "text");
-    const model = readModelSelector(body.model);
-    const agent = readOptionalString(body.agent);
-    const parts: Array<{ type: "text"; text: string }> = [{ type: "text", text }];
+    const text = readOptionalString(body.text);
+    const model = readModelSelector(body.model) ?? readModelSelector(body);
+    const agent = readOptionalString(body.agent ?? body.agentId);
+    const variant = readOptionalString(body.variant ?? body.variantId ?? body.variantID);
+    const parts = readPromptParts(body.parts, text);
+    if (parts.length === 0) {
+      throw new Error("text or parts is required");
+    }
     await client.session.promptAsync({
       path: { id: sessionId },
       query: { directory: this.options.projectDir },
       body: withoutUndefined({
         model,
         agent,
+        variant,
         parts,
-      }),
+      }) as never,
     });
     return { ack: true };
   }
@@ -365,6 +370,16 @@ function readModelSelector(value: unknown): { providerID: string; modelID: strin
   const providerID = readOptionalString(model.providerID ?? model.providerId);
   const modelID = readOptionalString(model.modelID ?? model.modelId);
   return providerID && modelID ? { providerID, modelID } : undefined;
+}
+
+function readPromptParts(value: unknown, fallbackText: string | undefined): Array<Record<string, unknown>> {
+  if (Array.isArray(value)) {
+    const parts = value
+      .map((entry) => readOptionalRecord(entry))
+      .filter((entry) => readOptionalString(entry.type) != null);
+    if (parts.length > 0) return parts;
+  }
+  return fallbackText != null ? [{ type: "text", text: fallbackText }] : [];
 }
 
 function stringifyError(error: unknown): string {

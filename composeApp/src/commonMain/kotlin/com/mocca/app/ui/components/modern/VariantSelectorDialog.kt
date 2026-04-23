@@ -1,8 +1,6 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,30 +8,34 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.mocca.app.ui.theme.AppShapes
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.graphics.Color
+import com.mocca.app.domain.model.AiModelVariantOption
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
-
-/**
- * Terminal-styled variant selection dialog.
- * Shows available variants for the selected model.
- */
+import com.mocca.app.ui.theme.moccaClickable
 
 @Composable
 fun VariantSelectorDialog(
-    variants: List<String>,
+    variants: List<*>,
     selectedVariantId: String?,
     onVariantSelected: (variantId: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val normalizedVariants = variants.mapNotNull { variant ->
+        when (variant) {
+            is AiModelVariantOption -> variant
+            is String -> AiModelVariantOption(id = variant, name = variant)
+            else -> null
+        }
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -49,7 +51,6 @@ fun VariantSelectorDialog(
                 .fillMaxWidth()
                 .fillMaxHeight(0.6f)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -59,7 +60,7 @@ fun VariantSelectorDialog(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "// SELECT VARIANT",
+                    text = "Select Variant",
                     style = AppTypography.titleMedium,
                     color = AppColors.onSurface,
                     fontWeight = FontWeight.Bold
@@ -70,32 +71,28 @@ fun VariantSelectorDialog(
                     iconColor = AppColors.onSurfaceVariant
                 )
             }
-            
-            HorizontalDivider(
-                thickness = AppSpacing.borderThin,
-                color = AppColors.outline
-            )
-            
-            // Variant list
+
+            HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(AppSpacing.sm)
             ) {
-                if (variants.isEmpty()) {
-                    item {
+                if (normalizedVariants.isEmpty()) {
+                    item(key = "empty", contentType = "empty") {
                         Text(
-                            text = "// NO VARIANTS AVAILABLE",
+                            text = "No variants available",
                             style = AppTypography.labelSmall,
                             color = AppColors.onSurfaceVariant,
                             modifier = Modifier.padding(AppSpacing.md)
                         )
                     }
                 } else {
-                    item {
+                    item(key = "available", contentType = "section-header") {
                         Text(
-                            text = "// AVAILABLE",
+                            text = "AVAILABLE",
                             style = AppTypography.labelSmall,
                             color = AppColors.primary,
                             modifier = Modifier.padding(
@@ -105,35 +102,46 @@ fun VariantSelectorDialog(
                             )
                         )
                     }
-                    
-                    items(variants) { variantId ->
-                        val isSelected = variantId == selectedVariantId
+
+                    items(
+                        items = normalizedVariants,
+                        key = { variant -> variant.id },
+                        contentType = { "variant-row" }
+                    ) { variant ->
+                        val isSelected = variant.id == selectedVariantId
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { 
-                                    onVariantSelected(variantId)
-                                    onDismiss()
-                                }
-                                .background(
-                                    if (isSelected) 
-                                        AppColors.primary.copy(alpha = 0.2f) 
-                                    else 
-                                        AppColors.background
+                                .moccaClickable(
+                                    onClick = {
+                                        onVariantSelected(variant.id)
+                                        onDismiss()
+                                    },
+                                    pressedScale = 0.99f
                                 )
-                                .padding(
-                                    horizontal = AppSpacing.md,
-                                    vertical = AppSpacing.sm
-                                ),
+                                .background(
+                                    if (isSelected) AppColors.primary.copy(alpha = 0.18f) else AppColors.background
+                                )
+                                .padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "> ${variantId.uppercase()}",
-                                style = AppTypography.bodySmall,
-                                color = if (isSelected) AppColors.primary else AppColors.onSurface
-                            )
-                            
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = variant.name.ifBlank { variant.id },
+                                    style = AppTypography.bodySmall,
+                                    color = if (isSelected) AppColors.primary else AppColors.onSurface
+                                )
+                                variant.description?.let { description ->
+                                    Text(
+                                        text = description,
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.outline,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+
                             if (isSelected) {
                                 Icon(
                                     Icons.Default.Check,

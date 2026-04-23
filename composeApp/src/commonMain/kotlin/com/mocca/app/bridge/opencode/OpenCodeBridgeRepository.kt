@@ -1,6 +1,7 @@
 package com.mocca.app.bridge.opencode
 
 import com.mocca.app.bridge.client.MoccaBridgeClient
+import com.mocca.app.bridge.client.toBridgePayload
 import com.mocca.app.bridge.protocol.BridgeCapabilities
 import com.mocca.app.bridge.protocol.BridgeResponse
 import com.mocca.app.bridge.protocol.OpenCodeAgentInfo
@@ -9,6 +10,8 @@ import com.mocca.app.bridge.protocol.OpenCodeConfigSnapshot
 import com.mocca.app.bridge.protocol.OpenCodeCredentialInfo
 import com.mocca.app.bridge.protocol.OpenCodeMcpServerInfo
 import com.mocca.app.bridge.protocol.OpenCodeRuntimeEnsureResponse
+import com.mocca.app.domain.model.AiBridgeMessageRequest
+import com.mocca.app.domain.model.AiRuntimeConfigSnapshot
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -51,6 +54,18 @@ class OpenCodeBridgeRepository(
             .decodePayloadOrThrow()
     }
 
+    suspend fun fetchAiRuntimeConfig(forceRefresh: Boolean = false): AiRuntimeConfigSnapshot {
+        val capabilities = fetchCapabilities()
+        if (!capabilities.ai.configNormalized) {
+            throw BridgeFeatureUnavailableException("ai.config.get")
+        }
+
+        return client.request(
+            ns = "ai",
+            action = if (forceRefresh) "config.refresh" else "config.get"
+        ).decodePayloadOrThrow()
+    }
+
     suspend fun ensureOpenCodeRuntime(): OpenCodeRuntimeEnsureResponse {
         val capabilities = fetchCapabilities()
         if (!capabilities.ai.opencodeRuntime) {
@@ -79,6 +94,19 @@ class OpenCodeBridgeRepository(
     suspend fun fetchMcpServers(): List<OpenCodeMcpServerInfo> {
         return client.request(ns = "mcp", action = "servers.list")
             .decodePayloadOrThrow()
+    }
+
+    suspend fun sendMessage(request: AiBridgeMessageRequest): Unit {
+        val capabilities = fetchCapabilities()
+        if (!capabilities.ai.messages) {
+            throw BridgeFeatureUnavailableException("ai.messages.send")
+        }
+
+        client.request(
+            ns = "ai",
+            action = "messages.send",
+            payload = json.toBridgePayload(request)
+        ).decodePayloadOrThrow<JsonElement>()
     }
 
     private inline fun <reified T> BridgeResponse.decodePayloadOrThrow(): T {

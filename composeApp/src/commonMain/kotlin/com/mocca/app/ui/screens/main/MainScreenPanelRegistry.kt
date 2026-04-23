@@ -299,7 +299,9 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     onSendClick = { scope.chatScreenModel.sendMessage() },
                     onExportClick = { scope.chatScreenModel.openExportDialog() },
                     onMicClick = { scope.chatScreenModel.toggleVoiceInput() },
-                    inputEnabled = scope.chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected && scope.chatState.isSessionIdle,
+                    inputEnabled = scope.chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected &&
+                        scope.chatState.isSessionIdle &&
+                        scope.chatState.aiConfigState.isReady,
                     placeholder = "Type a message...",
                     isSessionIdle = scope.chatState.isSessionIdle,
                     isVoiceListening = scope.voiceInputState is VoiceInputState.Listening,
@@ -307,13 +309,13 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     onAbortClick = { scope.chatScreenModel.abortSession() },
                     modelName = scope.chatState.modelName,
                     agentName = scope.chatState.agentName,
-                    providerResponse = scope.chatState.providerInfo,
+                    modelPickerState = scope.chatState.modelPickerState,
                     selectedProviderId = scope.chatState.selectedProviderId,
                     selectedModelId = scope.chatState.selectedModelId,
                     onModelSelected = { providerId, modelId ->
                         scope.chatScreenModel.selectModel(providerId, modelId)
                     },
-                    variants = scope.chatState.availableVariants,
+                    variants = scope.chatState.variantPickerState.variants,
                     selectedVariantId = scope.chatState.selectedVariantId,
                     onVariantSelected = { scope.chatScreenModel.selectVariant(it) },
                     modes = scope.chatState.modes,
@@ -327,6 +329,8 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     onModeSelectedForMention = { scope.chatScreenModel.selectMode(it.id) },
                     shellMode = scope.shellMode,
                     onShellModeToggle = { scope.chatScreenModel.toggleShellMode() },
+                    planMode = scope.chatState.isPlanMode,
+                    onPlanModeToggle = { scope.chatScreenModel.togglePlanMode() },
                     onHistoryUp = { scope.chatScreenModel.navigateHistoryUp() },
                     onHistoryDown = { scope.chatScreenModel.navigateHistoryDown() }
                 )

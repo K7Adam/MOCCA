@@ -10,6 +10,7 @@ import type { OpenCodeRuntimeBridge, OpenCodeRuntimeEvent } from "../opencode/ru
 import { ConfirmationStore } from "../capabilities/common/confirmation.js";
 import { EventSequencer } from "../capabilities/common/eventSequencer.js";
 import { toErrorCode, toErrorDetails } from "../capabilities/common/errors.js";
+import { AiConfigManager } from "../capabilities/ai/aiConfigManager.js";
 import { FileSystemCapability } from "../capabilities/fs/fsCapability.js";
 import { GitCapability } from "../capabilities/git/gitCapability.js";
 import { SystemCapability } from "../capabilities/system/systemCapability.js";
@@ -71,6 +72,13 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
     eventSequencer,
     eventSink: options.eventSink,
   });
+  const aiConfigManager = new AiConfigManager({
+    projectDir: options.projectDir,
+    configSnapshotProvider: options.configSnapshotProvider,
+    openCodeRuntime: options.openCodeRuntime,
+    eventSequencer,
+    eventSink: options.eventSink,
+  });
   const unsubscribeRuntime = options.openCodeRuntime?.subscribe((event) => {
     options.eventSink?.(toBridgeRuntimeEvent(event, eventSequencer.next("ai")));
   });
@@ -81,7 +89,8 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
         const capabilityResponse = await fsCapability.handle(request)
           ?? await gitCapability.handle(request)
           ?? await terminalCapability.handle(request)
-          ?? await systemCapability.handle(request);
+          ?? await systemCapability.handle(request)
+          ?? await aiConfigManager.handle(request);
         if (capabilityResponse != null) {
           return capabilityResponse;
         }
@@ -101,12 +110,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
               safety: {
                 confirmationRequired: true,
               },
-              ai: {
-                opencodeConfigSnapshot: true,
-                opencodeRuntime: options.openCodeRuntime != null,
-                sessions: options.openCodeRuntime != null,
-                messages: options.openCodeRuntime != null,
-              },
+              ai: aiConfigManager.capabilities,
             },
           });
         }
@@ -256,6 +260,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
     },
     async close(): Promise<void> {
       unsubscribeRuntime?.();
+      await aiConfigManager.close();
       await terminalCapability.close();
       await fsCapability.close();
     },

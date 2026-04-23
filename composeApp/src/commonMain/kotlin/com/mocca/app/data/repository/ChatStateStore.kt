@@ -27,7 +27,8 @@ import kotlinx.datetime.Clock
 class ChatStateStore(
     private val localCache: LocalCache,
     private val stateCoordinator: StateCoordinator,
-    private val sessionRepository: SessionRepository
+    private val sessionRepository: SessionRepository,
+    private val aiChatGateway: AiChatGateway
 ) {
     private val storeScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -484,11 +485,8 @@ class ChatStateStore(
      */
     suspend fun sendMessage(
         text: String,
-        mode: String? = null,
-        variant: String? = null,
+        selection: AiEffectiveSelection,
         attachments: List<AttachedFile> = emptyList(),
-        modelId: String? = null,
-        providerId: String? = null
     ): Result<Unit> {
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
         
@@ -505,14 +503,11 @@ class ChatStateStore(
         _isSending.value = true
         _error.value = null
         
-        return sessionRepository.sendMessageAsync(
+        return aiChatGateway.sendMessage(
             sessionId = sessionId,
             text = text,
-            mode = mode,
-            variant = variant,
-            attachments = attachments,
-            modelId = modelId,
-            providerId = providerId
+            selection = selection,
+            attachments = attachments
         ).also { result ->
             if (result.isFailure) {
                 _isSending.value = false

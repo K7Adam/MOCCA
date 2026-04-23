@@ -111,6 +111,8 @@ val commonModule = module {
         )
     }
     singleOf(::BridgeRuntimeBootstrapper)
+    single { AiRuntimeConfigRepository(get(), get(), get(), get()) }
+    single { AiChatGateway(get(), get()) }
     
     // Global update notifier - allows any screen to trigger update dialog
     singleOf(::UpdateNotifier)
@@ -168,8 +170,7 @@ val commonModule = module {
             toolRepository = get(),
             agentRepository = get(),
             commandRepository = get(),
-            providerRepository = get(),
-            sessionRepository = get()
+            providerRepository = get()
         )
     }
 
@@ -198,7 +199,8 @@ val commonModule = module {
         ChatStateStore(
             localCache = get(),
             stateCoordinator = get(),
-            sessionRepository = get()
+            sessionRepository = get(),
+            aiChatGateway = get()
         )
     }
 }
@@ -248,9 +250,9 @@ val screenModelModule = module {
             sessionRepository = get(),
             stateCoordinator = get(),
             commandRepository = get(),
-            agentRepository = get(),
             appStateStore = get(),
             chatStateStore = get(),
+            aiRuntimeConfigRepository = get(),
             voiceInputProvider = get()
         )
     }

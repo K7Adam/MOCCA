@@ -61,7 +61,14 @@ data class BridgeAiCapabilities(
     val opencodeConfigSnapshot: Boolean = false,
     val opencodeRuntime: Boolean = false,
     val sessions: Boolean = false,
-    val messages: Boolean = false
+    val messages: Boolean = false,
+    val configNormalized: Boolean = false,
+    val providers: Boolean = false,
+    val agents: Boolean = false,
+    val modes: Boolean = false,
+    val selectionDefaults: Boolean = false,
+    val variantForwarding: Boolean = false,
+    val configEvents: Boolean = false
 )
 
 @Serializable

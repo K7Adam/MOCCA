@@ -28,8 +28,10 @@ import androidx.compose.ui.graphics.Color
 
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.AttachedFile
+import com.mocca.app.domain.model.AiModelVariantOption
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
+import com.mocca.app.domain.model.ModelPickerUiState
 import com.mocca.app.domain.model.ProviderResponse
 
 import com.mocca.app.ui.navigation.PanelState
@@ -127,11 +129,12 @@ fun UnifiedFloatingBottomBar(
     modelName: String = "--",
     agentName: String = "--",
     providerResponse: ProviderResponse? = null,
+    modelPickerState: ModelPickerUiState = ModelPickerUiState(),
     selectedProviderId: String = "",
     selectedModelId: String = "",
     onModelSelected: (String, String) -> Unit = { _, _ -> },
     // Variants
-    variants: List<String> = emptyList(),
+    variants: List<AiModelVariantOption> = emptyList(),
     selectedVariantId: String? = null,
     onVariantSelected: (String) -> Unit = {},
     // Modes
@@ -250,7 +253,7 @@ fun UnifiedFloatingBottomBar(
                         onVoicePermissionResult = {},
                         modelName = modelName,
                         agentName = agentName,
-                        providerResponse = providerResponse,
+                        modelPickerState = modelPickerState,
                         selectedProviderId = selectedProviderId,
                         selectedModelId = selectedModelId,
                         onModelSelected = onModelSelected,

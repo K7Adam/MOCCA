@@ -14,6 +14,7 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -495,6 +496,52 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         }
     }
 
+    // ==================== AI Runtime Config ====================
+
+    override suspend fun getAiSelection(projectKey: String): AiSelection? {
+        return try {
+            appSettingsQueries.getSetting(aiSelectionKey(projectKey)).executeAsOneOrNull()
+                ?.let { json.decodeFromString<AiSelection>(it) }
+        } catch (e: Exception) {
+            Napier.w("Failed to get AI selection for $projectKey", e)
+            null
+        }
+    }
+
+    override suspend fun saveAiSelection(projectKey: String, selection: AiSelection) {
+        try {
+            appSettingsQueries.insertSetting(aiSelectionKey(projectKey), json.encodeToString(selection))
+        } catch (e: Exception) {
+            Napier.w("Failed to save AI selection for $projectKey", e)
+        }
+    }
+
+    override suspend fun getAiRecentModels(projectKey: String): List<AiRecentModel> {
+        return try {
+            appSettingsQueries.getSetting(aiRecentModelsKey(projectKey)).executeAsOneOrNull()
+                ?.let { json.decodeFromString(ListSerializer(AiRecentModel.serializer()), it) }
+                ?: emptyList()
+        } catch (e: Exception) {
+            Napier.w("Failed to get AI recent models for $projectKey", e)
+            emptyList()
+        }
+    }
+
+    override suspend fun insertAiRecentModel(recentModel: AiRecentModel) {
+        try {
+            val current = getAiRecentModels(recentModel.projectKey)
+            val next = (listOf(recentModel) + current.filterNot {
+                it.providerId == recentModel.providerId && it.modelId == recentModel.modelId
+            }).sortedByDescending { it.lastUsedAt }.take(8)
+            appSettingsQueries.insertSetting(
+                aiRecentModelsKey(recentModel.projectKey),
+                json.encodeToString(ListSerializer(AiRecentModel.serializer()), next)
+            )
+        } catch (e: Exception) {
+            Napier.w("Failed to save AI recent model for ${recentModel.projectKey}", e)
+        }
+    }
+
     // ==================== App Settings ====================
 
     override suspend fun getSetting(key: String): String? {
@@ -538,6 +585,10 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             lastFetchedAt = lastFetchedAt
         )
     }
+
+    private fun aiSelectionKey(projectKey: String): String = "ai.selection.$projectKey"
+
+    private fun aiRecentModelsKey(projectKey: String): String = "ai.recents.$projectKey"
 
     private fun MessageEntity.toMessage(): Message {
         return Message(

@@ -1,6 +1,8 @@
 package com.mocca.app.data.local
 
 import com.mocca.app.domain.model.Agent
+import com.mocca.app.domain.model.AiRecentModel
+import com.mocca.app.domain.model.AiSelection
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.domain.model.GitStatusResponse
@@ -78,6 +80,12 @@ interface LocalCache {
     // Recent Models
     suspend fun getRecentModels(): List<RecentModel>
     suspend fun insertRecentModel(recentModel: RecentModel)
+
+    // AI Runtime Config
+    suspend fun getAiSelection(projectKey: String): AiSelection?
+    suspend fun saveAiSelection(projectKey: String, selection: AiSelection)
+    suspend fun getAiRecentModels(projectKey: String): List<AiRecentModel>
+    suspend fun insertAiRecentModel(recentModel: AiRecentModel)
     
     // App Settings
     suspend fun getSetting(key: String): String?

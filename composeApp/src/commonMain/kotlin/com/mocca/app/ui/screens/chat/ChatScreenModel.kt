@@ -5,14 +5,12 @@ import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.data.repository.*
 import com.mocca.app.domain.model.*
-import com.mocca.app.ui.screens.chat.delegates.*
 import com.mocca.app.util.ChatExporter
 import com.mocca.app.util.VoiceInputProvider
 import io.github.aakira.napier.Napier
 import kotlinx.collections.immutable.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.serialization.json.*
 
 @Immutable
 data class ChatState(
@@ -35,7 +33,10 @@ data class ChatState(
     val isThinking: Boolean = false,
     val thinkingContent: String = "",
     val thinkingElapsedMs: Long = 0,
-    val providerInfo: ProviderResponse? = null,
+    val aiConfigState: AiConfigState = AiConfigState(),
+    val effectiveSelection: AiEffectiveSelection? = null,
+    val modelPickerState: ModelPickerUiState = ModelPickerUiState(),
+    val variantPickerState: VariantPickerUiState = VariantPickerUiState(),
     val selectedProviderId: String = "",
     val selectedModelId: String = "",
     val selectedVariantId: String? = null,
@@ -61,14 +62,8 @@ data class ChatState(
             (msg.tokens?.input ?: 0) + (msg.tokens?.output ?: 0)
         } ?: 0
     }
-        
     val availableVariants: ImmutableList<String> get() {
-        if (providerInfo == null || selectedProviderId.isEmpty() || selectedModelId.isEmpty()) return persistentListOf()
-        val provider = providerInfo.all.find { it.id == selectedProviderId } ?: return persistentListOf()
-        val modelsObj = provider.models as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
-        val modelObj = modelsObj[selectedModelId] as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
-        val variantsObj = modelObj["variants"] as? kotlinx.serialization.json.JsonObject ?: return persistentListOf()
-        return variantsObj.keys.toList().sorted().toImmutableList()
+        return variantPickerState.variants.map { it.id }.toImmutableList()
     }
 }
 
@@ -77,15 +72,11 @@ class ChatScreenModel(
     private val sessionRepository: SessionRepository,
     private val stateCoordinator: StateCoordinator,
     private val commandRepository: CommandRepository,
-    private val agentRepository: AgentRepository,
     private val appStateStore: AppStateStore,
     private val chatStateStore: ChatStateStore,
+    private val aiRuntimeConfigRepository: AiRuntimeConfigRepository,
     private val voiceInputProvider: VoiceInputProvider
 ) : ScreenModel {
-    
-    private val configDelegate by lazy {
-        ChatConfigDelegateImpl(appStateStore, sessionRepository, agentRepository, screenModelScope) 
-    }
     
     val aggregatedMessages: StateFlow<ImmutableList<Message>> = combine(
         chatStateStore.messages,
@@ -146,8 +137,10 @@ class ChatScreenModel(
     val voicePermissionRequestToken: StateFlow<Int> = _voicePermissionRequestToken.asStateFlow()
 
     fun togglePlanMode() {
-        val newModeId = if (_state.value.isPlanMode) null else "plan"
-        configDelegate.selectMode(newModeId)
+        val next = if (_state.value.isPlanMode) null else "plan"
+        if (next == null || _state.value.modes.any { it.id == next }) {
+            selectMode(next)
+        }
     }
 
     fun toggleShellMode() { _shellMode.value = !_shellMode.value }
@@ -248,13 +241,13 @@ class ChatScreenModel(
             combine(
                 chatStateStore.pendingPermission,
                 chatStateStore.pendingQuestion,
-                configDelegate.commands,
+                commandRepository.cachedCommands,
                 chatStateStore.todos
             ) { perm, quest, cmds, todos ->
                 _state.update { it.copy(
                     pendingPermission = perm,
                     pendingQuestion = quest,
-                    commands = cmds,
+                    commands = cmds.toImmutableList(),
                     todos = todos.toImmutableList()
                 ) }
             }.collect()
@@ -263,41 +256,36 @@ class ChatScreenModel(
         // 4. Configuration & Model Updates
         screenModelScope.launch {
             combine(
-                configDelegate.providerInfo,
-                configDelegate.selectedProviderId,
-                configDelegate.selectedModelId,
-                configDelegate.selectedVariantId,
-                configDelegate.modes,
-                configDelegate.selectedModeId,
-                configDelegate.modelName,
-                configDelegate.agentName,
-                configDelegate.maxTokens,
-                configDelegate.recentModels
+                aiRuntimeConfigRepository.configState,
+                aiRuntimeConfigRepository.effectiveSelection,
+                aiRuntimeConfigRepository.modelPickerState,
+                aiRuntimeConfigRepository.variantPickerState,
+                aiRuntimeConfigRepository.recentModels
             ) { args ->
-                @Suppress("UNCHECKED_CAST")
-                val provider = args[0] as ProviderResponse?
-                val pId = args[1] as String
-                val mId = args[2] as String
-                val vId = args[3] as String?
-                val modes = args[4] as ImmutableList<Mode>
-                val modeId = args[5] as String?
-                val mName = args[6] as String
-                val aName = args[7] as String
-                val maxT = args[8] as Int
-                val recent = args[9] as ImmutableList<RecentModel>
+                val config = args[0] as AiConfigState
+                val effective = args[1] as AiEffectiveSelection?
+                val modelPicker = args[2] as ModelPickerUiState
+                val variantPicker = args[3] as VariantPickerUiState
+                val modes = config.snapshot?.agentModeOptions().orEmpty().toImmutableList()
 
                 _state.update { it.copy(
-                    providerInfo = provider,
-                    selectedProviderId = pId,
-                    selectedModelId = mId,
-                    selectedVariantId = vId,
+                    aiConfigState = config,
+                    effectiveSelection = effective,
+                    modelPickerState = modelPicker,
+                    variantPickerState = variantPicker,
+                    selectedProviderId = effective?.providerId.orEmpty(),
+                    selectedModelId = effective?.modelId.orEmpty(),
+                    selectedVariantId = effective?.variantId,
                     modes = modes,
-                    selectedModeId = modeId,
-                    isPlanMode = modeId == "plan",
-                    modelName = mName,
-                    agentName = aName,
-                    maxTokens = maxT,
-                    recentModels = recent
+                    selectedModeId = effective?.agentId ?: effective?.modeId,
+                    isPlanMode = effective?.agentId == "plan" || effective?.modeId == "plan",
+                    modelName = effective?.displayModel ?: when (config.status) {
+                        AiConfigStatus.UPDATE_REQUIRED -> "UPDATE CLI"
+                        AiConfigStatus.ERROR -> "NO MODEL"
+                        else -> "--"
+                    },
+                    agentName = effective?.displayAgentOrMode ?: "--",
+                    maxTokens = effective?.contextLimit ?: 0
                 ) }
             }.collect()
         }
@@ -372,9 +360,15 @@ class ChatScreenModel(
         }
     }
 
-    fun selectModel(p: String, m: String) = configDelegate.selectModel(p, m)
-    fun selectVariant(v: String?) = configDelegate.selectVariant(v)
-    fun selectMode(m: String?) = configDelegate.selectMode(m)
+    fun selectModel(p: String, m: String) {
+        screenModelScope.launch { aiRuntimeConfigRepository.selectModel(p, m) }
+    }
+    fun selectVariant(v: String?) {
+        screenModelScope.launch { aiRuntimeConfigRepository.selectVariant(v) }
+    }
+    fun selectMode(m: String?) {
+        screenModelScope.launch { aiRuntimeConfigRepository.selectAgentOrMode(m) }
+    }
     fun addAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = (it.attachedFiles + f).toImmutableList()) }
     fun removeAttachment(f: AttachedFile) = _state.update { it.copy(attachedFiles = it.attachedFiles.filter { a -> a.id != f.id }.toImmutableList()) }
     fun clearAttachments() = _state.update { it.copy(attachedFiles = persistentListOf()) }
@@ -428,16 +422,20 @@ class ChatScreenModel(
         }
         
         screenModelScope.launch {
+            val selection = try {
+                aiRuntimeConfigRepository.requireEffectiveSelection()
+            } catch (error: Exception) {
+                _state.update { it.copy(error = error.message ?: "No valid AI model is selected") }
+                return@launch
+            }
+
             _inputText.value = ""
             clearAttachments()
             
             val result = chatStateStore.sendMessage(
                 text = text,
-                mode = _state.value.selectedModeId,
-                variant = _state.value.selectedVariantId,
-                attachments = currentAttachments,
-                modelId = _state.value.selectedModelId.ifEmpty { null },
-                providerId = _state.value.selectedProviderId.ifEmpty { null }
+                selection = selection,
+                attachments = currentAttachments
             )
             
             if (result.isFailure) {
@@ -613,4 +611,14 @@ class ChatScreenModel(
         // The session will remain monitored for notifications
         voiceInputProvider.release()
     }
+}
+
+private fun AiRuntimeConfigSnapshot.agentModeOptions(): List<Mode> {
+    val agentModes = agents
+        .filterNot { it.hidden }
+        .map { agent -> Mode(id = agent.id, name = agent.name, description = agent.description) }
+    val runtimeModes = modes.map { mode -> Mode(id = mode.id, name = mode.name, description = mode.description) }
+    return (agentModes + runtimeModes)
+        .distinctBy { it.id }
+        .sortedWith(compareBy<Mode> { it.id != "build" }.thenBy { it.name })
 }

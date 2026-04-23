@@ -47,9 +47,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.window.PopupProperties
 import com.mocca.app.domain.model.AttachedFile
+import com.mocca.app.domain.model.AiModelVariantOption
 import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.Mode
-import com.mocca.app.domain.model.ProviderResponse
+import com.mocca.app.domain.model.ModelPickerUiState
 import com.mocca.app.domain.model.mergeCommands
 import com.mocca.app.ui.components.modern.CommandPaletteOverlay
 import com.mocca.app.ui.components.modern.ModelSelectorDialog
@@ -77,11 +78,11 @@ fun ChatInputContent(
     onAbortClick: () -> Unit = {},
     modelName: String,
     agentName: String,
-    providerResponse: ProviderResponse?,
+    modelPickerState: ModelPickerUiState = ModelPickerUiState(),
     selectedProviderId: String,
     selectedModelId: String,
     onModelSelected: (String, String) -> Unit,
-    variants: List<String>,
+    variants: List<AiModelVariantOption>,
     selectedVariantId: String?,
     onVariantSelected: (String) -> Unit,
     modes: List<Mode>,
@@ -159,7 +160,7 @@ fun ChatInputContent(
         ChatInputStatusBar(
             modelName = modelName,
             agentName = agentName,
-            providerResponse = providerResponse,
+            modelPickerState = modelPickerState,
             onModelSelectorClick = { showModelSelector = true },
             variants = variants,
             selectedVariantId = selectedVariantId,
@@ -250,13 +251,10 @@ fun ChatInputContent(
         }
     }
 
-    if (showModelSelector && providerResponse != null) {
+    if (showModelSelector) {
         ModelSelectorDialog(
-            providerResponse = providerResponse,
-            selectedProviderId = selectedProviderId,
-            selectedModelId = selectedModelId,
+            state = modelPickerState,
             onModelSelected = onModelSelected,
-            recentModels = emptyList(),
             onDismiss = { showModelSelector = false }
         )
     }

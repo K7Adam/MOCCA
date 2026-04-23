@@ -28,8 +28,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
+import com.mocca.app.domain.model.AiModelVariantOption
 import com.mocca.app.domain.model.Mode
-import com.mocca.app.domain.model.ProviderResponse
+import com.mocca.app.domain.model.ModelPickerUiState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
@@ -43,9 +44,9 @@ import com.mocca.app.ui.theme.moccaClickable
 internal fun ChatInputStatusBar(
     modelName: String,
     agentName: String,
-    providerResponse: ProviderResponse?,
+    modelPickerState: ModelPickerUiState,
     onModelSelectorClick: () -> Unit,
-    variants: List<String>,
+    variants: List<AiModelVariantOption>,
     selectedVariantId: String?,
     onVariantSelectorClick: () -> Unit,
     modes: List<Mode>,
@@ -68,7 +69,7 @@ modifier = Modifier
                     color = AppColors.bgRaised,
                     shape = AppShapes.pill
                 )
-                .moccaClickable(onClick = onModelSelectorClick, enabled = providerResponse != null, pressedScale = 0.97f)
+                .moccaClickable(onClick = onModelSelectorClick, enabled = modelPickerState.isAvailable, pressedScale = 0.97f)
                 .padding(horizontal = AppSpacing.sm),
             contentAlignment = Alignment.Center
         ) {
@@ -84,7 +85,7 @@ modifier = Modifier
                 )
                 Text(
                     text = modelName.uppercase(),
-                    color = if (providerResponse != null) AppColors.onSurfaceVariant else AppColors.outline,
+                    color = if (modelPickerState.isAvailable) AppColors.onSurfaceVariant else AppColors.outline,
                     style = AppTypography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis

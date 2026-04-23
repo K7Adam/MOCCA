@@ -27,12 +27,6 @@ class SessionRepository(
     private val cacheMutex = Mutex()
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    // Default model/provider - should be configurable from settings
-    // These will be populated from /config/providers
-    private var defaultModelId: String = "" // Loaded dynamically from loadDefaultConfig()
-    private var defaultProviderId: String = "anthropic"
-    private var defaultMode: String = "build"
-
     private companion object {
         const val DEFAULT_MESSAGE_FETCH_LIMIT = 80
         const val MAX_MESSAGE_FETCH_LIMIT = 200
@@ -344,12 +338,16 @@ class SessionRepository(
                 add(file.toChatPart())
             }
         }
+        val resolvedModelId = modelId?.takeIf { it.isNotBlank() }
+            ?: return Result.failure(IllegalStateException("AiEffectiveSelection.modelId is required"))
+        val resolvedProviderId = providerId?.takeIf { it.isNotBlank() }
+            ?: return Result.failure(IllegalStateException("AiEffectiveSelection.providerId is required"))
         return apiClient.chatAsync(
             sessionId = sessionId,
-            modelId = modelId ?: defaultModelId,
-            providerId = providerId ?: defaultProviderId,
+            modelId = resolvedModelId,
+            providerId = resolvedProviderId,
             parts = parts,
-            mode = mode ?: defaultMode,
+            mode = mode,
             variant = variant
         )
     }
@@ -359,25 +357,7 @@ class SessionRepository(
      * Use this if you need the response immediately.
      */
     suspend fun sendMessage(sessionId: String, text: String): Result<Message> {
-        val parts = listOf(ChatPart.Text(text = text))
-        return apiClient.chat(
-            sessionId = sessionId,
-            modelId = defaultModelId,
-            providerId = defaultProviderId,
-            parts = parts,
-            mode = defaultMode
-        ).map { info ->
-            // Convert to Message (without parts, since chat returns just info)
-            Message(
-                id = info.id,
-                sessionId = info.sessionID,
-                role = MessageRole.ASSISTANT,
-                parts = emptyList(), // Parts come via SSE
-                createdAt = info.time?.created ?: Clock.System.now().toEpochMilliseconds(),
-                model = info.modelID,
-                cost = info.cost
-            )
-        }
+        return Result.failure(IllegalStateException("AiEffectiveSelection is required for sending messages"))
     }
     
     /**
@@ -594,79 +574,22 @@ class SessionRepository(
         )
     }
     
-    /**
-     * Load and cache the default model/provider from server config.
-     * Now properly awaits network response before returning.
-     */
     suspend fun loadDefaultConfig() {
-        // 0. Instant Load: Check local cache for recent models to instantly populate UI
-        try {
-            val recent = localCache.getRecentModels().firstOrNull()
-            if (recent != null) {
-                defaultProviderId = recent.providerId
-                defaultModelId = recent.modelId
-                Napier.i("Fast-loaded default config from cache: $defaultProviderId / $defaultModelId")
-            }
-        } catch (e: Exception) {
-            Napier.w("Failed to read recent models from cache for fast-loading", e)
-        }
-
-        // If we already have defaults from cache, we can return early but still sync in background
-        val hadCacheHit = defaultModelId.isNotEmpty()
-        
-        // 1. Try to load global config from server (contains default model)
-        // Now we AWAIT this instead of fire-and-forget
-        if (!hadCacheHit || true) { // Always sync to ensure we have latest
-            apiClient.getConfig().onSuccess { config ->
-                // Parse "provider/model" format (e.g. "anthropic/claude-sonnet-4-5")
-                config.model?.let { modelStr ->
-                    val parts = modelStr.split("/", limit = 2)
-                    if (parts.size == 2) {
-                        defaultProviderId = parts[0]
-                        defaultModelId = parts[1]
-                        Napier.i("Default config synced from server: $defaultProviderId / $defaultModelId")
-                        // Save to RecentModel for future instant loading
-                        addRecentModel(defaultProviderId, defaultModelId)
-                    }
-                }
-
-                // Set default mode
-                config.modes.firstOrNull()?.let { mode ->
-                    defaultMode = mode.id
-                    Napier.i("Default mode synced: $defaultMode")
-                }
-            }.onFailure { error ->
-                Napier.w("Failed to sync server config: ${error.message}")
-            }
-
-            // 2. Fallback: If defaults still empty, try to pick first available from providers list
-            if (defaultModelId.isEmpty()) {
-                apiClient.getProviders().onSuccess { providers ->
-                    providers.firstOrNull { it.models.isNotEmpty() }?.let { provider ->
-                        defaultProviderId = provider.id
-                        defaultModelId = provider.models.values.first().id
-                        Napier.i("Fallback default config: $defaultProviderId / $defaultModelId")
-                        // Save to RecentModel for future instant loading
-                        addRecentModel(defaultProviderId, defaultModelId)
-                    }
-                }
-            }
-        }
+        Napier.v("[SessionRepository] loadDefaultConfig ignored; AiRuntimeConfigRepository owns AI defaults")
     }
     
     /**
      * Set the default model and provider for chat.
      */
     fun setDefaultModel(modelId: String, providerId: String) {
-        defaultModelId = modelId
-        defaultProviderId = providerId
+        Napier.v("[SessionRepository] setDefaultModel ignored; AiRuntimeConfigRepository owns AI selection")
     }
     
     /**
      * Set the default mode for chat.
      */
     fun setDefaultMode(mode: String) {
-        defaultMode = mode
+        Napier.v("[SessionRepository] setDefaultMode ignored; AiRuntimeConfigRepository owns AI selection")
     }
     
     /**
@@ -687,14 +610,14 @@ class SessionRepository(
      * Get current default model and provider IDs.
      */
     fun getDefaultModelProvider(): Pair<String, String> {
-        return Pair(defaultModelId, defaultProviderId)
+        return "" to ""
     }
     
     /**
      * Get current default mode.
      */
     fun getDefaultMode(): String {
-        return defaultMode
+        return ""
     }
     
     /**
@@ -702,13 +625,7 @@ class SessionRepository(
      * Returns pair of (modelName, agentName) for UI display.
      */
     fun getCurrentModelInfo(): Pair<String, String>? {
-        return if (defaultModelId.isNotEmpty()) {
-            val modelDisplay = defaultModelId.uppercase().replace("-", " ").take(30)
-            val agentDisplay = defaultMode.uppercase()
-            Pair(modelDisplay, agentDisplay)
-        } else {
-            null
-        }
+        return null
     }
     
     /**
