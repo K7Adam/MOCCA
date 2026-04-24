@@ -133,7 +133,7 @@ sqldelight {
     databases {
         create("AppDatabase") {
             packageName.set("com.mocca.app.db")
-            version = 2
+            version = 3
             // Schema now in commonMain/sqldelight, generated for all targets
         }
     }

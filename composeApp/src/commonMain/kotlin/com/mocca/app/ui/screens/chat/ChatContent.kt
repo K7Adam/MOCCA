@@ -45,6 +45,7 @@ import com.mocca.app.ui.screens.files.FilesScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import com.mocca.app.ui.navigation.LocalSharedTransitionScope
 import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
+import com.mocca.app.domain.model.AgentActivity
 
 enum class HeroMomentType { NONE, CONNECTED, COMPLETED }
 
@@ -259,6 +260,9 @@ fun ChatContent(
                 isThinking = state.isThinking,
                 thinkingContent = state.thinkingContent,
                 thinkingElapsedMs = state.thinkingElapsedMs,
+                agentActivity = state.agentActivity,
+                pendingPermissionCount = state.pendingPermissions.size,
+                pendingQuestionCount = state.pendingQuestions.size,
                 showTimestamps = state.showTimestamps,
                 showTokenCounts = state.showTokenCounts,
                 onFileClick = onFileClick,
@@ -339,6 +343,9 @@ private fun ChatMessagePane(
     isThinking: Boolean,
     thinkingContent: String,
     thinkingElapsedMs: Long,
+    agentActivity: AgentActivity?,
+    pendingPermissionCount: Int,
+    pendingQuestionCount: Int,
     showTimestamps: Boolean,
     showTokenCounts: Boolean,
     onFileClick: (String) -> Unit,
@@ -369,15 +376,31 @@ private fun ChatMessagePane(
             }
         }
         val reversedMessages = remember(displayMessages) { displayMessages.asReversed() }
+        val activeMessage = remember(displayMessages, agentActivity) {
+            agentActivity?.messageId?.let { id -> displayMessages.firstOrNull { it.id == id } }
+        }
+        val activeHasTextPart = activeMessage?.parts?.any { part ->
+            part is MessagePart.Text && part.text.isNotBlank()
+        } == true
+        val activeHasReasoningPart = activeMessage?.parts?.any { part ->
+            when (part) {
+                is MessagePart.Reasoning -> part.content.isNotBlank()
+                is MessagePart.Thinking -> part.content.isNotBlank()
+                else -> false
+            }
+        } == true
+        val showDetachedThinking = isThinking && !activeHasReasoningPart
+        val showDetachedStreaming = streamingText.isNotEmpty() && !activeHasTextPart
 
-        LaunchedEffect(targetMessageId, reversedMessages, isSending, isThinking, streamingText) {
+        LaunchedEffect(targetMessageId, reversedMessages, isSending, showDetachedThinking, showDetachedStreaming) {
             val messageId = targetMessageId ?: return@LaunchedEffect
             val targetIndex = reversedMessages.indexOfFirst { it.id == messageId }
             if (targetIndex >= 0) {
                 val prefixItemCount = 1 +
-                    (if (isSending && streamingText.isEmpty() && !isThinking) 1 else 0) +
-                    (if (isThinking) 1 else 0) +
-                    (if (streamingText.isNotEmpty()) 1 else 0)
+                    (if (agentActivity != null || pendingPermissionCount > 0 || pendingQuestionCount > 0) 1 else 0) +
+                    (if (isSending && !showDetachedStreaming && !showDetachedThinking) 1 else 0) +
+                    (if (showDetachedThinking) 1 else 0) +
+                    (if (showDetachedStreaming) 1 else 0)
 
                 listState.animateScrollToItem(prefixItemCount + targetIndex)
                 onTargetMessageHandled()
@@ -401,14 +424,27 @@ private fun ChatMessagePane(
                 contentType = "spacer"
             ) { Spacer(modifier = Modifier.height(32.dp)) }
 
-            if (isSending && streamingText.isEmpty() && !isThinking) {
+            if (agentActivity != null || pendingPermissionCount > 0 || pendingQuestionCount > 0) {
+                item(
+                    key = "agent_activity_strip",
+                    contentType = "agent_activity"
+                ) {
+                    AgentActivityStrip(
+                        activity = agentActivity,
+                        permissionCount = pendingPermissionCount,
+                        questionCount = pendingQuestionCount
+                    )
+                }
+            }
+
+            if (isSending && !showDetachedStreaming && !showDetachedThinking) {
                 item(
                     key = "processing_indicator",
                     contentType = "processing"
                 ) { ModernProcessingIndicator() }
             }
 
-            if (isThinking) {
+            if (showDetachedThinking) {
                 item(
                     key = "thinking_indicator",
                     contentType = "thinking"
@@ -420,7 +456,7 @@ private fun ChatMessagePane(
                 }
             }
 
-            if (streamingText.isNotEmpty()) {
+            if (showDetachedStreaming) {
                 item(
                     key = "streaming_message",
                     contentType = "streaming"
@@ -463,6 +499,70 @@ private fun ChatMessagePane(
                     onDeletePart = { partId -> screenModel.deleteMessagePart(message, partId) },
                     onEditPart = { part -> screenModel.showEditPart(message, part) },
                     onFileClick = onFileClick
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgentActivityStrip(
+    activity: AgentActivity?,
+    permissionCount: Int,
+    questionCount: Int,
+    modifier: Modifier = Modifier
+) {
+    val stage = activity?.stage ?: AgentActivity.STAGE_IDLE
+    val status = when (stage) {
+        AgentActivity.STAGE_QUEUED -> "Queued"
+        AgentActivity.STAGE_REASONING -> "Reasoning"
+        AgentActivity.STAGE_TOOL -> activity?.title ?: "Tool running"
+        AgentActivity.STAGE_WRITING -> "Writing"
+        AgentActivity.STAGE_ERROR -> "Attention needed"
+        AgentActivity.STAGE_IDLE -> "Idle"
+        else -> stage.replaceFirstChar { it.uppercase() }
+    }
+    val color = when (stage) {
+        AgentActivity.STAGE_ERROR -> AppColors.statusError
+        AgentActivity.STAGE_TOOL -> AppColors.statusProcessing
+        AgentActivity.STAGE_REASONING -> AppColors.statusThinking
+        AgentActivity.STAGE_WRITING -> AppColors.accentGreen
+        else -> AppColors.statusInfo
+    }
+
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = AppShapes.small,
+        color = AppColors.surfaceContainerHigh,
+        tonalElevation = 2.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = AppSpacing.md, vertical = AppSpacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(8.dp)
+                    .background(color, AppShapes.statusDot)
+            )
+            Text(
+                text = status,
+                style = AppTypography.labelSmall,
+                color = AppColors.onSurface
+            )
+            if (permissionCount > 0) {
+                Text(
+                    text = "$permissionCount permission",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.warning
+                )
+            }
+            if (questionCount > 0) {
+                Text(
+                    text = "$questionCount question",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.accentBright
                 )
             }
         }

@@ -1,61 +1,80 @@
 # MOCCA
 
-Android client for the **OpenCode** AI agent. Kotlin Multiplatform + Compose Multiplatform.
+Android companion app for OpenCode, built with Kotlin Multiplatform, Compose Multiplatform, Koin, Voyager, SQLDelight, and Material 3 Expressive.
 
-## Features
+MOCCA is Android-only. Shared code lives in `composeApp`; `androidApp` stays as the platform bootstrap.
 
-- **Session Management** — Real-time chat with streaming responses
-- **File & Git Operations** — Browse, edit, version control via OpenCode VCS endpoints
-- **Terminal Access** — WebSocket-based remote command execution
-- **Server-First** — Selective SQLDelight-backed persistence for durable data
-- **Auto-Update** — GitHub Releases integration
+## Current Product Shape
+
+- **Bridge-first connection**: pair with the MOCCA CLI bridge by QR code. Direct OpenCode HTTP/SSE remains available as an advanced legacy path.
+- **AI sessions**: streaming chat, session history, tool permissions, question replies, forks, reverts, sharing, and summaries.
+- **Runtime config**: provider, model, variant, agent, and mode selection come from the CLI bridge when available. Model picker recents are project-scoped `AiRecentModel` entries stored in `AppSettings`.
+- **Project tools**: files, git, terminal, MCP, commands, agents, and update checks are exposed through repositories and state stores.
+- **Server-first data**: primary user-facing data emits cache first, refreshes from network/bridge, updates `LocalCache`, then emits fresh state.
+- **UI system**: Material 3 Expressive shell with app-owned `AppColors`, `AppTypography`, `AppShapes`, and motion from `MaterialTheme.motionScheme`.
 
 ## Architecture
 
-```
-UI (Compose Multiplatform)
-  ↓
-ScreenModels (Voyager / MVI)
-  ↓
-Repositories (Data Layer)
-  ├── Local Cache (SQLDelight)
-  └── Remote Data (ApiExecutor → ConnectionManager → HttpClient)
-        ↓
-OpenCode Server (HTTP Basic Auth)
+```text
+Compose UI
+  -> Voyager ScreenModels / state holders
+  -> Repositories
+      -> LocalCache (SQLDelight + AppSettings)
+      -> ChatTurnReducer (session/message/part event state)
+      -> MOCCA CLI bridge
+      -> legacy OpenCode HTTP/SSE fallback
 ```
 
-**Key Components:**
-- `ConnectionManager` — owns HttpClient lifecycle, auth, health checks
-- `ApiExecutor` — interface for HTTP requests (consumers never hold HttpClient)
-- `ConnectionStatus` — real-time connection state for UI
+Key boundaries:
 
-**UI Theme**: Material 3 Expressive (Full Tokenization). True dark tonal palette driven by `#8B9DC3` seed color. Squircle-based shapes and expressive motion schemes.
+- `ConnectionManager` owns the legacy OpenCode `HttpClient`; consumers use `ApiExecutor.execute {}`.
+- `BridgeConnectionManager` owns the CLI bridge client and v2 capability checks.
+- `EventStreamRepository` ingests OpenCode events, reduces them through `ChatTurnReducer`, and persists streaming deltas by `messageId + partId`.
+- `StateCoordinator` fans canonical events into `AppStateStore` and `ChatStateStore`; it does not append stream tokens a second time.
+- `AiRuntimeConfigRepository` owns provider/model/agent/mode selection and project-scoped AI recents.
+- Repositories depend on `LocalCache`, not raw SQLDelight drivers.
+
+## Persistence
+
+SQLDelight schema lives in `composeApp/src/commonMain/sqldelight/com/mocca/app/db/`.
+
+Current durable tables:
+
+- `Agent.sq`
+- `AppSettings.sq` (`ai.selection.*`, `ai.recents.*`, bridge target settings, app settings)
+- `Command.sq`
+- `FileInfo.sq`
+- `Message.sq`
+- `ServerConfig.sq`
+- `Session.sq`
+- `SessionTodo.sq`
+
+Migration `2.sqm` removes the retired global `RecentModel` table. Do not add a new global model-recents table; use project-scoped `AiRecentModel` persistence through `LocalCache`.
+
+Streaming message persistence is part-addressable: text, reasoning, and legacy thinking deltas update only the affected message part. Avoid full-message JSON rewrites in token loops.
 
 ## Quick Start
 
-### 1. Prerequisites
+### Prerequisites
 
 - JDK 17+
-- Android SDK (API 36)
-- OpenCode CLI installed
+- Android SDK API 36
+- OpenCode CLI
+- MOCCA CLI bridge available on `PATH`
 
-### 2. Start MOCCA CLI Bridge
-
-The recommended connection path is the MOCCA CLI bridge. Start it in the project directory and scan the printed QR code in the Android app:
+### Start the MOCCA CLI Bridge
 
 ```bash
 mocca-cli
 ```
 
-For Tailscale pairing, use the dedicated network shortcut. The CLI automatically detects the Tailscale `100.x.x.x` address and writes it into the QR code:
+For Tailscale pairing:
 
 ```bash
 mocca-cli tailscale
-# or:
+# or
 mocca-cli --tailscale
 ```
-
-Tailscale mode uses the local `tailscale ip -4` command first and marks the QR link as `network=tailscale`, so the app does not have to guess based on the IP address alone.
 
 If port `17653` is already in use:
 
@@ -63,127 +82,64 @@ If port `17653` is already in use:
 mocca-cli tailscale --port 17654
 ```
 
-### Legacy: Start OpenCode Server Directly
+### Legacy Direct OpenCode Server
+
+Use this only for direct server testing or fallback verification:
 
 ```bash
-# Set credentials (optional — default: username "opencode", no password)
 export OPENCODE_SERVER_USERNAME=opencode
 export OPENCODE_SERVER_PASSWORD=your_password
-
-# Start server
 opencode serve --port 4096
-
-# For LAN/Tailscale access, bind to all interfaces:
 opencode serve --port 4096 --hostname 0.0.0.0
 ```
 
-### 3. Build & Install
+## Build And Test
 
-```bash
-# Windows
+```powershell
+# Build debug APK
 .\gradlew.bat :androidApp:assembleDebug
 
-# macOS/Linux
-./gradlew :androidApp:assembleDebug
+# Run shared host tests
+.\gradlew.bat :composeApp:allTests
 
-# Install
-adb install androidApp/build/outputs/apk/debug/androidApp-debug.apk
+# Start visible emulator
+.\maestro-workspace\start-emulator.ps1
+
+# Run smoke plan
+.\maestro-workspace\run-emulator-tests.ps1 maestro-workspace/testplans/smoke.yaml
 ```
 
-### 4. Configure Connection
-
-Recommended: scan the MOCCA CLI QR code from the app onboarding flow. Manual host entry is only needed for legacy/direct server setups.
-
-| Method | Host | Notes |
-|--------|------|-------|
-| **Emulator** | `10.0.2.2` | Auto-detected, no config needed |
-| **LAN** | Your machine's IP | Requires `--hostname 0.0.0.0` |
-| **Tailscale** | Tailscale hostname/IP | Prefer `mocca-cli tailscale`; both devices must be on Tailscale |
-
-**Settings** → Dashboard (right swipe) → `[SETTINGS]` → Enter host, port, username, password.
-
-### 5. Verify Connection
-
-Connection indicator in top bar:
-
-| Color | Status |
-|-------|--------|
-| 🟢 Green | Connected (good latency) |
-| 🟡 Yellow | Connected (high latency) |
-| 🔴 Red | Disconnected / Error |
-| ⚪ Gray | Not configured |
-
-**Health check from any machine:**
-```bash
-curl -u opencode:your_password http://<host>:4096/global/health
-# Expected: {"healthy":true,"version":"..."}
-```
-
-## Troubleshooting
-
-| Problem | Solution |
-|---------|----------|
-| "Not Configured" | Go to Settings and enter server details |
-| Connection refused | Verify OpenCode server is running |
-| 401 Unauthorized | Check username/password match server config |
-| Timeout on LAN | Ensure `--hostname 0.0.0.0` is set |
-| Emulator can't connect | Server must listen on `127.0.0.1` or `0.0.0.0` |
-
-## Development
-
-### Tech Stack
+## Tech Stack
 
 | Component | Version |
-|-----------|---------|
+|---|---|
 | Kotlin | 2.3.0 |
-| Compose Multiplatform | 1.11.0-alpha04 |
+| Compose Multiplatform | 1.9.3 |
+| Material 3 Expressive | 1.11.0-alpha04 |
+| Ktor | 3.0.3 |
+| SQLDelight | 2.2.1 |
 | Koin | 4.1.1 |
 | Voyager | 1.1.0-beta03 |
 | AGP | 9.0.0-rc03 |
-| M3 Expressive | 1.5.0-alpha15 (via CMP 1.11.0-alpha04) |
 
-### Project Structure
+## Engineering Rules
 
-```
-MOCCA/
-├── androidApp/           # Entry point (MainActivity, Manifest)
-├── composeApp/           # 90% of code
-│   └── src/commonMain/kotlin/com/mocca/app/
-│       ├── api/          # Network (Ktor, SSE)
-│       ├── data/         # Repositories + SQLDelight
-│       ├── domain/       # Models (immutable)
-│       └── ui/           # Screens + Components
-├── maestro-workspace/    # E2E UI tests
-└── gradle/               # Version catalog
-```
+- Keep business logic out of composables; use ScreenModels, repositories, and state stores.
+- Use `ApiExecutor` for legacy HTTP access and bridge repositories for CLI-backed capabilities.
+- Keep model picker recents project-scoped through `AiRecentModel`; `SessionRepository` must not persist model recents.
+- Route OpenCode `message.part.delta`, permission, question, status, and usage events through `ChatTurnReducer` before exposing chat UI state.
+- Treat `reasoning` as the canonical OpenCode part type; `thinking` is a legacy import/display alias only.
+- Prefer deleting obsolete compatibility paths over layering new adapters on top of them.
+- Use absolute paths in scripts and agent docs.
+- Do not add iOS or desktop targets.
 
-### Commands
+## AI Slop Cleanup Standard
 
-```bash
-# Build
-.\gradlew.bat :androidApp:assembleDebug
+For this repository, "AI slop" means code or docs that look complete but add low-quality maintenance burden: stale architecture claims, unused compatibility paths, generic placeholder docs, vague comments, duplicate state ownership, and old names that obscure the current contract.
 
-# E2E Tests (requires emulator)
-.\maestro-workspace\run-emulator-tests.ps1 maestro-workspace/testplans/smoke.yaml
+Cleanup work should leave a test or build signal behind, update the docs that future agents will read, and remove dead paths instead of hiding them behind new wrappers.
 
-# Logcat
-adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
-```
-
-### Conventions
-
-- **Architecture**: MVI (ScreenModel → StateFlow → UI)
-- **Server-First**: Repositories use `Flow<Resource<T>>` for selective persistence
-- **Paths**: ALWAYS use absolute paths
-- **Theme**: Soft Dark (`#1A1A1A`) with neutral palette, rounded corners, subtle cool accent
-
-### Anti-Patterns (STRICT)
-
-- NEVER use `RectangleShape` for interactive elements
-- NEVER hold `HttpClient` references — use `ApiExecutor.execute {}`
-- NEVER use relative paths
-- NEVER block main thread
-- DO NOT add iOS/Desktop targets
+See `docs/ai-slop-cleanup.md` for the current cleanup notes and sources.
 
 ## License
 

@@ -75,7 +75,7 @@ class BridgeConnectionManagerTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system", "ai"),
                         ai = BridgeAiCapabilities(opencodeConfigSnapshot = true)
                     )
@@ -87,7 +87,7 @@ class BridgeConnectionManagerTest {
 
         val status = assertIs<BridgeConnectionStatus.Connected>(manager.status.value)
         assertEquals(target, status.target)
-        assertEquals(1, status.capabilities.protocolVersion)
+        assertEquals(2, status.capabilities.protocolVersion)
         assertEquals(listOf(target), healthChecker.checkedTargets)
         assertEquals(target, targetRepository.activeTarget.value)
         assertEquals(target, targetRepository.loadPersistedTarget())
@@ -189,7 +189,7 @@ class BridgeConnectionManagerTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system"),
                     )
                 )
@@ -231,7 +231,7 @@ class BridgeConnectionManagerTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system", "ai"),
                         ai = BridgeAiCapabilities(opencodeConfigSnapshot = true)
                     )
@@ -273,7 +273,7 @@ class BridgeConnectionManagerTest {
     private class RecordingBridgeHealthChecker(
         private val result: BridgeHealth = BridgeHealth(
             ok = true,
-            protocolVersion = 1,
+            protocolVersion = 2,
             pairingRequired = true,
             websocketPath = "/v1/ws"
         )

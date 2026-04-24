@@ -205,7 +205,7 @@ class AiRuntimeConfigRepository(
             return
         }
 
-        val recents = mergedRecents(snapshot)
+        val recents = currentProjectRecents(snapshot)
         _recentModels.value = recents
         applySelection(snapshot, selected, persist = persisted == null)
         updatePickerState(snapshot, _effectiveSelection.value, recents)
@@ -315,24 +315,11 @@ class AiRuntimeConfigRepository(
         )
     }
 
-    private suspend fun mergedRecents(snapshot: AiRuntimeConfigSnapshot): List<AiRecentModel> {
-        val stored = localCache.getAiRecentModels(snapshot.projectKey)
-        val legacy = localCache.getRecentModels().mapNotNull { recent ->
-            val provider = snapshot.findProvider(recent.providerId) ?: return@mapNotNull null
-            val model = snapshot.findModel(recent.providerId, recent.modelId) ?: return@mapNotNull null
-            AiRecentModel(
-                projectKey = snapshot.projectKey,
-                providerId = recent.providerId,
-                modelId = recent.modelId,
-                displayName = model.name.ifBlank { model.id },
-                providerName = provider.name,
-                lastUsedAt = recent.lastUsedAt
-            )
-        }
-        return (stored + legacy)
-            .distinctBy { it.providerId to it.modelId }
-            .sortedByDescending { it.lastUsedAt }
-            .take(8)
+    private suspend fun currentProjectRecents(snapshot: AiRuntimeConfigSnapshot): List<AiRecentModel> {
+        return selectAiRecentModelsForSnapshot(
+            snapshot = snapshot,
+            stored = localCache.getAiRecentModels(snapshot.projectKey)
+        )
     }
 
     private suspend fun loadLegacyHttpSnapshot(): AiRuntimeConfigSnapshot {

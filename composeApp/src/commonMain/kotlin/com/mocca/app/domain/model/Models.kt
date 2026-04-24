@@ -153,7 +153,13 @@ data class TokenUsage(
     val output: Int = 0,
     val reasoning: Int = 0,
     val cache: CacheUsage? = null
-)
+) {
+    val hasVisibleDetails: Boolean
+        get() = input > 0 ||
+            output > 0 ||
+            reasoning > 0 ||
+            cache?.let { it.read > 0 || it.write > 0 } == true
+}
 
 @Serializable
 @Immutable
@@ -169,10 +175,23 @@ data class MessageTime(
     val completed: Long? = null
 )
 
+private fun MessageTime.durationMs(): Long? =
+    completed?.let { end -> created.takeIf { it > 0 }?.let { start -> end - start } }
+
+@Serializable
+@Immutable
+data class MessagePartTime(
+    val start: Long = 0,
+    val end: Long? = null
+)
+
+private fun MessagePartTime.durationMs(): Long? =
+    end?.let { finishedAt -> start.takeIf { it > 0 }?.let { startedAt -> finishedAt - startedAt } }
+
 /**
  * Message part as returned from GET /session/:id/message.
  * This is a flat structure with type discriminator.
- * Types: "text", "tool", "file", "step-start", "step-finish"
+ * Types: "text", "reasoning", "tool", "file", "step-start", "step-finish"
  */
 @Serializable
 @Immutable
@@ -182,7 +201,7 @@ data class MessagePartResponse(
     val sessionID: String,
     @SerialName("messageID")
     val messageID: String,
-    val type: String, // "text", "tool", "file", "step-start", "step-finish"
+    val type: String, // "text", "reasoning", "tool", "file", "step-start", "step-finish"
     // Text part fields
     val text: String? = null,
     // Tool part fields
@@ -199,8 +218,8 @@ data class MessagePartResponse(
     val reason: String? = null,
     val cost: Double? = null,
     val tokens: TokenUsage? = null,
-    // Time fields (for step-start/finish)
-    val time: MessageTime? = null
+    // Time fields for part lifecycle (OpenCode uses start/end here)
+    val time: MessagePartTime? = null
 )
 
 @Serializable
@@ -286,7 +305,7 @@ data class PermissionResponse(
 
 /**
  * Request body for POST /permission/:requestId/reply.
- * Matches OpenChamber SDK permission.reply API.
+ * Matches the OpenCode permission.reply API.
  */
 @Serializable
 @Immutable
@@ -299,7 +318,7 @@ data class PermissionReplyRequest(
 
 /**
  * Request body for POST /question/:requestId/reply.
- * Matches OpenChamber SDK question.reply API.
+ * Matches the OpenCode question.reply API.
  */
 @Serializable
 @Immutable
@@ -364,6 +383,7 @@ data class Message(
 ) {
     companion object {
         fun fromResponse(response: MessageResponse): Message {
+            val finishPart = response.parts.lastOrNull { it.type == "step-finish" }
             return Message(
                 id = response.info.id,
                 sessionId = response.info.sessionID,
@@ -371,12 +391,18 @@ data class Message(
                 parts = response.parts.mapNotNull { part ->
                     when (part.type) {
                         "text" -> part.text?.let { MessagePart.Text(id = part.id, text = it) }
+                        "reasoning" -> part.text?.let {
+                            MessagePart.Reasoning(
+                                content = it,
+                                timeMs = part.time?.durationMs() ?: 0L,
+                                id = part.id
+                            )
+                        }
                         "thinking" -> part.text?.let { 
                             MessagePart.Thinking(
                                 content = it,
-                                durationMs = part.time?.completed?.let { end -> 
-                                    part.time.created.takeIf { start -> start > 0 }?.let { start -> end - start }
-                                }
+                                durationMs = part.time?.durationMs(),
+                                id = part.id
                             ) 
                         }
                         "tool" -> {
@@ -404,8 +430,8 @@ data class Message(
                 },
                 createdAt = response.info.time?.created ?: 0L,
                 model = response.info.model?.modelID,
-                cost = response.info.cost,
-                tokens = response.info.tokens,
+                cost = response.info.cost ?: finishPart?.cost,
+                tokens = response.info.tokens ?: finishPart?.tokens,
                 isRead = true,
                 metadata = null,
                 isStreaming = false
@@ -424,18 +450,19 @@ sealed interface MessagePart {
     @Immutable
     data class Reasoning(
         val content: String,
-        val timeMs: Long
+        val timeMs: Long,
+        val id: String = ""
     ) : MessagePart
 
     /**
-     * Extended thinking content from Claude/o1 and other reasoning models.
-     * Displayed with a distinct "thinking" visualization before text response.
+     * Legacy alias for older streams that used "thinking" instead of OpenCode's "reasoning".
      */
     @Serializable
     @Immutable
     data class Thinking(
         val content: String,
-        val durationMs: Long? = null
+        val durationMs: Long? = null,
+        val id: String = ""
     ) : MessagePart
 
     @Serializable
@@ -490,7 +517,7 @@ enum class ToolState {
 }
 
 /**
- * Rich tool state matching OpenChamber's ToolStateUnion.
+ * Rich tool state matching OpenCode tool-state payloads.
  * Use this for detailed tool card rendering.
  */
 sealed interface RichToolState {
@@ -758,7 +785,7 @@ data class AgentConfig(
 
 /**
  * Session status info from /session/status endpoint.
- * Matches OpenChamber's session status types.
+ * Matches OpenCode session status types.
  */
 @Serializable
 @Immutable
@@ -782,17 +809,6 @@ data class SessionStatusInfo(
 data class SessionRevertInfo(
     @SerialName("messageID")
     val messageID: String
-)
-
-/**
- * Recent model entry for UI persistence.
- */
-@Serializable
-@Immutable
-data class RecentModel(
-    val providerId: String,
-    val modelId: String,
-    val lastUsedAt: Long
 )
 
 /**

@@ -339,6 +339,8 @@ class ConnectionManager(
                 errorMsg.contains("Trust", ignoreCase = true) ||
                 errorMsg.contains("Handshake", ignoreCase = true)) {
                 Napier.e("[ConnectionManager] SSL/TLS ERROR DETAILS: ${e.stackTraceToString()}")
+            } else if (errorMsg.isExpectedOfflineConnectionFailure()) {
+                Napier.i("[ConnectionManager] Server offline at ${config?.baseUrl}")
             } else {
                 Napier.w("[ConnectionManager] Health check failed: $errorType - $errorMsg")
             }
@@ -367,7 +369,11 @@ class ConnectionManager(
             },
             onFailure = { error ->
                 val errorMsg = error.message ?: "Unknown error"
-                Napier.e("[ConnectionManager] Health check FAILED: $errorMsg")
+                if (errorMsg.isExpectedOfflineConnectionFailure()) {
+                    Napier.i("[ConnectionManager] Health check offline: $errorMsg")
+                } else {
+                    Napier.e("[ConnectionManager] Health check FAILED: $errorMsg")
+                }
                 consecutiveFailures++
                 if (consecutiveFailures < MAX_RECONNECT_ATTEMPTS) {
                     scheduleReconnect()
@@ -546,4 +552,10 @@ private fun ServerConfig?.isSameEndpointAs(other: ServerConfig): Boolean {
         username == other.username &&
         password == other.password &&
         useHttps == other.useHttps
+}
+
+private fun String.isExpectedOfflineConnectionFailure(): Boolean {
+    return contains("Failed to connect", ignoreCase = true) ||
+        contains("Connection refused", ignoreCase = true) ||
+        contains("Connection failed", ignoreCase = true)
 }

@@ -42,8 +42,6 @@ class MoccaApiClient(
     /**
      * @deprecated This endpoint returns HTML, not JSON. Use [getHealth] instead. The /app endpoint
      * is a frontend route, not a REST API endpoint.
-     *
-     * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
      */
     @Deprecated(
             message = "The /app endpoint returns HTML. Use getHealth() for server status.",
@@ -195,7 +193,7 @@ class MoccaApiClient(
     suspend fun listPendingPermissions(): Result<List<PermissionRequest>> =
             safeCall("listPendingPermissions") { get("permission").body() }
 
-    // Questions (matching OpenChamber SDK)
+    // Questions
     /**
      * Reply to a question request.
      * @param requestId The question request ID
@@ -222,11 +220,10 @@ class MoccaApiClient(
             }
 
     /** List all pending question requests. */
-    /** List all pending question requests. */
     suspend fun listPendingQuestions(): Result<List<QuestionRequest>> =
             safeCall("listPendingQuestions") { get("question").body() }
 
-    // Session fork/revert (matching OpenChamber SDK)
+    // Session fork/revert
     /**
      * Fork a session from a specific message. Creates a new session with messages up to the
      * specified message.
@@ -308,7 +305,7 @@ class MoccaApiClient(
     suspend fun getProvidersConfig(): Result<ProvidersConfig> =
             safeCall("getProvidersConfig") { get("config/providers").body() }
 
-    // OAUTH / AUTHENTICATION (Priority 1.1, 1.2)
+    // OAuth and authentication
 
 
     /**
@@ -359,7 +356,7 @@ class MoccaApiClient(
                 Unit
             }
 
-    // CONFIG WRITE (Priority 1.3)
+    // Config write
 
 
     /**
@@ -375,7 +372,7 @@ class MoccaApiClient(
                         .body()
             }
 
-    // COMMAND EXECUTION (Priority 1.4, 1.5)
+    // Command execution
 
 
     /**
@@ -472,7 +469,7 @@ class MoccaApiClient(
         }
     }
 
-    // SESSION TODO (Priority 2.1)
+    // Session todos
 
 
     /**
@@ -482,7 +479,7 @@ class MoccaApiClient(
     suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> =
             safeCall("getSessionTodos") { get("session/$sessionId/todo").body() }
 
-    // SESSION SHARING (Priority 2.2)
+    // Session sharing
 
 
     /**
@@ -500,7 +497,7 @@ class MoccaApiClient(
     suspend fun unshareSession(sessionId: String): Result<Session> =
             safeCallNoRetry("unshareSession") { delete("session/$sessionId/share").body() }
 
-    // SESSION SUMMARIZATION (Priority 2.3)
+    // Session summarization
 
 
     /**
@@ -510,7 +507,7 @@ class MoccaApiClient(
     suspend fun summarizeSession(sessionId: String): Result<Session> =
             safeCallNoRetry("summarizeSession") { post("session/$sessionId/summarize").body() }
 
-    // SESSION INIT (Priority 2.4)
+    // Session initialization
 
 
     /**
@@ -527,7 +524,7 @@ class MoccaApiClient(
                         .body()
             }
 
-    // PROJECT MANAGEMENT (Priority 2.5)
+    // Project management
 
 
     /** List available projects. */
@@ -538,7 +535,7 @@ class MoccaApiClient(
     suspend fun getCurrentProject(): Result<Project> =
             safeCall("getCurrentProject") { get("project/current").body() }
 
-    // DYNAMIC MCP (Priority 2.6)
+    // Dynamic MCP
 
 
     /**
@@ -555,14 +552,14 @@ class MoccaApiClient(
                 Unit
             }
 
-    // PATH ENDPOINT (Priority 2.8)
+    // Path lookup
 
 
     /** Get current working directory path. */
     suspend fun getCurrentPath(): Result<PathInfo> =
             safeCall("getCurrentPath") { get("path").body() }
 
-    // INSTANCE DISPOSAL (Priority 2.9)
+    // Instance disposal
 
 
     /** Dispose an OpenCode instance gracefully. */
@@ -572,7 +569,7 @@ class MoccaApiClient(
                 Unit
             }
 
-    // LOGGING ENDPOINT (Priority 2.10)
+    // Logging
 
 
     /**
@@ -588,15 +585,13 @@ class MoccaApiClient(
                 Unit
             }
 
-    // FULL TOOL LIST (Priority 2.11)
+    // Tool discovery
 
 
     /**
      * @deprecated This endpoint returns HTML, not JSON. Use [getToolIds] instead. The /tool
      * endpoint is a frontend route, not a REST API endpoint. For tool discovery, use getToolIds()
      * which calls /experimental/tool/ids.
-     *
-     * Forensic Audit Reference: OPENCODE_API_ANALYSIS.md - Endpoint Reality Map
      */
     @Deprecated(
             message = "The /tool endpoint returns HTML. Use getToolIds() for tool discovery.",

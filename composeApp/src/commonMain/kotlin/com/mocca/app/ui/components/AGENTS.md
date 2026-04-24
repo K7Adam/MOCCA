@@ -1,12 +1,12 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
-**Scope:** Shared UI components & Modern M3 Surface Design System
+**Scope:** Shared UI components and Material 3 Expressive primitives
 
 ## RELEVANT SKILLS
 - **taste-skill-compose** — UI/UX design rules, animations, theming, M3 Surface components
 
 ## OVERVIEW
-Shared UI library implementing the **Modern M3 Surface Design System** for the MOCCA application. This system focuses on a low-latency, high-contrast, compact "Soft Dark" aesthetic with neutral monochrome palette.
+Shared UI library for MOCCA's compact developer-tool interface. Components should be low-latency, high-contrast, and consistent with `AppTheme`, `AppColors`, `AppTypography`, `AppShapes`, and Material 3 Expressive motion.
 
 ## SURFACE-BASED COMPONENTS
 - Prefer `tonalElevation` for depth. `shadowElevation` acceptable for modals (dialogs, modal sheets) needing extra visual separation.
@@ -14,11 +14,11 @@ Shared UI library implementing the **Modern M3 Surface Design System** for the M
 - NO blur effects, NO glassmorphism, NO backdrop sampling
 
 ## THEME RULES
-The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 defaults** (pastel colors, elevation shadows).
+The application MUST strictly adhere to the `AppTheme`.
 
 - **Theme Composable**: Use `AppTheme { ... }` as the root of all screens.
-- **Background**: **Soft Dark** (`#1A1A1A`) is the base background for all primary screens.
-- **Corners**: Rounded corners (12dp-32dp) for interactive elements (buttons, inputs, cards).
+- **Color Tokens**: Use `AppColors`; do not hard-code a screen-specific dark palette.
+- **Corners**: Use `AppShapes`; never use `RectangleShape` for interactive elements.
 - **Typography**: Use `AppTypography` for all text styles.
     - Use `AppTypography.bodyMedium` for standard text.
     - Use `AppTypography.labelSmall` for status indicators.
@@ -40,6 +40,7 @@ The application MUST strictly adhere to the `AppTheme`. **Do NOT use Material 3 
 ### 3. Specialized Widgets
 - `QuestionDialog.kt`: For interactive `confirm` or `input` requests from the AI agent.
 - `ToolCards.kt`: Specialized rendering for `ToolUse` and `ToolResult` data structures.
+- Chat activity strips should be compact, state-derived, and tied to `AgentActivity`; avoid separate UI-owned status buffers.
 
 ## CONNECTION STATUS
 The `ConnectionStatus` sealed class (defined in `Config.kt`) drives the connection indicator in the top bar:
@@ -55,5 +56,6 @@ The `ConnectionStatus` sealed class (defined in `Config.kt`) drives the connecti
 - **Material 3 Mixing**: In feature/UI code, use `AppColors`, `AppShapes`, `AppTypography` instead of `MaterialTheme.colorScheme`/`MaterialTheme.shapes`. Theme bridge code (`AppTheme.kt`) may use MaterialTheme APIs for provisioning.
 - **RectangleShape for Interactive Elements**: NEVER use `RectangleShape` for buttons, cards, or inputs. Use `AppShapes.pill`, `AppShapes.card`, or `AppShapes.medium`.
 - **Legacy Components**: Use `PermissionRequestDialog` instead of legacy confirmation systems.
+- **Detached Streaming UI**: Do not add new global streaming/thinking rows unless the active assistant message has no matching live part yet.
 - **Color Literals**: Avoid `Color(0xFF...)`. Always use `AppColors`.
 - **Main Thread Logic**: Components must remain stateless. Pass click events and state updates up to the `ScreenModel`.

@@ -2,7 +2,7 @@
 
 Maestro-based mobile UI testing framework for the MOCCA Android app.
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 maestro-workspace/
@@ -18,7 +18,7 @@ maestro-workspace/
 └── config/             # Environment configurations
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - [Maestro CLI](https://maestro.mobile.dev/getting-started/installing-maestro) installed
@@ -73,7 +73,7 @@ adb devices
 maestro --device emulator-5554 test maestro-workspace/testplans/smoke.yaml
 ```
 
-## 🏷️ Flow Tags
+## Flow Tags
 
 | Tag | Description |
 |-----|-------------|
@@ -82,7 +82,7 @@ maestro --device emulator-5554 test maestro-workspace/testplans/smoke.yaml
 | `@navigation` | Screen navigation tests |
 | `@sessions` | Session management tests |
 
-## 📝 Adding New Tests
+## Adding New Tests
 
 1. Create a new `.yaml` file in the appropriate `flows/` subdirectory
 2. Add tags for categorization
@@ -102,11 +102,11 @@ tags:
 - takeScreenshot: test_name
 ```
 
-## 📸 Screenshots
+## Screenshots
 
 Screenshots are saved to `maestro-workspace/.maestro/screenshots/` after test runs.
 
-## 🔄 CI/CD Integration
+## CI/CD Integration
 
 Maestro tests run automatically on GitHub Actions for every push to `main` and PRs.
 

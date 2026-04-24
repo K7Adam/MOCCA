@@ -6,6 +6,10 @@
 > Lunel clone analyzed at: `C:\Users\ruzaq\AppData\Local\Temp\mocca-lunel-research\lunel`
 > Lunel revision analyzed: `ba88d5f`
 
+> Update 2026-04-24: the old global `RecentModel` SQLDelight table and
+> `SessionRepository` model-recents API were removed. AI model recents are now
+> project-scoped `AiRecentModel` JSON records in `AppSettings`.
+
 ## Goal
 
 Refactor MOCCA from an Android app that talks directly to one OpenCode HTTP/SSE

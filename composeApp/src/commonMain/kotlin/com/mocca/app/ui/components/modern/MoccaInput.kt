@@ -221,7 +221,7 @@ fun CommandLineInput(
     placeholder: String = "Enter command...",
     shape: Shape = AppShapes.input,
 
-    // COMMAND HISTORY (Priority 5.3) - History navigation callbacks
+    // Command history navigation callbacks
 
     onHistoryUp: (() -> Unit)? = null,
     onHistoryDown: (() -> Unit)? = null
@@ -269,7 +269,7 @@ fun CommandLineInput(
             }
         )
 
-        // COMMAND HISTORY (Priority 5.3) - History navigation buttons
+        // Command history navigation buttons
 
         if (onHistoryUp != null || onHistoryDown != null) {
             Column(

@@ -103,6 +103,7 @@ class StateCoordinator(
     val isThinking: StateFlow<Boolean> = eventStreamRepository.isThinking
     val thinkingContent: StateFlow<String> = eventStreamRepository.thinkingContent
     val thinkingStartTime: StateFlow<Long?> = eventStreamRepository.thinkingStartTime
+    val chatTurnState: StateFlow<ChatTurnState> = eventStreamRepository.chatTurnState
     
     // Agent running state - tracked via AgentStatus events
     // This is the authoritative source for whether an agent is currently working
@@ -149,6 +150,7 @@ class StateCoordinator(
                 is ServerEvent.MessageUpdated -> event.properties.info.sessionID
                 is ServerEvent.MessageRemoved -> event.properties.sessionID
                 is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID
+                is ServerEvent.MessagePartDelta -> event.properties.sessionID
                 is ServerEvent.PermissionUpdated -> event.properties.sessionID
                 is ServerEvent.PermissionAsked -> event.properties.sessionID
                 is ServerEvent.PermissionReplied -> event.properties.sessionID
@@ -174,6 +176,7 @@ class StateCoordinator(
                 is ServerEvent.MessageUpdated -> event.properties.info.sessionID == sessionId
                 is ServerEvent.MessageRemoved -> event.properties.sessionID == sessionId
                 is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID == sessionId
+                is ServerEvent.MessagePartDelta -> event.properties.sessionID == sessionId
                 is ServerEvent.MessagePartRemoved -> true
                 is ServerEvent.PermissionUpdated -> event.properties.sessionID == sessionId
                 is ServerEvent.PermissionAsked -> event.properties.sessionID == sessionId
@@ -515,6 +518,7 @@ class StateCoordinator(
                         localCache.updateMessagePart(
                             messageId = part.messageID,
                             partId = part.id,
+                            partType = part.type,
                             content = part.text,
                             delta = delta
                         )
@@ -522,6 +526,9 @@ class StateCoordinator(
                         Napier.w("Failed to update message part", e)
                     }
                 }
+            }
+            is ServerEvent.MessagePartDelta -> {
+                // Deltas are reduced and persisted in EventStreamRepository so a token is not appended twice.
             }
             is ServerEvent.MessageUpdated -> {
                 val messageInfo = event.properties.info

@@ -50,7 +50,7 @@ class ConfigRepository(
         )
     }.flowOn(Dispatchers.IO)
 
-    // OAUTH & PROVIDER AUTHENTICATION (Priority 1.1)
+    // OAuth and provider authentication
 
 
     /**
@@ -100,7 +100,7 @@ class ConfigRepository(
         )
     }
 
-    // MANUAL API KEY AUTHENTICATION (Priority 1.2)
+    // Manual API key authentication
 
 
     /**
@@ -119,7 +119,7 @@ class ConfigRepository(
         )
     }
 
-    // CONFIG WRITE (Priority 1.3)
+    // Config write
 
 
     /**
@@ -175,7 +175,7 @@ class ConfigRepository(
         )
     }
 
-    // PROVIDER AUTH REMOVAL (Priority 1.4)
+    // Provider auth removal
 
 
     /**

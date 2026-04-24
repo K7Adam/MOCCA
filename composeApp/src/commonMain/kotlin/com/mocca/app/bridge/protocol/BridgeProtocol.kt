@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-const val BRIDGE_PROTOCOL_VERSION: Int = 1
+const val BRIDGE_PROTOCOL_VERSION: Int = 2
 
 @Serializable
 data class BridgeRequest(
@@ -62,6 +62,12 @@ data class BridgeAiCapabilities(
     val opencodeRuntime: Boolean = false,
     val sessions: Boolean = false,
     val messages: Boolean = false,
+    val events: Boolean = false,
+    val eventReplay: Boolean = false,
+    val permissions: Boolean = false,
+    val questions: Boolean = false,
+    val sessionStatus: Boolean = false,
+    val usage: Boolean = false,
     val configNormalized: Boolean = false,
     val providers: Boolean = false,
     val agents: Boolean = false,

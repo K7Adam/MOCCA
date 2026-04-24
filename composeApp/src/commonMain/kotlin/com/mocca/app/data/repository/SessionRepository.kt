@@ -193,22 +193,6 @@ class SessionRepository(
     }
 
     /**
-     * Get recently used models.
-     */
-    suspend fun getRecentModels(): List<RecentModel> {
-        return localCache.getRecentModels()
-    }
-    
-    /**
-     * Add or update a recent model.
-     */
-    suspend fun addRecentModel(providerId: String, modelId: String) {
-        val now = Clock.System.now().toEpochMilliseconds() // or System.currentTimeMillis() if using java.lang.System
-        // Clock is imported from kotlinx.datetime
-        localCache.insertRecentModel(RecentModel(providerId, modelId, now))
-    }
-
-    /**
      * Get messages for a session with caching.
      * @param fetchLimit Optional parameter to limit the number of messages fetched from the server.
      * If null, fetches the default history size from the server.
@@ -593,7 +577,7 @@ class SessionRepository(
         )
     }.flowOn(Dispatchers.IO)
 
-    // SESSION TODO LIST (Priority 2.1)
+    // Session todos
 
 
     /**
@@ -618,7 +602,7 @@ class SessionRepository(
         )
     }.flowOn(Dispatchers.IO)
 
-    // SESSION SHARING (Priority 2.2)
+    // Session sharing
 
 
     /**
@@ -655,7 +639,7 @@ class SessionRepository(
         )
     }
 
-    // SESSION SUMMARIZATION (Priority 2.3)
+    // Session summarization
 
 
     /**
@@ -675,7 +659,7 @@ class SessionRepository(
         )
     }
 
-    // SESSION INIT (Priority 2.4)
+    // Session initialization
 
 
     /**
@@ -704,7 +688,7 @@ class SessionRepository(
         )
     }
 
-    // SLASH COMMAND EXECUTION (Priority 1.4)
+    // Slash command execution
 
 
     /**
@@ -728,7 +712,7 @@ class SessionRepository(
         )
     }
 
-    // SHELL COMMAND EXECUTION (Priority 1.5)
+    // Shell command execution
 
 
     /**

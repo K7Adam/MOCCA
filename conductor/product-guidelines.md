@@ -1,21 +1,23 @@
 ﻿# Product Guidelines: MOCCA
 
 ## Visual Style & Design System
-MOCCA utilizes the **Motion-Driven Material 3 Expressive** design system. This approach emphasizes dynamic, playful elements and rich motion to create an engaging and lively mobile experience.
+MOCCA uses a restrained **Material 3 Expressive** design system for a dense developer tool. Motion should clarify state changes and preserve spatial context, not decorate routine actions.
 - **Adaptive Layouts:** The UI must respond gracefully to different screen sizes and orientations, leveraging Material 3 adaptive components.
-- **Expressive Motion:** Animations and transitions should be used intentionally to provide feedback and guide the user's focus.
+- **Expressive Motion:** Use `MaterialTheme.motionScheme` and existing app tokens. Avoid custom animation constant objects.
+- **Token Ownership:** Feature UI uses `AppColors`, `AppTypography`, and `AppShapes`; Material bridge code owns direct Material defaults.
 
 ## Prose & Voice
-Our communication style is **Clear & Approachable**. We ensure the interface is easy to understand for all users, providing helpful explanations and avoiding overly dense technical jargon where possible.
-- **Clarity:** Use plain language to describe complex AI operations or system tasks.
-- **Helpful Context:** Provide tooltips or brief explanations for advanced features.
+Our communication style is **clear, compact, and task-focused**.
+- **Clarity:** Use plain language for AI runtime state, connection state, and tool permissions.
+- **Specificity:** Prefer concrete status, action, and error text over generic reassurance.
+- **No Filler:** Do not add visible text that merely explains the UI layout or repeats button labels.
 
 ## Interaction Principles
-- **Efficiency-First UX:** Design for high-frequency tasks, ensuring that core operations (like sending a message or running a command) are quick and require minimal friction.
+- **Efficiency-First UX:** Design for repeated developer tasks. Chat, model selection, permissions, git, files, and terminal actions should be reachable without ceremony.
 - **Contextual Transitions:** Use animations to bridge the gap between different app states, helping users maintain their mental model of the application's flow.
 - **Broad Accessibility:** Ensure all interactive elements are accessible, supporting screen readers, high-contrast modes, and multiple input methods (touch, keyboard).
 
 ## Branding & Tone
-MOCCA embodies a **Sleek & Professional** tone. The interface is clean and dark-first, utilizing high-contrast elements to maintain user focus on their work.
-- **Minimalist Aesthetic:** Avoid unnecessary clutter, focusing on content and task execution.
-- **Professional Palette:** A sophisticated color scheme that feels reliable and modern.
+MOCCA should feel like a serious mobile workbench for AI-assisted development.
+- **Information Density:** Prefer scannable, organized panels over marketing-style hero sections or decorative cards.
+- **Professional Palette:** Maintain contrast and hierarchy without one-note color themes.

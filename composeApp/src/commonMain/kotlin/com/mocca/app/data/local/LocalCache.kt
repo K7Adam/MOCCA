@@ -7,7 +7,6 @@ import com.mocca.app.domain.model.Command
 import com.mocca.app.domain.model.FileInfo
 import com.mocca.app.domain.model.GitStatusResponse
 import com.mocca.app.domain.model.Message
-import com.mocca.app.domain.model.RecentModel
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.domain.model.Session
 
@@ -45,12 +44,14 @@ interface LocalCache {
      * 
      * @param messageId The message ID
      * @param partId The part ID to update
+     * @param partType Optional OpenCode part type used when a streaming part is not in cache yet
      * @param content New content (replaces existing)
      * @param delta Content to append (for streaming)
      */
     suspend fun updateMessagePart(
         messageId: String,
         partId: String,
+        partType: String? = null,
         content: String? = null,
         delta: String? = null
     )
@@ -76,10 +77,6 @@ interface LocalCache {
     suspend fun hasCommandCache(maxAgeMs: Long): Boolean
     
     // FileInfo (file browser cache)
-    
-    // Recent Models
-    suspend fun getRecentModels(): List<RecentModel>
-    suspend fun insertRecentModel(recentModel: RecentModel)
 
     // AI Runtime Config
     suspend fun getAiSelection(projectKey: String): AiSelection?

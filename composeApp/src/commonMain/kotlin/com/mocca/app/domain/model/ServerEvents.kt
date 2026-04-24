@@ -504,11 +504,15 @@ data class MessagePartUpdatedProperties(
 @Immutable
 data class MessagePartInfo(
     val id: String,
-    val type: String, // "text", "tool", "file"
+    val type: String, // "text", "reasoning", "tool", "file"
     val messageID: String,
     val sessionID: String,
     // Text part
     val text: String? = null,
+    val synthetic: Boolean? = null,
+    val ignored: Boolean? = null,
+    val metadata: Map<String, JsonElement>? = null,
+    val time: MessagePartTime? = null,
     // Tool part
     val callID: String? = null,
     val tool: String? = null,
@@ -599,7 +603,7 @@ data class LegacyPermissionProperties(
 )
 
 /**
- * Properties for permission.asked event - matches OpenChamber's PermissionRequest.
+ * Properties for permission.asked events.
  */
 @Serializable
 @Immutable
@@ -648,7 +652,7 @@ data class PermissionToolInfo(
 // ==== Question Events ====
 
 /**
- * Properties for question.asked event - matches OpenChamber's QuestionRequest.
+ * Properties for question.asked events.
  */
 @Serializable
 @Immutable
@@ -697,7 +701,7 @@ data class QuestionOption(
 
 /**
  * Question request shown to user for interactive input.
- * Matches OpenChamber's QuestionRequest type.
+ * Matches OpenCode question request payloads.
  */
 @Serializable
 @Immutable
@@ -746,8 +750,7 @@ data class LspDiagnosticsProperties(
     val serverID: String
 )
 
-// Permission request shown to user for tool approval.
-// Matches OpenChamber's PermissionRequest type with patterns and always list.
+// Permission request shown to the user for tool approval.
 @Serializable
 @Immutable
 data class PermissionRequest(
@@ -787,7 +790,7 @@ data class PermissionRequest(
     }
 }
 
-// Permission response types matching OpenChamber.
+// Permission response types accepted by OpenCode.
 enum class PermissionResponseType(val value: String) {
     ONCE("once"),
     ALWAYS("always"),
@@ -859,6 +862,7 @@ data class MessagePartDeltaProperties(
     val sessionID: String,
     val messageID: String,
     val partID: String,
+    val field: String = "text",
     val delta: String
 )
 

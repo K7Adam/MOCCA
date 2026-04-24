@@ -48,7 +48,7 @@ class BridgeProtocolModelsTest {
         )
 
         val encodedResponse = json.decodeFromString<BridgeResponse>(json.encodeToString(response))
-        assertEquals(1, encodedResponse.v)
+        assertEquals(2, encodedResponse.v)
         assertEquals("req-1", encodedResponse.id)
         assertTrue(encodedResponse.ok)
 
@@ -75,24 +75,36 @@ class BridgeProtocolModelsTest {
         val capabilities = json.decodeFromString<BridgeCapabilities>(
             """
             {
-              "protocolVersion": 1,
+              "protocolVersion": 2,
               "namespaces": ["system", "ai", "git"],
               "ai": {
                 "opencodeConfigSnapshot": true,
                 "opencodeRuntime": false,
                 "sessions": false,
-                "messages": false
+                "messages": false,
+                "events": true,
+                "eventReplay": true,
+                "permissions": true,
+                "questions": true,
+                "sessionStatus": true,
+                "usage": true
               }
             }
             """.trimIndent()
         )
 
-        assertEquals(1, capabilities.protocolVersion)
+        assertEquals(2, capabilities.protocolVersion)
         assertEquals(listOf("system", "ai", "git"), capabilities.namespaces)
         assertTrue(capabilities.ai.opencodeConfigSnapshot)
         assertFalse(capabilities.ai.opencodeRuntime)
         assertFalse(capabilities.ai.sessions)
         assertFalse(capabilities.ai.messages)
+        assertTrue(capabilities.ai.events)
+        assertTrue(capabilities.ai.eventReplay)
+        assertTrue(capabilities.ai.permissions)
+        assertTrue(capabilities.ai.questions)
+        assertTrue(capabilities.ai.sessionStatus)
+        assertTrue(capabilities.ai.usage)
     }
 
     @Test

@@ -10,7 +10,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import com.mocca.app.ui.theme.AppColors
 
-// ANSI COLOR PARSING (Priority 5.2)
+// ANSI color parsing
 
 
 /**

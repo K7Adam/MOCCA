@@ -141,6 +141,9 @@ class EventStreamRepository(
     
     private val _pendingQuestions = MutableStateFlow<List<QuestionRequest>>(emptyList())
     val pendingQuestions: StateFlow<List<QuestionRequest>> = _pendingQuestions.asStateFlow()
+
+    private val _chatTurnState = MutableStateFlow(ChatTurnState())
+    val chatTurnState: StateFlow<ChatTurnState> = _chatTurnState.asStateFlow()
     
     // Backwards-compatible accessor for first pending question
     val pendingQuestion: StateFlow<QuestionRequest?> = _pendingQuestions
@@ -537,6 +540,7 @@ class EventStreamRepository(
         _thinkingStartTime.value = null
         _pendingPermissions.value = emptyList()
         _pendingQuestions.value = emptyList()
+        _chatTurnState.value = ChatTurnState()
         processedEventIds.clear()
         Napier.i("SSE disconnected")
     }
@@ -631,6 +635,7 @@ class EventStreamRepository(
     private suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
         Napier.v("Dispatching event: ${event.type}")
         _events.emit(event)
+        reduceChatTurn(event)
         
         when (event) {
             is ServerEvent.Connected -> {
@@ -706,7 +711,7 @@ class EventStreamRepository(
                 }
                 
                 // Handle thinking state for extended reasoning models (Claude/o1)
-                if (part.type == "thinking") {
+                if (part.type == "thinking" || part.type == "reasoning") {
                     if (monitoredSessionIds.value.contains(part.sessionID)) {
                         if (part.sessionID == activeSessionId) {
                             _isThinking.value = true
@@ -778,6 +783,7 @@ class EventStreamRepository(
                                             localCache.updateMessagePart(
                                                 messageId = part.messageID,
                                                 partId = part.id,
+                                                partType = part.type,
                                                 delta = deltaToWrite
                                             )
                                         }
@@ -793,6 +799,7 @@ class EventStreamRepository(
                                                     localCache.updateMessagePart(
                                                         messageId = part.messageID,
                                                         partId = part.id,
+                                                        partType = part.type,
                                                         delta = deltaToWrite
                                                     )
                                                 }
@@ -982,7 +989,9 @@ class EventStreamRepository(
             is ServerEvent.SessionCompacted -> Napier.d("Session compacted: ${event.properties.sessionID}")
             is ServerEvent.TodoUpdated -> Napier.d("Todo updated")
             is ServerEvent.QuestionRejected -> Napier.d("Question rejected: ${event.properties.requestID}")
-            is ServerEvent.MessagePartDelta -> Napier.v("MessagePartDelta received")
+            is ServerEvent.MessagePartDelta -> {
+                handleMessagePartDelta(event)
+            }
             is ServerEvent.PtyCreated -> Napier.d("PTY created: ${event.properties.ptyID}")
             is ServerEvent.PtyUpdated -> Napier.d("PTY updated")
             is ServerEvent.PtyExited -> Napier.d("PTY exited")
@@ -1003,6 +1012,62 @@ class EventStreamRepository(
                 Napier.w("Unknown event type: ${event.type}")
             }
         }
+    }
+
+    private fun reduceChatTurn(event: ServerEvent) {
+        _chatTurnState.value = ChatTurnReducer.reduce(_chatTurnState.value, event)
+    }
+
+    private suspend fun handleMessagePartDelta(event: ServerEvent.MessagePartDelta) {
+        val props = event.properties
+        if (props.field != "text") {
+            Napier.v("Ignoring non-text MessagePartDelta field=${props.field}")
+            return
+        }
+
+        val part = _chatTurnState.value.messagesById[props.messageID]
+            ?.parts
+            ?.firstOrNull { it.openCodePartId == props.partID }
+
+        if (monitoredSessionIds.value.contains(props.sessionID) && props.sessionID == activeSessionId) {
+            when (part) {
+                is MessagePart.Text -> {
+                    streamingTextMutex.withLock {
+                        _streamingText.value = part.text.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                    }
+                    _isThinking.value = false
+                    _thinkingContent.value = ""
+                    _thinkingStartTime.value = null
+                }
+                is MessagePart.Reasoning -> {
+                    streamingTextMutex.withLock {
+                        _thinkingContent.value = part.content.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                    }
+                    _isThinking.value = true
+                    if (_thinkingStartTime.value == null) {
+                        _thinkingStartTime.value = System.currentTimeMillis()
+                    }
+                }
+                is MessagePart.Thinking -> {
+                    streamingTextMutex.withLock {
+                        _thinkingContent.value = part.content.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                    }
+                    _isThinking.value = true
+                    if (_thinkingStartTime.value == null) {
+                        _thinkingStartTime.value = System.currentTimeMillis()
+                    }
+                }
+                else -> Unit
+            }
+        }
+
+        localCache?.updateMessagePart(
+            messageId = props.messageID,
+            partId = props.partID,
+            partType = part.openCodePartType,
+            delta = props.delta
+        )
+        Napier.v("MessagePartDelta applied: ${props.messageID}/${props.partID}")
     }
     
     /**
@@ -1058,6 +1123,7 @@ class EventStreamRepository(
                 is ServerEvent.MessageUpdated -> event.properties.info.sessionID
                 is ServerEvent.MessageRemoved -> event.properties.sessionID
                 is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID
+                is ServerEvent.MessagePartDelta -> event.properties.sessionID
                 is ServerEvent.PermissionUpdated -> event.properties.sessionID
                 is ServerEvent.PermissionAsked -> event.properties.sessionID
                 is ServerEvent.PermissionReplied -> event.properties.sessionID
@@ -1082,6 +1148,7 @@ class EventStreamRepository(
                 is ServerEvent.MessageUpdated -> event.properties.info.sessionID == sessionId
                 is ServerEvent.MessageRemoved -> event.properties.sessionID == sessionId
                 is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID == sessionId
+                is ServerEvent.MessagePartDelta -> event.properties.sessionID == sessionId
                 is ServerEvent.MessagePartRemoved -> true
                 is ServerEvent.PermissionUpdated -> event.properties.sessionID == sessionId
                 is ServerEvent.PermissionAsked -> event.properties.sessionID == sessionId
@@ -1093,3 +1160,26 @@ class EventStreamRepository(
         }
     }
 }
+
+private val MessagePart.openCodePartId: String?
+    get() = when (this) {
+        is MessagePart.Text -> id
+        is MessagePart.Reasoning -> id
+        is MessagePart.Thinking -> id
+        is MessagePart.ToolInvocation -> id
+        is MessagePart.ToolResult -> id
+        is MessagePart.File -> null
+        is MessagePart.SubTask -> sessionId
+    }
+
+private val MessagePart?.openCodePartType: String?
+    get() = when (this) {
+        is MessagePart.Text -> "text"
+        is MessagePart.Reasoning -> "reasoning"
+        is MessagePart.Thinking -> "thinking"
+        is MessagePart.ToolInvocation -> "tool"
+        is MessagePart.ToolResult -> "tool"
+        is MessagePart.File -> "file"
+        is MessagePart.SubTask -> "subtask"
+        null -> null
+    }

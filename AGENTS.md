@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-04-12
-**Commit:** 55cf8e0
+**Updated:** 2026-04-24
+**Commit:** working tree
 **Project:** MOCCA (Mobile OpenCode Companion App)
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight + Material 3 Expressive
 
@@ -33,14 +33,16 @@ MOCCA/
 | Android launcher | `androidApp/src/main/java/com/mocca/app/MainActivity.kt` | Edge-to-edge + deep links + `App()` |
 | Root Compose shell | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/App.kt` | Splash, theme, navigator start screen |
 | DI graph | `composeApp/src/commonMain/kotlin/com/mocca/app/di/Modules.kt` | Declaration order matters |
-| Connection lifecycle | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/ConnectionManager.kt` | Owns `HttpClient` + health checks |
+| Connection lifecycle | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/ConnectionManager.kt` | Owns legacy OpenCode `HttpClient` + health checks |
 | Event fanout | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/StateCoordinator.kt` | SSE -> stores -> UI backbone |
+| Chat event reducer | `composeApp/src/commonMain/kotlin/com/mocca/app/domain/model/ChatTurnReducer.kt` | Canonical session/message/part state from OpenCode events |
 | Global UI state | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/AppStateStore.kt` | Non-chat app state |
 | Chat UI state | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/ChatStateStore.kt` | Messages, streaming, permissions |
+| AI runtime config | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/AiRuntimeConfigRepository.kt` | Bridge-first provider/model/agent/mode selection |
 | Silent polling sync | `composeApp/src/commonMain/kotlin/com/mocca/app/data/repository/RealtimeSyncService.kt` | Non-SSE refresh loop |
 | Theme tokens | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/theme/` | Dedicated AGENTS.md there |
 | Settings subtree | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/settings/` | Dedicated AGENTS.md there |
-| DB schema | `composeApp/src/commonMain/sqldelight/com/mocca/app/db/*.sq` | 9 SQLDelight tables |
+| DB schema | `composeApp/src/commonMain/sqldelight/com/mocca/app/db/*.sq` | 8 SQLDelight tables; `2.sqm` drops retired `RecentModel` |
 | E2E tests | `maestro-workspace/` | Dedicated AGENTS.md there |
 
 ## STARTUP CHAIN
@@ -52,7 +54,11 @@ MOCCA/
 
 ## CROSS-CUTTING ARCHITECTURE
 - **Event pipeline**: `EventStreamRepository` -> `StateCoordinator` -> `BroadcastEvent` -> `AppStateStore` / `ChatStateStore` -> ScreenModels -> UI
+- **Chat turn state**: `ChatTurnReducer` owns idempotent OpenCode event state keyed by `sessionID`, `messageID`, and `partID`. Bridge and fallback SSE events must converge here before UI-specific compatibility state is derived.
+- **Bridge-first runtime**: the MOCCA CLI bridge is the preferred provider/model/agent configuration source. Direct OpenCode HTTP/SSE remains a legacy fallback path until parity is complete.
 - **Dual sync model**: SSE for sessions/messages + `RealtimeSyncService` for MCP/providers/git/tools/commands/agents. The Server-First pattern (Cache → Network → Update → Emit) is mandatory for primary user-facing data (sessions, messages) and optional for infrequently-changing secondary data (agent list, providers, diffs).
+- **AI runtime persistence**: `AiSelection` and project-scoped `AiRecentModel` lists live in `AppSettings` under `ai.selection.*` and `ai.recents.*`. Do not reintroduce the removed global `RecentModel` table or `SessionRepository` recents API.
+- **Streaming persistence**: `LocalCache.updateMessagePart(...)` is part-addressable. Pass `messageId`, `partId`, and `partType`; do not append token deltas through multiple repositories.
 - **Platform abstractions**: `NetworkObserver`, `AppLifecycleObserver`, `ServerDiscovery`, `SecureTokenStorage`, `NotificationTracker`
 - **Global helpers**: `PreferencesManager`, `GlobalActivityManager`, `UpdateNotifier`, `DatabasePruner`, `TestTags`
 
@@ -91,6 +97,8 @@ MOCCA/
 - NEVER use `RectangleShape` for interactive elements
 - NEVER mix `MaterialTheme.colorScheme` / `MaterialTheme.shapes` into app primitives in feature/UI code — use `AppColors`, `AppShapes`, `AppTypography` instead. Theme bridge code (`AppTheme.kt`) legitimately uses `MaterialTheme.colorScheme` to provision the M3 shell.
 - NEVER block the main thread; use `Dispatchers.IO` for blocking DB/file/network I/O (not required for non-blocking suspend calls)
+- NEVER store model picker recents through `SessionRepository` or a global SQLDelight table; use project-scoped `AiRecentModel` persistence in `AppSettings`
+- NEVER create another global `streamingText`/`thinkingContent` source of truth. Compatibility flows may mirror reducer state, but canonical chat-turn state is part-keyed.
 - NEVER use relative paths in scripts/automation docs
 - DO NOT add iOS/Desktop targets
 - DO NOT use physical devices for `android-mcp` or Maestro host-connectivity checks

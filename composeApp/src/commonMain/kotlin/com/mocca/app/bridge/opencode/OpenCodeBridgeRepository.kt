@@ -39,9 +39,16 @@ class OpenCodeBridgeRepository(
     private val client: MoccaBridgeClient,
     private val json: Json = MoccaBridgeClient.DefaultBridgeJson
 ) {
-    suspend fun fetchCapabilities(): BridgeCapabilities {
+    private var cachedCapabilities: BridgeCapabilities? = null
+
+    suspend fun fetchCapabilities(forceRefresh: Boolean = false): BridgeCapabilities {
+        if (!forceRefresh) {
+            cachedCapabilities?.let { return it }
+        }
+
         return client.request(ns = "system", action = "capabilities")
-            .decodePayloadOrThrow()
+            .decodePayloadOrThrow<BridgeCapabilities>()
+            .also { cachedCapabilities = it }
     }
 
     suspend fun fetchOpenCodeConfigSnapshot(): OpenCodeConfigSnapshot {

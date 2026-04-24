@@ -9,6 +9,14 @@ The Repository layer implements a **server-first** architecture, mediating betwe
 
 ## KEY REPOSITORIES
 
+### AiRuntimeConfigRepository
+Bridge-first runtime configuration owner for provider, model, variant, agent, and mode selection.
+
+- **Primary source**: MOCCA CLI bridge `ai.config.get` when connected and capable
+- **Fallback**: legacy OpenCode HTTP config/provider/agent/mode endpoints
+- **Persistence**: project-scoped `AiSelection` and `AiRecentModel` records through `LocalCache`/`AppSettings`
+- **Boundary**: model picker recents do not belong to `SessionRepository`
+
 ### ConnectionManager
 Unified connection lifecycle manager. Replaces the old `HttpClientProvider` and `AppConnectionManager`. Implements `ApiExecutor` so consumers never hold `HttpClient` references.
 
@@ -30,10 +38,17 @@ All Git operations go through OpenCode's built-in endpoints:
 Central coordinator for all application state.
 - **Single Source of Truth**: Tracks active session ID and running sessions.
 - **Event Flow**: SSE Events -> EventStreamRepository -> StateCoordinator -> State Stores -> UI
+- **Delta Boundary**: Does not append `message.part.delta` content to cache. Token deltas are reduced and persisted once in `EventStreamRepository`.
 
 ### ChatStateStore
 Specialized state store for chat screen state.
-- Provides reactive chat state, pending permissions, and thinking state tracking.
+- Provides reactive chat state, pending permissions/questions, and reducer-backed agent activity.
+
+### EventStreamRepository
+OpenCode event ingestion and stream compatibility layer.
+- Reduces canonical events into `ChatTurnState`.
+- Persists text/reasoning/thinking deltas by `messageId + partId`.
+- Mirrors reducer state into legacy `streamingText`, `isThinking`, and `thinkingContent` only for compatibility while the UI moves to part-based rendering.
 
 ### AppStateStore
 Global application state store.
@@ -107,3 +122,4 @@ Some specific lookups return a `suspend Resource<T>` instead of a Flow. These st
 - **Direct API Leakage**: UI calling `MoccaApiClient` directly, bypassing the repository's caching logic.
 - **In-Memory Only**: Storing critical business state in repository variables instead of persisting to `LocalCache`.
 - **Holding HttpClient**: Consumers must NEVER hold an `HttpClient` reference. Always use `ApiExecutor.execute {}`. Exception: `GitHubApiClient` holds its own `HttpClient` for external GitHub API calls (not the OpenCode server).
+- **Double Delta Writes**: Never persist the same `message.part.delta` from both `EventStreamRepository` and `StateCoordinator`.

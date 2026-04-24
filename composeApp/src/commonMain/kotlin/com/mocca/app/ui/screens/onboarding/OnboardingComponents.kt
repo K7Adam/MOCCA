@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Lan
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SettingsEthernet
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
@@ -32,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -51,65 +54,108 @@ internal fun SetupChecklist() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(AppColors.bgRaised, AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.card)
+            .border(AppSpacing.borderThin, AppColors.outlineVariant, AppShapes.card)
             .padding(AppSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
-        Text(
-            text = "GET STARTED",
-            style = AppTypography.labelSmall,
-            color = AppColors.onSurfaceVariant
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(AppColors.accent.copy(alpha = 0.14f), AppShapes.small),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Lan,
+                    contentDescription = null,
+                    tint = AppColors.accent,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+            ) {
+                Text(
+                    text = "GET STARTED",
+                    style = AppTypography.labelSmall,
+                    color = AppColors.accent,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Bridge-first setup for reliable agent chat",
+                    style = AppTypography.bodySmall,
+                    color = AppColors.onSurfaceVariant
+                )
+            }
+        }
+
+        ChecklistItem(
+            icon = Icons.Default.Terminal,
+            eyebrow = "1 minute",
+            text = "Start the MOCCA CLI bridge",
+            subtext = "Run mocca-cli on your workstation so the app can use OpenCode's live event stream."
         )
         
         ChecklistItem(
-            number = "1",
-            text = "Start OpenCode on your computer",
-            subtext = "Quick start: run scripts/mocca-serve.ps1 (Windows) or .sh (macOS/Linux)"
+            icon = Icons.Default.Wifi,
+            eyebrow = "Pair once",
+            text = "Find or pair this phone",
+            subtext = "Use auto-discovery, QR pairing, or manual address entry. Saved bridge targets reconnect later."
         )
         
         ChecklistItem(
-            number = "2",
-            text = "Find your server automatically",
-            subtext = "MOCCA scans for nearby OpenCode servers and imports their config"
-        )
-        
-        ChecklistItem(
-            number = "3",
-            text = "Start chatting",
-            subtext = "Providers and models are imported from your server automatically"
+            icon = Icons.Default.AutoAwesome,
+            eyebrow = "Live state",
+            text = "Chat with the agent",
+            subtext = "MOCCA shows reasoning, tool runs, permissions, questions, usage, and session progress as they happen."
         )
     }
 }
 
 @Composable
 internal fun ChecklistItem(
-    number: String,
+    icon: ImageVector,
+    eyebrow: String,
     text: String,
     subtext: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md)
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.md),
+        verticalAlignment = Alignment.Top
     ) {
-        // Number circle
         Box(
             modifier = Modifier
-                .size(28.dp)
-                .background(AppColors.primary.copy(alpha = 0.2f), CircleShape)
-                .border(AppSpacing.borderThin, AppColors.primary, CircleShape),
+                .size(36.dp)
+                .background(AppColors.primary.copy(alpha = 0.12f), AppShapes.small)
+                .border(AppSpacing.borderThin, AppColors.primary.copy(alpha = 0.45f), AppShapes.small),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = number,
-                style = AppTypography.labelMedium,
-                color = AppColors.primary,
-                fontWeight = FontWeight.Bold
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = AppColors.primary,
+                modifier = Modifier.size(20.dp)
             )
         }
         
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xs)
         ) {
+            Text(
+                text = eyebrow.uppercase(),
+                style = AppTypography.labelSmall,
+                color = AppColors.accent,
+                fontWeight = FontWeight.Bold
+            )
             Text(
                 text = text,
                 style = AppTypography.bodyMedium,

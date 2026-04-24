@@ -1,6 +1,6 @@
 # ANDROID BOOTSTRAP KNOWLEDGE BASE
 
-**Updated:** 2026-04-12
+**Updated:** 2026-04-24
 **Scope:** `androidApp/`
 
 ## OVERVIEW
@@ -26,6 +26,8 @@ Android-only bootstrap layer: `Application`, launcher `Activity`, Manifest wirin
 - Android layer stays thin; business logic belongs in shared `composeApp`
 - Android-only services/receivers bridge to shared repositories or buses instead of duplicating logic
 - Notification permission prompt only for Android 13+
+- Android 16 promoted Live Updates are only for active, user-initiated, time-sensitive agent runs. Use standard `NotificationCompat` states for passive messages, completed work, and unsupported devices.
+- Promotable ongoing notifications must avoid custom RemoteViews, group summaries, colorized styling, and low-importance channels.
 - Keep host connectivity features emulator-friendly (`10.0.2.2`, visible emulator workflow)
 
 ## ANTI-PATTERNS

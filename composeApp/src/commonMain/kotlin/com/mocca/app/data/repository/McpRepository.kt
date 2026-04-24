@@ -175,7 +175,7 @@ class McpRepository(
         )
     }
 
-    // DYNAMIC MCP SERVER ADDITION (Priority 2.6)
+    // Dynamic MCP server addition
 
 
     /**

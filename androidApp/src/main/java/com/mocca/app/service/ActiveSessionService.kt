@@ -660,7 +660,7 @@ class ActiveSessionService : Service() {
             }
         }
 
-        return Notification.Builder(this, CHANNEL_AGENT_ACTIVE)
+        val builder = Notification.Builder(this, CHANNEL_AGENT_ACTIVE)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -672,7 +672,19 @@ class ActiveSessionService : Service() {
             .setUsesChronometer(true)
             .setShortCriticalText(shortCriticalText)
             .setStyle(progressStyle)
-            .build()
+
+        if (canRequestPromotedOngoing()) {
+            builder.setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
+        }
+
+        return builder.build()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.BAKLAVA)
+    private fun canRequestPromotedOngoing(): Boolean {
+        return runCatching {
+            getSystemService(NotificationManager::class.java).canPostPromotedNotifications()
+        }.getOrDefault(false)
     }
 
     private fun buildLegacyNotification(

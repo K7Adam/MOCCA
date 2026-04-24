@@ -96,7 +96,11 @@ fun App() {
             try {
                 bridgeRuntimeBootstrapper.ensureRuntimeServer(target)
             } catch (error: Exception) {
-                Napier.w("MOCCA CLI runtime bootstrap failed", error)
+                if (error.isExpectedBridgeOffline()) {
+                    Napier.i("MOCCA CLI bridge is offline; startup continues in disconnected mode")
+                } else {
+                    Napier.w("MOCCA CLI runtime bootstrap failed", error)
+                }
             }
         }
 
@@ -143,6 +147,13 @@ fun App() {
             }
         }
     }
+}
+
+private fun Throwable.isExpectedBridgeOffline(): Boolean {
+    val message = message.orEmpty()
+    return "Failed to connect" in message ||
+        "bridge did not connect" in message ||
+        "health check failed" in message
 }
 
 @Composable

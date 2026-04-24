@@ -34,6 +34,62 @@ class OpenCodeBridgeRepositoryTest {
     private val json = MoccaBridgeClient.DefaultBridgeJson
 
     @Test
+    fun fetchCapabilitiesCachesUntilForceRefresh() = runTest {
+        val transport = FakeBridgeTransport()
+        val client = MoccaBridgeClient(transport = transport, scope = backgroundScope)
+        val repository = OpenCodeBridgeRepository(client = client, json = json)
+
+        val firstJob = async { repository.fetchCapabilities() }
+        val firstRequest = json.decodeFromString<BridgeRequest>(transport.nextSent())
+        transport.emitIncoming(
+            BridgeResponse(
+                id = firstRequest.id,
+                ns = firstRequest.ns,
+                action = firstRequest.action,
+                ok = true,
+                payload = json.encodeToJsonElement(
+                    BridgeCapabilities(
+                        protocolVersion = 2,
+                        namespaces = listOf("system", "ai"),
+                        ai = BridgeAiCapabilities(events = true)
+                    )
+                )
+            )
+        )
+        runCurrent()
+
+        val first = firstJob.await()
+        val cached = repository.fetchCapabilities()
+        assertEquals(first, cached)
+        assertEquals(false, transport.hasPendingSentFrame())
+
+        val refreshedJob = async { repository.fetchCapabilities(forceRefresh = true) }
+        val refreshRequest = json.decodeFromString<BridgeRequest>(transport.nextSent())
+        transport.emitIncoming(
+            BridgeResponse(
+                id = refreshRequest.id,
+                ns = refreshRequest.ns,
+                action = refreshRequest.action,
+                ok = true,
+                payload = json.encodeToJsonElement(
+                    BridgeCapabilities(
+                        protocolVersion = 2,
+                        namespaces = listOf("system", "ai", "git"),
+                        ai = BridgeAiCapabilities(events = true, eventReplay = true)
+                    )
+                )
+            )
+        )
+        runCurrent()
+
+        val refreshed = refreshedJob.await()
+        assertEquals(listOf("system", "ai", "git"), refreshed.namespaces)
+        assertTrue(refreshed.ai.eventReplay)
+
+        client.close()
+    }
+
+    @Test
     fun fetchOpenCodeConfigSnapshotRequestsCapabilitiesThenSnapshot() = runTest {
         val transport = FakeBridgeTransport()
         val client = MoccaBridgeClient(transport = transport, scope = backgroundScope)
@@ -52,7 +108,7 @@ class OpenCodeBridgeRepositoryTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system", "ai"),
                         ai = BridgeAiCapabilities(opencodeConfigSnapshot = true)
                     )
@@ -111,7 +167,7 @@ class OpenCodeBridgeRepositoryTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system"),
                         ai = BridgeAiCapabilities(opencodeConfigSnapshot = false)
                     )
@@ -146,7 +202,7 @@ class OpenCodeBridgeRepositoryTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system", "ai"),
                         ai = BridgeAiCapabilities(opencodeRuntime = true)
                     )

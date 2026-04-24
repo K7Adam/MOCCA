@@ -111,6 +111,7 @@ class ChatStateStore(
     val streamingText: StateFlow<String> = stateCoordinator.streamingText
     val isThinking: StateFlow<Boolean> = stateCoordinator.isThinking
     val thinkingContent: StateFlow<String> = stateCoordinator.thinkingContent
+    val chatTurnState: StateFlow<ChatTurnState> = stateCoordinator.chatTurnState
     
     // Agent running state - authoritative source for whether agent is working
     // This is used for button control (ABORT vs SEND)
@@ -125,7 +126,7 @@ class ChatStateStore(
     val pendingPermission: StateFlow<PermissionRequest?> = stateCoordinator.pendingPermission
     val pendingQuestion: StateFlow<QuestionRequest?> = stateCoordinator.pendingQuestion
 
-    // TODO STATE
+    // Task state
 
     
     private val _todos = MutableStateFlow<List<Todo>>(emptyList())
@@ -459,7 +460,7 @@ class ChatStateStore(
         }
     }
 
-    // TODO OPERATIONS
+    // Task operations
 
     
     private fun loadTodos(sessionId: String) {

@@ -157,6 +157,21 @@ data class AiRecentModel(
     val lastUsedAt: Long
 )
 
+internal const val AI_RECENT_MODEL_LIMIT = 8
+
+internal fun selectAiRecentModelsForSnapshot(
+    snapshot: AiRuntimeConfigSnapshot,
+    stored: List<AiRecentModel>
+): List<AiRecentModel> {
+    return stored
+        .asSequence()
+        .filter { it.projectKey == snapshot.projectKey }
+        .sortedByDescending { it.lastUsedAt }
+        .distinctBy { it.providerId to it.modelId }
+        .take(AI_RECENT_MODEL_LIMIT)
+        .toList()
+}
+
 @Immutable
 data class ModelPickerUiState(
     val current: AiEffectiveSelection? = null,

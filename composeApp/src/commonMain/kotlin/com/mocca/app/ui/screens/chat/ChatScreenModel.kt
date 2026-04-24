@@ -26,6 +26,8 @@ data class ChatState(
     val error: String? = null,
     val pendingPermission: PermissionRequest? = null,
     val pendingQuestion: QuestionRequest? = null,
+    val pendingPermissions: ImmutableList<PermissionRequest> = persistentListOf(),
+    val pendingQuestions: ImmutableList<QuestionRequest> = persistentListOf(),
     val connectionStatus: ConnectionStatus = ConnectionStatus.Disconnected(),
     val isSessionIdle: Boolean = true,
     val modelName: String = "--",
@@ -33,6 +35,7 @@ data class ChatState(
     val isThinking: Boolean = false,
     val thinkingContent: String = "",
     val thinkingElapsedMs: Long = 0,
+    val agentActivity: AgentActivity? = null,
     val aiConfigState: AiConfigState = AiConfigState(),
     val effectiveSelection: AiEffectiveSelection? = null,
     val modelPickerState: ModelPickerUiState = ModelPickerUiState(),
@@ -239,11 +242,30 @@ class ChatScreenModel(
                 chatStateStore.pendingPermission,
                 chatStateStore.pendingQuestion,
                 commandRepository.cachedCommands,
-                chatStateStore.todos
-            ) { perm, quest, cmds, todos ->
+                chatStateStore.todos,
+                chatStateStore.chatTurnState,
+                chatStateStore.currentSessionId
+            ) { args ->
+                val perm = args[0] as PermissionRequest?
+                val quest = args[1] as QuestionRequest?
+                @Suppress("UNCHECKED_CAST")
+                val cmds = args[2] as List<Command>
+                @Suppress("UNCHECKED_CAST")
+                val todos = args[3] as List<Todo>
+                val turnState = args[4] as ChatTurnState
+                val currentSessionId = args[5] as String?
+                val queuedPermissions = currentSessionId
+                    ?.let { turnState.pendingPermissionsBySession[it].orEmpty() }
+                    .orEmpty()
+                val queuedQuestions = currentSessionId
+                    ?.let { turnState.pendingQuestionsBySession[it].orEmpty() }
+                    .orEmpty()
                 _state.update { it.copy(
-                    pendingPermission = perm,
-                    pendingQuestion = quest,
+                    pendingPermission = perm ?: queuedPermissions.firstOrNull(),
+                    pendingQuestion = quest ?: queuedQuestions.firstOrNull(),
+                    pendingPermissions = queuedPermissions.toImmutableList(),
+                    pendingQuestions = queuedQuestions.toImmutableList(),
+                    agentActivity = currentSessionId?.let { sessionId -> turnState.sessionActivities[sessionId] },
                     commands = cmds.toImmutableList(),
                     todos = todos.toImmutableList()
                 ) }

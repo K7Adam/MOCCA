@@ -255,7 +255,7 @@ private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> U
 
 @Composable
 private fun TokenCountFooter(tokens: TokenUsage, cost: Double? = null) {
-    if (tokens.input <= 0 && tokens.output <= 0 && cost == null) return
+    if (!tokens.hasVisibleDetails && cost == null) return
 
     Spacer(modifier = Modifier.height(AppSpacing.xs))
     Row(
