@@ -6,6 +6,7 @@ import com.mocca.app.bridge.client.MoccaBridgeClient
 import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
 import com.mocca.app.bridge.protocol.BridgeCapabilities
+import com.mocca.app.bridge.protocol.BRIDGE_PROTOCOL_VERSION
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,6 +95,23 @@ class BridgeConnectionManager(
                 _status.value = BridgeConnectionStatus.Error(
                     message = "MOCCA CLI bridge health check failed",
                     code = "bridge_health_failed"
+                )
+                return
+            }
+
+            // Fail fast on protocol version mismatch instead of waiting for a 30s timeout.
+            // The CLI health endpoint reports its protocol version, so we can detect
+            // incompatibilities before opening the WebSocket connection.
+            val serverVersion = health?.protocolVersion
+            if (serverVersion != null && serverVersion != BRIDGE_PROTOCOL_VERSION) {
+                _status.value = BridgeConnectionStatus.Error(
+                    message = "Protocol version mismatch: app uses v$BRIDGE_PROTOCOL_VERSION " +
+                        "but CLI reports v$serverVersion. " +
+                        if (serverVersion < BRIDGE_PROTOCOL_VERSION)
+                            "Please update your MOCCA CLI (npm update -g @mocca/cli)."
+                        else
+                            "Please update the MOCCA app.",
+                    code = "protocol_version_mismatch"
                 )
                 return
             }

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { watch, type FSWatcher } from "chokidar";
-import { createResponse, type MoccaEvent, type MoccaRequest, type MoccaResponse } from "../../protocol/message.js";
+import { createResponse, PROTOCOL_VERSION, type MoccaEvent, type MoccaRequest, type MoccaResponse } from "../../protocol/message.js";
 import type { EventSequencer } from "../common/eventSequencer.js";
 import type { OpenCodeRuntimeBridge } from "../../opencode/runtimeServer.js";
 
@@ -121,7 +121,7 @@ export class AiConfigManager {
       try {
         const snapshot = await this.getConfig(true);
         this.options.eventSink?.({
-          v: 1,
+          v: PROTOCOL_VERSION,
           ns: "ai",
           event: "config.changed",
           seq: this.options.eventSequencer.next("ai"),
@@ -129,7 +129,7 @@ export class AiConfigManager {
         });
       } catch (error) {
         this.options.eventSink?.({
-          v: 1,
+          v: PROTOCOL_VERSION,
           ns: "ai",
           event: "config.error",
           seq: this.options.eventSequencer.next("ai"),

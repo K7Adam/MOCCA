@@ -144,18 +144,28 @@ async function handleSocketMessage(
   try {
     const frame = parseProtocolFrame(parsed);
     if (!("action" in frame) || "ok" in frame) {
-      websocket.send(JSON.stringify(createInvalidFrameResponse(new Error("Expected request frame"))));
+      websocket.send(JSON.stringify(createInvalidFrameResponse(new Error("Expected request frame"), parsed)));
       return;
     }
     websocket.send(JSON.stringify(await handleRequest(frame)));
   } catch (error) {
-    websocket.send(JSON.stringify(createInvalidFrameResponse(error)));
+    websocket.send(JSON.stringify(createInvalidFrameResponse(error, parsed)));
   }
 }
 
-function createInvalidFrameResponse(error: unknown) {
+function createInvalidFrameResponse(error: unknown, rawFrame?: unknown) {
+  // Extract the actual request ID from the raw frame if available,
+  // so the client can match the error response to its pending request
+  // instead of silently timing out.
+  const frameId =
+    typeof rawFrame === "object" &&
+    rawFrame != null &&
+    "id" in rawFrame &&
+    typeof (rawFrame as Record<string, unknown>).id === "string"
+      ? (rawFrame as Record<string, unknown>).id as string
+      : "invalid-frame";
   return {
-    ...createRequest({ id: "invalid-frame", ns: "system", action: "parse" }),
+    ...createRequest({ id: frameId, ns: "system", action: "parse" }),
     ok: false,
     error: {
       code: "invalid_frame",

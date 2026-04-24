@@ -1,4 +1,5 @@
-export const PROTOCOL_VERSION = 1 as const;
+export const PROTOCOL_VERSION = 2 as const;
+export const MIN_PROTOCOL_VERSION = 1 as const;
 
 export type BridgeNamespace =
   | "system"
@@ -99,8 +100,10 @@ export function parseProtocolFrame(frame: unknown): ProtocolFrame {
     throw new Error("Malformed protocol frame: expected object");
   }
 
-  if (frame.v !== PROTOCOL_VERSION) {
-    throw new Error(`Unsupported protocol version: ${String(frame.v)}`);
+  if (typeof frame.v !== "number" || frame.v < MIN_PROTOCOL_VERSION || frame.v > PROTOCOL_VERSION) {
+    throw new Error(
+      `Unsupported protocol version: ${String(frame.v)} (supported: ${MIN_PROTOCOL_VERSION}–${PROTOCOL_VERSION})`,
+    );
   }
 
   if (typeof frame.ns !== "string" || frame.ns.length === 0) {
