@@ -219,8 +219,7 @@ class OnboardingWizardModel(
                     isActive = true,
                     useHttps = runtimeServer.useHttps
                 )
-                serverConfigRepository.saveServer(cliServerConfig)
-                connectionManager.connect(cliServerConfig)
+                serverConfigRepository.saveActiveServer(cliServerConfig)
                 waitForServerConnection()
 
                 _state.update {

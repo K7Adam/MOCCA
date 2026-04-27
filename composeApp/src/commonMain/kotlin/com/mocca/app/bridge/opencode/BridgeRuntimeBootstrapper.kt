@@ -73,7 +73,7 @@ class BridgeRuntimeBootstrapper(
             }
         }
 
-        serverConfigRepository.saveServer(config)
+        serverConfigRepository.saveActiveServer(config)
         connectionManager.connect(config)
         waitForOpenCodeConnection()
         Napier.i("[BridgeRuntimeBootstrapper] OpenCode runtime ready at ${server.baseUrl}")

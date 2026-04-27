@@ -169,8 +169,9 @@ class ConnectionManager(
                 _status.value = ConnectionStatus.Connecting
                 currentClient = createClient(config)
             }
-            // Persist as active
-            serverConfigRepository.setActiveServer(config.id)
+            // Persist as active (already handled by the repo call that triggered this, 
+            // but we ensure the local state is updated if needed. 
+            // Actually, we can just remove it since this is reactive.)
             // Run initial health check directly (NOT via checkConnection() which guards against Connecting)
             consecutiveFailures = 0
             hasEverConnected = false

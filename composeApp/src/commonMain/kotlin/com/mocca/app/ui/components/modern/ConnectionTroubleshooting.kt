@@ -205,9 +205,9 @@ fun ConnectionHelpInline(
 
         Text(
             text = "Common causes:\n" +
-                    "• OpenCode server is not running on your computer\n" +
-                    "• Device and computer are on different networks\n" +
-                    "• Firewall blocking port 4242",
+                    "• MOCCA CLI is not running on your computer\n" +
+                    "• Bridge connection was interrupted\n" +
+                    "• Firewall is blocking the connection",
             style = AppTypography.bodySmall,
             color = AppColors.onSurfaceVariant
         )

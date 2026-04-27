@@ -139,32 +139,15 @@ class ServerConfigRepository(
     }
 
     /**
-     * Get all configured servers.
-     * Decrypts encrypted passwords and migrates plaintext ones.
-     */
-    suspend fun getAllServers(): List<ServerConfig> {
-        return try {
-            localCache.getAllServerConfigs().map { raw ->
-                val passwordRead = readPasswordCompatibility(raw.password, raw.id)
-                val config = raw.copy(password = passwordRead.password)
-                if (passwordRead.shouldMigrate) {
-                    migratePasswordToNewFormat(config)
-                }
-                config
-            }
-        } catch (e: Exception) {
-            Napier.w("Failed to get servers", e)
-            emptyList()
-        }
-    }
-
-    /**
-     * Add or update a server configuration.
+     * Set the active server configuration.
+     *
+     * Configs are created exclusively by the MOCCA CLI bridge pairing flow.
+     * This replaces any existing configuration, enforcing the "Single Active Connection" rule.
      *
      * SECURITY: If the config has a password, it will be encrypted using
      * SecureTokenStorage before being saved to the database.
      */
-    suspend fun saveServer(config: ServerConfig) {
+    suspend fun saveActiveServer(config: ServerConfig) {
         try {
             // Encrypt password if present and secure storage is available
             val configToSave = if (secureTokenStorage != null && config.password.isNotEmpty()) {
@@ -180,55 +163,12 @@ class ServerConfigRepository(
             }
 
             localCache.insertServerConfig(configToSave)
-
-            if (config.isActive) {
-                localCache.setActiveServerConfig(config.id)
-                _activeServer.value = config
-            }
+            localCache.setActiveServerConfig(config.id)
+            _activeServer.value = config
+            
+            Napier.i("Saved new active server: ${config.name} (${config.baseUrl})")
         } catch (e: Exception) {
             Napier.e("Failed to save server", e)
-        }
-    }
-
-    /**
-     * Delete a server configuration.
-     */
-    suspend fun deleteServer(serverId: String) {
-        try {
-            localCache.deleteServerConfig(serverId)
-            if (_activeServer.value?.id == serverId) {
-                val raw = localCache.getActiveServerConfig()
-                _activeServer.value = raw?.let {
-                    val passwordRead = readPasswordCompatibility(it.password, it.id)
-                    val config = it.copy(password = passwordRead.password)
-                    if (passwordRead.shouldMigrate) {
-                        migratePasswordToNewFormat(config)
-                    }
-                    config
-                }
-            }
-        } catch (e: Exception) {
-            Napier.e("Failed to delete server", e)
-        }
-    }
-
-    /**
-     * Set a server as active.
-     */
-    suspend fun setActiveServer(serverId: String) {
-        try {
-            localCache.setActiveServerConfig(serverId)
-            val raw = localCache.getServerConfig(serverId)
-            if (raw != null) {
-                val passwordRead = readPasswordCompatibility(raw.password, raw.id)
-                val config = raw.copy(password = passwordRead.password)
-                if (passwordRead.shouldMigrate) {
-                    migratePasswordToNewFormat(config)
-                }
-                _activeServer.value = config
-            }
-        } catch (e: Exception) {
-            Napier.e("Failed to set active server", e)
         }
     }
 

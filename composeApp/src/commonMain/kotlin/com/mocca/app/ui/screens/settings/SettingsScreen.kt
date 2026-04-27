@@ -100,26 +100,6 @@ class SettingsScreen : Screen {
                     }
                 }
 
-                // Legacy Servers Section
-                item {
-                    Box(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                        )
-                    ) {
-                        ServersSection(
-                            servers = state.servers,
-                            activeServerId = state.activeServerId,
-                            connectionStatuses = state.connectionStatuses,
-                            onActivate = { screenModel.setActiveServer(it) },
-                            onEdit = { screenModel.editServer(it) },
-                            onDelete = { screenModel.deleteServer(it) },
-                            onCheckConnection = { screenModel.checkServerConnection(it) },
-                            onAddNewServer = { screenModel.addNewServer() }
-                        )
-                    }
-                }
                 
                 // Provider Authentication Section
                 item {
@@ -151,7 +131,6 @@ class SettingsScreen : Screen {
                         )
                     ) {
                         AppConfigSection(
-                            isCliAuthoritative = state.bridgeTarget != null,
                             activeConnectionState = state.activeConnectionState,
                             serverDefaultProvider = state.serverDefaultProvider,
                             serverDefaultModel = state.serverDefaultModel,
@@ -201,28 +180,6 @@ class SettingsScreen : Screen {
                     }
                 }
                 
-                // Server Info Section
-                if (state.bridgeTarget == null) {
-                    state.serverVersion?.let { version ->
-                    item {
-                        Box(
-                            modifier = Modifier.animateItem(
-                                fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                                placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                            )
-                        ) {
-                            SettingsCard(title = "Legacy OpenCode Server Info") {
-                                SettingsRowItem(
-                                    title = "Server Version",
-                                    subtitle = version,
-                                    isEnabled = true,
-                                    showToggle = false
-                                )
-                            }
-                        }
-                    }
-                }
-                }
                 
                 // Appearance Section
                 item {
@@ -346,17 +303,6 @@ class SettingsScreen : Screen {
                 }
             }
         
-            // Edit Server Dialog (Overlay)
-            state.editingServer?.let { server ->
-                val isNewServer = state.servers.none { it.id == server.id }
-                TerminalServerEditDialog(
-                    server = server,
-                    isNewServer = isNewServer,
-                    onSave = { screenModel.saveServer(it, isNewServer) },
-                    onDismiss = { screenModel.cancelEdit() }
-                )
-            }
-            
             // Clear Cache Confirmation Dialog
             if (state.showClearCacheDialog) {
                 AlertDialog(
@@ -489,7 +435,6 @@ fun CliConnectionSection(
 
 @Composable
 fun AppConfigSection(
-    isCliAuthoritative: Boolean,
     activeConnectionState: ConnectionStatus,
     serverDefaultProvider: String?,
     serverDefaultModel: String?,
@@ -574,7 +519,7 @@ fun AppConfigSection(
                 Spacer(modifier = Modifier.width(AppSpacing.md))
 
                 MoccaButton(
-                    text = if (isSyncingConfig) "Syncing" else if (isCliAuthoritative) "Refresh Runtime" else "Sync Config",
+                    text = if (isSyncingConfig) "Syncing" else "Refresh Runtime",
                     onClick = onSyncConfig,
                     enabled = canSyncConfig && !isSyncingConfig,
                     height = AppSpacing.buttonHeightCompact
@@ -643,21 +588,13 @@ fun AppConfigSection(
 
             // Info note about server-side configuration
             Text(
-                text = if (isCliAuthoritative) {
-                    "This configuration is read from your local OpenCode setup through MOCCA CLI."
-                } else {
-                    "Provider and model are configured on the OpenCode server."
-                },
+                text = "This configuration is read from your local OpenCode setup through MOCCA CLI.",
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
             Spacer(modifier = Modifier.height(AppSpacing.xs))
             Text(
-                text = if (isCliAuthoritative) {
-                    "Refresh after editing local opencode.json/jsonc or switching the active CLI project."
-                } else {
-                    "Update these settings via /config command in OpenCode."
-                },
+                text = "Refresh after editing local opencode.json/jsonc or switching the active CLI project.",
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
@@ -676,6 +613,7 @@ fun AppConfigSection(
         }
     }
 }
+
 @Composable
 fun AppUpdatesSection(
     githubToken: String,
@@ -820,6 +758,7 @@ fun AppUpdatesSection(
         }
     }
 }
+
 @Composable
 fun ChatSection(
     preferences: UserPreferences,
@@ -868,6 +807,7 @@ fun ChatSection(
         }
     }
 }
+
 @Composable
 fun ConnectionSection(
     preferences: UserPreferences,
@@ -913,6 +853,7 @@ fun ConnectionSection(
         }
     }
 }
+
 @Composable
 fun ExperimentalSection(
     navigator: Navigator,
@@ -942,6 +883,7 @@ fun ExperimentalSection(
         }
     }
 }
+
 @Composable
 fun NotificationsSection(
     preferences: UserPreferences,
@@ -990,6 +932,7 @@ fun NotificationsSection(
         }
     }
 }
+
 @Composable
 fun PrivacySecuritySection(
     preferences: UserPreferences,
@@ -1088,6 +1031,7 @@ fun PrivacySecuritySection(
         }
     }
 }
+
 @Composable
 fun ProjectSection(
     currentProject: Project,
@@ -1157,6 +1101,7 @@ fun ProjectSection(
         }
     }
 }
+
 @Composable
 fun ProviderAuthSection(
     providerAuthMethods: Map<String, ImmutableList<ProviderAuthMethod>>,
@@ -1269,48 +1214,7 @@ fun ProviderAuthSection(
         }
     }
 }
-@Composable
-fun ServersSection(
-    servers: ImmutableList<ServerConfig>,
-    activeServerId: String?,
-    connectionStatuses: Map<String, ServerConnectionStatus>,
-    onActivate: (String) -> Unit,
-    onEdit: (ServerConfig) -> Unit,
-    onDelete: (String) -> Unit,
-    onCheckConnection: (ServerConfig) -> Unit,
-    onAddNewServer: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Legacy OpenCode Servers",
-            color = AppColors.onSurfaceVariant,
-            style = AppTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        servers.forEach { server ->
-            TerminalServerCard(
-                server = server,
-                isActive = server.id == activeServerId,
-                connectionStatus = connectionStatuses[server.id] ?: ServerConnectionStatus.UNKNOWN,
-                onActivate = { onActivate(server.id) },
-                onEdit = { onEdit(server) },
-                onDelete = { onDelete(server.id) },
-                onCheckConnection = { onCheckConnection(server) }
-            )
-            Spacer(modifier = Modifier.height(AppSpacing.cardGap))
-        }
-        
-        MoccaButton(
-            text = "Add Legacy Server",
-            onClick = onAddNewServer,
-            modifier = Modifier.fillMaxWidth(),
-            height = AppSpacing.buttonHeightCompact
-        )
-    }
-}
+
 @Composable
 fun SettingsCard(
     title: String,

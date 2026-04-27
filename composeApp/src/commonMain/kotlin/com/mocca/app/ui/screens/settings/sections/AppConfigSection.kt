@@ -90,7 +90,7 @@ fun AppConfigSection(
 
             // Info note about server-side configuration
             Text(
-                text = "Provider and model are configured on the OpenCode server.",
+                text = "Provider and model are managed by the MOCCA CLI.",
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )
