@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.draw.blur
+import kotlin.math.abs
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -61,7 +63,15 @@ internal fun MainScreenPanelHost(
             .fillMaxSize()
             .padding(paddingValues)
     ) {
-        centerPanel.content()
+        val blurRadius = (abs(panelProgress - 0.5f) * 2 * 16).dp
+        
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(blurRadius)
+        ) {
+            centerPanel.content()
+        }
 
         if (activePanel.id != centerPanel.id) {
             Box(
