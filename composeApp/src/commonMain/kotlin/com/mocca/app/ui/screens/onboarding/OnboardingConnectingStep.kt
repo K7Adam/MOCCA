@@ -42,12 +42,12 @@ import com.mocca.app.ui.theme.AppTypography
 
 /**
  * Connecting step — staged progress visualization with auto-navigation on success.
+ * Bridge-only: always shows CLI-specific stage labels.
  */
 
 @Composable
 internal fun OnboardingConnectingStep(
     connectionStage: ConnectionStage,
-    connectionMode: OnboardingConnectionMode,
     connectionProgress: String,
     bridgePairingNetwork: DirectBridgeNetwork?,
     bridgeValidationSummary: BridgeValidationSummary?,
@@ -85,26 +85,19 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.xl))
 
             Text(
-                text = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
-                    "MOCCA CLI Connected"
-                } else {
-                    "Connected!"
-                },
+                text = "MOCCA CLI Connected",
                 style = AppTypography.headlineMedium,
                 color = AppColors.success,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
-            if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE &&
-                bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE
-            ) {
+            if (bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE) {
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 TailscaleConnectionBadge()
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.sm))
-
 
             Text(
                 text = bridgeValidationSummary?.let { summary ->
@@ -171,11 +164,7 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
             Text(
-                text = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
-                    "Connecting CLI..."
-                } else {
-                    "Connecting..."
-                },
+                text = "Connecting CLI...",
                 style = AppTypography.headlineMedium,
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold,
@@ -192,33 +181,21 @@ internal fun OnboardingConnectingStep(
                 )
             }
 
-            if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE &&
-                bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE
-            ) {
+            if (bridgePairingNetwork == DirectBridgeNetwork.TAILSCALE) {
                 Spacer(modifier = Modifier.height(AppSpacing.md))
                 TailscaleConnectionBadge()
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
-            // Staged progress items
-            val labels = if (connectionMode == OnboardingConnectionMode.MOCCA_CLI_BRIDGE) {
-                listOf(
-                    "Reading pairing link...",
-                    "Checking CLI health...",
-                    "Verifying pairing code...",
-                    "Starting OpenCode runtime...",
-                    "Importing OpenCode config..."
-                )
-            } else {
-                listOf(
-                    "Saving configuration...",
-                    "Resolving server...",
-                    "Authenticating...",
-                    "Testing API connection...",
-                    "Importing server config..."
-                )
-            }
+            // Staged progress items (bridge-only labels)
+            val labels = listOf(
+                "Reading pairing link...",
+                "Checking CLI health...",
+                "Verifying pairing code...",
+                "Starting OpenCode runtime...",
+                "Importing OpenCode config..."
+            )
             Column(
                 modifier = Modifier.fillMaxWidth(0.8f),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
@@ -354,4 +331,3 @@ private fun StageItem(
         }
     }
 }
-

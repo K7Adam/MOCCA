@@ -6,7 +6,6 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.components.modern.MoccaButton
-import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import androidx.compose.animation.core.LinearEasing
@@ -36,16 +34,13 @@ import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
 
 /**
- * Welcome step — app branding, setup checklist, and entry options.
+ * Welcome step — app branding, setup checklist, and continue button.
  *
- * Discovery-first flow: the primary CTA scans for nearby OpenCode servers
- * and imports their config automatically. Manual entry remains available
- * as a secondary fallback.
+ * Bridge-only flow: the single CTA proceeds to the MOCCA CLI pairing step.
  */
 @Composable
 internal fun OnboardingWelcomeStep(
-    onAutoDiscover: () -> Unit,
-    onManualEntry: () -> Unit,
+    onContinue: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     // Subtle breathing animation for the terminal icon
@@ -104,7 +99,7 @@ internal fun OnboardingWelcomeStep(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Action buttons (bottom-aligned) — discovery-first ordering
+        // Action button (bottom-aligned)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -112,22 +107,16 @@ internal fun OnboardingWelcomeStep(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             MoccaButton(
-                text = "Find & Connect to Server",
-                onClick = onAutoDiscover,
+                text = "Get Started",
+                onClick = onContinue,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Text(
-                text = "Scans your network and saved configs for OpenCode servers",
+                text = "Connect to your MOCCA CLI bridge to start chatting",
                 style = AppTypography.labelSmall,
                 color = AppColors.outline,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            MoccaOutlinedButton(
-                text = "Enter Server Address Manually",
-                onClick = onManualEntry,
                 modifier = Modifier.fillMaxWidth()
             )
         }

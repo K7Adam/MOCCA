@@ -46,6 +46,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.jsonPrimitive
+
 import kotlin.math.min
 
 /**
@@ -311,7 +315,19 @@ class ConnectionManager(
         
         return try {
             Napier.i("[ConnectionManager] Executing GET /global/health...")
-            val appInfo = execute { get("/global/health").body<AppInfo>() }
+            val appInfo = try {
+                execute { get("/global/health").body<AppInfo>() }
+            } catch (e: ClientRequestException) {
+                if (e.response.status == HttpStatusCode.NotFound) {
+                    Napier.i("[ConnectionManager] /global/health not found, trying /v1/health (Bridge mode)...")
+                    val body = execute { get("/v1/health").body<JsonObject>() }
+                    AppInfo(
+                        version = body["protocolVersion"]?.jsonPrimitive?.content ?: "bridge-v2",
+                        healthy = body["ok"]?.jsonPrimitive?.booleanOrNull ?: true,
+                        initialized = true
+                    )
+                } else throw e
+            }
             Napier.i("[ConnectionManager] Health check SUCCESS: ${appInfo.version}")
             Result.success(appInfo)
         } catch (e: ClientRequestException) {

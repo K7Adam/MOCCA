@@ -84,7 +84,8 @@ val commonModule = module {
             apiClient = get(),
             appLifecycleObserver = getOrNull(),
             notificationTracker = getOrNull<com.mocca.app.domain.manager.NotificationTracker>(),
-            localCache = get()
+            localCache = get(),
+            bridgeConnectionManager = get()
         )
     }
     single {
@@ -327,7 +328,7 @@ val screenModelModule = module {
         OnboardingWizardModel(
             serverConfigRepository = get(),
             connectionManager = get(),
-            serverDiscovery = getOrNull(),
+
             appStateStore = get(),
             bridgeConnectionManager = get()
         )

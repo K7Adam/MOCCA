@@ -100,33 +100,6 @@ object NetworkConfig {
     // RETRY POLICY
 
     
-    /** Default max retries for idempotent operations */
-    const val DEFAULT_MAX_RETRIES = 3
-    
-    /** Aggressive max retries for critical operations */
-    const val AGGRESSIVE_MAX_RETRIES = 5
-
-    // SERVER PORTS & ENDPOINTS
-
-    
-    /** OpenCode server default port */
-    const val OPENCODE_SERVER_PORT = 443
-    
-    /** Emulator loopback host for local Android emulator development. */
-    const val DEFAULT_HOST_IP = "10.0.2.2"
-
-    /** Default username used by common OpenCode installs. */
-    const val DEFAULT_USERNAME = "opencode"
-
-    /** Password is intentionally blank by default. */
-    const val DEFAULT_PASSWORD = ""
-
-    // CIRCUIT BREAKER
-
-    
-    /** Failure threshold before opening circuit */
-    const val CIRCUIT_BREAKER_FAILURE_THRESHOLD = 5
-    
     /** Timeout duration for circuit breaker (30 seconds) */
     const val CIRCUIT_BREAKER_TIMEOUT_MS = 30_000L
     

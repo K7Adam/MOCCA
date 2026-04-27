@@ -15,7 +15,7 @@ expect fun getDefaultConfigPath(): String
 
 /**
  * Platform-specific default host for connecting to OpenCode server.
- * Android emulator uses NetworkConfig.DEFAULT_HOST_IP
+ * Android emulator uses 10.0.2.2
  * Other platforms use localhost directly.
  */
 expect fun getPlatformDefaultHost(): String

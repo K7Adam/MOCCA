@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.Undo
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -422,7 +423,7 @@ private fun MessageContextMenu(
 
                 if (canRevert) {
                     MoccaIconButton(
-                        icon = Icons.Default.Undo,
+                        icon = Icons.AutoMirrored.Filled.Undo,
                         onClick = {
                             revertAction()
                             onDismiss()

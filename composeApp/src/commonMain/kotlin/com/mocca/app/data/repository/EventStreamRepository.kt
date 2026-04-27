@@ -18,6 +18,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.coroutines.sync.withLock
 
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +47,8 @@ class EventStreamRepository(
     private val apiClient: MoccaApiClient? = null,
     private val appLifecycleObserver: AppLifecycleObserver? = null,
     private val notificationTracker: NotificationTracker? = null,
-    private val localCache: com.mocca.app.data.local.LocalCache? = null
+    private val localCache: com.mocca.app.data.local.LocalCache? = null,
+    private val bridgeConnectionManager: com.mocca.app.bridge.connection.BridgeConnectionManager? = null
 ) {
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     
@@ -51,6 +57,13 @@ class EventStreamRepository(
     private var lifecycleObserverJob: Job? = null
     private var backgroundPauseJob: Job? = null
     private var permissionActionJob: Job? = null
+    private var bridgeEventJob: Job? = null
+    
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        encodeDefaults = true
+    }
     
     // Removed 'scope' variable as we use repositoryScope now
     private var autoReconnect: Boolean = true
@@ -191,6 +204,90 @@ class EventStreamRepository(
             startNetworkObserver()
             startLifecycleObserver()
             startPermissionActionObserver()
+            startBridgeEventObserver()
+        }
+    }
+    
+    /**
+     * Start observing events from the MOCCA Bridge WebSocket.
+     * This is critical for chat synchronization when connected via the CLI bridge.
+     */
+    @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+    private fun startBridgeEventObserver() {
+        if (bridgeEventJob?.isActive == true || bridgeConnectionManager == null) return
+        
+        Napier.i("[EventStream] Starting Bridge event observer")
+        bridgeEventJob = repositoryScope.launch {
+            bridgeConnectionManager.client
+                .filterNotNull()
+                .flatMapLatest { client -> 
+                    Napier.d("[EventStream] Observing events from new Bridge client")
+                    client.events 
+                }
+                .collect { bridgeEvent ->
+                    handleBridgeEvent(bridgeEvent)
+                }
+        }
+    }
+
+    private suspend fun handleBridgeEvent(bridgeEvent: com.mocca.app.bridge.protocol.BridgeEvent) {
+        // We only care about AI runtime events which contain ServerEvent payloads
+        if (bridgeEvent.ns != "ai") return
+        
+        // Both "runtime.event" (new) and "event" (old/compat) might be used
+        if (bridgeEvent.event != "runtime.event" && bridgeEvent.event != "event") return
+        
+        val payload = bridgeEvent.payload ?: return
+        
+        try {
+            val serverEvent = parseBridgePayload(payload)
+            if (serverEvent != null) {
+                Napier.v("[EventStream] Processing Bridge event: ${serverEvent.type}")
+                handleEvent(serverEvent)
+            }
+        } catch (e: Exception) {
+            Napier.w("[EventStream] Failed to parse Bridge event payload", e)
+        }
+    }
+
+    private fun parseBridgePayload(payload: JsonElement): ServerEvent? {
+        if (payload !is JsonObject) return null
+        
+        // OpenCode wraps events in a "payload" object sometimes, 
+        // but the bridge router.js sends the raw event as the payload.
+        // We handle both cases for robustness.
+        val eventObject = (payload["payload"] as? JsonObject) ?: payload
+        val type = eventObject["type"]?.jsonPrimitive?.content ?: return null
+        
+        val eventData = json.encodeToString(JsonObject.serializer(), eventObject)
+        
+        return try {
+            when (type) {
+                "server.connected" -> json.decodeFromString<ServerEvent.Connected>(eventData)
+                "server.heartbeat" -> json.decodeFromString<ServerEvent.Heartbeat>(eventData)
+                "session.updated" -> json.decodeFromString<ServerEvent.SessionUpdated>(eventData)
+                "session.deleted" -> json.decodeFromString<ServerEvent.SessionDeleted>(eventData)
+                "session.idle" -> json.decodeFromString<ServerEvent.SessionIdle>(eventData)
+                "session.error" -> json.decodeFromString<ServerEvent.SessionError>(eventData)
+                "message.updated" -> json.decodeFromString<ServerEvent.MessageUpdated>(eventData)
+                "message.removed" -> json.decodeFromString<ServerEvent.MessageRemoved>(eventData)
+                "message.part.updated" -> json.decodeFromString<ServerEvent.MessagePartUpdated>(eventData)
+                "message.part.delta" -> json.decodeFromString<ServerEvent.MessagePartDelta>(eventData)
+                "message.part.removed" -> json.decodeFromString<ServerEvent.MessagePartRemoved>(eventData)
+                "permission.asked" -> json.decodeFromString<ServerEvent.PermissionAsked>(eventData)
+                "permission.updated" -> json.decodeFromString<ServerEvent.PermissionUpdated>(eventData)
+                "permission.replied" -> json.decodeFromString<ServerEvent.PermissionReplied>(eventData)
+                "question.asked" -> json.decodeFromString<ServerEvent.QuestionAsked>(eventData)
+                "question.replied" -> json.decodeFromString<ServerEvent.QuestionReplied>(eventData)
+                "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(eventData)
+                else -> {
+                    Napier.d("[EventStream] Unknown Bridge event type: $type")
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            Napier.w("[EventStream] Error decoding Bridge event: $type", e)
+            null
         }
     }
     
@@ -631,8 +728,9 @@ class EventStreamRepository(
     /**
      * Handle incoming SSE events.
      * Persists relevant events to local database for offline-first support.
+     * This is internal so it can be called by bridge adapters or state coordinators.
      */
-    private suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
+    internal suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
         Napier.v("Dispatching event: ${event.type}")
         _events.emit(event)
         reduceChatTurn(event)

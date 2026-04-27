@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,10 +51,9 @@ import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.data.repository.ConnectionManager
 import com.mocca.app.data.repository.ServerConfigRepository
 import androidx.compose.animation.core.tween
-import com.mocca.app.discovery.ServerDiscovery
 
 /**
- * Progressive Onboarding Screen — 3-step wizard.
+ * Progressive Onboarding Screen — 3-step wizard (bridge-only).
  *
  * Flow: WELCOME → CONNECT → CONNECTING (auto-nav to MainScreen on success)
  *
@@ -75,7 +72,6 @@ class ProgressiveOnboardingScreen(
 
         val serverConfigRepository = koinInject<ServerConfigRepository>()
         val connectionManager = koinInject<ConnectionManager>()
-        val serverDiscovery = koinInject<ServerDiscovery>()
         val appStateStore = koinInject<com.mocca.app.data.repository.AppStateStore>()
         val bridgeConnectionManager = koinInject<BridgeConnectionManager>()
         val bridgePairingIntentStore = koinInject<BridgePairingIntentStore>()
@@ -85,7 +81,6 @@ class ProgressiveOnboardingScreen(
             OnboardingWizardModel(
                 serverConfigRepository = serverConfigRepository,
                 connectionManager = connectionManager,
-                serverDiscovery = serverDiscovery,
                 appStateStore = appStateStore,
                 bridgeConnectionManager = bridgeConnectionManager
             )
@@ -115,19 +110,6 @@ class ProgressiveOnboardingScreen(
             val payload = pendingBridgePairingPayload ?: return@LaunchedEffect
             bridgePairingIntentStore.consume(payload)
             screenModel.onAction(OnboardingAction.BridgePairingPayloadReceived(payload))
-        }
-
-        // Credential dialog
-        if (state.needsCredentials && state.credentialServer != null) {
-            CredentialDialog(
-                serverName = state.credentialServer!!.name,
-                onConfirm = { username, password ->
-                    screenModel.onAction(OnboardingAction.CredentialsProvided(username, password))
-                },
-                onDismiss = {
-                    screenModel.onAction(OnboardingAction.Back)
-                }
-            )
         }
 
         Column(
@@ -168,27 +150,12 @@ class ProgressiveOnboardingScreen(
             ) { step ->
                 when (step) {
                     OnboardingStep.WELCOME -> OnboardingWelcomeStep(
-                        onAutoDiscover = {
+                        onContinue = {
                             screenModel.onAction(OnboardingAction.GoToConnect)
-                        },
-                        onManualEntry = {
-                            screenModel.onAction(OnboardingAction.GoToManualEntry)
                         }
                     )
                     OnboardingStep.CONNECT -> OnboardingConnectStep(
-                        discoveredServers = state.allServers,
-                        isDiscovering = state.isDiscovering,
-                        showManualEntry = state.showManualEntry,
                         error = state.error,
-                        selectedServer = state.selectedServer,
-                        onServerSelected = { server ->
-                            screenModel.onAction(OnboardingAction.ServerSelected(server))
-                        },
-                        onManualConnect = { host, port, username, password, useHttps ->
-                            screenModel.onAction(
-                                OnboardingAction.ManualConnect(host, port, username, password, useHttps)
-                            )
-                        },
                         bridgePairingPayload = state.bridgePairingPayload,
                         bridgePairingNetwork = state.bridgePairingNetwork,
                         onBridgePairingPayloadChange = { payload ->
@@ -203,19 +170,12 @@ class ProgressiveOnboardingScreen(
                         onBridgePairingError = { message ->
                             screenModel.onAction(OnboardingAction.BridgePairingError(message))
                         },
-                        onRefreshDiscovery = {
-                            screenModel.onAction(OnboardingAction.StartDiscovery)
-                        },
-                        onToggleManualEntry = {
-                            screenModel.onAction(OnboardingAction.GoToManualEntry)
-                        },
                         onBack = {
                             screenModel.onAction(OnboardingAction.Back)
                         }
                     )
                     OnboardingStep.CONNECTING -> OnboardingConnectingStep(
                         connectionStage = state.connectionStage,
-                        connectionMode = state.connectionMode,
                         connectionProgress = state.connectionProgress,
                         bridgePairingNetwork = state.bridgePairingNetwork,
                         bridgeValidationSummary = state.bridgeValidationSummary,

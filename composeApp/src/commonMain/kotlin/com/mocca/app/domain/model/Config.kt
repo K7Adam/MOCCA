@@ -1,17 +1,15 @@
 package com.mocca.app.domain.model
 
-import com.mocca.app.api.NetworkConfig
+
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 
 /**
- * Server configuration for connecting to OpenCode server. Uses HTTP Basic Auth (username +
- * password) as defined by OpenCode's server API.
+ * Server configuration for connecting to the OpenCode runtime.
  *
- * OpenCode authenticates via environment variables:
- * - OPENCODE_SERVER_PASSWORD — protects the server with basic auth
- * - OPENCODE_SERVER_USERNAME — defaults to "opencode" (our server uses "adamk7")
+ * Created by the MOCCA CLI bridge pairing flow. The bridge starts an OpenCode runtime
+ * and provides host/port/credentials via the pairing handshake.
  */
 @Serializable
 @Immutable
@@ -20,7 +18,7 @@ data class ServerConfig(
         val name: String,
         val host: String = "localhost",
         val port: Int = 443,
-        val username: String = NetworkConfig.DEFAULT_USERNAME,
+        val username: String = "",
         val password: String = "",
         val isActive: Boolean = false,
         val useHttps: Boolean = true
@@ -45,7 +43,7 @@ data class ServerConfig(
     val displayType: String
         get() =
                 when {
-                    host == NetworkConfig.DEFAULT_HOST_IP -> "Emulator"
+                    host == "10.0.2.2" -> "Emulator"
                     host == "localhost" || host == "127.0.0.1" -> "Local"
                     host.endsWith(".ts.net") -> "Tailscale"
                     host.matches(Regex("""\d+\.\d+\.\d+\.\d+""")) -> "LAN"

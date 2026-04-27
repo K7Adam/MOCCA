@@ -21,7 +21,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.mocca.app.api.NetworkConfig
 import com.mocca.app.api.getPlatformDefaultHost
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.ui.components.modern.*
@@ -203,8 +202,8 @@ fun TerminalServerEditDialog(
     var name by remember { mutableStateOf(server.name.ifBlank { "DigitalOcean OpenCode" }) }
     val defaultHost = remember { getPlatformDefaultHost() }
     var host by remember { mutableStateOf(server.host.ifBlank { defaultHost }) }
-    var port by remember { mutableStateOf(if (server.port == 0) NetworkConfig.OPENCODE_SERVER_PORT.toString() else server.port.toString()) }
-    var username by remember { mutableStateOf(server.username.ifBlank { NetworkConfig.DEFAULT_USERNAME }) }
+    var port by remember { mutableStateOf(if (server.port == 0) "4242" else server.port.toString()) }
+    var username by remember { mutableStateOf(server.username.ifBlank { "user" }) }
     var password by remember { mutableStateOf(server.password) }
 
     val focusManager = LocalFocusManager.current
@@ -262,7 +261,7 @@ fun TerminalServerEditDialog(
                     value = username,
                     onValueChange = { username = it },
                     label = "Username",
-                    placeholder = NetworkConfig.DEFAULT_USERNAME,
+                    placeholder = "user",
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
@@ -283,7 +282,7 @@ fun TerminalServerEditDialog(
                                 name = name,
                                 host = host,
                                 port = port.toIntOrNull() ?: 4242,
-                                username = username.ifBlank { NetworkConfig.DEFAULT_USERNAME },
+                                username = username.ifBlank { "user" },
                                 password = password
                             )
                         )
@@ -300,7 +299,7 @@ fun TerminalServerEditDialog(
                             name = name,
                             host = host,
                             port = port.toIntOrNull() ?: 4242,
-                            username = username.ifBlank { NetworkConfig.DEFAULT_USERNAME },
+                            username = username.ifBlank { "user" },
                             password = password
                         )
                     )

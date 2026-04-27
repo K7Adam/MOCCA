@@ -6,7 +6,6 @@ import coil3.memory.MemoryCache
 import com.mocca.app.data.local.LocalCacheFactory
 import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.data.security.SecureTokenStorageImpl
-import com.mocca.app.discovery.ServerDiscoveryManager
 import com.mocca.app.domain.manager.AndroidUpdateManager
 import com.mocca.app.domain.manager.PlatformUpdateManager
 import com.mocca.app.domain.provider.AndroidAppVersionProvider
@@ -38,9 +37,6 @@ val androidModule = module {
     // Override with Android Keystore implementation
     single<SecureTokenStorage> { SecureTokenStorageImpl(androidContext()) }
     single<VoiceInputProvider> { AndroidVoiceInputProvider(androidContext()) }
-    
-    // Server discovery for auto-discovery of OpenCode servers
-    single<com.mocca.app.discovery.ServerDiscovery> { ServerDiscoveryManager(androidContext()) }
     
     // OPTIMIZED: Coil ImageLoader with memory and disk cache configuration
     single {
