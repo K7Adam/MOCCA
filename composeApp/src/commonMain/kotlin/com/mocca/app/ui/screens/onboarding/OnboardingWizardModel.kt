@@ -228,25 +228,20 @@ class OnboardingWizardModel(
                         connectionProgress = "Importing local OpenCode configuration..."
                     )
                 }
-                val snapshot = repository.fetchOpenCodeConfigSnapshot()
-                if (!snapshot.installed.available) {
-                    val detail = snapshot.installed.error?.let { ": $it" }.orEmpty()
-                    error("OpenCode is not available on your computer$detail")
+                val config = repository.fetchAiRuntimeConfig(forceRefresh = true)
+                if (config.providers.none { it.connected && it.models.isNotEmpty() }) {
+                    error("OpenCode is available, but no usable provider/model configuration was found.")
                 }
-                val credentials = repository.fetchCredentials()
-                val agents = repository.fetchAgents()
-                val commands = repository.fetchCommands()
-                val mcpServers = repository.fetchMcpServers()
 
                 val summary = BridgeValidationSummary(
-                    opencodeAvailable = snapshot.installed.available,
-                    opencodeVersion = snapshot.installed.version,
+                    opencodeAvailable = true,
+                    opencodeVersion = null,
                     runtimeBaseUrl = runtimeServer.baseUrl,
-                    configFileCount = snapshot.configFiles.size,
-                    credentialCount = credentials.size,
-                    agentCount = agents.size,
-                    commandCount = commands.size,
-                    mcpServerCount = mcpServers.size
+                    configFileCount = 0,
+                    credentialCount = config.providers.count { it.connected },
+                    agentCount = config.agents.size,
+                    commandCount = config.modes.size,
+                    mcpServerCount = 0
                 )
 
                 _state.update {

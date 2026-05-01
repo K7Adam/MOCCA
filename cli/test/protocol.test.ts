@@ -16,7 +16,7 @@ describe("MOCCA bridge protocol messages", () => {
     });
 
     expect(request).toEqual({
-      v: 1,
+      v: 2,
       id: "req-1",
       ns: "system",
       action: "capabilities",
@@ -24,7 +24,7 @@ describe("MOCCA bridge protocol messages", () => {
     });
 
     expect(createResponse(request, { ok: true, payload: { ready: true } })).toEqual({
-      v: 1,
+      v: 2,
       id: "req-1",
       ns: "system",
       action: "capabilities",
@@ -33,7 +33,7 @@ describe("MOCCA bridge protocol messages", () => {
     });
 
     expect(createEvent({ ns: "ai", event: "config.snapshot", seq: 7, payload: { model: "openai/gpt-5" } })).toEqual({
-      v: 1,
+      v: 2,
       ns: "ai",
       event: "config.snapshot",
       seq: 7,
@@ -42,7 +42,7 @@ describe("MOCCA bridge protocol messages", () => {
   });
 
   it("rejects unsupported or malformed protocol frames", () => {
-    expect(() => parseProtocolFrame({ v: 2, ns: "system", event: "ready" })).toThrow(/unsupported protocol version/i);
+    expect(() => parseProtocolFrame({ v: 3, ns: "system", event: "ready" })).toThrow(/unsupported protocol version/i);
     expect(() => parseProtocolFrame({ v: 1, id: "", ns: "system", action: "ping" })).toThrow(/id/i);
     expect(() => parseProtocolFrame({ v: 1, ns: "system" })).toThrow(/frame/i);
   });

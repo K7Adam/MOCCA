@@ -3,9 +3,13 @@ package com.mocca.app.bridge.client
 import com.mocca.app.bridge.protocol.BridgeEvent
 import com.mocca.app.bridge.protocol.BridgeRequest
 import com.mocca.app.bridge.protocol.BridgeResponse
+import com.mocca.app.domain.model.AiBridgeMessageModel
+import com.mocca.app.domain.model.AiBridgeMessageRequest
+import com.mocca.app.domain.model.ChatPart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -191,13 +195,66 @@ class MoccaBridgeClientTest {
         client.close()
     }
 
-    private class FakeBridgeTransport : BridgeTransport {
+    @Test
+    fun requestTimesOutWhenTransportSendDoesNotComplete() = runTest {
+        val transport = FakeBridgeTransport(sendDelayMillis = 5_000)
+        val client = MoccaBridgeClient(
+            transport = transport,
+            scope = backgroundScope,
+            requestTimeoutMillis = 1_000
+        )
+
+        val requestJob = async {
+            assertFailsWith<BridgeRequestTimeoutException> {
+                client.request(ns = "ai", action = "messages.send")
+            }
+        }
+
+        advanceTimeBy(1_001)
+        runCurrent()
+
+        val timeout = requestJob.await()
+        assertEquals("ai", timeout.ns)
+        assertEquals("messages.send", timeout.action)
+        assertEquals(1_000, timeout.timeoutMillis)
+
+        client.close()
+    }
+
+    @Test
+    fun bridgeJsonOmitsNullFieldsInPromptParts() {
+        val encoded = MoccaBridgeClient.DefaultBridgeJson.encodeToString(
+            AiBridgeMessageRequest(
+                sessionId = "ses-1",
+                text = "hello",
+                parts = listOf(ChatPart.Text(text = "hello")),
+                model = AiBridgeMessageModel(
+                    providerId = "opencode",
+                    modelId = "hy3-preview-free"
+                ),
+                variant = null,
+                agent = "build",
+                legacyMode = null
+            )
+        )
+
+        assertTrue("\"type\":\"text\"" in encoded)
+        assertTrue("\"id\":null" !in encoded)
+        assertTrue("\"synthetic\":null" !in encoded)
+        assertTrue("\"variant\":null" !in encoded)
+        assertTrue("\"legacyMode\":null" !in encoded)
+    }
+
+    private class FakeBridgeTransport(
+        private val sendDelayMillis: Long = 0
+    ) : BridgeTransport {
         private val incomingFrames = Channel<String>(Channel.UNLIMITED)
         private val sentFrames = Channel<String>(Channel.UNLIMITED)
 
         override val incoming = incomingFrames.receiveAsFlow()
 
         override suspend fun send(text: String) {
+            if (sendDelayMillis > 0) delay(sendDelayMillis)
             sentFrames.send(text)
         }
 

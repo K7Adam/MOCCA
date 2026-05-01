@@ -59,6 +59,7 @@ export type OpenCodeConfigSnapshot = {
 
 const SECRET_KEY_PATTERN = /(api[-_]?key|token|secret|password|authorization|credential|cookie|headers?)/i;
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/g;
+const DEFAULT_COMMAND_TIMEOUT_MS = 8_000;
 
 export async function collectOpenCodeConfigSnapshot(
   options: OpenCodeConfigSnapshotOptions,
@@ -293,6 +294,21 @@ function defaultCommandRunner(command: string, args: readonly string[]): Promise
 
     let stdout = "";
     let stderr = "";
+    let settled = false;
+    let timeout: NodeJS.Timeout;
+    const finish = (result: CommandResult) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve(result);
+    };
+    timeout = setTimeout(() => {
+      stderr = stderr.trim()
+        ? `${stderr.trim()}\n${command} ${args.join(" ")} timed out after ${DEFAULT_COMMAND_TIMEOUT_MS}ms`
+        : `${command} ${args.join(" ")} timed out after ${DEFAULT_COMMAND_TIMEOUT_MS}ms`;
+      child.kill();
+      finish({ exitCode: 124, stdout, stderr });
+    }, DEFAULT_COMMAND_TIMEOUT_MS);
 
     child.stdout?.setEncoding("utf8");
     child.stderr?.setEncoding("utf8");
@@ -303,10 +319,10 @@ function defaultCommandRunner(command: string, args: readonly string[]): Promise
       stderr += chunk;
     });
     child.on("error", (error) => {
-      resolve({ exitCode: 1, stdout, stderr: error.message });
+      finish({ exitCode: 1, stdout, stderr: error.message });
     });
     child.on("close", (code) => {
-      resolve({ exitCode: code ?? 1, stdout, stderr });
+      finish({ exitCode: code ?? 1, stdout, stderr });
     });
   });
 }

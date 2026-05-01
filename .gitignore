@@ -54,6 +54,12 @@ nul
 .opencode/package-lock.json
 .agents/cache/
 
+# Scratch / debug artifacts
+scratch/
+maestro-workspace/scratch/
+*.py
+build_output*.txt
+
 # Secrets
 .env
 .env.*

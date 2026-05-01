@@ -17,6 +17,12 @@ export type AiCapabilities = {
   opencodeRuntime: boolean;
   sessions: boolean;
   messages: boolean;
+  events: boolean;
+  eventReplay: boolean;
+  permissions: boolean;
+  questions: boolean;
+  sessionStatus: boolean;
+  usage: boolean;
   configNormalized: boolean;
   providers: boolean;
   agents: boolean;
@@ -41,6 +47,12 @@ export class AiConfigManager {
       opencodeRuntime: options.openCodeRuntime != null,
       sessions: options.openCodeRuntime != null,
       messages: options.openCodeRuntime != null,
+      events: options.openCodeRuntime != null,
+      eventReplay: false,
+      permissions: options.openCodeRuntime != null,
+      questions: options.openCodeRuntime != null,
+      sessionStatus: options.openCodeRuntime != null,
+      usage: options.openCodeRuntime != null,
       configNormalized: true,
       providers: true,
       agents: true,

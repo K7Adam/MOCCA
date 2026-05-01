@@ -110,6 +110,30 @@ object ChatTurnReducer {
             createdAt = part.time?.start ?: 0L,
             isStreaming = true
         )
+        if (part.type == "step-finish") {
+            val finishedMessage = message.copy(
+                cost = part.cost ?: message.cost,
+                tokens = part.tokens?.toTokenUsage() ?: message.tokens,
+                isStreaming = false
+            )
+            return copy(messagesById = messagesById + (part.messageID to finishedMessage))
+                .withActivity(
+                    sessionId = part.sessionID,
+                    stage = AgentActivity.STAGE_IDLE,
+                    messageId = part.messageID,
+                    partId = part.id
+                )
+        }
+        if (part.type == "step-start") {
+            val startedMessage = message.copy(isStreaming = true)
+            return copy(messagesById = messagesById + (part.messageID to startedMessage))
+                .withActivity(
+                    sessionId = part.sessionID,
+                    stage = AgentActivity.STAGE_RUNNING,
+                    messageId = part.messageID,
+                    partId = part.id
+                )
+        }
         val mappedPart = part.toMessagePart() ?: return this
         val updatedMessage = message.copy(
             parts = message.parts.replaceById(part.id, mappedPart),

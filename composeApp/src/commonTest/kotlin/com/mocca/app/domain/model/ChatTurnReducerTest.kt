@@ -116,6 +116,19 @@ class ChatTurnReducerTest {
 
         assertTrue(replied.pendingPermissionsBySession["ses_1"].orEmpty().isEmpty())
         assertEquals(listOf("que_1"), replied.pendingQuestionsBySession.getValue("ses_1").map { it.id })
+
+        val questionReplied = ChatTurnReducer.reduce(
+            replied,
+            ServerEvent.QuestionReplied(
+                properties = QuestionRepliedProperties(
+                    sessionID = "ses_1",
+                    requestID = "que_1",
+                    answers = listOf(listOf("Proceed"))
+                )
+            )
+        )
+
+        assertTrue(questionReplied.pendingQuestionsBySession["ses_1"].orEmpty().isEmpty())
     }
 
     @Test
@@ -161,6 +174,73 @@ class ChatTurnReducerTest {
         assertEquals(0.42, message.cost)
         assertEquals(60, message.tokens?.reasoning)
         assertEquals(9, message.tokens?.cache?.read)
+    }
+
+    @Test
+    fun reducerKeepsStepMarkersOutOfVisiblePartsButAppliesStepFinishUsage() {
+        val withMessage = ChatTurnReducer.reduce(
+            ChatTurnState(),
+            ServerEvent.MessageUpdated(
+                properties = MessageUpdatedProperties(
+                    info = AssistantMessageInfo(
+                        id = "msg_1",
+                        role = "assistant",
+                        sessionID = "ses_1",
+                        time = MessageTimeInfo(created = 10)
+                    )
+                )
+            )
+        )
+
+        val withStepStart = ChatTurnReducer.reduce(
+            withMessage,
+            ServerEvent.MessagePartUpdated(
+                properties = MessagePartUpdatedProperties(
+                    part = MessagePartInfo(
+                        id = "prt_start",
+                        type = "step-start",
+                        messageID = "msg_1",
+                        sessionID = "ses_1"
+                    )
+                )
+            )
+        )
+        val withText = ChatTurnReducer.reduce(
+            withStepStart,
+            ServerEvent.MessagePartUpdated(
+                properties = MessagePartUpdatedProperties(
+                    part = MessagePartInfo(
+                        id = "prt_text",
+                        type = "text",
+                        messageID = "msg_1",
+                        sessionID = "ses_1",
+                        text = "Done"
+                    )
+                )
+            )
+        )
+        val finished = ChatTurnReducer.reduce(
+            withText,
+            ServerEvent.MessagePartUpdated(
+                properties = MessagePartUpdatedProperties(
+                    part = MessagePartInfo(
+                        id = "prt_finish",
+                        type = "step-finish",
+                        messageID = "msg_1",
+                        sessionID = "ses_1",
+                        cost = 0.01,
+                        tokens = TokenInfo(input = 3, output = 2, reasoning = 1)
+                    )
+                )
+            )
+        )
+
+        val message = finished.messagesById.getValue("msg_1")
+        assertEquals(1, message.parts.size)
+        assertIs<MessagePart.Text>(message.parts.single())
+        assertEquals(0.01, message.cost)
+        assertEquals(1, message.tokens?.reasoning)
+        assertEquals(false, message.isStreaming)
     }
 
     @Test
