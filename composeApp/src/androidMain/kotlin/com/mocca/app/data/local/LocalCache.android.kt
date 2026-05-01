@@ -242,10 +242,11 @@ private class AndroidLocalCache(context: Context) : LocalCache {
                     else -> part
                 }
             }
-            val nextParts = if (matchedPart) {
-                updatedParts
-            } else {
-                updatedParts + createStreamingPart(partId, partType, content ?: delta.orEmpty())
+            val createdPart = if (matchedPart) null else createStreamingPart(partId, partType, content ?: delta.orEmpty())
+            val nextParts = when {
+                matchedPart -> updatedParts
+                createdPart != null -> updatedParts + createdPart
+                else -> updatedParts
             }
             
             // Re-insert the message with updated parts
@@ -271,9 +272,10 @@ private class AndroidLocalCache(context: Context) : LocalCache {
         partId: String,
         partType: String?,
         text: String
-    ): MessagePart = when (partType) {
+    ): MessagePart? = when (partType) {
         "reasoning" -> MessagePart.Reasoning(content = text, timeMs = 0L, id = partId)
         "thinking" -> MessagePart.Thinking(content = text, id = partId)
+        "step-start", "step-finish" -> null
         else -> MessagePart.Text(id = partId, text = text)
     }
 

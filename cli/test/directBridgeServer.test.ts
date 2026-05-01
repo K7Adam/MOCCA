@@ -36,7 +36,7 @@ describe("direct CLI bridge server", () => {
       action: "capabilities",
       ok: true,
       payload: {
-        protocolVersion: 1,
+        protocolVersion: 2,
       },
     });
 
@@ -125,7 +125,7 @@ describe("direct CLI bridge server", () => {
     socket.send("{not-json");
 
     await expect(readJson(socket)).resolves.toMatchObject({
-      v: 1,
+      v: 2,
       id: "invalid-frame",
       ns: "system",
       action: "parse",
@@ -152,7 +152,7 @@ describe("direct CLI bridge server", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toMatchObject({
       ok: true,
-      protocolVersion: 1,
+      protocolVersion: 2,
       pairingRequired: true,
       websocketPath: "/v1/ws",
     });
@@ -184,7 +184,7 @@ describe("direct CLI bridge server", () => {
     });
 
     await expect(readJson(socket)).resolves.toMatchObject({
-      v: 1,
+      v: 2,
       ns: "ai",
       event: "runtime.event",
       payload: {

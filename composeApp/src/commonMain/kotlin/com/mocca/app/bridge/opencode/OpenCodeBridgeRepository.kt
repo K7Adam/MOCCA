@@ -39,6 +39,10 @@ class OpenCodeBridgeRepository(
     private val client: MoccaBridgeClient,
     private val json: Json = MoccaBridgeClient.DefaultBridgeJson
 ) {
+    private companion object {
+        const val RUNTIME_ENSURE_TIMEOUT_MILLIS = 90_000L
+    }
+
     private var cachedCapabilities: BridgeCapabilities? = null
 
     suspend fun fetchCapabilities(forceRefresh: Boolean = false): BridgeCapabilities {
@@ -79,7 +83,11 @@ class OpenCodeBridgeRepository(
             throw BridgeFeatureUnavailableException("ai.runtime.ensure")
         }
 
-        return client.request(ns = "ai", action = "runtime.ensure")
+        return client.request(
+            ns = "ai",
+            action = "runtime.ensure",
+            timeoutMillis = RUNTIME_ENSURE_TIMEOUT_MILLIS
+        )
             .decodePayloadOrThrow()
     }
 

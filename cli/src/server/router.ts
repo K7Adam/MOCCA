@@ -47,6 +47,26 @@ const SUPPORTED_NAMESPACES = [
 export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
   const eventSequencer = new EventSequencer();
   const confirmationStore = new ConfirmationStore();
+  let snapshotCache: { value: unknown; timestamp: number } | undefined;
+  let snapshotInFlight: Promise<unknown> | undefined;
+  const getConfigSnapshot = async (force = false): Promise<unknown> => {
+    const now = Date.now();
+    if (!force && snapshotCache != null && now - snapshotCache.timestamp < CONFIG_SNAPSHOT_CACHE_TTL_MS) {
+      return snapshotCache.value;
+    }
+    if (!force && snapshotInFlight != null) {
+      return snapshotInFlight;
+    }
+    snapshotInFlight = options.configSnapshotProvider()
+      .then((value) => {
+        snapshotCache = { value, timestamp: Date.now() };
+        return value;
+      })
+      .finally(() => {
+        snapshotInFlight = undefined;
+      });
+    return snapshotInFlight;
+  };
   const fsCapability = new FileSystemCapability({
     projectDir: options.projectDir,
     confirmationStore,
@@ -74,7 +94,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
   });
   const aiConfigManager = new AiConfigManager({
     projectDir: options.projectDir,
-    configSnapshotProvider: options.configSnapshotProvider,
+    configSnapshotProvider: getConfigSnapshot,
     openCodeRuntime: options.openCodeRuntime,
     eventSequencer,
     eventSink: options.eventSink,
@@ -136,7 +156,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
       if (request.ns === "ai" && request.action === "config.snapshot") {
         return createResponse(request, {
           ok: true,
-          payload: await options.configSnapshotProvider(),
+          payload: await getConfigSnapshot(request.payload === "refresh"),
         });
       }
 
@@ -197,7 +217,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
       }
 
       if (request.ns === "providers" && request.action === "credentials.list") {
-        const snapshot = await options.configSnapshotProvider();
+        const snapshot = await getConfigSnapshot();
         return createResponse(request, {
           ok: true,
           payload: readArrayProjection(snapshot, "credentials"),
@@ -211,7 +231,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
             payload: await options.openCodeRuntime.listAgents(),
           });
         }
-        const snapshot = await options.configSnapshotProvider();
+        const snapshot = await getConfigSnapshot();
         return createResponse(request, {
           ok: true,
           payload: readArrayProjection(snapshot, "agents"),
@@ -225,7 +245,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
             payload: await options.openCodeRuntime.listCommands(),
           });
         }
-        const snapshot = await options.configSnapshotProvider();
+        const snapshot = await getConfigSnapshot();
         return createResponse(request, {
           ok: true,
           payload: readArrayProjection(snapshot, "commands"),
@@ -233,7 +253,7 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
       }
 
       if (request.ns === "mcp" && request.action === "servers.list") {
-        const snapshot = await options.configSnapshotProvider();
+        const snapshot = await getConfigSnapshot();
         return createResponse(request, {
           ok: true,
           payload: readArrayProjection(snapshot, "mcpServers"),
@@ -266,6 +286,8 @@ export function createBridgeRouter(options: BridgeRouterOptions): BridgeRouter {
     },
   };
 }
+
+const CONFIG_SNAPSHOT_CACHE_TTL_MS = 30_000;
 
 function requireRuntime(options: BridgeRouterOptions): OpenCodeRuntimeBridge {
   if (options.openCodeRuntime == null) {

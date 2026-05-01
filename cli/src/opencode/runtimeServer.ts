@@ -36,7 +36,7 @@ export type OpenCodeRuntimeManagerOptions = {
 type OpenCodeServer = Awaited<ReturnType<typeof createOpencodeServer>>;
 export type OpenCodeRuntimeEventListener = (event: OpenCodeRuntimeEvent) => void;
 
-const DEFAULT_STARTUP_TIMEOUT_MILLIS = 15_000;
+const DEFAULT_STARTUP_TIMEOUT_MILLIS = 60_000;
 
 export type OpenCodeRuntimeBridge = {
   getStatus(): OpenCodeRuntimeSnapshot;
@@ -160,7 +160,7 @@ export class OpenCodeRuntimeManager implements OpenCodeRuntimeBridge {
     if (parts.length === 0) {
       throw new Error("text or parts is required");
     }
-    await client.session.promptAsync({
+    const response = await client.session.promptAsync({
       path: { id: sessionId },
       query: { directory: this.options.projectDir },
       body: withoutUndefined({
@@ -170,6 +170,7 @@ export class OpenCodeRuntimeManager implements OpenCodeRuntimeBridge {
         parts,
       }) as never,
     });
+    throwIfResponseError(response, "session.promptAsync");
     return { ack: true };
   }
 
@@ -336,6 +337,12 @@ function requireData<T>(response: { data?: T; error?: unknown }, label: string):
   throw new Error(message);
 }
 
+function throwIfResponseError(response: { error?: unknown }, label: string): void {
+  if (response.error !== undefined) {
+    throw new Error(`${label}: ${stringifyError(response.error)}`);
+  }
+}
+
 function normalizeRuntimeEvent(raw: unknown): OpenCodeRuntimeEvent {
   const record = readOptionalRecord(raw);
   const payload = readOptionalRecord(record.payload);
@@ -372,14 +379,29 @@ function readModelSelector(value: unknown): { providerID: string; modelID: strin
   return providerID && modelID ? { providerID, modelID } : undefined;
 }
 
-function readPromptParts(value: unknown, fallbackText: string | undefined): Array<Record<string, unknown>> {
+export function readPromptParts(value: unknown, fallbackText: string | undefined): Array<Record<string, unknown>> {
   if (Array.isArray(value)) {
     const parts = value
       .map((entry) => readOptionalRecord(entry))
+      .map((entry) => stripNullish(entry) as Record<string, unknown>)
       .filter((entry) => readOptionalString(entry.type) != null);
     if (parts.length > 0) return parts;
   }
   return fallbackText != null ? [{ type: "text", text: fallbackText }] : [];
+}
+
+function stripNullish(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((entry) => stripNullish(entry));
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, entry]) => entry !== null && entry !== undefined)
+        .map(([key, entry]) => [key, stripNullish(entry)]),
+    );
+  }
+  return value;
 }
 
 function stringifyError(error: unknown): string {

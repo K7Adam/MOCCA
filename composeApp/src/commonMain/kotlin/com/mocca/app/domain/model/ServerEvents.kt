@@ -460,7 +460,7 @@ data class AssistantMessageInfo(
     val time: MessageTimeInfo? = null,
     val system: List<String>? = null,
     val error: JsonElement? = null,
-    val summary: Boolean? = null
+    val summary: JsonElement? = null
 )
 
 @Serializable
@@ -520,7 +520,11 @@ data class MessagePartInfo(
     // File part
     val mime: String? = null,
     val url: String? = null,
-    val filename: String? = null
+    val filename: String? = null,
+    // Step-finish part fields
+    val reason: String? = null,
+    val cost: Double? = null,
+    val tokens: TokenInfo? = null
 )
 
 @Serializable

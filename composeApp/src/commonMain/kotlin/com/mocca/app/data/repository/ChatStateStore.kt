@@ -503,7 +503,8 @@ class ChatStateStore(
         
         _isSending.value = true
         _error.value = null
-        
+
+        Napier.i("[ChatStateStore] Sending message: session=$sessionId provider=${selection.providerId} model=${selection.modelId}")
         return aiChatGateway.sendMessage(
             sessionId = sessionId,
             text = text,
@@ -511,9 +512,12 @@ class ChatStateStore(
             attachments = attachments
         ).also { result ->
             if (result.isFailure) {
+                Napier.e("[ChatStateStore] Send failed: ${result.exceptionOrNull()?.message}", result.exceptionOrNull())
                 _isSending.value = false
                 _error.value = result.exceptionOrNull()?.message
                 _optimisticUserMessage.value = null
+            } else {
+                Napier.i("[ChatStateStore] Send accepted: session=$sessionId")
             }
         }
     }

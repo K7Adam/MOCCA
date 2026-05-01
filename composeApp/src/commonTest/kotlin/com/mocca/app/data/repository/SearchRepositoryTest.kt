@@ -91,7 +91,7 @@ class SearchRepositoryTest {
             scope = backgroundScope,
             healthChecker = object : BridgeHealthChecker {
                 override suspend fun check(target: DirectBridgeTarget): BridgeHealth =
-                    BridgeHealth(ok = true, protocolVersion = 1, pairingRequired = true)
+                    BridgeHealth(ok = true, protocolVersion = 2, pairingRequired = true)
             }
         )
         val target = DirectBridgeTarget(host = "127.0.0.1", port = 17653, pairingCode = "123456")
@@ -108,7 +108,7 @@ class SearchRepositoryTest {
                 ok = true,
                 payload = json.encodeToJsonElement(
                     BridgeCapabilities(
-                        protocolVersion = 1,
+                        protocolVersion = 2,
                         namespaces = listOf("system", "fs"),
                         fs = BridgeFsCapabilities(native = true)
                     )

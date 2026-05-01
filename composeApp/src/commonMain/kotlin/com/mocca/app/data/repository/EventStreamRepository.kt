@@ -58,6 +58,7 @@ class EventStreamRepository(
     private var backgroundPauseJob: Job? = null
     private var permissionActionJob: Job? = null
     private var bridgeEventJob: Job? = null
+    private val bridgeEventObserverMutex = Mutex()
     
     private val json = Json {
         ignoreUnknownKeys = true
@@ -177,12 +178,13 @@ class EventStreamRepository(
      * Note: externalScope is ignored in favor of internal repositoryScope
      */
     fun connect(externalScope: CoroutineScope? = null, sessionId: String? = null) {
-        if (connectionJob?.isActive == true) {
+        if (isEventConnectionActive()) {
             if (activeSessionId == sessionId) {
-                Napier.i("SSE already connected to session: $sessionId")
-                return // Already connected to this session
+                Napier.i("[EventStream] Event stream already connected to session: $sessionId")
+                startBridgeEventObserver()
+                return
             }
-            Napier.i("Switching SSE session from $activeSessionId to $sessionId")
+            Napier.i("[EventStream] Switching event stream session from $activeSessionId to $sessionId")
             // Clear streaming state when switching sessions
             setActiveSession(sessionId)
         } else {
@@ -197,13 +199,17 @@ class EventStreamRepository(
         reconnectAttempts = 0
         isPaused = false
         
-        // Only start a new connection if one isn't active
-        if (connectionJob?.isActive != true) {
+        // Only start a new connection if one isn't active. In bridge mode the
+        // WebSocket event observer is the live event connection, so there is no
+        // SSE job to check here.
+        if (!isEventConnectionActive()) {
             _connectionStatus.value = ConnectionStatus.Connecting
             startConnection()
             startNetworkObserver()
             startLifecycleObserver()
             startPermissionActionObserver()
+            startBridgeEventObserver()
+        } else {
             startBridgeEventObserver()
         }
     }
@@ -215,18 +221,24 @@ class EventStreamRepository(
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     private fun startBridgeEventObserver() {
         if (bridgeEventJob?.isActive == true || bridgeConnectionManager == null) return
-        
-        Napier.i("[EventStream] Starting Bridge event observer")
-        bridgeEventJob = repositoryScope.launch {
-            bridgeConnectionManager.client
-                .filterNotNull()
-                .flatMapLatest { client -> 
-                    Napier.d("[EventStream] Observing events from new Bridge client")
-                    client.events 
+
+        repositoryScope.launch {
+            bridgeEventObserverMutex.withLock {
+                if (bridgeEventJob?.isActive == true) return@withLock
+
+                Napier.i("[EventStream] Starting Bridge event observer")
+                bridgeEventJob = repositoryScope.launch {
+                    bridgeConnectionManager.client
+                        .filterNotNull()
+                        .flatMapLatest { client ->
+                            Napier.d("[EventStream] Observing events from new Bridge client")
+                            client.events
+                        }
+                        .collect { bridgeEvent ->
+                            handleBridgeEvent(bridgeEvent)
+                        }
                 }
-                .collect { bridgeEvent ->
-                    handleBridgeEvent(bridgeEvent)
-                }
+            }
         }
     }
 
@@ -242,6 +254,10 @@ class EventStreamRepository(
         try {
             val serverEvent = parseBridgePayload(payload)
             if (serverEvent != null) {
+                if (isDuplicateEvent(serverEvent)) {
+                    Napier.v("[EventStream] Skipping duplicate Bridge event: ${serverEvent.type}")
+                    return
+                }
                 Napier.v("[EventStream] Processing Bridge event: ${serverEvent.type}")
                 handleEvent(serverEvent)
             }
@@ -265,10 +281,14 @@ class EventStreamRepository(
             when (type) {
                 "server.connected" -> json.decodeFromString<ServerEvent.Connected>(eventData)
                 "server.heartbeat" -> json.decodeFromString<ServerEvent.Heartbeat>(eventData)
+                "session.created" -> json.decodeFromString<ServerEvent.SessionCreated>(eventData)
                 "session.updated" -> json.decodeFromString<ServerEvent.SessionUpdated>(eventData)
                 "session.deleted" -> json.decodeFromString<ServerEvent.SessionDeleted>(eventData)
                 "session.idle" -> json.decodeFromString<ServerEvent.SessionIdle>(eventData)
                 "session.error" -> json.decodeFromString<ServerEvent.SessionError>(eventData)
+                "session.status" -> json.decodeFromString<ServerEvent.SessionStatus>(eventData)
+                "session.diff" -> json.decodeFromString<ServerEvent.SessionDiff>(eventData)
+                "session.compacted" -> json.decodeFromString<ServerEvent.SessionCompacted>(eventData)
                 "message.updated" -> json.decodeFromString<ServerEvent.MessageUpdated>(eventData)
                 "message.removed" -> json.decodeFromString<ServerEvent.MessageRemoved>(eventData)
                 "message.part.updated" -> json.decodeFromString<ServerEvent.MessagePartUpdated>(eventData)
@@ -279,7 +299,29 @@ class EventStreamRepository(
                 "permission.replied" -> json.decodeFromString<ServerEvent.PermissionReplied>(eventData)
                 "question.asked" -> json.decodeFromString<ServerEvent.QuestionAsked>(eventData)
                 "question.replied" -> json.decodeFromString<ServerEvent.QuestionReplied>(eventData)
+                "question.rejected" -> json.decodeFromString<ServerEvent.QuestionRejected>(eventData)
+                "file.edited" -> json.decodeFromString<ServerEvent.FileEdited>(eventData)
+                "file.watcher.updated" -> json.decodeFromString<ServerEvent.FileWatcherUpdated>(eventData)
+                "file.updated" -> json.decodeFromString<ServerEvent.FileUpdated>(eventData)
+                "installation.updated" -> json.decodeFromString<ServerEvent.InstallationUpdated>(eventData)
+                "installation.update.available" -> json.decodeFromString<ServerEvent.InstallationUpdateAvailable>(eventData)
+                "todo.updated" -> json.decodeFromString<ServerEvent.TodoUpdated>(eventData)
                 "agent.status" -> json.decodeFromString<ServerEvent.AgentStatus>(eventData)
+                "pty.created" -> json.decodeFromString<ServerEvent.PtyCreated>(eventData)
+                "pty.updated" -> json.decodeFromString<ServerEvent.PtyUpdated>(eventData)
+                "pty.exited" -> json.decodeFromString<ServerEvent.PtyExited>(eventData)
+                "pty.deleted" -> json.decodeFromString<ServerEvent.PtyDeleted>(eventData)
+                "project.updated" -> json.decodeFromString<ServerEvent.ProjectUpdated>(eventData)
+                "vcs.branch.updated" -> json.decodeFromString<ServerEvent.VcsBranchUpdated>(eventData)
+                "lsp.updated" -> json.decodeFromString<ServerEvent.LspUpdated>(eventData)
+                "lsp.client.diagnostics" -> json.decodeFromString<ServerEvent.LspDiagnostics>(eventData)
+                "mcp.tools.changed" -> json.decodeFromString<ServerEvent.McpToolsChanged>(eventData)
+                "mcp.browser.open.failed" -> json.decodeFromString<ServerEvent.McpBrowserOpenFailed>(eventData)
+                "worktree.ready" -> json.decodeFromString<ServerEvent.WorktreeReady>(eventData)
+                "worktree.failed" -> json.decodeFromString<ServerEvent.WorktreeFailed>(eventData)
+                "server.instance.disposed" -> json.decodeFromString<ServerEvent.ServerInstanceDisposed>(eventData)
+                "global.disposed" -> json.decodeFromString<ServerEvent.GlobalDisposed>(eventData)
+                "tui.toast.show" -> null
                 else -> {
                     Napier.d("[EventStream] Unknown Bridge event type: $type")
                     null
@@ -429,9 +471,23 @@ class EventStreamRepository(
     private var lastEventTime = 0L
     private var heartbeatJob: Job? = null
 
+    private fun isEventConnectionActive(): Boolean {
+        if (connectionJob?.isActive == true) return true
+        return bridgeConnectionManager?.client?.value != null &&
+            _connectionStatus.value is ConnectionStatus.Connected
+    }
+
     private fun startConnection() {
         connectionJob?.cancel()
         heartbeatJob?.cancel()
+
+        if (bridgeConnectionManager?.client?.value != null) {
+            Napier.i("[EventStream] Bridge event stream active; skipping direct SSE to avoid duplicate chat deltas")
+            _connectionStatus.value = ConnectionStatus.Connected(
+                AppInfo(version = "bridge-events", initialized = true)
+            )
+            return
+        }
         
         connectionJob = repositoryScope.launch {
             try {
@@ -532,9 +588,15 @@ class EventStreamRepository(
      */
     private fun extractEventId(event: ServerEvent): String? {
         return when (event) {
-            is ServerEvent.MessageUpdated -> "msg-${event.properties.info.id}"
-            is ServerEvent.MessagePartUpdated -> "part-${event.properties.part.id}-${event.properties.part.text?.hashCode()}"
-            is ServerEvent.SessionUpdated -> "session-${event.properties.info.id}"
+            is ServerEvent.MessageUpdated -> with(event.properties.info) {
+                "msg-$id-${time?.completed ?: time?.created ?: 0}-${tokens?.hashCode() ?: 0}-${cost ?: 0.0}-${summary?.hashCode() ?: 0}"
+            }
+            is ServerEvent.MessagePartUpdated -> with(event.properties) {
+                "part-${part.id}-${part.hashCode()}-${delta?.hashCode() ?: 0}"
+            }
+            is ServerEvent.SessionUpdated -> with(event.properties.info) {
+                "session-$id-${hashCode()}"
+            }
             is ServerEvent.PermissionAsked -> "perm-${event.properties.id}"
             is ServerEvent.QuestionAsked -> "question-${event.properties.id}"
             else -> null // Don't deduplicate connection events, heartbeats, etc.
@@ -732,7 +794,6 @@ class EventStreamRepository(
      */
     internal suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
         Napier.v("Dispatching event: ${event.type}")
-        _events.emit(event)
         reduceChatTurn(event)
         
         when (event) {
@@ -790,21 +851,19 @@ class EventStreamRepository(
                 
                 // Insert initial streaming message to LocalCache if it doesn't exist yet
                 if (localCache != null && streamingMessagesInserted.putIfAbsent(part.messageID, true) == null) {
-                    repositoryScope.launch {
-                        try {
-                            val placeholder = Message(
-                                id = part.messageID,
-                                sessionId = part.sessionID,
-                                role = com.mocca.app.domain.model.MessageRole.ASSISTANT,
-                                parts = emptyList(),
-                                createdAt = System.currentTimeMillis(),
-                                isStreaming = true
-                            )
-                            localCache.insertMessages(listOf(placeholder))
-                            Napier.d("Inserted placeholder streaming message: ${part.messageID}")
-                        } catch (e: Exception) {
-                            Napier.w("Could not insert placeholder message: ${e.message}")
-                        }
+                    try {
+                        val placeholder = Message(
+                            id = part.messageID,
+                            sessionId = part.sessionID,
+                            role = com.mocca.app.domain.model.MessageRole.ASSISTANT,
+                            parts = emptyList(),
+                            createdAt = System.currentTimeMillis(),
+                            isStreaming = true
+                        )
+                        localCache.insertMessages(listOf(placeholder))
+                        Napier.d("Inserted placeholder streaming message: ${part.messageID}")
+                    } catch (e: Exception) {
+                        Napier.w("Could not insert placeholder message: ${e.message}")
                     }
                 }
                 
@@ -1110,6 +1169,8 @@ class EventStreamRepository(
                 Napier.w("Unknown event type: ${event.type}")
             }
         }
+
+        _events.emit(event)
     }
 
     private fun reduceChatTurn(event: ServerEvent) {

@@ -19,13 +19,13 @@ describe("MOCCA CLI request router", () => {
     }));
 
     expect(response).toMatchObject({
-      v: 1,
+      v: 2,
       id: "req-capabilities",
       ns: "system",
       action: "capabilities",
       ok: true,
       payload: {
-        protocolVersion: 1,
+        protocolVersion: 2,
         namespaces: expect.arrayContaining(["system", "ai"]),
         ai: {
           opencodeConfigSnapshot: true,
@@ -36,6 +36,12 @@ describe("MOCCA CLI request router", () => {
           selectionDefaults: true,
           variantForwarding: true,
           configEvents: true,
+          events: false,
+          eventReplay: false,
+          permissions: false,
+          questions: false,
+          sessionStatus: false,
+          usage: false,
         },
       },
     });
@@ -205,6 +211,11 @@ describe("MOCCA CLI request router", () => {
           opencodeRuntime: true,
           sessions: true,
           messages: true,
+          events: true,
+          permissions: true,
+          questions: true,
+          sessionStatus: true,
+          usage: true,
         },
       },
     });

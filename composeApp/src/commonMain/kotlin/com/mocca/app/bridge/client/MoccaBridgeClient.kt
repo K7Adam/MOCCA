@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -58,30 +59,31 @@ class MoccaBridgeClient(
     suspend fun request(
         ns: String,
         action: String,
-        payload: JsonElement? = null
+        payload: JsonElement? = null,
+        timeoutMillis: Long = requestTimeoutMillis
     ): BridgeResponse {
+        require(timeoutMillis > 0) { "Bridge request timeout must be positive" }
         val id = nextRequestId()
         val deferred = CompletableDeferred<BridgeResponse>()
+        val frame = json.encodeToString(
+            BridgeRequest(
+                id = id,
+                ns = ns,
+                action = action,
+                payload = payload
+            )
+        )
         pendingMutex.withLock {
             pending[id] = deferred
         }
 
         try {
-            transport.send(
-                json.encodeToString(
-                    BridgeRequest(
-                        id = id,
-                        ns = ns,
-                        action = action,
-                        payload = payload
-                    )
-                )
-            )
-            return withTimeout(requestTimeoutMillis) {
+            return withTimeout(timeoutMillis) {
+                transport.send(frame)
                 deferred.await()
             }
         } catch (_: TimeoutCancellationException) {
-            throw BridgeRequestTimeoutException(ns, action, requestTimeoutMillis)
+            throw BridgeRequestTimeoutException(ns, action, timeoutMillis)
         } finally {
             pendingMutex.withLock {
                 pending.remove(id)
@@ -141,9 +143,11 @@ class MoccaBridgeClient(
     companion object {
         const val DEFAULT_REQUEST_TIMEOUT_MILLIS: Long = 30_000
 
+        @OptIn(ExperimentalSerializationApi::class)
         val DefaultBridgeJson: Json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
+            explicitNulls = false
         }
     }
 }
