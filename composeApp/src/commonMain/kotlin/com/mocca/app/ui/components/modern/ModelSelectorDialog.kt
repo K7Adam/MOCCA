@@ -32,11 +32,12 @@ fun ModelSelectorDialog(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var searchQuery by remember { mutableStateOf("") }
     val normalizedQuery = remember(searchQuery) { searchQuery.normalizeModelQuery() }
-    val filteredProviders = remember(state.providers, normalizedQuery) {
+    val connectedProviders = remember(state.providers) { state.providers.filter { it.connected } }
+    val filteredProviders = remember(connectedProviders, normalizedQuery) {
         if (normalizedQuery.isEmpty()) {
-            state.providers
+            connectedProviders
         } else {
-            state.providers.mapNotNull { provider ->
+            connectedProviders.mapNotNull { provider ->
                 val providerMatches = provider.name.normalizeModelQuery().contains(normalizedQuery) ||
                     provider.id.normalizeModelQuery().contains(normalizedQuery)
                 val models = provider.models.filter { model ->
@@ -200,7 +201,7 @@ fun ModelSelectorDialog(
                 } else {
                     item(key = "empty", contentType = "empty") {
                         Text(
-                            text = state.errorMessage ?: "No configured provider",
+                            text = state.errorMessage ?: "No connected provider",
                             style = AppTypography.bodySmall,
                             color = AppColors.onSurfaceVariant,
                             modifier = Modifier.padding(AppSpacing.md)
