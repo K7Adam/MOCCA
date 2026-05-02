@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.navigationBarsPadding
 
@@ -235,6 +237,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             MainScreenPanelRegistry.navigationItems(mainPanels)
         }
         val performance = LocalAppPerformance.current
+        val density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val isImeVisible = WindowInsets.ime.getBottom(density) > 0
 
         Box(modifier = Modifier.fillMaxSize()) {
             if (performance.useAmbientEffects) {
@@ -279,12 +284,23 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     }
                 }
             ) { paddingValues ->
+                val panelPaddingValues = if (isImeVisible) {
+                    PaddingValues(
+                        start = paddingValues.calculateStartPadding(layoutDirection),
+                        top = paddingValues.calculateTopPadding(),
+                        end = paddingValues.calculateEndPadding(layoutDirection),
+                        bottom = 0.dp
+                    )
+                } else {
+                    paddingValues
+                }
+
                 MainScreenPanelHost(
                     panels = mainPanels,
                     panelState = panelState.state,
                     onPanelStateChange = { panelState.state = it },
                     progressHolder = progressHolder,
-                    paddingValues = paddingValues
+                    paddingValues = panelPaddingValues
                 )
             }
 

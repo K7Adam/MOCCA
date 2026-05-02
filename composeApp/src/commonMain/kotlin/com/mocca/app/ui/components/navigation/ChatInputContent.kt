@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Mic
@@ -70,7 +69,6 @@ fun ChatInputContent(
     inputText: String,
     onInputTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
-    onExportClick: () -> Unit,
     onMicClick: () -> Unit,
     inputEnabled: Boolean,
     placeholder: String,
@@ -92,10 +90,6 @@ fun ChatInputContent(
     commands: List<Command>,
     onCommandSelected: (Command) -> Unit,
     onModeSelectedForMention: (Mode) -> Unit,
-    shellMode: Boolean = false,
-    onShellModeToggle: () -> Unit = {},
-    planMode: Boolean = false,
-    onPlanModeToggle: () -> Unit = {},
     onHistoryUp: () -> Unit = {},
     onHistoryDown: () -> Unit = {},
     isVoiceListening: Boolean = false,
@@ -237,13 +231,8 @@ fun ChatInputContent(
                 onModeSelectedForMention = onModeSelectedForMention,
                 showCommandPalette = showCommandPalette,
                 onCommandPaletteToggle = { showCommandPalette = !showCommandPalette },
-                shellMode = shellMode,
-                onShellModeToggle = onShellModeToggle,
-                planMode = planMode,
-                onPlanModeToggle = onPlanModeToggle,
                 onHistoryUp = onHistoryUp,
                 onHistoryDown = onHistoryDown,
-                onExportClick = onExportClick,
                 inputEnabled = inputEnabled
             )
         }
@@ -328,13 +317,8 @@ private fun ComposerToolRow(
     onModeSelectedForMention: (Mode) -> Unit,
     showCommandPalette: Boolean,
     onCommandPaletteToggle: () -> Unit,
-    shellMode: Boolean,
-    onShellModeToggle: () -> Unit,
-    planMode: Boolean,
-    onPlanModeToggle: () -> Unit,
     onHistoryUp: () -> Unit,
     onHistoryDown: () -> Unit,
-    onExportClick: () -> Unit,
     inputEnabled: Boolean
 ) {
     Row(
@@ -357,20 +341,6 @@ private fun ComposerToolRow(
             onClick = onCommandPaletteToggle,
             enabled = inputEnabled
         )
-        ComposerTextButton(
-            text = "!",
-            active = shellMode,
-            contentDescription = "Toggle shell mode",
-            onClick = onShellModeToggle,
-            enabled = inputEnabled
-        )
-        ComposerTextButton(
-            text = "P",
-            active = planMode,
-            contentDescription = "Toggle plan mode",
-            onClick = onPlanModeToggle,
-            enabled = inputEnabled
-        )
         ComposerIconButton(
             icon = Icons.Default.KeyboardArrowUp,
             contentDescription = "Previous prompt",
@@ -384,14 +354,6 @@ private fun ComposerToolRow(
             contentDescription = "Next prompt",
             onClick = onHistoryDown,
             enabled = inputEnabled,
-            size = NavConstants.CompactActionButtonSize,
-            iconSize = AppSpacing.iconSizeSmall
-        )
-        ComposerIconButton(
-            icon = Icons.Default.ContentCopy,
-            contentDescription = "Export chat to Markdown",
-            onClick = onExportClick,
-            enabled = true,
             size = NavConstants.CompactActionButtonSize,
             iconSize = AppSpacing.iconSizeSmall
         )

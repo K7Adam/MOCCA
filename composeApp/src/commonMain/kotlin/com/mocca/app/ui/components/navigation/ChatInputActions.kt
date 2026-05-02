@@ -16,7 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,7 +46,7 @@ import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
 
 /**
- * Action toolbar for ChatInputContent — quick actions (@ / ! P ↑ ↓), attachment, send/abort.
+ * Action toolbar for ChatInputContent — quick actions (@ / ↑ ↓), attachment, send/abort.
  */
 @Composable
 internal fun ChatInputActionToolbar(
@@ -58,7 +57,6 @@ internal fun ChatInputActionToolbar(
     onAbortClick: () -> Unit,
     onAttachClick: () -> Unit,
     onMicClick: () -> Unit,
-    onExportClick: () -> Unit,
     isListening: Boolean,
     isVoiceAvailable: Boolean,
     // @ mention palette
@@ -68,12 +66,6 @@ internal fun ChatInputActionToolbar(
     // / command palette
     showCommandPalette: Boolean,
     onCommandPaletteToggle: () -> Unit,
-    // Shell mode
-    shellMode: Boolean,
-    onShellModeToggle: () -> Unit,
-    // Plan mode
-    planMode: Boolean,
-    onPlanModeToggle: () -> Unit,
     // History
     onHistoryUp: () -> Unit,
     onHistoryDown: () -> Unit
@@ -107,26 +99,6 @@ internal fun ChatInputActionToolbar(
                 stateDescriptionText = if (showCommandPalette) "Expanded" else "Collapsed"
             )
         }
-
-        // ! shell mode button
-        ToggleActionButton(
-            text = "!",
-            isActive = shellMode,
-            onClick = onShellModeToggle,
-            contentDescription = "Toggle shell mode",
-            selectedState = shellMode,
-            stateDescriptionText = if (shellMode) "On" else "Off"
-        )
-
-        // P plan mode button
-        ToggleActionButton(
-            text = "P",
-            isActive = planMode,
-            onClick = onPlanModeToggle,
-            contentDescription = "Toggle plan mode",
-            selectedState = planMode,
-            stateDescriptionText = if (planMode) "On" else "Off"
-        )
 
         // History up button
         ToggleActionButton(
@@ -198,25 +170,6 @@ internal fun ChatInputActionToolbar(
         }
 
         Spacer(modifier = Modifier.weight(1f))
-
-        // Export chat button
-        Box(
-            modifier = Modifier
-                .size(NavConstants.ActionButtonSize)
-                .background(
-                    color = AppColors.surface.copy(alpha = 0.3f),
-                    shape = AppShapes.pill
-                )
-                .moccaClickable(onClick = onExportClick, pressedScale = 0.94f),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.ContentCopy,
-                contentDescription = "Export chat to Markdown",
-                tint = AppColors.onSurfaceVariant,
-                modifier = Modifier.size(NavConstants.ActionIconSize)
-            )
-        }
 
         // RIGHT: Send/Abort button (transforms based on agent state)
         if (isSessionIdle) {

@@ -297,7 +297,6 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     inputText = scope.inputText,
                     onInputTextChange = { scope.chatScreenModel.updateInputText(it) },
                     onSendClick = { scope.chatScreenModel.sendMessage() },
-                    onExportClick = { scope.chatScreenModel.openExportDialog() },
                     onMicClick = { scope.chatScreenModel.toggleVoiceInput() },
                     inputEnabled = scope.chatState.connectionStatus is com.mocca.app.domain.model.ConnectionStatus.Connected &&
                         scope.chatState.isSessionIdle &&
@@ -325,10 +324,6 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                     commands = scope.chatState.commands,
                     onCommandSelected = { scope.chatScreenModel.executeCommand(it) },
                     onModeSelectedForMention = { scope.chatScreenModel.selectMode(it.id) },
-                    shellMode = scope.shellMode,
-                    onShellModeToggle = { scope.chatScreenModel.toggleShellMode() },
-                    planMode = scope.chatState.isPlanMode,
-                    onPlanModeToggle = { scope.chatScreenModel.togglePlanMode() },
                     onHistoryUp = { scope.chatScreenModel.navigateHistoryUp() },
                     onHistoryDown = { scope.chatScreenModel.navigateHistoryDown() }
                 )
