@@ -177,6 +177,45 @@ class MainScreenModel(
             delay(5 * 60_000L)
             updateCheckScheduler.start()
         }
+
+        // Resume active update download polling if any
+        screenModelScope.launch {
+            try {
+                updateRepository.pollActiveDownload()
+                    .collect { status ->
+                        when (status) {
+                            is DownloadStatus.Progress -> _state.update { 
+                                it.copy(isDownloadingUpdate = true, isUpdateAvailable = true, downloadProgress = status.progress) 
+                            }
+                            is DownloadStatus.Log -> _state.update { 
+                                it.copy(updateLogs = (it.updateLogs + status.message).toImmutableList()) 
+                            }
+                            is DownloadStatus.Error -> {
+                                if (status.message != "No active download found") {
+                                    _state.update { 
+                                        it.copy(
+                                            isDownloadingUpdate = false,
+                                            updateError = status.message,
+                                            updateLogs = (it.updateLogs + "ERROR: ${status.message}").toImmutableList()
+                                        ) 
+                                    }
+                                }
+                            }
+                            is DownloadStatus.Complete -> {
+                                _state.update { 
+                                    it.copy(
+                                        isDownloadingUpdate = false,
+                                        isUpdateAvailable = false,
+                                        updateLogs = (it.updateLogs + "Download complete. Waiting for installation...").toImmutableList()
+                                    ) 
+                                }
+                            }
+                        }
+                    }
+            } catch (e: Exception) {
+                // Ignore failure if no active download
+            }
+        }
         
         // Sync initial state
         appStateStore.start()

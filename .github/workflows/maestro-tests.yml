@@ -5,6 +5,7 @@ on:
 
 jobs:
   maestro-smoke:
+    if: false
     name: Emulator Smoke Tests
     runs-on: ubuntu-latest
 

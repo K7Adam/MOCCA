@@ -1,8 +1,9 @@
 package com.mocca.app.domain.manager
 
-import io.ktor.utils.io.ByteReadChannel
+import com.mocca.app.domain.model.DownloadStatus
 
 interface PlatformUpdateManager {
-    suspend fun saveApk(fileName: String, data: ByteReadChannel, contentLength: Long?, onProgress: suspend (Float) -> Unit): String
-    fun installApk(path: String)
+    suspend fun enqueueDownload(url: String, fileName: String, version: String): Long
+    fun getDownloadStatus(downloadId: Long): DownloadStatus
+    fun installUpdate(version: String, downloadedPath: String)
 }

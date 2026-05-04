@@ -43,6 +43,8 @@ class SettingsRepository(
         
         // Updates
         const val KEY_AUTO_UPDATE_CHECK_INTERVAL = "auto_update_check_interval"
+        const val KEY_ACTIVE_DOWNLOAD_ID = "active_download_id"
+        const val KEY_DOWNLOADED_VERSION = "downloaded_version"
     }
 
     // Session State
@@ -164,6 +166,30 @@ class SettingsRepository(
     // Update Settings
     suspend fun getAutoUpdateCheckInterval(): Int = getInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, 10)
     suspend fun setAutoUpdateCheckInterval(value: Int) = setInt(KEY_AUTO_UPDATE_CHECK_INTERVAL, value)
+
+    suspend fun getActiveDownloadId(): Long = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_ACTIVE_DOWNLOAD_ID)?.toLongOrNull() ?: -1L
+    }
+
+    suspend fun setActiveDownloadId(id: Long) = withContext(Dispatchers.IO) {
+        if (id == -1L) {
+            localCache.deleteSetting(KEY_ACTIVE_DOWNLOAD_ID)
+        } else {
+            localCache.saveSetting(KEY_ACTIVE_DOWNLOAD_ID, id.toString())
+        }
+    }
+
+    suspend fun getDownloadedVersion(): String? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_DOWNLOADED_VERSION)
+    }
+
+    suspend fun setDownloadedVersion(version: String?) = withContext(Dispatchers.IO) {
+        if (version.isNullOrBlank()) {
+            localCache.deleteSetting(KEY_DOWNLOADED_VERSION)
+        } else {
+            localCache.saveSetting(KEY_DOWNLOADED_VERSION, version)
+        }
+    }
 
     // Helper Methods
     private suspend fun getBoolean(key: String, default: Boolean): Boolean = withContext(Dispatchers.IO) {

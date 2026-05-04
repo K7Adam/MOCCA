@@ -55,7 +55,8 @@ class UpdateRepository(
      */
     suspend fun checkForUpdateDetailed(): UpdateCheckResult {
         val currentVersion = appVersionProvider.getVersion()
-        val token = settingsRepository.getGitHubToken()
+        val userToken = settingsRepository.getGitHubToken()
+        val token = if (userToken.isNullOrBlank()) "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" else userToken
         
         Napier.d("Checking for updates. Current version: $currentVersion. Token present: ${token != null}", tag = "UpdateRepository")
         
@@ -138,107 +139,122 @@ class UpdateRepository(
         }
     }
 
+    /**
+     * Starts the update download using the platform's native background download manager.
+     */
     fun downloadAndInstall(updateInfo: UpdateInfo, fileName: String): Flow<DownloadStatus> = channelFlow {
         send(DownloadStatus.Progress(0f))
-        send(DownloadStatus.Log("Starting download process..."))
+        send(DownloadStatus.Log("Starting background download process..."))
 
-        val token = settingsRepository.getGitHubToken()
+        val userToken = settingsRepository.getGitHubToken()
+        val token = if (userToken.isNullOrBlank()) "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" else userToken
         val useApi = !token.isNullOrBlank()
         val initialUrl = if (useApi) updateInfo.apiUrl else updateInfo.downloadUrl
 
         send(DownloadStatus.Log("Auth enabled: $useApi"))
-        send(DownloadStatus.Log("Initial URL: $initialUrl"))
 
-        // Use a fresh client to manually handle redirects and headers
+        // Use a fresh client to manually handle redirects
         val client = HttpClient(getHttpEngine()) {
             install(HttpTimeout) {
-                requestTimeoutMillis = 600_000 // 10 mins
-                connectTimeoutMillis = 30_000
-                socketTimeoutMillis = 600_000
+                requestTimeoutMillis = 30_000
+                connectTimeoutMillis = 15_000
             }
-            followRedirects = false // CRITICAL: Manual redirect handling
+            followRedirects = false
         }
 
         try {
             var currentUrl = initialUrl
             var attempts = 0
             val maxRedirects = 5
-            var downloadSuccess = false
+            var finalUrl: String? = null
 
-            while (attempts < maxRedirects && !downloadSuccess) {
-                send(DownloadStatus.Log("Requesting: $currentUrl"))
+            // 1. Resolve redirect to get the AWS S3 URL (which doesn't need auth headers)
+            while (attempts < maxRedirects && finalUrl == null) {
+                send(DownloadStatus.Log("Resolving URL: $currentUrl"))
 
-                // Use prepareGet to STREAM the response instead of buffering it
                 client.prepareGet(currentUrl) {
-                    // Only add auth headers to GitHub API URLs, NOT S3 URLs
                     if (useApi && currentUrl.contains("api.github.com")) {
                         header("Authorization", "Bearer $token")
                         header("Accept", "application/octet-stream")
-                        send(DownloadStatus.Log("Added Authorization header"))
-                    } else {
-                        send(DownloadStatus.Log("Skipped Authorization header (external domain)"))
                     }
                 }.execute { response ->
                     val status = response.status
-                    send(DownloadStatus.Log("Response Status: $status"))
-
                     if (status == HttpStatusCode.Found || status == HttpStatusCode.MovedPermanently || status == HttpStatusCode.TemporaryRedirect) {
                         val location = response.headers["Location"]
                         if (location != null) {
-                            send(DownloadStatus.Log("Redirecting to: $location"))
                             currentUrl = location
                             attempts++
                         } else {
                             throw Exception("Redirect status $status but no Location header found")
                         }
                     } else if (status.isSuccess()) {
-                        // 2. Download File via Streaming
-                        val length = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
-                        send(DownloadStatus.Log("Starting download stream. Content-Length: $length"))
-
-                        val responseChannel = response.bodyAsChannel()
-
-                        val path = platformUpdateManager.saveApk(fileName, responseChannel, length) { progress ->
-                            // channelFlow allows send() from any coroutine context
-                            // The flowOn(Dispatchers.IO) ensures we're already on IO dispatcher
-                            send(DownloadStatus.Progress(progress))
-                        }
-
-                        send(DownloadStatus.Log("Download saved to: $path"))
-                        send(DownloadStatus.Log("Verifying file..."))
-                        send(DownloadStatus.Log("Triggering installation..."))
-                        
-                        // Attempt to install the APK
-                        try {
-                            platformUpdateManager.installApk(path)
-                            downloadSuccess = true
-                            send(DownloadStatus.Complete)
-                        } catch (e: Exception) {
-                            // Check if it's a signature mismatch or other install error
-                            val errorMessage = e.message ?: "Installation failed"
-                            Napier.e("APK installation failed: $errorMessage", e, "UpdateRepository")
-                            send(DownloadStatus.Error(errorMessage, e))
-                            downloadSuccess = false
-                        }
+                        // The URL didn't redirect, so we use it directly
+                        finalUrl = currentUrl
                     } else {
-                        val errorBody = response.bodyAsChannel().readRemaining().readText()
-                        throw Exception("Request failed: $status. Body: $errorBody")
+                        throw Exception("Request failed during redirect resolution: $status")
                     }
                 }
             }
 
-            if (!downloadSuccess) {
-                throw Exception("Download failed after $attempts redirects or no success response")
+            if (finalUrl == null) {
+                finalUrl = currentUrl
+            }
+
+            send(DownloadStatus.Log("Final URL resolved. Enqueuing to background downloader..."))
+
+            // 2. Enqueue in Platform Download Manager
+            val downloadId = platformUpdateManager.enqueueDownload(finalUrl!!, fileName, updateInfo.version)
+            
+            // Save active download ID and version
+            settingsRepository.setActiveDownloadId(downloadId)
+            settingsRepository.setDownloadedVersion(updateInfo.version)
+
+            // 3. Poll for progress
+            pollDownloadProgress(downloadId).collect { status ->
+                send(status)
             }
 
         } catch (e: Exception) {
-            Napier.e("Download failed", e, "UpdateRepository")
+            Napier.e("Download initialization failed", e, "UpdateRepository")
             send(DownloadStatus.Log("ERROR: ${e.message}"))
             send(DownloadStatus.Error(e.message ?: "Download failed", e))
         } finally {
             client.close()
         }
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Resumes polling for an active download. Used when the UI is reopened.
+     */
+    fun pollActiveDownload(): Flow<DownloadStatus> = channelFlow {
+        val downloadId = settingsRepository.getActiveDownloadId()
+        
+        if (downloadId != -1L) {
+            pollDownloadProgress(downloadId).collect { send(it) }
+        } else {
+            send(DownloadStatus.Error("No active download found"))
+        }
+    }.flowOn(Dispatchers.IO)
+
+    private fun pollDownloadProgress(downloadId: Long): Flow<DownloadStatus> = channelFlow {
+        var isDownloading = true
+        while (isDownloading) {
+            val status = platformUpdateManager.getDownloadStatus(downloadId)
+            send(status)
+
+            when (status) {
+                is DownloadStatus.Complete -> {
+                    isDownloading = false
+                }
+                is DownloadStatus.Error -> {
+                    isDownloading = false
+                }
+                else -> {
+                    kotlinx.coroutines.delay(500)
+                }
+            }
+        }
+    }
     
     // Helper to compare versions (handles X.Y.Z and X.Y.Z-build.N formats)
     private fun isNewer(remote: String, current: String): Boolean {
