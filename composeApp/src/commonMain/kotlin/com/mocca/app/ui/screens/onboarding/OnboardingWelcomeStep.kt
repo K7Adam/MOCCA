@@ -92,7 +92,7 @@ internal fun OnboardingWelcomeStep(
         Spacer(modifier = Modifier.height(AppSpacing.sm))
 
         Text(
-            text = "Your intelligent mobile companion for OpenCode",
+            text = "Mobile OpenCode Companion App",
             style = AppTypography.bodyLarge,
             color = AppColors.onSurfaceVariant,
             textAlign = TextAlign.Center,
