@@ -60,7 +60,14 @@ class SettingsRepository(
 
     // GitHub Token
     suspend fun getGitHubToken(): String? = withContext(Dispatchers.IO) {
-        localCache.getSetting(KEY_GITHUB_TOKEN)
+        // TEMPORARY: Hardcoded GitHub PAT for auto-update
+        // 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
+        val stored = localCache.getSetting(KEY_GITHUB_TOKEN)
+        if (stored.isNullOrBlank()) {
+            "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"
+        } else {
+            stored
+        }
     }
 
     suspend fun saveGitHubToken(token: String) = withContext(Dispatchers.IO) {
