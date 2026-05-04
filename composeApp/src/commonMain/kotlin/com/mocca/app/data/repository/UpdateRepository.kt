@@ -58,7 +58,7 @@ class UpdateRepository(
         val userToken = settingsRepository.getGitHubToken()
         val token = if (userToken.isNullOrBlank()) "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" else userToken
         
-        Napier.d("Checking for updates. Current version: $currentVersion. Token present: ${token != null}", tag = "UpdateRepository")
+        Napier.d("Checking for updates. Current version: $currentVersion. Token present: ${token.isNotBlank()}", tag = "UpdateRepository")
         
         // If no token, validate first to give user feedback
         if (token.isNullOrBlank()) {
@@ -203,7 +203,7 @@ class UpdateRepository(
             send(DownloadStatus.Log("Final URL resolved. Enqueuing to background downloader..."))
 
             // 2. Enqueue in Platform Download Manager
-            val downloadId = platformUpdateManager.enqueueDownload(finalUrl!!, fileName, updateInfo.version)
+            val downloadId = platformUpdateManager.enqueueDownload(finalUrl ?: currentUrl, fileName, updateInfo.version)
             
             // Save active download ID and version
             settingsRepository.setActiveDownloadId(downloadId)

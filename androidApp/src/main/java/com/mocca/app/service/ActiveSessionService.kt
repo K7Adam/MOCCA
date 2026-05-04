@@ -82,7 +82,7 @@ class ActiveSessionService : Service() {
     private val _activeSessionIds = MutableStateFlow<Set<String>>(emptySet())
     val activeSessionIds: StateFlow<Set<String>> = _activeSessionIds.asStateFlow()
 
-    // Note: accentGreen is intentionally retained here as a semantic success color 
+    // Note: accentGreen is intentionally retained here as a semantic success color
     // for completed tasks in notifications, rather than a general brand accent.
     private val accentGreen = Color.parseColor("#00D9A5")
     private val amberColor = Color.parseColor("#FFB800")
