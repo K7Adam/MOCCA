@@ -23,25 +23,28 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import com.mocca.app.domain.model.VoiceInputState
 import com.mocca.app.ui.components.navigation.BottomNavItem
-import com.mocca.app.ui.navigation.PanelStateHolder
 import com.mocca.app.ui.navigation.PanelState
+import com.mocca.app.ui.navigation.toPageIndex
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppTypography
 
-internal enum class MainPanelPlacement {
-    LEFT,
-    CENTER,
-    RIGHT
-}
-
+/**
+ * Defines a single page/panel in the main HorizontalPager.
+ *
+ * @property id Stable identifier used as Pager key.
+ * @property pageIndex Position in the HorizontalPager (0=Sessions, 1=Chat, 2=Tools).
+ * @property panelState Semantic state; used for BottomNavItem.targetProgress mapping.
+ * @property navLabel Label shown in the bottom navigation bar.
+ * @property navIcon Icon shown in the bottom navigation bar.
+ * @property targetProgress Progress value for [PersistentNavRow] indicator (0.0–1.0).
+ * @property content Composable content for this page.
+ */
 internal data class MainPanelDefinition(
     val id: String,
-    val placement: MainPanelPlacement,
+    val pageIndex: Int,
     val panelState: PanelState,
-    val title: String,
-    val iconKey: String,
     val navLabel: String,
     val navIcon: ImageVector,
     val targetProgress: Float,
@@ -59,7 +62,6 @@ internal data class MainScreenPanelScope(
     val shellMode: Boolean,
     val voicePermissionRequestToken: Int,
     val voiceInputState: VoiceInputState,
-    val panelState: PanelStateHolder,
     val onAttachClick: () -> Unit,
     val scrollToBottomTrigger: Long,
     val showScrollToBottom: Boolean,
@@ -72,109 +74,101 @@ internal data class MainScreenPanelScope(
     val onSessionTabSelected: (String) -> Unit,
     val onSearchClick: () -> Unit,
     val targetMessageId: String?,
-    val onTargetMessageHandled: () -> Unit
+    val onTargetMessageHandled: () -> Unit,
+    // Pager navigation – replaces PanelStateHolder
+    val onNavigateToPage: (Int) -> Unit,
 )
 
 internal object MainScreenPanelRegistry {
-    const val CONTEXT_HISTORY_PANEL_ID = "context_history"
+    const val SESSIONS_PANEL_ID = "context_history"
     const val CHAT_PANEL_ID = "chat"
-    const val DASHBOARD_PANEL_ID = "dashboard"
+    const val TOOLS_PANEL_ID = "dashboard"
 
-    fun getAll(scope: MainScreenPanelScope): List<MainPanelDefinition> {
-        return listOf(
-            MainPanelDefinition(
-                id = CONTEXT_HISTORY_PANEL_ID,
-                placement = MainPanelPlacement.LEFT,
-                panelState = PanelState.LEFT_OPEN,
-                title = "Context & History",
-                iconKey = "history",
-                navLabel = "Sessions",
-                navIcon = Icons.Default.Computer,
-                targetProgress = 1f,
-                content = {
-                    com.mocca.app.ui.screens.panels.ContextHistoryPanel(
-                        modifier = Modifier.fillMaxHeight(),
-                        sessions = scope.state.sessions,
-                        sessionGroups = scope.state.sessionGroups,
-                        runningSessionIds = scope.state.runningSessionIds,
-                        currentSessionId = scope.state.currentSessionId,
-                        mcpStatus = scope.state.mcpStatus,
-                        model = scope.chatState.modelName,
-                        latency = scope.state.latency,
-                        port = scope.state.port,
-                        usedTokens = scope.chatState.contextWindowUsage,
-                        maxTokens = scope.chatState.maxTokens.takeIf { it > 0 } ?: scope.state.maxTokens,
-                        agentName = scope.chatState.agentName,
-                        appVersion = scope.state.appVersion,
-                        isCreatingSession = scope.state.isCreatingSession,
-                        loadingSessionId = scope.state.loadingSessionId,
-                        newlyCreatedSessionId = scope.state.newlyCreatedSessionId,
-                        isRefreshing = scope.state.isLoading,
-                        onSessionClick = { session ->
-                            scope.screenModel.selectSession(session.id) {
-                                scope.panelState.closePanel()
-                            }
-                        },
-                        onNewSessionClick = {
-                            scope.screenModel.createSession {
-                                scope.panelState.closePanel()
-                            }
-                        },
-                        onRefresh = { scope.screenModel.refreshAll() },
-                        onGroupExpandToggle = { groupId ->
-                            scope.screenModel.toggleGroupExpanded(groupId)
+    fun getAll(scope: MainScreenPanelScope): List<MainPanelDefinition> = listOf(
+        // Page 0 – Sessions / Context History
+        MainPanelDefinition(
+            id = SESSIONS_PANEL_ID,
+            pageIndex = 0,
+            panelState = PanelState.LEFT_OPEN,
+            navLabel = "Sessions",
+            navIcon = Icons.Default.Computer,
+            targetProgress = 1f,
+            content = {
+                com.mocca.app.ui.screens.panels.ContextHistoryPanel(
+                    modifier = Modifier.fillMaxSize(),
+                    sessions = scope.state.sessions,
+                    sessionGroups = scope.state.sessionGroups,
+                    runningSessionIds = scope.state.runningSessionIds,
+                    currentSessionId = scope.state.currentSessionId,
+                    mcpStatus = scope.state.mcpStatus,
+                    model = scope.chatState.modelName,
+                    latency = scope.state.latency,
+                    port = scope.state.port,
+                    usedTokens = scope.chatState.contextWindowUsage,
+                    maxTokens = scope.chatState.maxTokens.takeIf { it > 0 } ?: scope.state.maxTokens,
+                    agentName = scope.chatState.agentName,
+                    appVersion = scope.state.appVersion,
+                    isCreatingSession = scope.state.isCreatingSession,
+                    loadingSessionId = scope.state.loadingSessionId,
+                    newlyCreatedSessionId = scope.state.newlyCreatedSessionId,
+                    isRefreshing = scope.state.isLoading,
+                    onSessionClick = { session ->
+                        scope.screenModel.selectSession(session.id) {
+                            scope.onNavigateToPage(PanelState.CENTER.toPageIndex())
                         }
-                    )
-                }
-            ),
-            MainPanelDefinition(
-                id = CHAT_PANEL_ID,
-                placement = MainPanelPlacement.CENTER,
-                panelState = PanelState.CENTER,
-                title = "Chat",
-                iconKey = "chat",
-                navLabel = "Chat",
-                navIcon = Icons.AutoMirrored.Filled.Chat,
-                targetProgress = 0.5f,
-                content = {
-                    MainChatPanel(scope = scope)
-                }
-            ),
-            MainPanelDefinition(
-                id = DASHBOARD_PANEL_ID,
-                placement = MainPanelPlacement.RIGHT,
-                panelState = PanelState.RIGHT_OPEN,
-                title = "Dashboard",
-                iconKey = "dashboard",
-                navLabel = "Tools",
-                navIcon = Icons.Default.Dashboard,
-                targetProgress = 0f,
-                content = {
-                    com.mocca.app.ui.screens.panels.DashboardPanel(
-                        screenModel = scope.dashboardScreenModel,
-                        onMcpConfigClick = { scope.navigator.push(com.mocca.app.ui.screens.mcp.McpScreen()) },
-                        onSettingsClick = { scope.navigator.push(com.mocca.app.ui.screens.settings.SettingsScreen()) },
-                        onGitClick = { scope.navigator.push(com.mocca.app.ui.screens.git.GitScreen()) },
-                        onFilesClick = { scope.navigator.push(com.mocca.app.ui.screens.files.FilesScreen()) },
-                        onSkillsClick = { },
-                        onSkillClick = { },
-                        onTerminalClick = { scope.navigator.push(com.mocca.app.ui.screens.terminal.TerminalScreen()) }
-                    )
-                }
-            )
+                    },
+                    onNewSessionClick = {
+                        scope.screenModel.createSession {
+                            scope.onNavigateToPage(PanelState.CENTER.toPageIndex())
+                        }
+                    },
+                    onRefresh = { scope.screenModel.refreshAll() },
+                    onGroupExpandToggle = { groupId ->
+                        scope.screenModel.toggleGroupExpanded(groupId)
+                    }
+                )
+            }
+        ),
+
+        // Page 1 – Chat (always kept in composition by beyondViewportPageCount)
+        MainPanelDefinition(
+            id = CHAT_PANEL_ID,
+            pageIndex = 1,
+            panelState = PanelState.CENTER,
+            navLabel = "Chat",
+            navIcon = Icons.AutoMirrored.Filled.Chat,
+            targetProgress = 0.5f,
+            content = { MainChatPanel(scope = scope) }
+        ),
+
+        // Page 2 – Tools / Dashboard
+        MainPanelDefinition(
+            id = TOOLS_PANEL_ID,
+            pageIndex = 2,
+            panelState = PanelState.RIGHT_OPEN,
+            navLabel = "Tools",
+            navIcon = Icons.Default.Dashboard,
+            targetProgress = 0f,
+            content = {
+                com.mocca.app.ui.screens.panels.DashboardPanel(
+                    screenModel = scope.dashboardScreenModel,
+                    onMcpConfigClick = { scope.navigator.push(com.mocca.app.ui.screens.mcp.McpScreen()) },
+                    onSettingsClick = { scope.navigator.push(com.mocca.app.ui.screens.settings.SettingsScreen()) },
+                    onGitClick = { scope.navigator.push(com.mocca.app.ui.screens.git.GitScreen()) },
+                    onFilesClick = { scope.navigator.push(com.mocca.app.ui.screens.files.FilesScreen()) },
+                    onSkillsClick = { },
+                    onSkillClick = { },
+                    onTerminalClick = { scope.navigator.push(com.mocca.app.ui.screens.terminal.TerminalScreen()) }
+                )
+            }
         )
-    }
+    )
 
-    fun getById(panels: List<MainPanelDefinition>, panelId: String): MainPanelDefinition? {
-        return panels.firstOrNull { it.id == panelId }
-    }
+    fun getById(panels: List<MainPanelDefinition>, panelId: String): MainPanelDefinition? =
+        panels.firstOrNull { it.id == panelId }
 
-    fun getByPanelState(panels: List<MainPanelDefinition>, panelState: PanelState): MainPanelDefinition? {
-        return panels.firstOrNull { it.panelState == panelState }
-    }
-
-    fun navigationItems(panels: List<MainPanelDefinition>): List<BottomNavItem> {
-        return panels.map { panel ->
+    fun navigationItems(panels: List<MainPanelDefinition>): List<BottomNavItem> =
+        panels.map { panel ->
             BottomNavItem(
                 panelState = panel.panelState,
                 icon = panel.navIcon,
@@ -182,7 +176,6 @@ internal object MainScreenPanelRegistry {
                 targetProgress = panel.targetProgress
             )
         }
-    }
 }
 
 @Composable
@@ -206,6 +199,10 @@ internal fun rememberMainScreenPanels(scope: MainScreenPanelScope): List<MainPan
         MainScreenPanelRegistry.getAll(scope)
     }
 }
+
+// ---------------------------------------------------------------------------
+// Chat page composable (page 1)
+// ---------------------------------------------------------------------------
 
 @Composable
 private fun MainChatPanel(scope: MainScreenPanelScope) {
@@ -257,7 +254,6 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                             attempt = scope.state.connectionAttempt,
                             maxAttempts = scope.state.maxConnectionAttempts
                         )
-
                         scope.state.isWaitingForNetwork -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.WaitingForNetwork
                         scope.state.connectionError != null -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.Error(scope.state.connectionError)
                         else -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.Disconnected()
@@ -287,6 +283,8 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                 )
             }
 
+            // Chat input sits at the bottom of the Chat page only.
+            // imePadding() here ensures the input lifts above the keyboard.
             Surface(
                 modifier = Modifier.fillMaxWidth().imePadding(),
                 color = Color.Transparent
@@ -338,7 +336,6 @@ private fun MainChatPanel(scope: MainScreenPanelScope) {
                             attempt = scope.state.connectionAttempt,
                             maxAttempts = scope.state.maxConnectionAttempts
                         )
-
                         scope.state.isWaitingForNetwork -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.WaitingForNetwork
                         scope.state.connectionError != null -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.Error(scope.state.connectionError)
                         else -> com.mocca.app.ui.components.modern.ConnectionBannerStatus.Disconnected()

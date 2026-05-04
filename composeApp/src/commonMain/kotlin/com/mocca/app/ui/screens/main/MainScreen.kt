@@ -9,73 +9,77 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.ui.graphics.Color
 import com.mocca.app.ui.components.navigation.PersistentNavRow
 import com.mocca.app.ui.components.navigation.ChatInputContent
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.navigationBarsPadding
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Share
 
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.navigation.NavConstants
-import com.mocca.app.ui.theme.AppShapes
 
-import com.mocca.app.ui.navigation.PanelProgressHolder
 import com.mocca.app.ui.navigation.PanelState
-import com.mocca.app.ui.navigation.rememberPanelState
+import com.mocca.app.ui.navigation.toDragProgress
+import com.mocca.app.ui.navigation.toPageIndex
 import com.mocca.app.ui.screens.chat.ChatScreenModel
 import com.mocca.app.ui.screens.chat.ScrollDirection
 import com.mocca.app.domain.model.SearchMode
 import com.mocca.app.ui.screens.files.FilesScreen
-import com.mocca.app.ui.screens.git.GitScreen
-import com.mocca.app.ui.screens.mcp.McpScreen
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
 import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
-import com.mocca.app.ui.screens.settings.SettingsScreen
-import com.mocca.app.ui.screens.terminal.TerminalScreen
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.DynamicExpressiveBackground
+import com.mocca.app.ui.theme.LocalAppPerformance
+import com.mocca.app.ui.components.modern.UpdateDialog
 import org.koin.core.parameter.parametersOf
-import androidx.compose.runtime.rememberCoroutineScope
-import com.mocca.app.util.FilePickerHelper
 import io.github.vinceglb.filekit.dialogs.FileKitMode
 import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
+import com.mocca.app.util.FilePickerHelper
 import kotlinx.coroutines.launch
-import com.mocca.app.ui.components.modern.ModernTopBar
-import com.mocca.app.ui.navigation.LocalSharedTransitionScope
-import com.mocca.app.ui.components.modern.UpdateDialog
-import com.mocca.app.ui.theme.LocalAppPerformance
 
 /**
- * Main screen with swipe panel navigation.
- * Shows chat content in center, context/history on left, dashboard on right.
+ * Main screen: 3-page HorizontalPager navigation.
  *
+ * Page 0 – Sessions / Context History
+ * Page 1 – Chat                         <- initial page
+ * Page 2 – Tools / Dashboard
+ *
+ * Battery-conscious design:
+ * - beyondViewportPageCount = 1 keeps Chat (page 1) always in composition
+ *   so streaming continues even while the user browses Sessions or Tools.
+ * - Expensive visual effects (DynamicExpressiveBackground) check
+ *   [LocalAppPerformance] and are only composed when the performance
+ *   tier permits them.
+ * - userScrollEnabled = !isImeVisible prevents accidental page swipes
+ *   while the keyboard is open, saving spurious composition passes.
+ * - Page content that is not the current page does not run animations
+ *   or heavy recompositions; only Chat keeps live SSE data flowing.
  */
 data class MainScreen(val sessionId: String? = null) : Screen {
-
 
     @Composable
     override fun Content() {
@@ -83,7 +87,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val screenModel = koinScreenModel<MainScreenModel> { parametersOf(sessionId) }
         val state by screenModel.state.collectAsState()
         val dashboardScreenModel = koinScreenModel<DashboardScreenModel>()
-        // Use a stable ChatScreenModel instance and reload content when session changes
         val chatScreenModel = koinScreenModel<ChatScreenModel>()
         val chatState by chatScreenModel.state.collectAsState()
         val aggregatedMessages by chatScreenModel.aggregatedMessages.collectAsState()
@@ -93,14 +96,36 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val voiceInputState by chatScreenModel.voiceInputState.collectAsState()
 
         // Reload chat session when ID changes
-        androidx.compose.runtime.LaunchedEffect(state.currentSessionId) {
-            state.currentSessionId?.let { id ->
-                chatScreenModel.loadSession(id)
-            }
+        LaunchedEffect(state.currentSessionId) {
+            state.currentSessionId?.let { id -> chatScreenModel.loadSession(id) }
         }
 
         val coroutineScope = rememberCoroutineScope()
+        val hapticFeedback = LocalHapticFeedback.current
+        val density = LocalDensity.current
+        val layoutDirection = LocalLayoutDirection.current
+        val performance = LocalAppPerformance.current
 
+        // ---------------------------------------------------------------
+        // Pager state – single source of truth for active page
+        // ---------------------------------------------------------------
+        val pagerState = rememberPagerState(
+            initialPage = PanelState.CENTER.toPageIndex(),
+            pageCount = { 3 }
+        )
+
+        // Live drag progress for the bottom nav indicator.
+        // Wrapped in derivedStateOf so the lambda only triggers recomposition
+        // in consumers (PersistentNavRow), not in MainScreen itself.
+        val dragProgress by remember { derivedStateOf { pagerState.toDragProgress() } }
+
+        // IME visibility – disable pager scroll while keyboard is shown to
+        // prevent accidental navigation and spurious layout passes.
+        val isImeVisible = WindowInsets.ime.getBottom(density) > 0
+
+        // ---------------------------------------------------------------
+        // File picker
+        // ---------------------------------------------------------------
         val filePickerLauncher = rememberFilePickerLauncher(
             type = FilePickerHelper.createFileType(),
             mode = FileKitMode.Multiple()
@@ -117,7 +142,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        // Show Update Dialog
+        // ---------------------------------------------------------------
+        // Update dialog
+        // ---------------------------------------------------------------
         if (state.isUpdateAvailable && state.updateInfo != null) {
             UpdateDialog(
                 updateInfo = state.updateInfo!!,
@@ -130,15 +157,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             )
         }
 
-        val panelState = rememberPanelState()
-        val progressHolder = remember { PanelProgressHolder() }
-        val hapticFeedback = LocalHapticFeedback.current
-        var lastSnappedPanelState by remember { mutableStateOf(panelState.state) }
-
-        // Track scroll direction for chat input auto-hide
+        // ---------------------------------------------------------------
+        // Chat-specific UI state
+        // ---------------------------------------------------------------
         var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
-
-        // State for jump-to-latest button (reported by ChatContent)
         var showScrollToBottom by remember { mutableStateOf(false) }
         var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
         var scrollToBottomTrigger by remember { mutableStateOf(0L) }
@@ -148,23 +170,17 @@ data class MainScreen(val sessionId: String? = null) : Screen {
 
         val trimmedGlobalSearchQuery = globalSearchQuery.trim()
         val sessionSearchResults = remember(trimmedGlobalSearchQuery, state.sessions) {
-            if (trimmedGlobalSearchQuery.isBlank()) {
-                emptyList()
-            } else {
-                state.sessions
-                    .filter { session -> session.matchesGlobalSearch(trimmedGlobalSearchQuery) }
-                    .take(8)
-            }
+            if (trimmedGlobalSearchQuery.isBlank()) emptyList()
+            else state.sessions
+                .filter { it.matchesGlobalSearch(trimmedGlobalSearchQuery) }
+                .take(8)
         }
         val messageSearchResults = remember(trimmedGlobalSearchQuery, aggregatedMessages, state.currentSessionId) {
-            if (trimmedGlobalSearchQuery.isBlank() || state.currentSessionId == null) {
-                emptyList()
-            } else {
-                aggregatedMessages
-                    .asReversed()
-                    .mapNotNull { message -> message.toGlobalSearchMatch(trimmedGlobalSearchQuery) }
-                    .take(8)
-            }
+            if (trimmedGlobalSearchQuery.isBlank() || state.currentSessionId == null) emptyList()
+            else aggregatedMessages
+                .asReversed()
+                .mapNotNull { it.toGlobalSearchMatch(trimmedGlobalSearchQuery) }
+                .take(8)
         }
 
         fun clearGlobalSearch() {
@@ -177,20 +193,30 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             clearGlobalSearch()
         }
 
-        // Reset chat-specific state
-        LaunchedEffect(panelState.state) {
-            if (panelState.state != lastSnappedPanelState) {
-                hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                lastSnappedPanelState = panelState.state
-            }
+        // ---------------------------------------------------------------
+        // Side-effects on page settle
+        // ---------------------------------------------------------------
 
-            if (panelState.state != PanelState.CENTER) {
+        // Haptic feedback + chat scroll-state reset when settled on a non-chat page.
+        LaunchedEffect(pagerState.settledPage) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            if (pagerState.settledPage != PanelState.CENTER.toPageIndex()) {
                 scrollDirection = ScrollDirection.IDLE
                 showScrollToBottom = false
                 hasNewMessagesWhileScrolledUp = false
             }
         }
 
+        // BackHandler: any non-Chat page -> navigate back to Chat.
+        BackHandler(enabled = pagerState.currentPage != PanelState.CENTER.toPageIndex()) {
+            coroutineScope.launch {
+                pagerState.animateScrollToPage(PanelState.CENTER.toPageIndex())
+            }
+        }
+
+        // ---------------------------------------------------------------
+        // Panels
+        // ---------------------------------------------------------------
         val mainPanels = rememberMainScreenPanels(
             MainScreenPanelScope(
                 navigator = navigator,
@@ -203,12 +229,11 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 shellMode = shellMode,
                 voicePermissionRequestToken = voicePermissionRequestToken,
                 voiceInputState = voiceInputState,
-                panelState = panelState,
                 onAttachClick = { filePickerLauncher.launch() },
                 scrollToBottomTrigger = scrollToBottomTrigger,
                 showScrollToBottom = showScrollToBottom,
                 hasNewMessagesWhileScrolledUp = hasNewMessagesWhileScrolledUp,
-                onScrollDirectionChange = { direction -> scrollDirection = direction },
+                onScrollDirectionChange = { dir -> scrollDirection = dir },
                 onScrollToBottomStateChange = { show, hasNew ->
                     showScrollToBottom = show
                     hasNewMessagesWhileScrolledUp = hasNew
@@ -230,18 +255,21 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 onSessionTabSelected = { sessionId -> screenModel.selectSession(sessionId) },
                 onSearchClick = { showGlobalSearch = true },
                 targetMessageId = targetMessageId,
-                onTargetMessageHandled = { targetMessageId = null }
+                onTargetMessageHandled = { targetMessageId = null },
+                onNavigateToPage = { page ->
+                    coroutineScope.launch { pagerState.animateScrollToPage(page) }
+                }
             )
         )
         val navItems = remember(mainPanels) {
             MainScreenPanelRegistry.navigationItems(mainPanels)
         }
-        val performance = LocalAppPerformance.current
-        val density = LocalDensity.current
-        val layoutDirection = LocalLayoutDirection.current
-        val isImeVisible = WindowInsets.ime.getBottom(density) > 0
 
+        // ---------------------------------------------------------------
+        // Root layout
+        // ---------------------------------------------------------------
         Box(modifier = Modifier.fillMaxSize()) {
+            // Background layer (performance-gated)
             if (performance.useAmbientEffects) {
                 DynamicExpressiveBackground()
             } else {
@@ -252,14 +280,10 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 )
             }
 
-            // Content area - full screen, unified bottom bar floats above
-
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 containerColor = Color.Transparent,
                 bottomBar = {
-                    val bottomBarModifier = Modifier.navigationBarsPadding()
-
                     Box(
                         modifier = Modifier.padding(
                             horizontal = AppSpacing.screenPaddingHorizontal,
@@ -267,24 +291,34 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                         )
                     ) {
                         Surface(
-                            modifier = bottomBarModifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .navigationBarsPadding(),
                             color = AppColors.bgBase,
                             shape = AppShapes.extraLarge,
                             tonalElevation = 0.dp
                         ) {
-                        PersistentNavRow(
-                                dragProgress = progressHolder.dragProgress,
-                                onItemClick = { panelState.state = it },
+                            PersistentNavRow(
+                                dragProgress = dragProgress,
+                                onItemClick = { panelState ->
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(panelState.toPageIndex())
+                                    }
+                                },
                                 items = navItems,
                                 showLabels = true,
                                 isAgentRunning = !chatState.isSessionIdle,
-                                modifier = Modifier.fillMaxWidth().height(NavConstants.NavigationModeHeight)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(NavConstants.NavigationModeHeight)
                             )
                         }
                     }
                 }
             ) { paddingValues ->
-                val panelPaddingValues = if (isImeVisible) {
+                // Adjust bottom padding: when IME is visible the bottom bar
+                // is covered by the keyboard, so we remove the bar clearance.
+                val adjustedPadding = if (isImeVisible) {
                     PaddingValues(
                         start = paddingValues.calculateStartPadding(layoutDirection),
                         top = paddingValues.calculateTopPadding(),
@@ -295,15 +329,27 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     paddingValues
                 }
 
-                MainScreenPanelHost(
-                    panels = mainPanels,
-                    panelState = panelState.state,
-                    onPanelStateChange = { panelState.state = it },
-                    progressHolder = progressHolder,
-                    paddingValues = panelPaddingValues
-                )
+                HorizontalPager(
+                    state = pagerState,
+                    // Keep 1 page beyond the viewport in composition.
+                    // With 3 pages and Chat at index 1, this means Chat is ALWAYS
+                    // in composition regardless of which page is visible – streaming
+                    // stays alive, state is preserved.
+                    beyondViewportPageCount = 1,
+                    // Block horizontal swipe while keyboard is open to prevent
+                    // accidental page changes and spurious layout recompositions.
+                    userScrollEnabled = !isImeVisible,
+                    // Stable key prevents unnecessary recomposition on pager updates.
+                    key = { page -> mainPanels[page].id },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(adjustedPadding)
+                ) { page ->
+                    mainPanels[page].content()
+                }
             }
 
+            // Global search overlay – modal, sits above the pager
             if (showGlobalSearch) {
                 GlobalSearchOverlay(
                     query = globalSearchQuery,
