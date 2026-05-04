@@ -12,7 +12,7 @@ tags:
     timeout: 15000
 
 # Open tools panel via bottom navigation
-- tapOn: "TOOLS"
+- tapOn: "(Tools|TOOLS)"
 
 - waitForAnimationToEnd:
     timeout: 2000
@@ -30,3 +30,4 @@ tags:
     timeout: 10000
 
 - takeScreenshot: git_screen
+

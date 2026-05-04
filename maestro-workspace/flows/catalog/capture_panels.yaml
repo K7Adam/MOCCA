@@ -11,17 +11,17 @@ tags:
 
 - takeScreenshot: catalog_main_center_initial
 
-- tapOn: "SESSIONS"
+- tapOn: "(Sessions|SESSIONS)"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_panel_sessions
 
-- tapOn: "CHAT"
+- tapOn: "(Chat|CHAT)"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_panel_chat
 
-- tapOn: "TOOLS"
+- tapOn: "(Tools|TOOLS)"
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: catalog_panel_tools_top
@@ -37,3 +37,4 @@ tags:
 - waitForAnimationToEnd:
     timeout: 1200
 - takeScreenshot: catalog_panel_tools_scrolled
+

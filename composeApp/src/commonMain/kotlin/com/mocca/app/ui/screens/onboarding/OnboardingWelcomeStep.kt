@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,7 @@ import com.mocca.app.ui.theme.AppTypography
 @Composable
 internal fun OnboardingWelcomeStep(
     onContinue: () -> Unit,
+    onSkip: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     // Subtle breathing animation for the terminal icon
@@ -80,7 +83,10 @@ internal fun OnboardingWelcomeStep(
             style = AppTypography.displayLarge,
             color = AppColors.onSurface,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures(onLongPress = { onSkip() })
+            }
         )
 
         Spacer(modifier = Modifier.height(AppSpacing.sm))
@@ -89,7 +95,10 @@ internal fun OnboardingWelcomeStep(
             text = "Your mobile companion for OpenCode",
             style = AppTypography.bodyLarge,
             color = AppColors.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.pointerInput(Unit) {
+                detectTapGestures(onLongPress = { onSkip() })
+            }
         )
 
         Spacer(modifier = Modifier.height(AppSpacing.xxxl))

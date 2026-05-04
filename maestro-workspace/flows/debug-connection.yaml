@@ -118,3 +118,4 @@ appId: com.mocca.app
     visible: "Connection failed"
     optional: true
     timeout: 3000
+

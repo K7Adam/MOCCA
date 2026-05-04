@@ -6,3 +6,4 @@ appId: com.mocca.app
 - runFlow: ../flows/catalog/capture_settings_skills_flags.yaml
 - runFlow: ../flows/catalog/capture_onboarding_connection.yaml
 - runFlow: ../flows/catalog/capture_mcp.yaml
+

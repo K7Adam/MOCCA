@@ -7,3 +7,4 @@ appId: com.mocca.app
 - extendedWaitUntil:
     visible: "(SEND|SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 30000
+

@@ -10,11 +10,11 @@ tags:
 
 # Wait for app to be ready
 - extendedWaitUntil:
-    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
+    visible: "(SESSIONS|CHAT|TOOLS|Sessions|Chat|Tools|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 15000
 
 # Open sessions panel via bottom navigation
-- tapOn: "SESSIONS"
+- tapOn: "(Sessions|SESSIONS)"
 
 # Wait for panel animation
 - waitForAnimationToEnd:
@@ -34,3 +34,4 @@ tags:
 
 # Take screenshot to capture result
 - takeScreenshot: create_session_result
+

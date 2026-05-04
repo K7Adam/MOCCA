@@ -8,3 +8,4 @@ appId: com.mocca.app
 - runFlow: ../flows/navigation/navigate_to_settings.yaml
 - runFlow: ../flows/navigation/navigate_to_git.yaml
 - runFlow: ../flows/navigation/navigate_to_terminal.yaml
+

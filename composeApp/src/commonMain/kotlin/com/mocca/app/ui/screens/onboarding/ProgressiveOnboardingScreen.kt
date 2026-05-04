@@ -152,6 +152,9 @@ class ProgressiveOnboardingScreen(
                     OnboardingStep.WELCOME -> OnboardingWelcomeStep(
                         onContinue = {
                             screenModel.onAction(OnboardingAction.GoToConnect)
+                        },
+                        onSkip = {
+                            screenModel.onAction(OnboardingAction.Skip)
                         }
                     )
                     OnboardingStep.CONNECT -> OnboardingConnectStep(

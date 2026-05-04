@@ -9,7 +9,7 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "TOOLS"
+- tapOn: "(Tools|TOOLS)"
 - waitForAnimationToEnd:
     timeout: 2000
 
@@ -133,3 +133,4 @@ tags:
     visible: ".*FEATURE FLAGS.*"
     timeout: 10000
 - takeScreenshot: catalog_screen_feature_flags
+

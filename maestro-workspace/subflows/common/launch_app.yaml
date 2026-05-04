@@ -9,5 +9,17 @@ appId: com.mocca.app
     text: "Wait"
     optional: true
 - extendedWaitUntil:
-    visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
+    visible: "(SESSIONS|CHAT|TOOLS|Sessions|Chat|Tools|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 30000
+
+# Bypass Progressive Onboarding if we are on the Welcome screen
+- longPressOn:
+    text: "Your mobile companion for OpenCode"
+    optional: true
+
+# Wait for Main Screen to be visible
+- extendedWaitUntil:
+    visible: "(SESSIONS|CHAT|TOOLS|Sessions|Chat|Tools)"
+    timeout: 10000
+    optional: true
+

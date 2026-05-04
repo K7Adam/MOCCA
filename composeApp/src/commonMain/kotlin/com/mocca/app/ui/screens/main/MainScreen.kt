@@ -88,12 +88,14 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val state by screenModel.state.collectAsState()
         val dashboardScreenModel = koinScreenModel<DashboardScreenModel>()
         val chatScreenModel = koinScreenModel<ChatScreenModel>()
-        val chatState by chatScreenModel.state.collectAsState()
-        val aggregatedMessages by chatScreenModel.aggregatedMessages.collectAsState()
-        val inputText by chatScreenModel.inputText.collectAsState()
-        val shellMode by chatScreenModel.shellMode.collectAsState()
-        val voicePermissionRequestToken by chatScreenModel.voicePermissionRequestToken.collectAsState()
-        val voiceInputState by chatScreenModel.voiceInputState.collectAsState()
+
+        // Only collect aggregatedMessages when global search is open to avoid recompositions
+        var showGlobalSearch by remember { mutableStateOf(false) }
+        val globalAggregatedMessages by if (showGlobalSearch) {
+            chatScreenModel.aggregatedMessages
+        } else {
+            kotlinx.coroutines.flow.flowOf<List<com.mocca.app.domain.model.Message>>(emptyList())
+        }.collectAsState(initial = emptyList())
 
         // Reload chat session when ID changes
         LaunchedEffect(state.currentSessionId) {
@@ -158,13 +160,8 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         }
 
         // ---------------------------------------------------------------
-        // Chat-specific UI state
+        // Global search & message targeting state
         // ---------------------------------------------------------------
-        var scrollDirection by remember { mutableStateOf(ScrollDirection.IDLE) }
-        var showScrollToBottom by remember { mutableStateOf(false) }
-        var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
-        var scrollToBottomTrigger by remember { mutableStateOf(0L) }
-        var showGlobalSearch by remember { mutableStateOf(false) }
         var globalSearchQuery by remember { mutableStateOf("") }
         var targetMessageId by remember { mutableStateOf<String?>(null) }
 
@@ -175,9 +172,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 .filter { it.matchesGlobalSearch(trimmedGlobalSearchQuery) }
                 .take(8)
         }
-        val messageSearchResults = remember(trimmedGlobalSearchQuery, aggregatedMessages, state.currentSessionId) {
+        val messageSearchResults = remember(trimmedGlobalSearchQuery, globalAggregatedMessages, state.currentSessionId) {
             if (trimmedGlobalSearchQuery.isBlank() || state.currentSessionId == null) emptyList()
-            else aggregatedMessages
+            else globalAggregatedMessages
                 .asReversed()
                 .mapNotNull { it.toGlobalSearchMatch(trimmedGlobalSearchQuery) }
                 .take(8)
@@ -197,14 +194,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Side-effects on page settle
         // ---------------------------------------------------------------
 
-        // Haptic feedback + chat scroll-state reset when settled on a non-chat page.
+        // Haptic feedback when settled on a new page.
         LaunchedEffect(pagerState.settledPage) {
             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            if (pagerState.settledPage != PanelState.CENTER.toPageIndex()) {
-                scrollDirection = ScrollDirection.IDLE
-                showScrollToBottom = false
-                hasNewMessagesWhileScrolledUp = false
-            }
         }
 
         // BackHandler: any non-Chat page -> navigate back to Chat.
@@ -214,56 +206,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
             }
         }
 
-        // ---------------------------------------------------------------
-        // Panels
-        // ---------------------------------------------------------------
-        val mainPanels = rememberMainScreenPanels(
-            MainScreenPanelScope(
-                navigator = navigator,
-                screenModel = screenModel,
-                chatScreenModel = chatScreenModel,
-                dashboardScreenModel = dashboardScreenModel,
-                state = state,
-                chatState = chatState,
-                inputText = inputText,
-                shellMode = shellMode,
-                voicePermissionRequestToken = voicePermissionRequestToken,
-                voiceInputState = voiceInputState,
-                onAttachClick = { filePickerLauncher.launch() },
-                scrollToBottomTrigger = scrollToBottomTrigger,
-                showScrollToBottom = showScrollToBottom,
-                hasNewMessagesWhileScrolledUp = hasNewMessagesWhileScrolledUp,
-                onScrollDirectionChange = { dir -> scrollDirection = dir },
-                onScrollToBottomStateChange = { show, hasNew ->
-                    showScrollToBottom = show
-                    hasNewMessagesWhileScrolledUp = hasNew
-                },
-                onScrollToBottomClick = {
-                    scrollToBottomTrigger += 1L
-                    showScrollToBottom = false
-                    hasNewMessagesWhileScrolledUp = false
-                },
-                onRetryConnection = { screenModel.retryConnection() },
-                onOpenSetup = {
-                    navigator.push(
-                        ProgressiveOnboardingScreen(
-                            isSetupMode = true,
-                            connectionError = state.connectionError
-                        )
-                    )
-                },
-                onSessionTabSelected = { sessionId -> screenModel.selectSession(sessionId) },
-                onSearchClick = { showGlobalSearch = true },
-                targetMessageId = targetMessageId,
-                onTargetMessageHandled = { targetMessageId = null },
-                onNavigateToPage = { page ->
-                    coroutineScope.launch { pagerState.animateScrollToPage(page) }
-                }
-            )
-        )
-        val navItems = remember(mainPanels) {
-            MainScreenPanelRegistry.navigationItems(mainPanels)
-        }
+        val navItems = com.mocca.app.ui.components.navigation.defaultBottomNavItems
 
         // ---------------------------------------------------------------
         // Root layout
@@ -284,6 +227,7 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                 modifier = Modifier.fillMaxSize(),
                 containerColor = Color.Transparent,
                 bottomBar = {
+                    val chatState by chatScreenModel.state.collectAsState()
                     Box(
                         modifier = Modifier.padding(
                             horizontal = AppSpacing.screenPaddingHorizontal,
@@ -340,12 +284,69 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                     // accidental page changes and spurious layout recompositions.
                     userScrollEnabled = !isImeVisible,
                     // Stable key prevents unnecessary recomposition on pager updates.
-                    key = { page -> mainPanels[page].id },
+                    key = { page -> page },
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(adjustedPadding)
                 ) { page ->
-                    mainPanels[page].content()
+                    when (page) {
+                        0 -> {
+                            val chatState by chatScreenModel.state.collectAsState()
+                            com.mocca.app.ui.screens.panels.ContextHistoryPanel(
+                                modifier = Modifier.fillMaxSize(),
+                                sessions = state.sessions,
+                                sessionGroups = state.sessionGroups,
+                                runningSessionIds = state.runningSessionIds,
+                                currentSessionId = state.currentSessionId,
+                                mcpStatus = state.mcpStatus,
+                                model = chatState.modelName,
+                                latency = state.latency,
+                                port = state.port,
+                                usedTokens = chatState.contextWindowUsage,
+                                maxTokens = chatState.maxTokens.takeIf { it > 0 } ?: state.maxTokens,
+                                agentName = chatState.agentName,
+                                appVersion = state.appVersion,
+                                isCreatingSession = state.isCreatingSession,
+                                loadingSessionId = state.loadingSessionId,
+                                newlyCreatedSessionId = state.newlyCreatedSessionId,
+                                isRefreshing = state.isLoading,
+                                onSessionClick = { session ->
+                                    screenModel.selectSession(session.id) {
+                                        coroutineScope.launch { pagerState.animateScrollToPage(PanelState.CENTER.toPageIndex()) }
+                                    }
+                                },
+                                onNewSessionClick = {
+                                    screenModel.createSession {
+                                        coroutineScope.launch { pagerState.animateScrollToPage(PanelState.CENTER.toPageIndex()) }
+                                    }
+                                },
+                                onRefresh = { screenModel.refreshAll() },
+                                onGroupExpandToggle = { groupId ->
+                                    screenModel.toggleGroupExpanded(groupId)
+                                }
+                            )
+                        }
+                        1 -> MainChatPanel(
+                            isActive = pagerState.settledPage == PanelState.CENTER.toPageIndex(),
+                            mainScreenModel = screenModel,
+                            chatScreenModel = chatScreenModel,
+                            navigator = navigator,
+                            onAttachClick = { filePickerLauncher.launch() },
+                            targetMessageId = targetMessageId,
+                            onTargetMessageHandled = { targetMessageId = null },
+                            onSearchClick = { showGlobalSearch = true }
+                        )
+                        2 -> com.mocca.app.ui.screens.panels.DashboardPanel(
+                            screenModel = dashboardScreenModel,
+                            onMcpConfigClick = { navigator.push(com.mocca.app.ui.screens.mcp.McpScreen()) },
+                            onSettingsClick = { navigator.push(com.mocca.app.ui.screens.settings.SettingsScreen()) },
+                            onGitClick = { navigator.push(com.mocca.app.ui.screens.git.GitScreen()) },
+                            onFilesClick = { navigator.push(com.mocca.app.ui.screens.files.FilesScreen()) },
+                            onSkillsClick = { },
+                            onSkillClick = { },
+                            onTerminalClick = { navigator.push(com.mocca.app.ui.screens.terminal.TerminalScreen()) }
+                        )
+                    }
                 }
             }
 

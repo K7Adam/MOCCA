@@ -9,7 +9,7 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "SESSIONS"
+- tapOn: "(Sessions|SESSIONS)"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_sessions_initial
@@ -25,7 +25,8 @@ tags:
     timeout: 2500
 - takeScreenshot: catalog_sessions_after_new_session
 
-- tapOn: "CHAT"
+- tapOn: "(Chat|CHAT)"
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_chat_after_new_session
+

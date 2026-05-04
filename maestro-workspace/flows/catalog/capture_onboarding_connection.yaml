@@ -6,7 +6,7 @@ tags:
     clearState: true
 
 - extendedWaitUntil:
-    visible: "(Select Server|CONNECT TO SERVER|Enter server manually|SESSIONS|CHAT|TOOLS)"
+    visible: "(Select Server|CONNECT TO SERVER|Enter server manually|SESSIONS|CHAT|TOOLS|Sessions|Chat|Tools)"
     timeout: 30000
 
 - takeScreenshot: catalog_onboarding_initial
@@ -15,3 +15,4 @@ tags:
     timeout: 1800
 
 - takeScreenshot: catalog_state_chat_no_session
+
