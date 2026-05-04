@@ -92,7 +92,7 @@ internal fun OnboardingWelcomeStep(
         Spacer(modifier = Modifier.height(AppSpacing.sm))
 
         Text(
-            text = "Your mobile companion for OpenCode",
+            text = "Your intelligent mobile companion for OpenCode",
             style = AppTypography.bodyLarge,
             color = AppColors.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -125,6 +125,14 @@ internal fun OnboardingWelcomeStep(
                 text = "Connect to your MOCCA CLI bridge to start chatting",
                 style = AppTypography.labelSmall,
                 color = AppColors.outline,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Text(
+                text = "v1.0.1",
+                style = AppTypography.labelSmall,
+                color = AppColors.outline.copy(alpha = 0.5f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
