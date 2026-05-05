@@ -1,5 +1,6 @@
 # DOMAIN MODELS KNOWLEDGE BASE
 
+**Updated:** 2026-05-05
 **Scope:** Domain Models & Contracts
 
 **Relevant Skills:** `kotlin-best-practices` (data classes, sealed classes)
@@ -21,16 +22,21 @@ Core immutable data structures and sealed class hierarchies that define the MOCC
 ### GitTypes.kt
 - **`GitStatusResponse`**: Constructor params include `branch, upstream, ahead, behind, staged, unstaged, untracked, conflicted, stashes, clean`. `hasChanges` and `totalChanges` are computed properties (not constructor params).
 
-### ServerDiscovery.kt
-- **`DiscoveredServer`**: Has `username`, `password`, `useHttps`, and `source: DiscoverySource` fields (not `authToken`).
-
-### AppConfig.kt
+### Config.kt (continued)
 - **`GlobalAppConfig`**, **`AppConfigUpdate`**, **`FeatureFlags`**: Global application configuration models.
+- **`DiscoveredServer`**: Has `username`, `password`, `useHttps`, and `source: DiscoverySource` fields (not `authToken`). The `ServerDiscovery` contract is planned but the `discovery/` package is currently empty; bridge-first QR pairing is the active mechanism.
 
 ### AiRuntimeConfig.kt
 - **`AiRuntimeConfigSnapshot`**: Provider/model/agent/mode runtime projection from the CLI bridge or legacy HTTP fallback.
 - **`AiSelection`**: Persisted per-project explicit selection. The fingerprint must match the active snapshot before reuse.
 - **`AiRecentModel`**: Project-scoped model picker history. Use `selectAiRecentModelsForSnapshot(...)` for ordering, de-duplication, project filtering, and the current picker limit.
+
+### Other Key Types
+- **`ServerEvents.kt`**: SSE event types (`ServerEvent` sealed hierarchy).
+- **`Models.kt`**: Core message/session models (`Message`, `Session`, `MessagePart`).
+- **`BroadcastEvent.kt`**: Event fanout types for `StateCoordinator` → stores.
+- **`AgentTypes.kt`**, **`CommandTypes.kt`**, **`ProviderTypes.kt`**, **`ToolTypes.kt`**: Typed enums and sealed classes for respective domains.
+- **`McpModels.kt`**, **`DiffTypes.kt`**, **`SearchTypes.kt`**, **`SyncState.kt`**, **`SystemInfo.kt`**, **`UpdateModels.kt`**, **`AttachedFile.kt`**, **`TerminalGrid.kt`**, **`VoiceInput.kt`**, **`UserPreferences.kt`**, **`AiSelectionPresentation.kt`**: Specialized domain types.
 
 ### ChatTurnReducer.kt
 - **`ChatTurnState`**: Canonical OpenCode turn projection keyed by session, message, and part id.

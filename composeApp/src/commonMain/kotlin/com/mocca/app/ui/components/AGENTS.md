@@ -1,5 +1,6 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
+**Updated:** 2026-05-05
 **Scope:** Shared UI components and Material 3 Expressive primitives
 
 ## RELEVANT SKILLS
@@ -27,19 +28,49 @@ The application MUST strictly adhere to the `AppTheme`.
 ## KEY COMPONENTS
 ### 1. Modern Primitives (`modern/`)
 - `MoccaButton`: Pill-shaped button with `primary` background and black text.
+- `MoccaButtonVariants`: Extended button styles for secondary/ghost states.
 - `MoccaInput`: Solid black background with rounded corners and subtle border.
 - `MoccaCard`: Rounded container with `surfaceContainer` background and 16dp corners.
 - `ModernBadge`: Surface-based "USER" or "AGENT" tags with tonal elevation.
 - `ModernTopBar`: Compact top bar with connection quality indicator. Observes `ConnectionStatus` from `ConnectionManager`.
+- `ModernActionComponents`, `ModernChatComponents`, `ModernProcessingIndicator`, `ModernThinkingIndicator`: Chat-specific modern primitives.
+- `ConnectionStatus`, `ConnectionTroubleshooting`, `SyncStatusIndicator`: Connection-state UI.
+- `MessageRow`, `MessageSkeleton`, `GroupedSessionCard`: Message and session rendering.
+- `ScrollToBottomButton`, `SuggestionPopup`, `QuoteRotator`: Chat interaction helpers.
+- `ModelSelectorDialog`, `VariantSelectorDialog`, `EditMessagePartDialog`, `ForkSessionDialog`: Modal dialogs.
+- `UpdateDialog`, `GlobalActivityIndicator`, `UnifiedSystemStatus`: System status surfaces.
+- `AdaptiveScaffold`, `DashboardModules`, `ModuleCard`: Layout scaffolding.
+- `CommandPaletteOverlay`, `ContextInfo`: Command and context UI.
+- `MoccaList`, `ModernText`, `ShimmerModifier`, `SnakeDotsLoader`: Utility primitives.
+- `SystemModules`: Modular system UI components.
 
-### 2. Common Layouts (`CommonComponents.kt`)
+### 2. Message Parts (`modern/message/`)
+- `StreamingPart`, `ReasoningPart`, `FilePart`, `SubTaskPart`, `ToolCallPart`: Part-type renderers for chat messages.
+
+### 3. Common Layouts (`CommonComponents.kt`)
 - `LoadingScreen`: Center-aligned progress with compact status text.
 - `ErrorScreen`: High-visibility error display.
 - `PermissionRequestDialog`: **MANDATORY** for tool approval requests.
+- `GodBlocks.kt`: Debug/diagnostic overlay components.
+- `EmulatorSetupBanner.kt`: Emulator environment banner.
 
-### 3. Specialized Widgets
+### 4. Chat Components (`chat/`)
+- `InlineDiffViewer`, `FileChangeBlock`, `PermissionBanner`, `TodoListPanel`: Chat inline widgets.
+
+### 5. Editor Components (`editor/`)
+- `CodeEditorView`, `EditorJsBridge`: Code editing surface and bridge.
+
+### 6. Navigation Components (`navigation/`)
+- `PersistentNavRow`, `BottomNavItems`, `SharedNavIndicator`, `NavConstants`: Navigation chrome.
+- `ChatInputActions`, `ChatInputContent`, `ChatInputStatusBar`, `ChatInputTextField`: Chat input composition.
+- `AgentSelectorSheet`, `AttachmentPreview`: Chat input sheets and previews.
+
+### 7. Voice Components (`voice/`)
+- `RequestVoicePermissionEffect`: Voice permission handling.
+
+### 8. Specialized Widgets
 - `QuestionDialog.kt`: For interactive `confirm` or `input` requests from the AI agent.
-- `ToolCards.kt`: Specialized rendering for `ToolUse` and `ToolResult` data structures.
+- `ToolCards.kt`, `ToolCardHelpers.kt`, `ToolCardWidgets.kt`, `UniversalToolCard.kt`: Specialized rendering for `ToolUse` and `ToolResult` data structures.
 - Chat activity strips should be compact, state-derived, and tied to `AgentActivity`; avoid separate UI-owned status buffers.
 
 ## CONNECTION STATUS

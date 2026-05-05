@@ -52,7 +52,6 @@ class SettingsScreen : Screen {
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1229,7 +1228,6 @@ fun SettingsCard(
             .clip(AppShapes.moduleCard)
             .background(AppColors.bgRaised, AppShapes.moduleCard)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1306,7 +1304,6 @@ fun SettingsRowItem(
             .padding(vertical = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Status indicator
         if (!isEnabled || !isConnected) {
             StatusDot(
                 color = when {
@@ -1318,7 +1315,6 @@ fun SettingsRowItem(
             Spacer(modifier = Modifier.width(AppSpacing.md))
         }
         
-        // Text content
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -1339,7 +1335,6 @@ fun SettingsRowItem(
             )
         }
         
-        // Toggle switch
         if (showToggle && onToggle != null) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Switch(

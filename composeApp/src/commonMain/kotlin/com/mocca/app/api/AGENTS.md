@@ -1,6 +1,6 @@
 # NETWORK LAYER KNOWLEDGE BASE (api)
 
-**Updated:** 2026-04-24
+**Updated:** 2026-05-05
 **Scope:** `com.mocca.app.api`
 
 **Relevant Skills:** `kotlin-best-practices` (Ktor, coroutines)
@@ -27,3 +27,7 @@ Ktor-based networking layer providing REST and SSE fallback connectivity to a si
 - **JSON Configuration**: `ignoreUnknownKeys = true` and `isLenient = true` are mandatory for forward compatibility with OpenCode server updates.
 - **OpenCode Parts**: Treat `reasoning` as canonical. Keep `thinking` only as a legacy alias when parsing older cached/imported payloads.
 - **Git Operations**: All Git operations go through `MoccaApiClient` using OpenCode's `/vcs` endpoint (read) and `executeShell()` (write). No separate Git server or port is involved.
+
+## ANTI-PATTERNS
+- Do not add new callers to `@Deprecated(ERROR)` methods in `MoccaApiClient.kt` (`getAppInfo` at line 46, `getTools` at line 596). These legacy endpoints return HTML and will be removed.
+- Do not bypass `ApiExecutor.execute {}` for direct `HttpClient` ownership. Exception: `GitHubApiClient` for external GitHub API calls.

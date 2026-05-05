@@ -1,6 +1,6 @@
 # SETTINGS SUBTREE KNOWLEDGE BASE
 
-**Updated:** 2026-04-12
+**Updated:** 2026-05-05
 **Scope:** `com.mocca.app.ui.screens.settings`
 
 ## OVERVIEW
@@ -25,11 +25,16 @@ settings/
 ├── FeatureFlagsScreen.kt
 ├── FeatureFlagsScreenModel.kt
 └── sections/
-    ├── ProviderAuthSection.kt
-    ├── ServersSection.kt
-    ├── ProjectSection.kt
+    ├── AppConfigSection.kt
     ├── AppearanceSection.kt
-    └── ...
+    ├── AppUpdatesSection.kt
+    ├── ChatSection.kt
+    ├── ConnectionSection.kt
+    ├── ExperimentalSection.kt
+    ├── NotificationsSection.kt
+    ├── PrivacySecuritySection.kt
+    ├── ProjectSection.kt
+    └── ProviderAuthSection.kt
 ```
 
 ## CONVENTIONS

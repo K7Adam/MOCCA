@@ -1,5 +1,6 @@
 # DATA REPOSITORY LAYER
 
+**Updated:** 2026-05-05
 **Scope:** Server-First Repositories, ConnectionManager
 
 **Relevant Skills:** `kotlin-best-practices` (repository patterns, Flow)
@@ -53,6 +54,25 @@ OpenCode event ingestion and stream compatibility layer.
 ### AppStateStore
 Global application state store.
 - Tracks global configuration and connection state.
+
+### Additional Repositories
+- `AgentRepository` — Agent list + bridge sync.
+- `CommandRepository` — Slash commands + shell tools.
+- `ConfigRepository` — Global app config.
+- `FileRepository` — Workspace file browser.
+- `McpRepository` — MCP server/resource status.
+- `PermissionActionBus` — Permission request fanout.
+- `ProjectRepository` — Project path + workspace.
+- `ProviderRepository` — Provider list + auth.
+- `SearchRepository` — Search endpoint.
+- `SessionRepository` — Session CRUD.
+- `SettingsRepository` — Preferences + AppSettings.
+- `SystemMonitorRepository` — System info.
+- `ToolRepository` — Tool definitions.
+- `UpdateCheckScheduler` — Periodic update checks.
+- `UpdateNotifier` — Update notification fanout.
+- `UpdateRepository` — APK update check + download. Holds a standalone `HttpClient` for redirect downloads (line 157) — documented deviation from the `ApiExecutor` pattern.
+- `AiChatGateway` — Bridge → chat send orchestration.
 
 ## PATTERNS
 

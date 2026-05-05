@@ -1,5 +1,6 @@
 # DATA LAYER KNOWLEDGE BASE
 
+**Updated:** 2026-05-05
 **Scope:** SQLDelight, LocalCache, Server-First
 
 **Relevant Skills:** `kotlin-best-practices` (SQLDelight, repositories)
@@ -26,6 +27,8 @@ Schema definitions are located in `composeApp/src/commonMain/sqldelight/com/mocc
 | `Session.sq` | Manages conversation sessions, metadata, and sync status. |
 | `SessionTodo.sq` | Caches session-specific todo lists. |
 
+Migrations: `1.sqm` (initial), `2.sqm` (drops retired global `RecentModel`).
+
 ## CONVENTIONS
 - **LocalCache Interface**: Primary abstraction for all persistence. Repositories MUST depend on `LocalCache`, never direct DB drivers.
 - **ServerConfig Schema**: Fields are `id`, `name`, `host`, `port`, `username`, `password`, `isActive`, `useHttps`. The `baseUrl` is a computed property (`protocol = if (useHttps) "https" else "http"`, omits port 443 if standard) on the domain model, not stored in the DB. There is no `connectionType`, `authType`, or `authToken` field.
@@ -38,3 +41,4 @@ Schema definitions are located in `composeApp/src/commonMain/sqldelight/com/mocc
     4. Emit `Resource.Success(fresh)`.
 - **Git Cache**: `GitStatusResponse` is stored as an in-memory cache in `LocalCache` (not persisted to DB).
 - **Error Handling**: Always return `Resource.Error(message, cached)` to prevent UI flickering during transient network failures.
+- **ServerDiscovery**: `discovery/` package is reserved for cross-platform server discovery but currently empty; bridge-first QR pairing is the active mechanism.

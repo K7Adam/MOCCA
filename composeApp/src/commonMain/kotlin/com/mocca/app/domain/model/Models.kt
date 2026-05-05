@@ -25,10 +25,10 @@ data class Session(
     val parentId: String? = null,
     // summary can be a SessionSummary object or null depending on server version
     val summary: JsonElement? = null,
-    val permission: List<SessionPermission>? = null, // Tool permissions
-    val revert: SessionRevertInfo? = null, // Revert state for undo/redo
+    val permission: List<SessionPermission>? = null,
+    val revert: SessionRevertInfo? = null,
     @SerialName("shareID")
-    val shareID: String? = null, // Share ID for public sharing
+    val shareID: String? = null,
     val lastFetchedAt: Long? = null
 ) {
     // Convenience accessors for time fields

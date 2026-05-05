@@ -47,7 +47,6 @@ internal fun McpServerDetailsDialog(
                 .background(AppColors.background)
                 .border(AppSpacing.borderStandard, AppColors.outlineVariant, AppShapes.medium)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

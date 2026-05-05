@@ -64,7 +64,6 @@ fun ModernStreamingMessage(
             .padding(vertical = AppSpacing.sm),
         horizontalAlignment = Alignment.Start
     ) {
-        // Header
         Row(
             modifier = Modifier.padding(bottom = AppSpacing.xxs, start = AppSpacing.sm),
             verticalAlignment = Alignment.CenterVertically

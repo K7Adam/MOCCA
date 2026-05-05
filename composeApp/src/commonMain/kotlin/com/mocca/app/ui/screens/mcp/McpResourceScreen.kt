@@ -282,7 +282,6 @@ private fun McpResourceContentPanel(
                 .border(AppSpacing.borderStandard, AppColors.outlineVariant, AppShapes.card)
                 .clip(AppShapes.card)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -316,7 +315,6 @@ private fun McpResourceContentPanel(
 
             HorizontalDivider(thickness = AppSpacing.borderThin, color = AppColors.outline)
 
-            // Content area
             Box(
                 modifier = Modifier
                     .fillMaxSize()

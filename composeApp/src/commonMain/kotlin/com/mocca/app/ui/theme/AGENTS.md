@@ -1,6 +1,6 @@
 # UI THEME KNOWLEDGE BASE
 
-**Updated:** 2026-04-12
+**Updated:** 2026-05-05
 **Scope:** `com.mocca.app.ui.theme`
 
 ## OVERVIEW

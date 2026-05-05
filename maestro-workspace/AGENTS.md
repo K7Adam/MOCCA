@@ -1,6 +1,6 @@
 # MAESTRO E2E TESTING
 
-**Updated:** 2026-04-12
+**Updated:** 2026-05-05
 **Project:** MOCCA Maestro Workspace
 **Target:** Android Emulator (`10.0.2.2` host access)
 **Format:** Maestro YAML flows + PowerShell runners
@@ -36,6 +36,8 @@ maestro-workspace/
 | Screenshot catalog | `testplans/screenshot-catalog.yaml` | Visual artifact generation |
 | Shared launch logic | `subflows/common/launch_app.yaml` | Standard app boot sequence |
 | Stable wait | `subflows/common/wait_for_main_screen.yaml` | Main-screen landmark sync |
+| Files navigation | `flows/navigation/navigate_to_files.yaml` | Files screen reachability |
+| Terminal navigation | `flows/navigation/navigate_to_terminal.yaml` | Terminal screen reachability |
 | Runner script | `run-emulator-tests.ps1` | Install, clear state, logcat capture |
 | Emulator startup | `start-emulator.ps1` | Visible by default |
 | Screenshot script | `capture-screenshot-catalog.ps1` | Catalog batch capture |
@@ -78,3 +80,4 @@ maestro-workspace/
 ## NOTES
 - `flows/debug-connection.yaml` is a debug helper, not a normal plan member
 - `flows/catalog/capture_workspace_explorer.yaml` exists but is not currently wired into `testplans/screenshot-catalog.yaml`
+- `flows/sessions/create_new_session.yaml` exercises session creation from the onboarding flow

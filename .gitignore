@@ -7,6 +7,7 @@ cli/pty/target/
 
 # Android
 local.properties
+local.properties.*
 .navigation/
 captures/
 *.apk
@@ -59,6 +60,9 @@ scratch/
 maestro-workspace/scratch/
 *.py
 build_output*.txt
+/app_launch_success.png
+/create_session_result.png
+/settings_screen.png
 
 # Secrets
 .env

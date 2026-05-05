@@ -33,13 +33,6 @@ import java.util.concurrent.ConcurrentHashMap
  * Repository for managing Server-Sent Events streaming.
  * Includes automatic reconnection, network state awareness, and DB persistence.
  * Connection lifecycle (HttpClient management) is handled by ConnectionManager.
- * 
- * IMPROVEMENTS:
- * - Background/foreground lifecycle awareness
- * - Adaptive heartbeat based on connection quality
- * - Thread-safe streaming text with Mutex
- * - Event deduplication with TTL
- * - Pause/resume for background optimization
  */
 class EventStreamRepository(
     private val sseClient: MoccaSseClient,

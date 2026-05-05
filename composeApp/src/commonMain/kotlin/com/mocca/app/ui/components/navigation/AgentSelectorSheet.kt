@@ -56,7 +56,6 @@ fun AgentSelectorBottomSheet(
                 .fillMaxWidth()
                 .fillMaxHeight(0.6f)
         ) {
-            // Header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

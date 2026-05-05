@@ -73,7 +73,6 @@ fun ModuleCard(
             )
             // Borderless: using bgRaised for visual separation instead of border
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -168,7 +167,6 @@ fun ModuleRowItem(
             Spacer(modifier = Modifier.width(AppSpacing.md))
         }
 
-        // Text content
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
@@ -189,7 +187,6 @@ fun ModuleRowItem(
             )
         }
 
-        // Toggle switch
         if (showToggle && onToggle != null) {
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             ModernToggle(

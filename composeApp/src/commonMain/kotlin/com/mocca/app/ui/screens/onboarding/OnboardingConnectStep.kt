@@ -67,7 +67,6 @@ internal fun OnboardingConnectStep(
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .imePadding()
     ) {
-        // Header
         Text(
             text = "CONNECT TO MOCCA CLI",
             style = AppTypography.headlineSmall,

@@ -14,7 +14,6 @@ object ChatExporter {
     ): String {
         val builder = StringBuilder()
         
-        // Header
         builder.appendLine("# $sessionTitle")
         builder.appendLine()
         

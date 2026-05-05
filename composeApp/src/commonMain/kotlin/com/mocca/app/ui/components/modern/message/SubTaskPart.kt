@@ -72,7 +72,6 @@ fun ModernSubTaskBlock(part: MessagePart.SubTask) {
             .border(1.dp, statusColor.copy(alpha = 0.5f), AppShapes.medium)
             .background(AppColors.surface, AppShapes.medium)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()

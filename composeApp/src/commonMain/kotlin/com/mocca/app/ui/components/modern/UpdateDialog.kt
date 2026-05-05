@@ -175,7 +175,6 @@ fun UpdateDialog(
                     }
                 }
 
-                // Size
                 Text(
                     text = "Download size: ${updateInfo.size / 1024 / 1024} MB",
                     color = AppColors.outline,

@@ -1,6 +1,6 @@
 # UI & SCREENS KNOWLEDGE BASE
 
-**Updated:** 2026-04-12
+**Updated:** 2026-05-05
 **Scope:** UI screens, screen models, navigation shell
 
 **Relevant Skills:** `taste-skill-compose`, `material3-expressive-compose`, `kotlin-best-practices`
@@ -27,8 +27,13 @@ Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` i
 | Git tools | `git/` | Status + diff workflows |
 | MCP tooling | `mcp/` | MCP status/resources |
 | Onboarding | `onboarding/` | First-run and connection setup |
+| Sessions | `sessions/` | Session components |
 | Settings subtree | `settings/` | Dedicated AGENTS.md there |
+| Terminal | `terminal/` | Terminal session UI |
 | Dashboard panels | `panels/` | Context/history + dashboard modules |
+| Skills | `skills/` | Placeholder (empty) |
+| Workspace | `workspace/` | Placeholder (empty) |
+| Worktree | `worktree/` | Placeholder (empty) |
 
 ## SCREEN LIST
 | Screen | Role |
@@ -41,6 +46,7 @@ Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` i
 | `McpScreen` / `McpResourceScreen` | MCP inspection |
 | `SettingsScreen` / `FeatureFlagsScreen` | Preferences + server-side config |
 | `TerminalScreen` | Terminal session UI |
+| `SessionsScreen` | Session management components |
 
 ## MVI RULES
 - `ScreenModel` owns repository calls, validation, and state transitions
