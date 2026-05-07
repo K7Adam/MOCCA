@@ -1,7 +1,5 @@
 package com.mocca.app.ui.screens.onboarding
 
-import androidx.compose.material3.MaterialTheme
-
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -28,6 +26,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.components.modern.MeshGradientHeroSurface
 import com.mocca.app.ui.components.modern.MoccaButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
@@ -66,40 +65,53 @@ internal fun OnboardingWelcomeStep(
     ) {
         Spacer(modifier = Modifier.weight(0.15f))
 
-        // Hero branding
-        Icon(
-            imageVector = Icons.Default.Terminal,
-            contentDescription = "MOCCA",
-            tint = AppColors.accent,
+        MeshGradientHeroSurface(
             modifier = Modifier
-                .size(72.dp)
-                .alpha(breatheAlpha)
-        )
+                .fillMaxWidth()
+                .padding(top = AppSpacing.sm)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = AppSpacing.xxl, horizontal = AppSpacing.lg),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Hero branding
+                Icon(
+                    imageVector = Icons.Default.Terminal,
+                    contentDescription = "MOCCA",
+                    tint = AppColors.accent,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .alpha(breatheAlpha)
+                )
 
-        Spacer(modifier = Modifier.height(AppSpacing.xl))
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
 
-        Text(
-            text = "MOCCA",
-            style = AppTypography.displayLarge,
-            color = AppColors.onSurface,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures(onLongPress = { onSkip() })
+                Text(
+                    text = "MOCCA",
+                    style = AppTypography.displayLarge,
+                    color = AppColors.onSurface,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { onSkip() })
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+                Text(
+                    text = "Mobile OpenCode Companion App",
+                    style = AppTypography.bodyLarge,
+                    color = AppColors.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onLongPress = { onSkip() })
+                    }
+                )
             }
-        )
-
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-
-        Text(
-            text = "Mobile OpenCode Companion App",
-            style = AppTypography.bodyLarge,
-            color = AppColors.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.pointerInput(Unit) {
-                detectTapGestures(onLongPress = { onSkip() })
-            }
-        )
+        }
 
         Spacer(modifier = Modifier.height(AppSpacing.xxxl))
 
