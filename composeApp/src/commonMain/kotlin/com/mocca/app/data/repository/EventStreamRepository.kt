@@ -33,6 +33,10 @@ import java.util.concurrent.ConcurrentHashMap
  * Repository for managing Server-Sent Events streaming.
  * Includes automatic reconnection, network state awareness, and DB persistence.
  * Connection lifecycle (HttpClient management) is handled by ConnectionManager.
+ *
+ * SINGLE OWNER: This repository is the sole writer of streaming message part deltas
+ * to LocalCache. StateCoordinator and other consumers must NOT double-write the same
+ * delta to prevent duplicate content in the UI.
  */
 class EventStreamRepository(
     private val sseClient: MoccaSseClient,
@@ -888,8 +892,24 @@ class EventStreamRepository(
                             Napier.v(">>> Thinking state updated")
                         }
                     }
+
+                    // Persist reasoning/thinking delta to LocalCache (single-owner path)
+                    if (delta != null && localCache != null) {
+                        repositoryScope.launch {
+                            try {
+                                localCache.updateMessagePart(
+                                    messageId = part.messageID,
+                                    partId = part.id,
+                                    partType = part.type,
+                                    delta = delta
+                                )
+                            } catch (e: Exception) {
+                                Napier.w("Failed to persist reasoning delta", e)
+                            }
+                        }
+                    }
                 }
-                
+
                 // IMPROVED: Thread-safe streaming text handling
                 if (part.type == "text") {
                     // Text part received means thinking is complete

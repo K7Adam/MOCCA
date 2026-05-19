@@ -60,6 +60,8 @@ import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Chat composer content above the persistent navigation row.
@@ -146,7 +148,8 @@ fun ChatInputContent(
         modifier = modifier
             .fillMaxWidth()
             .graphicsLayer { this.alpha = alpha }
-            .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs),
+            .padding(horizontal = AppSpacing.xs, vertical = AppSpacing.xs)
+            .testTag(TestTags.Chat.inputContent),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         ChatInputStatusBar(
@@ -184,7 +187,8 @@ fun ChatInputContent(
                     icon = Icons.Default.Add,
                     contentDescription = "Attach file",
                     onClick = onAttachClick,
-                    enabled = inputEnabled
+                    enabled = inputEnabled,
+                    modifier = Modifier.testTag(TestTags.Chat.attachButton)
                 )
 
                 ChatInputTextFieldArea(
@@ -213,13 +217,14 @@ fun ChatInputContent(
                     contentDescription = if (isVoiceListening) "Stop voice input" else "Start voice input",
                     onClick = onMicClick,
                     enabled = inputEnabled && isVoiceAvailable,
-                    active = isVoiceListening
+                    active = isVoiceListening,
+                    modifier = Modifier.testTag(TestTags.Chat.micButton)
                 )
 
                 if (isSessionIdle) {
-                    ComposerSendButton(canSend = canSend, onClick = onSendClick)
+                    ComposerSendButton(canSend = canSend, onClick = onSendClick, modifier = Modifier.testTag(TestTags.Chat.sendButton))
                 } else {
-                    ComposerAbortButton(onClick = onAbortClick)
+                    ComposerAbortButton(onClick = onAbortClick, modifier = Modifier.testTag(TestTags.Chat.abortButton))
                 }
             }
 
@@ -435,6 +440,7 @@ private fun ComposerIconButton(
     onClick: () -> Unit,
     enabled: Boolean,
     active: Boolean = false,
+    modifier: Modifier = Modifier,
     size: Dp = NavConstants.ActionButtonSize,
     iconSize: Dp = NavConstants.ActionIconSize
 ) {
@@ -450,7 +456,7 @@ private fun ComposerIconButton(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(size)
             .clip(AppShapes.pill)
             .background(containerColor, AppShapes.pill)
@@ -517,7 +523,8 @@ private fun ComposerTextButton(
 @Composable
 private fun ComposerSendButton(
     canSend: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val containerColor by animateColorAsState(
         targetValue = if (canSend) AppColors.primary else AppColors.surfaceContainerHigh.copy(alpha = 0.58f),
@@ -536,7 +543,7 @@ private fun ComposerSendButton(
     )
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(NavConstants.SendButtonHeight)
             .graphicsLayer {
                 scaleX = scale
@@ -561,9 +568,9 @@ private fun ComposerSendButton(
 }
 
 @Composable
-private fun ComposerAbortButton(onClick: () -> Unit) {
+private fun ComposerAbortButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(NavConstants.SendButtonHeight)
             .clip(AppShapes.pill)
             .background(AppColors.error, AppShapes.pill)

@@ -2,6 +2,8 @@
 <paths>
     <!-- External cache directory for downloaded APK files -->
     <external-cache-path name="external_cache_files" path="." />
+    <!-- External files directory for APK downloads -->
+    <external-files-path name="external_files_downloads" path="Download/" />
     <!-- Internal cache directory fallback -->
     <cache-path name="cache_files" path="." />
 </paths>

@@ -34,6 +34,8 @@ import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.util.TimeFormatter
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 import kotlinx.collections.immutable.ImmutableList
 
 class SettingsScreen : Screen {
@@ -51,6 +53,7 @@ class SettingsScreen : Screen {
                 .background(AppColors.background)
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .testTag(TestTags.Settings.screen)
         ) {
             Row(
                 modifier = Modifier
@@ -63,7 +66,8 @@ class SettingsScreen : Screen {
                     icon = Icons.AutoMirrored.Filled.ArrowBack,
                     onClick = { navigator.pop() },
                     iconColor = AppColors.onSurfaceVariant,
-                    contentDescription = "Back"
+                    contentDescription = "Back",
+                    modifier = Modifier.testTag(TestTags.Settings.backButton)
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.md))
                 Text(
@@ -308,6 +312,7 @@ class SettingsScreen : Screen {
                     onDismissRequest = { screenModel.hideClearCacheDialog() },
                     containerColor = AppColors.surfaceContainerHigh,
                     shape = AppShapes.dialog,
+                    modifier = Modifier.testTag(TestTags.Settings.clearCacheDialog),
                     title = {
                         Text(
                             text = "Clear All Cache",
@@ -326,13 +331,15 @@ class SettingsScreen : Screen {
                         MoccaButton(
                             text = "Clear",
                             onClick = { screenModel.confirmClearCache() },
-                            height = AppSpacing.buttonHeightCompact
+                            height = AppSpacing.buttonHeightCompact,
+                            modifier = Modifier.testTag(TestTags.Settings.clearCacheConfirmButton)
                         )
                     },
                     dismissButton = {
                         MoccaTextButton(
                             text = "Cancel",
-                            onClick = { screenModel.hideClearCacheDialog() }
+                            onClick = { screenModel.hideClearCacheDialog() },
+                            modifier = Modifier.testTag(TestTags.Settings.clearCacheCancelButton)
                         )
                     }
                 )
@@ -351,7 +358,7 @@ fun CliConnectionSection(
     onForget: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.cliConnectionSection)) {
         Text(
             text = "MOCCA CLI",
             color = AppColors.onSurfaceVariant,
@@ -398,14 +405,14 @@ fun CliConnectionSection(
                 MoccaButton(
                     text = "Refresh",
                     onClick = onRefreshRuntime,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Settings.refreshButton),
                     height = AppSpacing.buttonHeightCompact
                 )
                 if (uiState.canReconnect) {
                     MoccaOutlinedButton(
                         text = "Reconnect",
                         onClick = onReconnect,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).testTag(TestTags.Settings.reconnectButton)
                     )
                 }
             }
@@ -419,12 +426,12 @@ fun CliConnectionSection(
                     MoccaOutlinedButton(
                         text = "Disconnect",
                         onClick = onDisconnect,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).testTag(TestTags.Settings.disconnectButton)
                     )
                     MoccaOutlinedButton(
                         text = "Forget",
                         onClick = onForget,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f).testTag(TestTags.Settings.forgetButton)
                     )
                 }
             }
@@ -625,7 +632,7 @@ fun AppUpdatesSection(
     onCheckUpdates: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.appUpdatesSection)) {
         Text(
             text = "App Updates",
             color = AppColors.onSurfaceVariant,
@@ -695,7 +702,9 @@ fun AppUpdatesSection(
                 value = tokenInput,
                 onValueChange = { tokenInput = it },
                 label = "GitHub PAT",
-                placeholder = "ghp_... or github_pat_..."
+                placeholder = "ghp_... or github_pat_...",
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                modifier = Modifier.testTag(TestTags.Settings.githubTokenInput)
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -709,7 +718,7 @@ fun AppUpdatesSection(
                     text = "Save",
                     onClick = { onSaveToken(tokenInput) },
                     enabled = tokenInput.isNotBlank() && tokenInput != githubToken && !isValidatingToken,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Settings.saveTokenButton),
                     height = AppSpacing.buttonHeightCompact
                 )
                 
@@ -717,7 +726,7 @@ fun AppUpdatesSection(
                     text = "Validate",
                     onClick = onValidateToken,
                     enabled = githubToken.isNotBlank() && !isValidatingToken && !isLoading,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Settings.validateTokenButton),
                     height = AppSpacing.buttonHeightCompact
                 )
                 
@@ -725,7 +734,7 @@ fun AppUpdatesSection(
                     text = "Check Updates",
                     onClick = onCheckUpdates,
                     enabled = !isLoading && !isValidatingToken,
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.weight(1.2f).testTag(TestTags.Settings.checkUpdatesButton),
                     height = AppSpacing.buttonHeightCompact
                 )
             }
@@ -1039,7 +1048,7 @@ fun ProjectSection(
     onSaveProjectPath: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.projectSection)) {
         Text(
             text = "Project",
             color = AppColors.onSurfaceVariant,
@@ -1069,7 +1078,7 @@ fun ProjectSection(
                     value = editingProjectPath,
                     onValueChange = onSetEditingProjectPath,
                     placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.outline) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag(TestTags.Settings.projectPathInput),
                     singleLine = true,
                     textStyle = AppTypography.bodySmall.copy(color = AppColors.onSurface),
                     keyboardOptions = KeyboardOptions(
@@ -1094,7 +1103,8 @@ fun ProjectSection(
                     onClick = onSaveProjectPath,
                     enabled = editingProjectPath.isNotBlank() &&
                         editingProjectPath != (currentProject.path ?: currentProject.directory ?: ""),
-                    height = AppSpacing.buttonHeightSmall
+                    height = AppSpacing.buttonHeightSmall,
+                    modifier = Modifier.testTag(TestTags.Settings.updatePathButton)
                 )
             }
         }
@@ -1115,7 +1125,7 @@ fun ProviderAuthSection(
 ) {
     val commonProviders = listOf("anthropic", "openai", "github")
     
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.providerAuthSection)) {
         Text(
             text = "Provider Authentication",
             color = AppColors.onSurfaceVariant,
@@ -1172,7 +1182,7 @@ fun ProviderAuthSection(
                                             openUrl(url)
                                         }
                                     },
-                                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag(TestTags.Settings.projectPathInput),
                                     height = AppSpacing.buttonHeightCompact
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.sm))

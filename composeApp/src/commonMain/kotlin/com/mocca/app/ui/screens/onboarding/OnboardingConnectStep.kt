@@ -42,6 +42,8 @@ import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Connect step — MOCCA CLI bridge pairing only.
@@ -66,6 +68,7 @@ internal fun OnboardingConnectStep(
             .fillMaxSize()
             .padding(horizontal = AppSpacing.screenPaddingHorizontal)
             .imePadding()
+            .testTag(TestTags.Onboarding.connectStep)
     ) {
         Text(
             text = "CONNECT TO MOCCA CLI",
@@ -128,7 +131,7 @@ internal fun OnboardingConnectStep(
                         onValueChange = onBridgePairingPayloadChange,
                         label = "Pairing link",
                         placeholder = "mocca://bridge/connect?...",
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().testTag(TestTags.Onboarding.pairingLinkInput)
                     )
 
                     AnimatedVisibility(
@@ -151,14 +154,14 @@ internal fun OnboardingConnectStep(
                                     enabled = true,
                                     onPayloadScanned = onBridgePairingPayloadScanned,
                                     onError = onBridgePairingError,
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag(TestTags.Onboarding.qrScanButton)
                                 )
                                 MoccaButton(
                                     text = "Connect",
                                     icon = if (bridgePairingPayload.isBlank()) Icons.Default.Link else Icons.Default.PlayArrow,
                                     onClick = onBridgePairingConnect,
                                     enabled = bridgePairingPayload.isNotBlank(),
-                                    modifier = Modifier.fillMaxWidth()
+                                    modifier = Modifier.fillMaxWidth().testTag(TestTags.Onboarding.connectButton)
                                 )
                             }
                         } else {
@@ -170,14 +173,14 @@ internal fun OnboardingConnectStep(
                                     enabled = true,
                                     onPayloadScanned = onBridgePairingPayloadScanned,
                                     onError = onBridgePairingError,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f).testTag(TestTags.Onboarding.qrScanButton)
                                 )
                                 MoccaButton(
                                     text = "Connect",
                                     icon = if (bridgePairingPayload.isBlank()) Icons.Default.Link else Icons.Default.PlayArrow,
                                     onClick = onBridgePairingConnect,
                                     enabled = bridgePairingPayload.isNotBlank(),
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f).testTag(TestTags.Onboarding.connectButton)
                                 )
                             }
                         }
@@ -209,6 +212,7 @@ internal fun OnboardingConnectStep(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = AppSpacing.lg)
+                .testTag(TestTags.Onboarding.backButton)
         )
     }
 }

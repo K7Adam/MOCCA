@@ -33,6 +33,8 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * The text input field area for ChatInputContent, including the BasicTextField
@@ -84,7 +86,8 @@ internal fun ChatInputTextFieldArea(
                         }
                         true
                     }
-                },
+                }
+                .testTag(TestTags.Chat.inputTextField),
             enabled = inputEnabled,
             textStyle = AppTypography.bodyMedium.copy(color = AppColors.onSurface),
             cursorBrush = SolidColor(AppColors.primary),

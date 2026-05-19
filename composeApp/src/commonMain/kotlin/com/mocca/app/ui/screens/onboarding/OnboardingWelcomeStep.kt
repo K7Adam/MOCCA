@@ -33,6 +33,8 @@ import com.mocca.app.ui.theme.AppSpacing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Welcome step — app branding, setup checklist, and continue button.
@@ -60,7 +62,8 @@ internal fun OnboardingWelcomeStep(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(horizontal = AppSpacing.screenPaddingHorizontal),
+            .padding(horizontal = AppSpacing.screenPaddingHorizontal)
+            .testTag(TestTags.Onboarding.welcomeScreen),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.weight(0.15f))
@@ -130,7 +133,7 @@ internal fun OnboardingWelcomeStep(
             MoccaButton(
                 text = "Get Started",
                 onClick = onContinue,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().testTag(TestTags.Onboarding.getStartedButton)
             )
 
             Text(

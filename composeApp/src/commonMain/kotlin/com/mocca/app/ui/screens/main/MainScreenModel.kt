@@ -7,6 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import com.mocca.app.data.repository.AiChatGateway
 import com.mocca.app.data.repository.AppStateStore
 import com.mocca.app.data.repository.AiRuntimeConfigRepository
 import com.mocca.app.data.repository.ChatStateStore
@@ -151,7 +152,8 @@ class MainScreenModel(
     private val updateRepository: UpdateRepository,
     private val updateNotifier: UpdateNotifier,
     private val updateCheckScheduler: UpdateCheckScheduler,
-    private val appVersionProvider: AppVersionProvider
+    private val appVersionProvider: AppVersionProvider,
+    private val aiChatGateway: AiChatGateway
 ) : ScreenModel {
 
     private var fileSearchJob: Job? = null
@@ -842,12 +844,23 @@ class MainScreenModel(
         _state.update { it.copy(isSending = true) }
         
         screenModelScope.launch {
-            sessionRepository.sendMessageAsync(sessionId, text).fold(
+            val selection = try {
+                aiRuntimeConfigRepository.requireEffectiveSelection()
+            } catch (error: Exception) {
+                _state.update { it.copy(isSending = false, error = error.message ?: "No valid AI model is selected") }
+                return@launch
+            }
+
+            aiChatGateway.sendMessage(
+                sessionId = sessionId,
+                text = text,
+                selection = selection
+            ).fold(
                 onSuccess = {
                     _state.update { it.copy(isSending = false) }
                 },
                 onFailure = { error ->
-                    _state.update { 
+                    _state.update {
                         it.copy(
                             isSending = false,
                             error = error.message

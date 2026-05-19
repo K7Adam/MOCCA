@@ -30,6 +30,8 @@ import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 // QUICK MODULE PREVIEWS (for specific module types)
 
@@ -46,7 +48,7 @@ fun McpConfigModule(
 ) {
     ModuleCard(
         title = "MCP CONFIG",
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.Dashboard.mcpNav),
         actionButton = {
             ModuleActionButton(
                 text = "JSON CONFIG",
@@ -100,7 +102,7 @@ fun GitStatusModule(
             interactionSource = remember { MutableInteractionSource() },
             rippleColor = Color.White.copy(alpha = 0.1f),
             pressedScale = 0.99f
-        ),
+        ).testTag(TestTags.Dashboard.gitNav),
         actionButton = {
             MoccaIconButton(
                 icon = Icons.Default.ChevronRight,

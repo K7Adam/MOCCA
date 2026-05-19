@@ -1,12 +1,14 @@
 package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
+import com.mocca.app.data.security.SecureTokenStorage
 import com.mocca.app.domain.model.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class SettingsRepository(
-    private val localCache: LocalCache
+    private val localCache: LocalCache,
+    private val secureTokenStorage: SecureTokenStorage
 ) {
     companion object {
         // Session State
@@ -60,15 +62,20 @@ class SettingsRepository(
         }
     }
 
-    // GitHub Token
+    // GitHub Token — stored encrypted via SecureTokenStorage
     suspend fun getGitHubToken(): String? = withContext(Dispatchers.IO) {
-        // TEMPORARY: Hardcoded GitHub PAT for auto-update
-        // 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
         val stored = localCache.getSetting(KEY_GITHUB_TOKEN)
-        if (stored.isNullOrBlank()) {
-            "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"
-        } else {
-            stored
+        when {
+            stored.isNullOrBlank() -> null
+            secureTokenStorage.isEncrypted(stored) -> {
+                secureTokenStorage.decrypt(stored)
+            }
+            else -> {
+                // Backward compatibility: migrate plaintext token to encrypted storage
+                val encrypted = secureTokenStorage.encrypt(stored)
+                localCache.saveSetting(KEY_GITHUB_TOKEN, encrypted)
+                stored
+            }
         }
     }
 
@@ -76,7 +83,8 @@ class SettingsRepository(
         if (token.isBlank()) {
             localCache.deleteSetting(KEY_GITHUB_TOKEN)
         } else {
-            localCache.saveSetting(KEY_GITHUB_TOKEN, token)
+            val encrypted = secureTokenStorage.encrypt(token)
+            localCache.saveSetting(KEY_GITHUB_TOKEN, encrypted)
         }
     }
 

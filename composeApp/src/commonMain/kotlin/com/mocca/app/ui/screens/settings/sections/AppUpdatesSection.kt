@@ -16,6 +16,8 @@ import com.mocca.app.ui.components.modern.ModuleCard
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Settings section: App updates
@@ -34,7 +36,7 @@ fun AppUpdatesSection(
     onCheckUpdates: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.appUpdatesSection)) {
         Text(
             text = "App updates",
             color = AppColors.onSurfaceVariant,
@@ -104,7 +106,9 @@ fun AppUpdatesSection(
                 value = tokenInput,
                 onValueChange = { tokenInput = it },
                 label = "GitHub PAT",
-                placeholder = "ghp_... or github_pat_..."
+                placeholder = "ghp_... or github_pat_...",
+                visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                modifier = Modifier.testTag(TestTags.Settings.githubTokenInput)
             )
             
             Spacer(modifier = Modifier.height(AppSpacing.md))
@@ -134,7 +138,7 @@ fun AppUpdatesSection(
                     text = "Check updates",
                     onClick = onCheckUpdates,
                     enabled = !isLoading && !isValidatingToken,
-                    modifier = Modifier.weight(1.2f),
+                    modifier = Modifier.weight(1.2f).testTag(TestTags.Update.checkUpdatesButton),
                     height = AppSpacing.buttonHeightCompact
                 )
             }

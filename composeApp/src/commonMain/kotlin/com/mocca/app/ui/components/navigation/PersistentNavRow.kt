@@ -52,12 +52,14 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.TestTags
 import com.mocca.app.ui.navigation.PanelState
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.LocalAppPerformance
 import com.mocca.app.ui.theme.moccaClickable
+import androidx.compose.ui.platform.testTag
 import kotlin.math.abs
 
 /**
@@ -102,7 +104,8 @@ fun PersistentNavRow(
                 .weight(1f)
                 .onSizeChanged { size ->
                     rowWidthPx = size.width.toFloat()
-                },
+                }
+                .testTag(TestTags.Dashboard.navigationRow),
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEachIndexed { index, item ->
@@ -123,7 +126,15 @@ fun PersistentNavRow(
                         .semantics {
                             role = Role.Tab
                             selected = isSelected
-                        },
+                        }
+                        .testTag(
+                            when (item.label) {
+                                "Sessions" -> TestTags.Dashboard.sessionsTab
+                                "Chat" -> TestTags.Dashboard.chatTab
+                                "Tools" -> TestTags.Dashboard.toolsTab
+                                else -> "dashboard_${item.label.lowercase()}_tab"
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     PersistentNavItem(

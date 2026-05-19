@@ -14,6 +14,8 @@ import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.mocca.app.ui.components.modern.MoccaOutlinedButton
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 @Composable
 internal actual fun BridgeQrScanButton(
@@ -36,7 +38,7 @@ internal actual fun BridgeQrScanButton(
         text = if (isScanning) "Scanning..." else "Scan QR",
         icon = Icons.Default.QrCodeScanner,
         enabled = enabled && !isScanning,
-        modifier = modifier,
+        modifier = modifier.testTag(TestTags.Onboarding.qrScanButton),
         onClick = {
             if (isScanning) return@MoccaOutlinedButton
             isScanning = true

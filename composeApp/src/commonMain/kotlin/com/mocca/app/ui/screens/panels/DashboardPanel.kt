@@ -38,6 +38,8 @@ import com.mocca.app.ui.navigation.LocalNavAnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.ui.text.font.FontWeight
 import com.mocca.app.ui.theme.AppTypography
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Right swipe panel: Modular tools dashboard.
@@ -194,7 +196,7 @@ fun DashboardPanel(
                     text = "Settings",
                     icon = Icons.Default.Settings,
                     onClick = onSettingsClick,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Dashboard.settingsNav),
                     textColor = AppColors.onSurface,
                     backgroundColor = AppColors.surfaceContainerHigh
                 )
@@ -202,7 +204,7 @@ fun DashboardPanel(
                     text = "Files",
                     icon = Icons.Default.Folder,
                     onClick = onFilesClick,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Dashboard.filesNav),
                     textColor = AppColors.onSurface,
                     backgroundColor = AppColors.surfaceContainerHigh
                 )
@@ -210,7 +212,7 @@ fun DashboardPanel(
                     text = "Terminal",
                     icon = Icons.Default.Terminal,
                     onClick = onTerminalClick,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).testTag(TestTags.Dashboard.terminalNav),
                     textColor = AppColors.primary,
                     backgroundColor = AppColors.surfaceContainerHigh
                 )

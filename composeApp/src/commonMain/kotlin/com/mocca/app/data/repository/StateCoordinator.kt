@@ -512,20 +512,12 @@ class StateCoordinator(
                     }
                 }
                 
-                // Cache persistence
-                coordinatorScope.launch(Dispatchers.IO) {
-                    try {
-                        localCache.updateMessagePart(
-                            messageId = part.messageID,
-                            partId = part.id,
-                            partType = part.type,
-                            content = part.text,
-                            delta = delta
-                        )
-                    } catch (e: Exception) {
-                        Napier.w("Failed to update message part", e)
-                    }
-                }
+                // STREAMING DELTA OWNERSHIP: EventStreamRepository is the single writer of
+                // message part deltas to LocalCache. Do NOT add localCache.updateMessagePart()
+                // here; that would double-write the same token and produce duplicate text in
+                // the UI. StateCoordinator broadcasts the event to stores; persistence lives in
+                // EventStreamRepository.handleEvent() and its throttled delta flush.
+                // See AGENTS.md 'Double Delta Writes' anti-pattern.
             }
             is ServerEvent.MessagePartDelta -> {
                 // Deltas are reduced and persisted in EventStreamRepository so a token is not appended twice.

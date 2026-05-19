@@ -95,7 +95,7 @@ val commonModule = module {
     }
     single { GitRepository(get(), get()) }
     single { McpRepository(get()) }
-    singleOf(::SettingsRepository)
+    single { SettingsRepository(get(), get()) }
     singleOf(::PreferencesManager)
     single { ConfigRepository(get()) }
     singleOf(::UpdateRepository)
@@ -319,7 +319,8 @@ val screenModelModule = module {
             updateRepository = get(),
             updateNotifier = get(),
             updateCheckScheduler = get(),
-            appVersionProvider = get()
+            appVersionProvider = get(),
+            aiChatGateway = get()
         )
     }
     

@@ -19,11 +19,13 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.UpdateInfo
+import com.mocca.app.ui.TestTags
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
+import androidx.compose.ui.platform.testTag
 
 @Composable
 fun UpdateDialog(
@@ -40,7 +42,8 @@ fun UpdateDialog(
     val clipboardManager = LocalClipboardManager.current
 
     BasicAlertDialog(
-        onDismissRequest = { if (!isDownloading) onDismiss() }
+        onDismissRequest = { if (!isDownloading) onDismiss() },
+        modifier = Modifier.testTag(TestTags.Update.dialog)
     ) {
         Column(
             modifier = Modifier
@@ -222,14 +225,14 @@ fun UpdateDialog(
                         MoccaOutlinedButton(
                             text = "Dismiss",
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag(TestTags.Update.dismissButton),
                             height = AppSpacing.buttonHeightCompact
                         )
                         if (onRetry != null) {
                             MoccaButton(
                                 text = "Retry",
                                 onClick = onRetry,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).testTag(TestTags.Update.retryButton),
                                 height = AppSpacing.buttonHeightCompact
                             )
                         }
@@ -245,13 +248,13 @@ fun UpdateDialog(
                         MoccaOutlinedButton(
                             text = "Later",
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag(TestTags.Update.laterButton),
                             height = AppSpacing.buttonHeightCompact
                         )
                         MoccaButton(
                             text = "Download & Install",
                             onClick = onUpdate,
-                            modifier = Modifier.weight(1f),
+                            modifier = Modifier.weight(1f).testTag(TestTags.Update.downloadButton),
                             height = AppSpacing.buttonHeightCompact,
                             showArrow = true
                         )
