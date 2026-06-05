@@ -1,6 +1,10 @@
 package com.mocca.app.data.repository
 
 import com.mocca.app.api.MoccaApiClient
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
+import com.mocca.app.bridge.opencode.BridgeFeatureUnavailableException
+import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
 import com.mocca.app.domain.model.Resource
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
@@ -144,7 +148,8 @@ data class ToolCapabilities(
  * Reference: OPENCODE_API_ANALYSIS.md
  */
 class ToolRepository(
-    private val apiClient: MoccaApiClient
+    private val apiClient: MoccaApiClient,
+    private val bridgeConnectionManager: BridgeConnectionManager
 ) {
     private val TAG = "ToolRepository"
     
@@ -216,7 +221,29 @@ class ToolRepository(
      */
     fun getToolsByCategory(): Flow<Resource<Map<ToolCategory, List<ToolInfo>>>> = flow {
         emit(Resource.Loading())
-        
+
+        // Try bridge-first
+        val bridgeStatus = bridgeConnectionManager.status.value
+        if (bridgeStatus is BridgeConnectionStatus.Connected) {
+            try {
+                val client = bridgeConnectionManager.client.value
+                    ?: throw BridgeFeatureUnavailableException("MOCCA CLI connection")
+                if ("tools" in bridgeStatus.capabilities.namespaces || bridgeStatus.capabilities.ai.configNormalized) {
+                    Napier.d("[ToolRepository] Tools available via bridge config")
+                    // Use bridge config snapshot for tool info
+                    val config = OpenCodeBridgeRepository(client).fetchOpenCodeConfigSnapshot()
+                    val toolIds = config.effective.tools.keys.toList()
+                    val toolInfoList = updateToolCache(toolIds)
+                    val grouped = toolInfoList.groupBy { it.category }
+                        .toSortedMap(compareBy { it.ordinal })
+                    emit(Resource.Success(grouped))
+                    return@flow
+                }
+            } catch (e: Exception) {
+                Napier.w("[ToolRepository] Bridge failed, HTTP fallback", e)
+            }
+        }
+
         apiClient.getToolIds().fold(
             onSuccess = { toolIds ->
                 val toolInfoList = updateToolCache(toolIds)
