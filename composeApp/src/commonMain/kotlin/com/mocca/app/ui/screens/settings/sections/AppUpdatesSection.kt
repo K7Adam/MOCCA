@@ -20,9 +20,11 @@ import com.mocca.app.ui.TestTags
 import androidx.compose.ui.platform.testTag
 
 /**
- * Settings section: App updates
- * 
- * GitHub auto-update configuration (PAT management, token validation, update checks).
+ * Settings section: MOCCA APK updates
+ *
+ * GitHub Personal Access Token management for in-app update checks.
+ * The token is stored on this device only and used exclusively for fetching
+ * MOCCA APK releases from GitHub.
  */
 @Composable
 fun AppUpdatesSection(
@@ -38,7 +40,7 @@ fun AppUpdatesSection(
 ) {
     Column(modifier = modifier.testTag(TestTags.Settings.appUpdatesSection)) {
         Text(
-            text = "App updates",
+            text = "MOCCA APK updates",
             color = AppColors.onSurfaceVariant,
             style = AppTypography.labelSmall
         )
@@ -93,7 +95,7 @@ fun AppUpdatesSection(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             
             Text(
-                text = "GitHub Personal Access Token for update checks. Required for private repos and higher rate limits.",
+                text = "Enter a GitHub Personal Access Token to enable in-app APK update checks. The token is stored securely on this device and used only for MOCCA update downloads from GitHub.",
                 color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )

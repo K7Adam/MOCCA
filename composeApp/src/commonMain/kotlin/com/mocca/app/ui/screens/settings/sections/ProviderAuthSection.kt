@@ -22,10 +22,10 @@ import com.mocca.app.ui.theme.AppTypography
 import kotlinx.collections.immutable.ImmutableList
 
 /**
- * Settings section: Provider authentication
- * 
- * Expandable provider cards for configuring OAuth or manual API keys
- * for common providers (anthropic, openai, github).
+ * Settings section: Server-side provider credentials
+ *
+ * Expandable provider cards for managing LLM provider API keys via OpenCode.
+ * Credentials are sent to the connected OpenCode server — they are not stored locally.
  */
 @Composable
 fun ProviderAuthSection(
@@ -43,8 +43,15 @@ fun ProviderAuthSection(
     
     Column(modifier = modifier) {
         Text(
-            text = "Provider authentication",
+            text = "Server-side provider auth",
             color = AppColors.onSurfaceVariant,
+            style = AppTypography.labelSmall
+        )
+        
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
+        Text(
+            text = "Provider API keys are managed by OpenCode on your server. Adding credentials here sends them to the connected OpenCode server for LLM provider access.",
+            color = AppColors.outline,
             style = AppTypography.labelSmall
         )
         
