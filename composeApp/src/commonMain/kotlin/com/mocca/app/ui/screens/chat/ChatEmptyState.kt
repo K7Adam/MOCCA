@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 
 @Composable
@@ -30,17 +31,17 @@ internal fun EmptySessionState() {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 48.dp)
+            modifier = Modifier.padding(horizontal = AppSpacing.xxxl)
         ) {
             ModernBootSequence()
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xl))
             Text(
                 text = "Mocca AI v2",
                 style = AppTypography.headlineMedium,
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
                 text = "System ready // Select model",
                 style = AppTypography.labelExtraSmall,

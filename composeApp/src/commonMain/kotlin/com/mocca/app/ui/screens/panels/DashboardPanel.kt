@@ -88,7 +88,7 @@ fun DashboardPanel(
                 icon = {
                     Box(
                         modifier = Modifier
-                            .size(48.dp)
+                            .size(AppSpacing.xxxl)
                             .clip(AppShapes.medium)
                             .background(AppColors.surfaceContainer, AppShapes.medium)
                             .border(AppSpacing.borderThin, AppColors.outline, AppShapes.medium),
@@ -98,7 +98,7 @@ fun DashboardPanel(
                             imageVector = Icons.Default.GridView,
                             contentDescription = null,
                             tint = AppColors.onSurface,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeLarge)
                         )
                     }
                 }
@@ -233,7 +233,7 @@ private fun WorkspaceModule(
     val currentId = (currentProject as? Resource.Success)?.data?.id
     
     ModuleCard(title = "Workspace") {
-        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(AppSpacing.md)) {
             // Projects
             when (projects) {
                 is Resource.Loading -> Text("Bootstrapping workspace...", color = AppColors.outline, style = AppTypography.labelMedium)
@@ -242,7 +242,7 @@ private fun WorkspaceModule(
                     if (active != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             StatusDot(color = AppColors.primary)
-                            Spacer(Modifier.width(8.dp))
+                            Spacer(Modifier.width(AppSpacing.sm))
                             Column {
                                 Text(active.displayName.uppercase(), color = AppColors.onSurface, style = AppTypography.labelLarge, fontWeight = FontWeight.Black)
                                 Text(active.path ?: active.directory ?: "/", color = AppColors.onSurfaceVariant, style = AppTypography.labelSmall)
@@ -290,7 +290,7 @@ private fun CapabilitiesModule(
             // Tools Column
             Column(modifier = Modifier.weight(1f)) {
                 Text("Integrated tools", color = AppColors.outline, style = AppTypography.labelSmall)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(AppSpacing.xs))
                 when (tools) {
                     is Resource.Loading -> Text("Scanning...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {
@@ -307,7 +307,7 @@ private fun CapabilitiesModule(
             // Commands Column
             Column(modifier = Modifier.weight(1f)) {
                 Text("Slash commands", color = AppColors.outline, style = AppTypography.labelSmall)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(AppSpacing.xs))
                 when (commands) {
                     is Resource.Loading -> Text("Scanning...", color = AppColors.onSurfaceVariant, style = AppTypography.bodySmall)
                     is Resource.Success -> {

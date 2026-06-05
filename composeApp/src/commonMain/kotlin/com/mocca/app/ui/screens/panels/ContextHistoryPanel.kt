@@ -281,7 +281,40 @@ private fun ConversationHistorySection(
                 onRefresh = onRefresh,
                 modifier = Modifier.fillMaxSize()
             ) {
-            if (useGroupedView) {
+            val isEmpty = !useGroupedView && sessions.isEmpty()
+            if (isEmpty) {
+                // Empty state: no sessions yet
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(AppSpacing.xl),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "[ ]",
+                            style = AppTypography.displayLarge,
+                            color = AppColors.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.lg))
+                        Text(
+                            text = "NO SESSIONS YET",
+                            style = AppTypography.headlineSmall,
+                            color = AppColors.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        Text(
+                            text = "Start a new conversation to begin",
+                            style = AppTypography.bodyMedium,
+                            color = AppColors.onSurfaceVariant
+                        )
+                    }
+                }
+            } else if (useGroupedView) {
                 val groupedByDate = remember(sessionGroups) { groupSessionGroupsByDate(sessionGroups) }
                 val dateGroups = remember(groupedByDate) { groupedByDate.keys.toList() }
 
@@ -314,8 +347,8 @@ private fun ConversationHistorySection(
                             )
                         }
                     }
-            }
-} else {
+                }
+            } else {
                 // Flat session view with date grouping (fallback)
                 val groupedByDate = remember(sessions) { groupSessionsByDate(sessions) }
                 val dateGroups = remember(groupedByDate) { groupedByDate.keys.toList() }
