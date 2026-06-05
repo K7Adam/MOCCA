@@ -6,10 +6,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.mocca.app.domain.model.UserPreferences
 import com.mocca.app.ui.components.modern.MoccaOutlinedButton
 import com.mocca.app.ui.components.modern.ModuleCard
-import com.mocca.app.ui.components.modern.ModuleRowItem
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
@@ -17,14 +15,11 @@ import com.mocca.app.ui.theme.AppTypography
 /**
  * Settings section: Privacy & Security
  * 
- * Security preferences (screen security, clear cache on exit),
- * data management actions (clear cache, reset preferences).
+ * Data management actions (clear cache, reset preferences).
+ * Security toggles (screen security, clear cache on exit) were removed as dead fields.
  */
 @Composable
 fun PrivacySecuritySection(
-    preferences: UserPreferences,
-    onSetScreenSecurity: (Boolean) -> Unit,
-    onSetClearCacheOnExit: (Boolean) -> Unit,
     onShowClearCacheDialog: () -> Unit,
     onResetPreferences: () -> Unit,
     modifier: Modifier = Modifier
@@ -37,28 +32,6 @@ fun PrivacySecuritySection(
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        ModuleCard(title = "Security") {
-            // Screen Security
-            ModuleRowItem(
-                title = "Screen security",
-                subtitle = "Prevent screenshots",
-                isEnabled = preferences.screenSecurity,
-                onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Clear Cache on Exit
-            ModuleRowItem(
-                title = "Clear cache on exit",
-                subtitle = "Remove local data when app closes",
-                isEnabled = preferences.clearCacheOnExit,
-                onToggle = { onSetClearCacheOnExit(!preferences.clearCacheOnExit) }
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Data Management
         ModuleCard(title = "Data") {

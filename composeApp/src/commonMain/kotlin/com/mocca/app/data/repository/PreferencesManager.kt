@@ -93,30 +93,6 @@ class PreferencesManager(
     /** Whether to show timestamps in chat */
     val showTimestamps: Boolean get() = _preferences.value.showTimestamps
     
-    /** Whether compact mode is enabled */
-    val compactMode: Boolean get() = _preferences.value.compactMode
-    
-    /** Current font scale */
-    val fontScale: Float get() = _preferences.value.validFontScale
-    
-    /** Whether to hide API keys */
-    val hideApiKeys: Boolean get() = _preferences.value.hideApiKeys
-    
-    /** Whether auto-scroll is enabled */
-    val autoScroll: Boolean get() = _preferences.value.autoScroll
-    
-    /** Whether confirm before delete is enabled */
-    val confirmDelete: Boolean get() = _preferences.value.confirmDelete
-    
-    /** Whether to show thinking blocks */
-    val showThinkingBlocks: Boolean get() = _preferences.value.showThinkingBlocks
-    
-    /** Whether auto-reconnect is enabled */
-    val autoReconnect: Boolean get() = _preferences.value.autoReconnect
-    
-    /** Whether data saver mode is enabled */
-    val dataSaverMode: Boolean get() = _preferences.value.dataSaverMode
-    
     /** Whether permission notifications are enabled */
     val notifyPermissions: Boolean get() = _preferences.value.notifyPermissions
     
@@ -125,12 +101,6 @@ class PreferencesManager(
     
     /** Whether connection lost notifications are enabled */
     val notifyConnectionLost: Boolean get() = _preferences.value.notifyConnectionLost
-    
-    /** Whether screen security is enabled */
-    val screenSecurity: Boolean get() = _preferences.value.screenSecurity
-    
-    /** Whether to clear cache on exit */
-    val clearCacheOnExit: Boolean get() = _preferences.value.clearCacheOnExit
     
     /** Auto-update check interval in minutes (0 = disabled) */
     val autoUpdateCheckIntervalMinutes: Int get() = _preferences.value.autoUpdateCheckIntervalMinutes

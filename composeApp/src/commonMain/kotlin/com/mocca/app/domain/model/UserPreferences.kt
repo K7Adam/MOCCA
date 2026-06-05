@@ -21,32 +21,8 @@ data class UserPreferences(
     /** Show timestamps on chat messages */
     val showTimestamps: Boolean = true,
     
-    /** Use compact layout (reduced padding for information density) */
-    val compactMode: Boolean = false,
-    
-    /** Font scale multiplier (0.8f to 1.4f) */
-    val fontScale: Float = 1.0f,
-    
-    /** Hide/mask API keys in settings UI for security */
-    val hideApiKeys: Boolean = true,
-    
     /** Code font family key — matches a curated list in AppTypography */
     val codeFontFamily: String = DEFAULT_CODE_FONT,
-
-    /** Auto-scroll to bottom when new messages arrive */
-    val autoScroll: Boolean = true,
-    
-    /** Show confirmation dialog before deleting sessions */
-    val confirmDelete: Boolean = true,
-    
-    /** Show AI thinking/reasoning blocks in messages */
-    val showThinkingBlocks: Boolean = true,
-
-    /** Automatically reconnect when connection is lost */
-    val autoReconnect: Boolean = true,
-    
-    /** Data saver mode - reduce network usage (disable background sync) */
-    val dataSaverMode: Boolean = false,
 
     /** Show notification when permission approval is required */
     val notifyPermissions: Boolean = true,
@@ -57,19 +33,9 @@ data class UserPreferences(
     /** Show notification when connection to server is lost */
     val notifyConnectionLost: Boolean = true,
 
-    /** Enable screen security (prevent screenshots) */
-    val screenSecurity: Boolean = false,
-    
-    /** Clear local cache when app exits */
-    val clearCacheOnExit: Boolean = false,
-
     /** Auto-check for app updates interval in minutes (0 = disabled, default 10 min) */
     val autoUpdateCheckIntervalMinutes: Int = 10
 ) {
-    val validFontScale: Float get() = fontScale.coerceIn(0.8f, 1.4f)
-    
-    val fontScalePercent: Int get() = (validFontScale * 100).toInt()
-    
     companion object {
         /** Default code font identifier */
         const val DEFAULT_CODE_FONT = "jetbrains_mono"
@@ -85,9 +51,6 @@ data class UserPreferences(
         /** Default preferences */
         val DEFAULT = UserPreferences()
         
-        /** Valid font scale range */
-        val FONT_SCALE_RANGE = 0.8f..1.4f
-        
         /** Valid auto-update check interval range in minutes (0 = disabled, max = 60) */
         val AUTO_UPDATE_INTERVAL_RANGE = 0..60
         
@@ -99,17 +62,6 @@ data class UserPreferences(
             15 to "15 minutes",
             30 to "30 minutes",
             60 to "1 hour"
-        )
-        
-        /** Font scale presets */
-        val FONT_SCALE_PRESETS = listOf(
-            0.8f to "Small",
-            0.9f to "Medium-Small",
-            1.0f to "Default",
-            1.1f to "Medium-Large",
-            1.2f to "Large",
-            1.3f to "Extra Large",
-            1.4f to "Maximum"
         )
     }
 }

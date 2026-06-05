@@ -221,22 +221,6 @@ class SettingsScreen : Screen {
                     }
                 }
                 
-                // Connection Section
-                item {
-                    Box(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                        )
-                    ) {
-                        ConnectionSection(
-                            preferences = state.preferences,
-                            onSetAutoReconnect = { screenModel.setAutoReconnect(it) },
-                            onSetDataSaverMode = { screenModel.setDataSaverMode(it) }
-                        )
-                    }
-                }
-                
                 // Privacy & Security Section
                 item {
                     Box(
@@ -246,9 +230,6 @@ class SettingsScreen : Screen {
                         )
                     ) {
                         PrivacySecuritySection(
-                            preferences = state.preferences,
-                            onSetScreenSecurity = { screenModel.setScreenSecurity(it) },
-                            onSetClearCacheOnExit = { screenModel.setClearCacheOnExit(it) },
                             onShowClearCacheDialog = { screenModel.showClearCacheDialog() },
                             onResetPreferences = { screenModel.resetPreferencesToDefaults() }
                         )
@@ -751,101 +732,6 @@ fun AppUpdatesSection(
 }
 
 @Composable
-fun ChatSection(
-    preferences: UserPreferences,
-    onSetAutoScroll: (Boolean) -> Unit,
-    onSetConfirmDelete: (Boolean) -> Unit,
-    onSetShowThinkingBlocks: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Chat",
-            color = AppColors.onSurfaceVariant,
-            style = AppTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        SettingsCard(title = "Messaging") {
-            // Auto Scroll
-            SettingsRowItem(
-                title = "Auto Scroll",
-                subtitle = "Scroll to bottom on new messages",
-                isEnabled = preferences.autoScroll,
-                onToggle = { onSetAutoScroll(!preferences.autoScroll) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Confirm Delete
-            SettingsRowItem(
-                title = "Confirm Delete",
-                subtitle = "Ask before deleting sessions",
-                isEnabled = preferences.confirmDelete,
-                onToggle = { onSetConfirmDelete(!preferences.confirmDelete) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Show Thinking Blocks
-            SettingsRowItem(
-                title = "Show Thinking",
-                subtitle = "Display AI reasoning blocks",
-                isEnabled = preferences.showThinkingBlocks,
-                onToggle = { onSetShowThinkingBlocks(!preferences.showThinkingBlocks) }
-            )
-        }
-    }
-}
-
-@Composable
-fun ConnectionSection(
-    preferences: UserPreferences,
-    onSetAutoReconnect: (Boolean) -> Unit,
-    onSetDataSaverMode: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(modifier = modifier) {
-        Text(
-            text = "Connection",
-            color = AppColors.onSurfaceVariant,
-            style = AppTypography.labelSmall
-        )
-        
-        Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        SettingsCard(title = "Network") {
-            // Auto Reconnect
-            SettingsRowItem(
-                title = "Auto Reconnect",
-                subtitle = "Reconnect when connection drops",
-                isEnabled = preferences.autoReconnect,
-                onToggle = { onSetAutoReconnect(!preferences.autoReconnect) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Data Saver Mode
-            SettingsRowItem(
-                title = "Data Saver",
-                subtitle = "Reduce background network usage",
-                isEnabled = preferences.dataSaverMode,
-                onToggle = { onSetDataSaverMode(!preferences.dataSaverMode) }
-            )
-            
-            Spacer(modifier = Modifier.height(AppSpacing.sm))
-            
-            Text(
-                text = "Data Saver disables background sync and reduces network calls.",
-                color = AppColors.outline,
-                style = AppTypography.labelSmall
-            )
-        }
-    }
-}
-
-@Composable
 fun ExperimentalSection(
     navigator: Navigator,
     modifier: Modifier = Modifier
@@ -926,9 +812,6 @@ fun NotificationsSection(
 
 @Composable
 fun PrivacySecuritySection(
-    preferences: UserPreferences,
-    onSetScreenSecurity: (Boolean) -> Unit,
-    onSetClearCacheOnExit: (Boolean) -> Unit,
     onShowClearCacheDialog: () -> Unit,
     onResetPreferences: () -> Unit,
     modifier: Modifier = Modifier
@@ -941,28 +824,6 @@ fun PrivacySecuritySection(
         )
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
-        
-        SettingsCard(title = "Security") {
-            // Screen Security
-            SettingsRowItem(
-                title = "Screen Security",
-                subtitle = "Prevent screenshots",
-                isEnabled = preferences.screenSecurity,
-                onToggle = { onSetScreenSecurity(!preferences.screenSecurity) }
-            )
-            
-            HorizontalDivider(color = AppColors.outline, thickness = AppSpacing.borderThin)
-            
-            // Clear Cache on Exit
-            SettingsRowItem(
-                title = "Clear Cache on Exit",
-                subtitle = "Remove local data when app closes",
-                isEnabled = preferences.clearCacheOnExit,
-                onToggle = { onSetClearCacheOnExit(!preferences.clearCacheOnExit) }
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         
         // Data Management
         SettingsCard(title = "Data") {

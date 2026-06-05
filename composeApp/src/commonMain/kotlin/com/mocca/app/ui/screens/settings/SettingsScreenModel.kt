@@ -208,83 +208,10 @@ class SettingsScreenModel(
         }
     }
     
-    fun setCompactMode(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setCompactMode(value)
-            val newPrefs = _state.value.preferences.copy(compactMode = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
-    fun setFontScale(value: Float) {
-        screenModelScope.launch {
-            val clampedValue = value.coerceIn(UserPreferences.FONT_SCALE_RANGE)
-            settingsRepository.setFontScale(clampedValue)
-            val newPrefs = _state.value.preferences.copy(fontScale = clampedValue)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
     fun setCodeFontFamily(fontKey: String) {
         screenModelScope.launch {
             settingsRepository.setCodeFontFamily(fontKey)
             val newPrefs = _state.value.preferences.copy(codeFontFamily = fontKey)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
-    fun setHideApiKeys(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setHideApiKeys(value)
-            val newPrefs = _state.value.preferences.copy(hideApiKeys = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-
-    fun setAutoScroll(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setAutoScroll(value)
-            val newPrefs = _state.value.preferences.copy(autoScroll = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
-    fun setConfirmDelete(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setConfirmDelete(value)
-            val newPrefs = _state.value.preferences.copy(confirmDelete = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
-    fun setShowThinkingBlocks(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setShowThinkingBlocks(value)
-            val newPrefs = _state.value.preferences.copy(showThinkingBlocks = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-    
-    fun setAutoReconnect(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setAutoReconnect(value)
-            val newPrefs = _state.value.preferences.copy(autoReconnect = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-
-    fun setDataSaverMode(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setDataSaverMode(value)
-            val newPrefs = _state.value.preferences.copy(dataSaverMode = value)
             _state.value = _state.value.copy(preferences = newPrefs)
             preferencesManager.updatePreferences(newPrefs)
         }
@@ -312,24 +239,6 @@ class SettingsScreenModel(
         screenModelScope.launch {
             settingsRepository.setNotifyConnectionLost(value)
             val newPrefs = _state.value.preferences.copy(notifyConnectionLost = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-
-    fun setScreenSecurity(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setScreenSecurity(value)
-            val newPrefs = _state.value.preferences.copy(screenSecurity = value)
-            _state.value = _state.value.copy(preferences = newPrefs)
-            preferencesManager.updatePreferences(newPrefs)
-        }
-    }
-
-    fun setClearCacheOnExit(value: Boolean) {
-        screenModelScope.launch {
-            settingsRepository.setClearCacheOnExit(value)
-            val newPrefs = _state.value.preferences.copy(clearCacheOnExit = value)
             _state.value = _state.value.copy(preferences = newPrefs)
             preferencesManager.updatePreferences(newPrefs)
         }
@@ -371,20 +280,10 @@ class SettingsScreenModel(
             // Save all defaults
             settingsRepository.setShowTokenCounts(defaults.showTokenCounts)
             settingsRepository.setShowTimestamps(defaults.showTimestamps)
-            settingsRepository.setCompactMode(defaults.compactMode)
-            settingsRepository.setFontScale(defaults.fontScale)
-            settingsRepository.setHideApiKeys(defaults.hideApiKeys)
             settingsRepository.setCodeFontFamily(defaults.codeFontFamily)
-            settingsRepository.setAutoScroll(defaults.autoScroll)
-            settingsRepository.setConfirmDelete(defaults.confirmDelete)
-            settingsRepository.setShowThinkingBlocks(defaults.showThinkingBlocks)
-            settingsRepository.setAutoReconnect(defaults.autoReconnect)
-            settingsRepository.setDataSaverMode(defaults.dataSaverMode)
             settingsRepository.setNotifyPermissions(defaults.notifyPermissions)
             settingsRepository.setNotifySessionComplete(defaults.notifySessionComplete)
             settingsRepository.setNotifyConnectionLost(defaults.notifyConnectionLost)
-            settingsRepository.setScreenSecurity(defaults.screenSecurity)
-            settingsRepository.setClearCacheOnExit(defaults.clearCacheOnExit)
             
             _state.value = _state.value.copy(
                 preferences = defaults,
