@@ -13,6 +13,43 @@ MOCCA is Android-only. Shared code lives in `composeApp`; `androidApp` stays as 
 - **Server-first data**: primary user-facing data emits cache first, refreshes from network/bridge, updates `LocalCache`, then emits fresh state.
 - **UI system**: Material 3 Expressive shell with app-owned `AppColors`, `AppTypography`, `AppShapes`, and motion from `MaterialTheme.motionScheme`.
 
+## Screenshots
+
+UI screenshots are produced by deterministic Maestro flows against a visible Android emulator and committed to the catalog for review. The catalog is regenerated from the flows rather than hand-edited, so the on-disk PNGs always reflect the current Compose surface area.
+
+### Catalog Generation
+
+- Test plan: `maestro-workspace/testplans/screenshot-catalog.yaml`
+- Flow set: `maestro-workspace/flows/catalog/*.yaml`
+- Runner: `maestro-workspace/capture-screenshot-catalog.ps1`
+- Output: `screenshots/catalog_*.png`
+- Per-screenshot index: `screenshots/README.md`
+
+Regenerate locally after the emulator is running:
+
+```powershell
+.\maestro-workspace\capture-screenshot-catalog.ps1
+```
+
+In CI, run the **Screenshot Catalog** workflow to refresh the artifact bundle.
+
+### Catalog Flows
+
+| Flow | Coverage |
+|---|---|
+| `capture_panels.yaml` | Three-panel shell: Sessions, Chat, Tools (top and scrolled) |
+| `capture_sessions_chat.yaml` | Sessions list before and after creating a session, chat with new session |
+| `capture_files_git_terminal.yaml` | Git Status, Branches, Log, Remotes, Tags, Terminal |
+| `capture_settings_skills_flags.yaml` | Settings scroll positions, Skills, Feature Flags |
+| `capture_onboarding_connection.yaml` | First-run and chat-empty states |
+| `capture_mcp.yaml` | MCP dashboard module, JSON config, resources |
+
+`capture_workspace_explorer.yaml` covers the workspace explorer, dashboard, git, and chat tabs. It exists in the flow set but is not currently wired into `screenshot-catalog.yaml`.
+
+### What The Catalog Reflects
+
+The catalog captures the Material 3 Expressive dark theme surface area: the three-panel `SwipePanelLayout` shell, the modern chat primitives (streaming, reasoning, file, sub-task, tool parts), the dashboard modules, the Git, Terminal, Files, Settings, MCP, Skills, and Feature Flags screens, and the first-run onboarding state. The `screenshots/README.md` index maps each PNG to the surface it documents and lists surfaces that the current runtime profile cannot reach (for example, the manual server form on a fully cleared install).
+
 ## Architecture
 
 ```text
