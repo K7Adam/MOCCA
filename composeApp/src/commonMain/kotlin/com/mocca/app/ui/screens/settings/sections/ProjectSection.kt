@@ -9,9 +9,11 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.mocca.app.domain.model.Project
+import com.mocca.app.ui.TestTags
 import com.mocca.app.ui.components.modern.MoccaCompactButton
 import com.mocca.app.ui.components.modern.ModuleCard
 import com.mocca.app.ui.components.modern.ModuleRowItem
@@ -33,7 +35,7 @@ fun ProjectSection(
     onSaveProjectPath: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.projectSection)) {
         Text(
             text = "Project",
             color = AppColors.onSurfaceVariant,
@@ -63,7 +65,7 @@ fun ProjectSection(
                     value = editingProjectPath,
                     onValueChange = onSetEditingProjectPath,
                     placeholder = { Text("/path/to/project", style = AppTypography.bodySmall, color = AppColors.outline) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().testTag(TestTags.Settings.projectPathInput),
                     singleLine = true,
                     textStyle = AppTypography.bodySmall.copy(color = AppColors.onSurface),
                     keyboardOptions = KeyboardOptions(
@@ -88,7 +90,8 @@ fun ProjectSection(
                     onClick = onSaveProjectPath,
                     enabled = editingProjectPath.isNotBlank() &&
                         editingProjectPath != (currentProject.path ?: currentProject.directory ?: ""),
-                    height = AppSpacing.buttonHeightSmall
+                    height = AppSpacing.buttonHeightSmall,
+                    modifier = Modifier.testTag(TestTags.Settings.updatePathButton)
                 )
             }
         }

@@ -13,8 +13,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import com.mocca.app.domain.model.ProviderAuthMethod
+import com.mocca.app.ui.TestTags
 import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppSpacing
@@ -41,7 +43,7 @@ fun ProviderAuthSection(
 ) {
     val commonProviders = listOf("anthropic", "openai", "github")
     
-    Column(modifier = modifier) {
+    Column(modifier = modifier.testTag(TestTags.Settings.providerAuthSection)) {
         Text(
             text = "Server-side provider auth",
             color = AppColors.onSurfaceVariant,
