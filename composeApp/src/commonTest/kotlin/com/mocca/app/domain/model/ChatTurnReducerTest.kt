@@ -325,7 +325,7 @@ class ChatTurnReducerTest {
             ServerEvent.SessionError(
                 properties = SessionErrorProperties(
                     sessionID = "ses_1",
-                    error = ErrorInfo(message = "boom")
+                    error = SessionErrorInfo(message = "boom")
                 )
             )
         )
