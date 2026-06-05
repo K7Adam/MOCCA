@@ -64,7 +64,8 @@ class EventStreamRepository(
     }
     
     // Removed 'scope' variable as we use repositoryScope now
-    private var autoReconnect: Boolean = true
+    // autoReconnect toggle was removed from Settings; always enabled.
+    private val autoReconnectEnabled = true
     private var reconnectAttempts = 0
     private val maxReconnectAttempts = NetworkConfig.SSE_MAX_RECONNECT_ATTEMPTS
     
@@ -192,7 +193,6 @@ class EventStreamRepository(
         if (sessionId != null) {
             monitoredSessionIds.update { it + sessionId }
         }
-        autoReconnect = true
         reconnectAttempts = 0
         isPaused = false
         
@@ -605,8 +605,8 @@ class EventStreamRepository(
      * IMPROVED: Uses connection quality for adaptive delay.
      */
     private fun scheduleReconnect() {
-        if (!autoReconnect || reconnectAttempts >= maxReconnectAttempts) {
-            Napier.w("Not reconnecting: autoReconnect=$autoReconnect, attempts=$reconnectAttempts/$maxReconnectAttempts")
+        if (!autoReconnectEnabled || reconnectAttempts >= maxReconnectAttempts) {
+            Napier.w("Not reconnecting: autoReconnectEnabled=$autoReconnectEnabled, attempts=$reconnectAttempts/$maxReconnectAttempts")
             return
         }
         
@@ -633,7 +633,7 @@ class EventStreamRepository(
             _connectionStatus.value = ConnectionStatus.Reconnecting(reconnectAttempts, maxReconnectAttempts)
             delay(delayMs)
             
-            if (autoReconnect && !isPaused) {
+            if (autoReconnectEnabled && !isPaused) {
                 _connectionStatus.value = ConnectionStatus.Connecting
                 startConnection()
             }
@@ -673,7 +673,6 @@ class EventStreamRepository(
      * Disconnect from the SSE event stream.
      */
     fun disconnect() {
-        autoReconnect = false
         isPaused = false
         connectionJob?.cancel()
         heartbeatJob?.cancel()
@@ -721,7 +720,6 @@ class EventStreamRepository(
         }
 
         reconnectAttempts = 0
-        autoReconnect = true
         _connectionStatus.value = ConnectionStatus.Connecting
         startConnection()
     }

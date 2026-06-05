@@ -75,7 +75,7 @@ fun buildCliConnectionUiState(
             canForget = true
         )
 
-        BridgeConnectionStatus.Disconnected -> CliConnectionUiState(
+        is BridgeConnectionStatus.Disconnected -> CliConnectionUiState(
             headline = "MOCCA CLI",
             statusLabel = "Disconnected",
             supportingText = "The paired target is saved, but the CLI bridge is currently offline.",

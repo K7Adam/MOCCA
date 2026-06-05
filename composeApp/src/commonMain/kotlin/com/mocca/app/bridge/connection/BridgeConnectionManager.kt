@@ -7,12 +7,17 @@ import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
 import com.mocca.app.bridge.protocol.BridgeCapabilities
 import com.mocca.app.bridge.protocol.BRIDGE_PROTOCOL_VERSION
+import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.math.min
 import kotlinx.serialization.Serializable
 
 interface BridgeTransportFactory {
@@ -49,7 +54,7 @@ sealed class BridgeConnectionStatus {
         val capabilities: BridgeCapabilities
     ) : BridgeConnectionStatus()
 
-    data object Disconnected : BridgeConnectionStatus()
+    data class Disconnected(val reason: String? = null) : BridgeConnectionStatus()
     data class Error(
         val message: String,
         val code: String? = null
@@ -63,14 +68,16 @@ class BridgeConnectionManager(
     private val healthChecker: BridgeHealthChecker? = null
 ) {
     private val mutex = Mutex()
+    private var reconnectJob: Job? = null
 
-    private val _status = MutableStateFlow<BridgeConnectionStatus>(BridgeConnectionStatus.Disconnected)
+    private val _status = MutableStateFlow<BridgeConnectionStatus>(BridgeConnectionStatus.Disconnected())
     val status: StateFlow<BridgeConnectionStatus> = _status.asStateFlow()
 
     private val _client = MutableStateFlow<MoccaBridgeClient?>(null)
     val client: StateFlow<MoccaBridgeClient?> = _client.asStateFlow()
 
     suspend fun connect(target: DirectBridgeTarget? = targetRepository.activeTarget.value) {
+        reconnectJob?.cancel()
         mutex.withLock {
             val resolvedTarget = target ?: targetRepository.loadPersistedTarget()
             if (resolvedTarget == null) {
@@ -171,7 +178,30 @@ class BridgeConnectionManager(
     suspend fun disconnect() {
         mutex.withLock {
             closeActiveClient()
-            _status.value = BridgeConnectionStatus.Disconnected
+            _status.value = BridgeConnectionStatus.Disconnected()
+            startReconnectLoop()
+        }
+    }
+
+    /**
+     * Start a reconnect loop with exponential backoff.
+     * Launches a coroutine that retries [connect] up to 10 times with increasing delays.
+     * Cancels any existing reconnect job before starting.
+     */
+    private fun startReconnectLoop(delayMs: Long = 1000) {
+        reconnectJob?.cancel()
+        reconnectJob = scope.launch {
+            var attempt = 0
+            val maxAttempts = 10
+            while (attempt < maxAttempts && status.value is BridgeConnectionStatus.Disconnected) {
+                attempt++
+                delay(delayMs * (1 shl min(attempt - 1, 5)))
+                Napier.i("[BridgeConnectionManager] Reconnect attempt $attempt/$maxAttempts")
+                connect()
+            }
+            if (status.value is BridgeConnectionStatus.Disconnected) {
+                _status.value = BridgeConnectionStatus.Disconnected("Max reconnect attempts reached")
+            }
         }
     }
 

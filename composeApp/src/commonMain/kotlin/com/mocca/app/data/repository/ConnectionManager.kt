@@ -220,7 +220,9 @@ class ConnectionManager(
             return
         }
 
-        // Skip if already connected or checking
+        // Guard: skip if already connected or connecting — prevents duplicate reconnect stacking.
+        // reconnectJob is always cancelled before launching a new one (see scheduleReconnect()),
+        // so concurrent reconnect loops cannot accumulate.
         val current = _status.value
         if (current.isConnected || current.isConnecting) {
             Napier.d("[ConnectionManager] Skipping check, already ${current::class.simpleName}")
