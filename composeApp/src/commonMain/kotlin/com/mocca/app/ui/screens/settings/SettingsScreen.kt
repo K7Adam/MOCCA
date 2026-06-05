@@ -196,30 +196,13 @@ class SettingsScreen : Screen {
                             preferences = state.preferences,
                             onSetShowTokenCounts = { screenModel.setShowTokenCounts(it) },
                             onSetShowTimestamps = { screenModel.setShowTimestamps(it) },
-                            onSetCompactMode = { screenModel.setCompactMode(it) },
-                            onSetHideApiKeys = { screenModel.setHideApiKeys(it) },
-                            onSetFontScale = { screenModel.setFontScale(it) },
+
                             onSetCodeFontFamily = { screenModel.setCodeFontFamily(it) }
                         )
                     }
                 }
                 
-                // Chat Section
-                item {
-                    Box(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = MaterialTheme.motionScheme.defaultEffectsSpec(),
-                            placementSpec = MaterialTheme.motionScheme.defaultSpatialSpec()
-                        )
-                    ) {
-                        ChatSection(
-                            preferences = state.preferences,
-                            onSetAutoScroll = { screenModel.setAutoScroll(it) },
-                            onSetConfirmDelete = { screenModel.setConfirmDelete(it) },
-                            onSetShowThinkingBlocks = { screenModel.setShowThinkingBlocks(it) }
-                        )
-                    }
-                }
+
                 
                 // Notifications Section
                 item {

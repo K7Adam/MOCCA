@@ -360,18 +360,6 @@ class SessionRepository(
     }
     
     /**
-     * Respond to a permission request (tool approval) - legacy API.
-     */
-    suspend fun respondToPermission(
-        sessionId: String,
-        permissionId: String,
-        allow: Boolean,
-        remember: Boolean = false
-    ): Result<Boolean> {
-        return apiClient.respondToPermission(sessionId, permissionId, allow, remember)
-    }
-    
-    /**
      * Reply to a permission request using the new API.
      * @param requestId The permission request ID
      * @param response One of: once, always, reject

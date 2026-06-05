@@ -158,7 +158,6 @@ class ActiveSessionService : Service() {
 
             val approveIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_APPROVE
-                putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
                 putExtra(PermissionActionReceiver.EXTRA_PERMISSION_ID, permissionId)
             }
             val approvePendingIntent = PendingIntent.getBroadcast(
@@ -170,7 +169,6 @@ class ActiveSessionService : Service() {
 
             val denyIntent = Intent(context, PermissionActionReceiver::class.java).apply {
                 action = PermissionActionReceiver.ACTION_PERMISSION_DENY
-                putExtra(PermissionActionReceiver.EXTRA_SESSION_ID, sessionId)
                 putExtra(PermissionActionReceiver.EXTRA_PERMISSION_ID, permissionId)
             }
             val denyPendingIntent = PendingIntent.getBroadcast(

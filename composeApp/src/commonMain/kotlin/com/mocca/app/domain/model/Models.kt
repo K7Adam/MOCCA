@@ -114,6 +114,12 @@ data class MessageInfo(
     val error: JsonElement? = null
 ) {
     /**
+     * Effective variant, preferring the nested model.variant path.
+     * The flat variant field is retained for backward compatibility with older server responses.
+     */
+    val effectiveVariant: String? get() = model?.variant ?: variant
+
+    /**
      * Get the summary title, handling both object and boolean formats.
      * Returns null if summary is boolean or missing.
      */
@@ -136,7 +142,9 @@ data class ModelInfo(
     @SerialName("providerID")
     val providerID: String? = null,
     @SerialName("modelID")
-    val modelID: String? = null
+    val modelID: String? = null,
+    /** Nested variant for current OpenCode responses (model.variant shape). */
+    val variant: String? = null
 )
 
 @Serializable
@@ -292,16 +300,6 @@ sealed class ChatPart {
         val filename: String? = null
     ) : ChatPart()
 }
-
-/**
- * Request body for POST /session/:id/permissions/:permissionId (legacy format).
- */
-@Serializable
-@Immutable
-data class PermissionResponse(
-    val response: String, // "allow" or "deny"
-    val remember: Boolean = false
-)
 
 /**
  * Request body for POST /permission/:requestId/reply.

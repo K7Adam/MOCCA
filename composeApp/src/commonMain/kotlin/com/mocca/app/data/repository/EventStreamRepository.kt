@@ -371,28 +371,26 @@ class EventStreamRepository(
      */
     private fun startPermissionActionObserver() {
         if (permissionActionJob?.isActive == true) return
-        
+
         permissionActionJob = repositoryScope.launch {
             PermissionActionBus.actions.collect { action ->
-                Napier.i("[EventStream] Received permission action from notification: ${action.permissionId}, approved=${action.isApproved}")
-                
-                // Call the API to respond to the permission
+                Napier.i("[EventStream] Received permission action from notification: ${action.permissionId}, reply=${action.replyType.value}")
+
+                // Call the API to reply to the permission using the top-level endpoint
                 apiClient?.let { client ->
-                    val result = client.respondToPermission(
-                        sessionId = action.sessionId,
-                        permissionId = action.permissionId,
-                        allow = action.isApproved,
-                        remember = false
+                    val result = client.replyToPermission(
+                        requestId = action.permissionId,
+                        reply = action.replyType
                     )
-                    
+
                     result.fold(
                         onSuccess = {
-                            Napier.i("[EventStream] Permission ${action.permissionId} ${if (action.isApproved) "approved" else "denied"} successfully")
+                            Napier.i("[EventStream] Permission ${action.permissionId} ${action.replyType.value} successfully")
                             // Dismiss the pending permission from our state
                             dismissPermission(action.permissionId)
                         },
                         onFailure = { error ->
-                            Napier.e("[EventStream] Failed to respond to permission ${action.permissionId}", error)
+                            Napier.e("[EventStream] Failed to reply to permission ${action.permissionId}", error)
                         }
                     )
                 }

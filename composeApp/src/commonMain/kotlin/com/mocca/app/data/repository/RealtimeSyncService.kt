@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -81,6 +82,7 @@ class RealtimeSyncService(
     private val syncIntervalMs = SYNC_INTERVAL_MS
     private var connectionObserverJob: Job? = null
     private var sessionObserverJob: Job? = null
+    private var periodicSyncJob: Job? = null
     
     // Internal sync state
     private val _isSyncing = MutableStateFlow(false)
@@ -109,7 +111,10 @@ class RealtimeSyncService(
         
         // Observe connection state for immediate sync (SILENT)
         startConnectionObserver()
-        
+
+        // Start the periodic background sync loop
+        startPeriodicSync()
+
         // Do initial sync if connected (SILENT)
         if (connectionManager.status.value.isConnected) {
             serviceScope.launch {
@@ -130,6 +135,8 @@ class RealtimeSyncService(
         connectionObserverJob = null
         sessionObserverJob?.cancel()
         sessionObserverJob = null
+        periodicSyncJob?.cancel()
+        periodicSyncJob = null
     }
     
     /**
@@ -182,6 +189,32 @@ class RealtimeSyncService(
         }
     }
     
+    /**
+     * Start the periodic background sync loop.
+     * Fires every [SYNC_INTERVAL_MS] while the service is started and connected.
+     * Skips silently when disconnected to avoid spamming failures.
+     */
+    private fun startPeriodicSync() {
+        periodicSyncJob?.cancel()
+        periodicSyncJob = serviceScope.launch {
+            Napier.i("[RealtimeSync] Periodic sync loop started (interval=${SYNC_INTERVAL_MS}ms)")
+            while (isActive) {
+                delay(SYNC_INTERVAL_MS)
+                if (!isStarted) {
+                    Napier.v("[RealtimeSync] Service stopped, exiting periodic loop")
+                    break
+                }
+                if (!connectionManager.status.value.isConnected) {
+                    Napier.v("[RealtimeSync] Periodic sync skipped - not connected")
+                    continue
+                }
+                Napier.v("[RealtimeSync] Periodic sync tick")
+                performSilentSync("periodic")
+            }
+            Napier.i("[RealtimeSync] Periodic sync loop ended")
+        }
+    }
+
     private fun startConnectionObserver() {
         connectionObserverJob?.cancel()
         connectionObserverJob = serviceScope.launch {

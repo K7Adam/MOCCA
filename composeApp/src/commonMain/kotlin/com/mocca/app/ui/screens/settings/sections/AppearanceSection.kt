@@ -31,9 +31,7 @@ fun AppearanceSection(
     preferences: UserPreferences,
     onSetShowTokenCounts: (Boolean) -> Unit,
     onSetShowTimestamps: (Boolean) -> Unit,
-    onSetCompactMode: (Boolean) -> Unit,
-    onSetHideApiKeys: (Boolean) -> Unit,
-    onSetFontScale: (Float) -> Unit,
+
     onSetCodeFontFamily: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -63,80 +61,10 @@ fun AppearanceSection(
                 isEnabled = preferences.showTimestamps,
                 onToggle = { onSetShowTimestamps(!preferences.showTimestamps) }
             )
-            
-            Spacer(modifier = Modifier.height(AppSpacing.xs))
-            
-            // Compact Mode
-            SettingsRowItem(
-                title = "Compact Mode",
-                subtitle = "Reduced padding for higher density",
-                isEnabled = preferences.compactMode,
-                onToggle = { onSetCompactMode(!preferences.compactMode) }
-            )
-            
-            Spacer(modifier = Modifier.height(AppSpacing.xs))
-            
-            // Hide API Keys
-            SettingsRowItem(
-                title = "Hide API Keys",
-                subtitle = "Mask sensitive keys in settings",
-                isEnabled = preferences.hideApiKeys,
-                onToggle = { onSetHideApiKeys(!preferences.hideApiKeys) }
-            )
+
         }
         
-        Spacer(modifier = Modifier.height(AppSpacing.cardGap))
-        
-        // Font Scale Slider
-        SettingsCard(title = "Font Size") {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Text Scale",
-                        color = AppColors.onSurface,
-                        style = AppTypography.bodyMedium
-                    )
-                    Text(
-                        text = "${preferences.fontScalePercent}%",
-                        color = AppColors.primary,
-                        style = AppTypography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(AppSpacing.sm))
-                
-                // Font scale slider
-                var sliderValue by remember { mutableStateOf(preferences.fontScale) }
-                
-                Slider(
-                    value = sliderValue,
-                    onValueChange = { sliderValue = it },
-                    onValueChangeFinished = { onSetFontScale(sliderValue) },
-                    valueRange = 0.8f..1.4f,
-                    steps = 5,
-                    colors = SliderDefaults.colors(
-                        thumbColor = AppColors.primary,
-                        activeTrackColor = AppColors.primary,
-                        inactiveTrackColor = AppColors.onSurfaceVariantDark
-                    )
-                )
-                
-                // Labels
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Small", color = AppColors.outline, style = AppTypography.labelSmall)
-                    Text("Default", color = AppColors.outline, style = AppTypography.labelSmall)
-                    Text("Large", color = AppColors.outline, style = AppTypography.labelSmall)
-                }
-            }
-        }
+
         
         Spacer(modifier = Modifier.height(AppSpacing.cardGap))
         

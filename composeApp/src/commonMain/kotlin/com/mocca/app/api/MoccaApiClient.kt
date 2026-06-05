@@ -143,26 +143,6 @@ class MoccaApiClient(
                 }
             }
 
-    // Permissions (legacy)
-    suspend fun respondToPermission(
-            sessionId: String,
-            permissionId: String,
-            allow: Boolean,
-            remember: Boolean = false
-    ): Result<Boolean> =
-            safeCallNoRetry("respondToPermission") {
-                post("session/$sessionId/permissions/$permissionId") {
-                            contentType(ContentType.Application.Json)
-                            setBody(
-                                    PermissionResponse(
-                                            response = if (allow) "allow" else "deny",
-                                            remember = remember
-                                    )
-                            )
-                        }
-                        .body()
-            }
-
     // Permissions
     /**
      * Reply to a permission request using the new permission.reply API.
