@@ -10,6 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /**
@@ -43,3 +45,25 @@ fun Modifier.focusBorder(
         this
     }
 }
+
+/**
+ * Applies a [contentDescription] to the component for screen reader accessibility.
+ *
+ * Use this on interactive controls that lack visible text labels (icon-only buttons,
+ * icon-based toggles, close buttons, back buttons, etc.). Do not use on decorative
+ * elements or elements that already have text content.
+ *
+ * @param description The accessibility description read aloud by screen readers.
+ */
+fun Modifier.accessibleLabel(description: String): Modifier = this.semantics {
+    contentDescription = description
+}
+
+/**
+ * Marks a composable as decorative so that screen readers skip it.
+ *
+ * Uses [mergeDescendants] to fold this node into its parent, effectively
+ * hiding it from TalkBack. Use on purely decorative icons or images that
+ * convey no semantic meaning and are redundant with adjacent text.
+ */
+fun Modifier.decorativeElement(): Modifier = this.semantics(mergeDescendants = true) { }

@@ -304,6 +304,7 @@ fun CommandLineInput(
         MoccaFab(
             icon = Icons.AutoMirrored.Filled.Send,
             onClick = onSubmit,
+            contentDescription = "Send command",
             size = AppSpacing.fabSize,
             backgroundColor = if (value.isNotBlank()) AppColors.primary else AppColors.onSurfaceVariantDark,
             iconColor = if (value.isNotBlank()) AppColors.background else AppColors.outline

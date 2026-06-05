@@ -101,8 +101,8 @@ internal fun OnboardingConnectingStep(
 
             Text(
                 text = bridgeValidationSummary?.let { summary ->
-                    "${summary.credentialCount} providers · ${summary.agentCount} agents · " +
-                        "${summary.commandCount} commands · ${summary.mcpServerCount} MCP"
+                    "Imported ${summary.credentialCount} providers, " +
+                        "${summary.agentCount} agents, ${summary.commandCount} commands"
                 } ?: "Launching MOCCA...",
                 style = AppTypography.bodyMedium,
                 color = AppColors.onSurfaceVariant,
@@ -136,6 +136,13 @@ internal fun OnboardingConnectingStep(
                     color = AppColors.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.height(AppSpacing.md))
+                Text(
+                    text = "Make sure mocca-cli is running on your computer and both devices are on the same network.",
+                    style = AppTypography.bodySmall,
+                    color = AppColors.outline,
+                    textAlign = TextAlign.Center
+                )
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.xl))
@@ -164,7 +171,7 @@ internal fun OnboardingConnectingStep(
             Spacer(modifier = Modifier.height(AppSpacing.xxl))
 
             Text(
-                text = "Connecting CLI...",
+                text = "Connecting to MOCCA CLI...",
                 style = AppTypography.headlineMedium,
                 color = AppColors.onSurface,
                 fontWeight = FontWeight.Bold,

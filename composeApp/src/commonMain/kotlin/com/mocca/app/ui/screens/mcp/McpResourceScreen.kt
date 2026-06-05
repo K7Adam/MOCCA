@@ -72,6 +72,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     MoccaIconButton(
                         icon = Icons.AutoMirrored.Filled.ArrowBack,
                         onClick = { navigator.pop() },
+                        contentDescription = "Back",
                         iconColor = AppColors.onSurface
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.md))
@@ -91,6 +92,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                     MoccaIconButton(
                         icon = Icons.Default.Refresh,
                         onClick = { screenModel.loadResources() },
+                        contentDescription = "Refresh resources",
                         iconColor = if (state.isLoading) AppColors.statusWaiting else AppColors.onSurfaceVariantLight
                     )
                 }
@@ -309,6 +311,7 @@ private fun McpResourceContentPanel(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
+                    contentDescription = "Close",
                     iconColor = AppColors.onSurfaceVariantLight
                 )
             }

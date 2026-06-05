@@ -85,6 +85,7 @@ fun ModelSelectorDialog(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
+                    contentDescription = "Close",
                     iconColor = AppColors.onSurfaceVariant
                 )
             }
@@ -121,6 +122,7 @@ fun ModelSelectorDialog(
                     MoccaIconButton(
                         icon = Icons.Default.Close,
                         onClick = { searchQuery = "" },
+                        contentDescription = "Clear search",
                         iconColor = AppColors.onSurfaceVariant,
                         size = 16.dp
                     )

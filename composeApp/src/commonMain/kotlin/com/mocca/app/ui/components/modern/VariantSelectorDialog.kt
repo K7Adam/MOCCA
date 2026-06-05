@@ -68,6 +68,7 @@ fun VariantSelectorDialog(
                 MoccaIconButton(
                     icon = Icons.Default.Close,
                     onClick = onDismiss,
+                    contentDescription = "Close",
                     iconColor = AppColors.onSurfaceVariant
                 )
             }

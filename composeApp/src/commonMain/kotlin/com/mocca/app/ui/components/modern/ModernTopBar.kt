@@ -61,6 +61,7 @@ fun ModernTopBar(
     modifier: Modifier = Modifier,
     navigationIcon: ImageVector? = null,
     onNavigationClick: (() -> Unit)? = null,
+    navigationContentDescription: String? = null,
     showDivider: Boolean = true,
     sessionId: String? = null,
     actions: @Composable RowScope.() -> Unit = {}
@@ -105,6 +106,7 @@ fun ModernTopBar(
                     MoccaIconButton(
                         icon = navigationIcon,
                         onClick = onNavigationClick,
+                        contentDescription = navigationContentDescription,
                         iconColor = AppColors.onSurface
                     )
                 }

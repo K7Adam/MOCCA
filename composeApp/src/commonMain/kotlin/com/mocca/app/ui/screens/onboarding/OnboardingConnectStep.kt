@@ -187,7 +187,7 @@ internal fun OnboardingConnectStep(
                     }
 
                     Text(
-                        text = "This enables local OpenCode config, providers, agents, commands, MCP and fast session APIs through the CLI bridge.",
+                        text = "The bridge gives MOCCA access to your OpenCode setup: providers, agents, commands, and MCP servers — all through a secure local connection.",
                         style = AppTypography.labelSmall,
                         color = AppColors.onSurfaceVariant
                     )
