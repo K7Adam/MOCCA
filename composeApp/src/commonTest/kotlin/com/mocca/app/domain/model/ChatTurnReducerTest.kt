@@ -249,4 +249,89 @@ class ChatTurnReducerTest {
         assertTrue(TokenUsage(cache = CacheUsage(read = 1)).hasVisibleDetails)
         assertTrue(TokenUsage(cache = CacheUsage(write = 1)).hasVisibleDetails)
     }
+
+    @Test
+    fun sessionIdleMarksLatestAssistantMessageAsNotStreaming() {
+        val withMessage = ChatTurnReducer.reduce(
+            ChatTurnState(),
+            ServerEvent.MessageUpdated(
+                properties = MessageUpdatedProperties(
+                    info = AssistantMessageInfo(
+                        id = "msg_1",
+                        role = "assistant",
+                        sessionID = "ses_1",
+                        time = MessageTimeInfo(created = 10)
+                    )
+                )
+            )
+        )
+        val withText = ChatTurnReducer.reduce(
+            withMessage,
+            ServerEvent.MessagePartUpdated(
+                properties = MessagePartUpdatedProperties(
+                    part = MessagePartInfo(
+                        id = "prt_text",
+                        type = "text",
+                        messageID = "msg_1",
+                        sessionID = "ses_1",
+                        text = "Hello"
+                    )
+                )
+            )
+        )
+
+        val idle = ChatTurnReducer.reduce(
+            withText,
+            ServerEvent.SessionIdle(properties = SessionIdleProperties(sessionID = "ses_1"))
+        )
+
+        val message = idle.messagesById.getValue("msg_1")
+        assertEquals(false, message.isStreaming)
+        assertEquals(AgentActivity.STAGE_IDLE, idle.sessionActivities.getValue("ses_1").stage)
+    }
+
+    @Test
+    fun sessionErrorMarksLatestAssistantMessageAsNotStreaming() {
+        val withMessage = ChatTurnReducer.reduce(
+            ChatTurnState(),
+            ServerEvent.MessageUpdated(
+                properties = MessageUpdatedProperties(
+                    info = AssistantMessageInfo(
+                        id = "msg_1",
+                        role = "assistant",
+                        sessionID = "ses_1",
+                        time = MessageTimeInfo(created = 10)
+                    )
+                )
+            )
+        )
+        val withText = ChatTurnReducer.reduce(
+            withMessage,
+            ServerEvent.MessagePartUpdated(
+                properties = MessagePartUpdatedProperties(
+                    part = MessagePartInfo(
+                        id = "prt_text",
+                        type = "text",
+                        messageID = "msg_1",
+                        sessionID = "ses_1",
+                        text = "Hello"
+                    )
+                )
+            )
+        )
+
+        val error = ChatTurnReducer.reduce(
+            withText,
+            ServerEvent.SessionError(
+                properties = SessionErrorProperties(
+                    sessionID = "ses_1",
+                    error = ErrorInfo(message = "boom")
+                )
+            )
+        )
+
+        val message = error.messagesById.getValue("msg_1")
+        assertEquals(false, message.isStreaming)
+        assertEquals(AgentActivity.STAGE_ERROR, error.sessionActivities.getValue("ses_1").stage)
+    }
 }

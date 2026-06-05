@@ -38,6 +38,18 @@ data class AgentActivity(
     }
 }
 
+/**
+ * Canonical reducer for OpenCode chat-turn state.
+ *
+ * **Reasoning and thinking display must derive from this state.**
+ * `MessagePart.Reasoning` and `MessagePart.Thinking` parts inside
+ * `ChatTurnState.messagesById` are the single source of truth for
+ * whether a model is currently reasoning and what its reasoning content is.
+ *
+ * Compatibility mirrors (e.g. `_isThinking`, `_thinkingContent`) must be
+ * read-only projections of this reducer state and must never be mutated
+ * independently by agent-status events or other unrelated streams.
+ */
 object ChatTurnReducer {
     fun reduce(state: ChatTurnState, event: ServerEvent): ChatTurnState = when (event) {
         is ServerEvent.MessageUpdated -> state.upsertMessageInfo(event.properties.info)
@@ -51,12 +63,30 @@ object ChatTurnReducer {
                 AgentActivity.STAGE_IDLE
             }
         )
-        is ServerEvent.SessionIdle -> state.withActivity(
-            sessionId = event.properties.sessionID,
-            stage = AgentActivity.STAGE_IDLE
-        )
+        is ServerEvent.SessionIdle -> {
+            val sessionId = event.properties.sessionID
+            val latestMsg = state.latestAssistantMessage(sessionId)
+            val updatedMessages = if (latestMsg != null && latestMsg.isStreaming) {
+                state.messagesById + (latestMsg.id to latestMsg.copy(isStreaming = false))
+            } else {
+                state.messagesById
+            }
+            state.copy(messagesById = updatedMessages).withActivity(
+                sessionId = sessionId,
+                stage = AgentActivity.STAGE_IDLE
+            )
+        }
         is ServerEvent.SessionError -> event.properties.sessionID?.let { sessionId ->
-            state.withActivity(sessionId = sessionId, stage = AgentActivity.STAGE_ERROR)
+            val latestMsg = state.latestAssistantMessage(sessionId)
+            val updatedMessages = if (latestMsg != null && latestMsg.isStreaming) {
+                state.messagesById + (latestMsg.id to latestMsg.copy(isStreaming = false))
+            } else {
+                state.messagesById
+            }
+            state.copy(messagesById = updatedMessages).withActivity(
+                sessionId = sessionId,
+                stage = AgentActivity.STAGE_ERROR
+            )
         } ?: state
         is ServerEvent.PermissionAsked -> state.upsertPermission(PermissionRequest.fromEvent(event))
         is ServerEvent.PermissionUpdated -> state.upsertPermission(PermissionRequest.fromLegacyEvent(event))

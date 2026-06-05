@@ -809,16 +809,6 @@ class EventStreamRepository(
             
             is ServerEvent.SessionIdle -> {
                 val sessionId = event.properties.sessionID
-                if (sessionId == activeSessionId) {
-                    // IMPROVED: Thread-safe streaming text clear
-                    streamingTextMutex.withLock {
-                        _streamingText.value = ""
-                    }
-                    // Clear thinking state on session idle
-                    _isThinking.value = false
-                    _thinkingContent.value = ""
-                    _thinkingStartTime.value = null
-                }
                 Napier.d("Session idle: $sessionId")
             }
             
@@ -837,13 +827,13 @@ class EventStreamRepository(
             is ServerEvent.MessagePartUpdated -> {
                 val part = event.properties.part
                 val delta = event.properties.delta
-                
+
                 // Record latency for quality tracking
                 qualityTracker.recordLatency(System.currentTimeMillis() - lastEventTime)
-                
+
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
                 Napier.v(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
-                
+
                 // Insert initial streaming message to LocalCache if it doesn't exist yet
                 if (localCache != null && streamingMessagesInserted.putIfAbsent(part.messageID, true) == null) {
                     try {
@@ -861,130 +851,61 @@ class EventStreamRepository(
                         Napier.w("Could not insert placeholder message: ${e.message}")
                     }
                 }
-                
-                // Handle thinking state for extended reasoning models (Claude/o1)
-                if (part.type == "thinking" || part.type == "reasoning") {
-                    if (monitoredSessionIds.value.contains(part.sessionID)) {
-                        if (part.sessionID == activeSessionId) {
-                            _isThinking.value = true
-                            
-                            // IMPROVED: Thread-safe thinking content update
-                            streamingTextMutex.withLock {
-                                // Initialize thinking content if empty, or append delta
-                                if (_thinkingContent.value.isEmpty() && !part.text.isNullOrEmpty()) {
-                                    _thinkingContent.value = part.text
-                                } else if (delta != null) {
-                                    _thinkingContent.value += delta
-                                    // OOM FIX: Cap thinking content to prevent unbounded memory growth
-                                    if (_thinkingContent.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
-                                        _thinkingContent.value = _thinkingContent.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
-                                    }
-                                } else if (!part.text.isNullOrEmpty()) {
-                                    _thinkingContent.value = part.text
-                                }
-                            }
-                            
-                            if (_thinkingStartTime.value == null) {
-                                _thinkingStartTime.value = System.currentTimeMillis()
-                            }
-                            Napier.v(">>> Thinking state updated")
+
+                // Persist reasoning/thinking delta to LocalCache (single-owner path)
+                if ((part.type == "thinking" || part.type == "reasoning") && delta != null && localCache != null) {
+                    repositoryScope.launch {
+                        try {
+                            localCache.updateMessagePart(
+                                messageId = part.messageID,
+                                partId = part.id,
+                                partType = part.type,
+                                delta = delta
+                            )
+                        } catch (e: Exception) {
+                            Napier.w("Failed to persist reasoning delta", e)
                         }
                     }
+                }
 
-                    // Persist reasoning/thinking delta to LocalCache (single-owner path)
-                    if (delta != null && localCache != null) {
-                        repositoryScope.launch {
-                            try {
+                // Persist streaming text delta to LocalCache (throttled)
+                if (part.type == "text" && delta != null && localCache != null) {
+                    pendingDbDelta += delta
+                    val now = System.currentTimeMillis()
+                    if (now - lastDbWriteTime > dbWriteThrottleMs) {
+                        val deltaToWrite = pendingDbDelta
+                        pendingDbDelta = ""
+                        lastDbWriteTime = now
+
+                        // Write in background to avoid blocking the stream
+                        dbWriteJob?.cancel()
+                        dbWriteJob = repositoryScope.launch {
+                            localCache.updateMessagePart(
+                                messageId = part.messageID,
+                                partId = part.id,
+                                partType = part.type,
+                                delta = deltaToWrite
+                            )
+                        }
+                    } else {
+                        // Schedule a delayed write for the remainder if no new chunks arrive soon
+                        dbWriteJob?.cancel()
+                        dbWriteJob = repositoryScope.launch {
+                            delay(dbWriteThrottleMs * 2)
+                            if (pendingDbDelta.isNotEmpty()) {
+                                val deltaToWrite = pendingDbDelta
+                                pendingDbDelta = ""
                                 localCache.updateMessagePart(
                                     messageId = part.messageID,
                                     partId = part.id,
                                     partType = part.type,
-                                    delta = delta
+                                    delta = deltaToWrite
                                 )
-                            } catch (e: Exception) {
-                                Napier.w("Failed to persist reasoning delta", e)
                             }
                         }
                     }
                 }
 
-                // IMPROVED: Thread-safe streaming text handling
-                if (part.type == "text") {
-                    // Text part received means thinking is complete
-                    if (_isThinking.value) {
-                        _isThinking.value = false
-                        _thinkingContent.value = ""
-                        _thinkingStartTime.value = null
-                    }
-                    
-                    if (monitoredSessionIds.value.contains(part.sessionID)) {
-                        if (part.sessionID == activeSessionId) {
-                            // IMPROVED: Thread-safe streaming text update
-                            streamingTextMutex.withLock {
-                                // Initialize streaming text if empty, or append delta
-                                if (_streamingText.value.isEmpty() && !part.text.isNullOrEmpty()) {
-                                    _streamingText.value = part.text
-                                } else if (delta != null) {
-                                    _streamingText.value += delta
-                                } else if (!part.text.isNullOrEmpty()) {
-                                    _streamingText.value = part.text
-                                }
-                                
-                                // Limit streaming text size to prevent memory issues
-                                if (_streamingText.value.length > NetworkConfig.STREAMING_TEXT_MAX_SIZE) {
-                                    Napier.w("[EventStream] Streaming text exceeded max size, truncating")
-                                    _streamingText.value = _streamingText.value.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
-                                }
-                                
-                                // Persist streaming chunks to LocalCache (throttled)
-                                if (delta != null && localCache != null) {
-                                    pendingDbDelta += delta
-                                    val now = System.currentTimeMillis()
-                                    if (now - lastDbWriteTime > dbWriteThrottleMs) {
-                                        val deltaToWrite = pendingDbDelta
-                                        pendingDbDelta = ""
-                                        lastDbWriteTime = now
-                                        
-                                        // Write in background to avoid blocking the stream
-                                        dbWriteJob?.cancel()
-                                        dbWriteJob = repositoryScope.launch {
-                                            localCache.updateMessagePart(
-                                                messageId = part.messageID,
-                                                partId = part.id,
-                                                partType = part.type,
-                                                delta = deltaToWrite
-                                            )
-                                        }
-                                    } else {
-                                        // Schedule a delayed write for the remainder if no new chunks arrive soon
-                                        dbWriteJob?.cancel()
-                                        dbWriteJob = repositoryScope.launch {
-                                            delay(dbWriteThrottleMs * 2)
-                                            streamingTextMutex.withLock {
-                                                if (pendingDbDelta.isNotEmpty()) {
-                                                    val deltaToWrite = pendingDbDelta
-                                                    pendingDbDelta = ""
-                                                    localCache.updateMessagePart(
-                                                        messageId = part.messageID,
-                                                        partId = part.id,
-                                                        partType = part.type,
-                                                        delta = deltaToWrite
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            Napier.v(">>> Streaming text updated: ...${_streamingText.value.takeLast(50)}")
-                        } else {
-                            Napier.w(">>> Session ID mismatch: event.sessionID=${part.sessionID}, activeSessionId=$activeSessionId")
-                        }
-                    } else {
-                        Napier.w(">>> Session ${part.sessionID} NOT in monitored set: ${monitoredSessionIds.value}")
-                    }
-                }
                 // Tool execution state changes
                 if (part.type == "tool" && part.state != null) {
                     Napier.d("Tool ${part.tool}: ${part.state.status}")
@@ -993,15 +914,6 @@ class EventStreamRepository(
             
             is ServerEvent.MessageUpdated -> {
                 val messageInfo = event.properties.info
-                if (messageInfo.sessionID == activeSessionId) {
-                    // Message complete - clear streaming text and thinking state
-                    streamingTextMutex.withLock {
-                        _streamingText.value = ""
-                    }
-                    _isThinking.value = false
-                    _thinkingContent.value = ""
-                    _thinkingStartTime.value = null
-                }
                 Napier.d("[EventStream] Message updated: ${messageInfo.id}")
             }
             
@@ -1101,36 +1013,27 @@ class EventStreamRepository(
                 val agentName = event.properties.agentName
                 val sessionId = event.properties.sessionID
                 Napier.i("Agent $agentName: $status${event.properties.message?.let { " - $it" } ?: ""}")
-                
-                // Track agent running state for button control and thinking indicator
-                // Only track if this event is for the active session or a monitored session
+
+                // Track agent running state for button control.
+                // Thinking visibility is derived from ChatTurnReducer part state, NOT from
+                // agent status events, to prevent non-reasoning models from showing fake
+                // thinking indicators.
                 if (sessionId == activeSessionId || monitoredSessionIds.value.contains(sessionId)) {
                     when (status) {
                         "starting", "running" -> {
                             _isAgentRunning.value = true
                             _runningAgentName.value = agentName
-                            // Also set isThinking to true for the thinking indicator
-                            // (this is independent of "thinking" type message parts)
-                            _isThinking.value = true
-                            // Also set thinking start time if not already set
-                            if (_thinkingStartTime.value == null) {
-                                _thinkingStartTime.value = System.currentTimeMillis()
-                            }
                         }
                         "completed", "error" -> {
                             // Only clear if this is the currently tracked agent
                             if (_runningAgentName.value == agentName) {
                                 _isAgentRunning.value = false
                                 _runningAgentName.value = null
-                                // Clear thinking state when agent completes
-                                _isThinking.value = false
-                                _thinkingContent.value = ""
-                                _thinkingStartTime.value = null
                             }
                         }
                     }
                 }
-                
+
                 // Show completion/error notifications for monitored sessions
                 if (monitoredSessionIds.value.contains(event.properties.sessionID)) {
                     if (status == "completed") {
@@ -1181,11 +1084,61 @@ class EventStreamRepository(
             }
         }
 
+        syncCompatibilityMirrors()
         _events.emit(event)
     }
 
     private fun reduceChatTurn(event: ServerEvent) {
         _chatTurnState.value = ChatTurnReducer.reduce(_chatTurnState.value, event)
+    }
+
+    /**
+     * Sync compatibility mirrors (streamingText, isThinking, thinkingContent)
+     * from the canonical ChatTurnReducer/part state.
+     *
+     * These are read-only mirrors for legacy UI consumers.
+     * The canonical source of truth is ChatTurnState.messagesById and their parts.
+     * Do NOT mutate these flows independently; always derive from chatTurnState.
+     */
+    private fun syncCompatibilityMirrors() {
+        val sessionId = activeSessionId ?: return
+        val latestMessage = _chatTurnState.value.latestAssistantMessage(sessionId)
+
+        if (latestMessage != null && latestMessage.isStreaming) {
+            // Streaming text: latest text part content
+            val textParts = latestMessage.parts.filterIsInstance<MessagePart.Text>()
+            val latestText = textParts.lastOrNull()
+            _streamingText.value = latestText?.text?.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE) ?: ""
+
+            // Thinking state: derived from actual reasoning/thinking parts only
+            val reasoningParts = latestMessage.parts.filter {
+                it is MessagePart.Reasoning || it is MessagePart.Thinking
+            }
+            if (reasoningParts.isNotEmpty()) {
+                _isThinking.value = true
+                val content = reasoningParts.joinToString("") { part ->
+                    when (part) {
+                        is MessagePart.Reasoning -> part.content
+                        is MessagePart.Thinking -> part.content
+                        else -> ""
+                    }
+                }
+                _thinkingContent.value = content.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
+                if (_thinkingStartTime.value == null) {
+                    _thinkingStartTime.value = System.currentTimeMillis()
+                }
+            } else {
+                _isThinking.value = false
+                _thinkingContent.value = ""
+                _thinkingStartTime.value = null
+            }
+        } else {
+            // No active streaming message - clear mirrors
+            _streamingText.value = ""
+            _isThinking.value = false
+            _thinkingContent.value = ""
+            _thinkingStartTime.value = null
+        }
     }
 
     private suspend fun handleMessagePartDelta(event: ServerEvent.MessagePartDelta) {
@@ -1199,37 +1152,9 @@ class EventStreamRepository(
             ?.parts
             ?.firstOrNull { it.openCodePartId == props.partID }
 
-        if (monitoredSessionIds.value.contains(props.sessionID) && props.sessionID == activeSessionId) {
-            when (part) {
-                is MessagePart.Text -> {
-                    streamingTextMutex.withLock {
-                        _streamingText.value = part.text.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
-                    }
-                    _isThinking.value = false
-                    _thinkingContent.value = ""
-                    _thinkingStartTime.value = null
-                }
-                is MessagePart.Reasoning -> {
-                    streamingTextMutex.withLock {
-                        _thinkingContent.value = part.content.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
-                    }
-                    _isThinking.value = true
-                    if (_thinkingStartTime.value == null) {
-                        _thinkingStartTime.value = System.currentTimeMillis()
-                    }
-                }
-                is MessagePart.Thinking -> {
-                    streamingTextMutex.withLock {
-                        _thinkingContent.value = part.content.takeLast(NetworkConfig.STREAMING_TEXT_MAX_SIZE)
-                    }
-                    _isThinking.value = true
-                    if (_thinkingStartTime.value == null) {
-                        _thinkingStartTime.value = System.currentTimeMillis()
-                    }
-                }
-                else -> Unit
-            }
-        }
+        // Compatibility mirrors (streamingText, isThinking, thinkingContent) are synced
+        // from chatTurnState by syncCompatibilityMirrors() after reduceChatTurn().
+        // Do NOT mutate them here independently.
 
         localCache?.updateMessagePart(
             messageId = props.messageID,
