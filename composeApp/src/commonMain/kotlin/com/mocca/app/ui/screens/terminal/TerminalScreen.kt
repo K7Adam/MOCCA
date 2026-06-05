@@ -39,7 +39,7 @@ class TerminalScreen : Screen {
                         // New tab button
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(AppSpacing.iconButtonSize)
                                 .moccaClickable(
                                     onClick = { screenModel.createTab() },
                                     enabled = !state.isCreatingTab,
@@ -57,7 +57,7 @@ class TerminalScreen : Screen {
                                     Icons.Default.Add,
                                     contentDescription = "New terminal",
                                     tint = AppColors.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
                             }
                         }
@@ -87,9 +87,9 @@ class TerminalScreen : Screen {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 LoadingIndicator(
                                     color = AppColors.primary,
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(AppSpacing.xxl)
                                 )
-                                Spacer(Modifier.height(12.dp))
+                                Spacer(Modifier.height(AppSpacing.md))
                                 Text(
                                     "Loading terminals...",
                                     style = AppTypography.labelSmall,

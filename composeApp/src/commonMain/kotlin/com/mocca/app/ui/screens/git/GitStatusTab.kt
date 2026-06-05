@@ -31,19 +31,19 @@ internal fun GitStatusSummary(
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = AppSpacing.cardPaddingLarge, vertical = AppSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
     ) {
 
         item {
             Surface(
                 color = AppColors.surfaceContainerHigh,
                 shape = AppShapes.medium,
-                border = BorderStroke(0.5.dp, AppColors.white.copy(alpha = 0.08f))
+                border = BorderStroke(AppSpacing.borderThin, AppColors.white.copy(alpha = 0.08f))
             ) {
                 Column(
-                    modifier = Modifier.fillMaxWidth().padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.fillMaxWidth().padding(AppSpacing.cardPaddingLarge),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -52,13 +52,13 @@ internal fun GitStatusSummary(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                         ) {
                             Icon(
                                 Icons.Default.Source,
                                 contentDescription = "Current branch",
                                 tint = AppColors.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(AppSpacing.iconSizeMedium)
                             )
                             Text(
                                 text = status?.branch ?: "unknown",
@@ -84,7 +84,7 @@ internal fun GitStatusSummary(
                             }
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.lg)) {
                         Text(
                             text = "${uiState.stagedCount} staged",
                             style = AppTypography.labelSmall,
@@ -114,7 +114,7 @@ internal fun GitStatusSummary(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                     ) {
                         Text("Staged", style = AppTypography.labelSmall, color = AppColors.primary.copy(alpha = 0.6f))
                         GodBadge(
@@ -144,7 +144,7 @@ internal fun GitStatusSummary(
                         Box(
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
-                                .size(40.dp)
+                                .size(AppSpacing.iconButtonSize)
                                 .moccaClickable(onClick = { screenModel.unstageFile(change.path) }, pressedScale = 0.92f),
                             contentAlignment = Alignment.Center
                         ) {
@@ -152,7 +152,7 @@ internal fun GitStatusSummary(
                                 Icons.Default.Remove,
                                 contentDescription = "Unstage ${change.path.substringAfterLast('/')}",
                                 tint = AppColors.primary.copy(alpha = 0.8f),
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(AppSpacing.iconSizeMedium)
                             )
                         }
                     },
@@ -170,7 +170,7 @@ internal fun GitStatusSummary(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                     ) {
                         Text(
                             "Modified",
@@ -201,11 +201,11 @@ internal fun GitStatusSummary(
                         )
                     },
                     trailing = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(40.dp)
+                                    .size(AppSpacing.iconButtonSize)
                                     .moccaClickable(onClick = { screenModel.stageFile(change.path) }, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -213,13 +213,13 @@ internal fun GitStatusSummary(
                                     Icons.Default.Add,
                                     contentDescription = "Stage ${change.path.substringAfterLast('/')}",
                                     tint = AppColors.primary.copy(alpha = 0.85f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
                             }
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(40.dp)
+                                    .size(AppSpacing.iconButtonSize)
                                     .moccaClickable(onClick = { screenModel.discardFile(change.path) }, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -227,7 +227,7 @@ internal fun GitStatusSummary(
                                     Icons.AutoMirrored.Filled.Undo,
                                     contentDescription = "Discard changes to ${change.path.substringAfterLast('/')}",
                                     tint = AppColors.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
                             }
                         }
@@ -246,7 +246,7 @@ internal fun GitStatusSummary(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                     ) {
                         Text("Untracked", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                         GodBadge(
@@ -276,7 +276,7 @@ internal fun GitStatusSummary(
                         Box(
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
-                                .size(40.dp)
+                                .size(AppSpacing.iconButtonSize)
                                 .moccaClickable(onClick = { screenModel.stageFile(path) }, pressedScale = 0.92f),
                             contentAlignment = Alignment.Center
                         ) {
@@ -284,7 +284,7 @@ internal fun GitStatusSummary(
                                 Icons.Default.Add,
                                 contentDescription = "Stage ${path.substringAfterLast('/')}",
                                 tint = AppColors.primary.copy(alpha = 0.85f),
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(AppSpacing.iconSizeMedium)
                             )
                         }
                     }
@@ -294,7 +294,7 @@ internal fun GitStatusSummary(
 
         if (uiState.stagedCount > 0) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 GodButton(
                     text = "Commit ${uiState.stagedCount} files",
                     onClick = { screenModel.showCommitDialog() },
@@ -306,7 +306,7 @@ internal fun GitStatusSummary(
 
         if (uiState.stashes.isNotEmpty() || uiState.hasChanges) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -314,7 +314,7 @@ internal fun GitStatusSummary(
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
                     ) {
                         Text("Stashes", style = AppTypography.labelSmall, color = AppColors.white.copy(alpha = 0.4f))
                         if (uiState.stashes.isNotEmpty()) {
@@ -345,11 +345,11 @@ internal fun GitStatusSummary(
                         )
                     },
                     trailing = {
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)) {
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(40.dp)
+                                    .size(AppSpacing.iconButtonSize)
                                     .moccaClickable(onClick = { screenModel.popStash(stash.index) }, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -357,13 +357,13 @@ internal fun GitStatusSummary(
                                     Icons.Default.Unarchive,
                                     contentDescription = "Apply ${stash.message.ifBlank { "stash ${stash.index}" }}",
                                     tint = AppColors.primary.copy(alpha = 0.85f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
                             }
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(40.dp)
+                                    .size(AppSpacing.iconButtonSize)
                                     .moccaClickable(onClick = { screenModel.dropStash(stash.index) }, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -371,7 +371,7 @@ internal fun GitStatusSummary(
                                     Icons.Default.Delete,
                                     contentDescription = "Delete ${stash.message.ifBlank { "stash ${stash.index}" }}",
                                     tint = AppColors.error.copy(alpha = 0.7f),
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
                             }
                         }
@@ -382,15 +382,15 @@ internal fun GitStatusSummary(
 
         if (status?.clean == true && uiState.stashes.isEmpty()) {
             item {
-                Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.fillMaxWidth().padding(AppSpacing.xxl), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
                             Icons.Default.CheckCircle,
                             contentDescription = null,
                             tint = AppColors.statusOnline,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(AppSpacing.xxxl)
                         )
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.height(AppSpacing.sm))
                         Text("Working tree clean", style = AppTypography.headlineSmall, color = AppColors.statusOnline)
                     }
                 }

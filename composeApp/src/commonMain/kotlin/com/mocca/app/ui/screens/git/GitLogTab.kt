@@ -27,7 +27,7 @@ internal fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
     
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
+        contentPadding = PaddingValues(AppSpacing.cardPaddingLarge),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         itemsIndexed(items = commits, key = { _, commit -> commit.hash }) { index, commit ->
@@ -40,7 +40,7 @@ internal fun LogTab(uiState: GitUiState, screenModel: GitScreenModel) {
         
         if (uiState.log?.hasMore == true) {
             item {
-                Box(modifier = Modifier.padding(start = 20.dp, top = 16.dp)) {
+                Box(modifier = Modifier.padding(start = AppSpacing.cardPaddingLarge, top = AppSpacing.lg)) {
                     GodButton(
                         text = "LOAD MORE",
                         onClick = { screenModel.loadLog(skip = commits.size) },
@@ -65,15 +65,15 @@ private fun LogTimelineItem(
     ) {
         // Timeline Column
         Column(
-            modifier = Modifier.width(40.dp),
+            modifier = Modifier.width(AppSpacing.avatarSizeLarge),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top circle
             Box(
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(AppSpacing.avatarSizeLarge)
                     .background(AppColors.surfaceContainerHigh, AppShapes.circle)
-                    .border(BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f)), AppShapes.circle),
+                    .border(BorderStroke(AppSpacing.borderThin, AppColors.white.copy(alpha = 0.1f)), AppShapes.circle),
                 contentAlignment = Alignment.Center
             ) {
                 if (commit.author.contains("Bot", ignoreCase = true)) {
@@ -81,7 +81,7 @@ private fun LogTimelineItem(
                         imageVector = Icons.Default.SmartToy,
                         contentDescription = null,
                         tint = AppColors.white.copy(alpha = 0.4f),
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(AppSpacing.iconSizeMedium)
                     )
                 } else {
                     // Placeholder for avatar
@@ -97,14 +97,14 @@ private fun LogTimelineItem(
             if (!isLast || hasMore) {
                 Box(
                     modifier = Modifier
-                        .width(2.dp)
+                        .width(AppSpacing.borderThin)
                         .height(AppSpacing.bottomBarClearance)
                         .background(AppColors.white.copy(alpha = 0.1f))
                 )
             }
         }
         
-        Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(AppSpacing.lg))
         
         // Content Column
         Column(
@@ -117,7 +117,7 @@ private fun LogTimelineItem(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                     Text(
                         text = commit.message,
                         style = AppTypography.titleSmall,
@@ -141,11 +141,11 @@ private fun LogTimelineItem(
                     color = AppColors.white.copy(alpha = 0.3f),
                     modifier = Modifier
                         .background(AppColors.white.copy(alpha = 0.05f), AppShapes.badge)
-                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                        .padding(horizontal = AppSpacing.badgePaddingHorizontal, vertical = AppSpacing.badgePaddingVertical)
                 )
             }
             
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.xs))
             
             Text(
                 text = commit.message,
@@ -155,11 +155,11 @@ private fun LogTimelineItem(
                 overflow = TextOverflow.Ellipsis
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.sm))
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
             ) {
                 Text(
                     text = commit.author,
@@ -167,7 +167,7 @@ private fun LogTimelineItem(
                     color = AppColors.white.copy(alpha = 0.3f),
                     fontWeight = FontWeight.Medium
                 )
-                Box(modifier = Modifier.size(4.dp).background(AppColors.white.copy(alpha = 0.2f), AppShapes.circle))
+                Box(modifier = Modifier.size(AppSpacing.statusDotSizeSmall).background(AppColors.white.copy(alpha = 0.2f), AppShapes.circle))
                 Text(
                     text = formatRelativeTime(commit.date), 
                     style = AppTypography.labelSmall,

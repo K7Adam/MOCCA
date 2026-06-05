@@ -24,8 +24,8 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(AppSpacing.cardPaddingLarge),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         val localBranches = branches.filter { !it.remote }
         item {
@@ -44,7 +44,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     onClick = { showCreateBranch = true },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
                     contentColor = AppColors.onSurface,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(AppSpacing.buttonHeightSmall)
                 )
             }
         }
@@ -58,12 +58,12 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                             imageVector = if (branch.name == currentBranch) Icons.Default.CheckCircle else Icons.Default.Source,
                             contentDescription = null,
                             tint = if (branch.name == currentBranch) AppColors.primary else AppColors.white.copy(alpha = 0.4f),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeMedium)
                         )
                     },
                     trailing = {
                         if (branch.ahead > 0 || branch.behind > 0) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                                 if (branch.ahead > 0) GodBadge(text = "+${branch.ahead}", contentColor = AppColors.primary)
                                 if (branch.behind > 0) GodBadge(text = "-${branch.behind}", contentColor = AppColors.error)
                             }
@@ -77,12 +77,12 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
         val remoteBranches = branches.filter { it.remote }
         if (remoteBranches.isNotEmpty()) {
             item {
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(AppSpacing.lg))
                 Text(
                     text = "Remote branches",
                     style = AppTypography.labelSmall,
                     color = AppColors.white.copy(alpha = 0.4f),
-                    modifier = Modifier.padding(bottom = 8.dp)
+                    modifier = Modifier.padding(bottom = AppSpacing.sm)
                 )
             }
             items(items = remoteBranches, key = { "remote-${it.name}" }) { branch ->
@@ -94,7 +94,7 @@ internal fun BranchesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                             imageVector = Icons.Default.Cloud,
                             contentDescription = null,
                             tint = AppColors.white.copy(alpha = 0.2f),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeMedium)
                         )
                     },
                     onClick = { selectedBranch = branch.name }

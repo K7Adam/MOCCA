@@ -22,12 +22,12 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val remotes = uiState.remotes
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(AppSpacing.cardPaddingLarge),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         item {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -41,7 +41,7 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     onClick = { screenModel.showAddRemoteDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
                     contentColor = AppColors.onSurface,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(AppSpacing.buttonHeightSmall)
                 )
             }
         }
@@ -59,7 +59,7 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 trailing = {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(AppSpacing.iconButtonSize)
                             .moccaClickable(onClick = { screenModel.removeRemote(remote.name) }, pressedScale = 0.92f),
                         contentAlignment = Alignment.Center
                     ) {
@@ -75,8 +75,8 @@ internal fun RemotesTab(uiState: GitUiState, screenModel: GitScreenModel) {
 internal fun StashesTab(uiState: GitUiState, screenModel: GitScreenModel) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(64.dp), tint = AppColors.primary)
-            Spacer(modifier = Modifier.height(16.dp))
+            Icon(Icons.Default.Inventory, contentDescription = null, modifier = Modifier.size(AppSpacing.xxxl), tint = AppColors.primary)
+            Spacer(modifier = Modifier.height(AppSpacing.lg))
             Text("Stashes Not Fully Implemented", fontWeight = FontWeight.Bold, color = AppColors.onSurfaceVariant)
             Text("Counts: ${uiState.stashes.size}", color = AppColors.onSurfaceVariant.copy(alpha = 0.7f))
         }
@@ -88,12 +88,12 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
     val tags = uiState.tags
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        contentPadding = PaddingValues(AppSpacing.cardPaddingLarge),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {
         item {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = AppSpacing.sm),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -107,7 +107,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                     onClick = { screenModel.showCreateTagDialog() },
                     containerColor = AppColors.white.copy(alpha = 0.05f),
                     contentColor = AppColors.onSurface,
-                    modifier = Modifier.height(32.dp)
+                    modifier = Modifier.height(AppSpacing.buttonHeightSmall)
                 )
             }
         }
@@ -125,7 +125,7 @@ internal fun TagsTab(uiState: GitUiState, screenModel: GitScreenModel) {
                 trailing = {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(AppSpacing.iconButtonSize)
                             .moccaClickable(onClick = { screenModel.deleteTag(tag) }, pressedScale = 0.92f),
                         contentAlignment = Alignment.Center
                     ) {

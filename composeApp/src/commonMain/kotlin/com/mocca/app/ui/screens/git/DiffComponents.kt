@@ -33,7 +33,7 @@ internal fun DiffModeToggle(splitMode: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .clip(AppShapes.pill)
             .background(AppColors.surface, AppShapes.pill)
-            .border(0.5.dp, AppColors.outline, AppShapes.pill),
+            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.pill),
         verticalAlignment = Alignment.CenterVertically
     ) {
         DiffModeTab(label = "UNIFIED", active = !splitMode) {
@@ -172,7 +172,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
             // W4-T2: per-file proportional changes bar
             val total = file.additions + file.deletions
             if (total > 0) {
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.xs))
                 DiffFileChangesBar(additions = file.additions, deletions = file.deletions)
             }
         }
@@ -183,7 +183,7 @@ internal fun FileDiffItem(file: GitDiffFile, splitMode: Boolean) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(AppColors.onSurfaceVariantDark)
-                    .padding(horizontal = AppSpacing.sm, vertical = 2.dp)
+                    .padding(horizontal = AppSpacing.sm, vertical = AppSpacing.xxs)
             ) {
                 Text(
                     text = hunk.header,
@@ -333,7 +333,7 @@ internal fun SplitDiffLines(lines: List<com.mocca.app.domain.model.GitDiffLine>)
                 // 1dp separator
                 Box(
                     modifier = Modifier
-                        .width(1.dp)
+                        .width(AppSpacing.borderThin)
                         .height(IntrinsicSize.Min)
                         .background(AppColors.outline)
                 )

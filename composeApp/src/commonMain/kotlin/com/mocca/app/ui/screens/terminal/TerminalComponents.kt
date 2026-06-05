@@ -95,7 +95,7 @@ internal fun TerminalTabItem(
             .moccaClickable(onClick = onSelected, pressedScale = 0.98f)
             .padding(horizontal = AppSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
     ) {
         // Status indicator dot
         val dotColor = when {
@@ -106,7 +106,7 @@ internal fun TerminalTabItem(
         }
         Box(
             modifier = Modifier
-                .size(6.dp)
+                .size(AppSpacing.statusDotSize)
                 .clip(AppShapes.circle)
                 .background(dotColor)
         )
@@ -124,7 +124,7 @@ internal fun TerminalTabItem(
         if (isActive) {
             Box(
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(AppSpacing.iconSizeSmall)
                     .clip(AppShapes.circle)
                     .moccaClickable(onClick = onClosed, pressedScale = 0.9f),
                 contentAlignment = Alignment.Center
@@ -133,7 +133,7 @@ internal fun TerminalTabItem(
                     Icons.Default.Close,
                     contentDescription = "Close terminal",
                     tint = AppColors.onSurfaceVariant,
-                    modifier = Modifier.size(12.dp)
+                    modifier = Modifier.size(AppSpacing.iconSizeSmall)
                 )
             }
         }
@@ -198,13 +198,13 @@ internal fun TerminalContent(
                         Icons.Default.Warning,
                         contentDescription = null,
                         tint = AppColors.error,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(AppSpacing.xxl)
                     )
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(AppSpacing.sm))
                     Text(
                         text = tab.error,
                         style = monoStyle.copy(color = AppColors.error),
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = AppSpacing.lg)
                     )
                 }
             } else {
@@ -214,7 +214,7 @@ internal fun TerminalContent(
                     modifier = Modifier
                         .fillMaxSize()
                         .horizontalScroll(hScrollState)
-                        .padding(4.dp),
+                        .padding(AppSpacing.xs),
                     userScrollEnabled = true
                 ) {
                     if (tab.isConnecting && tab.grid.rowData.all { it.text.isBlank() }) {
@@ -298,9 +298,9 @@ internal fun TerminalInputBar(
 
         // Send button
         Box(
-            modifier = Modifier
-                .size(32.dp)
-                .moccaClickable(
+                modifier = Modifier
+                    .size(AppSpacing.xxl)
+                    .moccaClickable(
                     onClick = {
                         if (inputText.isNotEmpty() && isEnabled) {
                             onInput(inputText + "\n")
@@ -316,7 +316,7 @@ internal fun TerminalInputBar(
                 Icons.AutoMirrored.Filled.Send,
                 contentDescription = "Send",
                 tint = if (isEnabled && inputText.isNotEmpty()) AppColors.primary else AppColors.outline,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(AppSpacing.iconSizeSmall)
             )
         }
     }
@@ -336,13 +336,13 @@ internal fun TerminalEmptyState(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
         ) {
             Icon(
                 Icons.Default.Terminal,
                 contentDescription = null,
                 tint = AppColors.outline,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier.size(AppSpacing.xxxl)
             )
             Text(
                 "NO TERMINAL SESSIONS",
@@ -360,13 +360,13 @@ internal fun TerminalEmptyState(
             ) {
                 if (isCreating) {
                     LoadingIndicator(
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(AppSpacing.iconSizeSmall),
                         color = AppColors.background
                     )
                 } else {
-                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(AppSpacing.iconSizeSmall))
                 }
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(AppSpacing.inlineGap))
                 Text(
                     "NEW TERMINAL",
                     style = AppTypography.labelMedium,

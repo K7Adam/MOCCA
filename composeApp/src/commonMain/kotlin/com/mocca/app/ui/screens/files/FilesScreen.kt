@@ -31,12 +31,14 @@ import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.domain.model.FileInfo
+import com.mocca.app.ui.components.ErrorScreen
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.components.GodListItem
 import com.mocca.app.ui.components.LoadingScreen
 import com.mocca.app.ui.components.editor.CodeEditorView
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
+import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
 import mocca.composeapp.generated.resources.Res
@@ -74,14 +76,14 @@ class FilesScreen : Screen {
                             imageVector = Icons.Default.FolderOpen,
                             contentDescription = null,
                             tint = AppColors.onSurface.copy(alpha = 0.4f),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeSmall)
                         )
                     },
                     actions = {
                         Box(
                             modifier = Modifier
                                 .minimumInteractiveComponentSize()
-                                .size(40.dp)
+                                .size(AppSpacing.iconButtonSize)
                                 .moccaClickable(onClick = { screenModel.loadFiles(state.currentPath) }, pressedScale = 0.92f),
                             contentAlignment = Alignment.Center
                         ) {
@@ -117,6 +119,11 @@ class FilesScreen : Screen {
                 ) {
                     if (state.isLoading) {
                         LoadingScreen()
+                    } else if (state.error != null && state.files.isEmpty()) {
+                        ErrorScreen(
+                            message = state.error!!,
+                            onRetry = { screenModel.loadFiles(state.currentPath) }
+                        )
                     } else if (state.selectedFile != null && state.fileContent != null) {
                         // File viewer
                         GodFileViewer(
@@ -166,20 +173,20 @@ private fun GodBreadcrumbBar(
     Surface(
         color = Color.Transparent,
         modifier = modifier.fillMaxWidth(),
-        border = BorderStroke(0.5.dp, AppColors.outline)
+                    border = BorderStroke(AppSpacing.borderThin, AppColors.outline)
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 20.dp, vertical = 12.dp)
+                .padding(horizontal = AppSpacing.cardPaddingLarge, vertical = AppSpacing.md)
                 .horizontalScroll(rememberScrollState()),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             if (canNavigateUp) {
                 Box(
                     modifier = Modifier
                         .minimumInteractiveComponentSize()
-                        .size(48.dp)
+                        .size(AppSpacing.xxxl)
                         .background(AppColors.surfaceVariant, AppShapes.circle)
                         .moccaClickable(onClick = onNavigateUp, pressedScale = 0.92f),
                     contentAlignment = Alignment.Center
@@ -188,7 +195,7 @@ private fun GodBreadcrumbBar(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Navigate up",
                         tint = AppColors.onSurface,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(AppSpacing.iconSizeSmall)
                     )
                 }
             }
@@ -196,7 +203,7 @@ private fun GodBreadcrumbBar(
             Icon(
                 Icons.Default.Home,
                 contentDescription = null,
-                modifier = Modifier.size(16.dp),
+                                                modifier = Modifier.size(AppSpacing.iconSizeSmall),
                 tint = AppColors.primary
             )
 
@@ -207,7 +214,7 @@ private fun GodBreadcrumbBar(
                             Icons.AutoMirrored.Filled.KeyboardArrowRight,
                             contentDescription = null,
                             tint = AppColors.onSurface.copy(alpha = 0.2f),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeSmall)
                         )
                         Text(
                             text = segment,
@@ -232,17 +239,28 @@ private fun GodFilesList(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Directory empty",
-                style = AppTypography.labelMedium,
-                color = AppColors.onSurface.copy(alpha = 0.2f)
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FolderOpen,
+                    contentDescription = null,
+                    tint = AppColors.onSurface.copy(alpha = 0.2f),
+                    modifier = Modifier.size(AppSpacing.xxxl)
+                )
+                Text(
+                    text = "Directory empty",
+                    style = AppTypography.labelMedium,
+                    color = AppColors.onSurface.copy(alpha = 0.4f)
+                )
+            }
         }
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(20.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            contentPadding = PaddingValues(AppSpacing.cardPaddingLarge),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             items(
                 items = files,
@@ -261,7 +279,7 @@ private fun GodFilesList(
                             imageVector = if (file.isDirectory) Icons.Default.Folder else getFileIcon(file.name),
                             contentDescription = null,
                             tint = if (file.isDirectory) AppColors.primary else AppColors.onSurface.copy(alpha = 0.4f),
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeMedium)
                         )
                     },
                     trailing = {
@@ -270,7 +288,7 @@ private fun GodFilesList(
                                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                                 contentDescription = null,
                                 tint = AppColors.onSurface.copy(alpha = 0.2f),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(AppSpacing.iconSizeSmall)
                             )
                         }
                     },
@@ -393,19 +411,19 @@ private fun GodFileViewer(
             Surface(
                 color = AppColors.surface,
                 modifier = Modifier.fillMaxWidth(),
-                border = BorderStroke(1.dp, AppColors.outline)
+                border = BorderStroke(AppSpacing.borderThin, AppColors.outline)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                    modifier = Modifier.padding(horizontal = AppSpacing.cardPaddingLarge, vertical = AppSpacing.md),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         getFileIcon(fileName),
                         contentDescription = null,
                         tint = AppColors.primary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(AppSpacing.iconSizeMedium)
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(AppSpacing.lg))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = if (hasUnsavedChanges && isEditing) "$fileName *" else fileName,
@@ -427,7 +445,7 @@ private fun GodFileViewer(
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(48.dp)
+                                    .size(AppSpacing.xxxl)
                                     .background(AppColors.primary, AppShapes.circle)
                                     .moccaClickable(onClick = onSave, enabled = !isSaving, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
@@ -450,7 +468,7 @@ private fun GodFileViewer(
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(48.dp)
+                                    .size(AppSpacing.xxxl)
                                     .moccaClickable(onClick = onToggleEdit, enabled = !isSaving, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -465,7 +483,7 @@ private fun GodFileViewer(
                             Box(
                                 modifier = Modifier
                                     .minimumInteractiveComponentSize()
-                                    .size(48.dp)
+                                    .size(AppSpacing.xxxl)
                                     .background(AppColors.surfaceVariant, AppShapes.circle)
                                     .moccaClickable(onClick = onToggleEdit, pressedScale = 0.92f),
                                 contentAlignment = Alignment.Center
@@ -483,7 +501,7 @@ private fun GodFileViewer(
                     Box(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
-                            .size(40.dp)
+                            .size(AppSpacing.iconButtonSize)
                             .moccaClickable(onClick = onRefreshFile, pressedScale = 0.92f),
                         contentAlignment = Alignment.Center
                     ) {
@@ -491,14 +509,14 @@ private fun GodFileViewer(
                             Icons.Default.Refresh,
                             contentDescription = "Refresh file",
                             tint = AppColors.onSurface,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeSmall)
                         )
                     }
                     // Close button
                     Box(
                         modifier = Modifier
                             .minimumInteractiveComponentSize()
-                            .size(48.dp)
+                            .size(AppSpacing.xxxl)
                             .moccaClickable(onClick = onClose, pressedScale = 0.92f),
                         contentAlignment = Alignment.Center
                     ) {
@@ -506,7 +524,7 @@ private fun GodFileViewer(
                             Icons.Default.Close,
                             contentDescription = "Close file viewer",
                             tint = AppColors.onSurface,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeSmall)
                         )
                     }
                 }
@@ -526,9 +544,9 @@ private fun GodFileViewer(
                             Icons.Default.Block,
                             contentDescription = null,
                             tint = AppColors.onSurfaceVariant,
-                            modifier = Modifier.size(48.dp)
+                            modifier = Modifier.size(AppSpacing.iconButtonSize)
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(AppSpacing.lg))
                         Text(
                             text = "Cannot edit binary file",
                             style = AppTypography.bodyMedium,
@@ -547,7 +565,7 @@ private fun GodFileViewer(
                             text = "File too large to edit (${formatFileSize(content.length.toLong())})",
                             style = AppTypography.labelMedium,
                             color = AppColors.warning,
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = AppSpacing.cardPaddingLarge, vertical = AppSpacing.sm)
                         )
                     }
                     Box(
@@ -557,7 +575,7 @@ private fun GodFileViewer(
                             .background(AppColors.background)
                             .verticalScroll(rememberScrollState())
                             .horizontalScroll(rememberScrollState())
-                            .padding(20.dp)
+                            .padding(AppSpacing.cardPaddingLarge)
                     ) {
                         Text(
                             text = content,
@@ -587,7 +605,7 @@ private fun GodFileViewer(
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp)
+                .padding(AppSpacing.lg)
         ) { data ->
             Snackbar(
                 snackbarData = data,

@@ -116,7 +116,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 LoadingIndicator(
                                     color = AppColors.statusWaiting,
-                                    modifier = Modifier.size(32.dp)
+                                    modifier = Modifier.size(AppSpacing.xxl)
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
@@ -144,7 +144,7 @@ data class McpResourceScreen(val serverName: String) : Screen {
                                     imageVector = Icons.Default.FolderOff,
                                     contentDescription = null,
                                     tint = AppColors.onSurfaceVariantDark,
-                                    modifier = Modifier.size(48.dp)
+                                    modifier = Modifier.size(AppSpacing.xxxl)
                                 )
                                 Spacer(modifier = Modifier.height(AppSpacing.md))
                                 Text(
@@ -217,7 +217,7 @@ private fun McpResourceItem(
                 imageVector = Icons.Default.Folder,
                 contentDescription = null,
                 tint = AppColors.statusWaiting,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(AppSpacing.iconSizeSmall)
             )
             Spacer(modifier = Modifier.width(AppSpacing.sm))
             Text(

@@ -75,7 +75,7 @@ fun McpOAuthDialog(
                     imageVector = Icons.Default.Lock,
                     contentDescription = null,
                     tint = AppColors.statusWaiting,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                 )
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Column {
@@ -147,7 +147,7 @@ fun McpOAuthDialog(
                 ) {
                     LoadingIndicator(
                         color = AppColors.statusWaiting,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(AppSpacing.iconSizeSmall)
                     )
                     Text(
                         text = "Generating authorization URL...",
@@ -237,7 +237,7 @@ fun McpOAuthDialog(
                 ) {
                     LoadingIndicator(
                         color = AppColors.statusWaiting,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(AppSpacing.iconSizeMedium)
                     )
                     Spacer(modifier = Modifier.width(AppSpacing.sm))
                     Text(

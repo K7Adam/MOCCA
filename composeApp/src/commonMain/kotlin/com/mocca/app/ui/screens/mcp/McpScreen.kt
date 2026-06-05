@@ -66,7 +66,7 @@ class McpScreen : Screen {
                             text = "${state.connectedCount}/${state.totalCount} servers active",
                             color = if (state.connectedCount > 0) AppColors.statusOnline else AppColors.onSurfaceVariant,
                             style = AppTypography.labelSmall,
-                            modifier = Modifier.padding(start = 16.dp)
+                            modifier = Modifier.padding(start = AppSpacing.lg)
                         )
                     }
                     
@@ -106,7 +106,7 @@ class McpScreen : Screen {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             LoadingIndicator(
                                 color = AppColors.statusWaiting,
-                                modifier = Modifier.size(32.dp)
+                                modifier = Modifier.size(AppSpacing.xxl)
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(
@@ -133,7 +133,7 @@ class McpScreen : Screen {
                                 imageVector = Icons.Default.CloudOff,
                                 contentDescription = null,
                                 tint = AppColors.onSurfaceVariantDark,
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier.size(AppSpacing.xxxl)
                             )
                             Spacer(modifier = Modifier.height(AppSpacing.md))
                             Text(

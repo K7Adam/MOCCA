@@ -69,13 +69,13 @@ class GitScreen : Screen {
                             imageVector = Icons.Default.FolderOpen,
                             contentDescription = null,
                             tint = AppColors.white.copy(alpha = 0.4f),
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(AppSpacing.iconSizeSmall)
                         )
                     },
                     actions = {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(AppSpacing.iconButtonSize)
                                 .moccaClickable(onClick = { /* More actions */ }, pressedScale = 0.92f),
                             contentAlignment = Alignment.Center
                         ) {
@@ -148,9 +148,9 @@ private fun GitTabsNavigation(
     ) {
         Row(
             modifier = Modifier
-                .padding(vertical = 16.dp, horizontal = 20.dp)
+                .padding(vertical = AppSpacing.lg, horizontal = AppSpacing.cardPaddingLarge)
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             GitTab.entries.forEach { tab ->
                 val isSelected = selectedTab == tab
@@ -161,7 +161,7 @@ private fun GitTabsNavigation(
                         contentColor = if (isSelected) AppColors.onSurface else AppColors.white.copy(alpha = 0.6f)
                     ),
                     shape = AppShapes.pill,
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = AppSpacing.cardPaddingLarge, vertical = AppSpacing.sm)
                 ) {
                     Text(text = tab.title, style = AppTypography.labelMedium)
                 }
@@ -177,10 +177,10 @@ private fun GitFloatingBar(
     onPull: () -> Unit,
     onPush: () -> Unit
 ) {
-    Box(modifier = Modifier.padding(bottom = 16.dp)) {
+    Box(modifier = Modifier.padding(bottom = AppSpacing.lg)) {
         Row(
             modifier = Modifier.animateContentSize(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
         ) {
             Button(
                 onClick = onFetch,
@@ -189,7 +189,7 @@ private fun GitFloatingBar(
                     containerColor = AppColors.surfaceContainerHigh,
                     contentColor = AppColors.onSurface
                 ),
-                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+                border = BorderStroke(AppSpacing.borderThin, AppColors.white.copy(alpha = 0.1f))
             ) {
                 Text("Refetch", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
             }
@@ -201,11 +201,11 @@ private fun GitFloatingBar(
                     containerColor = AppColors.surfaceContainerHigh,
                     contentColor = AppColors.onSurface
                 ),
-                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+                border = BorderStroke(AppSpacing.borderThin, AppColors.white.copy(alpha = 0.1f))
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                     Text("Pull", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
-                    Box(modifier = Modifier.size(6.dp).background(AppColors.primary, AppShapes.circle))
+                    Box(modifier = Modifier.size(AppSpacing.statusDotSizeLarge).background(AppColors.primary, AppShapes.circle))
                 }
             }
 
@@ -216,11 +216,11 @@ private fun GitFloatingBar(
                     containerColor = AppColors.surfaceContainerHigh,
                     contentColor = AppColors.primary
                 ),
-                border = BorderStroke(1.dp, AppColors.white.copy(alpha = 0.1f))
+                border = BorderStroke(AppSpacing.borderThin, AppColors.white.copy(alpha = 0.1f))
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)) {
                     Text("Push", style = AppTypography.labelMedium, fontWeight = FontWeight.Bold)
-                    Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = AppColors.primary, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.ArrowUpward, contentDescription = null, tint = AppColors.primary, modifier = Modifier.size(AppSpacing.iconSizeSmall))
                 }
             }
         }
@@ -232,7 +232,7 @@ private fun NotGitRepoScreen() {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
         ) {
             Icon(
                 imageVector = Icons.Default.FolderOff,

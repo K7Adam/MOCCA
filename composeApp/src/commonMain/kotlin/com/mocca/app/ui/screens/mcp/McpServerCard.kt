@@ -77,7 +77,7 @@ Column(
             if (isOperationInProgress) {
                 LoadingIndicator(
                     color = AppColors.statusWaiting,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(AppSpacing.iconSizeMedium)
                 )
             } else {
                 ModernToggle(
@@ -163,7 +163,7 @@ internal fun McpErrorBanner(
             imageVector = Icons.Default.Error,
             contentDescription = null,
             tint = AppColors.error,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(AppSpacing.iconSizeMedium)
         )
         Spacer(modifier = Modifier.width(AppSpacing.sm))
         Text(
@@ -174,7 +174,7 @@ internal fun McpErrorBanner(
         )
         Box(
             modifier = Modifier
-                .size(40.dp)
+                .size(AppSpacing.iconButtonSize)
                 .moccaClickable(onClick = onDismiss, pressedScale = 0.92f),
             contentAlignment = Alignment.Center
         ) {
@@ -182,7 +182,7 @@ internal fun McpErrorBanner(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Dismiss",
                 tint = AppColors.error,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(AppSpacing.iconSizeMedium)
             )
         }
     }
