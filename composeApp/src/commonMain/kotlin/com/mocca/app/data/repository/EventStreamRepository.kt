@@ -580,17 +580,19 @@ class EventStreamRepository(
     
     /**
      * Extract a unique ID from an event for deduplication.
+     * Avoids hashCode() — unreliable across process restarts and can collide.
+     * Uses deterministic fields (ids, timestamps, lengths) for stable identity.
      */
     private fun extractEventId(event: ServerEvent): String? {
         return when (event) {
             is ServerEvent.MessageUpdated -> with(event.properties.info) {
-                "msg-$id-${time?.completed ?: time?.created ?: 0}-${tokens?.hashCode() ?: 0}-${cost ?: 0.0}-${summary?.hashCode() ?: 0}"
+                "msg-${id}-${time?.completed ?: time?.created ?: 0}-${cost ?: 0.0}"
             }
             is ServerEvent.MessagePartUpdated -> with(event.properties) {
-                "part-${part.id}-${part.hashCode()}-${delta?.hashCode() ?: 0}"
+                "part-${part.id}-${part.time?.start ?: 0}-${delta?.length ?: 0}"
             }
             is ServerEvent.SessionUpdated -> with(event.properties.info) {
-                "session-$id-${hashCode()}"
+                "session-${id}-${time?.updated ?: time?.created ?: 0}"
             }
             is ServerEvent.PermissionAsked -> "perm-${event.properties.id}"
             is ServerEvent.QuestionAsked -> "question-${event.properties.id}"
@@ -786,9 +788,38 @@ class EventStreamRepository(
      * Handle incoming SSE events.
      * Persists relevant events to local database for offline-first support.
      * This is internal so it can be called by bridge adapters or state coordinators.
+     *
+     * NOTE: This method is called from BOTH handleBridgeEvent() and the SSE collect
+     * loop. Both callers perform isDuplicateEvent() before invoking handleEvent(),
+     * so dedup is handled upstream.
      */
     internal suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
         Napier.v("Dispatching event: ${event.type}")
+
+        // Early-exit for events from non-monitored sessions
+        // OpenCode sends ALL events for ALL sessions—filter client-side
+        if (event !is ServerEvent.Connected &&
+            event !is ServerEvent.Heartbeat &&
+            event !is ServerEvent.Log &&
+            event !is ServerEvent.InstallationUpdateAvailable &&
+            event !is ServerEvent.ServerInstanceDisposed &&
+            event !is ServerEvent.ProjectUpdated) {
+            val sessionId = when (event) {
+                is ServerEvent.MessageUpdated -> event.properties.info.sessionID
+                is ServerEvent.MessagePartUpdated -> event.properties.part.sessionID
+                is ServerEvent.MessagePartDelta -> event.properties.sessionID
+                is ServerEvent.SessionUpdated -> event.properties.info.id
+                is ServerEvent.SessionDeleted -> event.properties.info.id
+                is ServerEvent.SessionError -> event.properties.sessionID
+                is ServerEvent.AgentStatus -> event.properties.sessionID
+                else -> null
+            }
+            if (sessionId != null && !monitoredSessionIds.value.contains(sessionId)) {
+                Napier.v("[EventStream] Skipping event for non-monitored session: $sessionId (${event.type})")
+                return@withContext
+            }
+        }
+
         reduceChatTurn(event)
         
         when (event) {
