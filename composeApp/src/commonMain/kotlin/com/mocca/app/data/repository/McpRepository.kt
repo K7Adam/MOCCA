@@ -11,6 +11,11 @@ import com.mocca.app.domain.model.McpAuthCallbackRequest
 import com.mocca.app.domain.model.McpResourceContent
 import com.mocca.app.domain.model.McpResource
 import com.mocca.app.domain.model.McpOAuthState
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
+import com.mocca.app.bridge.opencode.BridgeFeatureUnavailableException
+import com.mocca.app.bridge.opencode.OpenCodeBridgeRepository
+import com.mocca.app.domain.model.McpServerType
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +28,8 @@ import kotlinx.coroutines.flow.update
  * Uses in-memory caching since MCP status is transient.
  */
 class McpRepository(
-    private val apiClient: MoccaApiClient
+    private val apiClient: MoccaApiClient,
+    private val bridgeConnectionManager: BridgeConnectionManager
 ) {
     private val _mcpServers = MutableStateFlow<Map<String, McpServerInfo>>(emptyMap())
     val mcpServers: Flow<Map<String, McpServerInfo>> = _mcpServers.asStateFlow()
@@ -50,7 +56,46 @@ class McpRepository(
     suspend fun refresh(directory: String? = null): Resource<Map<String, McpServerInfo>> {
         _isLoading.value = true
         _error.value = null
-        
+
+        // Try bridge-first
+        val bridgeStatus = bridgeConnectionManager.status.value
+        if (bridgeStatus is BridgeConnectionStatus.Connected) {
+            try {
+                val client = bridgeConnectionManager.client.value
+                    ?: throw BridgeFeatureUnavailableException("MOCCA CLI connection")
+                if ("mcp" in bridgeStatus.capabilities.namespaces) {
+                    Napier.d("[McpRepository] Fetching MCP servers from bridge")
+                    val bridgeServers = OpenCodeBridgeRepository(client).fetchMcpServers()
+                    val converted = bridgeServers.associate { info ->
+                        info.name to McpServerInfo(
+                            name = info.name,
+                            status = McpServerStatus(
+                                status = McpConnectionStatus.CONNECTED,
+                                error = null,
+                                tools = emptyList(),
+                                resources = emptyList(),
+                                prompts = emptyList()
+                            ),
+                            config = McpServerConfig(
+                                type = when (info.type?.uppercase()) {
+                                    "REMOTE" -> McpServerType.REMOTE
+                                    "STDIO" -> McpServerType.STDIO
+                                    else -> McpServerType.LOCAL
+                                },
+                                enabled = info.enabled ?: true
+                            )
+                        )
+                    }
+                    _mcpServers.value = converted
+                    _isLoading.value = false
+                    Napier.d("MCP status refreshed from bridge: ${converted.size} servers")
+                    return Resource.Success(converted)
+                }
+            } catch (e: Exception) {
+                Napier.w("[McpRepository] Bridge failed, HTTP fallback", e)
+            }
+        }
+
         return apiClient.getMcpStatus(directory).fold(
             onSuccess = { statusMap ->
                 _mcpServers.update { current ->

@@ -94,7 +94,7 @@ val commonModule = module {
         )
     }
     single { GitRepository(get(), get()) }
-    single { McpRepository(get()) }
+    single { McpRepository(get(), get()) }
     single { SettingsRepository(get(), get()) }
     singleOf(::PreferencesManager)
     single { ConfigRepository(get()) }
