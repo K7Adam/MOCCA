@@ -14,7 +14,12 @@ tags:
     timeout: 15000
 
 # Open sessions panel via bottom navigation
-- tapOn: "(Sessions|SESSIONS)"
+- tapOn:
+    id: "dashboard_sessions_tab"
+    optional: true
+- tapOn:
+    text: "(Sessions|SESSIONS)"
+    optional: true
 
 # Wait for panel animation
 - waitForAnimationToEnd:

@@ -9,7 +9,12 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 

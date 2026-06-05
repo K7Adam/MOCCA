@@ -9,7 +9,12 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 
@@ -17,8 +22,12 @@ tags:
     maxRetries: 2
     commands:
       - tapOn:
+          id: "dashboard_git_nav"
+          optional: true
+      - tapOn:
           text: "GIT STATUS"
           retryTapIfNoChange: true
+          optional: true
 
 - extendedWaitUntil:
     visible: "(STATUS|NOT A GIT REPOSITORY)"
@@ -49,7 +58,12 @@ tags:
 - waitForAnimationToEnd:
     timeout: 1200
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1200
 
@@ -87,8 +101,12 @@ tags:
     maxRetries: 2
     commands:
       - tapOn:
+          id: "dashboard_terminal_nav"
+          optional: true
+      - tapOn:
           text: "(Terminal|TERMINAL)"
           retryTapIfNoChange: true
+          optional: true
 
 - extendedWaitUntil:
     visible: ".*TERMINAL.*"

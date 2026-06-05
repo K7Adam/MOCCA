@@ -9,7 +9,12 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "(Sessions|SESSIONS)"
+- tapOn:
+    id: "dashboard_sessions_tab"
+    optional: true
+- tapOn:
+    text: "(Sessions|SESSIONS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_sessions_initial
@@ -25,7 +30,12 @@ tags:
     timeout: 2500
 - takeScreenshot: catalog_sessions_after_new_session
 
-- tapOn: "(Chat|CHAT)"
+- tapOn:
+    id: "dashboard_chat_tab"
+    optional: true
+- tapOn:
+    text: "(Chat|CHAT)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_chat_after_new_session

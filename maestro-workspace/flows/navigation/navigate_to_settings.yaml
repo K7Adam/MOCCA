@@ -13,8 +13,15 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|Sessions|Chat|Tools|CONNECT TO SERVER|MOCCA|Agents that understand context|Built for what|Making the impossible|From idea to|Code at the speed)"
     timeout: 15000
 
-# Open tools panel via bottom navigation
-- tapOn: "(Tools|TOOLS)"
+# Open tools panel via bottom navigation (uses testTag)
+# The nav item testTag is "dashboard_tools_tab" from TestTags.Dashboard.toolsTab
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+# Fallback: try text-based matching if testTag approach fails
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 
 - waitForAnimationToEnd:
     timeout: 2000
@@ -28,13 +35,16 @@ tags:
     direction: UP
     duration: 450
 
-# Tap on Settings button
-- retry:
-    maxRetries: 2
-    commands:
-      - tapOn:
-          text: "(Settings|SETTINGS)"
-          retryTapIfNoChange: true
+# Tap on Settings button (uses testTag)
+# The dashboard Settings button testTag is "dashboard_settings_nav" from TestTags.Dashboard.settingsNav
+- tapOn:
+    id: "dashboard_settings_nav"
+    optional: true
+
+# Fallback: try text-based matching if testTag approach fails
+- tapOn:
+    text: "(Settings|SETTINGS)"
+    optional: true
 
 # Wait for settings screen
 - extendedWaitUntil:

@@ -12,7 +12,12 @@ tags:
     timeout: 15000
 
 # Open tools panel via bottom navigation
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 
 - waitForAnimationToEnd:
     timeout: 2000
@@ -22,8 +27,12 @@ tags:
     maxRetries: 2
     commands:
       - tapOn:
+          id: "dashboard_files_nav"
+          optional: true
+      - tapOn:
           text: "Files"
           retryTapIfNoChange: true
+          optional: true
 
 - extendedWaitUntil:
     visible: "Files"

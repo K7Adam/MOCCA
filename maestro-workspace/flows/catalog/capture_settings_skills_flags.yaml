@@ -9,7 +9,12 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 
@@ -28,8 +33,12 @@ tags:
     maxRetries: 2
     commands:
       - tapOn:
+          id: "dashboard_settings_nav"
+          optional: true
+      - tapOn:
           text: "(Settings|SETTINGS)"
           retryTapIfNoChange: true
+          optional: true
 
 - extendedWaitUntil:
     visible: "SETTINGS"

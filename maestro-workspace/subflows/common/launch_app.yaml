@@ -14,7 +14,7 @@ appId: com.mocca.app
 
 # Bypass Progressive Onboarding if we are on the Welcome screen
 - longPressOn:
-    text: "Your mobile companion for OpenCode"
+    text: "Mobile OpenCode Companion App"
     optional: true
 
 # Wait for Main Screen to be visible

@@ -9,7 +9,12 @@ tags:
     visible: "(SESSIONS|CHAT|TOOLS|CONNECT TO SERVER|MOCCA|Agents that understand context)"
     timeout: 30000
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 
@@ -36,7 +41,12 @@ tags:
     timeout: 1200
 - takeScreenshot: catalog_screen_workspace_git
 
-- tapOn: "(Chat|CHAT)"
+- tapOn:
+    id: "dashboard_chat_tab"
+    optional: true
+- tapOn:
+    text: "(Chat|CHAT)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1200
 - takeScreenshot: catalog_screen_workspace_chat

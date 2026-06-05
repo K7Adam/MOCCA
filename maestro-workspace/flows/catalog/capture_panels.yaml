@@ -11,17 +11,32 @@ tags:
 
 - takeScreenshot: catalog_main_center_initial
 
-- tapOn: "(Sessions|SESSIONS)"
+- tapOn:
+    id: "dashboard_sessions_tab"
+    optional: true
+- tapOn:
+    text: "(Sessions|SESSIONS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_panel_sessions
 
-- tapOn: "(Chat|CHAT)"
+- tapOn:
+    id: "dashboard_chat_tab"
+    optional: true
+- tapOn:
+    text: "(Chat|CHAT)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: catalog_panel_chat
 
-- tapOn: "(Tools|TOOLS)"
+- tapOn:
+    id: "dashboard_tools_tab"
+    optional: true
+- tapOn:
+    text: "(Tools|TOOLS)"
+    optional: true
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: catalog_panel_tools_top
