@@ -685,7 +685,7 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             path = path,
             type = type,
             size = size,
-            modifiedAt = modifiedAt
+            modifiedAt = modifiedAt?.toDouble()
         )
     }
 }

@@ -668,10 +668,22 @@ data class FileInfo(
     val path: String,
     val type: String, // "file" or "directory"
     val size: Long? = null,
+    /**
+     * Modified timestamp in milliseconds with optional fractional part.
+     * The bridge returns timestamps with fractional milliseconds (e.g., 1776372610442.404),
+     * so this is typed as Double to accept both integer and decimal JSON numbers.
+     * Use [modifiedAtMillis] for integer millisecond precision.
+     */
     @SerialName("updated")
-    val modifiedAt: Long? = null
+    val modifiedAt: Double? = null
 ) {
     val isDirectory: Boolean get() = type == "directory"
+
+    /**
+     * Modified timestamp as integer milliseconds (truncates fractional part).
+     * Use this for display, sorting, or any logic requiring Long millisecond precision.
+     */
+    val modifiedAtMillis: Long? get() = modifiedAt?.toLong()
 }
 
 @Serializable
