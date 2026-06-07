@@ -76,6 +76,6 @@ fun MeshGradientHeroSurface(
             .background(gradient)
             .background(overlay)
     ) {
-        Box(modifier = Modifier.fillMaxSize(), content = content)
+        Box(content = content)
     }
 }
