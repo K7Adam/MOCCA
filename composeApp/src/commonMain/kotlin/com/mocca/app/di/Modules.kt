@@ -347,7 +347,7 @@ val screenModelModule = module {
     }
 
     // Terminal screen
-    factory { TerminalScreenModel(get()) }
+    factory { TerminalScreenModel(get(), get()) }
 
     // Feature flags screen
     factoryOf(::FeatureFlagsScreenModel)
