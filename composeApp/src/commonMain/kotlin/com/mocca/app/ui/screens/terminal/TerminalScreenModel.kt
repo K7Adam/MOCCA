@@ -6,6 +6,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import com.mocca.app.bridge.client.requestPayload
 import com.mocca.app.bridge.client.requireClient
 import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
 import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.domain.model.Terminal
 import com.mocca.app.domain.model.TerminalGrid
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -48,10 +50,15 @@ data class TerminalState(
     val isLoadingTabs: Boolean = false,
     val globalError: String? = null,
     val cols: Int = 120,
-    val rows: Int = 40
+    val rows: Int = 40,
+    val isBridgeConnected: Boolean = false,
+    val hasTerminalCapability: Boolean = false
 ) {
     val activeTab: TerminalTab?
         get() = tabs.find { it.terminal.id == activeTabId }
+
+    val canUseTerminal: Boolean
+        get() = isBridgeConnected && hasTerminalCapability
 }
 
 class TerminalScreenModel(
@@ -66,12 +73,35 @@ class TerminalScreenModel(
     val state: StateFlow<TerminalState> = _state.asStateFlow()
 
     init {
+        observeBridgeStatus()
         observeBridgeEvents()
         loadExistingTerminals()
     }
 
+    private fun observeBridgeStatus() {
+        screenModelScope.launch {
+            bridgeConnectionManager.status.collect { status ->
+                val isConnected = status is BridgeConnectionStatus.Connected
+                val hasCapability = isConnected && status.capabilities.terminal.ptyGrid
+                _state.update { it.copy(
+                    isBridgeConnected = isConnected,
+                    hasTerminalCapability = hasCapability,
+                    globalError = when {
+                        !isConnected -> "CLI bridge not connected"
+                        !hasCapability -> "Terminal capability (ptyGrid) not available"
+                        else -> null
+                    }
+                ) }
+            }
+        }
+    }
+
     fun loadExistingTerminals() {
         screenModelScope.launch {
+            if (!_state.value.canUseTerminal) {
+                _state.update { it.copy(isLoadingTabs = false) }
+                return@launch
+            }
             _state.update { it.copy(isLoadingTabs = true, globalError = null) }
             try {
                 val client = bridgeConnectionManager.requireClient("terminal.list")
@@ -100,6 +130,10 @@ class TerminalScreenModel(
 
     fun createTab() {
         screenModelScope.launch {
+            if (!_state.value.canUseTerminal) {
+                _state.update { it.copy(isCreatingTab = false, globalError = "Terminal not available: bridge disconnected or capability missing") }
+                return@launch
+            }
             _state.update { it.copy(isCreatingTab = true, globalError = null) }
             try {
                 val client = bridgeConnectionManager.requireClient("terminal.spawn")
@@ -131,15 +165,17 @@ class TerminalScreenModel(
 
     fun closeTab(terminalId: String) {
         screenModelScope.launch {
-            try {
-                val client = bridgeConnectionManager.requireClient("terminal.kill")
-                client.request(
-                    ns = "terminal",
-                    action = "kill",
-                    payload = json.encodeToJsonElement(TerminalIdRequest(terminalId))
-                )
-            } catch (error: Exception) {
-                Napier.w("[TerminalScreenModel] terminal.kill failed: ${error.message}", error)
+            if (_state.value.canUseTerminal) {
+                try {
+                    val client = bridgeConnectionManager.requireClient("terminal.kill")
+                    client.request(
+                        ns = "terminal",
+                        action = "kill",
+                        payload = json.encodeToJsonElement(TerminalIdRequest(terminalId))
+                    )
+                } catch (error: Exception) {
+                    Napier.w("[TerminalScreenModel] terminal.kill failed: ${error.message}", error)
+                }
             }
             removeTab(terminalId)
         }
@@ -152,6 +188,10 @@ class TerminalScreenModel(
 
     fun sendInput(terminalId: String, text: String) {
         screenModelScope.launch {
+            if (!_state.value.canUseTerminal) {
+                updateTab(terminalId) { it.copy(error = "Terminal not available: bridge disconnected or capability missing") }
+                return@launch
+            }
             try {
                 val client = bridgeConnectionManager.requireClient("terminal.write")
                 client.request(
@@ -168,6 +208,7 @@ class TerminalScreenModel(
 
     fun notifyResize(cols: Int, rows: Int) {
         _state.update { it.copy(cols = cols, rows = rows) }
+        if (!_state.value.canUseTerminal) return
         _state.value.tabs.forEach { tab ->
             screenModelScope.launch {
                 try {
@@ -223,6 +264,7 @@ class TerminalScreenModel(
 
     private fun requestSnapshot(terminalId: String) {
         screenModelScope.launch {
+            if (!_state.value.canUseTerminal) return@launch
             try {
                 val client = bridgeConnectionManager.requireClient("terminal.snapshot")
                 val frame = client.requestPayload<TerminalGridFrame>(

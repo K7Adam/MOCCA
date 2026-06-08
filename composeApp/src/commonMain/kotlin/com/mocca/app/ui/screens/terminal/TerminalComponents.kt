@@ -566,3 +566,90 @@ internal fun TerminalEmptyState(
         }
     }
 }
+
+// BRIDGE DISCONNECTED STATE
+
+@Composable
+internal fun TerminalDisconnectedState(
+    onConnectClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier.fillMaxSize().testTag(TestTags.Terminal.disconnectedState),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+        ) {
+            Icon(
+                Icons.Default.LinkOff,
+                contentDescription = null,
+                tint = AppColors.outline,
+                modifier = Modifier.size(AppSpacing.xxxl)
+            )
+            Text(
+                "CLI BRIDGE DISCONNECTED",
+                style = AppTypography.titleMedium,
+                color = AppColors.onSurface
+            )
+            Text(
+                "Connect to the MOCCA CLI bridge to use the terminal.",
+                style = AppTypography.bodyMedium,
+                color = AppColors.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(horizontal = AppSpacing.xl)
+            )
+            Button(
+                onClick = onConnectClick,
+                shape = AppShapes.pill,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = AppColors.primary,
+                    contentColor = AppColors.background
+                )
+            ) {
+                Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(AppSpacing.iconSizeSmall))
+                Spacer(Modifier.width(AppSpacing.inlineGap))
+                Text(
+                    "CONNECT TO CLI BRIDGE",
+                    style = AppTypography.labelMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+// TERMINAL CAPABILITY MISSING STATE
+
+@Composable
+internal fun TerminalCapabilityMissingState() {
+    Box(
+        modifier = Modifier.fillMaxSize().testTag(TestTags.Terminal.capabilityMissingState),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.lg)
+        ) {
+            Icon(
+                Icons.Default.Warning,
+                contentDescription = null,
+                tint = AppColors.warning,
+                modifier = Modifier.size(AppSpacing.xxxl)
+            )
+            Text(
+                "TERMINAL NOT SUPPORTED",
+                style = AppTypography.titleMedium,
+                color = AppColors.onSurface
+            )
+            Text(
+                "The connected CLI bridge does not support the terminal capability (ptyGrid).\n" +
+                "Please update your MOCCA CLI bridge to a version that supports terminal emulation.",
+                style = AppTypography.bodyMedium,
+                color = AppColors.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.padding(horizontal = AppSpacing.xl)
+            )
+        }
+    }
+}

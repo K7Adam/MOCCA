@@ -13,10 +13,14 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.mocca.app.bridge.connection.BridgeConnectionManager
+import com.mocca.app.bridge.connection.BridgeConnectionStatus
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.theme.*
 import com.mocca.app.ui.TestTags
 import androidx.compose.ui.platform.testTag
+import org.koin.compose.koinInject
+import kotlinx.coroutines.launch
 
 /**
  * Terminal screen with multi-tab support.
@@ -30,8 +34,10 @@ class TerminalScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = koinScreenModel<TerminalScreenModel>()
         val state by screenModel.state.collectAsState()
+        val bridgeManager = koinInject<BridgeConnectionManager>()
+        val bridgeStatus by bridgeManager.status.collectAsState()
 
-Scaffold(
+        Scaffold(
             topBar = {
                 GodHeader(
                     title = "Terminal",
@@ -75,58 +81,80 @@ Scaffold(
                     .padding(padding)
             ) {
 
-                if (state.tabs.isNotEmpty()) {
-                    TerminalTabBar(
-                        tabs = state.tabs,
-                        activeTabId = state.activeTabId,
-                        onTabSelected = { screenModel.selectTab(it) },
-                        onTabClosed = { screenModel.closeTab(it) }
+                // Check bridge connection status and terminal capability
+                val bridgeStatusSnapshot = bridgeStatus
+                val isConnected = bridgeStatusSnapshot is BridgeConnectionStatus.Connected
+                val capabilities = (bridgeStatusSnapshot as? BridgeConnectionStatus.Connected)?.capabilities
+                val hasTerminalCapability = capabilities?.terminal?.ptyGrid == true
+
+                // Show bridge disconnected state
+                if (!isConnected) {
+                    TerminalDisconnectedState(
+                        onConnectClick = { 
+                            // Launch coroutine to connect
+                            kotlinx.coroutines.GlobalScope.launch { bridgeManager.connect() }
+                        }
                     )
                 }
+                // Show terminal capability missing state
+                else if (!hasTerminalCapability) {
+                    TerminalCapabilityMissingState()
+                }
+                // Show normal terminal UI
+                else {
+                    if (state.tabs.isNotEmpty()) {
+                        TerminalTabBar(
+                            tabs = state.tabs,
+                            activeTabId = state.activeTabId,
+                            onTabSelected = { screenModel.selectTab(it) },
+                            onTabClosed = { screenModel.closeTab(it) }
+                        )
+                    }
 
-                when {
-                    state.isLoadingTabs -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                LoadingIndicator(
-                                    color = AppColors.primary,
-                                    modifier = Modifier.size(AppSpacing.xxl)
-                                )
-                                Spacer(Modifier.height(AppSpacing.md))
-                                Text(
-                                    "Loading terminals...",
-                                    style = AppTypography.labelSmall,
-                                    color = AppColors.onSurfaceVariant
-                                )
+                    when {
+                        state.isLoadingTabs -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    LoadingIndicator(
+                                        color = AppColors.primary,
+                                        modifier = Modifier.size(AppSpacing.xxl)
+                                    )
+                                    Spacer(Modifier.height(AppSpacing.md))
+                                    Text(
+                                        "Loading terminals...",
+                                        style = AppTypography.labelSmall,
+                                        color = AppColors.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
-                    }
-                    state.tabs.isEmpty() -> {
-                        TerminalEmptyState(
-                            isCreating = state.isCreatingTab,
-                            onCreateClick = { screenModel.createTab() }
-                        )
-                    }
-                    state.activeTab != null -> {
-                        val currentTab = state.activeTab!!
-                        TerminalContent(
-                            tab = currentTab,
-                            currentCols = state.cols,
-                            currentRows = state.rows,
-                            onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
-                            onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
-                    }
-                    else -> {
-                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text(
-                                "Select a terminal tab",
-                                style = AppTypography.labelMedium,
-                                color = AppColors.outline
+                        state.tabs.isEmpty() -> {
+                            TerminalEmptyState(
+                                isCreating = state.isCreatingTab,
+                                onCreateClick = { screenModel.createTab() }
                             )
+                        }
+                        state.activeTab != null -> {
+                            val currentTab = state.activeTab!!
+                            TerminalContent(
+                                tab = currentTab,
+                                currentCols = state.cols,
+                                currentRows = state.rows,
+                                onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
+                                onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            )
+                        }
+                        else -> {
+                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                Text(
+                                    "Select a terminal tab",
+                                    style = AppTypography.labelMedium,
+                                    color = AppColors.outline
+                                )
+                            }
                         }
                     }
                 }

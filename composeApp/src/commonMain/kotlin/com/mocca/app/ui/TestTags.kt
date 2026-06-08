@@ -127,6 +127,8 @@ object TestTags {
         const val inputBar = "terminal_input_bar"
         const val inputField = "terminal_input_field"
         const val sendButton = "terminal_send_button"
+        const val disconnectedState = "terminal_disconnected_state"
+        const val capabilityMissingState = "terminal_capability_missing_state"
     }
 
     object Screen
