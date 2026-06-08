@@ -44,6 +44,7 @@ data class TerminalGrid(
     val cursorX: Int = 0,
     val cursorY: Int = 0,
     val cursorVisible: Boolean = true,
+    val cursorStyle: String = "block",
     val title: String? = null,
     val scrollbackLength: Int = 0
 ) {
@@ -71,6 +72,7 @@ data class TerminalGrid(
             cursorX = frame.cursorX,
             cursorY = frame.cursorY,
             cursorVisible = frame.cursorVisible,
+            cursorStyle = frame.cursorStyle,
             title = frame.title ?: title,
             scrollbackLength = frame.scrollbackLength
         )

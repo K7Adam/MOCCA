@@ -116,6 +116,19 @@ object TestTags {
         const val questionCancelButton = "dialog_question_cancel_button"
     }
 
+    object Terminal {
+        const val screen = "terminal_screen"
+        const val tabBar = "terminal_tab_bar"
+        const val newTabButton = "terminal_new_tab_button"
+        const val emptyState = "terminal_empty_state"
+        const val createButton = "terminal_create_button"
+        const val content = "terminal_content"
+        const val outputArea = "terminal_output_area"
+        const val inputBar = "terminal_input_bar"
+        const val inputField = "terminal_input_field"
+        const val sendButton = "terminal_send_button"
+    }
+
     object Screen
 
     object Tab

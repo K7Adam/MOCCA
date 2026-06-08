@@ -15,6 +15,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mocca.app.ui.components.GodHeader
 import com.mocca.app.ui.theme.*
+import com.mocca.app.ui.TestTags
+import androidx.compose.ui.platform.testTag
 
 /**
  * Terminal screen with multi-tab support.
@@ -29,7 +31,7 @@ class TerminalScreen : Screen {
         val screenModel = koinScreenModel<TerminalScreenModel>()
         val state by screenModel.state.collectAsState()
 
-        Scaffold(
+Scaffold(
             topBar = {
                 GodHeader(
                     title = "Terminal",
@@ -44,7 +46,8 @@ class TerminalScreen : Screen {
                                     onClick = { screenModel.createTab() },
                                     enabled = !state.isCreatingTab,
                                     pressedScale = 0.92f
-                                ),
+                                )
+                                .testTag(TestTags.Terminal.newTabButton),
                             contentAlignment = Alignment.Center
                         ) {
                             if (state.isCreatingTab) {
