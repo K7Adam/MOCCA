@@ -14,11 +14,11 @@ import com.mocca.app.domain.model.TerminalGrid
 import com.mocca.app.domain.model.TerminalGridFrame
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -45,6 +46,10 @@ data class TerminalTab(
             ?: "Terminal"
 }
 
+enum class TerminalInputMode {
+    INTERACTIVE, LINE
+}
+
 @Immutable
 data class TerminalState(
     val tabs: List<TerminalTab> = emptyList(),
@@ -55,7 +60,8 @@ data class TerminalState(
     val cols: Int = 120,
     val rows: Int = 40,
     val isBridgeConnected: Boolean = false,
-    val hasTerminalCapability: Boolean = false
+    val hasTerminalCapability: Boolean = false,
+    val inputMode: TerminalInputMode = TerminalInputMode.INTERACTIVE
 ) {
     val activeTab: TerminalTab?
         get() = tabs.find { it.terminal.id == activeTabId }
@@ -156,17 +162,23 @@ class TerminalScreenModel(
         if (_state.value.canUseTerminal) return true
         
         // Wait for bridge connection and terminal capability
-        return bridgeConnectionManager.status
-            .first { status ->
+        val ready = withTimeoutOrNull(TERMINAL_READY_TIMEOUT_MILLIS) {
+            bridgeConnectionManager.status.first { status ->
                 val isConnected = status is BridgeConnectionStatus.Connected
                 val hasCapability = isConnected && status.capabilities.terminal.ptyGrid
                 isConnected && hasCapability
             }
-            .let { true }
-            .also { 
+        } != null
+
+        _state.update {
+            if (ready) {
                 // Update state to reflect ready status
-                _state.update { it.copy(isLoadingTabs = true, globalError = null) }
+                it.copy(isLoadingTabs = true, globalError = null)
+            } else {
+                it.copy(globalError = "Terminal not available: bridge disconnected or capability missing")
             }
+        }
+        return ready
     }
 
     fun createTab() {
@@ -233,6 +245,10 @@ class TerminalScreenModel(
         }
     }
 
+    fun setInputMode(mode: TerminalInputMode) {
+        _state.update { it.copy(inputMode = mode) }
+    }
+
     fun sendInput(terminalId: String, text: String) {
         screenModelScope.launch {
             if (!waitForTerminalReady()) {
@@ -250,6 +266,12 @@ class TerminalScreenModel(
                     val errorMsg = response.error?.message ?: "Failed to send input"
                     Napier.e("[TerminalScreenModel] terminal.write failed: $errorMsg")
                     updateTab(terminalId) { it.copy(error = errorMsg) }
+                } else {
+                    // Only request snapshot as a fallback if the bridge is somehow disconnected
+                    if (!_state.value.isBridgeConnected) {
+                        delay(SNAPSHOT_AFTER_WRITE_DELAY_MILLIS)
+                        requestSnapshot(terminalId)
+                    }
                 }
             } catch (error: Exception) {
                 Napier.e("[TerminalScreenModel] sendInput failed: ${error.message}", error)
@@ -288,32 +310,41 @@ class TerminalScreenModel(
             bridgeConnectionManager.client
                 .flatMapLatest { client -> client?.events ?: flowOf() }
                 .filter { it.ns == "terminal" }
-                .collectLatest { event ->
-                    val payload = event.payload ?: return@collectLatest
-                    when (event.event) {
-                        "terminal.spawned" -> {
-                            val spawned = json.decodeFromJsonElement<TerminalSpawnedEvent>(payload)
-                            upsertTab(spawned)
-                        }
-                        "terminal.state" -> {
-                            val frame = json.decodeFromJsonElement<TerminalGridFrame>(payload)
-                            updateTab(frame.terminalId) { tab ->
-                                tab.copy(
-                                    grid = tab.grid.apply(frame),
-                                    isConnecting = false,
-                                    isConnected = true,
-                                    error = null
-                                )
+                .collect { event ->
+                    val payload = event.payload ?: return@collect
+                    try {
+                        when (event.event) {
+                            "terminal.spawned" -> {
+                                val spawned = json.decodeFromJsonElement<TerminalSpawnedEvent>(payload)
+                                upsertTab(spawned)
+                            }
+                            "terminal.state" -> {
+                                val frame = json.decodeFromJsonElement<TerminalGridFrame>(payload)
+                                updateTab(frame.terminalId) { tab ->
+                                    tab.copy(
+                                        grid = tab.grid.apply(frame),
+                                        isConnecting = false,
+                                        isConnected = true,
+                                        error = null
+                                    )
+                                }
+                            }
+                            "terminal.exited" -> {
+                                val exited = json.decodeFromJsonElement<TerminalExitedEvent>(payload)
+                                updateTab(exited.terminalId) { it.copy(isConnected = false, isConnecting = false) }
+                            }
+                            "terminal.error" -> {
+                                val terminalError = json.decodeFromJsonElement<TerminalErrorEvent>(payload)
+                                val terminalId = terminalError.terminalId
+                                if (terminalId == null) {
+                                    _state.update { it.copy(globalError = terminalError.message) }
+                                } else {
+                                    updateTab(terminalId) { it.copy(error = terminalError.message, isConnecting = false) }
+                                }
                             }
                         }
-                        "terminal.exited" -> {
-                            val exited = json.decodeFromJsonElement<TerminalExitedEvent>(payload)
-                            updateTab(exited.terminalId) { it.copy(isConnected = false, isConnecting = false) }
-                        }
-                        "terminal.error" -> {
-                            val terminalError = json.decodeFromJsonElement<TerminalErrorEvent>(payload)
-                            updateTab(terminalError.terminalId) { it.copy(error = terminalError.message, isConnecting = false) }
-                        }
+                    } catch (error: Exception) {
+                        Napier.w("[TerminalScreenModel] terminal event decode failed: ${error.message}", error)
                     }
                 }
         }
@@ -406,4 +437,7 @@ private data class TerminalSpawnedEvent(val terminalId: String, val shell: Strin
 private data class TerminalExitedEvent(val terminalId: String)
 
 @Serializable
-private data class TerminalErrorEvent(val terminalId: String, val message: String)
+private data class TerminalErrorEvent(val terminalId: String? = null, val message: String)
+
+private const val TERMINAL_READY_TIMEOUT_MILLIS = 5_000L
+private const val SNAPSHOT_AFTER_WRITE_DELAY_MILLIS = 80L

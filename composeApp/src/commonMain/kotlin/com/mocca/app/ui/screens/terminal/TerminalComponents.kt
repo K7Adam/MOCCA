@@ -46,6 +46,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.input.key.*
 import com.mocca.app.ui.theme.moccaClickable
 import com.mocca.app.ui.theme.*
 import com.mocca.app.ui.TestTags
@@ -207,13 +210,15 @@ private fun TerminalRow(
 
     // Build annotated string from cells with ANSI colors and attributes
     // Render cells up to terminalCols, filling missing cells with spaces
-    val annotatedString = buildAnnotatedString {
+    val hasCursorInThisRow = cursorVisible && currentRowIndex == cursorY
+    val annotatedString = remember(row, hasCursorInThisRow, if (hasCursorInThisRow) cursorX else -1, if (hasCursorInThisRow) cursorStyle else "", terminalCols, monoStyle.color) {
+        buildAnnotatedString {
         for (cellIndex in 0 until terminalCols) {
             val cell = if (cellIndex < row.cells.size) row.cells[cellIndex] else null
             val char = cell?.char ?: " "
             
             // Determine if this cell has the cursor
-            val hasCursor = cursorVisible && currentRowIndex == cursorY && cellIndex == cursorX
+            val hasCursor = hasCursorInThisRow && cellIndex == cursorX
             
             // Apply cell colors (fg/bg) if present
             val fgColor = cell?.fg?.let { parseHexColor(it) } ?: monoStyle.color
@@ -252,6 +257,8 @@ private fun TerminalRow(
         }
     }
     
+    }
+    
     // Measure character dimensions for resize calculation (only once per session)
     val textMeasurer = rememberTextMeasurer()
     val measured = remember { mutableStateOf(false) }
@@ -288,6 +295,8 @@ private fun TerminalRow(
 internal fun TerminalContent(
     tab: TerminalTab,
     currentCols: Int,
+    inputMode: TerminalInputMode,
+    onInputModeChange: (TerminalInputMode) -> Unit,
     currentRows: Int,
     onInput: (String) -> Unit,
     onResize: (cols: Int, rows: Int) -> Unit,
@@ -416,14 +425,29 @@ internal fun TerminalContent(
 
         HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
 
-        TerminalInputBar(
+        TerminalAccessoryToolbar(
+            inputMode = inputMode,
+            onInputModeChange = onInputModeChange,
+            onSpecialKey = onInput,
+            isEnabled = tab.isConnected
+        )
+
+        HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
+
+        if (inputMode == TerminalInputMode.INTERACTIVE) {
+            TerminalInteractiveInputBar(
+                isEnabled = tab.isConnected,
+                onInput = onInput
+            )
+        } else {
+            TerminalInputBar(isEnabled = tab.isConnected, onInput = onInput) } /*
             isEnabled = tab.isConnected,
             onInput = onInput
         )
     }
 }
 
-// INPUT BAR
+*/ } } // INPUT BAR
 
 
 @Composable
@@ -433,6 +457,12 @@ internal fun TerminalInputBar(
 ) {
     var inputText by remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
+    fun submitInput() {
+        if (inputText.isNotEmpty() && isEnabled) {
+            onInput(inputText + "\r\n")
+            inputText = ""
+        }
+    }
 
     LaunchedEffect(isEnabled) {
         if (isEnabled) focusRequester.requestFocus()
@@ -477,12 +507,8 @@ internal fun TerminalInputBar(
                 keyboardType = KeyboardType.Text
             ),
             keyboardActions = KeyboardActions(
-                onDone = { 
-                    if (inputText.isNotEmpty() && isEnabled) {
-                        onInput(inputText + "\n")
-                        inputText = ""
-                    }
-                }
+                onSend = { submitInput() },
+                onDone = { submitInput() }
             )
         )
 
@@ -492,10 +518,7 @@ internal fun TerminalInputBar(
                     .size(AppSpacing.xxl)
                     .moccaClickable(
                     onClick = {
-                        if (inputText.isNotEmpty() && isEnabled) {
-                            onInput(inputText + "\n")
-                            inputText = ""
-                        }
+                        submitInput()
                     },
                     enabled = isEnabled && inputText.isNotEmpty(),
                     pressedScale = 0.92f
@@ -620,7 +643,234 @@ internal fun TerminalDisconnectedState(
     }
 }
 
-// TERMINAL CAPABILITY MISSING STATE
+// INTERACTIVE INPUT BAR & ACCESSORY TOOLBAR
+
+@Composable
+internal fun TerminalInteractiveInputBar(
+    isEnabled: Boolean,
+    onInput: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var textFieldValue by remember { mutableStateOf(TextFieldValue(" ", TextRange(1))) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isEnabled) {
+        if (isEnabled) {
+            focusRequester.requestFocus()
+        }
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(AppColors.surface)
+            .padding(horizontal = AppSpacing.md, vertical = AppSpacing.xs)
+            .testTag("terminal_interactive_input_bar"),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+    ) {
+        // Prompt/Indicator
+        Text(
+            text = "⚡",
+            style = TextStyle(
+                fontFamily = FontFamily.Monospace,
+                color = AppColors.statusOnline,
+                fontWeight = FontWeight.Bold
+            )
+        )
+
+        // Custom real-time input field
+        BasicTextField(
+            value = textFieldValue,
+            onValueChange = { newValue ->
+                if (!isEnabled) return@BasicTextField
+                
+                val oldText = textFieldValue.text
+                val newText = newValue.text
+
+                if (newText.length > oldText.length) {
+                    // Character(s) inserted (e.g. typing or autocomplete/paste)
+                    val addedText = newText.substring(oldText.length)
+                    // If the user pressed enter, send Carriage Return \r instead of \n
+                    val sentText = if (addedText == "\n") "\r" else addedText
+                    onInput(sentText)
+                } else if (newText.length < oldText.length) {
+                    // Character deleted (Backspace)
+                    onInput("\u007f") // Standard ASCII DEL / backspace
+                }
+
+                // Always keep the text field with a single space " " and cursor at index 1
+                // to allow continuous backspace and input tracking.
+                textFieldValue = TextFieldValue(" ", TextRange(1))
+            },
+            modifier = Modifier
+                .weight(1f)
+                .focusRequester(focusRequester)
+                .onPreviewKeyEvent { keyEvent ->
+                    if (!isEnabled) return@onPreviewKeyEvent false
+                    // Handle physical keys / emulator hardware keys that might not trigger onValueChange
+                    if (keyEvent.type == KeyEventType.KeyDown) {
+                        when (keyEvent.key) {
+                            Key.Tab -> {
+                                onInput("\t")
+                                true
+                            }
+                            Key.Escape -> {
+                                onInput("\u001b")
+                                true
+                            }
+                            Key.Enter -> {
+                                onInput("\r")
+                                true
+                            }
+                            Key.Backspace -> {
+                                onInput("\u007f")
+                                true
+                            }
+                            Key.DirectionUp -> {
+                                onInput("\u001b[A")
+                                true
+                            }
+                            Key.DirectionDown -> {
+                                onInput("\u001b[B")
+                                true
+                            }
+                            Key.DirectionRight -> {
+                                onInput("\u001b[C")
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                onInput("\u001b[D")
+                                true
+                            }
+                            else -> false
+                        }
+                    } else {
+                        false
+                    }
+                }
+                .testTag("terminal_interactive_input_field"),
+            textStyle = TextStyle(
+                fontFamily = FontFamily.Monospace,
+                color = AppColors.onSurface
+            ),
+            cursorBrush = SolidColor(Color.Transparent), // Hide cursor to feel like real terminal typing
+            singleLine = true,
+            enabled = isEnabled,
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.None,
+                keyboardType = KeyboardType.Text,
+                autoCorrect = false
+            )
+        )
+
+        Text(
+            text = "Interactive Mode",
+            style = AppTypography.bodySmall,
+            color = AppColors.onSurfaceVariant.copy(alpha = 0.6f)
+        )
+    }
+}
+
+@Composable
+internal fun TerminalAccessoryToolbar(
+    inputMode: TerminalInputMode,
+    onInputModeChange: (TerminalInputMode) -> Unit,
+    onSpecialKey: (String) -> Unit,
+    isEnabled: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(AppColors.surfaceContainerLow)
+            .padding(horizontal = AppSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Left side: Special Keys
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+        ) {
+            TerminalToolbarButton(label = "ESC", onClick = { onSpecialKey("\u001b") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "TAB", onClick = { onSpecialKey("\t") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "CTRL+C", onClick = { onSpecialKey("\u0003") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "CTRL+D", onClick = { onSpecialKey("\u0004") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "CTRL+Z", onClick = { onSpecialKey("\u001a") }, isEnabled = isEnabled)
+            
+            Spacer(Modifier.width(AppSpacing.sm))
+            
+            // Directional keys (Up, Down, Left, Right)
+            TerminalToolbarButton(label = "▲", onClick = { onSpecialKey("\u001b[A") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "▼", onClick = { onSpecialKey("\u001b[B") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "◀", onClick = { onSpecialKey("\u001b[D") }, isEnabled = isEnabled)
+            TerminalToolbarButton(label = "▶", onClick = { onSpecialKey("\u001b[C") }, isEnabled = isEnabled)
+        }
+
+        // Right side: Mode Toggle
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
+        ) {
+            val isInteractive = inputMode == TerminalInputMode.INTERACTIVE
+            Text(
+                text = if (isInteractive) "Interactive" else "Line",
+                style = AppTypography.labelSmall,
+                color = AppColors.onSurfaceVariant
+            )
+            Switch(
+                checked = isInteractive,
+                onCheckedChange = { 
+                    onInputModeChange(if (it) TerminalInputMode.INTERACTIVE else TerminalInputMode.LINE)
+                },
+                thumbContent = {
+                    Icon(
+                        imageVector = if (isInteractive) Icons.Default.Check else Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(SwitchDefaults.IconSize)
+                    )
+                },
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = AppColors.primary,
+                    checkedTrackColor = AppColors.primaryContainer,
+                    uncheckedThumbColor = AppColors.outline,
+                    uncheckedTrackColor = AppColors.surfaceVariant
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun TerminalToolbarButton(
+    label: String,
+    onClick: () -> Unit,
+    isEnabled: Boolean
+) {
+    Box(
+        modifier = Modifier
+            .height(32.dp)
+            .widthIn(min = 36.dp)
+            .clip(AppShapes.extraSmall)
+            .background(AppColors.surfaceContainerHigh)
+            .moccaClickable(
+                onClick = onClick,
+                enabled = isEnabled,
+                pressedScale = 0.92f
+            )
+            .padding(horizontal = AppSpacing.xs),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            style = AppTypography.labelSmall.copy(fontSize = 10.sp),
+            color = if (isEnabled) AppColors.onSurface else AppColors.outline,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
 
 @Composable
 internal fun TerminalCapabilityMissingState() {

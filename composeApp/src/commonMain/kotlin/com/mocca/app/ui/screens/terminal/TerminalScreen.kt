@@ -36,6 +36,7 @@ class TerminalScreen : Screen {
         val state by screenModel.state.collectAsState()
         val bridgeManager = koinInject<BridgeConnectionManager>()
         val bridgeStatus by bridgeManager.status.collectAsState()
+        val coroutineScope = rememberCoroutineScope()
 
         Scaffold(
             topBar = {
@@ -92,7 +93,7 @@ class TerminalScreen : Screen {
                     TerminalDisconnectedState(
                         onConnectClick = { 
                             // Launch coroutine to connect
-                            kotlinx.coroutines.GlobalScope.launch { bridgeManager.connect() }
+                            coroutineScope.launch { bridgeManager.connect() }
                         }
                     )
                 }
@@ -139,6 +140,8 @@ class TerminalScreen : Screen {
                             TerminalContent(
                                 tab = currentTab,
                                 currentCols = state.cols,
+                                inputMode = state.inputMode,
+                                onInputModeChange = { screenModel.setInputMode(it) },
                                 currentRows = state.rows,
                                 onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
                                 onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
