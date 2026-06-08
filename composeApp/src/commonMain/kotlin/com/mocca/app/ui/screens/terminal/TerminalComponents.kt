@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.material3.LoadingIndicator
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -187,7 +189,7 @@ private fun TerminalRow(
     monoFontFamily: FontFamily,
     lineHeight: TextUnit,
     density: Density,
-    onCharMetricsMeasured: (Float, Float) -> Unit
+
 ) {
     // Helper to parse hex color string
     fun parseHexColor(hex: String?): Color? = hex?.let {
@@ -258,32 +260,13 @@ private fun TerminalRow(
     }
     
     }
-    
-    // Measure character dimensions for resize calculation (only once per session)
-    val textMeasurer = rememberTextMeasurer()
-    val measured = remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        if (!measured.value && row.cells.isNotEmpty()) {
-            measured.value = true
-            val sampleText = buildAnnotatedString {
-                val sampleSpanStyle = monoStyle.toSpanStyle()
-                withStyle(sampleSpanStyle) { append("M") }
-            }
-            val layoutResult = textMeasurer.measure(sampleText)
-            val charWidth = layoutResult.size.width
-            val charHeight = layoutResult.size.height
-            if (charWidth > 0 && charHeight > 0) {
-                onCharMetricsMeasured(charWidth.toFloat(), charHeight.toFloat())
-            }
-        }
-    }
 
     Text(
         text = annotatedString,
         style = monoStyle,
         softWrap = false,
         modifier = Modifier
-            .height(with(density) { lineHeight.roundToPx().dp })
+            .height(with(density) { lineHeight.toDp() })
             .fillMaxWidth()
     )
 }
@@ -298,22 +281,36 @@ internal fun TerminalContent(
     inputMode: TerminalInputMode,
     onInputModeChange: (TerminalInputMode) -> Unit,
     currentRows: Int,
+    fontSizeSp: Float,
+    onFontSizeChange: (Float) -> Unit,
     onInput: (String) -> Unit,
     onResize: (cols: Int, rows: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
     val monoFontFamily = FontFamily.Monospace
-    val lineHeight = 18.sp
+    val fontSize = fontSizeSp.sp
+    val lineHeight = fontSize
     val monoStyle = TextStyle(
         fontFamily = monoFontFamily,
+        fontSize = fontSize,
         lineHeight = lineHeight,
         color = AppColors.primary
     )
 
     // Measure actual character dimensions for accurate resize calculation
+    val textMeasurer = rememberTextMeasurer()
     var charWidthPx by remember { mutableStateOf(0f) }
     var charHeightPx by remember { mutableStateOf(0f) }
+
+    LaunchedEffect(monoStyle, density) {
+        val sampleText = buildAnnotatedString {
+            withStyle(monoStyle.toSpanStyle()) { append("M") }
+        }
+        val layoutResult = textMeasurer.measure(sampleText)
+        charWidthPx = layoutResult.size.width.toFloat()
+        charHeightPx = layoutResult.size.height.toFloat()
+    }
 
     Column(
         modifier = modifier
@@ -412,11 +409,7 @@ internal fun TerminalContent(
                             monoStyle = monoStyle,
                             monoFontFamily = monoFontFamily,
                             lineHeight = lineHeight,
-                            density = density,
-                            onCharMetricsMeasured = { width, height ->
-                                charWidthPx = width
-                                charHeightPx = height
-                            }
+                            density = density
                         )
                     }
                 }
@@ -425,6 +418,8 @@ internal fun TerminalContent(
 
         HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
 
+        TerminalFontSizeSlider(fontSizeSp = fontSizeSp, onFontSizeChange = onFontSizeChange)
+        HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
         TerminalAccessoryToolbar(
             inputMode = inputMode,
             onInputModeChange = onInputModeChange,
@@ -868,6 +863,48 @@ private fun TerminalToolbarButton(
             style = AppTypography.labelSmall.copy(fontSize = 10.sp),
             color = if (isEnabled) AppColors.onSurface else AppColors.outline,
             fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+internal fun TerminalFontSizeSlider(
+    fontSizeSp: Float,
+    onFontSizeChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .background(AppColors.surfaceContainerLow)
+            .padding(horizontal = AppSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Terminal,
+            contentDescription = "Font Size",
+            tint = AppColors.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = "Size: ${fontSizeSp.toInt()}sp",
+            style = AppTypography.labelSmall,
+            color = AppColors.onSurfaceVariant,
+            modifier = Modifier.width(64.dp)
+        )
+        Slider(
+            value = fontSizeSp,
+            onValueChange = onFontSizeChange,
+            valueRange = 8f..24f,
+            steps = 16,
+            colors = SliderDefaults.colors(
+                thumbColor = AppColors.primary,
+                activeTrackColor = AppColors.primaryContainer,
+                inactiveTrackColor = AppColors.surfaceVariant
+            ),
+            modifier = Modifier.weight(1f)
         )
     }
 }

@@ -61,7 +61,8 @@ data class TerminalState(
     val rows: Int = 40,
     val isBridgeConnected: Boolean = false,
     val hasTerminalCapability: Boolean = false,
-    val inputMode: TerminalInputMode = TerminalInputMode.INTERACTIVE
+    val inputMode: TerminalInputMode = TerminalInputMode.INTERACTIVE,
+    val fontSizeSp: Float = 11f
 ) {
     val activeTab: TerminalTab?
         get() = tabs.find { it.terminal.id == activeTabId }
@@ -247,6 +248,10 @@ class TerminalScreenModel(
 
     fun setInputMode(mode: TerminalInputMode) {
         _state.update { it.copy(inputMode = mode) }
+    }
+
+    fun setFontSize(sizeSp: Float) {
+        _state.update { it.copy(fontSizeSp = sizeSp) }
     }
 
     fun sendInput(terminalId: String, text: String) {
