@@ -45,30 +45,88 @@ class TerminalScreen : Screen {
                     onBackClick = { navigator.pop() },
                     subtitle = state.activeTab?.let { "${state.cols}×${state.rows}" },
                     actions = {
-                        // New tab button
-                        Box(
-                            modifier = Modifier
-                                .size(AppSpacing.iconButtonSize)
-                                .moccaClickable(
-                                    onClick = { screenModel.createTab() },
-                                    enabled = !state.isCreatingTab,
-                                    pressedScale = 0.92f
-                                )
-                                .testTag(TestTags.Terminal.newTabButton),
-                            contentAlignment = Alignment.Center
+                        var menuExpanded by remember { mutableStateOf(false) }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs)
                         ) {
-                            if (state.isCreatingTab) {
-                                LoadingIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = AppColors.primary
-                                )
-                            } else {
+                            // New tab button
+                            Box(
+                                modifier = Modifier
+                                    .size(AppSpacing.iconButtonSize)
+                                    .moccaClickable(
+                                        onClick = { screenModel.createTab() },
+                                        enabled = !state.isCreatingTab,
+                                        pressedScale = 0.92f
+                                    )
+                                    .testTag(TestTags.Terminal.newTabButton),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (state.isCreatingTab) {
+                                    LoadingIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = AppColors.primary
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.Add,
+                                        contentDescription = "New terminal",
+                                        tint = AppColors.primary,
+                                        modifier = Modifier.size(AppSpacing.iconSizeMedium)
+                                    )
+                                }
+                            }
+
+                            // More options button (3-dots)
+                            Box(
+                                modifier = Modifier
+                                    .size(AppSpacing.iconButtonSize)
+                                    .moccaClickable(
+                                        onClick = { menuExpanded = true },
+                                        pressedScale = 0.92f
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
                                 Icon(
-                                    Icons.Default.Add,
-                                    contentDescription = "New terminal",
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "More options",
                                     tint = AppColors.primary,
                                     modifier = Modifier.size(AppSpacing.iconSizeMedium)
                                 )
+
+                                DropdownMenu(
+                                    expanded = menuExpanded,
+                                    onDismissRequest = { menuExpanded = false }
+                                ) {
+                                    DropdownMenuItem(
+                                        text = { Text("Increase Font Size") },
+                                        onClick = {
+                                            screenModel.setFontSize((state.fontSizeSp + 1f).coerceAtMost(24f))
+                                            menuExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Add,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text("Decrease Font Size") },
+                                        onClick = {
+                                            screenModel.setFontSize((state.fontSizeSp - 1f).coerceAtLeast(8f))
+                                            menuExpanded = false
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Remove,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
@@ -144,7 +202,6 @@ class TerminalScreen : Screen {
                                 onInputModeChange = { screenModel.setInputMode(it) },
                                 currentRows = state.rows,
                                 fontSizeSp = state.fontSizeSp,
-                                onFontSizeChange = { screenModel.setFontSize(it) },
                                 onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
                                 onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
                                 modifier = Modifier
