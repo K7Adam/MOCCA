@@ -179,6 +179,7 @@ private fun TerminalRow(
     cursorVisible: Boolean,
     cursorStyle: String,
     currentRowIndex: Int,
+    terminalCols: Int,
     monoStyle: TextStyle,
     monoFontFamily: FontFamily,
     lineHeight: TextUnit,
@@ -205,49 +206,48 @@ private fun TerminalRow(
     }
 
     // Build annotated string from cells with ANSI colors and attributes
+    // Render cells up to terminalCols, filling missing cells with spaces
     val annotatedString = buildAnnotatedString {
-        row.cells.forEachIndexed { cellIndex, cell ->
-            val char = cell.char
-            if (char.isNotBlank()) {
-                // Determine if this cell has the cursor
-                val hasCursor = cursorVisible && currentRowIndex == cursorY && cellIndex == cursorX
-                
-                // Apply cell colors (fg/bg) if present
-                val fgColor = cell.fg?.let { parseHexColor(it) } ?: monoStyle.color
-                val bgColor = cell.bg?.let { parseHexColor(it) } ?: Color.Transparent
-                
-                // Parse attributes (bold, italic, underline, etc.)
-                val isBold = cell.attrs.contains("bold") || cell.attrs.contains("1")
-                val isItalic = cell.attrs.contains("italic") || cell.attrs.contains("3")
-                val isUnderline = cell.attrs.contains("underline") || cell.attrs.contains("4")
-                val isStrikethrough = cell.attrs.contains("strikethrough") || cell.attrs.contains("9")
-                val isDim = cell.attrs.contains("dim") || cell.attrs.contains("2")
-                
-                // If cursor is on this cell, invert colors for block cursor
-                val (finalFg, finalBg) = if (hasCursor && cursorStyle == "block") {
-                    bgColor to fgColor
-                } else {
-                    fgColor to bgColor
-                }
-                
-                val spanStyle = SpanStyle(
-                    color = if (isDim) finalFg.copy(alpha = 0.5f) else finalFg,
-                    background = finalBg,
-                    fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-                    fontStyle = if (isItalic) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
-                    textDecoration = when {
-                        isUnderline && isStrikethrough -> TextDecoration.combine(listOf(TextDecoration.Underline, TextDecoration.LineThrough))
-                        isUnderline -> TextDecoration.Underline
-                        isStrikethrough -> TextDecoration.LineThrough
-                        else -> TextDecoration.None
-                    }
-                )
-                withStyle(spanStyle) {
-                    append(char)
-                }
+        for (cellIndex in 0 until terminalCols) {
+            val cell = if (cellIndex < row.cells.size) row.cells[cellIndex] else null
+            val char = cell?.char ?: " "
+            
+            // Determine if this cell has the cursor
+            val hasCursor = cursorVisible && currentRowIndex == cursorY && cellIndex == cursorX
+            
+            // Apply cell colors (fg/bg) if present
+            val fgColor = cell?.fg?.let { parseHexColor(it) } ?: monoStyle.color
+            val bgColor = cell?.bg?.let { parseHexColor(it) } ?: Color.Transparent
+            
+            // Parse attributes (bold, italic, underline, etc.)
+            val attrs = cell?.attrs ?: emptyList()
+            val isBold = attrs.contains("bold") || attrs.contains("1")
+            val isItalic = attrs.contains("italic") || attrs.contains("3")
+            val isUnderline = attrs.contains("underline") || attrs.contains("4")
+            val isStrikethrough = attrs.contains("strikethrough") || attrs.contains("9")
+            val isDim = attrs.contains("dim") || attrs.contains("2")
+            
+            // If cursor is on this cell, invert colors for block cursor
+            val (finalFg, finalBg) = if (hasCursor && cursorStyle == "block") {
+                bgColor to fgColor
             } else {
-                // Empty cell - append space
-                append(" ")
+                fgColor to bgColor
+            }
+            
+            val spanStyle = SpanStyle(
+                color = if (isDim) finalFg.copy(alpha = 0.5f) else finalFg,
+                background = finalBg,
+                fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
+                fontStyle = if (isItalic) androidx.compose.ui.text.font.FontStyle.Italic else androidx.compose.ui.text.font.FontStyle.Normal,
+                textDecoration = when {
+                    isUnderline && isStrikethrough -> TextDecoration.combine(listOf(TextDecoration.Underline, TextDecoration.LineThrough))
+                    isUnderline -> TextDecoration.Underline
+                    isStrikethrough -> TextDecoration.LineThrough
+                    else -> TextDecoration.None
+                }
+            )
+            withStyle(spanStyle) {
+                append(char)
             }
         }
     }
@@ -399,6 +399,7 @@ internal fun TerminalContent(
                             cursorVisible = tab.grid.cursorVisible,
                             cursorStyle = tab.grid.cursorStyle,
                             currentRowIndex = row.index,
+                            terminalCols = tab.grid.cols,
                             monoStyle = monoStyle,
                             monoFontFamily = monoFontFamily,
                             lineHeight = lineHeight,

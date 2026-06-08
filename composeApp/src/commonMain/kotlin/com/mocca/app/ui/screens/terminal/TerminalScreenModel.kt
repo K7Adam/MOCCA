@@ -209,11 +209,15 @@ class TerminalScreenModel(
             if (_state.value.canUseTerminal) {
                 try {
                     val client = bridgeConnectionManager.requireClient("terminal.kill")
-                    client.request(
+                    val response = client.request(
                         ns = "terminal",
                         action = "kill",
                         payload = json.encodeToJsonElement(TerminalIdRequest(terminalId))
                     )
+                    if (!response.ok) {
+                        val errorMsg = response.error?.message ?: "Failed to close terminal"
+                        Napier.w("[TerminalScreenModel] terminal.kill failed: $errorMsg")
+                    }
                 } catch (error: Exception) {
                     Napier.w("[TerminalScreenModel] terminal.kill failed: ${error.message}", error)
                 }
@@ -237,11 +241,16 @@ class TerminalScreenModel(
             }
             try {
                 val client = bridgeConnectionManager.requireClient("terminal.write")
-                client.request(
+                val response = client.request(
                     ns = "terminal",
                     action = "write",
                     payload = json.encodeToJsonElement(TerminalWriteRequest(terminalId = terminalId, data = text))
                 )
+                if (!response.ok) {
+                    val errorMsg = response.error?.message ?: "Failed to send input"
+                    Napier.e("[TerminalScreenModel] terminal.write failed: $errorMsg")
+                    updateTab(terminalId) { it.copy(error = errorMsg) }
+                }
             } catch (error: Exception) {
                 Napier.e("[TerminalScreenModel] sendInput failed: ${error.message}", error)
                 updateTab(terminalId) { it.copy(error = error.toUiMessage("Unable to send input")) }
@@ -257,11 +266,15 @@ class TerminalScreenModel(
                 if (!waitForTerminalReady()) return@launch
                 try {
                     val client = bridgeConnectionManager.requireClient("terminal.resize")
-                    client.request(
+                    val response = client.request(
                         ns = "terminal",
                         action = "resize",
                         payload = json.encodeToJsonElement(TerminalResizeBridgeRequest(tab.terminal.id, cols, rows))
                     )
+                    if (!response.ok) {
+                        val errorMsg = response.error?.message ?: "Failed to resize terminal"
+                        Napier.w("[TerminalScreenModel] terminal.resize failed: $errorMsg")
+                    }
                 } catch (error: Exception) {
                     Napier.w("[TerminalScreenModel] resize failed: ${error.message}", error)
                 }
