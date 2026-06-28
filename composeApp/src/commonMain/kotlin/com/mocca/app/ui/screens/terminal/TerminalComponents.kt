@@ -57,6 +57,16 @@ import com.mocca.app.ui.TestTags
 import androidx.compose.ui.platform.testTag
 import com.mocca.app.util.AnsiParser
 
+// Extension to convert TextStyle to SpanStyle
+fun TextStyle.toSpanStyle(): SpanStyle = SpanStyle(
+    fontSize = this.fontSize,
+    fontWeight = this.fontWeight,
+    fontStyle = this.fontStyle,
+    fontFamily = this.fontFamily,
+    letterSpacing = this.letterSpacing,
+    textDecoration = this.textDecoration
+)
+
 // TAB BAR
 
 
@@ -255,7 +265,9 @@ private fun TerminalRow(
         text = annotatedString,
         style = monoStyle,
         softWrap = false,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+
+            .fillMaxWidth()
     )
 }
 
@@ -270,6 +282,7 @@ internal fun TerminalContent(
     onInputModeChange: (TerminalInputMode) -> Unit,
     currentRows: Int,
     fontSizeSp: Float,
+    onFontSizeChange: (Float) -> Unit,
     onInput: (String) -> Unit,
     onResize: (cols: Int, rows: Int) -> Unit,
     modifier: Modifier = Modifier
@@ -318,6 +331,16 @@ internal fun TerminalContent(
             }
         }
 
+        // Debounce resize: write to pending state in layout phase, defer onResize to LaunchedEffect
+        var pendingCols by remember { mutableStateOf(currentCols) }
+        var pendingRows by remember { mutableStateOf(currentRows) }
+
+        LaunchedEffect(pendingCols, pendingRows) {
+            if (pendingCols != currentCols || pendingRows != currentRows) {
+                onResize(pendingCols, pendingRows)
+            }
+        }
+
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -329,11 +352,8 @@ internal fun TerminalContent(
                         // Use actual measured font metrics if available, otherwise fall back to approximation
                         val cw = if (charWidthPx > 0) charWidthPx else with(density) { 8.sp.toPx() }
                         val ch = if (charHeightPx > 0) charHeightPx else with(density) { lineHeight.toPx() }
-                        val cols = (size.width / cw).toInt().coerceAtLeast(40)
-                        val rows = (size.height / ch).toInt().coerceAtLeast(10)
-                        if (cols != currentCols || rows != currentRows) {
-                            onResize(cols, rows)
-                        }
+                        pendingCols = (size.width / cw).toInt().coerceAtLeast(40)
+                        pendingRows = (size.height / ch).toInt().coerceAtLeast(10)
                     }
                 }
         ) {
@@ -405,6 +425,8 @@ internal fun TerminalContent(
 
         HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
 
+        TerminalFontSizeSlider(fontSizeSp = fontSizeSp, onFontSizeChange = onFontSizeChange)
+        HorizontalDivider(color = AppColors.outline.copy(alpha = 0.3f))
         TerminalAccessoryToolbar(
             inputMode = inputMode,
             onInputModeChange = onInputModeChange,
@@ -740,7 +762,7 @@ internal fun TerminalInteractiveInputBar(
             keyboardOptions = KeyboardOptions(
                 imeAction = ImeAction.None,
                 keyboardType = KeyboardType.Text,
-                autoCorrect = false
+                autoCorrectEnabled = false
             )
         )
 
@@ -848,6 +870,48 @@ private fun TerminalToolbarButton(
             style = AppTypography.labelSmall.copy(fontSize = 10.sp),
             color = if (isEnabled) AppColors.onSurface else AppColors.outline,
             fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+internal fun TerminalFontSizeSlider(
+    fontSizeSp: Float,
+    onFontSizeChange: (Float) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(40.dp)
+            .background(AppColors.surfaceContainerLow)
+            .padding(horizontal = AppSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.sm)
+    ) {
+        Icon(
+            imageVector = Icons.Default.Terminal,
+            contentDescription = "Font Size",
+            tint = AppColors.onSurfaceVariant,
+            modifier = Modifier.size(16.dp)
+        )
+        Text(
+            text = "Size: ${fontSizeSp.toInt()}sp",
+            style = AppTypography.labelSmall,
+            color = AppColors.onSurfaceVariant,
+            modifier = Modifier.width(64.dp)
+        )
+        Slider(
+            value = fontSizeSp,
+            onValueChange = onFontSizeChange,
+            valueRange = 8f..24f,
+            steps = 16,
+            colors = SliderDefaults.colors(
+                thumbColor = AppColors.primary,
+                activeTrackColor = AppColors.primaryContainer,
+                inactiveTrackColor = AppColors.surfaceVariant
+            ),
+            modifier = Modifier.weight(1f)
         )
     }
 }

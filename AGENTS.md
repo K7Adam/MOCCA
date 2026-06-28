@@ -18,7 +18,6 @@ MOCCA/
 │       ├── bridge/       # CLI bridge client, connection, protocol
 │       ├── data/         # LocalCache, repositories, state stores
 │       ├── di/           # Koin module graph (ordering matters)
-│       ├── discovery/    # Reserved for cross-platform server discovery (empty)
 │       ├── domain/       # Models, events, sync contracts
 │       ├── ui/           # App shell, screens, components, theme
 │       └── util/         # Shared formatters, lifecycle/network abstractions
@@ -52,6 +51,7 @@ MOCCA/
 | E2E tests | `maestro-workspace/` | Dedicated AGENTS.md there |
 | Test suite | `composeApp/src/commonTest/kotlin/com/mocca/app/` | 23 KMP commonTest files |
 | Scripts | `scripts/mocca-serve-emulator.ps1` | Emulator-specific OpenCode server |
+| Doc sync | `scripts/check-docs-sync.ps1` | Validates AGENTS.md path references + commit hash |
 
 ## STARTUP CHAIN
 - `AndroidManifest.xml` -> `MoccaApp` -> `startKoin(...)`
@@ -134,12 +134,15 @@ MOCCA/
 
 # Filter logcat for app warnings/errors
 adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
+
+# Validate AGENTS.md documentation sync (paths + commit hash)
+pwsh -NoProfile -File scripts/check-docs-sync.ps1
 ```
 
 ## NOTES
 - `gradle.properties` is tuned for constrained RAM (`workers.max=1`, configuration cache on)
 - `Modules.kt` ordering is not cosmetic; moving coordinator/state-store registrations can break bootstrap
 - Root README has newer theme wording than the old root AGENTS did; keep AGENTS aligned with current Material 3 Expressive setup
-- `discovery/` package exists but is currently empty — server discovery is bridge-first via QR pairing
+- Server discovery is bridge-first via QR pairing; no `discovery/` package exists
 - `UpdateRepository.kt` holds a standalone `HttpClient` for APK redirect downloads (line 155) — documented deviation from the `ApiExecutor` pattern
 - `ServerConfigRepository.kt:50` uses `runBlocking` — known anti-pattern violation for synchronous server-load

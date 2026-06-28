@@ -62,8 +62,8 @@ data class ChatState(
             (msg.tokens?.input ?: 0) + (msg.tokens?.output ?: 0)
         } ?: 0
     }
-    val availableVariants: ImmutableList<String> get() {
-        return variantPickerState.variants.map { it.id }.toImmutableList()
+    val availableVariants: ImmutableList<String> by lazy {
+        variantPickerState.variants.map { it.id }.toImmutableList()
     }
 }
 

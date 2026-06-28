@@ -202,6 +202,7 @@ class TerminalScreen : Screen {
                                 onInputModeChange = { screenModel.setInputMode(it) },
                                 currentRows = state.rows,
                                 fontSizeSp = state.fontSizeSp,
+                                onFontSizeChange = { screenModel.setFontSize(it) },
                                 onInput = { input -> screenModel.sendInput(currentTab.terminal.id, input) },
                                 onResize = { cols, rows -> screenModel.notifyResize(cols, rows) },
                                 modifier = Modifier

@@ -40,6 +40,7 @@ import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.components.modern.message.*
 import com.mocca.app.ui.theme.*
 import com.mocca.app.util.TimeFormatter
+import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.screens.files.FilesScreen
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -174,9 +175,16 @@ fun ChatContent(
     // Track new messages while scrolled up (for badge indicator)
     var hasNewMessagesWhileScrolledUp by remember { mutableStateOf(false) }
 
-    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        if (listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset <= 50) {
-            hasNewMessagesWhileScrolledUp = false
+    // Consolidate scroll-position tracking into a single snapshotFlow to avoid
+    // back-writing from multiple LaunchedEffects that read layout state independently.
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset
+        }.collect { (index, offset) ->
+            val isAtBottom = index == 0 && offset <= 50
+            if (isAtBottom) {
+                hasNewMessagesWhileScrolledUp = false
+            }
         }
     }
 

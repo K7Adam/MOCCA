@@ -5,8 +5,14 @@
 -dontwarn java.lang.management.ManagementFactory
 -dontwarn java.lang.management.RuntimeMXBean
 
-# Keep all classes from composeApp module
--keep class com.mocca.app.** { *; }
+# Keep Android bootstrap classes (Application, Activity, Service, Receiver)
+-keep class com.mocca.app.MoccaApp { *; }
+-keep class com.mocca.app.MainActivity { *; }
+-keep class com.mocca.app.service.ActiveSessionService { *; }
+-keep class com.mocca.app.service.PermissionActionReceiver { *; }
+-keep class com.mocca.app.domain.manager.ApkDownloadReceiver { *; }
+-keep class com.mocca.app.manager.AndroidNotificationTracker { *; }
+-keep class com.mocca.app.data.repository.SessionActivityManager { *; }
 
 # Koin
 -keep class org.koin.** { *; }
