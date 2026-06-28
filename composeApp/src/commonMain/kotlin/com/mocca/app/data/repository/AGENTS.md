@@ -1,6 +1,6 @@
 # DATA REPOSITORY LAYER
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** Server-First Repositories, ConnectionManager
 
 **Relevant Skills:** `kotlin-best-practices` (repository patterns, Flow)
@@ -56,22 +56,22 @@ Global application state store.
 - Tracks global configuration and connection state.
 
 ### Additional Repositories
-- `AgentRepository` — Agent list + bridge sync.
-- `CommandRepository` — Slash commands + shell tools.
+- `AgentRepository` — Agent list + bridge sync. Bridge-first parity complete (commit `81ec350`).
+- `CommandRepository` — Slash commands + shell tools. Bridge-first parity complete (commit `be5c252`).
 - `ConfigRepository` — Global app config.
 - `FileRepository` — Workspace file browser.
-- `McpRepository` — MCP server/resource status.
+- `McpRepository` — MCP server/resource status. Bridge-first parity complete (commit `0d984bc`).
 - `PermissionActionBus` — Permission request fanout.
 - `ProjectRepository` — Project path + workspace.
-- `ProviderRepository` — Provider list + auth.
+- `ProviderRepository` — Provider list + auth. Bridge-first parity complete (commit `81ec350`).
 - `SearchRepository` — Search endpoint.
 - `SessionRepository` — Session CRUD.
 - `SettingsRepository` — Preferences + AppSettings.
 - `SystemMonitorRepository` — System info.
-- `ToolRepository` — Tool definitions.
+- `ToolRepository` — Tool definitions. Bridge-first parity complete (commit `be5c252`).
 - `UpdateCheckScheduler` — Periodic update checks.
 - `UpdateNotifier` — Update notification fanout.
-- `UpdateRepository` — APK update check + download. Holds a standalone `HttpClient` for redirect downloads (line 157) — documented deviation from the `ApiExecutor` pattern.
+- `UpdateRepository` — APK update check + download. Holds a standalone `HttpClient` for redirect downloads (line 155) — documented deviation from the `ApiExecutor` pattern.
 - `AiChatGateway` — Bridge → chat send orchestration.
 
 ## PATTERNS

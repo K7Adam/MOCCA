@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
-**Commit:** 05faecd
+**Updated:** 2026-06-28
+**Commit:** b5323a2
 **Project:** MOCCA (Mobile OpenCode Companion App)
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight + Material 3 Expressive
 
@@ -46,9 +46,11 @@ MOCCA/
 | Bridge bootstrap | `composeApp/src/commonMain/kotlin/com/mocca/app/bridge/opencode/BridgeRuntimeBootstrapper.kt` | Bridge init flow |
 | Theme tokens | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/theme/` | Dedicated AGENTS.md there |
 | Settings subtree | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/settings/` | Dedicated AGENTS.md there |
+| Terminal screen | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/screens/terminal/` | Interactive input modes, font size control, bridge connection state handling, capability checks |
+| Mesh gradient hero | `composeApp/src/commonMain/kotlin/com/mocca/app/ui/components/modern/` | `MeshGradientHeroSurface` for onboarding/empty-state decorative surfaces |
 | DB schema | `composeApp/src/commonMain/sqldelight/com/mocca/app/db/*.sq` | 8 SQLDelight tables + 2 migrations; `2.sqm` drops retired `RecentModel` |
 | E2E tests | `maestro-workspace/` | Dedicated AGENTS.md there |
-| Test suite | `composeApp/src/commonTest/kotlin/com/mocca/app/` | 22 KMP commonTest files |
+| Test suite | `composeApp/src/commonTest/kotlin/com/mocca/app/` | 23 KMP commonTest files |
 | Scripts | `scripts/mocca-serve-emulator.ps1` | Emulator-specific OpenCode server |
 
 ## STARTUP CHAIN
@@ -62,8 +64,11 @@ MOCCA/
 - **Event pipeline**: `EventStreamRepository` -> `StateCoordinator` -> `BroadcastEvent` -> `AppStateStore` / `ChatStateStore` -> ScreenModels -> UI
 - **Bridge pipeline**: `BridgeConnectionManager` -> `BridgeRuntimeBootstrapper` -> `OpenCodeBridgeRepository` -> bridge events -> `StateCoordinator` -> state stores
 - **Chat turn state**: `ChatTurnReducer` owns idempotent OpenCode event state keyed by `sessionID`, `messageID`, and `partID`. Bridge and fallback SSE events must converge here before UI-specific compatibility state is derived.
-- **Bridge-first runtime**: the MOCCA CLI bridge is the preferred provider/model/agent configuration source. Direct OpenCode HTTP/SSE remains a legacy fallback path until parity is complete.
+- **Bridge-first runtime**: the MOCCA CLI bridge is the preferred provider/model/agent/mode configuration source. Bridge parity for providers, agents, commands, tools, and MCP is complete; direct OpenCode HTTP/SSE remains a legacy fallback path.
 - **Dual sync model**: SSE for sessions/messages + `RealtimeSyncService` for MCP/providers/git/tools/commands/agents. The Server-First pattern (Cache → Network → Update → Emit) is mandatory for primary user-facing data (sessions, messages) and optional for infrequently-changing secondary data (agent list, providers, diffs).
+- **Event dedup**: `EventStreamRepository` builds dedup keys from deterministic fields (message timestamps, completion times, `delta?.length`) — not `hashCode()`. A session filter at the top of `handleEvent()` prevents redundant work for inactive sessions.
+- **Reconnect resilience**: `ConnectionManager` re-runs health checks and refetches critical data after drops, with a backoff loop. The event stream reattaches and `StateCoordinator` rebuilds active chat state from the network.
+- **Terminal**: `TerminalScreen` supports interactive input modes (raw/cooked), real-time font size control via the 3-dots actions menu, bridge connection state handling, and capability checks. Row-height rendering is tuned for CLI spacing.
 - **AI runtime persistence**: `AiSelection` and project-scoped `AiRecentModel` lists live in `AppSettings` under `ai.selection.*` and `ai.recents.*`. Do not reintroduce the removed global `RecentModel` table or `SessionRepository` recents API.
 - **Streaming persistence**: `LocalCache.updateMessagePart(...)` is part-addressable. Pass `messageId`, `partId`, and `partType`; do not append token deltas through multiple repositories.
 - **Platform abstractions**: `NetworkObserver`, `AppLifecycleObserver`, `SecureTokenStorage`, `NotificationTracker`
@@ -136,5 +141,5 @@ adb logcat -c && adb logcat *:W | findstr "mocca|Exception"
 - `Modules.kt` ordering is not cosmetic; moving coordinator/state-store registrations can break bootstrap
 - Root README has newer theme wording than the old root AGENTS did; keep AGENTS aligned with current Material 3 Expressive setup
 - `discovery/` package exists but is currently empty — server discovery is bridge-first via QR pairing
-- `UpdateRepository.kt` holds a standalone `HttpClient` for APK redirect downloads (line 157) — documented deviation from the `ApiExecutor` pattern
+- `UpdateRepository.kt` holds a standalone `HttpClient` for APK redirect downloads (line 155) — documented deviation from the `ApiExecutor` pattern
 - `ServerConfigRepository.kt:50` uses `runBlocking` — known anti-pattern violation for synchronous server-load

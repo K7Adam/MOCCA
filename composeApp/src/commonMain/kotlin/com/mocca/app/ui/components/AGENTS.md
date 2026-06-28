@@ -1,6 +1,6 @@
 # UI COMPONENTS KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** Shared UI components and Material 3 Expressive primitives
 
 ## RELEVANT SKILLS
@@ -43,6 +43,7 @@ The application MUST strictly adhere to the `AppTheme`.
 - `CommandPaletteOverlay`, `ContextInfo`: Command and context UI.
 - `MoccaList`, `ModernText`, `ShimmerModifier`, `SnakeDotsLoader`: Utility primitives.
 - `SystemModules`: Modular system UI components.
+- `MeshGradientHeroSurface`: Decorative mesh-gradient surface for onboarding/empty-state hero areas. Use only for low-density branding surfaces, not chat or high-frequency recomposition areas.
 
 ### 2. Message Parts (`modern/message/`)
 - `StreamingPart`, `ReasoningPart`, `FilePart`, `SubTaskPart`, `ToolCallPart`: Part-type renderers for chat messages.

@@ -114,12 +114,15 @@ MOCCA declares the minimum permissions needed to function. We do not request opt
 |---|---|---|
 | `INTERNET` | Talk to your OpenCode server and GitHub | Always (install-time) |
 | `ACCESS_NETWORK_STATE` | Detect connectivity drops for the reconnect flow | Always (install-time) |
+| `ACCESS_WIFI_STATE` | Detect Wi-Fi connectivity for multicast and bridge discovery | Always (install-time) |
+| `CHANGE_WIFI_MULTICAST_STATE` | Enable multicast for bridge discovery on local networks | Runtime, when bridge discovery is active |
 | `POST_NOTIFICATIONS` | Active session foreground service | Runtime, Android 13+ |
+| `POST_PROMOTED_NOTIFICATIONS` | Android 16 promoted Live Updates for active agent runs | Always (install-time), Android 16+ |
 | `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_DATA_SYNC` | Keep an active agent session alive | Always (install-time) |
-| `CAMERA` | Scan the bridge QR code during pairing | Runtime, only when you tap "Scan QR" |
+| `REQUEST_INSTALL_PACKAGES` | Install downloaded APK updates in-app | Always (install-time), used when you tap "Install" on a downloaded update |
 | `RECORD_AUDIO` | Voice input for chat | Runtime, only when you tap the mic button |
 
-If you don't use the camera or mic features, those permissions never get requested. There is no location, contacts, storage, or media permission requested by the app. We do not scan for other apps or read your clipboard.
+QR code scanning for bridge pairing uses Google Play Services code scanner (`play-services-code-scanner`), which handles camera access internally without MOCCA declaring a `CAMERA` permission. If you don't use the mic feature, that permission never gets requested. There is no location, contacts, storage, or media permission requested by the app. We do not scan for other apps or read your clipboard.
 
 ---
 

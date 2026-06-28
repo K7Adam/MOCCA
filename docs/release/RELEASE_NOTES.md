@@ -10,7 +10,7 @@ This is an internal alpha build of MOCCA, the Android companion app for OpenCode
 |---|---|
 | Version | 1.0.1 |
 | Application ID | `com.mocca.app` |
-| Min Android | 7.0 (API 31) |
+| Min Android | 12.0 (API 31) |
 | Target Android | 16 (API 36) |
 | Signing | Debug keystore (alpha only, see [Known Limitations](#known-limitations)) |
 
@@ -75,7 +75,7 @@ MOCCA is Android-only. There is no iOS build, no desktop build, and no web build
 
 ### What You Need
 
-- An Android device or emulator running **Android 7.0 (API 31) or newer**
+- An Android device or emulator running **Android 12.0 (API 31) or newer**
 - An OpenCode server you can reach (yours, on your network or via Tailscale)
 - The MOCCA CLI bridge installed on the same machine that runs OpenCode
 

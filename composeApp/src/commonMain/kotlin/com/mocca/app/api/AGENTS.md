@@ -1,12 +1,12 @@
 # NETWORK LAYER KNOWLEDGE BASE (api)
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** `com.mocca.app.api`
 
 **Relevant Skills:** `kotlin-best-practices` (Ktor, coroutines)
 
 ## OVERVIEW
-Ktor-based networking layer providing REST and SSE fallback connectivity to a single OpenCode server instance. The MOCCA CLI bridge is the preferred runtime/config path; direct HTTP/SSE remains for compatibility and verification. Authentication uses HTTP Basic Auth. The `ApiExecutor` interface ensures consumers never hold `HttpClient` references directly.
+Ktor-based networking layer providing REST and SSE fallback connectivity to a single OpenCode server instance. The MOCCA CLI bridge is the preferred runtime/config path; direct HTTP/SSE remains for compatibility and verification. With bridge-first parity complete for providers, agents, commands, tools, and MCP, reliance on the legacy HTTP path has decreased. Authentication uses HTTP Basic Auth. The `ApiExecutor` interface ensures consumers never hold `HttpClient` references directly.
 
 ## STRUCTURE
 - **ApiExecutor.kt**: Interface with `suspend fun <T> execute(block: suspend HttpClient.() -> T): T`. Consumers call `execute {}` to make HTTP requests — the `ConnectionManager` provides the properly-configured `HttpClient`.
@@ -15,6 +15,8 @@ Ktor-based networking layer providing REST and SSE fallback connectivity to a si
 - **NetworkConfig.kt**: Timeout constants and network configuration.
 - **RetryPolicy.kt**: Exponential backoff retry logic for transient failures.
 - **GitHubApiClient.kt**: Client for GitHub Releases API (app auto-update feature).
+- **ConnectionQualityTracker.kt**: Tracks connection latency and quality metrics for `ConnectionQuality` derivation.
+- **NetworkError.kt**: Sealed network error types for structured error handling.
 - **Platform.kt**: Platform detection utilities.
 
 ## CONVENTIONS

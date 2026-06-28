@@ -1,6 +1,6 @@
 # UI & SCREENS KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** UI screens, screen models, navigation shell
 
 **Relevant Skills:** `taste-skill-compose`, `material3-expressive-compose`, `kotlin-best-practices`
@@ -29,7 +29,7 @@ Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` i
 | Onboarding | `onboarding/` | First-run and connection setup |
 | Sessions | `sessions/` | Session components |
 | Settings subtree | `settings/` | Dedicated AGENTS.md there |
-| Terminal | `terminal/` | Terminal session UI |
+| Terminal | `terminal/` | Interactive terminal session UI: raw/cooked input modes, real-time font size control via 3-dots actions menu, bridge connection state handling, capability checks, tuned row-height rendering |
 | Dashboard panels | `panels/` | Context/history + dashboard modules |
 | Skills | `skills/` | Placeholder (empty) |
 | Workspace | `workspace/` | Placeholder (empty) |
@@ -38,7 +38,7 @@ Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` i
 ## SCREEN LIST
 | Screen | Role |
 |--------|------|
-| `ProgressiveOnboardingScreen` | First-run connection setup |
+| `ProgressiveOnboardingScreen` | First-run connection setup with mesh-gradient hero surface |
 | `MainScreen` | 3-panel shell + update/dialog coordination |
 | `ChatScreen` | Active session/messages |
 | `GitScreen` / `GitDiffScreen` | VCS UI over OpenCode endpoints |

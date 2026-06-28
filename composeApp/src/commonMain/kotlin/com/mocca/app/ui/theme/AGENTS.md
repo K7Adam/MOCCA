@@ -1,6 +1,6 @@
 # UI THEME KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** `com.mocca.app.ui.theme`
 
 ## OVERVIEW
@@ -15,8 +15,11 @@ Theme/token source of truth for MOCCA: Material 3 Expressive shell, custom dark 
 | Shapes | `AppShapes.kt` | Squircle/card/pill definitions |
 | Spacing | `AppSpacing.kt` | Layout constants used across screens |
 | Motion | `MotionUtils.kt` | Expressive vs standard motion |
+| Expressive system | `ExpressiveDesignSystem.kt` | Material 3 Expressive design system configuration |
 | Adaptive tuning | `AppPerformance.kt` | Performance-sensitive theme toggles |
+| Performance detection | `PerformanceTierDetect.kt` | Device performance tier classification for adaptive tuning |
 | Focus polish | `FocusModifiers.kt` | Accessibility/focus affordances |
+| Inner shadow | `InnerShadow.kt` | Custom inner shadow modifier for depth effects |
 
 ## CONVENTIONS
 - `AppTheme {}` wraps the app; screens/components consume app tokens rather than inventing their own. Theme bridge code in `AppTheme.kt` may use `MaterialTheme.colorScheme` to provision the M3 shell. Feature/UI code uses `AppColors`/`AppShapes`.
@@ -36,3 +39,4 @@ Theme/token source of truth for MOCCA: Material 3 Expressive shell, custom dark 
 ## NOTES
 - Root docs and README should describe the current Material 3 Expressive setup, not the older soft-dark wording alone
 - This directory is foundational; changes ripple into `ui/components/` and `ui/screens/` immediately
+- `MeshGradientHeroSurface` (in `ui/components/modern/`) consumes theme tokens for decorative onboarding/empty-state surfaces; keep mesh gradients constrained to low-density branding zones per `docs/mesh-gradient-evaluation.md`

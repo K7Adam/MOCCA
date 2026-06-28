@@ -1,6 +1,6 @@
 # DOMAIN MODELS KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** Domain Models & Contracts
 
 **Relevant Skills:** `kotlin-best-practices` (data classes, sealed classes)
@@ -36,7 +36,7 @@ Core immutable data structures and sealed class hierarchies that define the MOCC
 - **`Models.kt`**: Core message/session models (`Message`, `Session`, `MessagePart`).
 - **`BroadcastEvent.kt`**: Event fanout types for `StateCoordinator` → stores.
 - **`AgentTypes.kt`**, **`CommandTypes.kt`**, **`ProviderTypes.kt`**, **`ToolTypes.kt`**: Typed enums and sealed classes for respective domains.
-- **`McpModels.kt`**, **`DiffTypes.kt`**, **`SearchTypes.kt`**, **`SyncState.kt`**, **`SystemInfo.kt`**, **`UpdateModels.kt`**, **`AttachedFile.kt`**, **`TerminalGrid.kt`**, **`VoiceInput.kt`**, **`UserPreferences.kt`**, **`AiSelectionPresentation.kt`**: Specialized domain types.
+- **`McpModels.kt`**, **`DiffTypes.kt`**, **`SearchTypes.kt`**, **`SyncState.kt`**, **`SystemInfo.kt`**, **`UpdateModels.kt`**, **`AttachedFile.kt`**, **`TerminalGrid.kt`**, **`VoiceInput.kt`**, **`UserPreferences.kt`**, **`AiSelectionPresentation.kt`**, **`MessageExtensions.kt`**: Specialized domain types.
 
 ### ChatTurnReducer.kt
 - **`ChatTurnState`**: Canonical OpenCode turn projection keyed by session, message, and part id.

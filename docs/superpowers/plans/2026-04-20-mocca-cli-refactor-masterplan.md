@@ -1,6 +1,6 @@
 # MOCCA CLI Bridge Refactor Masterplan
 
-> Status: research-backed architecture and migration plan
+> Status: **largely implemented** — retained for reference
 > Date: 2026-04-20
 > Workspace: `C:\Users\ruzaq\AndroidStudioProjects\MOCCA`
 > Lunel clone analyzed at: `C:\Users\ruzaq\AppData\Local\Temp\mocca-lunel-research\lunel`
@@ -9,6 +9,12 @@
 > Update 2026-04-24: the old global `RecentModel` SQLDelight table and
 > `SessionRepository` model-recents API were removed. AI model recents are now
 > project-scoped `AiRecentModel` JSON records in `AppSettings`.
+
+> Update 2026-06-28: the bridge-first migration described in this plan is
+> largely complete. Bridge parity for providers, agents, commands, tools, and
+> MCP has landed (commits `81ec350`, `be5c252`, `0d984bc`). The legacy
+> OpenCode HTTP/SSE path remains as a fallback. This document is retained as
+> historical reference; for current architecture see root `AGENTS.md`.
 
 ## Goal
 

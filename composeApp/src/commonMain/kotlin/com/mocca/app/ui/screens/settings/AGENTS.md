@@ -1,6 +1,6 @@
 # SETTINGS SUBTREE KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** `com.mocca.app.ui.screens.settings`
 
 ## OVERVIEW
@@ -14,7 +14,7 @@ High-complexity settings subtree covering server profiles, provider auth, projec
 | Shared settings widgets | `SettingsComponents.kt` | Server cards, edit dialog, row primitives |
 | Feature flags screen | `FeatureFlagsScreen.kt` | Server-side config UI |
 | Feature flags logic | `FeatureFlagsScreenModel.kt` | Loads/saves global app config |
-| Section components | `sections/*.kt` | Dedicated sections for auth, appearance, chat, privacy, updates, project |
+| Section components | `sections/*.kt` | Dedicated sections for app config, appearance, updates, experimental, notifications, privacy, project, provider auth |
 
 ## STRUCTURE
 ```
@@ -28,8 +28,6 @@ settings/
     ├── AppConfigSection.kt
     ├── AppearanceSection.kt
     ├── AppUpdatesSection.kt
-    ├── ChatSection.kt
-    ├── ConnectionSection.kt
     ├── ExperimentalSection.kt
     ├── NotificationsSection.kt
     ├── PrivacySecuritySection.kt
@@ -43,6 +41,8 @@ settings/
 - Project path editing is part of settings, not a separate workspace screen concern
 - Server-side config messaging matters: provider/model defaults come from OpenCode config, not local-only UI state
 - Preferences must update both `SettingsRepository` and `PreferencesManager` to keep reactive UI in sync
+- Dead controls have been pruned: compact mode, font scale, data saver, screen security, clear cache on exit, and "show thinking" toggles were removed because they did not change real behavior. Do not re-add them without wiring them to actual functionality
+- Sections were consolidated to remove duplicates; every visible control must do something real
 
 ## ANTI-PATTERNS
 - Do not move business logic into section composables

@@ -1,6 +1,6 @@
 # DATA LAYER KNOWLEDGE BASE
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Scope:** SQLDelight, LocalCache, Server-First
 
 **Relevant Skills:** `kotlin-best-practices` (SQLDelight, repositories)

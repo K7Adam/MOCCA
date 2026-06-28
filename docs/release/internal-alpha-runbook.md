@@ -17,7 +17,7 @@ You need all of the following on the machine that will build or run MOCCA:
 - **JDK 17 or newer.** Anything in the 17+ line works. AGP 9 in this project requires modern JDK.
 - **Android SDK with API 36 installed.** The build targets API 36. Older platforms compile but are not the test target.
 - **Android command-line tools or Android Studio.** Either is fine. The repo's Gradle build handles the rest.
-- **An Android emulator or a physical device running API 26 or newer.** Emulator is the standard target. See "Why Emulator Only" below.
+- **An Android emulator or a physical device running API 31 or newer.** Emulator is the standard target. See "Why Emulator Only" below.
 - **OpenCode CLI** on your `PATH`. The legacy HTTP path is still in the code, but the bridge path is what you should test.
 - **MOCCA CLI bridge** on your `PATH`. The alpha runbook assumes the bridge is running locally and reachable.
 - **A GitHub personal access token** if you want to test in-app APK updates without hitting rate limits. The token is optional for the alpha, but a no-token path runs against unauthenticated GitHub API limits.

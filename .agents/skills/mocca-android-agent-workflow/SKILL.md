@@ -99,7 +99,7 @@ Only run emulator/Maestro checks when the task affects user-facing flows or Andr
 - Codex App and Codex CLI: follow `AGENTS.md`; use this skill when the task mentions Android CLI, Android skills, Knowledge Base grounding, Gradle, Compose, emulator, or Maestro.
 - OpenCode: this skill is discoverable from `.agents/skills/`; existing `.opencode/skills/` remain available for project-specific Kotlin, UI, theme, and emulator workflows.
 - Gemini CLI: `GEMINI.md` imports `AGENTS.md` and this skill.
-- Windsurf: root `AGENTS.md` is discovered automatically; `.windsurf/rules/mocca-agent-tooling.md` points Cascade to this skill.
+- Windsurf: root `AGENTS.md` is discovered automatically; `.devin/rules/mocca-agent-tooling.md` points Devin to this skill.
 
 ## Anti-Patterns
 

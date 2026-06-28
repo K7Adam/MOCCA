@@ -1,6 +1,6 @@
 # MAESTRO E2E TESTING
 
-**Updated:** 2026-05-05
+**Updated:** 2026-06-28
 **Project:** MOCCA Maestro Workspace
 **Target:** Android Emulator (`10.0.2.2` host access)
 **Format:** Maestro YAML flows + PowerShell runners
@@ -37,6 +37,8 @@ maestro-workspace/
 | Shared launch logic | `subflows/common/launch_app.yaml` | Standard app boot sequence |
 | Stable wait | `subflows/common/wait_for_main_screen.yaml` | Main-screen landmark sync |
 | Files navigation | `flows/navigation/navigate_to_files.yaml` | Files screen reachability |
+| Git navigation | `flows/navigation/navigate_to_git.yaml` | Git screen reachability |
+| Settings navigation | `flows/navigation/navigate_to_settings.yaml` | Settings screen reachability |
 | Terminal navigation | `flows/navigation/navigate_to_terminal.yaml` | Terminal screen reachability |
 | Runner script | `run-emulator-tests.ps1` | Install, clear state, logcat capture |
 | Emulator startup | `start-emulator.ps1` | Visible by default |

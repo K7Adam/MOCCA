@@ -11,7 +11,6 @@
 
 ## Management
 - [Tracks Registry](./tracks.md)
-- [Tracks Directory](./tracks/)
 
 ## Cleanup
 - [AI Slop Cleanup Notes](../docs/ai-slop-cleanup.md)
