@@ -46,7 +46,7 @@ jobs:
           build-mode: manual
 
       - name: Build for CodeQL
-        run: ./gradlew :androidApp:assembleDebug -x test
+        run: ./gradlew :androidApp:assembleDebug -x test --rerun-tasks
         env:
           CI: true
 
