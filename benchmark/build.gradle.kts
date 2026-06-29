@@ -35,7 +35,7 @@ kotlin {
 
 dependencies {
     implementation(libs.macrobenchmark.junit4)
-    implementation("androidx.test:core:1.6.1")
-    implementation("androidx.test.ext:junit:1.2.1")
-    implementation("androidx.test:runner:1.6.2")
+    implementation("androidx.test:core:1.7.0")
+    implementation("androidx.test.ext:junit:1.3.0")
+    implementation("androidx.test:runner:1.7.0")
 }
