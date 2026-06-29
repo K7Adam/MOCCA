@@ -103,11 +103,9 @@ class MoccaApiClient(
                             contentType(ContentType.Application.Json)
                             setBody(
                                     ChatRequest(
-                                            modelID = modelId,
-                                            providerID = providerId,
+                                            model = "$providerId/$modelId",
                                             parts = parts,
-                                            mode = mode,
-                                            variant = variant
+                                            agent = mode
                                     )
                             )
                         }
@@ -128,11 +126,9 @@ class MoccaApiClient(
                             contentType(ContentType.Application.Json)
                             setBody(
                                     ChatRequest(
-                                            modelID = modelId,
-                                            providerID = providerId,
+                                            model = "$providerId/$modelId",
                                             parts = parts,
-                                            mode = mode,
-                                            variant = variant
+                                            agent = mode
                                     )
                             )
                         }
@@ -145,29 +141,55 @@ class MoccaApiClient(
 
     // Permissions
     /**
-     * Reply to a permission request using the new permission.reply API.
+     * Reply to a permission request using the V2 session-scoped permission API.
+     *
+     * Endpoint: `POST /session/:sessionId/permissions/:permissionID`
+     * Body: `{ response, remember? }`
+     *
+     * @param sessionId The session ID the permission belongs to
      * @param requestId The permission request ID
-     * @param reply One of: "once", "always", "reject"
-     * @param message Optional message for rejection
+     * @param response One of: "once", "always", "reject"
+     * @param remember If true, persists the decision for future requests of this type
      */
     suspend fun replyToPermission(
+            sessionId: String,
             requestId: String,
-            reply: PermissionResponseType,
-            message: String? = null
+            response: PermissionResponseType,
+            remember: Boolean? = null
     ): Result<Boolean> =
             safeCallNoRetry("replyToPermission") {
-                post("permission/$requestId/reply") {
+                post("session/$sessionId/permissions/$requestId") {
                             contentType(ContentType.Application.Json)
                             setBody(
                                     PermissionReplyRequest(
-                                            requestID = requestId,
-                                            reply = reply.value,
-                                            message = message
+                                            response = response.value,
+                                            remember = remember
                                     )
                             )
                         }
                         .body()
             }
+
+    /**
+     * @deprecated Use [replyToPermission] with sessionId instead.
+     * The top-level /permission/:id/reply endpoint is removed in V2.
+     */
+    @Deprecated(
+            message = "Use replyToPermission(sessionId, requestId, response) instead.",
+            replaceWith = ReplaceWith("replyToPermission(sessionId, requestId, response, remember)"),
+            level = DeprecationLevel.ERROR
+    )
+    suspend fun replyToPermissionLegacy(
+            requestId: String,
+            response: PermissionResponseType,
+            remember: Boolean? = null
+    ): Result<Boolean> =
+            Result.failure(
+                    NetworkError.ServerError(
+                            statusCode = 410,
+                            message = "Deprecated: /permission/:id/reply is removed in V2. Use /session/:id/permissions/:permissionID."
+                    )
+            )
 
     /** List all pending permission requests. */
     suspend fun listPendingPermissions(): Result<List<PermissionRequest>> =
@@ -249,10 +271,10 @@ class MoccaApiClient(
     suspend fun unrevertSession(sessionId: String): Result<Session> =
             safeCallNoRetry("unrevertSession") { post("session/$sessionId/unrevert").body() }
 
-    /** Update session title. */
+    /** Update session title. V2 API: `PATCH /session/:id` */
     suspend fun updateSession(sessionId: String, title: String): Result<Session> =
             safeCallNoRetry("updateSession") {
-                post("session/$sessionId") {
+                patch("session/$sessionId") {
                             contentType(ContentType.Application.Json)
                             setBody(mapOf("title" to title))
                         }
@@ -290,29 +312,42 @@ class MoccaApiClient(
 
     /**
      * Get available authentication methods for a provider.
+     *
+     * V2 API: `GET /provider/auth` returns a map of providerID → auth methods.
      * @param providerId The provider ID (e.g., "anthropic", "openai")
      * @return List of authentication methods (api_key, oauth, etc.)
      */
     suspend fun getProviderAuthMethods(providerId: String): Result<List<ProviderAuthMethod>> =
-            safeCall("getProviderAuthMethods") { get("provider/$providerId/auth").body() }
+            safeCall("getProviderAuthMethods") {
+                val response: Map<String, List<ProviderAuthMethod>> = get("provider/auth").body()
+                response[providerId] ?: emptyList()
+            }
+
+    /** Get auth methods for all providers at once. V2: `GET /provider/auth` */
+    suspend fun getAllProviderAuthMethods(): Result<Map<String, List<ProviderAuthMethod>>> =
+            safeCall("getAllProviderAuthMethods") { get("provider/auth").body() }
 
     /**
      * Initiate OAuth authorization flow for a provider.
+     *
+     * V2 API: `POST /provider/:id/oauth/authorize`
      * @param providerId The provider ID
      * @return Authorization URL and state for OAuth redirect
      */
     suspend fun authorizeProvider(providerId: String): Result<ProviderAuthAuthorization> =
-            safeCallNoRetry("authorizeProvider") { post("provider/$providerId/authorize").body() }
+            safeCallNoRetry("authorizeProvider") { post("provider/$providerId/oauth/authorize").body() }
 
     /**
      * Handle OAuth callback after authorization.
+     *
+     * V2 API: `POST /provider/:id/oauth/callback`
      * @param providerId The provider ID
      * @param code OAuth authorization code
      * @param state OAuth state for verification
      */
     suspend fun handleOAuthCallback(providerId: String, code: String, state: String): Result<Unit> =
             safeCallNoRetry("handleOAuthCallback") {
-                post("provider/$providerId/callback") {
+                post("provider/$providerId/oauth/callback") {
                     contentType(ContentType.Application.Json)
                     setBody(OAuthCallbackRequest(code = code, state = state))
                 }
@@ -321,6 +356,8 @@ class MoccaApiClient(
 
     /**
      * Set provider authentication credentials manually (API key).
+     *
+     * V2 API: `PUT /auth/:id`
      * @param providerId The provider ID
      * @param credentials Authentication credentials (API key, etc.)
      */
@@ -329,7 +366,7 @@ class MoccaApiClient(
             credentials: ProviderCredentials
     ): Result<Unit> =
             safeCallNoRetry("setProviderAuth") {
-                post("provider/$providerId/auth") {
+                put("auth/$providerId") {
                     contentType(ContentType.Application.Json)
                     setBody(credentials)
                 }
@@ -542,10 +579,10 @@ class MoccaApiClient(
     // Instance disposal
 
 
-    /** Dispose an OpenCode instance gracefully. */
+    /** Dispose an OpenCode instance gracefully. V2 API: `POST /instance/dispose` */
     suspend fun disposeInstance(): Result<Unit> =
             safeCallNoRetry("disposeInstance") {
-                post("dispose")
+                post("instance/dispose")
                 Unit
             }
 
@@ -749,10 +786,10 @@ class MoccaApiClient(
     // PROVIDER AUTH REMOVAL
 
 
-    /** Remove stored authentication credentials for a provider. */
+    /** Remove stored authentication credentials for a provider. V2 API: `DELETE /auth/:id` */
     suspend fun deleteProviderAuth(providerId: String): Result<Unit> =
         safeCallNoRetry("deleteProviderAuth") {
-            delete("provider/$providerId/auth")
+            delete("auth/$providerId")
             Unit
         }
 

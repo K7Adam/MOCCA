@@ -376,11 +376,12 @@ class EventStreamRepository(
             PermissionActionBus.actions.collect { action ->
                 Napier.i("[EventStream] Received permission action from notification: ${action.permissionId}, reply=${action.replyType.value}")
 
-                // Call the API to reply to the permission using the top-level endpoint
+                // Call the API to reply to the permission using the V2 session-scoped endpoint
                 apiClient?.let { client ->
                     val result = client.replyToPermission(
+                        sessionId = action.sessionId,
                         requestId = action.permissionId,
-                        reply = action.replyType
+                        response = action.replyType
                     )
 
                     result.fold(
@@ -1294,6 +1295,11 @@ private val MessagePart.openCodePartId: String?
         is MessagePart.ToolResult -> id
         is MessagePart.File -> null
         is MessagePart.SubTask -> sessionId
+        is MessagePart.Snapshot -> id
+        is MessagePart.Patch -> id
+        is MessagePart.AgentDelegate -> id
+        is MessagePart.Retry -> id
+        is MessagePart.Compaction -> id
     }
 
 private val MessagePart?.openCodePartType: String?
@@ -1305,5 +1311,10 @@ private val MessagePart?.openCodePartType: String?
         is MessagePart.ToolResult -> "tool"
         is MessagePart.File -> "file"
         is MessagePart.SubTask -> "subtask"
+        is MessagePart.Snapshot -> "snapshot"
+        is MessagePart.Patch -> "patch"
+        is MessagePart.AgentDelegate -> "agent"
+        is MessagePart.Retry -> "retry"
+        is MessagePart.Compaction -> "compaction"
         null -> null
     }

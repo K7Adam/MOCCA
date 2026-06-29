@@ -69,6 +69,29 @@ object ChatExporter {
                     is MessagePart.SubTask -> {
                         // Skip sub-tasks
                     }
+                    // V2 part types — minimal export
+                    is MessagePart.Snapshot -> {
+                        builder.appendLine("_[Snapshot: ${part.messageId.take(8)}]_")
+                        builder.appendLine()
+                    }
+                    is MessagePart.Patch -> {
+                        builder.appendLine("```diff")
+                        builder.appendLine("Patch: ${part.path} (+${part.additions}/-${part.deletions})")
+                        builder.appendLine("```")
+                        builder.appendLine()
+                    }
+                    is MessagePart.AgentDelegate -> {
+                        builder.appendLine("_[Agent: ${part.agentName} — ${part.status}]_")
+                        builder.appendLine()
+                    }
+                    is MessagePart.Retry -> {
+                        builder.appendLine("_[Retry #${part.attempt}${part.reason?.let { " — $it" } ?: ""}]_")
+                        builder.appendLine()
+                    }
+                    is MessagePart.Compaction -> {
+                        builder.appendLine("_[Context compacted: ${part.tokensBefore}→${part.tokensAfter} tokens]_")
+                        builder.appendLine()
+                    }
                 }
             }
             

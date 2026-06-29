@@ -553,21 +553,21 @@ class ChatStateStore(
     
     suspend fun approvePermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
-        return sessionRepository.replyToPermission(permission.id, PermissionResponseType.ONCE).also {
+        return sessionRepository.replyToPermission(permission.sessionId, permission.id, PermissionResponseType.ONCE).also {
             if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }
 
     suspend fun approvePermissionAlways(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
-        return sessionRepository.replyToPermission(permission.id, PermissionResponseType.ALWAYS).also {
+        return sessionRepository.replyToPermission(permission.sessionId, permission.id, PermissionResponseType.ALWAYS, remember = true).also {
             if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }
 
     suspend fun denyPermission(): Result<Boolean> {
         val permission = pendingPermission.value ?: return Result.failure(Exception("No pending permission"))
-        return sessionRepository.replyToPermission(permission.id, PermissionResponseType.REJECT).also {
+        return sessionRepository.replyToPermission(permission.sessionId, permission.id, PermissionResponseType.REJECT).also {
             if (it.isSuccess) stateCoordinator.dismissPermission()
         }
     }

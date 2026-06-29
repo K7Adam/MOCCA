@@ -90,6 +90,12 @@ private fun Message.buildMessageSearchPreview(query: String): String? {
             is MessagePart.ToolResult -> part.result.trim().takeIf { it.isNotEmpty() }
             is MessagePart.File -> part.filename?.trim()?.takeIf { it.isNotEmpty() }
             is MessagePart.SubTask -> null
+            // V2 part types — not searchable
+            is MessagePart.Snapshot -> null
+            is MessagePart.Patch -> part.path.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.AgentDelegate -> part.agentName.trim().takeIf { it.isNotEmpty() }
+            is MessagePart.Retry -> part.reason?.trim()?.takeIf { it.isNotEmpty() }
+            is MessagePart.Compaction -> null
         }
     }.joinToString(separator = " ")
         .replace(Regex("\\s+"), " ")

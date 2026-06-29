@@ -209,7 +209,7 @@ data class MessagePartResponse(
     val sessionID: String,
     @SerialName("messageID")
     val messageID: String,
-    val type: String, // "text", "reasoning", "tool", "file", "step-start", "step-finish"
+    val type: String, // "text", "reasoning", "tool", "file", "step-start", "step-finish", "subtask", "snapshot", "patch", "agent", "retry", "compaction"
     // Text part fields
     val text: String? = null,
     // Tool part fields
@@ -226,6 +226,8 @@ data class MessagePartResponse(
     val reason: String? = null,
     val cost: Double? = null,
     val tokens: TokenUsage? = null,
+    // Metadata for V2 part types (agent, retry, compaction, patch, etc.)
+    val metadata: Map<String, JsonElement>? = null,
     // Time fields for part lifecycle (OpenCode uses start/end here)
     val time: MessagePartTime? = null
 )
@@ -260,19 +262,21 @@ enum class MessageRole {
 
 /**
  * Request body for POST /session/:id/message (chat).
+ *
+ * V2 API uses `model` (format: "provider/model") and `agent` instead of
+ * the legacy `modelID`/`providerID` pair. The `model` field combines
+ * provider and model ID in the standard "provider/model" format.
  */
 @Serializable
 @Immutable
 data class ChatRequest(
-    @SerialName("modelID")
-    val modelID: String,
-    @SerialName("providerID")
-    val providerID: String,
+    /** Model in "provider/model" format (e.g., "anthropic/claude-sonnet-4-5"). */
+    val model: String,
     val parts: List<ChatPart>,
     @SerialName("messageID")
     val messageID: String? = null,
-    val mode: String? = null,
-    val variant: String? = null,
+    val agent: String? = null,
+    val noReply: Boolean? = null,
     val system: String? = null,
     val tools: Map<String, Boolean>? = null
 )
@@ -302,16 +306,17 @@ sealed class ChatPart {
 }
 
 /**
- * Request body for POST /permission/:requestId/reply.
- * Matches the OpenCode permission.reply API.
+ * Request body for POST /session/:id/permissions/:permissionID.
+ * Matches the OpenCode V2 session-scoped permission API.
+ *
+ * @param response One of: "once", "always", "reject"
+ * @param remember Optional — if true, persists the decision for future requests of this permission type
  */
 @Serializable
 @Immutable
 data class PermissionReplyRequest(
-    @SerialName("requestID")
-    val requestID: String,
-    val reply: String, // "once", "always", "reject"
-    val message: String? = null
+    val response: String, // "once", "always", "reject"
+    val remember: Boolean? = null
 )
 
 /**
@@ -421,6 +426,58 @@ data class Message(
                             url = part.url,
                             filename = part.filename
                         )
+                        // V2 part types
+                        "subtask" -> MessagePart.SubTask(
+                            sessionId = part.sessionID,
+                            title = part.text ?: part.tool ?: "Subtask",
+                            status = SessionStatus.IDLE
+                        )
+                        "snapshot" -> MessagePart.Snapshot(
+                            id = part.id,
+                            sessionId = part.sessionID,
+                            messageId = part.messageID,
+                            createdAt = part.time?.start ?: 0L
+                        )
+                        "patch" -> MessagePart.Patch(
+                            id = part.id,
+                            path = part.filename ?: part.tool ?: "unknown",
+                            additions = part.metadata?.get("additions")?.let { 
+                                (it as? JsonPrimitive)?.content?.toIntOrNull() 
+                            } ?: 0,
+                            deletions = part.metadata?.get("deletions")?.let {
+                                (it as? JsonPrimitive)?.content?.toIntOrNull()
+                            } ?: 0,
+                            content = part.text ?: ""
+                        )
+                        "agent" -> MessagePart.AgentDelegate(
+                            id = part.id,
+                            agentName = part.tool ?: part.text ?: "agent",
+                            subagentSessionId = part.metadata?.get("sessionID")?.let {
+                                (it as? JsonPrimitive)?.content
+                            },
+                            status = part.state?.status ?: "running"
+                        )
+                        "retry" -> MessagePart.Retry(
+                            id = part.id,
+                            attempt = part.metadata?.get("attempt")?.let {
+                                (it as? JsonPrimitive)?.content?.toIntOrNull()
+                            } ?: 1,
+                            reason = part.text,
+                            nextRetryAt = part.metadata?.get("next")?.let {
+                                (it as? JsonPrimitive)?.content?.toLongOrNull()
+                            }
+                        )
+                        "compaction" -> MessagePart.Compaction(
+                            id = part.id,
+                            sessionId = part.sessionID,
+                            tokensBefore = part.metadata?.get("tokensBefore")?.let {
+                                (it as? JsonPrimitive)?.content?.toIntOrNull()
+                            } ?: 0,
+                            tokensAfter = part.metadata?.get("tokensAfter")?.let {
+                                (it as? JsonPrimitive)?.content?.toIntOrNull()
+                            } ?: 0,
+                            timestamp = part.time?.start ?: 0L
+                        )
                         // Skip step-start and step-finish - these are internal markers
                         "step-start", "step-finish" -> null
                         else -> null // Skip unknown types
@@ -504,6 +561,60 @@ sealed interface MessagePart {
         val status: SessionStatus,
         val messages: List<Message> = emptyList(),
         val streamingText: String = ""
+    ) : MessagePart
+
+    // ==== V2 Part Types ====
+
+    /** Session snapshot reference for revert/unrevert UI. */
+    @Serializable
+    @Immutable
+    data class Snapshot(
+        val id: String = "",
+        val sessionId: String,
+        val messageId: String,
+        val createdAt: Long = 0L
+    ) : MessagePart
+
+    /** File patch/diff applied during the session. */
+    @Serializable
+    @Immutable
+    data class Patch(
+        val id: String = "",
+        val path: String,
+        val additions: Int = 0,
+        val deletions: Int = 0,
+        val content: String = ""
+    ) : MessagePart
+
+    /** Agent delegation — sub-agent was spawned for a subtask. */
+    @Serializable
+    @Immutable
+    data class AgentDelegate(
+        val id: String = "",
+        val agentName: String,
+        val subagentSessionId: String? = null,
+        val status: String = "running" // "running", "completed", "error"
+    ) : MessagePart
+
+    /** Retry attempt marker — the model is retrying after a failure. */
+    @Serializable
+    @Immutable
+    data class Retry(
+        val id: String = "",
+        val attempt: Int,
+        val reason: String? = null,
+        val nextRetryAt: Long? = null
+    ) : MessagePart
+
+    /** Context compaction marker — the session context was compacted. */
+    @Serializable
+    @Immutable
+    data class Compaction(
+        val id: String = "",
+        val sessionId: String,
+        val tokensBefore: Int = 0,
+        val tokensAfter: Int = 0,
+        val timestamp: Long = 0L
     ) : MessagePart
 }
 

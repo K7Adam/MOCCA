@@ -13,7 +13,7 @@ import io.github.aakira.napier.Napier
  * This receiver handles APPROVE/DENY actions from permission request notifications
  * and forwards them to the shared PermissionActionBus for processing by the app.
  *
- * Uses the top-level /permission/:requestID/reply API (not session-scoped).
+ * Uses the V2 session-scoped `POST /session/:id/permissions/:permissionID` API.
  */
 class PermissionActionReceiver : BroadcastReceiver() {
 
@@ -22,13 +22,20 @@ class PermissionActionReceiver : BroadcastReceiver() {
         const val ACTION_PERMISSION_DENY = "com.mocca.app.action.PERMISSION_DENY"
 
         const val EXTRA_PERMISSION_ID = "permission_id"
+        const val EXTRA_SESSION_ID = "session_id"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         val permissionId = intent.getStringExtra(EXTRA_PERMISSION_ID)
+        val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
 
         if (permissionId == null) {
             Napier.w("[PermissionActionReceiver] Missing permission_id extra")
+            return
+        }
+
+        if (sessionId == null) {
+            Napier.w("[PermissionActionReceiver] Missing session_id extra")
             return
         }
 
@@ -42,12 +49,12 @@ class PermissionActionReceiver : BroadcastReceiver() {
         }
 
         Napier.i(
-            "[PermissionActionReceiver] Permission $permissionId " +
+            "[PermissionActionReceiver] Permission $permissionId session=$sessionId " +
                 "reply=${replyType.value} via notification"
         )
 
         // Emit to shared bus for processing via replyToPermission
-        val emitted = PermissionActionBus.tryEmit(permissionId, replyType)
+        val emitted = PermissionActionBus.tryEmit(permissionId, sessionId, replyType)
 
         if (!emitted) {
             Napier.w("[PermissionActionReceiver] Failed to emit action - buffer full")

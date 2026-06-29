@@ -360,17 +360,22 @@ class SessionRepository(
     }
     
     /**
-     * Reply to a permission request using the new API.
+     * Reply to a permission request using the V2 session-scoped API.
+     *
+     * Endpoint: `POST /session/:sessionId/permissions/:permissionID`
+     *
+     * @param sessionId The session ID the permission belongs to
      * @param requestId The permission request ID
      * @param response One of: once, always, reject
-     * @param message Optional rejection message
+     * @param remember If true, persists the decision for future requests
      */
     suspend fun replyToPermission(
+        sessionId: String,
         requestId: String,
         response: PermissionResponseType,
-        message: String? = null
+        remember: Boolean? = null
     ): Result<Boolean> {
-        return apiClient.replyToPermission(requestId, response, message)
+        return apiClient.replyToPermission(sessionId, requestId, response, remember)
     }
     
     /**

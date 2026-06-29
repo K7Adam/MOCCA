@@ -248,6 +248,12 @@ private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> U
             is MessagePart.File -> ModernFileBlock(part)
             is MessagePart.SubTask -> ModernSubTaskBlock(part)
             is MessagePart.Thinking -> ModernThinkingBlock(part)
+            // V2 part types — minimal rendering for now
+            is MessagePart.Snapshot -> SnapshotBadge(part)
+            is MessagePart.Patch -> PatchBadge(part)
+            is MessagePart.AgentDelegate -> AgentDelegateBadge(part)
+            is MessagePart.Retry -> RetryBadge(part)
+            is MessagePart.Compaction -> CompactionBadge(part)
         }
 
         is MessagePartGroup.ToolGroup -> ContextToolGroup(tools = group.tools)
@@ -324,6 +330,12 @@ private fun Message.buildCopyText(): String {
             is MessagePart.ToolResult -> part.result.trim().takeIf { it.isNotEmpty() }?.let { "Result:\n$it" }
             is MessagePart.File -> part.filename?.trim()?.takeIf { it.isNotEmpty() }?.let { "File: $it" }
             is MessagePart.SubTask -> null
+            // V2 part types — minimal export text
+            is MessagePart.Snapshot -> "Snapshot: ${part.messageId}"
+            is MessagePart.Patch -> "Patch: ${part.path} (+${part.additions}/-${part.deletions})"
+            is MessagePart.AgentDelegate -> "Agent: ${part.agentName} [${part.status}]"
+            is MessagePart.Retry -> "Retry #${part.attempt}${part.reason?.let { " - $it" } ?: ""}"
+            is MessagePart.Compaction -> "Context compacted (${part.tokensBefore}→${part.tokensAfter} tokens)"
         }
     }.joinToString("\n\n")
 }
@@ -460,6 +472,87 @@ private fun MessageContextMenu(
                     )
                 }
             }
+        }
+    }
+}
+
+// ==== V2 Part Type Badges ====
+
+@Composable
+private fun SnapshotBadge(part: com.mocca.app.domain.model.MessagePart.Snapshot) {
+    V2PartBadge(
+        icon = Icons.Default.CameraAlt,
+        label = "Snapshot",
+        detail = part.messageId.take(8)
+    )
+}
+
+@Composable
+private fun PatchBadge(part: com.mocca.app.domain.model.MessagePart.Patch) {
+    V2PartBadge(
+        icon = Icons.Default.Difference,
+        label = "Patch",
+        detail = "${part.path} (+${part.additions}/-${part.deletions})"
+    )
+}
+
+@Composable
+private fun AgentDelegateBadge(part: com.mocca.app.domain.model.MessagePart.AgentDelegate) {
+    V2PartBadge(
+        icon = Icons.Default.SmartToy,
+        label = "Agent: ${part.agentName}",
+        detail = part.status
+    )
+}
+
+@Composable
+private fun RetryBadge(part: com.mocca.app.domain.model.MessagePart.Retry) {
+    V2PartBadge(
+        icon = Icons.Default.Refresh,
+        label = "Retry #${part.attempt}",
+        detail = part.reason ?: ""
+    )
+}
+
+@Composable
+private fun CompactionBadge(part: com.mocca.app.domain.model.MessagePart.Compaction) {
+    V2PartBadge(
+        icon = Icons.Default.Compress,
+        label = "Context Compacted",
+        detail = "${part.tokensBefore}→${part.tokensAfter} tokens"
+    )
+}
+
+@Composable
+private fun V2PartBadge(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    detail: String
+) {
+    Row(
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = AppColors.onSurfaceVariant
+        )
+        Text(
+            text = label,
+            style = AppTypography.labelSmall,
+            color = AppColors.onSurfaceVariant
+        )
+        if (detail.isNotEmpty()) {
+            Text(
+                text = detail,
+                style = AppTypography.labelSmall,
+                color = AppColors.onSurfaceVariant.copy(alpha = 0.7f)
+            )
         }
     }
 }

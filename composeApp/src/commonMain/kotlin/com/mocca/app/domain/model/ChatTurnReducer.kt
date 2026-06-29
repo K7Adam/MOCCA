@@ -1,6 +1,7 @@
 package com.mocca.app.domain.model
 
 import androidx.compose.runtime.Immutable
+import kotlinx.serialization.json.JsonPrimitive
 
 @Immutable
 data class ChatTurnState(
@@ -53,7 +54,7 @@ data class AgentActivity(
 object ChatTurnReducer {
     fun reduce(state: ChatTurnState, event: ServerEvent): ChatTurnState = when (event) {
         is ServerEvent.MessageUpdated -> state.upsertMessageInfo(event.properties.info)
-        is ServerEvent.MessagePartUpdated -> state.upsertMessagePart(event.properties.part)
+        is ServerEvent.MessagePartUpdated -> state.upsertMessagePart(event.properties.part, event.properties.delta)
         is ServerEvent.MessagePartDelta -> state.applyPartDelta(event.properties)
         is ServerEvent.SessionUpdated -> state.withActivity(
             sessionId = event.properties.info.id,
@@ -130,7 +131,7 @@ object ChatTurnReducer {
             .withActivity(info.sessionID, AgentActivity.STAGE_RUNNING, messageId = info.id)
     }
 
-    private fun ChatTurnState.upsertMessagePart(part: MessagePartInfo): ChatTurnState {
+    private fun ChatTurnState.upsertMessagePart(part: MessagePartInfo, delta: String? = null): ChatTurnState {
         val existing = messagesById[part.messageID]
         val message = existing ?: Message(
             id = part.messageID,
@@ -164,12 +165,70 @@ object ChatTurnReducer {
                     partId = part.id
                 )
         }
+        // V2 streaming: if delta is present, append to existing part text instead of replacing
+        if (delta != null) {
+            return applyPartDeltaToMessage(message, part, delta)
+        }
         val mappedPart = part.toMessagePart() ?: return this
         val updatedMessage = message.copy(
             parts = message.parts.replaceById(part.id, mappedPart),
             isStreaming = true
         )
         return copy(messagesById = messagesById + (part.messageID to updatedMessage))
+            .withActivity(
+                sessionId = part.sessionID,
+                stage = part.activityStage(),
+                messageId = part.messageID,
+                partId = part.id,
+                title = part.state?.title ?: part.tool
+            )
+    }
+
+    /**
+     * Apply a streaming delta to an existing message part (V2 protocol).
+     * Appends the delta to the matching part's text/content.
+     */
+    private fun ChatTurnState.applyPartDeltaToMessage(
+        message: Message,
+        part: MessagePartInfo,
+        delta: String
+    ): ChatTurnState {
+        var matched = false
+        val updatedParts = message.parts.map { existing ->
+            when {
+                existing is MessagePart.Text && existing.id == part.id -> {
+                    matched = true
+                    existing.copy(text = existing.text + delta)
+                }
+                existing is MessagePart.Reasoning && existing.id == part.id -> {
+                    matched = true
+                    existing.copy(content = existing.content + delta)
+                }
+                existing is MessagePart.Thinking && existing.id == part.id -> {
+                    matched = true
+                    existing.copy(content = existing.content + delta)
+                }
+                else -> existing
+            }
+        }
+        if (!matched) {
+            // Part doesn't exist yet — create from the part info with delta as initial text
+            val mappedPart = part.toMessagePart() ?: return this
+            val updatedMessage = message.copy(
+                parts = message.parts.replaceById(part.id, mappedPart),
+                isStreaming = true
+            )
+            return copy(messagesById = messagesById + (part.messageID to updatedMessage))
+                .withActivity(
+                    sessionId = part.sessionID,
+                    stage = part.activityStage(),
+                    messageId = part.messageID,
+                    partId = part.id,
+                    title = part.state?.title ?: part.tool
+                )
+        }
+        val updatedMessage = message.copy(parts = updatedParts, isStreaming = true)
+        return copy(messagesById = messagesById + (message.id to updatedMessage))
             .withActivity(
                 sessionId = part.sessionID,
                 stage = part.activityStage(),
@@ -303,6 +362,52 @@ private fun MessagePartInfo.toMessagePart(): MessagePart? = when (type) {
         url = url,
         filename = filename
     )
+    // V2 part types
+    "subtask" -> MessagePart.SubTask(
+        sessionId = sessionID,
+        title = text ?: tool ?: "Subtask",
+        status = SessionStatus.IDLE
+    )
+    "snapshot" -> MessagePart.Snapshot(
+        id = id,
+        sessionId = sessionID,
+        messageId = messageID,
+        createdAt = time?.start ?: 0L
+    )
+    "patch" -> MessagePart.Patch(
+        id = id,
+        path = filename ?: tool ?: "unknown",
+        content = text.orEmpty()
+    )
+    "agent" -> MessagePart.AgentDelegate(
+        id = id,
+        agentName = tool ?: text ?: "agent",
+        subagentSessionId = metadata?.get("sessionID")?.let {
+            (it as? JsonPrimitive)?.content
+        },
+        status = state?.status ?: "running"
+    )
+    "retry" -> MessagePart.Retry(
+        id = id,
+        attempt = metadata?.get("attempt")?.let {
+            (it as? JsonPrimitive)?.content?.toIntOrNull()
+        } ?: 1,
+        reason = text,
+        nextRetryAt = metadata?.get("next")?.let {
+            (it as? JsonPrimitive)?.content?.toLongOrNull()
+        }
+    )
+    "compaction" -> MessagePart.Compaction(
+        id = id,
+        sessionId = sessionID,
+        tokensBefore = metadata?.get("tokensBefore")?.let {
+            (it as? JsonPrimitive)?.content?.toIntOrNull()
+        } ?: 0,
+        tokensAfter = metadata?.get("tokensAfter")?.let {
+            (it as? JsonPrimitive)?.content?.toIntOrNull()
+        } ?: 0,
+        timestamp = time?.start ?: 0L
+    )
     else -> null
 }
 
@@ -310,6 +415,10 @@ private fun MessagePartInfo.activityStage(): String = when (type) {
     "tool" -> AgentActivity.STAGE_TOOL
     "reasoning", "thinking" -> AgentActivity.STAGE_REASONING
     "text" -> AgentActivity.STAGE_WRITING
+    "subtask", "agent" -> AgentActivity.STAGE_RUNNING
+    "retry" -> AgentActivity.STAGE_QUEUED
+    "compaction" -> AgentActivity.STAGE_RUNNING
+    "snapshot", "patch" -> AgentActivity.STAGE_IDLE
     else -> AgentActivity.STAGE_RUNNING
 }
 
@@ -345,4 +454,9 @@ private val MessagePart.partId: String?
         is MessagePart.ToolResult -> id
         is MessagePart.File -> null
         is MessagePart.SubTask -> sessionId
+        is MessagePart.Snapshot -> id
+        is MessagePart.Patch -> id
+        is MessagePart.AgentDelegate -> id
+        is MessagePart.Retry -> id
+        is MessagePart.Compaction -> id
     }
