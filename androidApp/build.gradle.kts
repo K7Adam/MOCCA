@@ -84,4 +84,8 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3.expressive)
     implementation(libs.compose.ui.graphics)
+
+    // Glance home screen widget
+    implementation(libs.androidx.glance.widget)
+    implementation(libs.androidx.glance.material3)
 }

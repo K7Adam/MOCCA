@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">MOCCA</string>
+    <string name="widget_status_description">Shows MOCCA connection status and active session count</string>
 </resources>
