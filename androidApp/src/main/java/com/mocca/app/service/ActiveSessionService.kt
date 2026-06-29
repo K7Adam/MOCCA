@@ -29,6 +29,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import com.mocca.app.MainActivity
 import com.mocca.app.android.R
+import com.mocca.app.widget.WidgetUpdateHelper
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +38,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -444,6 +446,9 @@ class ActiveSessionService : Service() {
         }
 
         Napier.d("[ActiveSessionService] Updated session: $sessionId, active: ${sessionStates.size}")
+
+        // Push widget update
+        pushWidgetUpdate()
     }
 
     /**
@@ -462,6 +467,28 @@ class ActiveSessionService : Service() {
         }
 
         Napier.i("[ActiveSessionService] Removed session: $sessionId, remaining: ${sessionStates.size}")
+
+        // Push widget update
+        pushWidgetUpdate()
+    }
+
+    /**
+     * Push widget update with current session count and connection status.
+     */
+    private fun pushWidgetUpdate() {
+        serviceScope.launch {
+            try {
+                WidgetUpdateHelper.update(
+                    context = this@ActiveSessionService,
+                    connectionStatus = "Connected",
+                    sessionCount = sessionStates.size,
+                    lastSync = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+                        .format(java.util.Date())
+                )
+            } catch (e: Exception) {
+                Napier.w("[ActiveSessionService] Widget update failed: ${e.message}")
+            }
+        }
     }
 
     private var isForeground = false
@@ -497,6 +524,7 @@ class ActiveSessionService : Service() {
                 isForeground = false
                 stopSelf()
                 Napier.i("[ActiveSessionService] All sessions stopped")
+                pushWidgetUpdate()
             }
             ACTION_ABORT -> {
                 val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
