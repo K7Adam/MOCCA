@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.data.repository.ConfigRepository
+import com.mocca.app.data.repository.SharedContentBus
 import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.App
 import com.mocca.app.ui.theme.AppColors
@@ -76,6 +77,18 @@ class MainActivity : ComponentActivity() {
     }
     
     private fun handleIntent(intent: Intent?) {
+        // Handle share-sheet (ACTION_SEND with text)
+        if (intent?.action == Intent.ACTION_SEND) {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+                ?: intent.getStringExtra(Intent.EXTRA_TITLE)
+            if (!sharedText.isNullOrBlank()) {
+                Napier.i("[MainActivity] Received shared text (${sharedText.length} chars)")
+                SharedContentBus.publish(sharedText)
+                Toast.makeText(this, "Content added to chat", Toast.LENGTH_SHORT).show()
+            }
+            return
+        }
+
         val uri = intent?.data
         if (uri != null && uri.scheme == "mocca" && uri.host == "bridge") {
             bridgePairingIntentStore.submit(uri.toString())

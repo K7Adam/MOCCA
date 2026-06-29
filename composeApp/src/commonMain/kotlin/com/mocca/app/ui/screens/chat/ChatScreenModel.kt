@@ -178,6 +178,13 @@ class ChatScreenModel(
                 loadSession(initialSessionId)
             }
         }
+        // Observe shared content from share-sheet / external sources
+        screenModelScope.launch {
+            SharedContentBus.sharedContent.collect { content ->
+                val current = _inputText.value
+                _inputText.value = if (current.isBlank()) content else "$current\n\n$content"
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
