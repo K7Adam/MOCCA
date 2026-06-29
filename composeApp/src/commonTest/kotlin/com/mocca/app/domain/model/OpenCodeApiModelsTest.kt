@@ -2,7 +2,7 @@ package com.mocca.app.domain.model
 
 import kotlin.test.Test
 import kotlin.test.assertFalse
-import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
 class OpenCodeApiModelsTest {
@@ -13,7 +13,8 @@ class OpenCodeApiModelsTest {
 
     @Test
     fun agentBooleanFieldsTreatNullAsFalse() {
-        val agents = json.decodeFromString<List<Agent>>(
+        val agents = json.decodeFromString(
+            ListSerializer(Agent.serializer()),
             """
             [
               {"name":"build","native":null,"hidden":null}
@@ -27,7 +28,8 @@ class OpenCodeApiModelsTest {
 
     @Test
     fun commandBooleanFieldsTreatNullAsFalse() {
-        val commands = json.decodeFromString<List<Command>>(
+        val commands = json.decodeFromString(
+            ListSerializer(Command.serializer()),
             """
             [
               {"name":"test","subtask":null,"mcp":null}
@@ -39,3 +41,4 @@ class OpenCodeApiModelsTest {
         assertFalse(commands.single().mcp)
     }
 }
+
