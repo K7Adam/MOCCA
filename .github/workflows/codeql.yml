@@ -45,7 +45,7 @@ jobs:
           build-mode: manual
 
       - name: Build for CodeQL
-        run: ./gradlew :androidApp:assembleDebug -x detekt -x test
+        run: ./gradlew :androidApp:assembleDebug -x test
         env:
           CI: true
 
