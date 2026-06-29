@@ -1,8 +1,8 @@
 package com.mocca.app.domain.model
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.fail
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
@@ -13,36 +13,40 @@ class OpenCodeApiModelsTest {
     }
 
     @Test
-    fun agentBooleanFieldsTreatNullAsFalse() {
-        val input = """
-            [
-              {"name":"build","native":null,"hidden":null}
-            ]
-        """.trimIndent()
-        val agents = try {
-            json.decodeFromString(ListSerializer(Agent.serializer()), input)
-        } catch (e: Exception) {
-            fail("Agent decode failed: ${e::class.qualifiedName} - ${e.message}", e)
-        }
+    fun agentWithOmittedBooleanFieldsDefaultsToFalse() {
+        val input = """[{"name":"build"}]"""
+        val agents = json.decodeFromString(ListSerializer(Agent.serializer()), input)
 
-        assertFalse(agents.single().native, "native should be false when null")
-        assertFalse(agents.single().hidden, "hidden should be false when null")
+        assertEquals("build", agents.single().name)
+        assertFalse(agents.single().native, "native should default to false when omitted")
+        assertFalse(agents.single().hidden, "hidden should default to false when omitted")
     }
 
     @Test
-    fun commandBooleanFieldsTreatNullAsFalse() {
-        val input = """
-            [
-              {"name":"test","subtask":null,"mcp":null}
-            ]
-        """.trimIndent()
-        val commands = try {
-            json.decodeFromString(ListSerializer(Command.serializer()), input)
-        } catch (e: Exception) {
-            fail("Command decode failed: ${e::class.qualifiedName} - ${e.message}", e)
-        }
+    fun commandWithOmittedBooleanFieldsDefaultsToFalse() {
+        val input = """[{"name":"test"}]"""
+        val commands = json.decodeFromString(ListSerializer(Command.serializer()), input)
 
-        assertFalse(commands.single().subtask, "subtask should be false when null")
-        assertFalse(commands.single().mcp, "mcp should be false when null")
+        assertEquals("test", commands.single().name)
+        assertFalse(commands.single().subtask, "subtask should default to false when omitted")
+        assertFalse(commands.single().mcp, "mcp should default to false when omitted")
+    }
+
+    @Test
+    fun agentWithExplicitFalseBooleanFields() {
+        val input = """[{"name":"build","native":false,"hidden":false}]"""
+        val agents = json.decodeFromString(ListSerializer(Agent.serializer()), input)
+
+        assertFalse(agents.single().native)
+        assertFalse(agents.single().hidden)
+    }
+
+    @Test
+    fun commandWithExplicitFalseBooleanFields() {
+        val input = """[{"name":"test","subtask":false,"mcp":false}]"""
+        val commands = json.decodeFromString(ListSerializer(Command.serializer()), input)
+
+        assertFalse(commands.single().subtask)
+        assertFalse(commands.single().mcp)
     }
 }
