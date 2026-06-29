@@ -11,6 +11,7 @@ import com.mocca.app.bridge.connection.BridgeHealthChecker
 import com.mocca.app.bridge.connection.BridgeTransportFactory
 import com.mocca.app.bridge.connection.KtorBridgeTransport
 import com.mocca.app.domain.model.AppInfo
+import com.mocca.app.domain.model.ConnectionQuality
 import com.mocca.app.domain.model.ConnectionStatus
 import com.mocca.app.domain.model.ServerConfig
 import com.mocca.app.util.NetworkObserver
@@ -86,6 +87,11 @@ class ConnectionManager(
     private val _activeConfig = MutableStateFlow<ServerConfig?>(null)
     val activeConfig: StateFlow<ServerConfig?> = _activeConfig.asStateFlow()
 
+    // Connection quality tracking — rolling window of latency samples
+    private val _connectionQuality = MutableStateFlow(ConnectionQuality.UNKNOWN)
+    val connectionQuality: StateFlow<ConnectionQuality> = _connectionQuality.asStateFlow()
+
+    private val latencyHistory = ArrayDeque<Long>(LATENCY_WINDOW_SIZE)
     private var healthJob: Job? = null
     private var reconnectJob: Job? = null
     private var networkObserverJob: Job? = null
@@ -207,6 +213,8 @@ class ConnectionManager(
             }
             _status.value = ConnectionStatus.Disconnected()
             _activeConfig.value = null
+            synchronized(latencyHistory) { latencyHistory.clear() }
+            _connectionQuality.value = ConnectionQuality.UNKNOWN
         }
     }
 
@@ -374,6 +382,7 @@ class ConnectionManager(
                 consecutiveFailures = 0
                 hasEverConnected = true
                 lastSuccessfulCheckMs = Clock.System.now().toEpochMilliseconds()
+                recordLatency(latencyMs)
                 _status.value = ConnectionStatus.Connected(
                     serverInfo = appInfo ?: AppInfo(version = "unknown"),
                     latencyMs = latencyMs
@@ -393,6 +402,7 @@ class ConnectionManager(
                 } else {
                     Napier.e("[ConnectionManager] Health check FAILED: $errorMsg")
                 }
+                _connectionQuality.value = ConnectionQuality.OFFLINE
                 consecutiveFailures++
                 if (consecutiveFailures < MAX_RECONNECT_ATTEMPTS) {
                     scheduleReconnect()
@@ -410,13 +420,20 @@ class ConnectionManager(
                 delay(PERIODIC_CHECK_INTERVAL_MS)
                 if (_status.value.isConnected) {
                     Napier.d("[ConnectionManager] Periodic health check...")
-                    val result = withContext(Dispatchers.IO) { performHealthCheck() }
+                    val (result, latencyMs) = withContext(Dispatchers.IO) {
+                        val start = Clock.System.now().toEpochMilliseconds()
+                        val r = performHealthCheck()
+                        val elapsed = Clock.System.now().toEpochMilliseconds() - start
+                        Pair(r, elapsed)
+                    }
                     result.fold(
                         onSuccess = {
                             lastSuccessfulCheckMs = Clock.System.now().toEpochMilliseconds()
+                            recordLatency(latencyMs)
                         },
                         onFailure = { error ->
                             Napier.w("[ConnectionManager] Periodic check failed: ${error.message}")
+                            _connectionQuality.value = ConnectionQuality.DEGRADED
                             consecutiveFailures++
                             if (consecutiveFailures >= 2) {
                                 _status.value = ConnectionStatus.Disconnected(error.message)
@@ -456,8 +473,9 @@ class ConnectionManager(
 
     private fun calculateBackoff(attempt: Int): Long {
         val baseDelay = 1000L
-        val maxDelay = if (networkObserver?.isCurrentlyOnline() == true) 10000L else 30000L
-        val exponentialDelay = baseDelay * (1L shl min(attempt - 1, 5))
+        val maxDelay = if (networkObserver?.isCurrentlyOnline() == true) 15000L else 30000L
+        // Cap exponent at 6 (2^6 = 64s base) to avoid overflow and excessive delays
+        val exponentialDelay = baseDelay * (1L shl min(attempt - 1, 6))
         val jitter = (0..500).random().toLong()
         return min(exponentialDelay, maxDelay) + jitter
     }
@@ -550,8 +568,51 @@ class ConnectionManager(
         reconnectJob = null
     }
 
+    // ==== Connection Quality Tracking ====
+
+    /**
+     * Record a latency sample and update the connection quality assessment.
+     * Maintains a rolling window of the most recent samples.
+     */
+    private fun recordLatency(latencyMs: Long) {
+        synchronized(latencyHistory) {
+            if (latencyHistory.size >= LATENCY_WINDOW_SIZE) {
+                latencyHistory.removeFirst()
+            }
+            latencyHistory.addLast(latencyMs)
+        }
+        _connectionQuality.value = computeQuality()
+    }
+
+    /**
+     * Compute connection quality from the rolling latency window.
+     * - EXCELLENT: avg < 100ms
+     * - GOOD: avg < 300ms
+     * - DEGRADED: avg < 1000ms
+     * - POOR: avg >= 1000ms
+     */
+    private fun computeQuality(): ConnectionQuality {
+        val samples = synchronized(latencyHistory) { latencyHistory.toList() }
+        if (samples.isEmpty()) return ConnectionQuality.UNKNOWN
+        val avg = samples.average().toLong()
+        return when {
+            avg < 100 -> ConnectionQuality.EXCELLENT
+            avg < 300 -> ConnectionQuality.GOOD
+            avg < 1000 -> ConnectionQuality.DEGRADED
+            else -> ConnectionQuality.POOR
+        }
+    }
+
+    /**
+     * Get the average latency from the rolling window, or null if no samples.
+     */
+    fun getAverageLatency(): Long? {
+        val samples = synchronized(latencyHistory) { latencyHistory.toList() }
+        return if (samples.isEmpty()) null else samples.average().toLong()
+    }
+
     companion object {
-        private const val MAX_RECONNECT_ATTEMPTS = 5
+        private const val MAX_RECONNECT_ATTEMPTS = 10
         /**
          * Interval for periodic health checks.
          *
@@ -560,6 +621,9 @@ class ConnectionManager(
          * Faster health checks mean faster detection of connection issues.
          */
         private const val PERIODIC_CHECK_INTERVAL_MS = 30 * 1000L // 30 seconds
+
+        /** Number of latency samples to keep for quality assessment. */
+        private const val LATENCY_WINDOW_SIZE = 5
     }
 }
 
