@@ -2,6 +2,7 @@ package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -109,7 +110,8 @@ fun MessageRow(
                 onLongClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     showContextMenu = true
-                }
+                },
+                onRevert = onRevert
             )
         }
 
@@ -202,7 +204,8 @@ private fun AgentMessageContent(
     message: Message,
     showTokenCounts: Boolean,
     onFileClick: ((String) -> Unit)?,
-    onLongClick: () -> Unit
+    onLongClick: () -> Unit,
+    onRevert: (() -> Unit)? = null
 ) {
     val shape = AppShapes.large
 
@@ -217,7 +220,7 @@ private fun AgentMessageContent(
         Column {
             val partGroups = remember(message.parts) { message.parts.groupForUi() }
             partGroups.forEach { group ->
-                RenderPartGroup(group = group, onFileClick = onFileClick)
+                RenderPartGroup(group = group, onFileClick = onFileClick, onRevert = onRevert)
                 Spacer(modifier = Modifier.height(AppSpacing.xs))
             }
 
@@ -229,7 +232,11 @@ private fun AgentMessageContent(
 }
 
 @Composable
-private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> Unit)?) {
+private fun RenderPartGroup(
+    group: MessagePartGroup,
+    onFileClick: ((String) -> Unit)?,
+    onRevert: (() -> Unit)? = null
+) {
     when (group) {
         is MessagePartGroup.Single -> when (val part = group.part) {
             is MessagePart.Text -> MarkdownText(
@@ -249,7 +256,7 @@ private fun RenderPartGroup(group: MessagePartGroup, onFileClick: ((String) -> U
             is MessagePart.SubTask -> ModernSubTaskBlock(part)
             is MessagePart.Thinking -> ModernThinkingBlock(part)
             // V2 part types — minimal rendering for now
-            is MessagePart.Snapshot -> SnapshotBadge(part)
+            is MessagePart.Snapshot -> SnapshotBadge(part, onRevert = onRevert)
             is MessagePart.Patch -> PatchBadge(part)
             is MessagePart.AgentDelegate -> AgentDelegateBadge(part)
             is MessagePart.Retry -> RetryBadge(part)
@@ -479,11 +486,15 @@ private fun MessageContextMenu(
 // ==== V2 Part Type Badges ====
 
 @Composable
-private fun SnapshotBadge(part: com.mocca.app.domain.model.MessagePart.Snapshot) {
+private fun SnapshotBadge(
+    part: com.mocca.app.domain.model.MessagePart.Snapshot,
+    onRevert: (() -> Unit)? = null
+) {
     V2PartBadge(
         icon = Icons.Default.CameraAlt,
         label = "Snapshot",
-        detail = part.messageId.take(8)
+        detail = part.messageId.take(8),
+        onClick = onRevert
     )
 }
 
@@ -527,7 +538,8 @@ private fun CompactionBadge(part: com.mocca.app.domain.model.MessagePart.Compact
 private fun V2PartBadge(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    detail: String
+    detail: String,
+    onClick: (() -> Unit)? = null
 ) {
     Row(
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
@@ -535,6 +547,13 @@ private fun V2PartBadge(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
+            .then(
+                if (onClick != null) {
+                    Modifier.clip(AppShapes.small).clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            )
     ) {
         Icon(
             imageVector = icon,

@@ -986,6 +986,22 @@ data class TodoWriteRequest(
     val todos: List<Todo>
 )
 
+// SKILLS
+
+/**
+ * Agent skill info from V2 API: GET /skill
+ * Matches OpenCode Skill.Info schema.
+ */
+@Serializable
+@Immutable
+data class SkillInfo(
+    val name: String,
+    val description: String? = null,
+    val slash: Boolean? = null,
+    val location: String,
+    val content: String
+)
+
 // SESSION OPERATIONS
 
 

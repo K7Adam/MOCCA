@@ -29,6 +29,7 @@ import com.mocca.app.ui.screens.mcp.McpScreenModel
 import com.mocca.app.ui.screens.mcp.McpResourceScreenModel
 import com.mocca.app.ui.screens.onboarding.OnboardingWizardModel
 import com.mocca.app.ui.screens.panels.DashboardScreenModel
+import com.mocca.app.ui.screens.skills.SkillsScreenModel
 
 import com.mocca.app.ui.screens.settings.SettingsScreenModel
 import com.mocca.app.ui.screens.terminal.TerminalScreenModel
@@ -128,6 +129,7 @@ val commonModule = module {
     singleOf(::AgentRepository)
     singleOf(::ToolRepository)
     singleOf(::CommandRepository)
+    singleOf(::SkillRepository)
     single { SearchRepository(apiClient = get(), fileRepository = get()) }
     singleOf(::ProjectRepository)
     single {
@@ -294,6 +296,13 @@ val screenModelModule = module {
     factory {
         McpScreenModel(
             mcpRepository = get()
+        )
+    }
+
+    // Skills screen
+    factory {
+        SkillsScreenModel(
+            skillRepository = get()
         )
     }
 

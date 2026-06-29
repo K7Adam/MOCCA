@@ -662,6 +662,15 @@ class MoccaApiClient(
     // Agents
     suspend fun getAgents(): Result<List<Agent>> = safeRequest("getAgents") { get("agent") }
 
+    // Skills
+    /**
+     * List all available skills.
+     * V2 API: GET /skill
+     * Returns skill info including name, description, location, and content.
+     */
+    suspend fun getSkills(): Result<List<SkillInfo>> =
+            safeCall("getSkills") { get("skill").body() }
+
     // Tools
     suspend fun getToolIds(): Result<List<String>> =
             safeRequest("getToolIds") { get("experimental/tool/ids") }
