@@ -12,6 +12,8 @@ import com.mocca.app.bridge.opencode.BridgeResponseException
 import com.mocca.app.domain.model.Terminal
 import com.mocca.app.domain.model.TerminalGrid
 import com.mocca.app.domain.model.TerminalGridFrame
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import io.github.aakira.napier.Napier
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -52,7 +54,7 @@ enum class TerminalInputMode {
 
 @Immutable
 data class TerminalState(
-    val tabs: List<TerminalTab> = emptyList(),
+    val tabs: ImmutableList<TerminalTab> = kotlinx.collections.immutable.persistentListOf(),
     val activeTabId: String? = null,
     val isCreatingTab: Boolean = false,
     val isLoadingTabs: Boolean = false,
@@ -145,7 +147,7 @@ class TerminalScreenModel(
                 }
                 _state.update { state ->
                     state.copy(
-                        tabs = tabs,
+                        tabs = tabs.toImmutableList(),
                         activeTabId = state.activeTabId ?: tabs.firstOrNull()?.terminal?.id,
                         isLoadingTabs = false
                     )
@@ -204,7 +206,7 @@ class TerminalScreenModel(
                 )
                 _state.update { state ->
                     state.copy(
-                        tabs = state.tabs.filterNot { it.terminal.id == terminal.id } + tab,
+                        tabs = (state.tabs.filterNot { it.terminal.id == terminal.id } + tab).toImmutableList(),
                         activeTabId = terminal.id,
                         isCreatingTab = false
                     )
@@ -381,7 +383,7 @@ class TerminalScreenModel(
                 isConnected = true
             )
             state.copy(
-                tabs = state.tabs.filterNot { it.terminal.id == event.terminalId } + tab,
+                tabs = (state.tabs.filterNot { it.terminal.id == event.terminalId } + tab).toImmutableList(),
                 activeTabId = state.activeTabId ?: event.terminalId
             )
         }
@@ -391,7 +393,7 @@ class TerminalScreenModel(
         _state.update { state ->
             val remaining = state.tabs.filter { it.terminal.id != terminalId }
             state.copy(
-                tabs = remaining,
+                tabs = remaining.toImmutableList(),
                 activeTabId = when {
                     state.activeTabId != terminalId -> state.activeTabId
                     remaining.isNotEmpty() -> remaining.last().terminal.id
@@ -405,7 +407,7 @@ class TerminalScreenModel(
         _state.update { state ->
             state.copy(tabs = state.tabs.map { tab ->
                 if (tab.terminal.id == terminalId) transform(tab) else tab
-            })
+            }.toImmutableList())
         }
     }
 

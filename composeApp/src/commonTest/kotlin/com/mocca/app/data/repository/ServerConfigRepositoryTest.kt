@@ -2,6 +2,7 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.FakeLocalCache
 import com.mocca.app.domain.model.ServerConfig
+import app.cash.turbine.test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -135,5 +136,63 @@ class ServerConfigRepositoryTest {
         val cache = FakeLocalCache()
         val repo = ServerConfigRepository(cache, null)
         assertTrue(repo.isLoaded.value)
+    }
+
+    // --- Turbine-based StateFlow tests ---
+
+    @Test
+    fun activeServerFlowEmitsNullInitially() = runTest {
+        val cache = FakeLocalCache()
+        val repo = ServerConfigRepository(cache, null)
+        repo.activeServer.test {
+            assertNull(awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun activeServerFlowEmitsConfigAfterSave() = runTest {
+        val cache = FakeLocalCache()
+        val repo = ServerConfigRepository(cache, null)
+        val config = makeConfig()
+
+        repo.activeServer.test {
+            // Initial state: null
+            assertNull(awaitItem())
+
+            // Save a config — flow should emit the new config
+            repo.saveActiveServer(config)
+            assertEquals(config, awaitItem())
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun activeServerFlowEmitsReplacementConfig() = runTest {
+        val cache = FakeLocalCache()
+        val repo = ServerConfigRepository(cache, null)
+
+        repo.activeServer.test {
+            assertNull(awaitItem())
+
+            repo.saveActiveServer(makeConfig(id = "srv_1", name = "First"))
+            assertEquals("First", awaitItem()!!.name)
+
+            repo.saveActiveServer(makeConfig(id = "srv_2", name = "Second"))
+            assertEquals("Second", awaitItem()!!.name)
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun isLoadedFlowEmitsTrueImmediately() = runTest {
+        val cache = FakeLocalCache()
+        val repo = ServerConfigRepository(cache, null)
+        repo.isLoaded.test {
+            assertTrue(awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
     }
 }

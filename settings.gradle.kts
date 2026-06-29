@@ -25,3 +25,7 @@ dependencyResolutionManagement {
 rootProject.name = "MOCCA"
 include(":composeApp")
 include(":androidApp")
+// :benchmark module — Baseline Profile generator.
+// Uncomment after upgrading to AGP 9.0.1 stable (com.android.test plugin
+// has a classpath conflict with AGP 9.0.0-rc03).
+// include(":benchmark")

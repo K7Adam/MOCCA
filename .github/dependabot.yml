@@ -1,0 +1,53 @@
+# Dependabot configuration for automated dependency updates.
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+updates:
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "gradle"
+    commit-message:
+      prefix: "deps"
+    groups:
+      kotlin:
+        patterns:
+          - "org.jetbrains.kotlin:*"
+          - "org.jetbrains.kotlinx:*"
+      compose:
+        patterns:
+          - "org.jetbrains.compose.*"
+      ktor:
+        patterns:
+          - "io.ktor:*"
+      koin:
+        patterns:
+          - "io.insert-koin:*"
+      sqldelight:
+        patterns:
+          - "app.cash.sqldelight:*"
+      voyager:
+        patterns:
+          - "cafe.adriel.voyager:*"
+      androidx:
+        patterns:
+          - "androidx.*"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"

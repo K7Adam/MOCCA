@@ -40,6 +40,7 @@ import com.mocca.app.ui.components.modern.*
 import com.mocca.app.ui.components.modern.message.*
 import com.mocca.app.ui.theme.*
 import com.mocca.app.util.TimeFormatter
+import kotlinx.collections.immutable.ImmutableList
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.launch
 import com.mocca.app.ui.screens.files.FilesScreen
@@ -343,7 +344,7 @@ private fun BoxScope.ChatOverlayHost(
 private fun ChatMessagePane(
     screenModel: ChatScreenModel,
     listState: LazyListState,
-    aggregatedMessages: List<Message>,
+    aggregatedMessages: ImmutableList<Message>,
     streamingText: String,
     isLoading: Boolean,
     error: String?,

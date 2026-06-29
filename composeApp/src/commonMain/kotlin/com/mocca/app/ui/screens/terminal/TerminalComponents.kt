@@ -56,6 +56,7 @@ import com.mocca.app.ui.theme.*
 import com.mocca.app.ui.TestTags
 import androidx.compose.ui.platform.testTag
 import com.mocca.app.util.AnsiParser
+import kotlinx.collections.immutable.ImmutableList
 
 // Extension to convert TextStyle to SpanStyle
 fun TextStyle.toSpanStyle(): SpanStyle = SpanStyle(
@@ -72,7 +73,7 @@ fun TextStyle.toSpanStyle(): SpanStyle = SpanStyle(
 
 @Composable
 internal fun TerminalTabBar(
-    tabs: List<TerminalTab>,
+    tabs: ImmutableList<TerminalTab>,
     activeTabId: String?,
     onTabSelected: (String) -> Unit,
     onTabClosed: (String) -> Unit
