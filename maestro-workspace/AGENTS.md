@@ -10,6 +10,17 @@
 ## OVERVIEW
 Emulator-only UI verification layer for MOCCA. Covers smoke, regression, and screenshot-catalog flows; unit tests do not live here.
 
+## CI STATUS
+The Maestro smoke workflow (`.github/workflows/maestro-tests.yml`) runs:
+- **Nightly** at 04:00 UTC via `cron` schedule
+- **On manual dispatch** via `workflow_dispatch`
+- With `continue-on-error: true` — failures do NOT block PRs
+- With a 30-minute timeout to prevent hung emulator jobs
+
+The job was previously fully disabled (`if: false`) due to emulator startup flakiness on GitHub Actions runners (cold boot timeouts, KVM availability) and Maestro UI test timing sensitivity. It was re-enabled on nightly + manual dispatch with non-blocking semantics. Once consistently green for 2+ weeks, consider re-adding to PR checks.
+
+**Local testing** via `start-emulator.ps1` + `run-emulator-tests.ps1` is always available regardless of CI status.
+
 ## STRUCTURE
 ```
 maestro-workspace/

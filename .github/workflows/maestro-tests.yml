@@ -1,13 +1,26 @@
 name: MOCCA Maestro Tests
 
+# Re-enabled on manual dispatch + nightly schedule.
+# The job uses continue-on-error so failures do not block PRs.
+# Once consistently green for 2+ weeks of nightly runs, consider
+# re-adding to PR checks as non-blocking, then blocking.
+#
+# Original disablement reason: emulator startup flakiness on GitHub Actions
+# runners (cold boot timeouts, KVM availability) and Maestro UI test timing
+# sensitivity. Local testing via maestro-workspace scripts remains fully
+# supported regardless of CI status.
 on:
-  workflow_dispatch: # disabled: was pull_request + push to main
+  workflow_dispatch:
+  schedule:
+    # Nightly at 04:00 UTC
+    - cron: '0 4 * * *'
 
 jobs:
   maestro-smoke:
-    if: false
     name: Emulator Smoke Tests
     runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
