@@ -146,3 +146,7 @@ pwsh -NoProfile -File scripts/check-docs-sync.ps1
 - Server discovery is bridge-first via QR pairing; no `discovery/` package exists
 - `UpdateRepository.kt` holds a standalone `HttpClient` for APK redirect downloads (line 155) — documented deviation from the `ApiExecutor` pattern
 - `ServerConfigRepository.kt:50` uses `runBlocking` — known anti-pattern violation for synchronous server-load
+- R8 full mode (`android.enableR8.fullMode=true`) and resource shrinking are enabled in release builds
+- Network security config blocks cleartext traffic globally; only `10.0.2.2`, `localhost`, `127.0.0.1` are exempt for dev servers
+- `:benchmark` module exists for Baseline Profile generation but is disabled until AGP 9.0.1 stable (com.android.test plugin classpath conflict)
+- CI security: `dependency-review.yml` (PR vulnerability scan), `codeql.yml` (SAST), `.github/dependabot.yml` (automated updates)
