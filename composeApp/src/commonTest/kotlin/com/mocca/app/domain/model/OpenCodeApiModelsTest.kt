@@ -2,6 +2,7 @@ package com.mocca.app.domain.model
 
 import kotlin.test.Test
 import kotlin.test.assertFalse
+import kotlin.test.fail
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
@@ -18,17 +19,14 @@ class OpenCodeApiModelsTest {
               {"name":"build","native":null,"hidden":null}
             ]
         """.trimIndent()
-        println("DEBUG: Decoding Agent list from: $input")
         val agents = try {
             json.decodeFromString(ListSerializer(Agent.serializer()), input)
         } catch (e: Exception) {
-            println("DEBUG: Agent decode failed: ${e::class.simpleName} - ${e.message}")
-            throw e
+            fail("Agent decode failed: ${e::class.qualifiedName} - ${e.message}", e)
         }
-        println("DEBUG: Agent decoded successfully: $agents")
 
-        assertFalse(agents.single().native)
-        assertFalse(agents.single().hidden)
+        assertFalse(agents.single().native, "native should be false when null")
+        assertFalse(agents.single().hidden, "hidden should be false when null")
     }
 
     @Test
@@ -38,16 +36,13 @@ class OpenCodeApiModelsTest {
               {"name":"test","subtask":null,"mcp":null}
             ]
         """.trimIndent()
-        println("DEBUG: Decoding Command list from: $input")
         val commands = try {
             json.decodeFromString(ListSerializer(Command.serializer()), input)
         } catch (e: Exception) {
-            println("DEBUG: Command decode failed: ${e::class.simpleName} - ${e.message}")
-            throw e
+            fail("Command decode failed: ${e::class.qualifiedName} - ${e.message}", e)
         }
-        println("DEBUG: Command decoded successfully: $commands")
 
-        assertFalse(commands.single().subtask)
-        assertFalse(commands.single().mcp)
+        assertFalse(commands.single().subtask, "subtask should be false when null")
+        assertFalse(commands.single().mcp, "mcp should be false when null")
     }
 }
