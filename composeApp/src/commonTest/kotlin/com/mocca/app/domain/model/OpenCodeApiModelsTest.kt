@@ -13,14 +13,19 @@ class OpenCodeApiModelsTest {
 
     @Test
     fun agentBooleanFieldsTreatNullAsFalse() {
-        val agents = json.decodeFromString(
-            ListSerializer(Agent.serializer()),
-            """
+        val input = """
             [
               {"name":"build","native":null,"hidden":null}
             ]
-            """.trimIndent()
-        )
+        """.trimIndent()
+        println("DEBUG: Decoding Agent list from: $input")
+        val agents = try {
+            json.decodeFromString(ListSerializer(Agent.serializer()), input)
+        } catch (e: Exception) {
+            println("DEBUG: Agent decode failed: ${e::class.simpleName} - ${e.message}")
+            throw e
+        }
+        println("DEBUG: Agent decoded successfully: $agents")
 
         assertFalse(agents.single().native)
         assertFalse(agents.single().hidden)
@@ -28,17 +33,21 @@ class OpenCodeApiModelsTest {
 
     @Test
     fun commandBooleanFieldsTreatNullAsFalse() {
-        val commands = json.decodeFromString(
-            ListSerializer(Command.serializer()),
-            """
+        val input = """
             [
               {"name":"test","subtask":null,"mcp":null}
             ]
-            """.trimIndent()
-        )
+        """.trimIndent()
+        println("DEBUG: Decoding Command list from: $input")
+        val commands = try {
+            json.decodeFromString(ListSerializer(Command.serializer()), input)
+        } catch (e: Exception) {
+            println("DEBUG: Command decode failed: ${e::class.simpleName} - ${e.message}")
+            throw e
+        }
+        println("DEBUG: Command decoded successfully: $commands")
 
         assertFalse(commands.single().subtask)
         assertFalse(commands.single().mcp)
     }
 }
-
