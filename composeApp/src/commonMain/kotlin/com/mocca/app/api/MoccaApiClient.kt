@@ -678,6 +678,34 @@ class MoccaApiClient(
     suspend fun getToolSchema(id: String): Result<ToolSchema> =
             safeRequest("getToolSchema") { get("experimental/tool/$id") }
 
+    /**
+     * List all tools with full definitions for a specific provider/model.
+     * V2 API: GET /experimental/tool?provider=...&model=...
+     */
+    suspend fun getTools(provider: String? = null, model: String? = null): Result<ToolListResponse> =
+            safeCall("getTools") {
+                get("experimental/tool") {
+                    if (provider != null) parameter("provider", provider)
+                    if (model != null) parameter("model", model)
+                }.body()
+            }
+
+    // LSP Status
+    /**
+     * Get LSP server status.
+     * V2 API: GET /lsp
+     */
+    suspend fun getLspStatus(): Result<List<LspStatus>> =
+            safeCall("getLspStatus") { get("lsp").body() }
+
+    // Formatter Status
+    /**
+     * Get formatter status.
+     * V2 API: GET /formatter
+     */
+    suspend fun getFormatterStatus(): Result<List<FormatterStatus>> =
+            safeCall("getFormatterStatus") { get("formatter").body() }
+
     // Slash Commands
     suspend fun getCommands(): Result<List<Command>> = safeRequest("getCommands") { get("command") }
 

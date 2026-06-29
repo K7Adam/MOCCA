@@ -1002,6 +1002,44 @@ data class SkillInfo(
     val content: String
 )
 
+// TOOLS (V2)
+
+/**
+ * Tool list response from V2 API: GET /experimental/tool
+ * Uses the existing ToolDefinition model.
+ */
+@Serializable
+@Immutable
+data class ToolListResponse(
+    val tools: List<ToolDefinition> = emptyList()
+)
+
+// LSP STATUS
+
+/**
+ * LSP server status from V2 API: GET /lsp
+ */
+@Serializable
+@Immutable
+data class LspStatus(
+    val name: String,
+    val running: Boolean = false,
+    val languages: List<String> = emptyList()
+)
+
+// FORMATTER STATUS
+
+/**
+ * Formatter status from V2 API: GET /formatter
+ */
+@Serializable
+@Immutable
+data class FormatterStatus(
+    val name: String,
+    val running: Boolean = false,
+    val languages: List<String> = emptyList()
+)
+
 // SESSION OPERATIONS
 
 
