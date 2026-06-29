@@ -392,26 +392,28 @@ class SessionRepository(
      */
     suspend fun replyToQuestion(
         requestId: String,
-        answers: List<List<String>>
+        answers: List<List<String>>,
+        sessionId: String? = null
     ): Result<Boolean> {
-        return apiClient.replyToQuestion(requestId, answers)
+        return apiClient.replyToQuestion(requestId, answers, sessionId)
     }
-    
+
     /**
      * Reply to a single-answer question.
      */
     suspend fun replyToQuestionSingle(
         requestId: String,
-        answer: String
+        answer: String,
+        sessionId: String? = null
     ): Result<Boolean> {
-        return replyToQuestion(requestId, listOf(listOf(answer)))
+        return replyToQuestion(requestId, listOf(listOf(answer)), sessionId)
     }
-    
+
     /**
      * Reject a question request.
      */
-    suspend fun rejectQuestion(requestId: String): Result<Boolean> {
-        return apiClient.rejectQuestion(requestId)
+    suspend fun rejectQuestion(requestId: String, sessionId: String? = null): Result<Boolean> {
+        return apiClient.rejectQuestion(requestId, sessionId)
     }
     
     /**
@@ -594,6 +596,72 @@ class SessionRepository(
                 .map { localTodos -> Resource.Success(localTodos) }
         )
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * Update todos for a session (bidirectional — user can modify todos).
+     * V2 API: POST /session/:sessionID/todo (full replacement).
+     *
+     * Optimistically updates local cache, then syncs with server.
+     */
+    suspend fun updateSessionTodos(sessionId: String, todos: List<Todo>): Resource<List<Todo>> {
+        // Optimistic update: write to local cache immediately
+        localCache.insertSessionTodos(sessionId, todos)
+
+        // Sync with server
+        return try {
+            val result = apiClient.updateSessionTodos(sessionId, todos)
+            result.fold(
+                onSuccess = { remoteTodos ->
+                    localCache.insertSessionTodos(sessionId, remoteTodos)
+                    Resource.Success(remoteTodos)
+                },
+                onFailure = { error ->
+                    Napier.e("Failed to update todos for session $sessionId", error)
+                    Resource.Error(error.message ?: "Failed to update todos", todos)
+                }
+            )
+        } catch (e: Exception) {
+            Napier.e("Exception updating todos for session $sessionId", e)
+            Resource.Error(e.message ?: "Exception updating todos", todos)
+        }
+    }
+
+    /**
+     * Toggle a todo's status (bidirectional convenience method).
+     * Cycles: pending -> in_progress -> completed -> pending
+     */
+    suspend fun toggleTodoStatus(sessionId: String, todoId: String, currentTodos: List<Todo>): Resource<List<Todo>> {
+        val updatedTodos = currentTodos.map { todo ->
+            if (todo.id == todoId) {
+                val newStatus = when (todo.status) {
+                    TodoStatus.PENDING -> TodoStatus.IN_PROGRESS
+                    TodoStatus.IN_PROGRESS -> TodoStatus.COMPLETED
+                    TodoStatus.COMPLETED -> TodoStatus.PENDING
+                    TodoStatus.CANCELLED -> TodoStatus.PENDING
+                }
+                todo.copy(
+                    status = newStatus,
+                    completedAt = if (newStatus == TodoStatus.COMPLETED) Clock.System.now().toEpochMilliseconds() else null
+                )
+            } else {
+                todo
+            }
+        }
+        return updateSessionTodos(sessionId, updatedTodos)
+    }
+
+    /**
+     * Add a new todo to the session's todo list.
+     */
+    suspend fun addTodo(sessionId: String, content: String, priority: TodoPriority = TodoPriority.MEDIUM, currentTodos: List<Todo>): Resource<List<Todo>> {
+        val newTodo = Todo(
+            content = content,
+            status = TodoStatus.PENDING,
+            priority = priority,
+            createdAt = Clock.System.now().toEpochMilliseconds()
+        )
+        return updateSessionTodos(sessionId, currentTodos + newTodo)
+    }
 
     // Session sharing
 

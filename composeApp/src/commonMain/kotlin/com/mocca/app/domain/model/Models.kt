@@ -976,6 +976,16 @@ enum class TodoPriority {
     @SerialName("low") LOW
 }
 
+/**
+ * Request body for POST /session/:sessionID/todo (V2 API).
+ * The server replaces all existing todos with the provided list.
+ */
+@Immutable
+@Serializable
+data class TodoWriteRequest(
+    val todos: List<Todo>
+)
+
 // SESSION OPERATIONS
 
 

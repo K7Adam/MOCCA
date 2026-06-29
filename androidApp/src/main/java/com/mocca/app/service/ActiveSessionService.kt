@@ -23,6 +23,7 @@ import android.graphics.Color
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -118,10 +119,45 @@ class ActiveSessionService : Service() {
         // Extras
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_SESSION_TITLE = "session_title"
+        const val EXTRA_QUESTION_REPLY = "question_reply_text"
 
         // Time constants
         private const val SECONDS_PER_MINUTE = 60L
         private const val MILLIS_PER_SECOND = 1000L
+
+        /**
+         * Check if the device supports promoted notifications (Live Updates).
+         * Requires Android 16 (BAKLAVA / API 35) or above.
+         */
+        fun supportsPromotedNotifications(): Boolean {
+            return Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+        }
+
+        /**
+         * Check if the app is allowed to post promoted notifications.
+         * Returns false on devices that don't support Live Updates.
+         */
+        fun canPostPromotedNotifications(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) return false
+            return runCatching {
+                context.getSystemService(NotificationManager::class.java)
+                    .canPostPromotedNotifications()
+            }.getOrDefault(false)
+        }
+
+        /**
+         * Create an intent to open the system settings for promoted notifications
+         * (Live Updates) for this app. Returns null if not supported.
+         */
+        fun createPromotedNotificationsSettingsIntent(context: Context): Intent? {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.BAKLAVA) return null
+            return runCatching {
+                // ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS was added in API 35
+                // Use string literal for forward compatibility
+                Intent("android.settings.ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS")
+                    .setData(android.net.Uri.parse("package:${context.packageName}"))
+            }.getOrNull()
+        }
 
         fun start(context: Context, sessionId: String, sessionTitle: String? = null) {
             val intent = Intent(context, ActiveSessionService::class.java).apply {
@@ -278,12 +314,53 @@ class ActiveSessionService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
+            // Inline reply action using RemoteInput
+            val remoteInput = androidx.core.app.RemoteInput.Builder(EXTRA_QUESTION_REPLY)
+                .setLabel("Type your answer...")
+                .build()
+
+            val replyIntent = Intent(context, QuestionActionReceiver::class.java).apply {
+                action = QuestionActionReceiver.ACTION_QUESTION_REPLY
+                putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
+                putExtra(QuestionActionReceiver.EXTRA_SESSION_ID, sessionId)
+            }
+            val replyPendingIntent = PendingIntent.getBroadcast(
+                context,
+                NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode(),
+                replyIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            )
+
+            val replyAction = NotificationCompat.Action.Builder(
+                R.drawable.ic_launcher_foreground,
+                "Reply",
+                replyPendingIntent
+            )
+                .addRemoteInput(remoteInput)
+                .setAllowGeneratedReplies(true)
+                .build()
+
+            // Reject action
+            val rejectIntent = Intent(context, QuestionActionReceiver::class.java).apply {
+                action = QuestionActionReceiver.ACTION_QUESTION_REJECT
+                putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
+                putExtra(QuestionActionReceiver.EXTRA_SESSION_ID, sessionId)
+            }
+            val rejectPendingIntent = PendingIntent.getBroadcast(
+                context,
+                NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode() + 1,
+                rejectIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+
             val notification = NotificationCompat.Builder(context, CHANNEL_QUESTION_PENDING)
                 .setContentTitle("Question from Agent")
                 .setContentText(question)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(question))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
+                .addAction(replyAction)
+                .addAction(R.drawable.ic_launcher_foreground, "Reject", rejectPendingIntent)
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setCategory(NotificationCompat.CATEGORY_MESSAGE)
@@ -673,11 +750,44 @@ class ActiveSessionService : Service() {
             .setShortCriticalText(shortCriticalText)
             .setStyle(progressStyle)
 
+        // Add abort action for active sessions
+        val abortIntent = Intent(this, ActiveSessionService::class.java).apply {
+            action = ACTION_ABORT
+            putExtra(EXTRA_SESSION_ID, session.sessionId)
+        }
+        val abortPendingIntent = PendingIntent.getService(
+            this,
+            session.sessionId.hashCode(),
+            abortIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        builder.addAction(
+            Notification.Action.Builder(
+                null,
+                "Abort",
+                abortPendingIntent
+            ).build()
+        )
+
+        // Request promoted ongoing (Live Update) if the app is allowed and
+        // the notification meets all promotion requirements.
         if (canRequestPromotedOngoing()) {
             builder.setFlag(Notification.FLAG_PROMOTED_ONGOING, true)
         }
 
-        return builder.build()
+        val notification = builder.build()
+
+        // Log promotion characteristics for debugging
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA) {
+            val hasPromotable = runCatching {
+                notification.hasPromotableCharacteristics()
+            }.getOrDefault(false)
+            if (!hasPromotable) {
+                Napier.d("[ActiveSessionService] Notification lacks promotable characteristics for session ${session.sessionId}")
+            }
+        }
+
+        return notification
     }
 
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)
@@ -696,7 +806,7 @@ class ActiveSessionService : Service() {
         elapsedSeconds: Long,
         bigText: String
     ): Notification {
-        return NotificationCompat.Builder(this, CHANNEL_AGENT_ACTIVE)
+        val builder = NotificationCompat.Builder(this, CHANNEL_AGENT_ACTIVE)
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
@@ -708,7 +818,16 @@ class ActiveSessionService : Service() {
             .setProgress(totalTodos.coerceAtLeast(0), totalCompleted, totalTodos == 0)
             .setWhen(System.currentTimeMillis() - elapsedSeconds * MILLIS_PER_SECOND)
             .setUsesChronometer(true)
-            .build()
+
+        val notification = builder.build()
+
+        // Apply promoted ongoing flag for devices that support it
+        // (Android 16+ / API 35+) even when using the legacy builder
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA && canRequestPromotedOngoing()) {
+            notification.flags = notification.flags or Notification.FLAG_PROMOTED_ONGOING
+        }
+
+        return notification
     }
 
     @RequiresApi(Build.VERSION_CODES.BAKLAVA)

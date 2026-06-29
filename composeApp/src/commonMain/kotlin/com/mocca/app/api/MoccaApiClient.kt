@@ -197,24 +197,44 @@ class MoccaApiClient(
 
     // Questions
     /**
-     * Reply to a question request.
+     * Reply to a question request (V2 session-scoped).
+     * V2 API: POST /session/:sessionID/question/request/:requestID/reply
+     *
+     * Falls back to legacy POST /question/:requestID/reply if sessionId is null.
+     *
+     * @param sessionId Session ID (V2) or null (legacy)
      * @param requestId The question request ID
      * @param answers Answers as a list of string lists (one list per question, multiple selections
      * if multiple=true)
      */
-    suspend fun replyToQuestion(requestId: String, answers: List<List<String>>): Result<Boolean> =
+    suspend fun replyToQuestion(requestId: String, answers: List<List<String>>, sessionId: String? = null): Result<Boolean> =
             safeCallNoRetry("replyToQuestion") {
-                post("question/$requestId/reply") {
+                val path = if (sessionId != null) {
+                    "session/$sessionId/question/request/$requestId/reply"
+                } else {
+                    "question/$requestId/reply"
+                }
+                post(path) {
                             contentType(ContentType.Application.Json)
                             setBody(QuestionReplyRequest(requestID = requestId, answers = answers))
                         }
                         .body()
             }
 
-    /** Reject a question request. */
-    suspend fun rejectQuestion(requestId: String): Result<Boolean> =
+    /**
+     * Reject a question request (V2 session-scoped).
+     * V2 API: POST /session/:sessionID/question/request/:requestID/reject
+     *
+     * Falls back to legacy POST /question/:requestID/reject if sessionId is null.
+     */
+    suspend fun rejectQuestion(requestId: String, sessionId: String? = null): Result<Boolean> =
             safeCallNoRetry("rejectQuestion") {
-                post("question/$requestId/reject") {
+                val path = if (sessionId != null) {
+                    "session/$sessionId/question/request/$requestId/reject"
+                } else {
+                    "question/$requestId/reject"
+                }
+                post(path) {
                             contentType(ContentType.Application.Json)
                             setBody(QuestionRejectRequest(requestID = requestId))
                         }
@@ -495,6 +515,22 @@ class MoccaApiClient(
      */
     suspend fun getSessionTodos(sessionId: String): Result<List<Todo>> =
             safeCall("getSessionTodos") { get("session/$sessionId/todo").body() }
+
+    /**
+     * Update todos for a session (full replacement).
+     * V2 API: POST /session/:sessionID/todo
+     * Sends the entire todo list; the server replaces all existing todos.
+     *
+     * @param sessionId Session ID
+     * @param todos Complete list of todos to set
+     */
+    suspend fun updateSessionTodos(sessionId: String, todos: List<Todo>): Result<List<Todo>> =
+            safeCallNoRetry("updateSessionTodos") {
+                post("session/$sessionId/todo") {
+                    contentType(ContentType.Application.Json)
+                    setBody(TodoWriteRequest(todos = todos))
+                }.body()
+            }
 
     // Session sharing
 

@@ -77,6 +77,17 @@
             </intent-filter>
         </receiver>
 
+        <!-- BroadcastReceiver for question actions from notifications (inline reply + reject) -->
+        <receiver
+            android:name="com.mocca.app.service.QuestionActionReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.mocca.app.action.QUESTION_REPLY" />
+                <action android:name="com.mocca.app.action.QUESTION_REJECT" />
+            </intent-filter>
+        </receiver>
+
         <!-- BroadcastReceiver for DownloadManager completion -->
         <receiver
             android:name="com.mocca.app.domain.manager.ApkDownloadReceiver"

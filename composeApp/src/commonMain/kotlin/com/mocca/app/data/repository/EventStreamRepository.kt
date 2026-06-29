@@ -54,6 +54,7 @@ class EventStreamRepository(
     private var lifecycleObserverJob: Job? = null
     private var backgroundPauseJob: Job? = null
     private var permissionActionJob: Job? = null
+    private var questionActionJob: Job? = null
     private var bridgeEventJob: Job? = null
     private val bridgeEventObserverMutex = Mutex()
     
@@ -205,6 +206,7 @@ class EventStreamRepository(
             startNetworkObserver()
             startLifecycleObserver()
             startPermissionActionObserver()
+            startQuestionActionObserver()
             startBridgeEventObserver()
         } else {
             startBridgeEventObserver()
@@ -394,6 +396,65 @@ class EventStreamRepository(
                             Napier.e("[EventStream] Failed to reply to permission ${action.permissionId}", error)
                         }
                     )
+                }
+            }
+        }
+    }
+
+    /**
+     * Start observing question actions from notification interactions.
+     * Handles inline replies and rejections from the notification system.
+     */
+    private fun startQuestionActionObserver() {
+        if (questionActionJob?.isActive == true) return
+
+        questionActionJob = repositoryScope.launch {
+            // Handle reply actions
+            launch {
+                QuestionActionBus.replyActions.collect { action ->
+                    Napier.i("[EventStream] Received question reply from notification: ${action.questionId}")
+
+                    apiClient?.let { client ->
+                        val result = client.replyToQuestion(
+                            requestId = action.questionId,
+                            answers = action.answers,
+                            sessionId = action.sessionId
+                        )
+
+                        result.fold(
+                            onSuccess = {
+                                Napier.i("[EventStream] Question ${action.questionId} replied successfully")
+                                dismissQuestion(action.questionId)
+                            },
+                            onFailure = { error ->
+                                Napier.e("[EventStream] Failed to reply to question ${action.questionId}", error)
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Handle reject actions
+            launch {
+                QuestionActionBus.rejectActions.collect { action ->
+                    Napier.i("[EventStream] Received question reject from notification: ${action.questionId}")
+
+                    apiClient?.let { client ->
+                        val result = client.rejectQuestion(
+                            requestId = action.questionId,
+                            sessionId = action.sessionId
+                        )
+
+                        result.fold(
+                            onSuccess = {
+                                Napier.i("[EventStream] Question ${action.questionId} rejected successfully")
+                                dismissQuestion(action.questionId)
+                            },
+                            onFailure = { error ->
+                                Napier.e("[EventStream] Failed to reject question ${action.questionId}", error)
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -777,6 +838,15 @@ class EventStreamRepository(
             _pendingQuestions.value = current.drop(1)
         }
     }
+
+    /**
+     * Dismiss a specific question request by ID.
+     * Used when handling question actions from notifications.
+     */
+    fun dismissQuestion(questionId: String) {
+        val current = _pendingQuestions.value
+        _pendingQuestions.value = current.filter { it.id != questionId }
+    }
     
     /**
      * Get the current (first) pending question for external handling.
@@ -1088,7 +1158,22 @@ class EventStreamRepository(
             is ServerEvent.SessionStatus -> Napier.d("Session status: ${event.properties.sessionID}")
             is ServerEvent.SessionDiff -> Napier.d("Session diff: ${event.properties.sessionID}")
             is ServerEvent.SessionCompacted -> Napier.d("Session compacted: ${event.properties.sessionID}")
-            is ServerEvent.TodoUpdated -> Napier.d("Todo updated")
+            is ServerEvent.TodoUpdated -> {
+                Napier.d("Todo updated for session ${event.properties.sessionID}")
+                // V2: todos array (full replacement)
+                if (event.properties.todos.isNotEmpty()) {
+                    val mappedTodos = event.properties.todos.map { info ->
+                        Todo(
+                            content = info.content,
+                            status = runCatching { TodoStatus.valueOf(info.status.uppercase()) }
+                                .getOrDefault(TodoStatus.PENDING),
+                            priority = runCatching { TodoPriority.valueOf(info.priority.uppercase()) }
+                                .getOrDefault(TodoPriority.MEDIUM)
+                        )
+                    }
+                    localCache?.insertSessionTodos(event.properties.sessionID, mappedTodos)
+                }
+            }
             is ServerEvent.QuestionRejected -> Napier.d("Question rejected: ${event.properties.requestID}")
             is ServerEvent.MessagePartDelta -> {
                 handleMessagePartDelta(event)

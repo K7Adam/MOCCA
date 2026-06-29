@@ -840,7 +840,17 @@ data class SessionCompactedProperties(
 @Immutable
 data class TodoUpdatedProperties(
     val sessionID: String,
-    val todo: TodoItem
+    val todos: List<TodoInfo> = emptyList(),
+    // Legacy V1 field — single todo item. Kept for backward compatibility.
+    val todo: TodoItem? = null
+)
+
+@Serializable
+@Immutable
+data class TodoInfo(
+    val content: String,
+    val status: String = "pending", // "pending", "in_progress", "completed", "cancelled"
+    val priority: String = "medium" // "high", "medium", "low"
 )
 
 @Serializable

@@ -576,14 +576,14 @@ class ChatStateStore(
     
     suspend fun answerQuestion(answers: List<List<String>>): Result<Boolean> {
         val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
-        return sessionRepository.replyToQuestion(question.id, answers).also {
+        return sessionRepository.replyToQuestion(question.id, answers, question.sessionId).also {
             if (it.isSuccess) stateCoordinator.dismissQuestion()
         }
     }
-    
+
     suspend fun rejectQuestion(): Result<Boolean> {
         val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
-        return sessionRepository.rejectQuestion(question.id).also {
+        return sessionRepository.rejectQuestion(question.id, question.sessionId).also {
             if (it.isSuccess) stateCoordinator.dismissQuestion()
         }
     }
