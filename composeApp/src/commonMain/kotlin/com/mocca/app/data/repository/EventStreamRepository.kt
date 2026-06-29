@@ -863,6 +863,12 @@ class EventStreamRepository(
      * so dedup is handled upstream.
      */
     internal suspend fun handleEvent(event: ServerEvent) = withContext(Dispatchers.IO) {
+        // Capture inter-event arrival time for quality tracking.
+        // Updated for both SSE and bridge paths so latency calculations
+        // don't use a stale/zero lastEventTime value.
+        val now = System.currentTimeMillis()
+        val interEventLatencyMs = now - lastEventTime
+        lastEventTime = now
         Napier.v("Dispatching event: ${event.type}")
 
         // Early-exit for events from non-monitored sessions
@@ -928,8 +934,8 @@ class EventStreamRepository(
                 val part = event.properties.part
                 val delta = event.properties.delta
 
-                // Record latency for quality tracking
-                qualityTracker.recordLatency(System.currentTimeMillis() - lastEventTime)
+                // Record inter-event latency for quality tracking
+                qualityTracker.recordLatency(interEventLatencyMs)
 
                 // DIAGNOSTIC: Log all MessagePartUpdated events for debugging
                 Napier.v(">>> MessagePartUpdated: type=${part.type}, hasDelta=${delta != null}, deltaLen=${delta?.length ?: 0}, textLen=${part.text?.length ?: 0}, sessionID=${part.sessionID}")
