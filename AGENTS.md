@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-06-28
-**Commit:** b5323a2
+**Updated:** 2026-07-12
+**Commit:** 7218538
 **Project:** MOCCA (Mobile OpenCode Companion App)
 **Stack:** Kotlin Multiplatform (Android-only) + Compose Multiplatform + Koin + Voyager + SQLDelight + Material 3 Expressive
 
@@ -21,6 +21,7 @@ MOCCA/
 │       ├── domain/       # Models, events, sync contracts
 │       ├── ui/           # App shell, screens, components, theme
 │       └── util/         # Shared formatters, lifecycle/network abstractions
+├── benchmark/            # Macrobenchmark + BaselineProfile generator (com.android.test)
 ├── maestro-workspace/    # Emulator-only E2E flows, subflows, test plans
 ├── .agent/skills/        # Android Studio skill compatibility adapters
 ├── .agents/skills/       # Cross-agent skills shared by Codex/OpenCode/Gemini/Windsurf-capable clients
@@ -148,5 +149,9 @@ pwsh -NoProfile -File scripts/check-docs-sync.ps1
 - `ServerConfigRepository.kt:50` uses `runBlocking` — known anti-pattern violation for synchronous server-load
 - R8 full mode (`android.enableR8.fullMode=true`) and resource shrinking are enabled in release builds
 - Network security config blocks cleartext traffic globally; only `10.0.2.2`, `localhost`, `127.0.0.1` are exempt for dev servers
-- `:benchmark` module exists for Baseline Profile generation but is disabled until AGP 9.0.1 stable (com.android.test plugin classpath conflict)
+- `:benchmark` module is active with `BaselineProfileGenerator` for manual Baseline Profile generation. Uses `com.android.test` plugin via `id()` (no version) since AGP 9 has built-in Kotlin support. The `baselineprofile` plugin is NOT applied to `:androidApp` because the KMP+application hybrid is not supported by the BP app-target plugin.
 - CI security: `dependency-review.yml` (PR vulnerability scan), `codeql.yml` (SAST), `.github/dependabot.yml` (automated updates)
+- CI Maestro: `maestro-tests.yml` runs nightly at 04:00 UTC + manual dispatch with `continue-on-error: true` (non-blocking). See `maestro-workspace/AGENTS.md` for details.
+- **Dependency versions** (as of 2026-07-12): AGP 9.0.1, Kotlin 2.3.0, Compose MP 1.11.1, Ktor 3.5.0, Koin 4.2.2, SQLDelight 2.3.2, Coroutines 1.11.0, Voyager 1.1.0-beta03
+- Compose MP 1.11+ enables `parallelRendering` by default — performance improvement for terminal/chat rendering
+- Koin 4.2.2 CoreResolverV2: ViewModel declarations requiring scope injection must be inside `viewModelScope { }` block. Lazy Modules provide parallel startup loading. Navigation 3 support available via `koin-navigation3` (not yet adopted — Voyager remains the navigator).
