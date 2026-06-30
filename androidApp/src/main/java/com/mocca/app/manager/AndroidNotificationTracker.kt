@@ -45,10 +45,12 @@ class AndroidNotificationTracker(private val context: Context) : NotificationTra
     override fun showQuestionNotification(
         sessionId: String,
         questionId: String,
-        question: String
+        question: String,
+        options: List<String>,
+        multiple: Boolean
     ) {
         ActiveSessionService.showQuestionNotification(
-            context, sessionId, questionId, question
+            context, sessionId, questionId, question, options, multiple
         )
     }
 

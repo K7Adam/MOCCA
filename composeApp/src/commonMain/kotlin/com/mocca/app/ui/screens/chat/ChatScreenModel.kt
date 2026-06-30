@@ -24,6 +24,7 @@ data class ChatState(
     val isLoading: Boolean = false,
     val isSending: Boolean = false,
     val error: String? = null,
+    val agentError: AgentErrorClassifier.AgentError? = null,
     val pendingPermission: PermissionRequest? = null,
     val pendingQuestion: QuestionRequest? = null,
     val pendingPermissions: ImmutableList<PermissionRequest> = persistentListOf(),
@@ -200,7 +201,8 @@ class ChatScreenModel(
                 chatStateStore.isSending,
                 chatStateStore.isSessionIdle,
                 chatStateStore.error,
-                chatStateStore.sessionDisposed
+                chatStateStore.sessionDisposed,
+                chatStateStore.agentError
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 val msgs = args[0] as List<Message>
@@ -212,6 +214,7 @@ class ChatScreenModel(
                 val idle = args[6] as Boolean
                 val err = args[7] as String?
                 val disposed = args[8] as String?
+                val agentErr = args[9] as AgentErrorClassifier.AgentError?
 
                 _state.update { it.copy(
                     messages = msgs.toImmutableList(),
@@ -222,6 +225,7 @@ class ChatScreenModel(
                     isSending = sending,
                     isSessionIdle = idle,
                     error = err,
+                    agentError = agentErr,
                     sessionDisposed = disposed != null,
                     disposalReason = disposed
                 ) }
@@ -627,6 +631,10 @@ class ChatScreenModel(
     }
 
     fun clearError() { _state.update { it.copy(error = null) } }
+    fun dismissAgentError() {
+        chatStateStore.clearAgentError()
+        _state.update { it.copy(agentError = null) }
+    }
     fun dismissDisposal() = chatStateStore.clearDisposed()
     
     override fun onDispose() {

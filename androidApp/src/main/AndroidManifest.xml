@@ -86,7 +86,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- BroadcastReceiver for question actions from notifications (inline reply + reject) -->
+        <!-- BroadcastReceiver for question actions from notifications (option select + inline reply + reject) -->
         <receiver
             android:name="com.mocca.app.service.QuestionActionReceiver"
             android:enabled="true"
@@ -94,6 +94,7 @@
             <intent-filter>
                 <action android:name="com.mocca.app.action.QUESTION_REPLY" />
                 <action android:name="com.mocca.app.action.QUESTION_REJECT" />
+                <action android:name="com.mocca.app.action.QUESTION_OPTION" />
             </intent-filter>
         </receiver>
 

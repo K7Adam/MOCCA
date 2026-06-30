@@ -11,6 +11,7 @@ import io.github.aakira.napier.Napier
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -47,6 +48,7 @@ class AiRuntimeConfigRepository(
     private var currentSnapshot: AiRuntimeConfigSnapshot? = null
     private var currentSelection: AiSelection? = null
     private var lastAiEventSeq: Long? = null
+    private var refreshJob: Job? = null
 
     init {
         scope.launch {
@@ -55,7 +57,22 @@ class AiRuntimeConfigRepository(
                 connectionManager.status
             ) { bridgeStatus, serverStatus -> bridgeStatus to serverStatus }
                 .distinctUntilChanged()
-                .collect { refresh(force = true) }
+                .collect {
+                    // Launch refresh in a child coroutine so that CancellationException
+                    // (e.g. from HttpClient recreation) cancels the child, not the
+                    // collect loop.  Without this, the observer dies on the first
+                    // cancellation and no retry happens when the bridge later connects.
+                    refreshJob?.cancel()
+                    refreshJob = scope.launch {
+                        try {
+                            refresh(force = true)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            // Expected when a newer refresh supersedes this one.
+                        } catch (e: Exception) {
+                            Napier.e("[AiRuntimeConfigRepository] refresh failed in observer", e)
+                        }
+                    }
+                }
         }
 
         scope.launch {
@@ -69,7 +86,16 @@ class AiRuntimeConfigRepository(
                     if (previous != null && seq != null && seq != previous + 1) {
                         Napier.w("[AiRuntimeConfigRepository] AI config event seq gap: $previous -> $seq")
                     }
-                    refresh(force = true)
+                    refreshJob?.cancel()
+                    refreshJob = scope.launch {
+                        try {
+                            refresh(force = true)
+                        } catch (e: kotlinx.coroutines.CancellationException) {
+                            // Expected when a newer refresh supersedes this one.
+                        } catch (e: Exception) {
+                            Napier.e("[AiRuntimeConfigRepository] refresh failed in event observer", e)
+                        }
+                    }
                 }
         }
     }

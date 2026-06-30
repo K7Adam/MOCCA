@@ -409,52 +409,65 @@ class EventStreamRepository(
         if (questionActionJob?.isActive == true) return
 
         questionActionJob = repositoryScope.launch {
-            // Handle reply actions
+            // Handle reply actions (from notification option buttons or text input)
             launch {
                 QuestionActionBus.replyActions.collect { action ->
                     Napier.i("[EventStream] Received question reply from notification: ${action.questionId}")
 
-                    apiClient?.let { client ->
-                        val result = client.replyToQuestion(
-                            requestId = action.questionId,
-                            answers = action.answers,
-                            sessionId = action.sessionId
-                        )
-
-                        result.fold(
-                            onSuccess = {
-                                Napier.i("[EventStream] Question ${action.questionId} replied successfully")
-                                dismissQuestion(action.questionId)
-                            },
-                            onFailure = { error ->
-                                Napier.e("[EventStream] Failed to reply to question ${action.questionId}", error)
-                            }
-                        )
+                    val client = apiClient
+                    if (client == null) {
+                        Napier.e("[EventStream] apiClient is null - cannot reply to question ${action.questionId}")
+                        return@collect
                     }
+
+                    val result = client.replyToQuestion(
+                        requestId = action.questionId,
+                        answers = action.answers,
+                        sessionId = action.sessionId
+                    )
+
+                    result.fold(
+                        onSuccess = {
+                            Napier.i("[EventStream] Question ${action.questionId} replied successfully")
+                            dismissQuestion(action.questionId)
+                        },
+                        onFailure = { error ->
+                            Napier.e("[EventStream] Failed to reply to question ${action.questionId}: ${error.message}", error)
+                            // Still dismiss the question locally so the UI is not stuck.
+                            // The server will eventually time out the question on its own.
+                            dismissQuestion(action.questionId)
+                        }
+                    )
                 }
             }
 
-            // Handle reject actions
+            // Handle reject actions (from notification reject button)
             launch {
                 QuestionActionBus.rejectActions.collect { action ->
                     Napier.i("[EventStream] Received question reject from notification: ${action.questionId}")
 
-                    apiClient?.let { client ->
-                        val result = client.rejectQuestion(
-                            requestId = action.questionId,
-                            sessionId = action.sessionId
-                        )
-
-                        result.fold(
-                            onSuccess = {
-                                Napier.i("[EventStream] Question ${action.questionId} rejected successfully")
-                                dismissQuestion(action.questionId)
-                            },
-                            onFailure = { error ->
-                                Napier.e("[EventStream] Failed to reject question ${action.questionId}", error)
-                            }
-                        )
+                    val client = apiClient
+                    if (client == null) {
+                        Napier.e("[EventStream] apiClient is null - cannot reject question ${action.questionId}")
+                        return@collect
                     }
+
+                    val result = client.rejectQuestion(
+                        requestId = action.questionId,
+                        sessionId = action.sessionId
+                    )
+
+                    result.fold(
+                        onSuccess = {
+                            Napier.i("[EventStream] Question ${action.questionId} rejected successfully")
+                            dismissQuestion(action.questionId)
+                        },
+                        onFailure = { error ->
+                            Napier.e("[EventStream] Failed to reject question ${action.questionId}: ${error.message}", error)
+                            // Still dismiss locally so the UI is not stuck
+                            dismissQuestion(action.questionId)
+                        }
+                    )
                 }
             }
         }
@@ -831,21 +844,48 @@ class EventStreamRepository(
 
     /**
      * Dismiss the first pending question request.
+     * Clears from BOTH the legacy _pendingQuestions list AND the canonical
+     * ChatTurnState to keep both sources in sync.
      */
     fun dismissQuestion() {
         val current = _pendingQuestions.value
         if (current.isNotEmpty()) {
+            val first = current.first()
             _pendingQuestions.value = current.drop(1)
+            removeQuestionFromChatTurnState(first.sessionId, first.id)
         }
     }
 
     /**
      * Dismiss a specific question request by ID.
-     * Used when handling question actions from notifications.
+     * Clears from BOTH the legacy _pendingQuestions list AND the canonical
+     * ChatTurnState to keep both sources in sync.
+     * Used when handling question actions from notifications or UI.
      */
     fun dismissQuestion(questionId: String) {
         val current = _pendingQuestions.value
+        val toRemove = current.firstOrNull { it.id == questionId }
         _pendingQuestions.value = current.filter { it.id != questionId }
+        if (toRemove != null) {
+            removeQuestionFromChatTurnState(toRemove.sessionId, questionId)
+        }
+    }
+
+    /**
+     * Remove a question from the canonical ChatTurnState directly.
+     * This is called after a successful reply/reject to ensure the UI
+     * dismisses the dialog immediately, without waiting for the server's
+     * question.replied / question.rejected SSE event.
+     */
+    private fun removeQuestionFromChatTurnState(sessionId: String, questionId: String) {
+        val current = _chatTurnState.value
+        val sessionQuestions = current.pendingQuestionsBySession[sessionId].orEmpty()
+        if (sessionQuestions.none { it.id == questionId }) return
+        _chatTurnState.value = current.copy(
+            pendingQuestionsBySession = current.pendingQuestionsBySession + (
+                sessionId to sessionQuestions.filterNot { it.id == questionId }
+            )
+        )
     }
     
     /**
@@ -921,9 +961,13 @@ class EventStreamRepository(
             is ServerEvent.SessionError -> {
                 event.properties.sessionID?.let { sessionId ->
                     if (monitoredSessionIds.value.contains(sessionId)) {
+                        val classified = AgentErrorClassifier.classify(
+                            message = event.properties.error?.message,
+                            code = event.properties.error?.code,
+                        )
                         notificationTracker?.showAgentErrorNotification(
                             sessionId = sessionId,
-                            errorMessage = event.properties.error?.message ?: "Unknown error"
+                            errorMessage = classified.title + ": " + classified.message
                         )
                     }
                 }
@@ -1071,10 +1115,13 @@ class EventStreamRepository(
                 if (monitoredSessionIds.value.contains(question.sessionId)) {
                     addPendingQuestion(question)
                     Napier.i("Question requested: ${question.questions.size} questions")
+                    val firstQuestion = question.questions.firstOrNull()
                     notificationTracker?.showQuestionNotification(
                         sessionId = question.sessionId,
                         questionId = question.id,
-                        question = question.questions.firstOrNull()?.question ?: "Agent has a question"
+                        question = firstQuestion?.question ?: "Agent has a question",
+                        options = firstQuestion?.options?.map { it.label } ?: emptyList(),
+                        multiple = firstQuestion?.multiple ?: false
                     )
                 }
             }
@@ -1148,9 +1195,13 @@ class EventStreamRepository(
                             sessionTitle = "Agent $agentName task completed"
                         )
                     } else if (status == "error") {
+                        val classified = AgentErrorClassifier.classify(
+                            message = event.properties.message,
+                            agentName = agentName,
+                        )
                         notificationTracker?.showAgentErrorNotification(
                             sessionId = event.properties.sessionID,
-                            errorMessage = event.properties.message ?: "Agent $agentName encountered an error"
+                            errorMessage = classified.title + ": " + classified.message
                         )
                     }
                 }

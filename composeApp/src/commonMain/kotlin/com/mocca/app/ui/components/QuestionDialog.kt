@@ -14,12 +14,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import com.mocca.app.ui.theme.AppShapes
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.mocca.app.domain.model.QuestionRequest
 import com.mocca.app.ui.theme.AppColors
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
 import com.mocca.app.ui.theme.AppTypography
 /**
@@ -32,7 +32,21 @@ fun QuestionDialog(
     onAnswer: (List<List<String>>) -> Unit,
     onReject: () -> Unit
 ) {
-    // Track answers for each question. 
+    // Processing state: disables buttons while the API call is in-flight
+    // to prevent double-submit and give visual feedback.
+    var isProcessing by remember(request) { mutableStateOf(false) }
+
+    // Safety timeout: reset isProcessing after 15 seconds in case the API call
+    // fails silently or the server never responds. This prevents the dialog from
+    // being permanently stuck in "Sending..." state.
+    LaunchedEffect(isProcessing) {
+        if (isProcessing) {
+            kotlinx.coroutines.delay(15_000L)
+            isProcessing = false
+        }
+    }
+
+    // Track answers for each question.
     // Each element in this list corresponds to a question in request.questions
     // and contains the list of selected values (or text input) for that question.
     val answers = remember(request) {
@@ -64,7 +78,10 @@ fun QuestionDialog(
     }
 
     AlertDialog(
-        onDismissRequest = onReject,
+        onDismissRequest = {
+            // Back button / outside tap: only allow if not processing
+            if (!isProcessing) onReject()
+        },
         icon = {
             Icon(
                 @Suppress("DEPRECATION") Icons.Default.Help,
@@ -199,24 +216,35 @@ fun QuestionDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // Sync text inputs to answers just in case (already done in onValueChange but safety first)
-                    // For text inputs, answers[index] should be listOf(text)
+                    isProcessing = true
                     onAnswer(answers.toList())
                 },
-                enabled = canSubmit,
+                enabled = canSubmit && !isProcessing,
                 shape = AppShapes.pill
             ) {
-                Icon(Icons.Default.Check, contentDescription = null)
+                if (isProcessing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = AppColors.onPrimary
+                    )
+                } else {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                }
                 Spacer(modifier = Modifier.width(AppSpacing.sm))
                 Text(
-                    text = "Submit",
+                    text = if (isProcessing) "Sending..." else "Submit",
                     style = AppTypography.labelMedium
                 )
             }
         },
         dismissButton = {
             OutlinedButton(
-                onClick = onReject,
+                onClick = {
+                    isProcessing = true
+                    onReject()
+                },
+                enabled = !isProcessing,
                 shape = AppShapes.pill,
                 border = BorderStroke(1.dp, AppColors.outline)
             ) {

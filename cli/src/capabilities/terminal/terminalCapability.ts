@@ -41,6 +41,7 @@ type TerminalSession = {
   scrollback: number;
   child: ChildProcessWithoutNullStreams;
   lines: string[];
+  cursorColumn: number;
   dirtyRows: Set<number>;
   frameTimer?: NodeJS.Timeout;
   exited: boolean;
@@ -130,6 +131,7 @@ export class TerminalCapability {
       scrollback,
       child,
       lines: [""],
+      cursorColumn: 0,
       dirtyRows: new Set(Array.from({ length: rows }, (_, index) => index)),
       exited: false,
     };
@@ -237,14 +239,18 @@ export class TerminalCapability {
   private append(session: TerminalSession, chunk: string): void {
     for (const char of chunk.replace(/\x1b\[[0-9;?]*[ -/]*[@-~]/g, "")) {
       if (char === "\r") {
-        session.lines[session.lines.length - 1] = "";
+        session.cursorColumn = 0;
       } else if (char === "\n") {
         session.lines.push("");
+        session.cursorColumn = 0;
       } else if (char === "\b") {
         const current = session.lines[session.lines.length - 1] ?? "";
-        session.lines[session.lines.length - 1] = current.slice(0, -1);
+        session.cursorColumn = Math.max(0, session.cursorColumn - 1);
+        session.lines[session.lines.length - 1] = current.slice(0, session.cursorColumn) + current.slice(session.cursorColumn + 1);
       } else if (char >= " ") {
-        session.lines[session.lines.length - 1] = (session.lines[session.lines.length - 1] ?? "") + char;
+        const current = (session.lines[session.lines.length - 1] ?? "").padEnd(session.cursorColumn, " ");
+        session.lines[session.lines.length - 1] = current.slice(0, session.cursorColumn) + char + current.slice(session.cursorColumn + 1);
+        session.cursorColumn += 1;
       }
     }
     if (session.lines.length > session.scrollback) {
@@ -276,7 +282,7 @@ export class TerminalCapability {
       cells[String(row)] = Array.from(line.slice(0, session.cols)).map((char) => ({ char }));
     }
     const cursorY = Math.min(session.rows - 1, visibleLines.length - 1);
-    const cursorX = Math.min(session.cols - 1, (visibleLines.at(-1) ?? "").length);
+    const cursorX = Math.min(session.cols - 1, session.cursorColumn);
     return {
       terminalId: session.id,
       fullFrame,

@@ -38,11 +38,20 @@ interface NotificationTracker {
     
     /**
      * Show a notification for a pending question.
+     * @param sessionId The session ID the question belongs to
+     * @param questionId The question request ID
+     * @param question The question text to display
+     * @param options List of option labels. If non-empty, the notification shows
+     *                tappable action buttons for each option instead of a text input.
+     * @param multiple If true, multiple options can be selected (checkbox semantics).
+     *                 If false, only one option can be selected (radio semantics).
      */
     fun showQuestionNotification(
         sessionId: String,
         questionId: String,
-        question: String
+        question: String,
+        options: List<String> = emptyList(),
+        multiple: Boolean = false
     )
     
     /**

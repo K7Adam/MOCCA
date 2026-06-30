@@ -747,6 +747,7 @@ class StateCoordinator(
     
     fun dismissPermission() = eventStreamRepository.dismissPermission()
     fun dismissQuestion() = eventStreamRepository.dismissQuestion()
+    fun dismissQuestion(questionId: String) = eventStreamRepository.dismissQuestion(questionId)
 
     // SSE CONNECTION CONTROL
 

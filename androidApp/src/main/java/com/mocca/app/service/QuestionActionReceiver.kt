@@ -11,7 +11,8 @@ import io.github.aakira.napier.Napier
  * BroadcastReceiver for handling question actions from notifications.
  *
  * Supports:
- * - Inline text replies via RemoteInput (quick answer without opening the app)
+ * - Option selection (tap an option button directly from the notification)
+ * - Inline text replies via RemoteInput (for free-text questions)
  * - Reject action (dismiss the question)
  *
  * Uses the V2 session-scoped question API.
@@ -21,9 +22,11 @@ class QuestionActionReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_QUESTION_REPLY = "com.mocca.app.action.QUESTION_REPLY"
         const val ACTION_QUESTION_REJECT = "com.mocca.app.action.QUESTION_REJECT"
+        const val ACTION_QUESTION_OPTION = "com.mocca.app.action.QUESTION_OPTION"
 
         const val EXTRA_QUESTION_ID = "question_id"
         const val EXTRA_SESSION_ID = "session_id"
+        const val EXTRA_OPTION_LABEL = "option_label"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -42,7 +45,7 @@ class QuestionActionReceiver : BroadcastReceiver() {
 
         when (intent.action) {
             ACTION_QUESTION_REPLY -> {
-                // Extract the reply text from RemoteInput
+                // Extract the reply text from RemoteInput (free-text questions)
                 val replyText = RemoteInput.getResultsFromIntent(intent)
                     ?.getCharSequence(ActiveSessionService.EXTRA_QUESTION_REPLY)
                     ?.toString()
@@ -53,16 +56,34 @@ class QuestionActionReceiver : BroadcastReceiver() {
                     return
                 }
 
-                Napier.i("[QuestionActionReceiver] Question $questionId reply: ${replyText.take(50)}...")
+                Napier.i("[QuestionActionReceiver] Question $questionId text reply: ${replyText.take(50)}...")
 
-                // Emit to shared bus for processing
                 val emitted = QuestionActionBus.tryEmitReply(questionId, sessionId, listOf(listOf(replyText)))
 
                 if (!emitted) {
                     Napier.w("[QuestionActionReceiver] Failed to emit reply - buffer full")
                 }
 
-                // Dismiss the notification
+                ActiveSessionService.dismissQuestionNotification(context, questionId)
+            }
+
+            ACTION_QUESTION_OPTION -> {
+                // Option-based question: user tapped a specific option button
+                val optionLabel = intent.getStringExtra(EXTRA_OPTION_LABEL)
+
+                if (optionLabel.isNullOrEmpty()) {
+                    Napier.w("[QuestionActionReceiver] Missing option_label for question $questionId")
+                    return
+                }
+
+                Napier.i("[QuestionActionReceiver] Question $questionId option selected: $optionLabel")
+
+                val emitted = QuestionActionBus.tryEmitReply(questionId, sessionId, listOf(listOf(optionLabel)))
+
+                if (!emitted) {
+                    Napier.w("[QuestionActionReceiver] Failed to emit option reply - buffer full")
+                }
+
                 ActiveSessionService.dismissQuestionNotification(context, questionId)
             }
 
@@ -75,7 +96,6 @@ class QuestionActionReceiver : BroadcastReceiver() {
                     Napier.w("[QuestionActionReceiver] Failed to emit reject - buffer full")
                 }
 
-                // Dismiss the notification
                 ActiveSessionService.dismissQuestionNotification(context, questionId)
             }
 

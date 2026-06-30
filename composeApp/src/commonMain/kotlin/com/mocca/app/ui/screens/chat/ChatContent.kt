@@ -258,6 +258,18 @@ fun ChatContent(
 
             ChatOverlayHost(screenModel = screenModel)
 
+            // In-app agent error banner (session.error / agent.status error)
+            val agentError = state.agentError
+            if (agentError != null) {
+                ChatErrorBanner(
+                    error = agentError,
+                    onDismiss = screenModel::dismissAgentError,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .zIndex(50f),
+                )
+            }
+
             ChatMessagePane(
                 screenModel = screenModel,
                 listState = listState,

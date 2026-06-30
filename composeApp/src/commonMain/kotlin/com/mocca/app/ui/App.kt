@@ -119,7 +119,6 @@ fun App() {
                     (config != null && config.host.isNotBlank()) || activeBridgeTarget != null -> MainScreen()
                     else -> ProgressiveOnboardingScreen()
                 }
-
                 if (performance.useHeavyNavigationMotion) {
                     SharedTransitionLayout {
                         CompositionLocalProvider(

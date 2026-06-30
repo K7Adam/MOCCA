@@ -18,10 +18,15 @@ data class Command(
     val description: String? = null,
     // template can be a String or an object {} - use JsonElement for flexibility
     val template: JsonElement? = null,
-    val subtask: Boolean = false,
+    @SerialName("subtask")
+    private val subtaskValue: Boolean? = false,
     val hints: List<String>? = null,
-    val mcp: Boolean = false
-)
+    @SerialName("mcp")
+    private val mcpValue: Boolean? = false
+) {
+    val subtask: Boolean get() = subtaskValue == true
+    val mcp: Boolean get() = mcpValue == true
+}
 
 /**
  * Built-in OpenCode CLI commands that are always available.

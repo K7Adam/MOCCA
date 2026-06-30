@@ -6,10 +6,12 @@ import com.mocca.app.bridge.protocol.BridgeResponse
 import com.mocca.app.domain.model.AiBridgeMessageModel
 import com.mocca.app.domain.model.AiBridgeMessageRequest
 import com.mocca.app.domain.model.ChatPart
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -222,6 +224,32 @@ class MoccaBridgeClientTest {
     }
 
     @Test
+    fun incomingTransportFailureCompletesPendingRequestExceptionally() = runTest {
+        val failure = IllegalStateException("Software caused connection abort")
+        val transport = FailingIncomingBridgeTransport(failure)
+        val client = MoccaBridgeClient(
+            transport = transport,
+            scope = backgroundScope,
+            requestTimeoutMillis = 5_000
+        )
+
+        val requestJob = async {
+            assertFailsWith<IllegalStateException> {
+                client.request(ns = "terminal", action = "snapshot")
+            }
+        }
+        json.decodeFromString<BridgeRequest>(transport.nextSent())
+
+        transport.failIncoming.complete(Unit)
+        runCurrent()
+
+        val thrown = requestJob.await()
+        assertEquals(failure.message, thrown.message)
+
+        client.close()
+    }
+
+    @Test
     fun bridgeJsonOmitsNullFieldsInPromptParts() {
         val encoded = MoccaBridgeClient.DefaultBridgeJson.encodeToString(
             AiBridgeMessageRequest(
@@ -264,6 +292,28 @@ class MoccaBridgeClientTest {
 
         suspend fun emitIncoming(text: String) {
             incomingFrames.send(text)
+        }
+
+        override suspend fun close() = Unit
+    }
+
+    private class FailingIncomingBridgeTransport(
+        private val failure: Throwable
+    ) : BridgeTransport {
+        val failIncoming = CompletableDeferred<Unit>()
+        private val sentFrames = Channel<String>(Channel.UNLIMITED)
+
+        override val incoming = flow<String> {
+            failIncoming.await()
+            throw failure
+        }
+
+        override suspend fun send(text: String) {
+            sentFrames.send(text)
+        }
+
+        suspend fun nextSent(): String {
+            return sentFrames.receive()
         }
 
         override suspend fun close() = Unit

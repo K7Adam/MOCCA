@@ -24,7 +24,7 @@ Core immutable data structures and sealed class hierarchies that define the MOCC
 
 ### Config.kt (continued)
 - **`GlobalAppConfig`**, **`AppConfigUpdate`**, **`FeatureFlags`**: Global application configuration models.
-- **`DiscoveredServer`**: Has `username`, `password`, `useHttps`, and `source: DiscoverySource` fields (not `authToken`). The `ServerDiscovery` contract is planned but the `discovery/` package is currently empty; bridge-first QR pairing is the active mechanism.
+- **`DiscoveredServer`**: Has `username`, `password`, `useHttps`, and `source: DiscoverySource` fields (not `authToken`). Bridge-first QR pairing is the active discovery mechanism; no `discovery/` package exists.
 
 ### AiRuntimeConfig.kt
 - **`AiRuntimeConfigSnapshot`**: Provider/model/agent/mode runtime projection from the CLI bridge or legacy HTTP fallback.

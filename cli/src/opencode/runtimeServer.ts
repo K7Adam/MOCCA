@@ -260,6 +260,13 @@ export class OpenCodeRuntimeManager implements OpenCodeRuntimeBridge {
 
     process.env.OPENCODE_SERVER_USERNAME = username;
     process.env.OPENCODE_SERVER_PASSWORD = password;
+    // Enable the question tool so the AI agent can ask interactive questions
+    // via the question.asked SSE event. Without this flag, OpenCode excludes
+    // the question tool from the runtime tool registry for non-app/cli/desktop clients.
+    // OPENCODE_CLIENT=cli tells OpenCode this is a CLI-like client (supports questions).
+    // OPENCODE_ENABLE_QUESTION_TOOL=1 is the explicit opt-in flag for ACP/server mode.
+    process.env.OPENCODE_ENABLE_QUESTION_TOOL = "1";
+    process.env.OPENCODE_CLIENT = "cli";
 
     const server = await createOpencodeServer({
       hostname: this.options.bindHost,

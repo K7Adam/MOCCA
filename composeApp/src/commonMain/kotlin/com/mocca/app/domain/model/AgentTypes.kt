@@ -18,8 +18,10 @@ data class Agent(
     val mode: String? = null,
     val description: String? = null,
     val prompt: String? = null,
-    val native: Boolean = false,
-    val hidden: Boolean = false,
+    @SerialName("native")
+    private val nativeValue: Boolean? = false,
+    @SerialName("hidden")
+    private val hiddenValue: Boolean? = false,
     val color: String? = null,
     val model: AgentModel? = null,
     val permission: List<AgentPermission>? = null,
@@ -27,6 +29,8 @@ data class Agent(
 ) {
     // Use name as id for UI compatibility
     val id: String get() = name
+    val native: Boolean get() = nativeValue == true
+    val hidden: Boolean get() = hiddenValue == true
 }
 
 @Serializable

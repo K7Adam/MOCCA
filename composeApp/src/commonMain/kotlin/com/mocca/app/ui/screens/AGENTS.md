@@ -31,9 +31,6 @@ Compose Multiplatform screen layer built on Voyager + strict MVI. `MainScreen` i
 | Settings subtree | `settings/` | Dedicated AGENTS.md there |
 | Terminal | `terminal/` | Interactive terminal session UI: raw/cooked input modes, real-time font size control via 3-dots actions menu, bridge connection state handling, capability checks, tuned row-height rendering |
 | Dashboard panels | `panels/` | Context/history + dashboard modules |
-| Skills | `skills/` | Placeholder (empty) |
-| Workspace | `workspace/` | Placeholder (empty) |
-| Worktree | `worktree/` | Placeholder (empty) |
 
 ## SCREEN LIST
 | Screen | Role |

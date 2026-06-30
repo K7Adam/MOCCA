@@ -14,7 +14,7 @@ describe("native CLI capabilities", () => {
     await router?.close();
     router = undefined;
     for (const tempDir of tempDirs) {
-      rmSync(tempDir, { recursive: true, force: true });
+      await removeTempDir(tempDir);
     }
     tempDirs = [];
   });
@@ -160,6 +160,29 @@ describe("native CLI capabilities", () => {
     });
   });
 
+  it("executes terminal input and exposes command output in snapshots", async () => {
+    const projectDir = tempProject();
+    router = createRouter(projectDir);
+
+    const spawnResponse = await router.handleRequest(createRequest({
+      id: "req-terminal-exec-spawn",
+      ns: "terminal",
+      action: "spawn",
+      payload: { cols: 100, rows: 20, shell: defaultShell() },
+    }));
+    expect(spawnResponse.ok).toBe(true);
+    const terminalId = (spawnResponse.payload as { id: string }).id;
+
+    await expect(router.handleRequest(createRequest({
+      id: "req-terminal-exec-write",
+      ns: "terminal",
+      action: "write",
+      payload: { terminalId, data: "echo MOCCA_TERMINAL_ECHO\r" },
+    }))).resolves.toMatchObject({ ok: true });
+
+    await expect(readTerminalTextUntil(terminalId, "MOCCA_TERMINAL_ECHO")).resolves.toContain("MOCCA_TERMINAL_ECHO");
+  });
+
   function tempProject(): string {
     const dir = mkdtempSync(path.join(tmpdir(), "mocca-native-cap-"));
     tempDirs.push(dir);
@@ -175,5 +198,54 @@ describe("native CLI capabilities", () => {
 
   function git(cwd: string, ...args: string[]): void {
     execFileSync("git", args, { cwd, stdio: "ignore" });
+  }
+
+  function defaultShell(): string {
+    if (process.platform === "win32") return process.env.COMSPEC ?? "cmd.exe";
+    return process.env.SHELL ?? "/bin/sh";
+  }
+
+  async function readTerminalTextUntil(terminalId: string, expected: string): Promise<string> {
+    const deadline = Date.now() + 4_000;
+    let lastText = "";
+    while (Date.now() < deadline) {
+      const snapshot = await router!.handleRequest(createRequest({
+        id: `req-terminal-exec-snapshot-${Date.now()}`,
+        ns: "terminal",
+        action: "snapshot",
+        payload: { terminalId },
+      }));
+      expect(snapshot.ok).toBe(true);
+      lastText = frameText(snapshot.payload);
+      if (lastText.includes(expected)) {
+        return lastText;
+      }
+      await delay(100);
+    }
+    return lastText;
+  }
+
+  function frameText(payload: unknown): string {
+    const cells = (payload as { cells?: Record<string, Array<{ char?: string }>> }).cells ?? {};
+    return Object.keys(cells)
+      .sort((left, right) => Number(left) - Number(right))
+      .map((row) => cells[row].map((cell) => cell.char ?? " ").join(""))
+      .join("\n");
+  }
+
+  function delay(milliseconds: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, milliseconds));
+  }
+
+  async function removeTempDir(tempDir: string): Promise<void> {
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      try {
+        rmSync(tempDir, { recursive: true, force: true });
+        return;
+      } catch (error) {
+        if (attempt === 7) throw error;
+        await delay(100);
+      }
+    }
   }
 });

@@ -643,8 +643,8 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             mode = mode,
             description = description,
             prompt = prompt,
-            native = isNative,
-            hidden = isHidden,
+            nativeValue = isNative,
+            hiddenValue = isHidden,
             color = color,
             model = if (modelProviderId != null || modelId != null) {
                 AgentModel(providerId = modelProviderId, modelId = modelId)
@@ -673,9 +673,9 @@ private class AndroidLocalCache(context: Context) : LocalCache {
             name = name,
             description = description,
             template = template,
-            subtask = isSubtask,
+            subtaskValue = isSubtask,
             hints = hints,
-            mcp = isMcp
+            mcpValue = isMcp
         )
     }
     

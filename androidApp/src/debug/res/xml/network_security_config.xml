@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Debug-only network security config.
+
+    Debug builds need cleartext (HTTP) access to arbitrary dev servers:
+    emulator (10.0.2.2), localhost, LAN IPs, and Tailscale CGNAT
+    (100.64.0.0/10).  Rather than maintaining an exhaustive allow-list
+    of IPs that change between networks, debug builds permit cleartext
+    globally.  Release builds keep the strict policy defined in
+    src/main/res/xml/network_security_config.xml.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

@@ -101,6 +101,13 @@ class ChatStateStore(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    /**
+     * Structured agent error from `session.error` / `agent.status(error)` events.
+     * Surfaced in the chat UI as a dismissible banner with actionable hints.
+     */
+    private val _agentError = MutableStateFlow<AgentErrorClassifier.AgentError?>(null)
+    val agentError: StateFlow<AgentErrorClassifier.AgentError?> = _agentError.asStateFlow()
+
     private val _sessionDisposed = MutableStateFlow<String?>(null)
     /** Non-null when a server.instance.disposed or global.disposed event was received; contains the reason string. */
     val sessionDisposed: StateFlow<String?> = _sessionDisposed.asStateFlow()
@@ -321,6 +328,29 @@ class ChatStateStore(
                 }
             }
             
+            is ServerEvent.SessionError -> {
+                val sessionId = event.properties.sessionID
+                if (sessionId == currentId) {
+                    _isSending.value = false
+                    val classified = AgentErrorClassifier.classify(
+                        message = event.properties.error?.message,
+                        code = event.properties.error?.code,
+                    )
+                    Napier.w("[ChatStateStore] Session error: ${classified.title} — ${classified.message}")
+                    _agentError.value = classified
+                }
+            }
+            is ServerEvent.AgentStatus -> {
+                if (event.properties.sessionID == currentId && event.properties.statusString() == "error") {
+                    _isSending.value = false
+                    val classified = AgentErrorClassifier.classify(
+                        message = event.properties.message,
+                        agentName = event.properties.agentName,
+                    )
+                    Napier.w("[ChatStateStore] Agent error: ${classified.title} — ${classified.message}")
+                    _agentError.value = classified
+                }
+            }
             is ServerEvent.ServerInstanceDisposed -> {
                 Napier.w("[ChatStateStore] Server instance disposed: ${event.properties.reason}")
                 _isSending.value = false
@@ -503,6 +533,7 @@ class ChatStateStore(
         
         _isSending.value = true
         _error.value = null
+        _agentError.value = null
 
         Napier.i("[ChatStateStore] Sending message: session=$sessionId provider=${selection.providerId} model=${selection.modelId}")
         return aiChatGateway.sendMessage(
@@ -524,13 +555,27 @@ class ChatStateStore(
     
     /**
      * Abort the current session.
+     * Also clears any pending questions/permissions for this session to prevent
+     * the UI from being stuck in a dialog state after abort.
      */
     suspend fun abortSession(): Result<Boolean> {
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
-        
+
         return sessionRepository.abortSession(sessionId).also { result ->
             if (result.isSuccess) {
                 _isSending.value = false
+                // Clear any pending questions for this session to prevent stuck dialogs
+                val questionsToDismiss = stateCoordinator.chatTurnState.value
+                    .pendingQuestionsBySession[sessionId].orEmpty()
+                questionsToDismiss.forEach { q ->
+                    stateCoordinator.dismissQuestion(q.id)
+                }
+                // Clear any pending permissions for this session
+                val permsToDismiss = stateCoordinator.chatTurnState.value
+                    .pendingPermissionsBySession[sessionId].orEmpty()
+                permsToDismiss.forEach { p ->
+                    stateCoordinator.dismissPermission()
+                }
             }
         }
     }
@@ -575,16 +620,42 @@ class ChatStateStore(
     fun dismissPermission() = stateCoordinator.dismissPermission()
     
     suspend fun answerQuestion(answers: List<List<String>>): Result<Boolean> {
-        val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
+        val question = pendingQuestion.value
+            ?: stateCoordinator.chatTurnState.value.let { turnState ->
+                _currentSessionId.value?.let { sid ->
+                    turnState.pendingQuestionsBySession[sid]?.firstOrNull()
+                }
+            }
+            ?: return Result.failure(Exception("No pending question"))
+
+        Napier.i("[ChatStateStore] Answering question ${question.id} with ${answers.size} answers")
         return sessionRepository.replyToQuestion(question.id, answers, question.sessionId).also {
-            if (it.isSuccess) stateCoordinator.dismissQuestion()
+            if (it.isSuccess) {
+                Napier.i("[ChatStateStore] Question ${question.id} replied successfully, dismissing")
+                stateCoordinator.dismissQuestion()
+            } else {
+                Napier.e("[ChatStateStore] Failed to reply to question ${question.id}: ${it.exceptionOrNull()?.message}")
+            }
         }
     }
 
     suspend fun rejectQuestion(): Result<Boolean> {
-        val question = pendingQuestion.value ?: return Result.failure(Exception("No pending question"))
+        val question = pendingQuestion.value
+            ?: stateCoordinator.chatTurnState.value.let { turnState ->
+                _currentSessionId.value?.let { sid ->
+                    turnState.pendingQuestionsBySession[sid]?.firstOrNull()
+                }
+            }
+            ?: return Result.failure(Exception("No pending question"))
+
+        Napier.i("[ChatStateStore] Rejecting question ${question.id}")
         return sessionRepository.rejectQuestion(question.id, question.sessionId).also {
-            if (it.isSuccess) stateCoordinator.dismissQuestion()
+            if (it.isSuccess) {
+                Napier.i("[ChatStateStore] Question ${question.id} rejected successfully, dismissing")
+                stateCoordinator.dismissQuestion()
+            } else {
+                Napier.e("[ChatStateStore] Failed to reject question ${question.id}: ${it.exceptionOrNull()?.message}")
+            }
         }
     }
 
@@ -622,6 +693,7 @@ class ChatStateStore(
 
     
     fun clearError() { _error.value = null }
+    fun clearAgentError() { _agentError.value = null }
     fun clearDisposed() { _sessionDisposed.value = null }
     
     /**

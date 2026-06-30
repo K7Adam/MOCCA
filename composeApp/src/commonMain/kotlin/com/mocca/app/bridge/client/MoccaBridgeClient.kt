@@ -3,6 +3,8 @@ package com.mocca.app.bridge.client
 import com.mocca.app.bridge.protocol.BridgeEvent
 import com.mocca.app.bridge.protocol.BridgeRequest
 import com.mocca.app.bridge.protocol.BridgeResponse
+import io.github.aakira.napier.Napier
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -49,8 +51,15 @@ class MoccaBridgeClient(
     private val _events = MutableSharedFlow<BridgeEvent>(extraBufferCapacity = 64)
     private var nextRequestNumber = 0L
     private val collectorJob: Job = scope.launch {
-        transport.incoming.collect { frame ->
-            handleIncomingFrame(frame)
+        try {
+            transport.incoming.collect { frame ->
+                handleIncomingFrame(frame)
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Throwable) {
+            Napier.w("[MoccaBridgeClient] incoming bridge transport failed: ${error.message}", error)
+            failPending(error)
         }
     }
 
@@ -119,6 +128,15 @@ class MoccaBridgeClient(
         val event = decodeEventOrNull(frame)
         if (event != null) {
             _events.emit(event)
+        }
+    }
+
+    private suspend fun failPending(error: Throwable) {
+        pendingMutex.withLock {
+            pending.values.forEach { deferred ->
+                deferred.completeExceptionally(error)
+            }
+            pending.clear()
         }
     }
 

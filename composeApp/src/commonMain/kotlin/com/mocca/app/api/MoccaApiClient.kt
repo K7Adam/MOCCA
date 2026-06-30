@@ -214,11 +214,11 @@ class MoccaApiClient(
                 } else {
                     "question/$requestId/reply"
                 }
-                post(path) {
+                val response = post(path) {
                             contentType(ContentType.Application.Json)
                             setBody(QuestionReplyRequest(requestID = requestId, answers = answers))
                         }
-                        .body()
+                response.status.value in 200..299
             }
 
     /**
@@ -234,11 +234,11 @@ class MoccaApiClient(
                 } else {
                     "question/$requestId/reject"
                 }
-                post(path) {
+                val response = post(path) {
                             contentType(ContentType.Application.Json)
                             setBody(QuestionRejectRequest(requestID = requestId))
                         }
-                        .body()
+                response.status.value in 200..299
             }
 
     /** List all pending question requests. */

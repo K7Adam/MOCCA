@@ -271,13 +271,22 @@ class ActiveSessionService : Service() {
         fun showAgentErrorNotification(context: Context, sessionId: String, errorMessage: String) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
 
+            // The errorMessage from EventStreamRepository is formatted as "Title: Message".
+            // Split it for a cleaner notification with the title as headline and message as body.
+            val (title, body) = if (errorMessage.contains(": ")) {
+                errorMessage.substringBefore(": ") to errorMessage.substringAfter(": ")
+            } else {
+                "Agent Error" to errorMessage
+            }
+
             val notification = NotificationCompat.Builder(context, CHANNEL_AGENT_ERROR)
-                .setContentTitle("Agent Error")
-                .setContentText(errorMessage)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(errorMessage))
+                .setContentTitle(title)
+                .setContentText(body)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(body))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build()
 
             notificationManager.notify(NOTIFICATION_ID_ERROR + sessionId.hashCode(), notification)
@@ -301,7 +310,9 @@ class ActiveSessionService : Service() {
             context: Context,
             sessionId: String,
             questionId: String,
-            question: String
+            question: String,
+            options: List<String> = emptyList(),
+            multiple: Boolean = false
         ) {
             val notificationManager = context.getSystemService(NotificationManager::class.java)
 
@@ -316,33 +327,18 @@ class ActiveSessionService : Service() {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
 
-            // Inline reply action using RemoteInput
-            val remoteInput = androidx.core.app.RemoteInput.Builder(EXTRA_QUESTION_REPLY)
-                .setLabel("Type your answer...")
-                .build()
+            val builder = NotificationCompat.Builder(context, CHANNEL_QUESTION_PENDING)
+                .setContentTitle("Question from Agent")
+                .setContentText(question)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(question))
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
 
-            val replyIntent = Intent(context, QuestionActionReceiver::class.java).apply {
-                action = QuestionActionReceiver.ACTION_QUESTION_REPLY
-                putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
-                putExtra(QuestionActionReceiver.EXTRA_SESSION_ID, sessionId)
-            }
-            val replyPendingIntent = PendingIntent.getBroadcast(
-                context,
-                NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode(),
-                replyIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
-            )
-
-            val replyAction = NotificationCompat.Action.Builder(
-                R.drawable.ic_launcher_foreground,
-                "Reply",
-                replyPendingIntent
-            )
-                .addRemoteInput(remoteInput)
-                .setAllowGeneratedReplies(true)
-                .build()
-
-            // Reject action
+            // Reject action (always present)
             val rejectIntent = Intent(context, QuestionActionReceiver::class.java).apply {
                 action = QuestionActionReceiver.ACTION_QUESTION_REJECT
                 putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
@@ -354,24 +350,83 @@ class ActiveSessionService : Service() {
                 rejectIntent,
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
+            builder.addAction(R.drawable.ic_launcher_foreground, "Reject", rejectPendingIntent)
 
-            val notification = NotificationCompat.Builder(context, CHANNEL_QUESTION_PENDING)
-                .setContentTitle("Question from Agent")
-                .setContentText(question)
-                .setStyle(NotificationCompat.BigTextStyle().bigText(question))
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentIntent(pendingIntent)
-                .addAction(replyAction)
-                .addAction(R.drawable.ic_launcher_foreground, "Reject", rejectPendingIntent)
-                .setAutoCancel(false)
-                .setOngoing(true)
-                .setCategory(NotificationCompat.CATEGORY_MESSAGE)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .build()
+            if (options.isNotEmpty()) {
+                // Option-based question: show up to 4 option buttons (Android limit)
+                // For multiple-select, the user taps each option; we reply with all selected.
+                // Since Android notification actions are one-shot, each option tap sends
+                // a reply with that single option. For multiple-select, the user must
+                // open the app to select multiple.
+                val maxOptions = minOf(options.size, 4)
+                for (i in 0 until maxOptions) {
+                    val optionLabel = options[i]
+                    val optionIntent = Intent(context, QuestionActionReceiver::class.java).apply {
+                        action = QuestionActionReceiver.ACTION_QUESTION_OPTION
+                        putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
+                        putExtra(QuestionActionReceiver.EXTRA_SESSION_ID, sessionId)
+                        putExtra(QuestionActionReceiver.EXTRA_OPTION_LABEL, optionLabel)
+                    }
+                    val optionPendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode() + 10 + i,
+                        optionIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    // Truncate label to 20 chars for the action button
+                    val displayLabel = if (optionLabel.length > 20) {
+                        optionLabel.take(17) + "..."
+                    } else {
+                        optionLabel
+                    }
+                    builder.addAction(R.drawable.ic_launcher_foreground, displayLabel, optionPendingIntent)
+                }
+                // If there are more than 4 options, add a "More..." action that opens the app
+                if (options.size > 4) {
+                    val moreIntent = Intent(context, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra(EXTRA_SESSION_ID, sessionId)
+                    }
+                    val morePendingIntent = PendingIntent.getActivity(
+                        context,
+                        NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode() + 100,
+                        moreIntent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    builder.addAction(R.drawable.ic_launcher_foreground, "More...", morePendingIntent)
+                }
+            } else {
+                // Text-input question: show RemoteInput for free text
+                val remoteInput = androidx.core.app.RemoteInput.Builder(EXTRA_QUESTION_REPLY)
+                    .setLabel("Type your answer...")
+                    .build()
+
+                val replyIntent = Intent(context, QuestionActionReceiver::class.java).apply {
+                    action = QuestionActionReceiver.ACTION_QUESTION_REPLY
+                    putExtra(QuestionActionReceiver.EXTRA_QUESTION_ID, questionId)
+                    putExtra(QuestionActionReceiver.EXTRA_SESSION_ID, sessionId)
+                }
+                val replyPendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode(),
+                    replyIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                )
+
+                val replyAction = NotificationCompat.Action.Builder(
+                    R.drawable.ic_launcher_foreground,
+                    "Reply",
+                    replyPendingIntent
+                )
+                    .addRemoteInput(remoteInput)
+                    .setAllowGeneratedReplies(true)
+                    .build()
+                builder.addAction(replyAction)
+            }
 
             notificationManager.notify(
                 NOTIFICATION_ID_QUESTION_PREFIX + questionId.hashCode(),
-                notification
+                builder.build()
             )
         }
 

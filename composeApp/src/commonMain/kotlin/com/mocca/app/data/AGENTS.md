@@ -41,4 +41,4 @@ Migrations: `1.sqm` (initial), `2.sqm` (drops retired global `RecentModel`).
     4. Emit `Resource.Success(fresh)`.
 - **Git Cache**: `GitStatusResponse` is stored as an in-memory cache in `LocalCache` (not persisted to DB).
 - **Error Handling**: Always return `Resource.Error(message, cached)` to prevent UI flickering during transient network failures.
-- **ServerDiscovery**: `discovery/` package is reserved for cross-platform server discovery but currently empty; bridge-first QR pairing is the active mechanism.
+- **ServerDiscovery**: Bridge-first QR pairing is the active discovery mechanism; no `discovery/` package exists.
