@@ -59,7 +59,7 @@ object AppTypography {
         fontWeight = FontWeight.W800,
         fontSize = 57.sp,
         lineHeight = 64.sp,
-        letterSpacing = (-0.5).sp
+        letterSpacing = 0.sp
     )
 
     val displayMedium: TextStyle @Composable get() = TextStyle(
@@ -67,7 +67,7 @@ object AppTypography {
         fontWeight = FontWeight.W700,
         fontSize = 45.sp,
         lineHeight = 52.sp,
-        letterSpacing = (-0.25).sp
+        letterSpacing = 0.sp
     )
 
     val displaySmall: TextStyle @Composable get() = TextStyle(
@@ -75,7 +75,7 @@ object AppTypography {
         fontWeight = FontWeight.W600,
         fontSize = 36.sp,
         lineHeight = 44.sp,
-        letterSpacing = (-0.25).sp
+        letterSpacing = 0.sp
     )
 
     val headlineLarge: TextStyle @Composable get() = TextStyle(
@@ -176,7 +176,7 @@ object AppTypography {
 
     val displayLargeEmphasized: TextStyle @Composable get() = displayLarge.copy(
         fontWeight = FontWeight.W900,
-        letterSpacing = (-1.5).sp
+        letterSpacing = 0.sp
     )
 
     val code: TextStyle @Composable get() = TextStyle(

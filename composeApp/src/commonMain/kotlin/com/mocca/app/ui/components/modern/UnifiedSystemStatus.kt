@@ -1,7 +1,6 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -91,8 +90,7 @@ fun SystemStatusCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(AppColors.surfaceVariant, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
+            .background(AppColors.surfaceContainer, AppShapes.groupSingle)
             .padding(AppSpacing.lg),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.md)
     ) {

@@ -28,10 +28,10 @@ fun TabPillButton(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    activeBackgroundColor: Color = AppColors.primary,
-    activeTextColor: Color = AppColors.background,
-    inactiveBackgroundColor: Color = Color.Transparent,
-    inactiveBorderColor: Color = AppColors.primary.copy(alpha = 0.4f),
+    activeBackgroundColor: Color = AppColors.primaryContainer,
+    activeTextColor: Color = AppColors.onPrimaryContainer,
+    inactiveBackgroundColor: Color = AppColors.surfaceContainer,
+    inactiveBorderColor: Color = Color.Transparent,
     inactiveTextColor: Color = AppColors.onSurfaceVariant
 ) {
     Box(
@@ -128,7 +128,7 @@ fun MoccaFab(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     backgroundColor: Color = AppColors.primary,
-    iconColor: Color = AppColors.background,
+    iconColor: Color = AppColors.onPrimary,
     size: Dp = AppSpacing.fabSize
 ) {
     Box(

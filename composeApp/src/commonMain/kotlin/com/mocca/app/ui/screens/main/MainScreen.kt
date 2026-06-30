@@ -238,9 +238,9 @@ data class MainScreen(val sessionId: String? = null) : Screen {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .navigationBarsPadding(),
-                            color = AppColors.bgBase,
-                            shape = AppShapes.extraLarge,
-                            tonalElevation = 0.dp
+                            color = AppColors.surfaceContainer,
+                            shape = AppShapes.floatingToolbar,
+                            tonalElevation = 3.dp
                         ) {
                             PersistentNavRow(
                                 dragProgress = dragProgress,

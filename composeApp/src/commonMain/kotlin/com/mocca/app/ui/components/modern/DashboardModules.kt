@@ -69,7 +69,7 @@ fun McpConfigModule(
             if (index < servers.lastIndex) {
                 HorizontalDivider(
                     thickness = AppSpacing.borderThin,
-                    color = AppColors.outline
+                    color = AppColors.outlineVariant
                 )
             }
         }
@@ -122,8 +122,8 @@ fun GitStatusModule(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
-                    .clip(AppShapes.small)
-                    .background(AppColors.outline.copy(alpha = 0.3f))
+                    .clip(AppShapes.pill)
+                    .background(AppColors.surfaceContainerHigh, AppShapes.pill)
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             ) {
                 StatusDot(color = AppColors.primary)

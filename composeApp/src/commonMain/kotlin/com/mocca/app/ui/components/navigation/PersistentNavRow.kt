@@ -191,15 +191,15 @@ private fun PersistentNavItem(
         val animatedIconColor by transition.animateColor(
             transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
             label = "iconColor"
-        ) { selected -> if (selected) AppColors.onBackground else AppColors.fgMuted }
+        ) { selected -> if (selected) AppColors.onPrimaryContainer else AppColors.fgMuted }
         val animatedTextColor by transition.animateColor(
             transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
             label = "textColor"
-        ) { selected -> if (selected) AppColors.onBackground else AppColors.fgSubtle }
+        ) { selected -> if (selected) AppColors.onPrimaryContainer else AppColors.fgSubtle }
         val animatedBgColor by transition.animateColor(
             transitionSpec = { MaterialTheme.motionScheme.fastEffectsSpec() },
             label = "bgColor"
-        ) { selected -> if (selected) AppColors.bgRaised else Color.Transparent }
+        ) { selected -> if (selected) AppColors.primaryContainer else Color.Transparent }
         val animatedScale by transition.animateFloat(
             transitionSpec = { MaterialTheme.motionScheme.fastSpatialSpec() },
             label = "scale"
@@ -210,9 +210,9 @@ private fun PersistentNavItem(
         bgColor = animatedBgColor
         scale = animatedScale
     } else {
-        iconColor = if (isSelected) AppColors.onBackground else AppColors.fgMuted
-        textColor = if (isSelected) AppColors.onBackground else AppColors.fgSubtle
-        bgColor = if (isSelected) AppColors.bgRaised else Color.Transparent
+        iconColor = if (isSelected) AppColors.onPrimaryContainer else AppColors.fgMuted
+        textColor = if (isSelected) AppColors.onPrimaryContainer else AppColors.fgSubtle
+        bgColor = if (isSelected) AppColors.primaryContainer else Color.Transparent
         scale = 1f
     }
 
@@ -231,7 +231,7 @@ private fun PersistentNavItem(
             }
             .background(
                 color = bgColor,
-                shape = AppShapes.medium
+                shape = AppShapes.navItem
             )
             .padding(
                 horizontal = NavConstants.NavItemPaddingHorizontal,

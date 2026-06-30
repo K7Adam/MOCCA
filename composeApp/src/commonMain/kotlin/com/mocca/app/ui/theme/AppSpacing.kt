@@ -45,6 +45,9 @@ object AppSpacing {
     /** Clearance above bottom navigation bar for scrollable content */
     val bottomBarClearance: Dp = 80.dp
 
+    /** Echo-style floating toolbar height */
+    val floatingToolbarHeight: Dp = 72.dp
+
     /** Standard screen edge padding (horizontal) */
     val screenPadding: Dp = 16.dp
 
@@ -302,6 +305,12 @@ object AppSpacing {
 
     /** Module corner radius */
     val cornerRadiusModule: Dp = 28.dp
+
+    /** Connected group outer corner radius */
+    val cornerRadiusGroupOuter: Dp = 24.dp
+
+    /** Connected group inner corner radius */
+    val cornerRadiusGroupInner: Dp = 4.dp
 
     /** Pill corner radius */
     val cornerRadiusPill: Dp = 32.dp

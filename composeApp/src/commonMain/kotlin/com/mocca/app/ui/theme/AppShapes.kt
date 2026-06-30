@@ -34,6 +34,22 @@ object AppShapes {
     val circle: Shape = RoundedCornerShape(50)
     val pill: Shape = RoundedCornerShape(9999.dp)
     val statusDot: Shape = RoundedCornerShape(4.dp)
+    val groupOuterRadius = 24.dp
+    val groupInnerRadius = 4.dp
+    val groupSingle: Shape = RoundedCornerShape(groupOuterRadius)
+    val groupTop: Shape = RoundedCornerShape(
+        topStart = groupOuterRadius,
+        topEnd = groupOuterRadius,
+        bottomEnd = groupInnerRadius,
+        bottomStart = groupInnerRadius
+    )
+    val groupMiddle: Shape = RoundedCornerShape(groupInnerRadius)
+    val groupBottom: Shape = RoundedCornerShape(
+        topStart = groupInnerRadius,
+        topEnd = groupInnerRadius,
+        bottomEnd = groupOuterRadius,
+        bottomStart = groupOuterRadius
+    )
     val bottomSheet: Shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     val bottomSheetExpanded: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
     val topRounded: Shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
@@ -41,12 +57,14 @@ object AppShapes {
     val messageBubbleUser: Shape = RoundedCornerShape(topStart = 24.dp, topEnd = 2.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
     val messageBubbleAgent: Shape = RoundedCornerShape(topStart = 2.dp, topEnd = 24.dp, bottomEnd = 24.dp, bottomStart = 24.dp)
     val input: Shape = RoundedCornerShape(32.dp)
-    val card: Shape = RoundedCornerShape(16.dp)
+    val card: Shape = groupSingle
     val moduleCard: Shape = RoundedCornerShape(28.dp)
     val codeBlock: Shape = RoundedCornerShape(12.dp)
     val avatar: Shape = RoundedCornerShape(50)
     val fab: Shape = RoundedCornerShape(50)
     val sessionCard: Shape = RoundedCornerShape(24.dp)
+    val floatingToolbar: Shape = RoundedCornerShape(24.dp)
+    val navItem: Shape = RoundedCornerShape(20.dp)
     val tabPill: Shape = RoundedCornerShape(9999.dp)
     val badge: Shape = RoundedCornerShape(4.dp)
     val tag: Shape = RoundedCornerShape(9999.dp)

@@ -232,14 +232,14 @@ fun CommandLineInput(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(AppColors.surfaceContainer, shape)
+            .background(AppColors.surfaceContainerHigh, shape)
             .innerShadow(
                 enabled = useDecorativeShadows,
                 shape = shape,
                 color = Color.Black.copy(alpha = 0.5f),
                 blur = 8.dp
             )
-            .border(AppSpacing.borderThin, AppColors.outline, shape)
+            .border(0.dp, Color.Transparent, shape)
             .padding(horizontal = AppSpacing.inputPaddingHorizontal, vertical = AppSpacing.inputPaddingVertical),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -307,7 +307,7 @@ fun CommandLineInput(
             contentDescription = "Send command",
             size = AppSpacing.fabSize,
             backgroundColor = if (value.isNotBlank()) AppColors.primary else AppColors.onSurfaceVariantDark,
-            iconColor = if (value.isNotBlank()) AppColors.background else AppColors.outline
+            iconColor = if (value.isNotBlank()) AppColors.onPrimary else AppColors.outline
         )
     }
 }

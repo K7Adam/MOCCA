@@ -1,81 +1,47 @@
 package com.mocca.app.ui.theme
 
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.GenericShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.unit.dp
-import kotlin.math.sin
 
 /**
- * Bleeding-edge Material 3 Expressive Design System Components for MOCCA.
- * Designed by Pickle Rick. Jerry-free zone.
+ * Material 3 Expressive design primitives for MOCCA.
  */
 
 /**
- * GPU-efficient Dynamic Mesh Background for premium M3 Expressive aesthetics.
+ * Tonal ambient background for the app shell.
  */
 @Composable
 fun DynamicExpressiveBackground(
     modifier: Modifier = Modifier,
-    color1: Color = AppColors.primary.copy(alpha = 0.15f),
-    color2: Color = AppColors.AnchorTertiary.copy(alpha = 0.1f)
+    color1: Color = AppColors.primary.copy(alpha = 0.08f),
+    color2: Color = AppColors.tertiary.copy(alpha = 0.06f)
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "mesh")
-    val time by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(10000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "time"
-    )
-
     Canvas(modifier = modifier.fillMaxSize()) {
         val width = size.width
         val height = size.height
-        
+
         drawRect(
             brush = Brush.verticalGradient(
-                colors = listOf(AppColors.background, AppColors.surfaceDim)
+                colors = listOf(
+                    AppColors.surfaceContainerLowest,
+                    AppColors.background,
+                    AppColors.surfaceDim
+                )
             )
         )
 
-        // Draw animated blobs
-        val x1 = width * (0.5f + 0.3f * sin(time * 2 * Math.PI.toFloat()))
-        val y1 = height * (0.3f + 0.2f * sin(time * 2 * Math.PI.toFloat() + 1f))
-        
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(color1, Color.Transparent),
-                center = Offset(x1, y1),
-                radius = width * 0.8f
-            ),
-            center = Offset(x1, y1),
-            radius = width * 0.8f
-        )
-
-        val x2 = width * (0.3f + 0.4f * sin(time * 2 * Math.PI.toFloat() + 3f))
-        val y2 = height * (0.7f + 0.2f * sin(time * 2 * Math.PI.toFloat() + 2f))
-        
-        drawCircle(
-            brush = Brush.radialGradient(
-                colors = listOf(color2, Color.Transparent),
-                center = Offset(x2, y2),
-                radius = width * 0.7f
-            ),
-            center = Offset(x2, y2),
-            radius = width * 0.7f
+        drawRect(
+            brush = Brush.linearGradient(
+                colors = listOf(color1, Color.Transparent, color2),
+                start = Offset(width * 0.12f, 0f),
+                end = Offset(width, height)
+            )
         )
     }
 }

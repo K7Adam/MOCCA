@@ -1,7 +1,6 @@
 package com.mocca.app.ui.components.modern
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,9 +53,8 @@ fun ContextInfoGrid(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(AppShapes.card)
-            .background(AppColors.surfaceContainer, AppShapes.card)
-            .border(AppSpacing.borderThin, AppColors.outline, AppShapes.card)
+            .clip(AppShapes.groupSingle)
+            .background(AppColors.surfaceContainer, AppShapes.groupSingle)
             .padding(AppSpacing.cardPadding)
     ) {
         // Row 1: MCP_STATUS and MODEL

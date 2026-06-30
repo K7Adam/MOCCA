@@ -41,7 +41,7 @@ fun MoccaCard(
     borderColor: Color = Color.Transparent,
     borderWidth: Dp = 0.dp,
     contentPadding: Dp = AppSpacing.cardPadding,
-    shape: Shape = AppShapes.card,
+    shape: Shape = AppShapes.groupSingle,
     isLoading: Boolean = false,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -81,7 +81,7 @@ fun MoccaCardElevated(
     borderColor: Color = Color.Transparent,
     borderWidth: Dp = 0.dp,
     contentPadding: Dp = AppSpacing.cardPadding,
-    shape: Shape = AppShapes.card,
+    shape: Shape = AppShapes.groupSingle,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -226,7 +226,7 @@ fun SurfaceCard(
     backgroundColor: Color = AppColors.bgRaised,
     borderColor: Color = Color.Transparent,
     contentPadding: Dp = AppSpacing.cardPadding,
-    shape: Shape = AppShapes.card,
+    shape: Shape = AppShapes.groupSingle,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }

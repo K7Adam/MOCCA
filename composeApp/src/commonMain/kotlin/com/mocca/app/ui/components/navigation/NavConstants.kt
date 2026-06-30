@@ -38,7 +38,7 @@ object NavConstants {
     val IndicatorWidth = 48.dp
     
     /** Sliding indicator height */
-    val IndicatorHeight = 2.dp
+    val IndicatorHeight = 3.dp
     
     /** Indicator dot size for selected item */
     val IndicatorDotSize = 4.dp
@@ -50,7 +50,7 @@ object NavConstants {
 
     
     /** Navigation-only mode height (compact) */
-    val NavigationModeHeight = 68.dp
+    val NavigationModeHeight = 72.dp
     
     /** Chat input mode minimum height (expanded) - includes nav row and the two-row composer */
     val ChatInputModeMinHeight = 220.dp
@@ -59,7 +59,7 @@ object NavConstants {
 
     
     /** Height of the persistent nav row (icons + labels/indicator) */
-    val NavRowHeight = 68.dp
+    val NavRowHeight = 72.dp
     
     /** Height of nav indicator section */
     val NavIndicatorSectionHeight = 10.dp

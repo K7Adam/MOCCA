@@ -23,6 +23,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -55,6 +57,8 @@ fun ModuleCard(
     title: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
+    containerColor: Color = AppColors.moduleBackground,
+    shape: Shape = AppShapes.moduleCard,
     actionButton: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -63,11 +67,11 @@ fun ModuleCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(AppShapes.moduleCard)
-            .background(AppColors.moduleBackground, AppShapes.moduleCard)
+            .clip(shape)
+            .background(containerColor, shape)
             .innerShadow(
                 enabled = useDecorativeShadows,
-                shape = AppShapes.moduleCard,
+                shape = shape,
                 color = AppColors.white.copy(alpha = 0.05f),
                 blur = 2.dp
             )
@@ -243,22 +247,22 @@ fun ModuleActionButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-Box(
+    Box(
         modifier = modifier
             .heightIn(min = 48.dp)
-            .clip(AppShapes.small)
-            .background(AppColors.bgRaised, AppShapes.small)
+            .clip(AppShapes.pill)
+            .background(AppColors.surfaceContainerHigh, AppShapes.pill)
             .moccaClickable(
                 onClick = onClick,
                 pressedScale = 0.97f,
                 rippleColor = AppColors.white.copy(alpha = 0.1f)
             )
-            .padding(horizontal = AppSpacing.sm, vertical = 4.dp),
+            .padding(horizontal = AppSpacing.md, vertical = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text.uppercase(),
-            color = AppColors.onSurfaceVariant,
+            color = AppColors.onSurface,
             style = AppTypography.labelSmall
         )
     }

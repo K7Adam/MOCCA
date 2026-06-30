@@ -30,10 +30,10 @@ private val AppColorScheme: ColorScheme = darkColorScheme(
     secondaryContainer = AppColors.secondaryContainer,
     onSecondaryContainer = AppColors.onSecondaryContainer,
     
-    tertiary = AppColors.AnchorTertiary,
-    onTertiary = AppColors.onPrimary,
-    tertiaryContainer = AppColors.primaryContainer,
-    onTertiaryContainer = AppColors.onPrimaryContainer,
+    tertiary = AppColors.tertiary,
+    onTertiary = AppColors.onTertiary,
+    tertiaryContainer = AppColors.tertiaryContainer,
+    onTertiaryContainer = AppColors.onTertiaryContainer,
     
     background = AppColors.background,
     onBackground = AppColors.onBackground,
