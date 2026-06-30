@@ -9,7 +9,7 @@ class MoccaThemeTest {
     @Test
     fun testMoccaThemeColors() {
         // Test direct access to tokens via MoccaTheme.colors (AppColors)
-        val expectedPrimary = Color(0xFF8B9DC3)
+        val expectedPrimary = Color(0xFFAFC2FF)
         assertEquals(expectedPrimary, MoccaTheme.colors.primary, "Primary color mismatch")
     }
 
