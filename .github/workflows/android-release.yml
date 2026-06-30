@@ -26,11 +26,16 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   release:
     name: Build & Release
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -82,6 +87,48 @@ jobs:
         run: |
           mv androidApp/build/outputs/apk/debug/androidApp-debug.apk mocca-${{ env.FULL_VERSION }}.apk
 
+      - name: Prepare public update channel
+        env:
+          RELEASE_NOTES: ${{ github.event.head_commit.message }}
+        run: |
+          APK_NAME="mocca-${{ env.FULL_VERSION }}.apk"
+          APK_URL="https://k7adam.github.io/MOCCA/downloads/${APK_NAME}"
+          RELEASE_URL="https://github.com/K7Adam/MOCCA/releases/tag/v${{ env.FULL_VERSION }}"
+          APK_SIZE=$(stat -c%s "$APK_NAME")
+          APK_SHA256=$(sha256sum "$APK_NAME" | awk '{print $1}')
+          PUBLISHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          mkdir -p public/update public/downloads
+          cp "$APK_NAME" "public/downloads/$APK_NAME"
+
+          jq -n \
+            --arg version "v${{ env.FULL_VERSION }}" \
+            --arg releaseNotes "$RELEASE_NOTES" \
+            --arg apkUrl "$APK_URL" \
+            --arg digest "sha256:${APK_SHA256}" \
+            --arg publishedAt "$PUBLISHED_AT" \
+            --arg releaseUrl "$RELEASE_URL" \
+            --argjson size "$APK_SIZE" \
+            '{
+              schemaVersion: 1,
+              version: $version,
+              releaseNotes: $releaseNotes,
+              apkUrl: $apkUrl,
+              size: $size,
+              digest: $digest,
+              publishedAt: $publishedAt,
+              releaseUrl: $releaseUrl
+            }' > public/update/latest.json
+
+          cat > public/index.html <<'HTML'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>MOCCA Updates</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <h1>MOCCA Updates</h1>
+          <p>Latest update manifest: <a href="./update/latest.json">update/latest.json</a></p>
+          HTML
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -101,3 +148,15 @@ jobs:
           make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload public update channel
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy public update channel
+        id: deployment
+        uses: actions/deploy-pages@v4

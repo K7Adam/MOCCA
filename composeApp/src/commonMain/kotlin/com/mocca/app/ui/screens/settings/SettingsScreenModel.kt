@@ -553,7 +553,7 @@ class SettingsScreenModel(
                                     append("\n\nYour GitHub token is invalid or expired. Please update it below.")
                                 }
                                 is GitHubTokenStatus.Missing -> {
-                                    append("\n\nNo GitHub token configured. Add a token for better rate limits.")
+                                    append("\n\nPublic MOCCA release checks do not require a token. Add one only if this device is rate-limited or you use a private fork.")
                                 }
                                 else -> {}
                             }
@@ -581,7 +581,7 @@ class SettingsScreenModel(
             
             val message = when (status) {
                 is GitHubTokenStatus.Valid -> "Token is valid and working"
-                is GitHubTokenStatus.Missing -> "No token configured. Add a GitHub PAT for update checks."
+                is GitHubTokenStatus.Missing -> "No token configured. Public update checks still work."
                 is GitHubTokenStatus.Invalid -> "Token is invalid: ${status.reason}"
                 is GitHubTokenStatus.Error -> "Validation error: ${status.message}"
             }

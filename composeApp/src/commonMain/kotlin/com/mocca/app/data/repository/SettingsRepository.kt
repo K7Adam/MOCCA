@@ -2,9 +2,14 @@ package com.mocca.app.data.repository
 
 import com.mocca.app.data.local.LocalCache
 import com.mocca.app.data.security.SecureTokenStorage
+import com.mocca.app.domain.model.UpdateInfo
 import com.mocca.app.domain.model.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class SettingsRepository(
     private val localCache: LocalCache,
@@ -31,6 +36,15 @@ class SettingsRepository(
         const val KEY_AUTO_UPDATE_CHECK_INTERVAL = "auto_update_check_interval"
         const val KEY_ACTIVE_DOWNLOAD_ID = "active_download_id"
         const val KEY_DOWNLOADED_VERSION = "downloaded_version"
+        const val KEY_DOWNLOADED_DIGEST = "downloaded_digest"
+        const val KEY_UPDATE_MANIFEST_ETAG = "update_manifest_etag"
+        const val KEY_UPDATE_RELEASE_ETAG = "update_release_etag"
+        const val KEY_CACHED_UPDATE_INFO = "cached_update_info"
+    }
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = true
     }
 
     // Session State
@@ -137,6 +151,61 @@ class SettingsRepository(
             localCache.deleteSetting(KEY_DOWNLOADED_VERSION)
         } else {
             localCache.saveSetting(KEY_DOWNLOADED_VERSION, version)
+        }
+    }
+
+    suspend fun getDownloadedDigest(): String? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_DOWNLOADED_DIGEST)
+    }
+
+    suspend fun setDownloadedDigest(digest: String?) = withContext(Dispatchers.IO) {
+        if (digest.isNullOrBlank()) {
+            localCache.deleteSetting(KEY_DOWNLOADED_DIGEST)
+        } else {
+            localCache.saveSetting(KEY_DOWNLOADED_DIGEST, digest)
+        }
+    }
+
+    suspend fun getUpdateReleaseEtag(): String? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_UPDATE_RELEASE_ETAG)
+    }
+
+    suspend fun setUpdateReleaseEtag(etag: String?) = withContext(Dispatchers.IO) {
+        if (etag.isNullOrBlank()) {
+            localCache.deleteSetting(KEY_UPDATE_RELEASE_ETAG)
+        } else {
+            localCache.saveSetting(KEY_UPDATE_RELEASE_ETAG, etag)
+        }
+    }
+
+    suspend fun getUpdateManifestEtag(): String? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_UPDATE_MANIFEST_ETAG)
+    }
+
+    suspend fun setUpdateManifestEtag(etag: String?) = withContext(Dispatchers.IO) {
+        if (etag.isNullOrBlank()) {
+            localCache.deleteSetting(KEY_UPDATE_MANIFEST_ETAG)
+        } else {
+            localCache.saveSetting(KEY_UPDATE_MANIFEST_ETAG, etag)
+        }
+    }
+
+    suspend fun getCachedUpdateInfo(): UpdateInfo? = withContext(Dispatchers.IO) {
+        localCache.getSetting(KEY_CACHED_UPDATE_INFO)?.let { raw ->
+            try {
+                json.decodeFromString<UpdateInfo>(raw)
+            } catch (_: SerializationException) {
+                localCache.deleteSetting(KEY_CACHED_UPDATE_INFO)
+                null
+            }
+        }
+    }
+
+    suspend fun setCachedUpdateInfo(updateInfo: UpdateInfo?) = withContext(Dispatchers.IO) {
+        if (updateInfo == null) {
+            localCache.deleteSetting(KEY_CACHED_UPDATE_INFO)
+        } else {
+            localCache.saveSetting(KEY_CACHED_UPDATE_INFO, json.encodeToString(updateInfo))
         }
     }
 

@@ -22,9 +22,8 @@ import androidx.compose.ui.platform.testTag
 /**
  * Settings section: MOCCA APK updates
  *
- * GitHub Personal Access Token management for in-app update checks.
- * The token is stored on this device only and used exclusively for fetching
- * MOCCA APK releases from GitHub.
+ * Public GitHub release checks work without credentials. A token can be saved
+ * as an optional fallback for private forks or exhausted GitHub API limits.
  */
 @Composable
 fun AppUpdatesSection(
@@ -47,7 +46,7 @@ fun AppUpdatesSection(
         
         Spacer(modifier = Modifier.height(AppSpacing.sm))
         
-        ModuleCard(title = "GitHub auto update") {
+        ModuleCard(title = "Release updates") {
             // Token status indicator
             val tokenStatus = githubTokenStatus
             val statusColor = when {
@@ -95,7 +94,7 @@ fun AppUpdatesSection(
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             
             Text(
-                text = "Enter a GitHub Personal Access Token to enable in-app APK update checks. The token is stored securely on this device and used only for MOCCA update downloads from GitHub.",
+                text = "MOCCA checks public GitHub releases without a token. Save an optional token only for private forks or higher GitHub API rate limits.",
                 color = AppColors.onSurfaceVariant,
                 style = AppTypography.labelSmall
             )
@@ -107,7 +106,7 @@ fun AppUpdatesSection(
             MoccaInput(
                 value = tokenInput,
                 onValueChange = { tokenInput = it },
-                label = "GitHub PAT",
+                label = "Optional GitHub token",
                 placeholder = "ghp_... or github_pat_...",
                 visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
                 modifier = Modifier.testTag(TestTags.Settings.githubTokenInput)
@@ -123,7 +122,7 @@ fun AppUpdatesSection(
                 MoccaOutlinedButton(
                     text = "Save",
                     onClick = { onSaveToken(tokenInput) },
-                    enabled = tokenInput.isNotBlank() && tokenInput != githubToken && !isValidatingToken,
+                    enabled = tokenInput != githubToken && !isValidatingToken,
                     modifier = Modifier.weight(1f),
                     height = AppSpacing.buttonHeightCompact
                 )
@@ -165,7 +164,7 @@ fun AppUpdatesSection(
             // Help text
             Spacer(modifier = Modifier.height(AppSpacing.sm))
             Text(
-                text = "Create a token at github.com/settings/tokens (requires 'repo' scope for private repos)",
+                text = "Public MOCCA releases do not need a token. Private repositories require a token with repository read access.",
                 color = AppColors.outline,
                 style = AppTypography.labelSmall
             )

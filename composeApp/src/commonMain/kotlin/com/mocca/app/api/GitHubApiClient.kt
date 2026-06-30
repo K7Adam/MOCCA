@@ -2,6 +2,7 @@ package com.mocca.app.api
 
 import com.mocca.app.domain.model.GitHubRelease
 import com.mocca.app.domain.model.GitHubTokenStatus
+import com.mocca.app.domain.model.UpdateManifest
 import io.ktor.client.plugins.HttpTimeout
 import io.github.aakira.napier.Napier
 import io.ktor.client.HttpClient
@@ -9,7 +10,7 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.header
-import io.ktor.client.request.prepareGet
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
@@ -35,6 +36,35 @@ data class GitHubTokenInfo(
     @kotlinx.serialization.SerialName("expires_at")
     val expiresAt: String? = null
 )
+
+sealed class GitHubReleaseFetchResult {
+    data class Success(
+        val release: GitHubRelease,
+        val etag: String?,
+        val rateLimitRemaining: Int?
+    ) : GitHubReleaseFetchResult()
+
+    data object NotModified : GitHubReleaseFetchResult()
+
+    data class Failure(
+        val message: String,
+        val statusCode: Int? = null
+    ) : GitHubReleaseFetchResult()
+}
+
+sealed class UpdateManifestFetchResult {
+    data class Success(
+        val manifest: UpdateManifest,
+        val etag: String?
+    ) : UpdateManifestFetchResult()
+
+    data object NotModified : UpdateManifestFetchResult()
+
+    data class Failure(
+        val message: String,
+        val statusCode: Int? = null
+    ) : UpdateManifestFetchResult()
+}
 
 class GitHubApiClient {
     private val client = HttpClient(getHttpEngine()) {
@@ -128,6 +158,85 @@ class GitHubApiClient {
         } catch (e: Exception) {
             Napier.e("Failed to fetch releases", e, "GitHubApiClient")
             Result.failure(e)
+        }
+    }
+
+    suspend fun getLatestRelease(
+        owner: String,
+        repo: String,
+        token: String? = null,
+        etag: String? = null
+    ): GitHubReleaseFetchResult {
+        return try {
+            val response = client.get("https://api.github.com/repos/$owner/$repo/releases/latest") {
+                if (!token.isNullOrBlank()) {
+                    header("Authorization", "Bearer $token")
+                }
+                if (!etag.isNullOrBlank()) {
+                    header(HttpHeaders.IfNoneMatch, etag)
+                }
+                header("Accept", "application/vnd.github+json")
+                header("X-GitHub-Api-Version", "2022-11-28")
+                header("User-Agent", "MOCCA-Android-Client")
+            }
+
+            when {
+                response.status == HttpStatusCode.NotModified -> GitHubReleaseFetchResult.NotModified
+                response.status == HttpStatusCode.NotFound -> GitHubReleaseFetchResult.Failure(
+                    message = "No public release found or repository is not accessible",
+                    statusCode = response.status.value
+                )
+                response.status == HttpStatusCode.Unauthorized -> GitHubReleaseFetchResult.Failure(
+                    message = "Unauthorized GitHub request. The token may be expired or revoked.",
+                    statusCode = response.status.value
+                )
+                response.status == HttpStatusCode.Forbidden -> GitHubReleaseFetchResult.Failure(
+                    message = "GitHub request forbidden. Rate limit may be exhausted or token permissions are insufficient.",
+                    statusCode = response.status.value
+                )
+                !response.status.isSuccess() -> GitHubReleaseFetchResult.Failure(
+                    message = "GitHub API error: ${response.status}",
+                    statusCode = response.status.value
+                )
+                else -> GitHubReleaseFetchResult.Success(
+                    release = response.body(),
+                    etag = response.headers[HttpHeaders.ETag],
+                    rateLimitRemaining = response.headers["X-RateLimit-Remaining"]?.toIntOrNull()
+                )
+            }
+        } catch (e: Exception) {
+            Napier.e("Failed to fetch latest release", e, "GitHubApiClient")
+            GitHubReleaseFetchResult.Failure(e.message ?: "Network error while fetching latest release")
+        }
+    }
+
+    suspend fun getUpdateManifest(
+        manifestUrl: String,
+        etag: String? = null
+    ): UpdateManifestFetchResult {
+        return try {
+            val response = client.get(manifestUrl) {
+                if (!etag.isNullOrBlank()) {
+                    header(HttpHeaders.IfNoneMatch, etag)
+                }
+                header("Accept", "application/json")
+                header("User-Agent", "MOCCA-Android-Client")
+            }
+
+            when {
+                response.status == HttpStatusCode.NotModified -> UpdateManifestFetchResult.NotModified
+                !response.status.isSuccess() -> UpdateManifestFetchResult.Failure(
+                    message = "Update manifest unavailable: ${response.status}",
+                    statusCode = response.status.value
+                )
+                else -> UpdateManifestFetchResult.Success(
+                    manifest = response.body(),
+                    etag = response.headers[HttpHeaders.ETag]
+                )
+            }
+        } catch (e: Exception) {
+            Napier.w("Failed to fetch update manifest: ${e.message}", e, "GitHubApiClient")
+            UpdateManifestFetchResult.Failure(e.message ?: "Network error while fetching update manifest")
         }
     }
 

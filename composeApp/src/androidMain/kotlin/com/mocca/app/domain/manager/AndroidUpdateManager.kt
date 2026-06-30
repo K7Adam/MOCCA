@@ -48,6 +48,10 @@ sealed class UpdateErrorType {
     data class FileNotFound(
         override val userMessage: String = "Update file not found. Please try downloading again."
     ) : UpdateErrorType()
+
+    data class IntegrityCheckFailed(
+        override val userMessage: String = "The downloaded update did not match the release checksum. Please try downloading it again."
+    ) : UpdateErrorType()
     
     data class UnknownError(
         val error: String,
@@ -118,8 +122,8 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
         return DownloadStatus.Error("Download not found")
     }
 
-    override fun installUpdate(version: String, downloadedPath: String) {
-        installApkWithResult(downloadedPath)
+    override fun installUpdate(version: String, downloadedPath: String, expectedDigest: String?) {
+        installApkWithResult(downloadedPath, expectedDigest)
     }
     
     /**
@@ -129,30 +133,47 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
      * @param onError Callback for error handling with user-friendly messages
      */
     fun installApkWithResult(
-        path: String, 
+        path: String,
+        expectedDigest: String? = null,
         onError: ((UpdateErrorType) -> Unit)? = null
     ) {
         // Assume path is either absolute path or Content URI string
         var finalUri: Uri? = null
         var apkFile: File? = null
 
-        if (path.startsWith("content://")) {
-            finalUri = Uri.parse(path)
-            // Cannot easily validate signature of content URI without streaming it to a temp file
-            // We'll skip signature validation for content URIs for now, as Android handles it
-        } else {
-            val file = File(path)
-            if (!file.exists()) {
-                Napier.e("APK file not found at $path", tag = "AndroidUpdateManager")
-                onError?.invoke(UpdateErrorType.FileNotFound())
-                return
+        when {
+            path.startsWith("content://") -> {
+                finalUri = Uri.parse(path)
             }
-            apkFile = file
-            finalUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.provider",
-                file
-            )
+            path.startsWith("file://") -> {
+                val uri = Uri.parse(path)
+                val file = File(uri.path.orEmpty())
+                if (!file.exists()) {
+                    Napier.e("APK file not found at $path", tag = "AndroidUpdateManager")
+                    onError?.invoke(UpdateErrorType.FileNotFound())
+                    return
+                }
+                apkFile = file
+                finalUri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    file
+                )
+            }
+            else -> {
+                val file = File(path)
+                if (!file.exists()) {
+                    Napier.e("APK file not found at $path", tag = "AndroidUpdateManager")
+                    onError?.invoke(UpdateErrorType.FileNotFound())
+                    return
+                }
+                apkFile = file
+                finalUri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    file
+                )
+            }
         }
 
         // Check for REQUEST_INSTALL_PACKAGES permission
@@ -169,6 +190,15 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             } catch (e: Exception) {
                 Napier.e("Failed to launch Manage Unknown App Sources settings", e, tag = "AndroidUpdateManager")
                 onError?.invoke(UpdateErrorType.UnknownError("Failed to open permission settings: ${e.message}"))
+            }
+        }
+
+        if (!expectedDigest.isNullOrBlank()) {
+            val validationResult = validateApkDigest(finalUri, apkFile, expectedDigest)
+            if (validationResult is ApkValidationResult.Invalid) {
+                Napier.e("APK digest validation failed: ${validationResult.reason}", tag = "AndroidUpdateManager")
+                onError?.invoke(UpdateErrorType.IntegrityCheckFailed())
+                throw ApkInstallException(validationResult.userMessage)
             }
         }
 
@@ -281,6 +311,62 @@ class AndroidUpdateManager(private val context: Context) : PlatformUpdateManager
             // If validation fails due to an error, allow the installation attempt
             // The OS will handle any actual signature mismatch
             ApkValidationResult.Valid
+        }
+    }
+
+    private fun validateApkDigest(
+        apkUri: Uri?,
+        apkFile: File?,
+        expectedDigest: String
+    ): ApkValidationResult {
+        val algorithm = expectedDigest.substringBefore(":", "sha256").lowercase()
+        if (algorithm != "sha256") {
+            Napier.w("Unsupported release digest algorithm: $algorithm", tag = "AndroidUpdateManager")
+            return ApkValidationResult.Valid
+        }
+
+        val expectedHash = expectedDigest
+            .substringAfter(":", expectedDigest)
+            .replace(" ", "")
+            .lowercase()
+
+        if (expectedHash.isBlank()) {
+            return ApkValidationResult.Valid
+        }
+
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            val input = apkFile?.inputStream()
+                ?: apkUri?.let { context.contentResolver.openInputStream(it) }
+                ?: return ApkValidationResult.Invalid(
+                    reason = "Could not open APK to validate digest",
+                    userMessage = "Could not verify the downloaded update."
+                )
+
+            input.use { stream ->
+                while (true) {
+                    val read = stream.read(buffer)
+                    if (read <= 0) break
+                    digest.update(buffer, 0, read)
+                }
+            }
+
+            val actualHash = digest.digest().joinToString("") { "%02x".format(it) }
+            if (actualHash != expectedHash) {
+                ApkValidationResult.Invalid(
+                    reason = "APK SHA-256 mismatch: expected $expectedHash, got $actualHash",
+                    userMessage = "The downloaded update did not match the release checksum."
+                )
+            } else {
+                Napier.d("APK digest validation passed", tag = "AndroidUpdateManager")
+                ApkValidationResult.Valid
+            }
+        } catch (e: Exception) {
+            ApkValidationResult.Invalid(
+                reason = "Digest validation failed: ${e.message}",
+                userMessage = "Could not verify the downloaded update."
+            )
         }
     }
     

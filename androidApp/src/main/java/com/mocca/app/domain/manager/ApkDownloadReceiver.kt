@@ -53,13 +53,14 @@ class ApkDownloadReceiver : BroadcastReceiver(), KoinComponent {
                                         val uriString = cursor.getString(uriColumn)
                                         if (uriString != null) {
                                             val version = settingsRepository.getDownloadedVersion() ?: ""
+                                            val expectedDigest = settingsRepository.getDownloadedDigest()
                                             Napier.i(
                                                 "Download complete successfully. URI: $uriString. Installing...",
                                                 tag = TAG
                                             )
 
                                             // Trigger installation
-                                            platformUpdateManager.installUpdate(version, uriString)
+                                            platformUpdateManager.installUpdate(version, uriString, expectedDigest)
                                         }
                                     }
                                 } else {
@@ -77,6 +78,7 @@ class ApkDownloadReceiver : BroadcastReceiver(), KoinComponent {
                         // Clear the active download since it's completed (success or fail)
                         settingsRepository.setActiveDownloadId(-1L)
                         settingsRepository.setDownloadedVersion(null)
+                        settingsRepository.setDownloadedDigest(null)
                     }
                 } finally {
                     pendingResult.finish()

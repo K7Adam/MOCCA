@@ -9,8 +9,9 @@ import kotlinx.serialization.Serializable
 @Immutable
 data class GitHubRelease(
     @SerialName("tag_name") val tagName: String,
-    val body: String,
-    val assets: List<GitHubAsset>
+    val body: String = "",
+    @SerialName("published_at") val publishedAt: String? = null,
+    val assets: List<GitHubAsset> = emptyList()
 )
 
 @Serializable
@@ -20,18 +21,43 @@ data class GitHubAsset(
     @SerialName("browser_download_url") val downloadUrl: String,
     @SerialName("url") val apiUrl: String,
     val size: Long,
-    @SerialName("content_type") val contentType: String
+    @SerialName("content_type") val contentType: String = "",
+    val digest: String? = null
 )
 
+@Serializable
 @Immutable
+data class UpdateManifest(
+    val schemaVersion: Int = 1,
+    val version: String,
+    val releaseNotes: String = "",
+    val apkUrl: String,
+    val size: Long = 0L,
+    val digest: String? = null,
+    val publishedAt: String? = null,
+    val releaseUrl: String? = null
+)
 
+@Serializable
+@Immutable
 data class UpdateInfo(
     val version: String,
     val releaseNotes: String,
     val downloadUrl: String,
     val apiUrl: String,
-    val size: Long
+    val size: Long,
+    val digest: String? = null,
+    val publishedAt: String? = null,
+    val source: UpdateSource = UpdateSource.PublicGitHubRelease
 )
+
+@Serializable
+enum class UpdateSource {
+    PublicManifest,
+    PublicGitHubRelease,
+    AuthenticatedGitHubRelease,
+    CachedGitHubRelease
+}
 
 /**
  * Represents the status of a GitHub Personal Access Token.
