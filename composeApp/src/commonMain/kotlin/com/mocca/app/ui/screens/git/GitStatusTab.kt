@@ -429,6 +429,7 @@ private fun gitFileStatusDescription(status: GitFileStatus): String {
     }
 }
 
+@Composable
 private fun gitAccentColor(status: GitFileStatus) = when (status) {
     GitFileStatus.ADDED -> AppColors.diffAddition
     GitFileStatus.MODIFIED -> AppColors.statusWaiting

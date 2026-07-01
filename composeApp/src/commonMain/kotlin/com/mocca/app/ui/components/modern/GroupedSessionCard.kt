@@ -106,13 +106,14 @@ fun GroupedSessionCard(
                 parentModifier
             }
             
+            val activeIndicatorColor = AppColors.primary
             Column(
                 modifier = borderModifier
                     .then(
                         if (isActive) {
                             Modifier.drawBehind {
                                 drawRect(
-                                    color = AppColors.primary,
+                                    color = activeIndicatorColor,
                                     topLeft = Offset(0f, 0f),
                                     size = androidx.compose.ui.geometry.Size(
                                         AppSpacing.activeIndicatorWidth.toPx(),

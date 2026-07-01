@@ -39,10 +39,16 @@ import com.mocca.app.ui.theme.AppSpacing
 data class ShimmerTheme(
     val durationMs: Int = 1200,
     val easing: androidx.compose.animation.core.Easing = FastOutSlowInEasing,
-    val baseColor: Color = AppColors.shimmerBase,
-    val highlightColor: Color = AppColors.shimmerHighlight,
-    val direction: ShimmerDirection = ShimmerDirection.LeftToRight
-)
+    val baseColor: Color = Color.Unspecified,
+    val highlightColor: Color = Color.Unspecified,
+    val direction: ShimmerDirection = ShimmerDirection.LeftToRight,
+) {
+    @Composable
+    fun resolve(): ShimmerTheme = copy(
+        baseColor = if (baseColor == Color.Unspecified) AppColors.shimmerBase else baseColor,
+        highlightColor = if (highlightColor == Color.Unspecified) AppColors.shimmerHighlight else highlightColor,
+    )
+}
 
 /**
  * Shimmer animation direction.
@@ -77,10 +83,11 @@ enum class ShimmerDirection {
 @Composable
 fun Modifier.shimmer(
     enabled: Boolean = true,
-    theme: ShimmerTheme = ShimmerTheme()
+    theme: ShimmerTheme = ShimmerTheme(),
 ): Modifier {
     if (!enabled) return this
 
+    val resolved = theme.resolve()
     val infiniteTransition = rememberInfiniteTransition(label = "shimmer_transition")
 
     val shimmerProgress by infiniteTransition.animateFloat(
@@ -96,7 +103,7 @@ fun Modifier.shimmer(
     // Calculate shimmer brush based on progress
     val brush = rememberShimmerBrush(
         progress = shimmerProgress,
-        theme = theme
+        theme = resolved,
     )
 
     return this.then(
