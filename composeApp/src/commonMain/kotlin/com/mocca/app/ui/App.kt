@@ -69,8 +69,9 @@ fun App() {
     val preferences by preferencesManager.preferences.collectAsState()
     
     AppTheme(
+        darkTheme = true, // force dark until full UI is audited for light theme
         performance = performance,
-        codeFontFamilyKey = { preferences.codeFontFamily }
+        codeFontFamilyKey = { preferences.codeFontFamily },
     ) {
         val serverConfigRepository = koinInject<ServerConfigRepository>()
         val bridgePairingIntentStore = koinInject<BridgePairingIntentStore>()
