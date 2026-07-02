@@ -21,8 +21,7 @@ import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.App
 import com.mocca.app.ui.theme.AppColors
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -115,7 +114,7 @@ class MainActivity : ComponentActivity() {
         val provider = uri.getQueryParameter("provider")
 
         if (code != null && state != null && provider != null) {
-            CoroutineScope(Dispatchers.Main).launch {
+            lifecycleScope.launch {
                 Toast.makeText(this@MainActivity, "Completing login...", Toast.LENGTH_SHORT).show()
                 val result = configRepository.completeOAuthFlow(provider, code, state)
                 when (result) {

@@ -529,6 +529,7 @@ class ActiveSessionService : Service() {
     /**
      * Push widget update with current session count and connection status.
      */
+    @Suppress("TooGenericExceptionCaught")
     private fun pushWidgetUpdate() {
         serviceScope.launch {
             try {
@@ -539,8 +540,10 @@ class ActiveSessionService : Service() {
                     lastSync = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                         .format(java.util.Date())
                 )
-            } catch (_: Exception) {
-                Napier.w("[ActiveSessionService] Widget update failed")
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Napier.w("[ActiveSessionService] Widget update failed: ${e.message}")
             }
         }
     }

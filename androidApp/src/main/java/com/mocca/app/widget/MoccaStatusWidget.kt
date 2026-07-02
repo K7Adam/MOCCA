@@ -43,13 +43,6 @@ import com.mocca.app.MainActivity
 class MoccaStatusWidget : GlanceAppWidget() {
 
     private companion object {
-        const val PREFS_NAME = "mocca_widget_prefs"
-        const val KEY_CONNECTION_STATUS = "connection_status"
-        const val KEY_SESSION_COUNT = "session_count"
-        const val KEY_LAST_SYNC = "last_sync"
-        const val DEFAULT_STATUS = "Not configured"
-        const val DEFAULT_SYNC = "—"
-
         val STATUS_COLOR_CONNECTED = Color(0xFF4CAF50)
         val STATUS_COLOR_CONNECTING = Color(0xFFFFC107)
         val STATUS_COLOR_DEFAULT = Color(0xFF9E9E9E)
@@ -69,10 +62,14 @@ class MoccaStatusWidget : GlanceAppWidget() {
     }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val connectionStatus = prefs.getString(KEY_CONNECTION_STATUS, DEFAULT_STATUS) ?: "Unknown"
-        val sessionCount = prefs.getInt(KEY_SESSION_COUNT, 0)
-        val lastSync = prefs.getString(KEY_LAST_SYNC, DEFAULT_SYNC) ?: DEFAULT_SYNC
+        val prefs = context.getSharedPreferences(WidgetPrefsContract.PREFS_NAME, Context.MODE_PRIVATE)
+        val connectionStatus = prefs.getString(
+            WidgetPrefsContract.KEY_CONNECTION_STATUS, WidgetPrefsContract.DEFAULT_STATUS
+        ) ?: WidgetPrefsContract.DEFAULT_STATUS
+        val sessionCount = prefs.getInt(WidgetPrefsContract.KEY_SESSION_COUNT, 0)
+        val lastSync = prefs.getString(
+            WidgetPrefsContract.KEY_LAST_SYNC, WidgetPrefsContract.DEFAULT_SYNC
+        ) ?: WidgetPrefsContract.DEFAULT_SYNC
 
         val statusColor = when (connectionStatus) {
             "Connected" -> STATUS_COLOR_CONNECTED
