@@ -7,7 +7,7 @@ import io.github.vinceglb.filekit.name
 import io.github.vinceglb.filekit.path
 import io.github.vinceglb.filekit.readBytes
 import io.github.vinceglb.filekit.size
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Helper for file picker operations.

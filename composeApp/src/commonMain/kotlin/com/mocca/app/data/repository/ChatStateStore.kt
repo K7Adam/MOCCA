@@ -8,7 +8,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Specialized state store for chat screen state.
@@ -522,7 +522,7 @@ class ChatStateStore(
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
         
         // Optimistic UI update
-        val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val now = Clock.System.now().toEpochMilliseconds()
         _optimisticUserMessage.value = Message(
             id = "local-$now",
             sessionId = sessionId,
