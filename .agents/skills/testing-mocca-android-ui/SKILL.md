@@ -1,6 +1,6 @@
 ---
 name: testing-mocca-android-ui
-description: Test MOCCA's Compose UI/theme end-to-end on a Devin Linux Android emulator. Use when verifying theme, onboarding, or any Android runtime UI change (e.g. the M3 Expressive "Mocha" theme).
+description: Test MOCCA's Compose UI/theme end-to-end on a Linux Android emulator (such as Devin's VM). Use when verifying theme, onboarding, or any Android runtime UI change (e.g. the M3 Expressive "Mocha" theme).
 ---
 
 # Testing MOCCA Android UI on a Linux Emulator
