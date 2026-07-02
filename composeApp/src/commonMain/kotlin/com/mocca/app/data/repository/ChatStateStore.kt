@@ -522,7 +522,7 @@ class ChatStateStore(
         val sessionId = _currentSessionId.value ?: return Result.failure(Exception("No session selected"))
         
         // Optimistic UI update
-        val now = kotlinx.datetime.Clock.System.now().toEpochMilliseconds()
+        val now = Clock.System.now().toEpochMilliseconds()
         _optimisticUserMessage.value = Message(
             id = "local-$now",
             sessionId = sessionId,
