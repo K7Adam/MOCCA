@@ -82,6 +82,7 @@ MOCCA/
 | `taste-skill-compose` | UI/UX composition, hierarchy, interaction polish |
 | `material3-expressive-compose` | Material 3 Expressive token work, theming, component refactors |
 | `android-mcp` | Emulator startup, install, Maestro, log capture |
+| `testing-mocca-android-ui` | Testing MOCCA UI/theme on a Linux Android emulator (build/install/launch, KVM fix, theme pixel checks) |
 | `mocca-android-agent-workflow` | Android CLI, Android skills, Android Knowledge Base, and cross-tool agent workflow |
 
 ## ANDROID AGENT TOOLING

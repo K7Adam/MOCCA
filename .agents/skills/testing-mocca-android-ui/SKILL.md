@@ -3,9 +3,9 @@ name: testing-mocca-android-ui
 description: Test MOCCA's Compose UI/theme end-to-end on a Devin Linux Android emulator. Use when verifying theme, onboarding, or any Android runtime UI change (e.g. the M3 Expressive "Mocha" theme).
 ---
 
-# Testing MOCCA Android UI on a Devin (Linux) Emulator
+# Testing MOCCA Android UI on a Linux Emulator
 
-The repo's `mocca-android-agent-workflow` skill is Windows/PowerShell-oriented. On a Devin Linux VM use the flow below instead.
+The repo's `mocca-android-agent-workflow` skill is Windows/PowerShell-oriented. On a Linux VM (such as Devin's) use the flow below instead.
 
 ## Prerequisites / environment
 - Android SDK is at `$HOME/android-sdk` (installed by the blueprint). Export:
@@ -22,10 +22,10 @@ sudo gpasswd -a ubuntu kvm && sudo chmod 666 /dev/kvm
 
 ## Build + install + launch
 ```
-./gradlew :androidApp:assembleDebug --no-daemon          # ~3-4 min; APK at androidApp/build/outputs/apk/debug/androidApp-debug.apk
+/home/ubuntu/repos/MOCCA/gradlew :androidApp:assembleDebug --no-daemon          # ~3-4 min; APK at /home/ubuntu/repos/MOCCA/androidApp/build/outputs/apk/debug/androidApp-debug.apk
 emulator -avd FlayerPhone -no-snapshot -no-audio -gpu swiftshader_indirect -no-boot-anim &   # cold boot avoids stale-snapshot deaths
 adb wait-for-device && (until [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = 1 ]; do sleep 3; done)
-adb install -r androidApp/build/outputs/apk/debug/androidApp-debug.apk
+adb install -r /home/ubuntu/repos/MOCCA/androidApp/build/outputs/apk/debug/androidApp-debug.apk
 adb shell pm grant com.mocca.app android.permission.POST_NOTIFICATIONS   # pre-dismiss the notif permission dialog
 adb shell monkey -p com.mocca.app -c android.intent.category.LAUNCHER 1
 ```
