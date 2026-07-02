@@ -1,6 +1,9 @@
 package com.mocca.app.util
 
-import kotlinx.datetime.*
+import kotlin.time.Clock
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * Centralized time formatting utilities.
@@ -74,7 +77,7 @@ object TimeFormatter {
             val instant = Instant.fromEpochMilliseconds(epochMillis)
             val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
             val month = local.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-            "$month ${local.dayOfMonth}"
+            "$month ${local.day}"
         } catch (e: Exception) {
             "--"
         }
@@ -89,7 +92,7 @@ object TimeFormatter {
             val instant = Instant.fromEpochMilliseconds(epochMillis)
             val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
             val month = local.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-            "$month ${local.dayOfMonth}, ${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
+            "$month ${local.day}, ${local.hour.toString().padStart(2, '0')}:${local.minute.toString().padStart(2, '0')}"
         } catch (e: Exception) {
             "--"
         }

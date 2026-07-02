@@ -29,7 +29,7 @@ import com.mocca.app.ui.theme.AppTypography
 import com.mocca.app.ui.theme.moccaClickable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Sync status indicator for showing data freshness.

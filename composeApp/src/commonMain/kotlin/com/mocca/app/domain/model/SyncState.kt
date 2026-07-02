@@ -1,7 +1,7 @@
 package com.mocca.app.domain.model
 
 import androidx.compose.runtime.Immutable
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Per-repository sync state.
