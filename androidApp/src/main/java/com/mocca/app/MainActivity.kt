@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.ContextCompat
 import com.mocca.app.bridge.connection.BridgePairingIntentStore
 import com.mocca.app.data.repository.ConfigRepository
@@ -45,9 +44,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         // Enable true edge-to-edge with transparent bars
+        // Mocha dark background (#19120D) — hardcoded because onCreate is not composable
+        val mochaDarkBg = android.graphics.Color.parseColor("#19120D")
         enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(AppColors.background.toArgb()),
-            navigationBarStyle = SystemBarStyle.dark(AppColors.background.toArgb())
+            statusBarStyle = SystemBarStyle.dark(mochaDarkBg),
+            navigationBarStyle = SystemBarStyle.dark(mochaDarkBg),
         )
         
         // Handle deep link on cold start

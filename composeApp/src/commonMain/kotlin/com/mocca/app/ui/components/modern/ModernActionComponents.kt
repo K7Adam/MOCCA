@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.MoccaTheme
 
 /**
@@ -103,7 +104,7 @@ fun ModernFAB(
         modifier = modifier.scale(scale),
         containerColor = containerColor,
         contentColor = contentColor,
-        shape = MoccaTheme.shapes.rounded2xl,
+        shape = AppShapes.extraLarge,
         interactionSource = interactionSource
     ) {
         Icon(

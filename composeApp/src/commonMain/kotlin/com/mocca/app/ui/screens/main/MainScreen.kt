@@ -52,8 +52,7 @@ import com.mocca.app.ui.screens.onboarding.ProgressiveOnboardingScreen
 import com.mocca.app.ui.theme.AppColors
 import com.mocca.app.ui.theme.AppShapes
 import com.mocca.app.ui.theme.AppSpacing
-import com.mocca.app.ui.theme.DynamicExpressiveBackground
-import com.mocca.app.ui.theme.LocalAppPerformance
+import com.mocca.app.ui.theme.LocalAppPerformance // referenced in KDoc
 import com.mocca.app.ui.components.modern.UpdateDialog
 import org.koin.core.parameter.parametersOf
 import io.github.vinceglb.filekit.dialogs.FileKitMode
@@ -71,9 +70,7 @@ import kotlinx.coroutines.launch
  * Battery-conscious design:
  * - beyondViewportPageCount = 1 keeps Chat (page 1) always in composition
  *   so streaming continues even while the user browses Sessions or Tools.
- * - Expensive visual effects (DynamicExpressiveBackground) check
- *   [LocalAppPerformance] and are only composed when the performance
- *   tier permits them.
+ * - [LocalAppPerformance] gates motion and ambient effects by device tier.
  * - userScrollEnabled = !isImeVisible prevents accidental page swipes
  *   while the keyboard is open, saving spurious composition passes.
  * - Page content that is not the current page does not run animations
@@ -106,7 +103,6 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         val hapticFeedback = LocalHapticFeedback.current
         val density = LocalDensity.current
         val layoutDirection = LocalLayoutDirection.current
-        val performance = LocalAppPerformance.current
 
         // ---------------------------------------------------------------
         // Pager state – single source of truth for active page
@@ -212,16 +208,12 @@ data class MainScreen(val sessionId: String? = null) : Screen {
         // Root layout
         // ---------------------------------------------------------------
         Box(modifier = Modifier.fillMaxSize()) {
-            // Background layer (performance-gated)
-            if (performance.useAmbientEffects) {
-                DynamicExpressiveBackground()
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(AppColors.background)
-                )
-            }
+            // Background — pure M3 tonal surface
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(AppColors.background)
+            )
 
             Scaffold(
                 modifier = Modifier.fillMaxSize(),

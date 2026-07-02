@@ -14,16 +14,20 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 
 /**
- * Custom modifier for M3 Expressive scale interaction.
- * Provides a consistent "squish" effect across the app.
+ * Custom scale-on-press interaction — **deprecated**.
+ * Replace with M3 shape morphing via ButtonShapes during component migration.
  */
+@Deprecated(
+    message = "Use M3 shape morphing (ButtonShapes) instead of custom scale animation",
+    level = DeprecationLevel.WARNING,
+)
 @Composable
 fun Modifier.moccaClickable(
     onClick: (() -> Unit)?,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     pressedScale: Float = 0.96f,
     rippleColor: Color = AppColors.primary.copy(alpha = 0.1f),
-    enabled: Boolean = true
+    enabled: Boolean = true,
 ): Modifier {
     if (onClick == null) return this
 
@@ -31,7 +35,7 @@ fun Modifier.moccaClickable(
     val scale by animateFloatAsState(
         targetValue = if (isPressed) pressedScale else 1f,
         animationSpec = MaterialTheme.motionScheme.fastSpatialSpec(),
-        label = "moccaClickableScale"
+        label = "moccaClickableScale",
     )
 
     return this
@@ -40,6 +44,6 @@ fun Modifier.moccaClickable(
             interactionSource = interactionSource,
             indication = ripple(color = rippleColor),
             enabled = enabled,
-            onClick = onClick
+            onClick = onClick,
         )
 }
