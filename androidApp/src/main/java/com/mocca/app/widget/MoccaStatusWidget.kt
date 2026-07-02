@@ -12,7 +12,6 @@ import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -43,78 +42,109 @@ import com.mocca.app.MainActivity
  */
 class MoccaStatusWidget : GlanceAppWidget() {
 
+    private companion object {
+        val STATUS_COLOR_CONNECTED = Color(0xFF4CAF50)
+        val STATUS_COLOR_CONNECTING = Color(0xFFFFC107)
+        val STATUS_COLOR_DEFAULT = Color(0xFF9E9E9E)
+        val COLOR_SECONDARY_TEXT = Color(0xFF757575)
+        val COLOR_TERTIARY_TEXT = Color(0xFF9E9E9E)
+
+        val FONT_SIZE_TITLE = TextUnit(18f, TextUnitType.Sp)
+        val FONT_SIZE_STATUS = TextUnit(13f, TextUnitType.Sp)
+        val FONT_SIZE_SESSIONS = TextUnit(12f, TextUnitType.Sp)
+        val FONT_SIZE_SYNC = TextUnit(11f, TextUnitType.Sp)
+
+        val PADDING_OUTER = 16.dp
+        val SPACER_SMALL = 4.dp
+        val SPACER_MEDIUM = 8.dp
+        val SPACER_TINY = 2.dp
+        val SPACER_DOT = 6.dp
+    }
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val prefs = context.getSharedPreferences("mocca_widget_prefs", Context.MODE_PRIVATE)
-        val connectionStatus = prefs.getString("connection_status", "Not configured") ?: "Unknown"
-        val sessionCount = prefs.getInt("session_count", 0)
-        val lastSync = prefs.getString("last_sync", "—") ?: "—"
+        val prefs = context.getSharedPreferences(WidgetPrefsContract.PREFS_NAME, Context.MODE_PRIVATE)
+        val connectionStatus = prefs.getString(
+            WidgetPrefsContract.KEY_CONNECTION_STATUS, WidgetPrefsContract.DEFAULT_STATUS
+        ) ?: WidgetPrefsContract.DEFAULT_STATUS
+        val sessionCount = prefs.getInt(WidgetPrefsContract.KEY_SESSION_COUNT, 0)
+        val lastSync = prefs.getString(
+            WidgetPrefsContract.KEY_LAST_SYNC, WidgetPrefsContract.DEFAULT_SYNC
+        ) ?: WidgetPrefsContract.DEFAULT_SYNC
 
         val statusColor = when (connectionStatus) {
-            "Connected" -> Color(0xFF4CAF50)
-            "Connecting", "Reconnecting" -> Color(0xFFFFC107)
-            else -> Color(0xFF9E9E9E)
+            "Connected" -> STATUS_COLOR_CONNECTED
+            "Connecting", "Reconnecting" -> STATUS_COLOR_CONNECTING
+            else -> STATUS_COLOR_DEFAULT
         }
 
-        provideContent {
-            GlanceTheme {
-                Box(
-                    modifier = GlanceModifier
-                        .fillMaxSize()
-                        .clickable(actionStartActivity<MainActivity>())
-                        .padding(16.dp)
+        provideContent { renderWidget(connectionStatus, sessionCount, lastSync, statusColor) }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun renderWidget(
+        connectionStatus: String,
+        sessionCount: Int,
+        lastSync: String,
+        statusColor: Color
+    ) {
+        GlanceTheme {
+            Box(
+                modifier = GlanceModifier
+                    .fillMaxSize()
+                    .clickable(actionStartActivity<MainActivity>())
+                    .padding(PADDING_OUTER)
+            ) {
+                Column(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.Start
                 ) {
-                    Column(
+                    // Title
+                    Text(
+                        text = "MOCCA",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = FONT_SIZE_TITLE
+                        )
+                    )
+                    Spacer(modifier = GlanceModifier.height(SPACER_SMALL))
+
+                    // Connection status with colored dot
+                    Row(
                         modifier = GlanceModifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.Start
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Title
                         Text(
-                            text = "MOCCA",
-                            style = TextStyle(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = TextUnit(18f, TextUnitType.Sp)
-                            )
+                            text = "●",
+                            style = TextStyle(color = ColorProvider(statusColor))
                         )
-                        Spacer(modifier = GlanceModifier.height(4.dp))
-
-                        // Connection status with colored dot
-                        Row(
-                            modifier = GlanceModifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "●",
-                                style = TextStyle(color = ColorProvider(statusColor))
-                            )
-                            Spacer(modifier = GlanceModifier.width(6.dp))
-                            Text(
-                                text = connectionStatus,
-                                style = TextStyle(fontSize = TextUnit(13f, TextUnitType.Sp))
-                            )
-                        }
-
-                        Spacer(modifier = GlanceModifier.height(8.dp))
-
-                        // Sessions count
+                        Spacer(modifier = GlanceModifier.width(SPACER_DOT))
                         Text(
-                            text = "$sessionCount active session${if (sessionCount != 1) "s" else ""}",
-                            style = TextStyle(
-                                fontSize = TextUnit(12f, TextUnitType.Sp),
-                                color = ColorProvider(Color(0xFF757575))
-                            )
-                        )
-
-                        Spacer(modifier = GlanceModifier.height(2.dp))
-
-                        // Last sync
-                        Text(
-                            text = "Synced: $lastSync",
-                            style = TextStyle(
-                                fontSize = TextUnit(11f, TextUnitType.Sp),
-                                color = ColorProvider(Color(0xFF9E9E9E))
-                            )
+                            text = connectionStatus,
+                            style = TextStyle(fontSize = FONT_SIZE_STATUS)
                         )
                     }
+
+                    Spacer(modifier = GlanceModifier.height(SPACER_MEDIUM))
+
+                    // Sessions count
+                    Text(
+                        text = "$sessionCount active session${if (sessionCount != 1) "s" else ""}",
+                        style = TextStyle(
+                            fontSize = FONT_SIZE_SESSIONS,
+                            color = ColorProvider(COLOR_SECONDARY_TEXT)
+                        )
+                    )
+
+                    Spacer(modifier = GlanceModifier.height(SPACER_TINY))
+
+                    // Last sync
+                    Text(
+                        text = "Synced: $lastSync",
+                        style = TextStyle(
+                            fontSize = FONT_SIZE_SYNC,
+                            color = ColorProvider(COLOR_TERTIARY_TEXT)
+                        )
+                    )
                 }
             }
         }

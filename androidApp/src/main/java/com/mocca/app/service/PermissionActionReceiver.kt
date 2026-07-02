@@ -29,23 +29,23 @@ class PermissionActionReceiver : BroadcastReceiver() {
         val permissionId = intent.getStringExtra(EXTRA_PERMISSION_ID)
         val sessionId = intent.getStringExtra(EXTRA_SESSION_ID)
 
-        if (permissionId == null) {
-            Napier.w("[PermissionActionReceiver] Missing permission_id extra")
-            return
-        }
-
-        if (sessionId == null) {
-            Napier.w("[PermissionActionReceiver] Missing session_id extra")
+        if (permissionId == null || sessionId == null) {
+            Napier.w(
+                "[PermissionActionReceiver] Missing required extras: " +
+                    "permissionId=$permissionId, sessionId=$sessionId"
+            )
             return
         }
 
         val replyType = when (intent.action) {
             ACTION_PERMISSION_APPROVE -> PermissionResponseType.ONCE
             ACTION_PERMISSION_DENY -> PermissionResponseType.REJECT
-            else -> {
-                Napier.w("[PermissionActionReceiver] Unknown action: ${intent.action}")
-                return
-            }
+            else -> null
+        }
+
+        if (replyType == null) {
+            Napier.w("[PermissionActionReceiver] Unknown action: ${intent.action}")
+            return
         }
 
         Napier.i(

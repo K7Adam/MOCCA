@@ -21,8 +21,7 @@ import com.mocca.app.domain.model.Resource
 import com.mocca.app.ui.App
 import com.mocca.app.ui.theme.AppColors
 import io.github.aakira.napier.Napier
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
@@ -80,46 +79,56 @@ class MainActivity : ComponentActivity() {
     private fun handleIntent(intent: Intent?) {
         // Handle share-sheet (ACTION_SEND with text)
         if (intent?.action == Intent.ACTION_SEND) {
-            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
-                ?: intent.getStringExtra(Intent.EXTRA_TITLE)
-            if (!sharedText.isNullOrBlank()) {
-                Napier.i("[MainActivity] Received shared text (${sharedText.length} chars)")
-                SharedContentBus.publish(sharedText)
-                Toast.makeText(this, "Content added to chat", Toast.LENGTH_SHORT).show()
-            }
+            handleShareIntent(intent)
             return
         }
 
         val uri = intent?.data
-        if (uri != null && uri.scheme == "mocca" && uri.host == "bridge") {
-            bridgePairingIntentStore.submit(uri.toString())
-            Toast.makeText(this, "Connecting MOCCA CLI...", Toast.LENGTH_SHORT).show()
-            return
+        if (uri != null && uri.scheme == "mocca") {
+            when (uri.host) {
+                "bridge" -> handleBridgePairing(uri.toString())
+                "oauth" -> handleOAuthCallback(uri)
+            }
         }
+    }
 
-        if (uri != null && uri.scheme == "mocca" && uri.host == "oauth") {
-            // mocca://oauth?code=...&state=...&provider=...
-            val code = uri.getQueryParameter("code")
-            val state = uri.getQueryParameter("state")
-            val provider = uri.getQueryParameter("provider")
-            
-            if (code != null && state != null && provider != null) {
-                CoroutineScope(Dispatchers.Main).launch {
-                    Toast.makeText(this@MainActivity, "Completing login...", Toast.LENGTH_SHORT).show()
-                    val result = configRepository.completeOAuthFlow(provider, code, state)
-                    when (result) {
-                        is Resource.Success -> {
-                            Toast.makeText(this@MainActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
-                        }
-                        is Resource.Error -> {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Login Failed: ${result.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                        else -> {}
+    private fun handleShareIntent(intent: Intent) {
+        val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+            ?: intent.getStringExtra(Intent.EXTRA_TITLE)
+        if (!sharedText.isNullOrBlank()) {
+            Napier.i("[MainActivity] Received shared text (${sharedText.length} chars)")
+            SharedContentBus.publish(sharedText)
+            Toast.makeText(this, "Content added to chat", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun handleBridgePairing(uriString: String) {
+        bridgePairingIntentStore.submit(uriString)
+        Toast.makeText(this, "Connecting MOCCA CLI...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun handleOAuthCallback(uri: android.net.Uri) {
+        // mocca://oauth?code=...&state=...&provider=...
+        val code = uri.getQueryParameter("code")
+        val state = uri.getQueryParameter("state")
+        val provider = uri.getQueryParameter("provider")
+
+        if (code != null && state != null && provider != null) {
+            lifecycleScope.launch {
+                Toast.makeText(this@MainActivity, "Completing login...", Toast.LENGTH_SHORT).show()
+                val result = configRepository.completeOAuthFlow(provider, code, state)
+                when (result) {
+                    is Resource.Success -> {
+                        Toast.makeText(this@MainActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
                     }
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Login Failed: ${result.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    else -> {}
                 }
             }
         }
