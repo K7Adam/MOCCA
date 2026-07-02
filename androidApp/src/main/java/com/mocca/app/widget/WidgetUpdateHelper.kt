@@ -1,7 +1,6 @@
 package com.mocca.app.widget
 
 import android.content.Context
-import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
 import io.github.aakira.napier.Napier
 

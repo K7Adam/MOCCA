@@ -23,7 +23,6 @@ import android.graphics.Color
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
-import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
@@ -540,8 +539,8 @@ class ActiveSessionService : Service() {
                     lastSync = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
                         .format(java.util.Date())
                 )
-            } catch (e: Exception) {
-                Napier.w("[ActiveSessionService] Widget update failed: ${e.message}")
+            } catch (_: Exception) {
+                Napier.w("[ActiveSessionService] Widget update failed")
             }
         }
     }
@@ -866,7 +865,10 @@ class ActiveSessionService : Service() {
                 notification.hasPromotableCharacteristics()
             }.getOrDefault(false)
             if (!hasPromotable) {
-                Napier.d("[ActiveSessionService] Notification lacks promotable characteristics for session ${session.sessionId}")
+                Napier.d(
+                    "[ActiveSessionService] Notification lacks promotable characteristics " +
+                        "for session ${session.sessionId}"
+                )
             }
         }
 
